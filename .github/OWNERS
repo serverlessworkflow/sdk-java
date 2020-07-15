@@ -1,0 +1,10 @@
+reviewers:
+  - tsurdilo
+  - manuelstein
+  - ricardozanini
+approvers:
+  - tsurdilo
+  - manuelstein
+  - ricardozanini
+labels:
+  - sig/contributor-experience
