@@ -28,8 +28,7 @@ of the Serverless Workflow specification. Currently the SDK features match those
 To build project and run tests locally:
 
 ```
-git clone https://github.com/cncf/wg-serverless-workflow.git
-cd sdk/java
+git clone https://github.com/serverlessworkflow/sdk-java.git
 mvn clean install
 ```
 
