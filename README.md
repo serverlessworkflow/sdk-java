@@ -1,7 +1,7 @@
 ![Verify JAVA SDK](https://github.com/serverlessworkflow/sdk-java/workflows/Verify%20JAVA%20SDK/badge.svg)
 ![Deploy JAVA SDK](https://github.com/serverlessworkflow/sdk-java/workflows/Deploy%20JAVA%20SDK/badge.svg)
 
-# Serverless Workflow Specification JAVA SDK
+# Serverless Workflow Specification - JAVA SDK
 
 Provides the JAVA API/SPI for the [Serverless Workflow Specification](https://github.com/serverlessworkflow/specification)
 
