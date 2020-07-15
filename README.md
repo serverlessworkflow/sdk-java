@@ -1,9 +1,9 @@
-![Verify JAVA SDK](https://github.com/cncf/wg-serverless-workflow/workflows/Verify%20JAVA%20SDK/badge.svg)
-![Deploy JAVA SDK](https://github.com/cncf/wg-serverless-workflow/workflows/Deploy%20JAVA%20SDK/badge.svg)
+![Verify JAVA SDK](https://github.com/serverlessworkflow/sdk-java/workflows/Verify%20JAVA%20SDK/badge.svg)
+![Deploy JAVA SDK](https://github.com/serverlessworkflow/sdk-java/workflows/Deploy%20JAVA%20SDK/badge.svg)
 
-# Serverless Workflow Specification JAVA SDK
+# Serverless Workflow Specification - JAVA SDK
 
-Provides the JAVA API/SPI for the [Serverless Workflow Specification](../../specification/README.md)
+Provides the JAVA API/SPI for the [Serverless Workflow Specification](https://github.com/serverlessworkflow/specification)
 
 Allows you to parse Workflow types from JSON/YAML sources, as well as programmatically build your workflows using 
 the provided builder API.
@@ -28,8 +28,7 @@ of the Serverless Workflow specification. Currently the SDK features match those
 To build project and run tests locally:
 
 ```
-git clone https://github.com/cncf/wg-serverless-workflow.git
-cd sdk/java
+git clone https://github.com/serverlessworkflow/sdk-java.git
 mvn clean install
 ```
 
