@@ -1,9 +1,9 @@
 ![Verify JAVA SDK](https://github.com/serverlessworkflow/sdk-java/workflows/Verify%20JAVA%20SDK/badge.svg)
 ![Deploy JAVA SDK](https://github.com/serverlessworkflow/sdk-java/workflows/Deploy%20JAVA%20SDK/badge.svg)
 
-# Serverless Workflow Specification - JAVA SDK
+# Serverless Workflow Specification - Java SDK
 
-Provides the JAVA API/SPI for the [Serverless Workflow Specification](https://github.com/serverlessworkflow/specification)
+Provides the Java API/SPI for the [Serverless Workflow Specification](https://github.com/serverlessworkflow/specification)
 
 Allows you to parse Workflow types from JSON/YAML sources, as well as programmatically build your workflows using 
 the provided builder API.
