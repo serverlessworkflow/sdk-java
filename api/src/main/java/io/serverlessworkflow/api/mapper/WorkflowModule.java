@@ -76,8 +76,6 @@ public class WorkflowModule extends SimpleModule {
                 new OperationStateActionModeDeserializer(workflowPropertySource));
         addDeserializer(DefaultState.Type.class,
                 new DefaultStateTypeDeserializer(workflowPropertySource));
-        addDeserializer(DataCondition.Operator.class,
-                new DataConditionOperatorDeserializer(workflowPropertySource));
         addDeserializer(EventDefinition.Kind.class, new EventDefinitionKindDeserializer(workflowPropertySource));
         addDeserializer(ParallelState.CompletionType.class, new ParallelStateCompletionTypeDeserializer(workflowPropertySource));
         addDeserializer(Schedule.DirectInvoke.class, new ScheduleDirectInvokeDeserializer(workflowPropertySource));

@@ -86,17 +86,13 @@
       "type":"switch",
       "dataConditions": [
         {
-          "path": "$.jobstatus",
-          "value": "SUCCEEDED",
-          "operator": "equals",
+          "condition": "{{ $[?(@.jobstatus == 'SUCCEEDED')] }}",
           "transition": {
             "nextState": "JobSucceeded"
           }
         },
         {
-          "path": "$.jobstatus",
-          "value": "FAILED",
-          "operator": "equals",
+          "condition": "{{ $[?(@.jobstatus == 'FAILED')] }}",
           "transition": {
             "nextState": "JobFailed"
           }

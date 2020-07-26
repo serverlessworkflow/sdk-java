@@ -6,32 +6,9 @@
   ],
   "description": "Switch state data based condition",
   "properties": {
-    "path": {
+    "condition": {
       "type": "string",
-      "description": "JSONPath expression that selects elements of state data"
-    },
-    "value": {
-      "type": "string",
-      "description": "Matching value"
-    },
-    "operator": {
-      "type": "string",
-      "enum": [
-        "exists",
-        "notexists",
-        "null",
-        "notnull",
-        "equals",
-        "notequals",
-        "lessthan",
-        "lessthanorequals",
-        "greaterthan",
-        "greaterthanorequals",
-        "matches",
-        "notmatches",
-        "custom"
-      ],
-      "description": "Condition operator"
+      "description": "JsonPath expression evaluated against state data. True if results are not empty"
     },
     "transition": {
       "$ref": "../transitions/transition.json",
@@ -39,9 +16,7 @@
     }
   },
   "required": [
-    "path",
-    "value",
-    "operator",
+    "condition",
     "transition"
   ]
 }
