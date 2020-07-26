@@ -12,14 +12,10 @@ states:
     start:
       kind: default
     dataConditions:
-      - path: "$.applicant.age"
-        value: '18'
-        operator: greaterthanorequals
+      - condition: "{{ $.applicants[?(@.age >= 18)] }}"
         transition:
           nextState: StartApplication
-      - path: "$.applicant.age"
-        value: '18'
-        operator: lessthan
+      - condition: "{{ $.applicants[?(@.age < 18)] }}"
         transition:
           nextState: RejectApplication
     default:
