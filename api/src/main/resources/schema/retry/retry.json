@@ -16,9 +16,8 @@
       "description": "Multiplier value by which interval increases during each attempt (ISO 8601 time format)"
     },
     "maxAttempts": {
-      "type": "integer",
+      "type": "string",
       "default": "0",
-      "minimum": 0,
       "description": "Maximum number of retry attempts (1 by default). Value of 0 means no retries are performed"
     }
   },

@@ -24,9 +24,8 @@
       "default": "and"
     },
     "n": {
-      "type": "integer",
-      "default": 0,
-      "minimum": 0,
+      "type": "string",
+      "default": "0",
       "description": "Used when completionType is set to 'n_of_m' to specify the 'N' value"
     }
   },
