@@ -3,17 +3,15 @@
 
 # Serverless Workflow Specification - Java SDK
 
-Provides the Java API/SPI for the [Serverless Workflow Specification](https://github.com/serverlessworkflow/specification)
+Provides the Java API/SPI and Model Validation for the [Serverless Workflow Specification](https://github.com/serverlessworkflow/specification)
 
-Allows you to parse Workflow types from JSON/YAML sources, as well as programmatically build your workflows using 
-the provided builder API.
+With the SDK you can:
+* Parse workflow JSON and YAML definitions
+* Programatically build workflow definitions
+* Validate workflow definitions (both schema and workflow integrity validation)
 
-The SDK focus is to allow to quickly go from the workflow definition (JSON or YAML) to instances 
-of Workflow type, as well as to provide a builder API to easily create a workflow programmatically.
-
-Future versions will also include validation functionality.
-
-This is **not** a workflow runtime implementation.
+Serverless Workflow Java SDK is **not** a workflow runtime implementation but can be used by Java runtime implementations
+to parse and validate workflow definitions.
 
 ### Status
 
@@ -54,6 +52,16 @@ Then to use it in your project pom.xml add:
 </dependency>
 ```
 
+* Validation dependency
+
+```xml
+<dependency>
+    <groupId>io.serverlessworkflow</groupId>
+    <artifactId>serverlessworkflow-validation</artifactId>
+    <version>0.2-SNAPSHOT</version>
+</dependency>
+```
+
 #### Get dependencies from Nexus
 
 Our SNAPSHOT versions are published to the Sonatype repositories.
@@ -83,12 +91,18 @@ And use the dependencies:
 </dependency>
 ```
 
-and
-
 ```xml
 <dependency>
   <groupId>io.serverlessworkflow</groupId>
   <artifactId>serverlessworkflow-spi</artifactId>
+  <version>0.2-SNAPSHOT</version>
+</dependency>
+```
+
+```xml
+<dependency>
+  <groupId>io.serverlessworkflow</groupId>
+  <artifactId>serverlessworkflow-validation</artifactId>
   <version>0.2-SNAPSHOT</version>
 </dependency>
 ```
@@ -170,7 +184,7 @@ Workflow testWorkflow = new Workflow().withId("test-workflow").withName("test-wo
                         new EventDefinition().withName("testEvent").withSource("testSource").withType("testType"))
                 )
                 .withFunctions(Arrays.asList(
-                        new Function().withName("testFunction").withResource("testResource").withType("testType"))
+                        new FunctionDefinition().withName("testFunction").withResource("testResource").withType("testType"))
                 )
                 .withStates(Arrays.asList(
                         new DelayState().withName("delayState").withType(DELAY)
@@ -192,4 +206,45 @@ You can use the workflow instance to get its JSON/YAML definition as well:
 ``` java
 assertNotNull(Workflow.toJson(testWorkflow));
 assertNotNull(Workflow.toYaml(testWorkflow));
+```
+
+#### Using Workflow Validation
+
+Validation allows you to performe Json Schema validation against the JSON/YAML workflow definitions.
+Once you have a `Workflow` instance, you can also run integrity checks.
+
+You can validate a Workflow JSON/YAML definition to get validation errors:
+
+``` java
+WorkflowValidator workflowValidator = new WorkflowValidatorImpl();
+List<ValidationError> validationErrors = workflowValidator.setSource("WORKFLOW_MODEL_JSON/YAML").validate();
+```
+
+Where `WORKFLOW_MODEL_JSON/YAML` is the actual workflow model JSON or YAML definition.
+
+Or you can just check if it is valid (without getting specific errors):
+
+``` java
+WorkflowValidator workflowValidator = new WorkflowValidatorImpl();
+boolean isValidWorkflow = workflowValidator.setSource("WORKFLOW_MODEL_JSON/YAML").isValid();
+```
+
+If you build your Workflow programmatically, you can validate it as well:
+
+``` java
+Workflow workflow = new Workflow().withId("test-workflow").withVersion("1.0")
+.withStates(Arrays.asList(
+        new DelayState().withName("delayState").withType(DELAY)
+                .withStart(
+                        new Start().withKind(Start.Kind.DEFAULT)
+                )
+                .withEnd(
+                        new End().withKind(End.Kind.DEFAULT)
+                )
+                .withTimeDelay("PT1M")
+        )
+);
+
+WorkflowValidator workflowValidator = new WorkflowValidatorImpl();
+List<ValidationError> validationErrors = workflowValidator.setWorkflow(workflow).validate();
 ```

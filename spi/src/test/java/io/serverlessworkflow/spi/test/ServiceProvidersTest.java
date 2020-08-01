@@ -16,17 +16,10 @@
  */
 package io.serverlessworkflow.spi.test;
 
-
-import io.serverlessworkflow.api.interfaces.ExpressionEvaluator;
-import io.serverlessworkflow.api.interfaces.WorkflowManager;
 import io.serverlessworkflow.api.interfaces.WorkflowPropertySource;
 import io.serverlessworkflow.api.interfaces.WorkflowValidator;
-import io.serverlessworkflow.spi.ExpressionEvaluatorProvider;
-import io.serverlessworkflow.spi.WorkflowManagerProvider;
 import io.serverlessworkflow.spi.WorkflowPropertySourceProvider;
 import io.serverlessworkflow.spi.WorkflowValidatorProvider;
-import io.serverlessworkflow.spi.test.providers.TestExpressionEvaluator;
-import io.serverlessworkflow.spi.test.providers.TestWorkflowManager;
 import io.serverlessworkflow.spi.test.providers.TestWorkflowPropertySource;
 import io.serverlessworkflow.spi.test.providers.TestWorkflowValidator;
 import org.junit.jupiter.api.Assertions;
@@ -35,23 +28,6 @@ import org.junit.jupiter.api.Test;
 import java.util.Map;
 
 public class ServiceProvidersTest {
-
-    @Test
-    public void testExpressionEvaluatorProvider() {
-        Map<String, ExpressionEvaluator> evaluators = ExpressionEvaluatorProvider.getInstance().get();
-        Assertions.assertNotNull(evaluators);
-        Assertions.assertEquals(1,
-                evaluators.size());
-        Assertions.assertNotNull(evaluators.get("test"));
-        Assertions.assertTrue(evaluators.get("test") instanceof TestExpressionEvaluator);
-    }
-
-    @Test
-    public void testWorkflowManagerProvider() {
-        WorkflowManager manager = WorkflowManagerProvider.getInstance().get();
-        Assertions.assertNotNull(manager);
-        Assertions.assertTrue(manager instanceof TestWorkflowManager);
-    }
 
     @Test
     public void testWorkflowValidatorProvider() {
