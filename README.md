@@ -210,7 +210,7 @@ assertNotNull(Workflow.toYaml(testWorkflow));
 
 #### Using Workflow Validation
 
-Validation allows you to performe Json Schema validation against the JSON/YAML workflow definitions.
+Validation allows you to perform Json Schema validation against the JSON/YAML workflow definitions.
 Once you have a `Workflow` instance, you can also run integrity checks.
 
 You can validate a Workflow JSON/YAML definition to get validation errors:
