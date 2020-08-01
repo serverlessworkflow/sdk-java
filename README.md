@@ -7,7 +7,7 @@ Provides the Java API/SPI and Model Validation for the [Serverless Workflow Spec
 
 With the SDK you can:
 * Parse workflow JSON and YAML definitions
-* Programatically build workflow definitions
+* Programmatically build workflow definitions
 * Validate workflow definitions (both schema and workflow integrity validation)
 
 Serverless Workflow Java SDK is **not** a workflow runtime implementation but can be used by Java runtime implementations
