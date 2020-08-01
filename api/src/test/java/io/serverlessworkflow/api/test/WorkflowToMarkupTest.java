@@ -19,7 +19,7 @@ package io.serverlessworkflow.api.test;
 import io.serverlessworkflow.api.Workflow;
 import io.serverlessworkflow.api.end.End;
 import io.serverlessworkflow.api.events.EventDefinition;
-import io.serverlessworkflow.api.functions.Function;
+import io.serverlessworkflow.api.functions.FunctionDefinition;
 import io.serverlessworkflow.api.interfaces.State;
 import io.serverlessworkflow.api.start.Start;
 import io.serverlessworkflow.api.states.DelayState;
@@ -61,7 +61,7 @@ public class WorkflowToMarkupTest {
 
         Workflow workflow = new Workflow().withId("test-workflow").withName("test-workflow-name").withVersion("1.0")
                 .withFunctions(Arrays.asList(
-                        new Function().withName("testFunction").withResource("testResource").withType("testType"))
+                        new FunctionDefinition().withName("testFunction").withResource("testResource").withType("testType"))
                 )
                 .withStates(Arrays.asList(
                         new DelayState().withName("delayState").withType(DELAY)
@@ -96,7 +96,7 @@ public class WorkflowToMarkupTest {
                                 .withKind(EventDefinition.Kind.PRODUCED))
                 )
                 .withFunctions(Arrays.asList(
-                        new Function().withName("testFunction").withResource("testResource").withType("testType"))
+                        new FunctionDefinition().withName("testFunction").withResource("testResource").withType("testType"))
                 )
                 .withStates(Arrays.asList(
                         new DelayState().withName("delayState").withType(DELAY)

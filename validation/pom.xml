@@ -9,8 +9,8 @@
         <version>0.2-SNAPSHOT</version>
     </parent>
 
-    <artifactId>serverlessworkflow-spi</artifactId>
-    <name>Serverless Workflow :: SPI</name>
+    <artifactId>serverlessworkflow-validation</artifactId>
+    <name>Serverless Workflow :: Validation</name>
     <description>Java SDK for Serverless Workflow Specification</description>
 
     <dependencies>
@@ -23,6 +23,16 @@
             <groupId>io.serverlessworkflow</groupId>
             <artifactId>serverlessworkflow-api</artifactId>
             <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.everit-org.json-schema</groupId>
+            <artifactId>org.everit.json.schema</artifactId>
         </dependency>
 
         <!-- test -->
@@ -54,6 +64,16 @@
         <dependency>
             <groupId>org.assertj</groupId>
             <artifactId>assertj-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.hamcrest</groupId>
+            <artifactId>hamcrest-library</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.skyscreamer</groupId>
+            <artifactId>jsonassert</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

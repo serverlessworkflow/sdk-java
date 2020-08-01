@@ -55,7 +55,7 @@
       "description": "Workflow functions",
       "items": {
         "type": "object",
-        "$ref": "functions/function.json"
+        "$ref": "functions/functiondef.json"
       }
     },
     "states": {

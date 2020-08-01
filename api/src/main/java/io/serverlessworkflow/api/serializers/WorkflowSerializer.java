@@ -21,7 +21,7 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import io.serverlessworkflow.api.Workflow;
 import io.serverlessworkflow.api.events.EventDefinition;
-import io.serverlessworkflow.api.functions.Function;
+import io.serverlessworkflow.api.functions.FunctionDefinition;
 import io.serverlessworkflow.api.interfaces.Extension;
 import io.serverlessworkflow.api.interfaces.State;
 
@@ -102,7 +102,7 @@ public class WorkflowSerializer extends StdSerializer<Workflow> {
 
         if (workflow.getFunctions() != null && !workflow.getFunctions().isEmpty()) {
             gen.writeArrayFieldStart("functions");
-            for (Function function : workflow.getFunctions()) {
+            for (FunctionDefinition function : workflow.getFunctions()) {
                 gen.writeObject(function);
             }
             gen.writeEndArray();

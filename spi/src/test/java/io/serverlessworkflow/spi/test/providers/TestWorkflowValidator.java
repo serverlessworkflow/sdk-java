@@ -16,24 +16,27 @@
  */
 package io.serverlessworkflow.spi.test.providers;
 
-import io.serverlessworkflow.api.interfaces.WorkflowManager;
+import io.serverlessworkflow.api.Workflow;
 import io.serverlessworkflow.api.interfaces.WorkflowValidator;
+import io.serverlessworkflow.api.validation.ValidationError;
+
+import java.util.List;
 
 public class TestWorkflowValidator implements WorkflowValidator {
 
     @Override
-    public WorkflowValidator setWorkflowManager(WorkflowManager workflowManager) {
+    public WorkflowValidator setWorkflow(Workflow workflow) {
         return this;
     }
 
     @Override
-    public void setJson(String json) {
-
+    public WorkflowValidator setSource(String source) {
+        return this;
     }
 
     @Override
-    public void setYaml(String yaml) {
-
+    public List<ValidationError> validate() {
+        return null;
     }
 
     @Override
@@ -42,22 +45,12 @@ public class TestWorkflowValidator implements WorkflowValidator {
     }
 
     @Override
-    public void setEnabled(boolean enabled) {
-
+    public WorkflowValidator setSchemaValidationEnabled(boolean schemaValidationEnabled) {
+        return this;
     }
 
     @Override
-    public void setSchemaValidationEnabled(boolean schemaValidationEnabled) {
-
-    }
-
-    @Override
-    public void setStrictValidationEnabled(boolean strictValidationEnabled) {
-
-    }
-
-    @Override
-    public void reset() {
-
+    public WorkflowValidator reset() {
+        return this;
     }
 }
