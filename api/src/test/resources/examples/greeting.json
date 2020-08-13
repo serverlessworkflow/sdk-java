@@ -16,23 +16,19 @@
       "start": {
         "kind": "default"
       },
-      "actionMode":"sequential",
       "actions":[
         {
           "functionRef": {
             "refName": "greetingFunction",
             "parameters": {
-              "name": "$.greet.name"
+              "name": "{{ $.person.name }}"
             }
           },
           "actionDataFilter": {
-            "dataResultsPath": "$.payload.greeting"
+            "dataResultsPath": "{{ $.greeting }}"
           }
         }
       ],
-      "stateDataFilter": {
-        "dataOutputPath": "$.greeting"
-      },
       "end": {
         "kind": "default"
       }

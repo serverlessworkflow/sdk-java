@@ -51,7 +51,7 @@
           "functionRef": {
             "refName": "sendRejectionEmailFunction",
             "parameters": {
-              "applicant": "$.applicant"
+              "applicant": "{{ $.applicant }}"
             }
           }
         }

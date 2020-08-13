@@ -1,6 +1,6 @@
 {
   "id": "checkInbox",
-  "name": "Periodically Check Inbox Workflow",
+  "name": "Check Inbox Workflow",
   "description": "Periodically Check Inbox",
   "version": "1.0",
   "functions": [
@@ -39,18 +39,15 @@
     {
       "name": "SendTextForHighPrioriry",
       "type": "foreach",
-      "inputCollection": "$.message",
-      "inputParameter": "$.singlemessage",
-      "states": [
+      "inputCollection": "{{ $.messages }}",
+      "iterationParam": "singlemessage",
+      "actions": [
         {
-          "name": "SendTextMessageForHighPriority",
-          "type": "subflow",
-          "start": {
-            "kind": "default"
-          },
-          "workflowId": "sendTextMessageForHighPriorityId",
-          "end": {
-            "kind": "default"
+          "functionRef": {
+            "refName": "sendTextFunction",
+            "parameters": {
+              "message": "{{ $.singlemessage }}"
+            }
           }
         }
       ],

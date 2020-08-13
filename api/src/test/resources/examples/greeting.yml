@@ -1,4 +1,3 @@
----
 id: greeting
 version: '1.0'
 name: Greeting Workflow
@@ -11,15 +10,12 @@ states:
     type: operation
     start:
       kind: default
-    actionMode: sequential
     actions:
       - functionRef:
           refName: greetingFunction
           parameters:
-            name: "$.greet.name"
+            name: "{{ $.person.name }}"
         actionDataFilter:
-          dataResultsPath: "$.payload.greeting"
-    stateDataFilter:
-      dataOutputPath: "$.greeting"
+          dataResultsPath: "{{ $.greeting }}"
     end:
       kind: default

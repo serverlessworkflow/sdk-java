@@ -1,6 +1,6 @@
 {
   "type": "object",
-  "javaType": "io.serverlessworkflow.api.events.EventsActions",
+  "javaType": "io.serverlessworkflow.api.events.OnEvents",
   "description": "Actions to be performed on Events arrival",
   "properties": {
     "eventRefs": {
@@ -28,7 +28,6 @@
         "$ref": "../actions/action.json"
       }
     },
-
     "eventDataFilter": {
       "$ref": "../filters/eventdatafilter.json"
     }

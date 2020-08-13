@@ -1,6 +1,6 @@
 {
   "id": "VetAppointmentWorkflow",
-  "name": "Vet Appointment Service Workflow",
+  "name": "Vet Appointment Workflow",
   "description": "Vet service call via events",
   "version": "1.0",
   "events": [
@@ -27,11 +27,11 @@
           "name": "MakeAppointmentAction",
           "eventRef": {
             "triggerEventRef": "MakeVetAppointment",
-            "data": "$.patientInfo",
+            "data": "{{ $.patientInfo }}",
             "resultEventRef":  "VetAppointmentInfo"
           },
           "actionDataFilter": {
-            "dataResultsPath": "$.appointmentInfo"
+            "dataResultsPath": "{{ $.appointmentInfo }}"
           },
           "timeout": "PT15M"
         }

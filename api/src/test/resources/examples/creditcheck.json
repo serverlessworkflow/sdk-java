@@ -37,7 +37,7 @@
         "functionRef": {
           "refName": "callCreditCheckMicroservice",
           "parameters": {
-            "customer": "$.customer"
+            "customer": "{{ $.customer }}"
           }
         }
       },
@@ -85,7 +85,7 @@
           "functionRef": {
             "refName": "sendRejectionEmailFunction",
             "parameters": {
-              "applicant": "$.customer"
+              "applicant": "{{ $.customer }}"
             }
           }
         }

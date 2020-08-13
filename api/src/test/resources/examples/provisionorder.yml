@@ -1,4 +1,3 @@
----
 id: provisionorders
 version: '1.0'
 name: Provision Orders
@@ -16,19 +15,19 @@ states:
       - functionRef:
           refName: provisionOrderFunction
           parameters:
-            order: "$.order"
+            order: "{{ $.order }}"
     onError:
-      - expression: "$.name == 'MissingOrderIdException'"
+      - expression: "{{ $.exceptions[?(@.name == 'MissingOrderIdException')] }}"
         transition:
           nextState: MissingId
-      - expression: "$.name == 'MissingOrderItemException'"
+      - expression: "{{ $.exceptions[?(@.name == 'MissingOrderItemException')] }}"
         transition:
           nextState: MissingItem
-      - expression: "$.name == 'MissingOrderQuantityException'"
+      - expression: "{{ $.exceptions[?(@.name == 'MissingOrderQuantityException')] }}"
         transition:
           nextState: MissingQuantity
     stateDataFilter:
-      dataOutputPath: "$.exception"
+      dataOutputPath: "{{ $.exceptions }}"
     transition:
       nextState: ApplyOrder
   - name: MissingId

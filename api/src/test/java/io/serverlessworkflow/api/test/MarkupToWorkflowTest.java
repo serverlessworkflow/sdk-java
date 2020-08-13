@@ -42,7 +42,8 @@ public class MarkupToWorkflowTest {
             "/examples/solvemathproblems.json", "/examples/solvemathproblems.yml",
             "/examples/foreachstatewithactions.json", "/examples/foreachstatewithactions.yml",
             "/examples/periodicinboxcheck.json", "/examples/periodicinboxcheck.yml",
-            "/examples/vetappointmentservice.json", "/examples/vetappointmentservice.yml"
+            "/examples/vetappointmentservice.json", "/examples/vetappointmentservice.yml",
+            "/examples/eventbasedtransition.json", "/examples/eventbasedtransition.yml"
     })
     public void testSpecExamplesParsing(String workflowLocation) {
         Workflow workflow = Workflow.fromSource(WorkflowTestUtils.readWorkflowFile(workflowLocation));

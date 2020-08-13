@@ -1,4 +1,3 @@
----
 id: finalizeCollegeApplication
 name: Finalize College Application
 version: '1.0'
@@ -28,7 +27,7 @@ states:
     start:
       kind: default
     exclusive: false
-    eventsActions:
+    onEvents:
       - eventRefs:
           - ApplicationSubmitted
           - SATScoresReceived
@@ -37,6 +36,6 @@ states:
           - functionRef:
               refName: finalizeApplicationFunction
               parameters:
-                student: "$.applicantId"
+                student: "{{ $.applicantId }}"
     end:
       kind: terminate

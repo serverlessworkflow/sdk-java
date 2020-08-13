@@ -127,20 +127,8 @@ public class WorkflowValidationTest {
                 "        \"name\": \"SendTextForHighPrioriry\",\n" +
                 "        \"type\": \"foreach\",\n" +
                 "        \"inputCollection\": \"{{ $.message }}\",\n" +
-                "        \"inputParameter\": \"{{ $.singlemessage }}\",\n" +
-                "        \"states\": [\n" +
-                "            {\n" +
-                "                \"name\": \"SendTextMessageForHighPriority\",\n" +
-                "                \"type\": \"subflow\",\n" +
-                "                \"start\": {\n" +
-                "                    \"kind\": \"default\"\n" +
-                "                },\n" +
-                "                \"workflowId\": \"sendTextMessageForHighPriorityId\",\n" +
-                "                \"end\": {\n" +
-                "                    \"kind\": \"default\"\n" +
-                "                }\n" +
-                "            }\n" +
-                "        ],\n" +
+                "        \"iterationParam\": \"{{ $.singlemessage }}\",\n" +
+                "        \"workflowId\": \"sendMessageWorkflowId\",\n" +
                 "        \"end\": {\n" +
                 "            \"kind\": \"default\"\n" +
                 "        }\n" +

@@ -1,4 +1,3 @@
----
 id: patientVitalsWorkflow
 name: Monitor Patient Vitals
 version: '1.0'
@@ -34,27 +33,27 @@ states:
     start:
       kind: default
     exclusive: true
-    eventsActions:
+    onEvents:
       - eventRefs:
           - HighBodyTemperature
         actions:
           - functionRef:
               refName: sendTylenolOrder
               parameters:
-                patientid: "$.patientId"
+                patientid: "{{ $.patientId }}"
       - eventRefs:
           - HighBloodPressure
         actions:
           - functionRef:
               refName: callNurse
               parameters:
-                patientid: "$.patientId"
+                patientid: "{{ $.patientId }}"
       - eventRefs:
           - HighRespirationRate
         actions:
           - functionRef:
               refName: callPulmonologist
               parameters:
-                patientid: "$.patientId"
+                patientid: "{{ $.patientId }}"
     end:
       kind: terminate

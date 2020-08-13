@@ -15,26 +15,22 @@
         "$ref": "../actions/action.json"
       }
     },
-    "states": {
-      "type": "array",
-      "description": "State Definitions",
-      "items": {
-        "type": "object",
-        "existingJavaType": "io.serverlessworkflow.api.interfaces.State"
-      }
+    "workflowId": {
+      "type": "string",
+      "description": "Unique Id of a workflow to be executed in this branch"
     }
   },
   "oneOf": [
     {
       "required": [
         "name",
-        "states"
+        "actions"
       ]
     },
     {
       "required": [
         "name",
-        "actions"
+        "workflowId "
       ]
     }
   ]

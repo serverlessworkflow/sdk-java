@@ -1,4 +1,3 @@
----
 id: solvemathproblems
 version: '1.0'
 name: Solve Math Problems Workflow
@@ -8,26 +7,18 @@ functions:
     resource: functionResourse
 states:
   - name: Solve
-    type: foreach
     start:
       kind: default
-    inputCollection: "$.expressions"
-    inputParameter: "$.singleexpression"
-    outputCollection: "$.results"
-    states:
-      - name: GetResults
-        type: operation
-        start:
-          kind: default
-        actionMode: sequential
-        actions:
-          - functionRef:
-              refName: solveMathExpressionFunction
-              parameters:
-                expression: "$.singleexpression"
-        end:
-          kind: default
+    type: foreach
+    inputCollection: "{{ $.expressions }}"
+    iterationParam: singleexpression
+    outputCollection: "{{ $.results }}"
+    actions:
+      - functionRef:
+          refName: solveMathExpressionFunction
+          parameters:
+            expression: "{{ $.singleexpression }}"
     stateDataFilter:
-      dataOutputPath: "$.results"
+      dataOutputPath: "{{ $.results }}"
     end:
       kind: default
