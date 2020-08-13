@@ -12,38 +12,25 @@
   "states":[
     {
       "name":"Solve",
-      "type":"foreach",
       "start": {
         "kind": "default"
       },
-      "inputCollection": "$.expressions",
-      "inputParameter": "$.singleexpression",
-      "outputCollection": "$.results",
-      "states": [
+      "type":"foreach",
+      "inputCollection": "{{ $.expressions }}",
+      "iterationParam": "singleexpression",
+      "outputCollection": "{{ $.results }}",
+      "actions":[
         {
-          "name":"GetResults",
-          "type":"operation",
-          "start": {
-            "kind": "default"
-          },
-          "actionMode":"sequential",
-          "actions":[
-            {
-              "functionRef": {
-                "refName": "solveMathExpressionFunction",
-                "parameters": {
-                  "expression": "$.singleexpression"
-                }
-              }
+          "functionRef": {
+            "refName": "solveMathExpressionFunction",
+            "parameters": {
+              "expression": "{{ $.singleexpression }}"
             }
-          ],
-          "end": {
-            "kind": "default"
           }
         }
       ],
       "stateDataFilter": {
-        "dataOutputPath": "$.results"
+        "dataOutputPath": "{{ $.results }}"
       },
       "end": {
         "kind": "default"

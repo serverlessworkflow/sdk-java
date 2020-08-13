@@ -6,7 +6,7 @@
     {
       "name": "provisioningCompleteEvent",
       "type": "provisionCompleteType",
-      "source": "provisionCompleteSource"
+      "kind": "produced"
     }
   ],
   "functions": [
@@ -22,40 +22,24 @@
       "start": {
         "kind": "default"
       },
-      "inputCollection": "$.orders",
-      "inputParameter": "$.singleorder",
-      "outputCollection": "$.results",
-      "states": [
+      "inputCollection": "{{ $.orders }}",
+      "iterationParam": "singleorder",
+      "outputCollection": "{{ $.provisionedOrders }}",
+      "actions": [
         {
-          "name": "DoProvision",
-          "type": "operation",
-          "start": {
-            "kind": "default"
-          },
-          "actionMode": "sequential",
-          "actions": [
-            {
-              "functionRef": {
-                "refName": "provisionOrderFunction",
-                "parameters": {
-                  "order": "$.order"
-                }
-              }
+          "functionRef": {
+            "refName": "provisionOrderFunction",
+            "parameters": {
+              "order": "{{ $.singleorder }}"
             }
-          ],
-          "end": {
-            "kind": "default"
           }
         }
       ],
-      "stateDataFilter": {
-        "dataOutputPath": "$.provisionedOrders"
-      },
       "end": {
         "kind": "event",
         "produceEvent": {
           "eventRef": "provisioningCompleteEvent",
-          "data": "$.provisionedOrders"
+          "data": "{{ $.provisionedOrders }}"
         }
       }
     }

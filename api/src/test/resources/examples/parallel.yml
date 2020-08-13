@@ -1,4 +1,3 @@
----
 id: parallelexec
 version: '1.0'
 name: Parallel Execution Workflow
@@ -10,23 +9,9 @@ states:
       kind: default
     completionType: and
     branches:
-      - name: Branch1
-        states:
-          - name: ShortDelay
-            type: delay
-            start:
-              kind: default
-            timeDelay: PT15S
-            end:
-              kind: default
-      - name: Branch2
-        states:
-          - name: LongDelay
-            type: delay
-            start:
-              kind: default
-            timeDelay: PT2M
-            end:
-              kind: default
+      - name: ShortDelayBranch
+        workflowId: shortdelayworkflowid
+      - name: LongDelayBranch
+        workflowId: longdelayworkflowid
     end:
       kind: default

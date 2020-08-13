@@ -1,22 +1,13 @@
----
 id: helloworld
 version: '1.0'
 name: Hello World Workflow
-description: Static Hello World
+description: Inject Hello World
 states:
-  - name: Hello
+  - name: Hello State
     type: inject
     start:
       kind: default
     data:
-      result: Hello
-    transition:
-      nextState: World
-  - name: World
-    type: inject
-    data:
-      result: " World!"
-    stateDataFilter:
-      dataOutputPath: "$.result"
+      result: Hello World!
     end:
       kind: default

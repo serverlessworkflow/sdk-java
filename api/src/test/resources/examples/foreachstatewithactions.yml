@@ -9,13 +9,13 @@ functions:
 states:
   - name: SendConfirmationForEachCompletedhOrder
     type: foreach
-    inputCollection: "$.orders[?(@.completed == true)]"
-    inputParameter: "$.completedorder"
+    inputCollection: "{{ $.orders[?(@.completed == true)] }}"
+    iterationParam: "{{ $.completedorder }}"
     actions:
       - functionRef:
           refName: sendConfirmationFunction
           parameters:
-            orderNumber: "$.completedorder.orderNumber"
-            email: "$.completedorder.email"
+            orderNumber: "{{ $.completedorder.orderNumber }}"
+            email: "{{ $.completedorder.email }}"
     end:
       kind: default

@@ -59,13 +59,13 @@
         "kind": "default"
       },
       "exclusive": true,
-      "eventsActions": [{
+      "onEvents": [{
         "eventRefs": ["HighBodyTemperature"],
         "actions": [{
           "functionRef": {
             "refName": "sendTylenolOrder",
             "parameters": {
-              "patientid": "$.patientId"
+              "patientid": "{{ $.patientId }}"
             }
           }
         }]
@@ -76,7 +76,7 @@
             "functionRef": {
               "refName": "callNurse",
               "parameters": {
-                "patientid": "$.patientId"
+                "patientid": "{{ $.patientId }}"
               }
             }
           }]
@@ -87,7 +87,7 @@
             "functionRef": {
               "refName": "callPulmonologist",
               "parameters": {
-                "patientid": "$.patientId"
+                "patientid": "{{ $.patientId }}"
               }
             }
           }]

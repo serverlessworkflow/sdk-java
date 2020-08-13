@@ -19,7 +19,7 @@ package io.serverlessworkflow.api.mapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import io.serverlessworkflow.api.deserializers.*;
 import io.serverlessworkflow.api.events.EventDefinition;
-import io.serverlessworkflow.api.events.EventsActions;
+import io.serverlessworkflow.api.events.OnEvents;
 import io.serverlessworkflow.api.interfaces.Extension;
 import io.serverlessworkflow.api.interfaces.State;
 import io.serverlessworkflow.api.interfaces.WorkflowPropertySource;
@@ -28,7 +28,6 @@ import io.serverlessworkflow.api.serializers.*;
 import io.serverlessworkflow.api.states.DefaultState;
 import io.serverlessworkflow.api.states.OperationState;
 import io.serverlessworkflow.api.states.ParallelState;
-import io.serverlessworkflow.api.switchconditions.DataCondition;
 
 public class WorkflowModule extends SimpleModule {
 
@@ -70,8 +69,8 @@ public class WorkflowModule extends SimpleModule {
                 new StateDeserializer(workflowPropertySource));
         addDeserializer(String.class,
                 new StringValueDeserializer(workflowPropertySource));
-        addDeserializer(EventsActions.ActionMode.class,
-                new EventsActionsActionModeDeserializer(workflowPropertySource));
+        addDeserializer(OnEvents.ActionMode.class,
+                new OnEventsActionModeDeserializer(workflowPropertySource));
         addDeserializer(OperationState.ActionMode.class,
                 new OperationStateActionModeDeserializer(workflowPropertySource));
         addDeserializer(DefaultState.Type.class,

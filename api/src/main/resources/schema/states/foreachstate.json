@@ -4,32 +4,28 @@
   "javaInterfaces": [
     "io.serverlessworkflow.api.interfaces.State"
   ],
-  "description": "Execute a set of defined states for each element of the data input array",
+  "description": "Execute a set of defined actions or workflows for each element of a data array",
   "extends": {
     "$ref": "defaultstate.json"
   },
   "properties": {
     "inputCollection": {
       "type": "string",
-      "description": "JSONPath expression selecting an JSON array element of the states data input"
+      "description": "JsonPath expression selecting an array element of the states data"
     },
     "outputCollection": {
       "type": "string",
-      "description": "JSONPath expression specifying where in the states data output to place the final data output of each iteration of the executed states"
+      "description": "JsonPath expression specifying an array element of the states data to add the results of each iteration"
     },
-    "inputParameter": {
+    "iterationParam": {
       "type": "string",
-      "description": "JSONPath expression specifying an JSON object field of the states data input. For each parallel iteration, this field will get populated with a unique element of the inputCollection array"
+      "description": "Name of the iteration parameter that can be referenced in actions/workflow. For each parallel iteration, this param should contain an unique element of the inputCollection array"
     },
     "max": {
       "type": "integer",
       "default": "0",
       "minimum": 0,
       "description": "Specifies how upper bound on how many iterations may run in parallel"
-    },
-    "timeDelay": {
-      "type": "string",
-      "description": "Amount of time (ISO 8601 format) to wait between each iteration "
     },
     "actions": {
       "type": "array",
@@ -39,13 +35,9 @@
         "$ref": "../actions/action.json"
       }
     },
-    "states": {
-      "type": "array",
-      "description": "States to be executed for each of the elements of inputCollection",
-      "items": {
-        "type": "object",
-        "existingJavaType": "io.serverlessworkflow.api.interfaces.State"
-      }
+    "workflowId": {
+      "type": "string",
+      "description": "Unique Id of a workflow to be executed for each of the elements of inputCollection"
     }
   },
   "oneOf": [
@@ -55,7 +47,7 @@
         "type",
         "inputCollection",
         "inputParameter",
-        "states",
+        "workflowId",
         "end"
       ]
     },
@@ -65,7 +57,7 @@
         "type",
         "inputCollection",
         "inputParameter",
-        "states",
+        "workflowId",
         "transition"
       ]
     },
@@ -76,7 +68,7 @@
         "type",
         "inputCollection",
         "inputParameter",
-        "states",
+        "workflowId",
         "end"
       ]
     },
@@ -87,7 +79,7 @@
         "type",
         "inputCollection",
         "inputParameter",
-        "states",
+        "workflowId",
         "transition"
       ]
     },

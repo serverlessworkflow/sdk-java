@@ -1,4 +1,3 @@
----
 id: applicantrequest
 version: '1.0'
 name: Applicant Request Decision Workflow
@@ -32,6 +31,6 @@ states:
       - functionRef:
           refName: sendRejectionEmailFunction
           parameters:
-            applicant: "$.applicant"
+            applicant: "{{ $.applicant }}"
     end:
       kind: default

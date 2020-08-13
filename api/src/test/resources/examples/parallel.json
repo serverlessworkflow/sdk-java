@@ -5,44 +5,20 @@
   "description": "Executes two branches in parallel",
   "states":[
     {
-      "name":"ParallelExec",
-      "type":"parallel",
+      "name": "ParallelExec",
+      "type": "parallel",
       "start": {
         "kind": "default"
       },
       "completionType": "and",
       "branches": [
         {
-          "name": "Branch1",
-          "states": [
-            {
-              "name":"ShortDelay",
-              "type":"delay",
-              "start": {
-                "kind": "default"
-              },
-              "timeDelay": "PT15S",
-              "end": {
-                "kind": "default"
-              }
-            }
-          ]
+          "name": "ShortDelayBranch",
+          "workflowId": "shortdelayworkflowid"
         },
         {
-          "name": "Branch2",
-          "states": [
-            {
-              "name":"LongDelay",
-              "type":"delay",
-              "start": {
-                "kind": "default"
-              },
-              "timeDelay": "PT2M",
-              "end": {
-                "kind": "default"
-              }
-            }
-          ]
+          "name": "LongDelayBranch",
+          "workflowId": "longdelayworkflowid"
         }
       ],
       "end": {

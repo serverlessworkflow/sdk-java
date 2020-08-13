@@ -34,19 +34,38 @@
           "functionRef": {
             "refName": "submitJob",
             "parameters": {
-              "name": "$.job.name"
+              "name": "{{ $.job.name }}"
             }
           },
           "actionDataFilter": {
-            "dataResultsPath": "$.jobuid"
+            "dataResultsPath": "{{ $.jobuid }}"
+          }
+        }
+      ],
+      "onError": [
+        {
+          "expression": "{{ $.exceptions[0] }}",
+          "errorDataFilter": {
+            "dataOutputPath": "{{ $.exception }}"
+          },
+          "transition": {
+            "nextState": "SubmitError"
           }
         }
       ],
       "stateDataFilter": {
-        "dataOutputPath": "$.jobuid"
+        "dataOutputPath": "{{ $.jobuid }}"
       },
       "transition": {
         "nextState":"WaitForCompletion"
+      }
+    },
+    {
+      "name": "SubmitError",
+      "type": "subflow",
+      "workflowId": "handleJobSubmissionErrorWorkflow",
+      "end": {
+        "kind": "default"
       }
     },
     {
@@ -66,16 +85,16 @@
           "functionRef": {
             "refName": "checkJobStatus",
             "parameters": {
-              "name": "$.jobuid"
+              "name": "{{ $.jobuid }}"
             }
           },
           "actionDataFilter": {
-            "dataResultsPath": "$.jobstatus"
+            "dataResultsPath": "{{ $.jobstatus }}"
           }
         }
       ],
       "stateDataFilter": {
-        "dataOutputPath": "$.jobstatus"
+        "dataOutputPath": "{{ $.jobstatus }}"
       },
       "transition": {
         "nextState":"DetermineCompletion"
@@ -111,7 +130,7 @@
           "functionRef": {
             "refName": "reportJobSuceeded",
             "parameters": {
-              "name": "$.jobuid"
+              "name": "{{ $.jobuid }}"
             }
           }
         }
@@ -129,7 +148,7 @@
           "functionRef": {
             "refName": "reportJobFailed",
             "parameters": {
-              "name": "$.jobuid"
+              "name": "{{ $.jobuid }}"
             }
           }
         }

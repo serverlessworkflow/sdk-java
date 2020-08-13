@@ -19,35 +19,35 @@ package io.serverlessworkflow.api.deserializers;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-import io.serverlessworkflow.api.events.EventsActions;
+import io.serverlessworkflow.api.events.OnEvents;
 import io.serverlessworkflow.api.interfaces.WorkflowPropertySource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-public class EventsActionsActionModeDeserializer extends StdDeserializer<EventsActions.ActionMode> {
+public class OnEventsActionModeDeserializer extends StdDeserializer<OnEvents.ActionMode> {
 
     private static final long serialVersionUID = 510l;
-    private static Logger logger = LoggerFactory.getLogger(EventsActionsActionModeDeserializer.class);
+    private static Logger logger = LoggerFactory.getLogger(OnEventsActionModeDeserializer.class);
 
     private WorkflowPropertySource context;
 
-    public EventsActionsActionModeDeserializer() {
-        this(EventsActions.ActionMode.class);
+    public OnEventsActionModeDeserializer() {
+        this(OnEvents.ActionMode.class);
     }
 
-    public EventsActionsActionModeDeserializer(WorkflowPropertySource context) {
-        this(EventsActions.ActionMode.class);
+    public OnEventsActionModeDeserializer(WorkflowPropertySource context) {
+        this(OnEvents.ActionMode.class);
         this.context = context;
     }
 
-    public EventsActionsActionModeDeserializer(Class<?> vc) {
+    public OnEventsActionModeDeserializer(Class<?> vc) {
         super(vc);
     }
 
     @Override
-    public EventsActions.ActionMode deserialize(JsonParser jp,
+    public OnEvents.ActionMode deserialize(JsonParser jp,
                                                 DeserializationContext ctxt) throws IOException {
 
         String value = jp.getText();
@@ -56,16 +56,16 @@ public class EventsActionsActionModeDeserializer extends StdDeserializer<EventsA
                 String result = context.getPropertySource().getProperty(value);
 
                 if (result != null) {
-                    return EventsActions.ActionMode.fromValue(result);
+                    return OnEvents.ActionMode.fromValue(result);
                 } else {
-                    return EventsActions.ActionMode.fromValue(jp.getText());
+                    return OnEvents.ActionMode.fromValue(jp.getText());
                 }
             } catch (Exception e) {
                 logger.info("Exception trying to evaluate property: {}", e.getMessage());
-                return EventsActions.ActionMode.fromValue(jp.getText());
+                return OnEvents.ActionMode.fromValue(jp.getText());
             }
         } else {
-            return EventsActions.ActionMode.fromValue(jp.getText());
+            return OnEvents.ActionMode.fromValue(jp.getText());
         }
     }
 }

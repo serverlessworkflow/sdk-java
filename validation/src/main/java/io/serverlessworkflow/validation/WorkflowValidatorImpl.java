@@ -22,7 +22,7 @@ import io.serverlessworkflow.api.Workflow;
 import io.serverlessworkflow.api.actions.Action;
 import io.serverlessworkflow.api.branches.Branch;
 import io.serverlessworkflow.api.events.EventDefinition;
-import io.serverlessworkflow.api.events.EventsActions;
+import io.serverlessworkflow.api.events.OnEvents;
 import io.serverlessworkflow.api.functions.FunctionDefinition;
 import io.serverlessworkflow.api.interfaces.WorkflowValidator;
 import io.serverlessworkflow.api.states.*;
@@ -192,18 +192,18 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
 
                     if (s instanceof EventState) {
                         EventState eventState = (EventState) s;
-                        if (eventState.getEventsActions() == null || eventState.getEventsActions().size() < 1) {
+                        if (eventState.getOnEvents() == null || eventState.getOnEvents().size() < 1) {
                             addValidationError("Event State has no eventActions defined",
                                     ValidationError.WORKFLOW_VALIDATION);
                         }
-                        List<EventsActions> eventsActionsList = eventState.getEventsActions();
-                        for (EventsActions eventsActions : eventsActionsList) {
-                            if (eventsActions.getActions() == null || eventsActions.getActions().size() < 1) {
+                        List<OnEvents> eventsActionsList = eventState.getOnEvents();
+                        for (OnEvents onEvents : eventsActionsList) {
+                            if (onEvents.getActions() == null || onEvents.getActions().size() < 1) {
                                 addValidationError("Event State eventsActions has no actions",
                                         ValidationError.WORKFLOW_VALIDATION);
                             }
 
-                            List<String> eventRefs = eventsActions.getEventRefs();
+                            List<String> eventRefs = onEvents.getEventRefs();
                             if (eventRefs == null || eventRefs.size() < 1) {
                                 addValidationError("Event State eventsActions has no event refs",
                                         ValidationError.WORKFLOW_VALIDATION);
@@ -260,8 +260,8 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
                         List<Branch> branches = parallelState.getBranches();
                         for (Branch branch : branches) {
                             if ((branch.getActions() == null || branch.getActions().size() < 1)
-                                    && (branch.getStates() == null || branch.getStates().size() < 1)) {
-                                addValidationError("Parallel state should define either actions or states",
+                                    && (branch.getWorkflowId() == null || branch.getWorkflowId().length() < 1)) {
+                                addValidationError("Parallel state should define either actions or workflow id",
                                         ValidationError.WORKFLOW_VALIDATION);
                             }
                         }
@@ -290,14 +290,14 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
                                     ValidationError.WORKFLOW_VALIDATION);
                         }
 
-                        if (forEachState.getInputParameter() == null || forEachState.getInputParameter().isEmpty()) {
-                            addValidationError("ForEach state should have a valid input parameter",
+                        if (forEachState.getIterationParam() == null || forEachState.getIterationParam().isEmpty()) {
+                            addValidationError("ForEach state should have a valid iteration parameter",
                                     ValidationError.WORKFLOW_VALIDATION);
                         }
 
                         if ((forEachState.getActions() == null || forEachState.getActions().size() < 1)
-                                && (forEachState.getStates() == null || forEachState.getStates().size() < 1)) {
-                            addValidationError("ForEach state should define either actions or states",
+                                && (forEachState.getWorkflowId() == null || forEachState.getWorkflowId().length() < 1)) {
+                            addValidationError("ForEach state should define either actions or workflow id",
                                     ValidationError.WORKFLOW_VALIDATION);
                         }
                     }

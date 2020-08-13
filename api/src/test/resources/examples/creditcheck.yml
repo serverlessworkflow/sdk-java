@@ -1,4 +1,3 @@
----
 id: customercreditcheck
 version: '1.0'
 name: Customer Credit Check Workflow
@@ -24,7 +23,7 @@ states:
       functionRef:
         refName: callCreditCheckMicroservice
         parameters:
-          customer: "$.customer"
+          customer: "{{ $.customer }}"
     eventRef: CreditCheckCompletedEvent
     timeout: PT15M
     transition:
@@ -52,6 +51,6 @@ states:
       - functionRef:
           refName: sendRejectionEmailFunction
           parameters:
-            applicant: "$.customer"
+            applicant: "{{ $.customer }}"
     end:
       kind: default

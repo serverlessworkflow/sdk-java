@@ -49,7 +49,7 @@
         "kind": "default"
       },
       "exclusive": false,
-      "eventsActions": [
+      "onEvents": [
         {
           "eventRefs": [
             "ApplicationSubmitted",
@@ -61,7 +61,7 @@
               "functionRef": {
                 "refName": "finalizeApplicationFunction",
                 "parameters": {
-                  "student": "$.applicantId"
+                  "student": "{{ $.applicantId }}"
                 }
               }
             }
