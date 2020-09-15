@@ -1,3 +1,4 @@
+---
 id: sendcloudeventonprovision
 version: '1.0'
 name: Send CloudEvent on provision completion
@@ -23,6 +24,6 @@ states:
             order: "{{ $.singleorder }}"
     end:
       kind: event
-      produceEvent:
-        eventRef: provisioningCompleteEvent
-        data: "{{ $.provisionedOrders }}"
+      produceEvents:
+        - eventRef: provisioningCompleteEvent
+          data: "{{ $.provisionedOrders }}"
