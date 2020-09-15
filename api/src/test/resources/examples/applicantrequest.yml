@@ -1,3 +1,4 @@
+---
 id: applicantrequest
 version: '1.0'
 name: Applicant Request Decision Workflow
@@ -18,7 +19,8 @@ states:
         transition:
           nextState: RejectApplication
     default:
-      nextState: RejectApplication
+      transition:
+        nextState: RejectApplication
   - name: StartApplication
     type: subflow
     workflowId: startApplicationWorkflowId

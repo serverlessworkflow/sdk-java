@@ -118,7 +118,9 @@
         }
       ],
       "default": {
-        "nextState": "WaitForCompletion"
+        "transition": {
+          "nextState": "WaitForCompletion"
+        }
       }
     },
     {

@@ -38,7 +38,9 @@
       ],
       "eventTimeout": "PT1H",
       "default": {
-        "nextState": "HandleNoVisaDecision"
+        "transition": {
+          "nextState": "HandleNoVisaDecision"
+        }
       }
     },
     {

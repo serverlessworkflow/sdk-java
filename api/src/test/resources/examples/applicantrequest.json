@@ -31,7 +31,9 @@
         }
       ],
       "default": {
-        "nextState": "RejectApplication"
+        "transition": {
+          "nextState": "RejectApplication"
+        }
       }
     },
     {

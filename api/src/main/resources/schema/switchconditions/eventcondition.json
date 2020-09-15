@@ -15,6 +15,10 @@
     "transition": {
       "$ref": "../transitions/transition.json",
       "description": "Next transition of the workflow if there is valid matches"
+    },
+    "end": {
+      "$ref": "../end/end.json",
+      "description": "Explicit transition to end"
     }
   },
   "required": [

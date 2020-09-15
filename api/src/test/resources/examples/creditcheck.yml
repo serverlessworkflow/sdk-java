@@ -1,3 +1,4 @@
+---
 id: customercreditcheck
 version: '1.0'
 name: Customer Credit Check Workflow
@@ -38,7 +39,8 @@ states:
         transition:
           nextState: RejectApplication
     default:
-      nextState: RejectApplication
+      transition:
+        nextState: RejectApplication
   - name: StartApplication
     type: subflow
     workflowId: startApplicationWorkflowId
