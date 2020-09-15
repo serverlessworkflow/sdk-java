@@ -30,7 +30,7 @@
       "description": "If eventConditions is used, defines the time period to wait for events (ISO 8601 format)"
     },
     "default": {
-      "$ref": "../transitions/transition.json"
+      "$ref": "../default/defaultdef.json"
     }
   },
   "required": [

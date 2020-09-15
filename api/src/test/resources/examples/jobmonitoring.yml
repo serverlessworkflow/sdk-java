@@ -1,3 +1,4 @@
+---
 id: jobmonitoring
 version: '1.0'
 name: Job Monitoring
@@ -68,7 +69,8 @@ states:
         transition:
           nextState: JobFailed
     default:
-      nextState: WaitForCompletion
+      transition:
+        nextState: WaitForCompletion
   - name: JobSucceeded
     type: operation
     actionMode: sequential
