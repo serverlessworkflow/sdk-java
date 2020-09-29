@@ -54,4 +54,34 @@ public class MarkupToWorkflowTest {
         assertNotNull(workflow.getStates());
         assertTrue(workflow.getStates().size() > 0);
     }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/features/applicantrequest.json", "/features/applicantrequest.yml"})
+    public void testSpecFreatureFunctionRef(String workflowLocation) {
+        Workflow workflow = Workflow.fromSource(WorkflowTestUtils.readWorkflowFile(workflowLocation));
+
+        assertNotNull(workflow);
+        assertNotNull(workflow.getId());
+        assertNotNull(workflow.getName());
+        assertNotNull(workflow.getStates());
+        assertTrue(workflow.getStates().size() > 0);
+
+        assertNotNull(workflow.getFunctions());
+        assertTrue(workflow.getFunctions().getFunctionDefs().size() == 1);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/features/vetappointment.json", "/features/vetappointment.yml"})
+    public void testSpecFreatureEventRef(String workflowLocation) {
+        Workflow workflow = Workflow.fromSource(WorkflowTestUtils.readWorkflowFile(workflowLocation));
+
+        assertNotNull(workflow);
+        assertNotNull(workflow.getId());
+        assertNotNull(workflow.getName());
+        assertNotNull(workflow.getStates());
+        assertTrue(workflow.getStates().size() > 0);
+
+        assertNotNull(workflow.getEvents());
+        assertTrue(workflow.getEvents().getEventDefs().size() == 2);
+    }
 }

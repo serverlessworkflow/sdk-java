@@ -43,20 +43,14 @@
       "$ref": "metadata/metadata.json"
     },
     "events": {
-      "type": "array",
-      "description": "Workflow event definitions. Defines events that can be consumed or produced",
-      "items": {
-        "type": "object",
-        "$ref": "events/eventdef.json"
-      }
+      "type": "object",
+      "existingJavaType": "io.serverlessworkflow.api.workflow.Events",
+      "description": "Workflow events"
     },
     "functions": {
-      "type": "array",
-      "description": "Workflow functions",
-      "items": {
-        "type": "object",
-        "$ref": "functions/functiondef.json"
-      }
+      "type": "object",
+      "existingJavaType": "io.serverlessworkflow.api.workflow.Functions",
+      "description": "Workflow functions"
     },
     "states": {
       "type": "array",

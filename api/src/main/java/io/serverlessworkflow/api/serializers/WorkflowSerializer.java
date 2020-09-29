@@ -89,9 +89,9 @@ public class WorkflowSerializer extends StdSerializer<Workflow> {
                     workflow.getMetadata());
         }
 
-        if (workflow.getEvents() != null && !workflow.getEvents().isEmpty()) {
+        if (workflow.getEvents() != null && !workflow.getEvents().getEventDefs().isEmpty()) {
             gen.writeArrayFieldStart("events");
-            for (EventDefinition eventDefinition : workflow.getEvents()) {
+            for (EventDefinition eventDefinition : workflow.getEvents().getEventDefs()) {
                 gen.writeObject(eventDefinition);
             }
             gen.writeEndArray();
@@ -100,9 +100,9 @@ public class WorkflowSerializer extends StdSerializer<Workflow> {
             gen.writeEndArray();
         }
 
-        if (workflow.getFunctions() != null && !workflow.getFunctions().isEmpty()) {
+        if (workflow.getFunctions() != null && !workflow.getFunctions().getFunctionDefs().isEmpty()) {
             gen.writeArrayFieldStart("functions");
-            for (FunctionDefinition function : workflow.getFunctions()) {
+            for (FunctionDefinition function : workflow.getFunctions().getFunctionDefs()) {
                 gen.writeObject(function);
             }
             gen.writeEndArray();

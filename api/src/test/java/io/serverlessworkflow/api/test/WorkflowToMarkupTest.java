@@ -23,6 +23,8 @@ import io.serverlessworkflow.api.functions.FunctionDefinition;
 import io.serverlessworkflow.api.interfaces.State;
 import io.serverlessworkflow.api.start.Start;
 import io.serverlessworkflow.api.states.DelayState;
+import io.serverlessworkflow.api.workflow.Events;
+import io.serverlessworkflow.api.workflow.Functions;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
@@ -60,8 +62,8 @@ public class WorkflowToMarkupTest {
     public void testSingleFunction() {
 
         Workflow workflow = new Workflow().withId("test-workflow").withName("test-workflow-name").withVersion("1.0")
-                .withFunctions(Arrays.asList(
-                        new FunctionDefinition().withName("testFunction").withResource("testResource").withType("testType"))
+                .withFunctions(new Functions(Arrays.asList(
+                        new FunctionDefinition().withName("testFunction").withResource("testResource").withType("testType")))
                 )
                 .withStates(Arrays.asList(
                         new DelayState().withName("delayState").withType(DELAY)
@@ -80,8 +82,8 @@ public class WorkflowToMarkupTest {
         State state = workflow.getStates().get(0);
         assertTrue(state instanceof DelayState);
         assertNotNull(workflow.getFunctions());
-        assertEquals(1, workflow.getFunctions().size());
-        assertEquals("testFunction", workflow.getFunctions().get(0).getName());
+        assertEquals(1, workflow.getFunctions().getFunctionDefs().size());
+        assertEquals("testFunction", workflow.getFunctions().getFunctionDefs().get(0).getName());
 
         assertNotNull(Workflow.toJson(workflow));
         assertNotNull(Workflow.toYaml(workflow));
@@ -91,12 +93,12 @@ public class WorkflowToMarkupTest {
     public void testSingleEvent() {
 
         Workflow workflow = new Workflow().withId("test-workflow").withName("test-workflow-name").withVersion("1.0")
-                .withEvents(Arrays.asList(
+                .withEvents(new Events(Arrays.asList(
                         new EventDefinition().withName("testEvent").withSource("testSource").withType("testType")
-                                .withKind(EventDefinition.Kind.PRODUCED))
+                                .withKind(EventDefinition.Kind.PRODUCED)))
                 )
-                .withFunctions(Arrays.asList(
-                        new FunctionDefinition().withName("testFunction").withResource("testResource").withType("testType"))
+                .withFunctions(new Functions(Arrays.asList(
+                        new FunctionDefinition().withName("testFunction").withResource("testResource").withType("testType")))
                 )
                 .withStates(Arrays.asList(
                         new DelayState().withName("delayState").withType(DELAY)
@@ -115,12 +117,12 @@ public class WorkflowToMarkupTest {
         State state = workflow.getStates().get(0);
         assertTrue(state instanceof DelayState);
         assertNotNull(workflow.getFunctions());
-        assertEquals(1, workflow.getFunctions().size());
-        assertEquals("testFunction", workflow.getFunctions().get(0).getName());
+        assertEquals(1, workflow.getFunctions().getFunctionDefs().size());
+        assertEquals("testFunction", workflow.getFunctions().getFunctionDefs().get(0).getName());
         assertNotNull(workflow.getEvents());
-        assertEquals(1, workflow.getEvents().size());
-        assertEquals("testEvent", workflow.getEvents().get(0).getName());
-        assertEquals(EventDefinition.Kind.PRODUCED, workflow.getEvents().get(0).getKind());
+        assertEquals(1, workflow.getEvents().getEventDefs().size());
+        assertEquals("testEvent", workflow.getEvents().getEventDefs().get(0).getName());
+        assertEquals(EventDefinition.Kind.PRODUCED, workflow.getEvents().getEventDefs().get(0).getKind());
 
         assertNotNull(Workflow.toJson(workflow));
         assertNotNull(Workflow.toYaml(workflow));
