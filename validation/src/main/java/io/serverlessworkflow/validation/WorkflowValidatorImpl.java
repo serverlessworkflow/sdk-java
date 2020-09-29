@@ -80,14 +80,18 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
                             workflowSchema.validate(new JSONObject(source));
                         }
                     } catch (ValidationException e) {
-                        // main error
-                        addValidationError(e.getMessage(),
-                                ValidationError.SCHEMA_VALIDATION);
-                        // suberrors
-                        e.getCausingExceptions().stream()
-                                .map(ValidationException::getMessage)
-                                .forEach(m -> addValidationError(m,
-                                        ValidationError.SCHEMA_VALIDATION));
+                        // ignore the "functions" and "events" multi-def error
+                        if((!e.getMessage().equals("#/functions: expected type: JSONObject, found: JSONArray") &&
+                                !e.getMessage().equals("#/events: expected type: JSONObject, found: JSONArray"))) {
+                            // main error
+                            addValidationError(e.getMessage(),
+                                    ValidationError.SCHEMA_VALIDATION);
+                            // suberrors
+                            e.getCausingExceptions().stream()
+                                    .map(ValidationException::getMessage)
+                                    .forEach(m -> addValidationError(m,
+                                            ValidationError.SCHEMA_VALIDATION));
+                        }
                     }
                 }
             } catch (Exception e) {
@@ -104,8 +108,9 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
                 workflow = Workflow.fromSource(source);
             }
 
-            List<FunctionDefinition> functions = workflow.getFunctions();
-            List<EventDefinition> events = workflow.getEvents();
+            List<FunctionDefinition> functions = workflow.getFunctions() != null ? workflow.getFunctions().getFunctionDefs() : null;
+
+            List<EventDefinition> events = workflow.getEvents() != null? workflow.getEvents().getEventDefs() : null;
 
             if (workflow.getId() == null || workflow.getId().trim().isEmpty()) {
                 addValidationError("Workflow id should not be empty",
@@ -359,19 +364,27 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
     }
 
     private boolean haveFunctionDefinition(String functionName, List<FunctionDefinition> functions) {
-        FunctionDefinition fun = functions.stream().filter(f -> f.getName().equals(functionName))
-                .findFirst()
-                .orElse(null);
+        if(functions != null) {
+            FunctionDefinition fun = functions.stream().filter(f -> f.getName().equals(functionName))
+                    .findFirst()
+                    .orElse(null);
 
-        return fun == null ? false : true;
+            return fun == null ? false : true;
+        } else {
+            return false;
+        }
     }
 
     private boolean haveEventsDefinition(String eventName, List<EventDefinition> events) {
-        EventDefinition eve = events.stream().filter(e -> e.getName().equals(eventName))
-                .findFirst()
-                .orElse(null);
+        if(events != null) {
+            EventDefinition eve = events.stream().filter(e -> e.getName().equals(eventName))
+                    .findFirst()
+                    .orElse(null);
 
-        return eve == null ? false : true;
+            return eve == null ? false : true;
+        } else {
+            return false;
+        }
     }
 
     private void addValidationError(String message,

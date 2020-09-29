@@ -1,0 +1,3 @@
+functions:
+  - name: sendRejectionEmailFunction
+    resource: functionResourse
