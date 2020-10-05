@@ -4,6 +4,10 @@
   "javaInterfaces": ["io.serverlessworkflow.api.interfaces.SwitchCondition"],
   "description": "Switch state data event condition",
   "properties": {
+    "name": {
+      "type": "string",
+      "description": "Event condition name"
+    },
     "eventRef": {
       "type" : "string",
       "description": "References an unique event name in the defined workflow events"

@@ -32,10 +32,12 @@ states:
   - name: EvaluateDecision
     type: switch
     dataConditions:
-      - condition: "{{ $.creditCheck[?(@.decision == 'Approved')] }}"
+      - name: Approved
+        condition: "{{ $.creditCheck[?(@.decision == 'Approved')] }}"
         transition:
           nextState: StartApplication
-      - condition: "{{ $.creditCheck[?(@.decision == 'Denied')] }}"
+      - name: Denied
+        condition: "{{ $.creditCheck[?(@.decision == 'Denied')] }}"
         transition:
           nextState: RejectApplication
     default:
