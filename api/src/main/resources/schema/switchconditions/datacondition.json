@@ -6,6 +6,10 @@
   ],
   "description": "Switch state data based condition",
   "properties": {
+    "name": {
+      "type": "string",
+      "description": "Data condition name"
+    },
     "condition": {
       "type": "string",
       "description": "JsonPath expression evaluated against state data. True if results are not empty"

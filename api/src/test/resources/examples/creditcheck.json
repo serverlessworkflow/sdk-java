@@ -52,12 +52,14 @@
       "type": "switch",
       "dataConditions": [
         {
+          "name": "Approved",
           "condition": "{{ $.creditCheck[?(@.decision == 'Approved')] }}",
           "transition": {
             "nextState": "StartApplication"
           }
         },
         {
+          "name": "Denied",
           "condition": "{{ $.creditCheck[?(@.decision == 'Denied')] }}",
           "transition": {
             "nextState": "RejectApplication"
