@@ -1,0 +1,34 @@
+---
+id: testEvents
+name: Test Events Workflow
+description: This is a test events workflow
+version: '1.0'
+events:
+  - name: event1
+    source: event1source
+    type: event1type
+  - name: event2
+    source: evet2source
+    type: event2type
+  - name: event3
+    source: event3source
+    type: event3type
+  - name: event4
+    source: event4source
+    type: event4type
+states:
+  - name: EventState
+    type: event
+    start:
+      kind: default
+    end:
+      kind: default
+    onEvents:
+      - eventRefs:
+          - event1
+          - event2
+        actions: []
+      - eventRefs:
+          - event3
+          - event4
+        actions: []

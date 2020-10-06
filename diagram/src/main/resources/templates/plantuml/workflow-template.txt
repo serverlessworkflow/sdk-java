@@ -1,0 +1,19 @@
+@startuml
+[(${diagram.title})]
+[(${diagram.legend})]
+[(${diagram.footer})]
+skinparam backgroundColor White
+skinparam state {
+  StartColor Green
+  EndColor Red
+}
+
+[# th:each="state : ${diagram.modelStates}" ]
+[(${state.toString()})]
+[/]
+
+[# th:each="connection : ${diagram.modelConnections}" ]
+[(${connection.toString()})]
+[/]
+
+@enduml
