@@ -1,0 +1,37 @@
+---
+id: testSwitch
+name: Test Switch State Workflow
+description: This is a test switch state workflow
+version: '1.0'
+states:
+  - name: SwitchIt
+    type: switch
+    start:
+      kind: default
+    eventConditions:
+      - name: first
+        eventRef: firstEvent
+        transition:
+          nextState: FromFirstCondition
+      - name: second
+        eventRef: secondEvent
+        transition:
+          nextState: FromSecondCondition
+      - name: third
+        eventRef: thirdEvent
+        end:
+          kind: default
+      - name: fourth
+        eventRef: fourthEvent
+        end:
+          kind: default
+  - name: FromFirstCondition
+    type: delay
+    timeDelay: PT2M
+    end:
+      kind: default
+  - name: FromSecondCondition
+    type: inject
+    data: {}
+    end:
+      kind: default

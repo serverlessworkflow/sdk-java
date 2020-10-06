@@ -28,6 +28,7 @@
         <module>api</module>
         <module>spi</module>
         <module>validation</module>
+        <module>diagram</module>
     </modules>
 
     <properties>
@@ -58,6 +59,9 @@
         <jsonassert.version>1.5.0</jsonassert.version>
         <json.schema.validation.version>1.12.1</json.schema.validation.version>
         <version.json>20200518</version.json>
+        <version.thymeleaf>3.0.11.RELEASE</version.thymeleaf>
+        <version.plantuml>8059</version.plantuml>
+        <version.graphviz>0.17.0</version.graphviz>
     </properties>
 
     <dependencyManagement>
@@ -101,6 +105,21 @@
                 <groupId>org.json</groupId>
                 <artifactId>json</artifactId>
                 <version>${version.json}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.thymeleaf</groupId>
+                <artifactId>thymeleaf</artifactId>
+                <version>${version.thymeleaf}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.sourceforge.plantuml</groupId>
+                <artifactId>plantuml</artifactId>
+                <version>${version.plantuml}</version>
+            </dependency>
+            <dependency>
+                <groupId>guru.nidi</groupId>
+                <artifactId>graphviz-java</artifactId>
+                <version>${version.graphviz}</version>
             </dependency>
 
             <!-- test -->

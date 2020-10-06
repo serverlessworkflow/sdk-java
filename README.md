@@ -9,9 +9,10 @@ With the SDK you can:
 * Parse workflow JSON and YAML definitions
 * Programmatically build workflow definitions
 * Validate workflow definitions (both schema and workflow integrity validation)
+* Generate workflow diagram (SVG)
 
 Serverless Workflow Java SDK is **not** a workflow runtime implementation but can be used by Java runtime implementations
-to parse and validate workflow definitions.
+to parse and validate workflow definitions as well as generate the workflow diagram (SVG).
 
 ### Status
 
@@ -62,6 +63,16 @@ Then to use it in your project pom.xml add:
 </dependency>
 ```
 
+* Diagram dependency
+
+```xml
+<dependency>
+    <groupId>io.serverlessworkflow</groupId>
+    <artifactId>serverlessworkflow-diagram</artifactId>
+    <version>0.2-SNAPSHOT</version>
+</dependency>
+```
+
 #### Get dependencies from Nexus
 
 Our SNAPSHOT versions are published to the Sonatype repositories.
@@ -103,6 +114,14 @@ And use the dependencies:
 <dependency>
   <groupId>io.serverlessworkflow</groupId>
   <artifactId>serverlessworkflow-validation</artifactId>
+  <version>0.2-SNAPSHOT</version>
+</dependency>
+```
+
+```xml
+<dependency>
+  <groupId>io.serverlessworkflow</groupId>
+  <artifactId>serverlessworkflow-diagram</artifactId>
   <version>0.2-SNAPSHOT</version>
 </dependency>
 ```
@@ -248,3 +267,37 @@ Workflow workflow = new Workflow().withId("test-workflow").withVersion("1.0")
 WorkflowValidator workflowValidator = new WorkflowValidatorImpl();
 List<ValidationError> validationErrors = workflowValidator.setWorkflow(workflow).validate();
 ```
+
+#### Building Workflow Diagram
+
+Given a valid workflow source or a Workflow object you can build the workflow Diagram SVG.
+Diagrams are built using [PlantUML](https://plantuml.com/) and can be embedded inside your 
+tooling or web pages, or any SVG viewer.
+
+You can build the workflow diagram SVG the the following code:
+
+``` java
+Workflow workflow = Workflow.fromSource(source);
+
+WorkflowDiagram workflowDiagram = new WorkflowDiagramImpl();
+workflowDiagram.setWorkflow(workflow);
+
+String diagramSVG = workflowDiagram.getSvgDiagram();
+```
+
+`diagramSVG` includes the diagram SVG which you can then decide to save to a file, 
+print, or process further.
+
+Here are some generated diagrams from the specification examples:
+
+1. [Job Monitoring Example](https://github.com/serverlessworkflow/specification/blob/master/examples/examples.md#Monitor-Job-Example)
+<p align="center">
+<img src="img/jobmonitoring.png" alt="Job Monitoring Example Diagram"/>
+</p>
+
+
+2. [Send CloudEvent on Workflow completion Example](https://github.com/serverlessworkflow/specification/blob/master/examples/examples.md#send-cloudevent-on-workfow-completion-example)
+<p align="center">
+<img src="img/provisionorders.png" alt="Send Cloud Event on Workflow complation"/>
+</p>
+
