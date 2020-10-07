@@ -34,6 +34,10 @@ public class WorkflowDiagramUtils {
     public static final String footer = "center footer Serverless Workflow Specification - serverlessworkflow.io";
     public static final String legendStart = new StringBuffer().append("legend top center").append(System.lineSeparator()).toString();
     public static final String legendEnd = new StringBuffer().append(System.lineSeparator()).append("endlegend").toString();
+    public static final String stateDef = "state ";
+    public static final String typeDefStart = " << ";
+    public static final String typeDefEnd = " >> ";
+
 
     public static State getWorkflowStartState(Workflow workflow) {
         return workflow.getStates().stream()

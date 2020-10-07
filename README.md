@@ -270,11 +270,11 @@ List<ValidationError> validationErrors = workflowValidator.setWorkflow(workflow)
 
 #### Building Workflow Diagram
 
-Given a valid workflow source or a Workflow object you can build the workflow Diagram SVG.
-Diagrams are built using [PlantUML](https://plantuml.com/) and can be embedded inside your 
+Given a valid workflow definition (JSON/YAML) or a Workflow object you can build the workflow diagram SVG.
+The generated diagram SVG uses [PlantUML](https://plantuml.com/) state diagram visualization and can be embedded inside your 
 tooling or web pages, or any SVG viewer.
 
-You can build the workflow diagram SVG the the following code:
+You can build the workflow diagram SVG with the following code:
 
 ``` java
 Workflow workflow = Workflow.fromSource(source);
@@ -285,7 +285,7 @@ workflowDiagram.setWorkflow(workflow);
 String diagramSVG = workflowDiagram.getSvgDiagram();
 ```
 
-`diagramSVG` includes the diagram SVG which you can then decide to save to a file, 
+`diagramSVG` includes the diagram SVG source which you can then decide to save to a file, 
 print, or process further.
 
 Here are some generated diagrams from the specification examples:

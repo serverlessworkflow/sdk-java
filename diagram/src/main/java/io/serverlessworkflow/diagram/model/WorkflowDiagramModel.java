@@ -18,7 +18,6 @@ package io.serverlessworkflow.diagram.model;
 
 import io.serverlessworkflow.api.Workflow;
 import io.serverlessworkflow.api.interfaces.State;
-import io.serverlessworkflow.api.interfaces.WorkflowDiagram;
 import io.serverlessworkflow.api.states.*;
 import io.serverlessworkflow.api.switchconditions.DataCondition;
 import io.serverlessworkflow.api.switchconditions.EventCondition;
@@ -34,6 +33,7 @@ public class WorkflowDiagramModel {
     private String title;
     private String legend;
     private String footer;
+    private List<ModelStateDef> modelStateDefs = new ArrayList<>();
     private List<ModelState> modelStates = new ArrayList<>();
     private List<ModelConnection> modelConnections = new ArrayList<>();
 
@@ -44,10 +44,9 @@ public class WorkflowDiagramModel {
 
     private void inspect(Workflow workflow) {
         // title
-        setTitle(WorkflowDiagramUtils.title + workflow.getName());
+        setTitle(workflow.getName());
         if (workflow.getVersion() != null && workflow.getVersion().trim().length() > 0) {
             StringBuffer titleBuf = new StringBuffer()
-                    .append(WorkflowDiagramUtils.title)
                     .append(workflow.getName())
                     .append(WorkflowDiagramUtils.versionSeparator)
                     .append(workflow.getVersion());
@@ -68,15 +67,24 @@ public class WorkflowDiagramModel {
         // footer
         setFooter(WorkflowDiagramUtils.footer);
 
-        // states
-        inspectStates(workflow);
+        // state definitions
+        inspectStateDefinitions(workflow);
 
-        // connections
-        inspectConnections(workflow);
+        // states info
+        inspectStatesInfo(workflow);
+
+        // states connections
+        inspectStatesConnections(workflow);
 
     }
 
-    private void inspectConnections(Workflow workflow) {
+    private void inspectStateDefinitions(Workflow workflow) {
+        for(State state : workflow.getStates()) {
+            modelStateDefs.add(new ModelStateDef(state.getName(), state.getType().value()));
+        }
+    }
+
+    private void inspectStatesConnections(Workflow workflow) {
         State workflowStartState = WorkflowDiagramUtils.getWorkflowStartState(workflow);
         modelConnections.add(new ModelConnection(WorkflowDiagramUtils.wfStart, workflowStartState.getName(), ""));
 
@@ -242,7 +250,7 @@ public class WorkflowDiagramModel {
         }
     }
 
-    private void inspectStates(Workflow workflow) {
+    private void inspectStatesInfo(Workflow workflow) {
         List<State> workflowStates = workflow.getStates();
         for(State state : workflowStates) {
             ModelState modelState = new ModelState(state.getName());
@@ -392,5 +400,13 @@ public class WorkflowDiagramModel {
 
     public void setModelConnections(List<ModelConnection> modelConnections) {
         this.modelConnections = modelConnections;
+    }
+
+    public List<ModelStateDef> getModelStateDefs() {
+        return modelStateDefs;
+    }
+
+    public void setModelStateDefs(List<ModelStateDef> modelStateDefs) {
+        this.modelStateDefs = modelStateDefs;
     }
 }
