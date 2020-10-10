@@ -169,14 +169,14 @@ You can also programmatically create Workflow instances, for example:
 
 ``` java
 Workflow testWorkflow = new Workflow().withId("test-workflow").withName("test-workflow-name").withVersion("1.0")
-                .withEvents(Arrays.asList(
+                .withEvents(new Events(Arrays.asList(
                         new EventDefinition().withName("testEvent").withSource("testSource").withType("testType"))
-                )
-                .withFunctions(Arrays.asList(
+                ))
+                .withFunctions(new Functions(Arrays.asList(
                         new FunctionDefinition().withName("testFunction").withResource("testResource").withType("testType"))
-                )
+                ))
                 .withStates(Arrays.asList(
-                        new DelayState().withName("delayState").withType(DELAY)
+                        new DelayState().withName("delayState").withType(DefaultState.Type.DELAY)
                                 .withStart(
                                         new Start().withKind(Start.Kind.DEFAULT)
                                 )
@@ -222,16 +222,16 @@ If you build your Workflow programmatically, you can validate it as well:
 
 ``` java
 Workflow workflow = new Workflow().withId("test-workflow").withVersion("1.0")
-.withStates(Arrays.asList(
-        new DelayState().withName("delayState").withType(DELAY)
-                .withStart(
-                        new Start().withKind(Start.Kind.DEFAULT)
-                )
-                .withEnd(
-                        new End().withKind(End.Kind.DEFAULT)
-                )
-                .withTimeDelay("PT1M")
-        )
+                .withStates(Arrays.asList(
+                        new DelayState().withName("delayState").withType(DefaultState.Type.DELAY)
+                                .withStart(
+                                        new Start().withKind(Start.Kind.DEFAULT)
+                                )
+                                .withEnd(
+                                        new End().withKind(End.Kind.DEFAULT)
+                                )
+                                .withTimeDelay("PT1M")
+                ));
 );
 
 WorkflowValidator workflowValidator = new WorkflowValidatorImpl();
