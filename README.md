@@ -31,53 +31,11 @@ git clone https://github.com/serverlessworkflow/sdk-java.git
 mvn clean install
 ```
 
-Then to use it in your project pom.xml add:
+To use it in your projects you can:
 
-* API dependency
+#### Maven projects:
 
-```xml
-<dependency>
-    <groupId>io.serverlessworkflow</groupId>
-    <artifactId>serverlessworkflow-api</artifactId>
-    <version>0.2-SNAPSHOT</version>
-</dependency>
-```
-
-* SPI dependency
-
-```xml
-<dependency>
-    <groupId>io.serverlessworkflow</groupId>
-    <artifactId>serverlessworkflow-spi</artifactId>
-    <version>0.2-SNAPSHOT</version>
-</dependency>
-```
-
-* Validation dependency
-
-```xml
-<dependency>
-    <groupId>io.serverlessworkflow</groupId>
-    <artifactId>serverlessworkflow-validation</artifactId>
-    <version>0.2-SNAPSHOT</version>
-</dependency>
-```
-
-* Diagram dependency
-
-```xml
-<dependency>
-    <groupId>io.serverlessworkflow</groupId>
-    <artifactId>serverlessworkflow-diagram</artifactId>
-    <version>0.2-SNAPSHOT</version>
-</dependency>
-```
-
-#### Get dependencies from Nexus
-
-Our SNAPSHOT versions are published to the Sonatype repositories.
-Make sure you enable snapshots in your Maven settings.xml 
-or you can specify in your pom.xml repositories section:
+a) Add the following repository to your pom.xml `repositories` section:
 
 ```xml
 <repository>
@@ -92,38 +50,50 @@ or you can specify in your pom.xml repositories section:
 </repository>
 ```
 
-And use the dependencies:
+b) Add the following dependencies to your pom.xml `dependencies` section:
 
 ```xml
 <dependency>
-  <groupId>io.serverlessworkflow</groupId>
-  <artifactId>serverlessworkflow-api</artifactId>
-  <version>0.2-SNAPSHOT</version>
+    <groupId>io.serverlessworkflow</groupId>
+    <artifactId>serverlessworkflow-api</artifactId>
+    <version>0.2-SNAPSHOT</version>
+</dependency>
+
+<dependency>
+    <groupId>io.serverlessworkflow</groupId>
+    <artifactId>serverlessworkflow-spi</artifactId>
+    <version>0.2-SNAPSHOT</version>
+</dependency>
+
+<dependency>
+    <groupId>io.serverlessworkflow</groupId>
+    <artifactId>serverlessworkflow-validation</artifactId>
+    <version>0.2-SNAPSHOT</version>
+</dependency>
+
+<dependency>
+    <groupId>io.serverlessworkflow</groupId>
+    <artifactId>serverlessworkflow-diagram</artifactId>
+    <version>0.2-SNAPSHOT</version>
 </dependency>
 ```
 
-```xml
-<dependency>
-  <groupId>io.serverlessworkflow</groupId>
-  <artifactId>serverlessworkflow-spi</artifactId>
-  <version>0.2-SNAPSHOT</version>
-</dependency>
+#### Gradle projects:
+
+a) Add the following repositories to your build.gradle `repositories` section:
+
+```text
+maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
+maven{ url "https://jitpack.io" }
 ```
 
-```xml
-<dependency>
-  <groupId>io.serverlessworkflow</groupId>
-  <artifactId>serverlessworkflow-validation</artifactId>
-  <version>0.2-SNAPSHOT</version>
-</dependency>
-```
+b) Add the following dependencies to your build.gradle `dependencies` section:
 
-```xml
-<dependency>
-  <groupId>io.serverlessworkflow</groupId>
-  <artifactId>serverlessworkflow-diagram</artifactId>
-  <version>0.2-SNAPSHOT</version>
-</dependency>
+```text
+implementation("io.serverlessworkflow:serverlessworkflow-api:0.2-SNAPSHOT")
+implementation("io.serverlessworkflow:serverlessworkflow-spi:0.2-SNAPSHOT")
+implementation("io.serverlessworkflow:serverlessworkflow-validation:0.2-SNAPSHOT")
+implementation("io.serverlessworkflow:serverlessworkflow-diagram:0.2-SNAPSHOT")
 ```
 
 ### How to Use 
