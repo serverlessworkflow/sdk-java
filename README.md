@@ -110,8 +110,8 @@ version: '1.0'
 name: Greeting Workflow
 description: Greet Someone
 functions:
-- name: greetingFunction
-  resource: functionResourse
+  - name: greetingFunction
+    operation: file://myapis/greetingapis.json#greeting
 states:
 - name: Greet
   type: operation
@@ -168,15 +168,13 @@ assertEquals(DefaultState.Type.OPERATION, operationState.getType());
 You can also programmatically create Workflow instances, for example:
 
 ``` java
-Workflow testWorkflow = new Workflow().withId("test-workflow").withName("test-workflow-name").withVersion("1.0")
-                .withEvents(new Events(Arrays.asList(
-                        new EventDefinition().withName("testEvent").withSource("testSource").withType("testType"))
-                ))
+Workflow workflow = new Workflow().withId("test-workflow").withName("test-workflow-name").withVersion("1.0")
                 .withFunctions(new Functions(Arrays.asList(
-                        new FunctionDefinition().withName("testFunction").withResource("testResource").withType("testType"))
-                ))
+                        new FunctionDefinition().withName("testFunction")
+                                .withOperation("testSwaggerDef#testOperationId")))
+                )
                 .withStates(Arrays.asList(
-                        new DelayState().withName("delayState").withType(DefaultState.Type.DELAY)
+                        new DelayState().withName("delayState").withType(DELAY)
                                 .withStart(
                                         new Start().withKind(Start.Kind.DEFAULT)
                                 )
