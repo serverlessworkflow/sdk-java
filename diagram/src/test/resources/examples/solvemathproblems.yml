@@ -4,7 +4,7 @@ name: Solve Math Problems Workflow
 description: Solve math problems
 functions:
   - name: solveMathExpressionFunction
-    resource: functionResourse
+    operation: http://myapis.org/mapthapis.json#solveExpression
 states:
   - name: Solve
     start:

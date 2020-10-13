@@ -7,13 +7,9 @@
       "description": "Function unique name",
       "minLength": 1
     },
-    "resource": {
+    "operation": {
       "type": "string",
-      "description": "Function resource (URI)"
-    },
-    "type": {
-      "type": "string",
-      "description": "Type of function to implement. Can be defined by implementations",
+      "description": "Combination of the function/service OpenAPI definition URI and the operationID of the operation that needs to be invoked, separated by a '#'. For example 'https://petstore.swagger.io/v2/swagger.json#getPetById'",
       "minLength": 1
     },
     "metadata": {
@@ -21,7 +17,6 @@
     }
   },
   "required": [
-    "name",
-    "resource"
+    "name"
   ]
 }

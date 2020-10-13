@@ -6,19 +6,19 @@
   "functions": [
     {
       "name": "submitJob",
-      "resource": "submitJobResource"
+      "operation": "http://myapis.org/monitorapi.json#doSubmit"
     },
     {
       "name": "checkJobStatus",
-      "resource": "checkJobStatusResource"
+      "operation": "http://myapis.org/monitorapi.json#checkStatus"
     },
     {
       "name": "reportJobSuceeded",
-      "resource": "reportJobSuceededResource"
+      "operation": "http://myapis.org/monitorapi.json#reportSucceeded"
     },
     {
       "name": "reportJobFailed",
-      "resource": "reportJobFailedResource"
+      "operation": "http://myapis.org/monitorapi.json#reportFailure"
     }
   ],
   "states":[

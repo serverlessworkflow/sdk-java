@@ -8,7 +8,7 @@ events:
     source: greetingEventSource
 functions:
   - name: greetingFunction
-    resource: functionResourse
+    operation: file://myapis/greetingapis.json#greeting
 states:
   - name: Greet
     type: event

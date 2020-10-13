@@ -6,7 +6,7 @@
   "functions": [
     {
       "name": "greetingFunction",
-      "resource": "functionResourse"
+      "operation": "file://myapis/greetingapis.json#greeting"
     }
   ],
   "states":[

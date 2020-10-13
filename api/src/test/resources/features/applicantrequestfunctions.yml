@@ -1,3 +1,3 @@
 functions:
   - name: sendRejectionEmailFunction
-    resource: functionResourse
+    operation: http://myapis.org/application.json#emailRejection

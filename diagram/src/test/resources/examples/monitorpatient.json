@@ -37,18 +37,15 @@
   "functions": [
     {
       "name": "callPulmonologist",
-      "type": "function",
-      "resource": "callPulmonologistResource"
+      "operation": "http://myapis.org/patientapis.json#callPulmonologist"
     },
     {
       "name": "sendTylenolOrder",
-      "type": "function",
-      "resource": "sendTylenolOrderFunction"
+      "operation": "http://myapis.org/patientapis.json#tylenolOrder"
     },
     {
       "name": "callNurse",
-      "type": "function",
-      "resource": "callNurseResource"
+      "operation": "http://myapis.org/patientapis.json#callNurse"
     }
   ],
   "states": [

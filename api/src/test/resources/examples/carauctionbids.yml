@@ -4,8 +4,7 @@ name: Car Auction Bidding Workflow
 description: Store a single bid whole the car auction is active
 functions:
   - name: StoreBidFunction
-    resource: storeBidResource
-    type: function
+    operation: http://myapis.org/carauctionapi.json#storeBid
 events:
   - name: CarBidEvent
     type: carBidMadeType

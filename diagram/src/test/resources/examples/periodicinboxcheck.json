@@ -6,12 +6,11 @@
   "functions": [
     {
       "name": "checkInboxFunction",
-      "resource": "inboxFunctionResource",
-      "type": "getNewMessages"
+      "operation": "http://myapis.org/inboxapi.json#checkNewMessages"
     },
     {
       "name": "sendTextFunction",
-      "resource": "sendTextFunctionResource"
+      "operation": "http://myapis.org/inboxapi.json#sendText"
     }
   ],
   "states": [

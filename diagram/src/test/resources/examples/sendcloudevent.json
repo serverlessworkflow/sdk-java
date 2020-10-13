@@ -12,7 +12,7 @@
   "functions": [
     {
       "name": "provisionOrderFunction",
-      "resource": "functionResourse"
+      "operation": "http://myapis.org/provisioning.json#doProvision"
     }
   ],
   "states": [

@@ -6,7 +6,7 @@
   "functions": [
     {
       "name": "provisionOrderFunction",
-      "resource": "functionResourse"
+      "operation": "http://myapis.org/provisioningapi.json#doProvision"
     }
   ],
   "states":[

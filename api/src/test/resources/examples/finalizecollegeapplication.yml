@@ -19,8 +19,7 @@ events:
       - contextAttributeName: applicantId
 functions:
   - name: finalizeApplicationFunction
-    type: function
-    resource: finalizeApplicationResource
+    operation: http://myapis.org/collegeapplicationapi.json#finalize
 states:
   - name: FinalizeApplication
     type: event
