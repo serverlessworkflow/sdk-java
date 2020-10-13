@@ -6,8 +6,7 @@
   "functions": [
     {
       "name": "StoreBidFunction",
-      "resource": "storeBidResource",
-      "type": "function"
+      "operation": "http://myapis.org/carauctionapi.json#storeBid"
     }
   ],
   "events": [

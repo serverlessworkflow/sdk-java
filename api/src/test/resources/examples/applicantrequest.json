@@ -6,7 +6,7 @@
   "functions": [
     {
       "name": "sendRejectionEmailFunction",
-      "resource": "functionResourse"
+      "operation": "http://myapis.org/applicationapi.json#emailRejection"
     }
   ],
   "states":[

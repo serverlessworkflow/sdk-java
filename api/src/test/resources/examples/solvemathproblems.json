@@ -6,7 +6,7 @@
   "functions": [
     {
       "name": "solveMathExpressionFunction",
-      "resource": "functionResourse"
+      "operation": "http://myapis.org/mapthapis.json#solveExpression"
     }
   ],
   "states":[

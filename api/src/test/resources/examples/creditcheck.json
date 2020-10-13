@@ -5,13 +5,12 @@
   "description": "Perform Customer Credit Check",
   "functions": [
     {
-      "name": "callCreditCheckMicroservice",
-      "resource": "creditCheckResource",
-      "type": "microservice"
+      "name": "creditCheckFunction",
+      "operation": "http://myapis.org/creditcheckapi.json#doCreditCheck"
     },
     {
       "name": "sendRejectionEmailFunction",
-      "resource": "rejectEmailResource"
+      "operation": "http://myapis.org/creditcheckapi.json#rejectionEmail"
     }
   ],
   "events": [

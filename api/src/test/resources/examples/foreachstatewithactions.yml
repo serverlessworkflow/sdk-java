@@ -5,7 +5,7 @@ description: ForEach State With Actions
 version: '1.0'
 functions:
   - name: sendConfirmationFunction
-    resource: functionResourse
+    operation: http://myapis.org/confirmationapi.json#sendConfirmation
 states:
   - name: SendConfirmationForEachCompletedhOrder
     type: foreach

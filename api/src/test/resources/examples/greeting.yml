@@ -4,7 +4,7 @@ name: Greeting Workflow
 description: Greet Someone
 functions:
   - name: greetingFunction
-    resource: functionResourse
+    operation: file://myapis/greetingapis.json#greeting
 states:
   - name: Greet
     type: operation
