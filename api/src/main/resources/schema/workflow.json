@@ -45,12 +45,17 @@
     "events": {
       "type": "object",
       "existingJavaType": "io.serverlessworkflow.api.workflow.Events",
-      "description": "Workflow events"
+      "description": "Workflow event definitions"
     },
     "functions": {
       "type": "object",
       "existingJavaType": "io.serverlessworkflow.api.workflow.Functions",
-      "description": "Workflow functions"
+      "description": "Workflow function definitions"
+    },
+    "retries": {
+      "type": "object",
+      "existingJavaType": "io.serverlessworkflow.api.workflow.Retries",
+      "description": "Workflow retry definitions"
     },
     "states": {
       "type": "array",

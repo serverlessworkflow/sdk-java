@@ -3,6 +3,7 @@ version: '1.0'
 name: Applicant Request Decision Workflow
 description: Determine if applicant request is valid
 functions: features/applicantrequestfunctions.yml
+retries: features/applicantrequestretries.yml
 states:
   - name: CheckApplication
     type: switch
@@ -31,5 +32,11 @@ states:
           refName: sendRejectionEmailFunction
           parameters:
             applicant: "{{ $.applicant }}"
+    onErrors:
+      - error: TimeoutError
+        code: '500'
+        retryRef: TimeoutRetryStrategy
+        end:
+          kind: default
     end:
       kind: default

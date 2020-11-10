@@ -4,6 +4,7 @@
   "name": "Applicant Request Decision Workflow",
   "description": "Determine if applicant request is valid",
   "functions": "features/applicantrequestfunctions.json",
+  "retries": "features/applicantrequestretries.json",
   "states":[
     {
       "name":"CheckApplication",
@@ -50,6 +51,16 @@
             "parameters": {
               "applicant": "{{ $.applicant }}"
             }
+          }
+        }
+      ],
+      "onErrors": [
+        {
+          "error": "TimeoutError",
+          "code": "500",
+          "retryRef": "TimeoutRetryStrategy",
+          "end": {
+            "kind": "default"
           }
         }
       ],

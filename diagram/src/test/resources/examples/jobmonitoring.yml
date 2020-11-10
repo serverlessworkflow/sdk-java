@@ -25,10 +25,8 @@ states:
             name: "{{ $.job.name }}"
         actionDataFilter:
           dataResultsPath: "{{ $.jobuid }}"
-    onError:
-      - expression: "{{ $.exceptions[0] }}"
-        errorDataFilter:
-          dataOutputPath: "{{ $.exception }}"
+    onErrors:
+      - error: "*"
         transition:
           nextState: SubmitError
     stateDataFilter:

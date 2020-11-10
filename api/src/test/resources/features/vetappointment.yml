@@ -3,6 +3,7 @@ name: Vet Appointment Workflow
 description: Vet service call via events
 version: '1.0'
 events: features/vetappointmenteventrefs.yml
+retries: features/vetappointmentretries.yml
 states:
   - name: MakeVetAppointmentState
     type: operation
@@ -17,5 +18,11 @@ states:
         actionDataFilter:
           dataResultsPath: "{{ $.appointmentInfo }}"
         timeout: PT15M
+    onErrors:
+      - error: TimeoutError
+        code: '500'
+        retryRef: TimeoutRetryStrategy
+        end:
+          kind: default
     end:
       kind: default
