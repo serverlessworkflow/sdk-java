@@ -18,7 +18,13 @@
     "maxAttempts": {
       "type": "string",
       "default": "0",
-      "description": "Maximum number of retry attempts (1 by default). Value of 0 means no retries are performed"
+      "description": "Maximum number of retry attempts. Value of 0 means no retries are performed"
+    },
+    "jitter": {
+      "type": "string",
+      "minimum": 0.0,
+      "maximum": 1.0,
+      "description": "Absolute maximum amount of random time added or subtracted from the delay between each retry (ISO 8601 duration format)"
     }
   },
   "required": [
