@@ -16,9 +16,9 @@ to parse and validate workflow definitions as well as generate the workflow diag
 
 ### Status
 
-This SDK is considered work in progress. We intend to release versions which match the future releases 
-of the Serverless Workflow specification. Currently the SDK features match those of the current 
-"master" specification branch.
+| Latest Releases | Conformance to spec version |
+| :---: | :---: |
+| 1.0.0.Final | [v0.5](https://github.com/serverlessworkflow/specification/tree/0.5.x)  |
 
 ### Getting Started
 
@@ -56,25 +56,25 @@ b) Add the following dependencies to your pom.xml `dependencies` section:
 <dependency>
     <groupId>io.serverlessworkflow</groupId>
     <artifactId>serverlessworkflow-api</artifactId>
-    <version>0.2-SNAPSHOT</version>
+    <version>1.0.0-SNAPSHOT</version>
 </dependency>
 
 <dependency>
     <groupId>io.serverlessworkflow</groupId>
     <artifactId>serverlessworkflow-spi</artifactId>
-    <version>0.2-SNAPSHOT</version>
+    <version>1.0.0-SNAPSHOT</version>
 </dependency>
 
 <dependency>
     <groupId>io.serverlessworkflow</groupId>
     <artifactId>serverlessworkflow-validation</artifactId>
-    <version>0.2-SNAPSHOT</version>
+    <version>1.0.0-SNAPSHOT</version>
 </dependency>
 
 <dependency>
     <groupId>io.serverlessworkflow</groupId>
     <artifactId>serverlessworkflow-diagram</artifactId>
-    <version>0.2-SNAPSHOT</version>
+    <version>1.0.0-SNAPSHOT</version>
 </dependency>
 ```
 
@@ -90,10 +90,10 @@ maven{ url "https://jitpack.io" }
 b) Add the following dependencies to your build.gradle `dependencies` section:
 
 ```text
-implementation("io.serverlessworkflow:serverlessworkflow-api:0.2-SNAPSHOT")
-implementation("io.serverlessworkflow:serverlessworkflow-spi:0.2-SNAPSHOT")
-implementation("io.serverlessworkflow:serverlessworkflow-validation:0.2-SNAPSHOT")
-implementation("io.serverlessworkflow:serverlessworkflow-diagram:0.2-SNAPSHOT")
+implementation("io.serverlessworkflow:serverlessworkflow-api:1.0.0-SNAPSHOT")
+implementation("io.serverlessworkflow:serverlessworkflow-spi:1.0.0-SNAPSHOT")
+implementation("io.serverlessworkflow:serverlessworkflow-validation:1.0.0-SNAPSHOT")
+implementation("io.serverlessworkflow:serverlessworkflow-diagram:1.0.0-SNAPSHOT")
 ```
 
 ### How to Use 
