@@ -18,7 +18,7 @@ to parse and validate workflow definitions as well as generate the workflow diag
 
 | Latest Releases | Conformance to spec version |
 | :---: | :---: |
-| 1.0.0.Final | [v0.5](https://github.com/serverlessworkflow/specification/tree/0.5.x)  |
+| [1.0.0.Final](https://github.com/serverlessworkflow/sdk-java/releases/tag/1.0.0.Final) | [v0.5](https://github.com/serverlessworkflow/specification/tree/0.5.x)  |
 
 ### Getting Started
 
