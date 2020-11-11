@@ -57,20 +57,12 @@
       "type": "string",
       "description": "URI to JSON Schema that state data output adheres to"
     },
-    "onError": {
+    "onErrors": {
       "type": "array",
-      "description": "State onError definition",
+      "description": "State error handling definitions",
       "items": {
         "type": "object",
         "$ref": "../error/error.json"
-      }
-    },
-    "retry": {
-      "type": "array",
-      "description": "State retry definition",
-      "items": {
-        "type": "object",
-        "$ref": "../retry/retry.json"
       }
     }
   },

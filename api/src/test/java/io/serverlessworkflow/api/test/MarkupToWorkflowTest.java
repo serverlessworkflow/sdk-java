@@ -68,10 +68,13 @@ public class MarkupToWorkflowTest {
 
         assertNotNull(workflow.getFunctions());
         assertTrue(workflow.getFunctions().getFunctionDefs().size() == 1);
+
+        assertNotNull(workflow.getRetries());
+        assertTrue(workflow.getRetries().getRetryDefs().size() == 1);
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"/features/vetappointment.json", "/features/vetappointment.yml"})
+    @ValueSource(strings = {"/features/vetappointment.json"})
     public void testSpecFreatureEventRef(String workflowLocation) {
         Workflow workflow = Workflow.fromSource(WorkflowTestUtils.readWorkflowFile(workflowLocation));
 
@@ -83,5 +86,8 @@ public class MarkupToWorkflowTest {
 
         assertNotNull(workflow.getEvents());
         assertTrue(workflow.getEvents().getEventDefs().size() == 2);
+
+        assertNotNull(workflow.getRetries());
+        assertTrue(workflow.getRetries().getRetryDefs().size() == 1);
     }
 }

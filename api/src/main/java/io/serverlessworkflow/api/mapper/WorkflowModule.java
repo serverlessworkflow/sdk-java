@@ -30,6 +30,7 @@ import io.serverlessworkflow.api.states.OperationState;
 import io.serverlessworkflow.api.states.ParallelState;
 import io.serverlessworkflow.api.workflow.Events;
 import io.serverlessworkflow.api.workflow.Functions;
+import io.serverlessworkflow.api.workflow.Retries;
 
 public class WorkflowModule extends SimpleModule {
 
@@ -80,6 +81,7 @@ public class WorkflowModule extends SimpleModule {
         addDeserializer(EventDefinition.Kind.class, new EventDefinitionKindDeserializer(workflowPropertySource));
         addDeserializer(ParallelState.CompletionType.class, new ParallelStateCompletionTypeDeserializer(workflowPropertySource));
         addDeserializer(Schedule.DirectInvoke.class, new ScheduleDirectInvokeDeserializer(workflowPropertySource));
+        addDeserializer(Retries.class, new RetriesDeserializer(workflowPropertySource));
         addDeserializer(Functions.class, new FunctionsDeserializer(workflowPropertySource));
         addDeserializer(Events.class, new EventsDeserializer(workflowPropertySource));
         addDeserializer(Extension.class, extensionDeserializer);

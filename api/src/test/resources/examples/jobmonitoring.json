@@ -42,12 +42,9 @@
           }
         }
       ],
-      "onError": [
+      "onErrors": [
         {
-          "expression": "{{ $.exceptions[0] }}",
-          "errorDataFilter": {
-            "dataOutputPath": "{{ $.exception }}"
-          },
+          "error": "*",
           "transition": {
             "nextState": "SubmitError"
           }

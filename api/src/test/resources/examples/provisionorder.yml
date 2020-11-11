@@ -16,14 +16,14 @@ states:
           refName: provisionOrderFunction
           parameters:
             order: "{{ $.order }}"
-    onError:
-      - expression: "{{ $.exceptions[?(@.name == 'MissingOrderIdException')] }}"
+    onErrors:
+      - error: "MissingOrderId"
         transition:
           nextState: MissingId
-      - expression: "{{ $.exceptions[?(@.name == 'MissingOrderItemException')] }}"
+      - error: "MissingOrderItem"
         transition:
           nextState: MissingItem
-      - expression: "{{ $.exceptions[?(@.name == 'MissingOrderQuantityException')] }}"
+      - error: "MissingOrderQuantity"
         transition:
           nextState: MissingQuantity
     stateDataFilter:

@@ -1,15 +1,16 @@
 {
   "type": "object",
-  "javaType": "io.serverlessworkflow.api.retry.Retry",
+  "javaType": "io.serverlessworkflow.api.retry.RetryDefinition",
   "description": "Retry Definition",
   "properties": {
-    "expression": {
+    "name": {
       "type": "string",
-      "description": "Common Expression Language (CEL) expression. Should be evaluated against state data. Must evaluate to true for retry to execute"
+      "description": "Unique retry strategy name",
+      "minLength": 1
     },
-    "interval": {
+    "delay": {
       "type": "string",
-      "description": "Specifies the amount of time between retries (ISO 8601 format)"
+      "description": "Time delay between retry attempts (ISO 8601 duration format)"
     },
     "multiplier": {
       "type": "string",
@@ -28,6 +29,7 @@
     }
   },
   "required": [
-    "expression"
+    "name",
+    "maxAttempts"
   ]
 }

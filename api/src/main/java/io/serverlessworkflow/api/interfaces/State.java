@@ -19,7 +19,6 @@ package io.serverlessworkflow.api.interfaces;
 import io.serverlessworkflow.api.end.End;
 import io.serverlessworkflow.api.error.Error;
 import io.serverlessworkflow.api.filters.StateDataFilter;
-import io.serverlessworkflow.api.retry.Retry;
 import io.serverlessworkflow.api.start.Start;
 import io.serverlessworkflow.api.states.DefaultState.Type;
 import io.serverlessworkflow.api.transitions.Transition;
@@ -47,9 +46,7 @@ public interface State {
 
     Transition getTransition();
 
-    List<Error> getOnError();
-
-    List<Retry> getRetry();
+    List<Error> getOnErrors();
 
     Map<String, String> getMetadata();
 }

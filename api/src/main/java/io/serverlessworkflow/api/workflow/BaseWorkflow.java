@@ -43,6 +43,7 @@ public class BaseWorkflow {
             return jsonObjectMapper.readValue(source,
                     Workflow.class);
         } catch (Exception e) {
+            logger.info("Unable to convert as json markup, trying as yaml");
             try {
                 return yamlObjectMapper.readValue(source,
                         Workflow.class);

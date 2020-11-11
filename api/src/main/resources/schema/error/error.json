@@ -2,21 +2,32 @@
   "type": "object",
   "javaType": "io.serverlessworkflow.api.error.Error",
   "properties": {
-    "expression": {
+    "error": {
       "type": "string",
-      "description": "Common Expression Language (CEL) expression. Should be evaluated against error data. Must evaluate to true."
+      "description": "Domain-specific error name, or '*' to indicate all possible errors",
+      "minLength": 1
     },
-    "errorDataFilter": {
-      "$ref": "../filters/errordatafilter.json",
-      "description": "Error data filter definition "
+    "code": {
+      "type": "string",
+      "description": "Error code. Can be used in addition to the name to help runtimes resolve to technical errors/exceptions. Should not be defined if error is set to '*'",
+      "minLength": 1
+    },
+    "retryRef": {
+      "type": "string",
+      "description": "References a unique name of a retry definition.",
+      "minLength": 1
     },
     "transition": {
       "$ref": "../transitions/transition.json",
-      "description": "Next transition of the workflow when 'expression' is true"
+      "description": "Transition to next state to handle the error. If retryRef is defined, this transition is taken only if retries were unsuccessful."
+    },
+    "end": {
+      "description": "End workflow execution in case of this error. If retryRef is defined, this ends workflow only if retries were unsuccessful.",
+      "$ref": "../end/end.json"
     }
   },
   "required": [
-    "expression",
+    "error",
     "transition"
   ]
 }

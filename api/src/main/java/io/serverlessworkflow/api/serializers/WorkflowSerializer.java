@@ -24,6 +24,7 @@ import io.serverlessworkflow.api.events.EventDefinition;
 import io.serverlessworkflow.api.functions.FunctionDefinition;
 import io.serverlessworkflow.api.interfaces.Extension;
 import io.serverlessworkflow.api.interfaces.State;
+import io.serverlessworkflow.api.retry.RetryDefinition;
 
 import java.io.IOException;
 import java.security.MessageDigest;
@@ -108,6 +109,17 @@ public class WorkflowSerializer extends StdSerializer<Workflow> {
             gen.writeEndArray();
         } else {
             gen.writeArrayFieldStart("functions");
+            gen.writeEndArray();
+        }
+
+        if (workflow.getRetries() != null && !workflow.getRetries().getRetryDefs().isEmpty()) {
+            gen.writeArrayFieldStart("retries");
+            for (RetryDefinition retry : workflow.getRetries().getRetryDefs()) {
+                gen.writeObject(retry);
+            }
+            gen.writeEndArray();
+        } else {
+            gen.writeArrayFieldStart("retries");
             gen.writeEndArray();
         }
 
