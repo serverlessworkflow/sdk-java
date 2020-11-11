@@ -56,25 +56,25 @@ b) Add the following dependencies to your pom.xml `dependencies` section:
 <dependency>
     <groupId>io.serverlessworkflow</groupId>
     <artifactId>serverlessworkflow-api</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>2.0.0-SNAPSHOT</version>
 </dependency>
 
 <dependency>
     <groupId>io.serverlessworkflow</groupId>
     <artifactId>serverlessworkflow-spi</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>2.0.0-SNAPSHOT</version>
 </dependency>
 
 <dependency>
     <groupId>io.serverlessworkflow</groupId>
     <artifactId>serverlessworkflow-validation</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>2.0.0-SNAPSHOT</version>
 </dependency>
 
 <dependency>
     <groupId>io.serverlessworkflow</groupId>
     <artifactId>serverlessworkflow-diagram</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>2.0.0-SNAPSHOT</version>
 </dependency>
 ```
 
@@ -90,10 +90,10 @@ maven{ url "https://jitpack.io" }
 b) Add the following dependencies to your build.gradle `dependencies` section:
 
 ```text
-implementation("io.serverlessworkflow:serverlessworkflow-api:1.0.0-SNAPSHOT")
-implementation("io.serverlessworkflow:serverlessworkflow-spi:1.0.0-SNAPSHOT")
-implementation("io.serverlessworkflow:serverlessworkflow-validation:1.0.0-SNAPSHOT")
-implementation("io.serverlessworkflow:serverlessworkflow-diagram:1.0.0-SNAPSHOT")
+implementation("io.serverlessworkflow:serverlessworkflow-api:2.0.0-SNAPSHOT")
+implementation("io.serverlessworkflow:serverlessworkflow-spi:2.0.0-SNAPSHOT")
+implementation("io.serverlessworkflow:serverlessworkflow-validation:2.0.0-SNAPSHOT")
+implementation("io.serverlessworkflow:serverlessworkflow-diagram:2.0.0-SNAPSHOT")
 ```
 
 ### How to Use 
