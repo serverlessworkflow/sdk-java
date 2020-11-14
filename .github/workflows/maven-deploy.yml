@@ -5,7 +5,9 @@ name: Deploy JAVA SDK
 
 on:
   push:
-    branches: [ master ]
+    branches:
+      - master
+      - 1.0.x
 jobs:
   publish:
     runs-on: ubuntu-latest
