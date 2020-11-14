@@ -6,11 +6,13 @@
     <parent>
         <groupId>io.serverlessworkflow</groupId>
         <artifactId>serverlessworkflow-parent</artifactId>
-        <version>1.0.0.Final</version>
+        <version>1.0.1.Final</version>
     </parent>
 
     <artifactId>serverlessworkflow-spi</artifactId>
     <name>Serverless Workflow :: SPI</name>
+    <version>${project.parent.version}</version>
+    <packaging>jar</packaging>
     <description>Java SDK for Serverless Workflow Specification</description>
 
     <dependencies>
