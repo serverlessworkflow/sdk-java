@@ -5,9 +5,13 @@ name: Verify JAVA SDK
 
 on:
   push:
-    branches: [ master ]
+    branches:
+      - master
+      - 1.0.x
   pull_request:
-    branches: [ master ]
+    branches:
+      - master
+      - 1.0.x
 jobs:
   build:
     runs-on: ubuntu-latest
