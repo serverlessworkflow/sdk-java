@@ -7,11 +7,9 @@ on:
   push:
     branches:
       - master
-      - 1.0.x
   pull_request:
     branches:
       - master
-      - 1.0.x
 jobs:
   build:
     runs-on: ubuntu-latest
