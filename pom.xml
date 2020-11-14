@@ -16,6 +16,7 @@
         <name>CNCF</name>
         <url>https://www.cncf.io//</url>
     </organization>
+
     <licenses>
         <license>
             <name>The Apache Software License, Version 2.0</name>
@@ -23,6 +24,19 @@
             <distribution>repo</distribution>
         </license>
     </licenses>
+
+    <scm>
+        <connection>scm:git:git://github.com/serverlessworkflow/sdk-java.git</connection>
+        <developerConnection>scm:git:git@github.com:serverlessworkflow/sdk-java.git</developerConnection>
+        <url>https://github.com/serverlessworkflow/sdk-java</url>
+    </scm>
+
+    <developers>
+        <developer>
+            <id>tsurdilo</id>
+            <name>Tihomir Surdilovic</name>
+        </developer>
+    </developers>
 
     <modules>
         <module>api</module>
@@ -175,7 +189,7 @@
     </dependencyManagement>
 
     <build>
-        <pluginManagement>
+
             <plugins>
                 <plugin>
                     <artifactId>maven-deploy-plugin</artifactId>
@@ -239,8 +253,58 @@
                        <argLine>-Xmx1024m -XX:MaxPermSize=256m</argLine>
                     </configuration>
                 </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>3.0.1</version>
+                    <executions>
+                        <execution>
+                            <id>attach-sources</id>
+                            <goals>
+                                <goal>jar</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>2.10.4</version>
+                    <configuration>
+                        <source>8</source>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>attach-javadocs</id>
+                            <goals>
+                                <goal>jar</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-gpg-plugin</artifactId>
+                    <version>1.6</version>
+                    <executions>
+                        <execution>
+                            <id>sign-artifacts</id>
+                            <phase>verify</phase>
+                            <goals>
+                                <goal>sign</goal>
+                            </goals>
+                            <configuration>
+                                <gpgArguments>
+                                    <arg>--batch</arg>
+                                    <arg>--pinentry-mode</arg>
+                                    <arg>loopback</arg>
+                                </gpgArguments>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
             </plugins>
-        </pluginManagement>
+
     </build>
 
     <distributionManagement>
