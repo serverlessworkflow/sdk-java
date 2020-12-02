@@ -38,6 +38,11 @@
     "workflowId": {
       "type": "string",
       "description": "Unique Id of a workflow to be executed for each of the elements of inputCollection"
+    },
+    "usedForCompensation": {
+      "type": "boolean",
+      "default": false,
+      "description": "If true, this state is used to compensate another state. Default is false"
     }
   },
   "oneOf": [

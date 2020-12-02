@@ -24,6 +24,11 @@
     "eventDataFilter": {
       "description": "Callback event data filter definition",
       "$ref": "../filters/eventdatafilter.json"
+    },
+    "usedForCompensation": {
+      "type": "boolean",
+      "default": false,
+      "description": "If true, this state is used to compensate another state. Default is false"
     }
   },
   "required": [
