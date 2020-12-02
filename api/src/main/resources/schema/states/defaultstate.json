@@ -64,6 +64,11 @@
         "type": "object",
         "$ref": "../error/error.json"
       }
+    },
+    "compensatedBy": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Unique Name of a workflow state which is responsible for compensation of this state"
     }
   },
   "required": [
