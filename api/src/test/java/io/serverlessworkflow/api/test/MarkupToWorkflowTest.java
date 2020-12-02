@@ -21,8 +21,7 @@ import io.serverlessworkflow.api.test.utils.WorkflowTestUtils;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class MarkupToWorkflowTest {
 
@@ -89,5 +88,33 @@ public class MarkupToWorkflowTest {
 
         assertNotNull(workflow.getRetries());
         assertTrue(workflow.getRetries().getRetryDefs().size() == 1);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/features/scopedefault.json", "/features/scopedefault.yml"})
+    public void testDefaultWorkflowScope(String workflowLocation) {
+        Workflow workflow = Workflow.fromSource(WorkflowTestUtils.readWorkflowFile(workflowLocation));
+
+        assertNotNull(workflow);
+        assertNotNull(workflow.getId());
+        assertNotNull(workflow.getName());
+        assertNotNull(workflow.getStates());
+        assertTrue(workflow.getStates().size() > 0);
+
+        assertEquals("public", workflow.getScope().value());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/features/scopeset.json", "/features/scopeset.yml"})
+    public void testSetWorkflowScope(String workflowLocation) {
+        Workflow workflow = Workflow.fromSource(WorkflowTestUtils.readWorkflowFile(workflowLocation));
+
+        assertNotNull(workflow);
+        assertNotNull(workflow.getId());
+        assertNotNull(workflow.getName());
+        assertNotNull(workflow.getStates());
+        assertTrue(workflow.getStates().size() > 0);
+
+        assertEquals("private", workflow.getScope().value());
     }
 }

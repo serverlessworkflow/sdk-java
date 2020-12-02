@@ -17,6 +17,7 @@
 package io.serverlessworkflow.api.mapper;
 
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import io.serverlessworkflow.api.Workflow;
 import io.serverlessworkflow.api.deserializers.*;
 import io.serverlessworkflow.api.events.EventDefinition;
 import io.serverlessworkflow.api.events.OnEvents;
@@ -84,6 +85,7 @@ public class WorkflowModule extends SimpleModule {
         addDeserializer(Retries.class, new RetriesDeserializer(workflowPropertySource));
         addDeserializer(Functions.class, new FunctionsDeserializer(workflowPropertySource));
         addDeserializer(Events.class, new EventsDeserializer(workflowPropertySource));
+        addDeserializer(Workflow.Scope.class, new WorkflowScopeDeserializer(workflowPropertySource));
         addDeserializer(Extension.class, extensionDeserializer);
 
     }
