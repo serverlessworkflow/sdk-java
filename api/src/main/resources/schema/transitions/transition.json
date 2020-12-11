@@ -18,6 +18,11 @@
       "type": "string",
       "description": "State to transition to next",
       "minLength": 1
+    },
+    "compensate": {
+      "type": "boolean",
+      "default": false,
+      "description": "If set to true, triggers workflow compensation before this transition is taken. Default is false"
     }
   },
   "required": [

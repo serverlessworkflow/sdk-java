@@ -17,6 +17,11 @@
     "workflowId": {
       "type": "string",
       "description": "Sub-workflow unique id."
+    },
+    "usedForCompensation": {
+      "type": "boolean",
+      "default": false,
+      "description": "If true, this state is used to compensate another state. Default is false"
     }
   },
   "required": [

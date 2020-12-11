@@ -48,5 +48,7 @@ public interface State {
 
     List<Error> getOnErrors();
 
+    String getCompensatedBy();
+
     Map<String, String> getMetadata();
 }
