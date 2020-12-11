@@ -20,6 +20,11 @@
         "type": "object",
         "$ref": "../produce/produceevent.json"
       }
+    },
+    "compensate": {
+      "type": "boolean",
+      "default": false,
+      "description": "If set to true, triggers workflow compensation when before workflow executin completes. Default is false"
     }
   },
   "required": [

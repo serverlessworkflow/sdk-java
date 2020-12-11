@@ -17,12 +17,14 @@
 package io.serverlessworkflow.api.test;
 
 import io.serverlessworkflow.api.Workflow;
+import io.serverlessworkflow.api.interfaces.State;
+import io.serverlessworkflow.api.states.EventState;
+import io.serverlessworkflow.api.states.OperationState;
 import io.serverlessworkflow.api.test.utils.WorkflowTestUtils;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class MarkupToWorkflowTest {
 
@@ -74,7 +76,7 @@ public class MarkupToWorkflowTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"/features/vetappointment.json"})
+    @ValueSource(strings = {"/features/vetappointment.json", "/features/vetappointment.yml"})
     public void testSpecFreatureEventRef(String workflowLocation) {
         Workflow workflow = Workflow.fromSource(WorkflowTestUtils.readWorkflowFile(workflowLocation));
 
@@ -89,5 +91,30 @@ public class MarkupToWorkflowTest {
 
         assertNotNull(workflow.getRetries());
         assertTrue(workflow.getRetries().getRetryDefs().size() == 1);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/features/compensationworkflow.json", "/features/compensationworkflow.yml"})
+    public void testSpecFreatureCompensation(String workflowLocation) {
+        Workflow workflow = Workflow.fromSource(WorkflowTestUtils.readWorkflowFile(workflowLocation));
+
+        assertNotNull(workflow);
+        assertNotNull(workflow.getId());
+        assertNotNull(workflow.getName());
+        assertNotNull(workflow.getStates());
+
+        assertNotNull(workflow.getStates());
+        assertTrue(workflow.getStates().size() == 2);
+
+        State firstState = workflow.getStates().get(0);
+        assertTrue(firstState instanceof EventState);
+        assertNotNull(firstState.getCompensatedBy());
+        assertEquals("CancelPurchase", firstState.getCompensatedBy());
+
+        State secondState = workflow.getStates().get(1);
+        assertTrue(secondState instanceof OperationState);
+        OperationState operationState = (OperationState) secondState;
+
+        assertTrue(operationState.isUsedForCompensation());
     }
 }

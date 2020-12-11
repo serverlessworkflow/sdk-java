@@ -32,6 +32,11 @@
     "default": {
       "description": "Default transition of the workflow if there is no matching data conditions. Can include a transition or end definition",
       "$ref": "../default/defaultdef.json"
+    },
+    "usedForCompensation": {
+      "type": "boolean",
+      "default": false,
+      "description": "If true, this state is used to compensate another state. Default is false"
     }
   },
   "required": [
