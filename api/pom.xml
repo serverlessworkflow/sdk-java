@@ -6,7 +6,7 @@
     <parent>
         <groupId>io.serverlessworkflow</groupId>
         <artifactId>serverlessworkflow-parent</artifactId>
-        <version>1.0.1.Final</version>
+        <version>1.0.2.Final</version>
     </parent>
 
     <artifactId>serverlessworkflow-api</artifactId>
