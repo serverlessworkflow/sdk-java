@@ -12,8 +12,7 @@ events:
 states:
   - name: MakeVetAppointmentState
     type: operation
-    start:
-      kind: default
+    start: true
     actions:
       - name: MakeAppointmentAction
         eventRef:
@@ -23,5 +22,4 @@ states:
         actionDataFilter:
           dataResultsPath: "{{ $.appointmentInfo }}"
         timeout: PT15M
-    end:
-      kind: default
+    end: true

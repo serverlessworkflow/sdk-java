@@ -7,8 +7,7 @@ functions:
     operation: http://myapis.org/mapthapis.json#solveExpression
 states:
   - name: Solve
-    start:
-      kind: default
+    start: true
     type: foreach
     inputCollection: "{{ $.expressions }}"
     iterationParam: singleexpression
@@ -20,5 +19,4 @@ states:
             expression: "{{ $.singleexpression }}"
     stateDataFilter:
       dataOutputPath: "{{ $.results }}"
-    end:
-      kind: default
+    end: true

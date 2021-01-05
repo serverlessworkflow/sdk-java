@@ -7,15 +7,11 @@
     {
       "name":"Hello State",
       "type":"inject",
-      "start": {
-        "kind": "default"
-      },
+      "start": true,
       "data": {
         "result": "Hello World!"
       },
-      "end": {
-        "kind": "default"
-      }
+      "end": true
     }
   ]
 }

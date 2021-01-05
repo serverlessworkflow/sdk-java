@@ -8,8 +8,7 @@ functions:
 states:
   - name: Greet
     type: operation
-    start:
-      kind: default
+    start: true
     actions:
       - functionRef:
           refName: greetingFunction
@@ -17,5 +16,4 @@ states:
             name: "{{ $.person.name }}"
         actionDataFilter:
           dataResultsPath: "{{ $.greeting }}"
-    end:
-      kind: default
+    end: true

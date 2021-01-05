@@ -6,8 +6,7 @@ version: '1.0'
 states:
   - name: SwitchIt
     type: switch
-    start:
-      kind: default
+    start: true
     eventConditions:
       - name: first
         eventRef: firstEvent
@@ -19,19 +18,15 @@ states:
           nextState: FromSecondCondition
       - name: third
         eventRef: thirdEvent
-        end:
-          kind: default
+        end: true
       - name: fourth
         eventRef: fourthEvent
-        end:
-          kind: default
+        end: true
   - name: FromFirstCondition
     type: delay
     timeDelay: PT2M
-    end:
-      kind: default
+    end: true
   - name: FromSecondCondition
     type: inject
     data: {}
-    end:
-      kind: default
+    end: true

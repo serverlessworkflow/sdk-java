@@ -19,9 +19,7 @@
     {
       "name": "MakeVetAppointmentState",
       "type": "operation",
-      "start": {
-        "kind": "default"
-      },
+      "start": true,
       "actions": [
         {
           "name": "MakeAppointmentAction",
@@ -36,9 +34,7 @@
           "timeout": "PT15M"
         }
       ],
-      "end": {
-        "kind": "default"
-      }
+      "end": true
     }
   ]
 }

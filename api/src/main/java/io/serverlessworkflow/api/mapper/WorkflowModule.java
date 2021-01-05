@@ -18,6 +18,7 @@ package io.serverlessworkflow.api.mapper;
 
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import io.serverlessworkflow.api.deserializers.*;
+import io.serverlessworkflow.api.end.End;
 import io.serverlessworkflow.api.events.EventDefinition;
 import io.serverlessworkflow.api.events.OnEvents;
 import io.serverlessworkflow.api.interfaces.Extension;
@@ -25,6 +26,7 @@ import io.serverlessworkflow.api.interfaces.State;
 import io.serverlessworkflow.api.interfaces.WorkflowPropertySource;
 import io.serverlessworkflow.api.schedule.Schedule;
 import io.serverlessworkflow.api.serializers.*;
+import io.serverlessworkflow.api.start.Start;
 import io.serverlessworkflow.api.states.DefaultState;
 import io.serverlessworkflow.api.states.OperationState;
 import io.serverlessworkflow.api.states.ParallelState;
@@ -64,6 +66,8 @@ public class WorkflowModule extends SimpleModule {
         addSerializer(new InjectStateSerializer());
         addSerializer(new ForEachStateSerializer());
         addSerializer(new CallbackStateSerializer());
+        addSerializer(new StartDefinitionSerializer());
+        addSerializer(new EndDefinitionSerializer());
         addSerializer(extensionSerializer);
     }
 
@@ -84,6 +88,8 @@ public class WorkflowModule extends SimpleModule {
         addDeserializer(Retries.class, new RetriesDeserializer(workflowPropertySource));
         addDeserializer(Functions.class, new FunctionsDeserializer(workflowPropertySource));
         addDeserializer(Events.class, new EventsDeserializer(workflowPropertySource));
+        addDeserializer(Start.class, new StartDefinitionDeserializer(workflowPropertySource));
+        addDeserializer(End.class, new EndDefinitionDeserializer(workflowPropertySource));
         addDeserializer(Extension.class, extensionDeserializer);
 
     }

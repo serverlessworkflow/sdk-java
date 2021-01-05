@@ -13,9 +13,7 @@
     {
       "name":"ProvisionOrder",
       "type":"operation",
-      "start": {
-        "kind": "default"
-      },
+      "start": true,
       "actionMode":"sequential",
       "actions":[
         {
@@ -58,33 +56,25 @@
       "name": "MissingId",
       "type": "subflow",
       "workflowId": "handleMissingIdExceptionWorkflow",
-      "end": {
-        "kind": "default"
-      }
+      "end": true
     },
     {
       "name": "MissingItem",
       "type": "subflow",
       "workflowId": "handleMissingItemExceptionWorkflow",
-      "end": {
-        "kind": "default"
-      }
+      "end": true
     },
     {
       "name": "MissingQuantity",
       "type": "subflow",
       "workflowId": "handleMissingQuantityExceptionWorkflow",
-      "end": {
-        "kind": "default"
-      }
+      "end": true
     },
     {
       "name": "ApplyOrder",
       "type": "subflow",
       "workflowId": "applyOrderWorkflowId",
-      "end": {
-        "kind": "default"
-      }
+      "end": true
     }
   ]
 }

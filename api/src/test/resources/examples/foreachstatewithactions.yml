@@ -17,5 +17,4 @@ states:
           parameters:
             orderNumber: "{{ $.completedorder.orderNumber }}"
             email: "{{ $.completedorder.email }}"
-    end:
-      kind: default
+    end: true

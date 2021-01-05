@@ -7,7 +7,7 @@
     {
       "name": "SwitchIt",
       "type": "switch",
-      "start": {"kind":"default"},
+      "start": true,
       "dataConditions": [
         {
           "name": "first",
@@ -26,16 +26,12 @@
         {
           "name": "third",
           "condition": "",
-          "end": {
-            "kind":"default"
-          }
+          "end": true
         },
         {
           "name": "fourth",
           "condition": "",
-          "end": {
-            "kind":"default"
-          }
+          "end": true
         }
       ]
     },
@@ -43,13 +39,13 @@
       "name": "FromFirstCondition",
       "type": "delay",
       "timeDelay": "PT2M",
-      "end": {"kind":"default"}
+      "end": true
     },
     {
       "name": "FromSecondCondition",
       "type": "inject",
       "data": {},
-      "end": {"kind":"default"}
+      "end": true
     }
   ]
 }

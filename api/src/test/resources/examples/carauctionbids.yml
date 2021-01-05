@@ -13,7 +13,6 @@ states:
   - name: StoreCarAuctionBid
     type: event
     start:
-      kind: scheduled
       schedule:
         interval: 2020-03-20T09:00:00Z/2020-03-20T15:00:00Z
     exclusive: true
@@ -26,4 +25,4 @@ states:
               parameters:
                 bid: "{{ $.bid }}"
     end:
-      kind: terminate
+      terminate: true

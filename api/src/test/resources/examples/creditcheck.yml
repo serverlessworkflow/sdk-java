@@ -17,8 +17,7 @@ events:
 states:
   - name: CheckCredit
     type: callback
-    start:
-      kind: default
+    start: true
     action:
       functionRef:
         refName: callCreditCheckMicroservice
@@ -45,8 +44,7 @@ states:
   - name: StartApplication
     type: subflow
     workflowId: startApplicationWorkflowId
-    end:
-      kind: default
+    end: true
   - name: RejectApplication
     type: operation
     actionMode: sequential
@@ -55,5 +53,4 @@ states:
           refName: sendRejectionEmailFunction
           parameters:
             applicant: "{{ $.customer }}"
-    end:
-      kind: default
+    end: true
