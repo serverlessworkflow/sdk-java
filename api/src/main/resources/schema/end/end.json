@@ -3,19 +3,14 @@
   "javaType": "io.serverlessworkflow.api.end.End",
   "description": "State end definition",
   "properties": {
-    "kind": {
-      "type": "string",
-      "enum": [
-        "default",
-        "terminate",
-        "event"
-      ],
-      "default": "default",
-      "description": "Kind of End definition"
+    "terminate": {
+      "type": "boolean",
+      "default": false,
+      "description": "If true, completes all execution flows in the given workflow instance"
     },
     "produceEvents": {
       "type": "array",
-      "description": "Used if kind is event. Array of events to be produced",
+      "description": "Array of events to be produced",
       "items": {
         "type": "object",
         "$ref": "../produce/produceevent.json"

@@ -20,9 +20,7 @@
     {
       "name":"Greet",
       "type":"event",
-      "start": {
-        "kind": "default"
-      },
+      "start": true,
       "onEvents": [{
         "eventRefs": ["GreetingEvent"],
         "eventDataFilter": {
@@ -42,9 +40,7 @@
       "stateDataFilter": {
         "dataOutputPath": "{{ $.payload.greeting }}"
       },
-      "end": {
-        "kind": "default"
-      }
+      "end": true
     }
   ]
 }

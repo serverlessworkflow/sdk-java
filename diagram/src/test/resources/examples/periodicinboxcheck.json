@@ -18,7 +18,6 @@
       "name": "CheckInbox",
       "type": "operation",
       "start": {
-        "kind": "scheduled",
         "schedule": {
           "cron": "0 0/15 * * * ?"
         }
@@ -50,9 +49,7 @@
           }
         }
       ],
-      "end": {
-        "kind": "default"
-      }
+      "end": true
     }
   ]
 }

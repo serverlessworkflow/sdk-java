@@ -52,9 +52,7 @@
     {
       "name": "MonitorVitals",
       "type": "event",
-      "start": {
-        "kind": "default"
-      },
+      "start": true,
       "exclusive": true,
       "onEvents": [{
         "eventRefs": ["HighBodyTemperature"],
@@ -90,8 +88,6 @@
           }]
         }
       ],
-      "end": {
-        "kind": "terminate"
-      }
+      "end": true
     }]
 }

@@ -25,9 +25,7 @@
             }
           }
         }],
-      "end": {
-        "kind": "default"
-      }
+      "end": true
     }
   ]
 }

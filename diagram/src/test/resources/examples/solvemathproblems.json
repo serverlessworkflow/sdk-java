@@ -12,9 +12,7 @@
   "states":[
     {
       "name":"Solve",
-      "start": {
-        "kind": "default"
-      },
+      "start": true,
       "type":"foreach",
       "inputCollection": "{{ $.expressions }}",
       "iterationParam": "singleexpression",
@@ -32,9 +30,7 @@
       "stateDataFilter": {
         "dataOutputPath": "{{ $.results }}"
       },
-      "end": {
-        "kind": "default"
-      }
+      "end": true
     }
   ]
 }

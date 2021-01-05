@@ -12,8 +12,7 @@ functions:
 states:
   - name: Greet
     type: event
-    start:
-      kind: default
+    start: true
     onEvents:
       - eventRefs:
           - GreetingEvent
@@ -26,5 +25,4 @@ states:
                 name: "{{ $.greet.name }}"
     stateDataFilter:
       dataOutputPath: "{{ $.payload.greeting }}"
-    end:
-      kind: default
+    end: true

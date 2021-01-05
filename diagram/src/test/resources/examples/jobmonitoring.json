@@ -25,9 +25,7 @@
     {
       "name":"SubmitJob",
       "type":"operation",
-      "start": {
-        "kind": "default"
-      },
+      "start": true,
       "actionMode":"sequential",
       "actions":[
         {
@@ -61,9 +59,7 @@
       "name": "SubmitError",
       "type": "subflow",
       "workflowId": "handleJobSubmissionErrorWorkflow",
-      "end": {
-        "kind": "default"
-      }
+      "end": true
     },
     {
       "name": "WaitForCompletion",
@@ -134,9 +130,7 @@
           }
         }
       ],
-      "end": {
-        "kind": "default"
-      }
+      "end": true
     },
     {
       "name":"JobFailed",
@@ -152,9 +146,7 @@
           }
         }
       ],
-      "end": {
-        "kind": "default"
-      }
+      "end": true
     }
   ]
 }

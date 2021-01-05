@@ -11,7 +11,6 @@ states:
   - name: CheckInbox
     type: operation
     start:
-      kind: scheduled
       schedule:
         cron: 0 0/15 * * * ?
     actionMode: sequential
@@ -29,5 +28,4 @@ states:
           refName: sendTextFunction
           parameters:
             message: "{{ $.singlemessage }}"
-    end:
-      kind: default
+    end: true

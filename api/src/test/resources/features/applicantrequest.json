@@ -9,9 +9,7 @@
     {
       "name":"CheckApplication",
       "type":"switch",
-      "start": {
-        "kind": "default"
-      },
+      "start": true,
       "dataConditions": [
         {
           "condition": "{{ $.applicants[?(@.age >= 18)] }}",
@@ -36,9 +34,7 @@
       "name": "StartApplication",
       "type": "subflow",
       "workflowId": "startApplicationWorkflowId",
-      "end": {
-        "kind": "default"
-      }
+      "end": true
     },
     {
       "name":"RejectApplication",
@@ -59,14 +55,10 @@
           "error": "TimeoutError",
           "code": "500",
           "retryRef": "TimeoutRetryStrategy",
-          "end": {
-            "kind": "default"
-          }
+          "end": true
         }
       ],
-      "end": {
-        "kind": "default"
-      }
+      "end": true
     }
   ]
 }

@@ -7,9 +7,7 @@
     {
       "name": "ParallelExec",
       "type": "parallel",
-      "start": {
-        "kind": "default"
-      },
+      "start": true,
       "completionType": "and",
       "branches": [
         {
@@ -21,9 +19,7 @@
           "workflowId": "longdelayworkflowid"
         }
       ],
-      "end": {
-        "kind": "default"
-      }
+      "end": true
     }
   ]
 }

@@ -7,8 +7,7 @@ retries: features/applicantrequestretries.yml
 states:
   - name: CheckApplication
     type: switch
-    start:
-      kind: default
+    start: true
     dataConditions:
       - condition: "{{ $.applicants[?(@.age >= 18)] }}"
         transition:
@@ -22,8 +21,7 @@ states:
   - name: StartApplication
     type: subflow
     workflowId: startApplicationWorkflowId
-    end:
-      kind: default
+    end: true
   - name: RejectApplication
     type: operation
     actionMode: sequential
@@ -36,7 +34,5 @@ states:
       - error: TimeoutError
         code: '500'
         retryRef: TimeoutRetryStrategy
-        end:
-          kind: default
-    end:
-      kind: default
+        end: true
+    end: true

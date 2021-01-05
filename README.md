@@ -116,8 +116,7 @@ functions:
 states:
 - name: Greet
   type: operation
-  start:
-    kind: default
+  start: true
   actionMode: sequential
   actions:
   - functionRef:
@@ -128,8 +127,7 @@ states:
       dataResultsPath: "$.payload.greeting"
   stateDataFilter:
     dataOutputPath: "$.greeting"
-  end:
-    kind: default
+  end: true
 ```
 
 To parse it and create a Workflow intance you can do:
