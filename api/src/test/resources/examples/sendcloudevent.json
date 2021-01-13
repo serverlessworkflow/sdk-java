@@ -19,9 +19,7 @@
     {
       "name": "ProvisionOrdersState",
       "type": "foreach",
-      "start": {
-        "kind": "default"
-      },
+      "start": true,
       "inputCollection": "{{ $.orders }}",
       "iterationParam": "singleorder",
       "outputCollection": "{{ $.provisionedOrders }}",
@@ -36,7 +34,6 @@
         }
       ],
       "end": {
-        "kind": "event",
         "produceEvents": [
           {
             "eventRef": "provisioningCompleteEvent",

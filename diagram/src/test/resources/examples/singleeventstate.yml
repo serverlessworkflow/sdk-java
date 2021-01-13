@@ -19,10 +19,8 @@ events:
 states:
   - name: EventState
     type: event
-    start:
-      kind: default
-    end:
-      kind: default
+    start: true
+    end: true
     onEvents:
       - eventRefs:
           - event1

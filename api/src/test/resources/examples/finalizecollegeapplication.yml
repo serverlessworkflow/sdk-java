@@ -23,8 +23,7 @@ functions:
 states:
   - name: FinalizeApplication
     type: event
-    start:
-      kind: default
+    start: true
     exclusive: false
     onEvents:
       - eventRefs:
@@ -37,4 +36,4 @@ states:
               parameters:
                 student: "{{ $.applicantId }}"
     end:
-      kind: terminate
+      terminate: true

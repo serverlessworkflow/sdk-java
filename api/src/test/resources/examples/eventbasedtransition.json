@@ -19,9 +19,7 @@
     {
       "name":"CheckVisaStatus",
       "type":"switch",
-      "start": {
-        "kind": "default"
-      },
+      "start": true,
       "eventConditions": [
         {
           "eventRef": "visaApprovedEvent",
@@ -47,25 +45,19 @@
       "name": "HandleApprovedVisa",
       "type": "subflow",
       "workflowId": "handleApprovedVisaWorkflowID",
-      "end": {
-        "kind": "default"
-      }
+      "end": true
     },
     {
       "name": "HandleRejectedVisa",
       "type": "subflow",
       "workflowId": "handleRejectedVisaWorkflowID",
-      "end": {
-        "kind": "default"
-      }
+      "end": true
     },
     {
       "name": "HandleNoVisaDecision",
       "type": "subflow",
       "workflowId": "handleNoVisaDecisionWorkfowId",
-      "end": {
-        "kind": "default"
-      }
+      "end": true
     }
   ]
 }

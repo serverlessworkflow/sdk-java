@@ -9,8 +9,7 @@ functions:
 states:
   - name: SendConfirmationForEachCompletedhOrder
     type: foreach
-    start:
-      kind: default
+    start: true
     inputCollection: "{{ $.orders[?(@.completed == true)] }}"
     iterationParam: "{{ $.completedorder }}"
     actions:
@@ -19,5 +18,4 @@ states:
           parameters:
             orderNumber: "{{ $.completedorder.orderNumber }}"
             email: "{{ $.completedorder.email }}"
-    end:
-      kind: default
+    end: true

@@ -15,8 +15,7 @@ functions:
 states:
   - name: SubmitJob
     type: operation
-    start:
-      kind: default
+    start: true
     actionMode: sequential
     actions:
       - functionRef:
@@ -36,8 +35,7 @@ states:
   - name: SubmitError
     type: subflow
     workflowId: handleJobSubmissionErrorWorkflow
-    end:
-      kind: default
+    end: true
   - name: WaitForCompletion
     type: delay
     timeDelay: PT5S
@@ -77,8 +75,7 @@ states:
           refName: reportJobSuceeded
           parameters:
             name: "{{ $.jobuid }}"
-    end:
-      kind: default
+    end: true
   - name: JobFailed
     type: operation
     actionMode: sequential
@@ -87,5 +84,4 @@ states:
           refName: reportJobFailed
           parameters:
             name: "{{ $.jobuid }}"
-    end:
-      kind: default
+    end: true
