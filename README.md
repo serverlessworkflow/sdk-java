@@ -85,7 +85,6 @@ a) Add the following repositories to your build.gradle `repositories` section:
 
 ```text
 maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
-maven{ url "https://jitpack.io" }
 ```
 
 b) Add the following dependencies to your build.gradle `dependencies` section:
