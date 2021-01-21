@@ -12,7 +12,8 @@ states:
     type: operation
     start:
       schedule:
-        cron: 0 0/15 * * * ?
+        cron:
+          expression: 0 0/15 * * * ?
     actionMode: sequential
     actions:
       - functionRef:
