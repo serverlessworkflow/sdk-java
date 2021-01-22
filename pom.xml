@@ -111,8 +111,8 @@
                 <version>${commons.lang.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.github.everit-org.json-schema</groupId>
-                <artifactId>org.everit.json.schema</artifactId>
+                <groupId>com.github.erosb</groupId>
+                <artifactId>everit-json-schema</artifactId>
                 <version>${json.schema.validation.version}</version>
             </dependency>
             <dependency>
@@ -329,11 +329,4 @@
             </snapshots>
         </pluginRepository>
     </pluginRepositories>
-
-    <repositories>
-        <repository>
-            <id>jitpack.io</id>
-            <url>https://jitpack.io</url>
-        </repository>
-    </repositories>
 </project>

@@ -29,9 +29,7 @@
     {
       "name": "CheckCredit",
       "type": "callback",
-      "start": {
-        "kind": "default"
-      },
+      "start": true,
       "action": {
         "functionRef": {
           "refName": "callCreditCheckMicroservice",
@@ -75,9 +73,7 @@
       "name": "StartApplication",
       "type": "subflow",
       "workflowId": "startApplicationWorkflowId",
-      "end": {
-        "kind": "default"
-      }
+      "end": true
     },
     {
       "name": "RejectApplication",
@@ -93,9 +89,7 @@
           }
         }
       ],
-      "end": {
-        "kind": "default"
-      }
+      "end": true
     }
   ]
 }

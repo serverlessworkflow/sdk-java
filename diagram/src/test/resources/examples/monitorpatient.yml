@@ -27,8 +27,7 @@ functions:
 states:
   - name: MonitorVitals
     type: event
-    start:
-      kind: default
+    start: true
     exclusive: true
     onEvents:
       - eventRefs:
@@ -53,4 +52,4 @@ states:
               parameters:
                 patientid: "{{ $.patientId }}"
     end:
-      kind: terminate
+      terminate: true

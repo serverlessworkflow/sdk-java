@@ -7,8 +7,7 @@ retries: features/vetappointmentretries.yml
 states:
   - name: MakeVetAppointmentState
     type: operation
-    start:
-      kind: default
+    start: true
     actions:
       - name: MakeAppointmentAction
         eventRef:
@@ -22,7 +21,5 @@ states:
       - error: TimeoutError
         code: '500'
         retryRef: TimeoutRetryStrategy
-        end:
-          kind: default
-    end:
-      kind: default
+        end: true
+    end: true

@@ -85,7 +85,6 @@ a) Add the following repositories to your build.gradle `repositories` section:
 
 ```text
 maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
-maven{ url "https://jitpack.io" }
 ```
 
 b) Add the following dependencies to your build.gradle `dependencies` section:
@@ -116,8 +115,7 @@ functions:
 states:
 - name: Greet
   type: operation
-  start:
-    kind: default
+  start: true
   actionMode: sequential
   actions:
   - functionRef:
@@ -128,8 +126,7 @@ states:
       dataResultsPath: "$.payload.greeting"
   stateDataFilter:
     dataOutputPath: "$.greeting"
-  end:
-    kind: default
+  end: true
 ```
 
 To parse it and create a Workflow intance you can do:

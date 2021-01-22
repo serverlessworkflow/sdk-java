@@ -21,6 +21,8 @@ import io.serverlessworkflow.api.end.End;
 import io.serverlessworkflow.api.events.EventDefinition;
 import io.serverlessworkflow.api.functions.FunctionDefinition;
 import io.serverlessworkflow.api.interfaces.State;
+import io.serverlessworkflow.api.produce.ProduceEvent;
+import io.serverlessworkflow.api.schedule.Schedule;
 import io.serverlessworkflow.api.start.Start;
 import io.serverlessworkflow.api.states.DelayState;
 import io.serverlessworkflow.api.workflow.Events;
@@ -40,10 +42,15 @@ public class WorkflowToMarkupTest {
                 .withStates(Arrays.asList(
                         new DelayState().withName("delayState").withType(DELAY)
                                 .withStart(
-                                        new Start().withKind(Start.Kind.DEFAULT)
+                                        new Start().withSchedule(
+                                                new Schedule().withInterval("PT1S")
+                                        )
                                 )
                                 .withEnd(
-                                        new End().withKind(End.Kind.DEFAULT)
+                                        new End().withTerminate(true).withCompensate(true)
+                                        .withProduceEvents(Arrays.asList(
+                                                new ProduceEvent().withEventRef("someEvent")
+                                        ))
                                 )
                                 .withTimeDelay("PT1M")
                         )
@@ -53,6 +60,8 @@ public class WorkflowToMarkupTest {
         assertEquals(1, workflow.getStates().size());
         State state = workflow.getStates().get(0);
         assertTrue(state instanceof DelayState);
+        assertNotNull(state.getStart());
+        assertNotNull(state.getEnd());
 
         assertNotNull(Workflow.toJson(workflow));
         assertNotNull(Workflow.toYaml(workflow));
@@ -69,10 +78,10 @@ public class WorkflowToMarkupTest {
                 .withStates(Arrays.asList(
                         new DelayState().withName("delayState").withType(DELAY)
                                 .withStart(
-                                        new Start().withKind(Start.Kind.DEFAULT)
+                                        new Start()
                                 )
                                 .withEnd(
-                                        new End().withKind(End.Kind.DEFAULT)
+                                        new End()
                                 )
                                 .withTimeDelay("PT1M")
                         )
@@ -105,10 +114,10 @@ public class WorkflowToMarkupTest {
                 .withStates(Arrays.asList(
                         new DelayState().withName("delayState").withType(DELAY)
                                 .withStart(
-                                        new Start().withKind(Start.Kind.DEFAULT)
+                                        new Start()
                                 )
                                 .withEnd(
-                                        new End().withKind(End.Kind.DEFAULT)
+                                        new End()
                                 )
                                 .withTimeDelay("PT1M")
                         )

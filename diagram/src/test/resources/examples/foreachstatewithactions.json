@@ -13,7 +13,7 @@
     {
       "name":"SendConfirmationForEachCompletedhOrder",
       "type":"foreach",
-      "start": {"kind": "default"},
+      "start": true,
       "inputCollection": "{{ $.orders[?(@.completed == true)] }}",
       "iterationParam": "{{ $.completedorder }}",
       "actions":[
@@ -26,9 +26,7 @@
             }
           }
         }],
-      "end": {
-        "kind": "default"
-      }
+      "end": true
     }
   ]
 }

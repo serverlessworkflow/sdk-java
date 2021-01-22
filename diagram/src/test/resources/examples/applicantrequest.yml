@@ -9,8 +9,7 @@ functions:
 states:
   - name: CheckApplication
     type: switch
-    start:
-      kind: default
+    start: true
     dataConditions:
       - condition: "{{ $.applicants[?(@.age >= 18)] }}"
         transition:
@@ -24,8 +23,7 @@ states:
   - name: StartApplication
     type: subflow
     workflowId: startApplicationWorkflowId
-    end:
-      kind: default
+    end: true
   - name: RejectApplication
     type: operation
     actionMode: sequential
@@ -34,5 +32,4 @@ states:
           refName: sendRejectionEmailFunction
           parameters:
             applicant: "{{ $.applicant }}"
-    end:
-      kind: default
+    end: true

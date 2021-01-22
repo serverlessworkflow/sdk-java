@@ -13,9 +13,7 @@
     {
       "name":"CheckApplication",
       "type":"switch",
-      "start": {
-        "kind": "default"
-      },
+      "start": true,
       "dataConditions": [
         {
           "condition": "{{ $.applicants[?(@.age >= 18)] }}",
@@ -40,9 +38,7 @@
       "name": "StartApplication",
       "type": "subflow",
       "workflowId": "startApplicationWorkflowId",
-      "end": {
-        "kind": "default"
-      }
+      "end": true
     },
     {
       "name":"RejectApplication",
@@ -58,9 +54,7 @@
           }
         }
       ],
-      "end": {
-        "kind": "default"
-      }
+      "end": true
     }
   ]
 }

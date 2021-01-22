@@ -13,9 +13,7 @@
     {
       "name":"Greet",
       "type":"operation",
-      "start": {
-        "kind": "default"
-      },
+      "start": true,
       "actions":[
         {
           "functionRef": {
@@ -29,9 +27,7 @@
           }
         }
       ],
-      "end": {
-        "kind": "default"
-      }
+      "end": true
     }
   ]
 }

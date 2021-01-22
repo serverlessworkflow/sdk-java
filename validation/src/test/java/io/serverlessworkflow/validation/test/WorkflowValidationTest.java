@@ -58,10 +58,10 @@ public class WorkflowValidationTest {
                 .withStates(Arrays.asList(
                         new DelayState().withName("delayState").withType(DELAY)
                                 .withStart(
-                                        new Start().withKind(Start.Kind.DEFAULT)
+                                        new Start()
                                 )
                                 .withEnd(
-                                        new End().withKind(End.Kind.DEFAULT)
+                                        new End()
                                 )
                                 .withTimeDelay("PT1M")
                         )

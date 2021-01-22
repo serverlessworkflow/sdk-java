@@ -9,9 +9,7 @@
     {
       "name": "MakeVetAppointmentState",
       "type": "operation",
-      "start": {
-        "kind": "default"
-      },
+      "start": true,
       "actions": [
         {
           "name": "MakeAppointmentAction",
@@ -31,14 +29,10 @@
           "error": "TimeoutError",
           "code": "500",
           "retryRef": "TimeoutRetryStrategy",
-          "end": {
-            "kind": "default"
-          }
+          "end": true
         }
       ],
-      "end": {
-        "kind": "default"
-      }
+      "end": true
     }
   ]
 }
