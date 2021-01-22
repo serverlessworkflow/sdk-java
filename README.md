@@ -20,6 +20,7 @@ to parse and validate workflow definitions as well as generate the workflow diag
 | :---: | :---: |
 | [1.0.1.Final](https://github.com/serverlessworkflow/sdk-java/releases/) | [v0.5](https://github.com/serverlessworkflow/specification/tree/0.5.x)  |
 | [1.0.2.Final](https://github.com/serverlessworkflow/sdk-java/releases/) | [v0.5](https://github.com/serverlessworkflow/specification/tree/0.5.x) + [Compensation support](https://github.com/serverlessworkflow/specification/blob/master/specification.md#Workflow-Compensation)  |
+| [1.0.3.Final](https://github.com/serverlessworkflow/sdk-java/releases/) | [v0.5](https://github.com/serverlessworkflow/specification/tree/0.5.x) + [Update to start/end definitions](https://github.com/serverlessworkflow/sdk-java/commit/1addf8d66450830cbc3542c8dfb968b3791aba6f)  |
 
 ### Getting Started
 
@@ -57,25 +58,25 @@ b) Add the following dependencies to your pom.xml `dependencies` section:
 <dependency>
     <groupId>io.serverlessworkflow</groupId>
     <artifactId>serverlessworkflow-api</artifactId>
-    <version>1.0.2.Final</version>
+    <version>1.0.3.Final</version>
 </dependency>
 
 <dependency>
     <groupId>io.serverlessworkflow</groupId>
     <artifactId>serverlessworkflow-spi</artifactId>
-    <version>1.0.2.Final</version>
+    <version>1.0.3.Final</version>
 </dependency>
 
 <dependency>
     <groupId>io.serverlessworkflow</groupId>
     <artifactId>serverlessworkflow-validation</artifactId>
-    <version>1.0.2.Final</version>
+    <version>1.0.3.Final</version>
 </dependency>
 
 <dependency>
     <groupId>io.serverlessworkflow</groupId>
     <artifactId>serverlessworkflow-diagram</artifactId>
-    <version>1.0.2.Final</version>
+    <version>1.0.3.Final</version>
 </dependency>
 ```
 
@@ -90,10 +91,10 @@ maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
 b) Add the following dependencies to your build.gradle `dependencies` section:
 
 ```text
-implementation("io.serverlessworkflow:serverlessworkflow-api:1.0.2.Final")
-implementation("io.serverlessworkflow:serverlessworkflow-spi:1.0.2.Final")
-implementation("io.serverlessworkflow:serverlessworkflow-validation:1.0.2.Final")
-implementation("io.serverlessworkflow:serverlessworkflow-diagram:1.0.2.Final")
+implementation("io.serverlessworkflow:serverlessworkflow-api:1.0.3.Final")
+implementation("io.serverlessworkflow:serverlessworkflow-spi:1.0.3.Final")
+implementation("io.serverlessworkflow:serverlessworkflow-validation:1.0.3.Final")
+implementation("io.serverlessworkflow:serverlessworkflow-diagram:1.0.3.Final")
 ```
 
 ### How to Use 
