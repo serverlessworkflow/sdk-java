@@ -20,6 +20,7 @@ to parse and validate workflow definitions as well as generate the workflow diag
 | :---: | :---: |
 | [1.0.1.Final](https://github.com/serverlessworkflow/sdk-java/releases/) | [v0.5](https://github.com/serverlessworkflow/specification/tree/0.5.x)  |
 | [1.0.2.Final](https://github.com/serverlessworkflow/sdk-java/releases/) | [v0.5](https://github.com/serverlessworkflow/specification/tree/0.5.x) + [Compensation support](https://github.com/serverlessworkflow/specification/blob/master/specification.md#Workflow-Compensation)  |
+| [1.0.3.Final](https://github.com/serverlessworkflow/sdk-java/releases/) | [v0.5](https://github.com/serverlessworkflow/specification/tree/0.5.x) + [Update to start/end definitions](https://github.com/serverlessworkflow/sdk-java/commit/1addf8d66450830cbc3542c8dfb968b3791aba6f)  |
 
 ### Getting Started
 
