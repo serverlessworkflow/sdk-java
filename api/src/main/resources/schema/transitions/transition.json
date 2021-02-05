@@ -2,10 +2,6 @@
   "type": "object",
   "javaType": "io.serverlessworkflow.api.transitions.Transition",
   "properties": {
-    "expression": {
-      "type": "string",
-      "description": "Common Expression Language (CEL) expression. Must evaluate to true for the transition to be valid"
-    },
     "produceEvents": {
       "type": "array",
       "description": "Array of events to be produced",
