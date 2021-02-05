@@ -43,17 +43,13 @@
       "onErrors": [
         {
           "error": "*",
-          "transition": {
-            "nextState": "SubmitError"
-          }
+          "transition": "SubmitError"
         }
       ],
       "stateDataFilter": {
         "dataOutputPath": "{{ $.jobuid }}"
       },
-      "transition": {
-        "nextState":"WaitForCompletion"
-      }
+      "transition": "WaitForCompletion"
     },
     {
       "name": "SubmitError",
@@ -65,9 +61,7 @@
       "name": "WaitForCompletion",
       "type": "delay",
       "timeDelay": "PT5S",
-      "transition": {
-        "nextState":"GetJobStatus"
-      }
+      "transition": "GetJobStatus"
     },
     {
       "name":"GetJobStatus",
@@ -89,9 +83,7 @@
       "stateDataFilter": {
         "dataOutputPath": "{{ $.jobstatus }}"
       },
-      "transition": {
-        "nextState":"DetermineCompletion"
-      }
+      "transition": "DetermineCompletion"
     },
     {
       "name":"DetermineCompletion",
@@ -99,21 +91,15 @@
       "dataConditions": [
         {
           "condition": "{{ $[?(@.jobstatus == 'SUCCEEDED')] }}",
-          "transition": {
-            "nextState": "JobSucceeded"
-          }
+          "transition": "JobSucceeded"
         },
         {
           "condition": "{{ $[?(@.jobstatus == 'FAILED')] }}",
-          "transition": {
-            "nextState": "JobFailed"
-          }
+          "transition": "JobFailed"
         }
       ],
       "default": {
-        "transition": {
-          "nextState": "WaitForCompletion"
-        }
+        "transition": "WaitForCompletion"
       }
     },
     {

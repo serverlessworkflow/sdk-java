@@ -16,15 +16,12 @@ states:
     start: true
     eventConditions:
       - eventRef: visaApprovedEvent
-        transition:
-          nextState: HandleApprovedVisa
+        transition: HandleApprovedVisa
       - eventRef: visaRejectedEvent
-        transition:
-          nextState: HandleRejectedVisa
+        transition: HandleRejectedVisa
     eventTimeout: PT1H
     default:
-      transition:
-        nextState: HandleNoVisaDecision
+      transition: HandleNoVisaDecision
   - name: HandleApprovedVisa
     type: subflow
     workflowId: handleApprovedVisaWorkflowID

@@ -17,10 +17,15 @@
 package io.serverlessworkflow.api.test;
 
 import io.serverlessworkflow.api.Workflow;
+import io.serverlessworkflow.api.actions.Action;
+import io.serverlessworkflow.api.defaultdef.DefaultDefinition;
 import io.serverlessworkflow.api.functions.FunctionDefinition;
+import io.serverlessworkflow.api.functions.FunctionRef;
 import io.serverlessworkflow.api.interfaces.State;
 import io.serverlessworkflow.api.states.EventState;
 import io.serverlessworkflow.api.states.OperationState;
+import io.serverlessworkflow.api.states.SwitchState;
+import io.serverlessworkflow.api.switchconditions.DataCondition;
 import io.serverlessworkflow.api.test.utils.WorkflowTestUtils;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -146,5 +151,89 @@ public class MarkupToWorkflowTest {
 
         FunctionDefinition restFunc2 = functionDefs.get(1);
         assertEquals(restFunc2.getType(), FunctionDefinition.Type.EXPRESSION);
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/features/transitions.json", "/features/transitions.yml"})
+    public void testTransitions(String workflowLocation) {
+        Workflow workflow = Workflow.fromSource(WorkflowTestUtils.readWorkflowFile(workflowLocation));
+
+        assertNotNull(workflow);
+        assertNotNull(workflow.getId());
+        assertNotNull(workflow.getName());
+        assertNotNull(workflow.getStates());
+
+        assertNotNull(workflow.getStates());
+        assertTrue(workflow.getStates().size() == 1);
+
+        State state = workflow.getStates().get(0);
+        assertTrue(state instanceof SwitchState);
+
+        SwitchState switchState = (SwitchState) workflow.getStates().get(0);
+        assertNotNull(switchState.getDataConditions());
+        List<DataCondition> dataConditions = switchState.getDataConditions();
+
+        assertEquals(2, dataConditions.size());
+
+        DataCondition cond1 = switchState.getDataConditions().get(0);
+        assertNotNull(cond1.getTransition());
+        assertEquals("StartApplication", cond1.getTransition().getNextState());
+        assertNotNull(cond1.getTransition().getProduceEvents());
+        assertTrue(cond1.getTransition().getProduceEvents().isEmpty());
+        assertFalse(cond1.getTransition().isCompensate());
+
+
+        DataCondition cond2 = switchState.getDataConditions().get(1);
+        assertNotNull(cond2.getTransition());
+        assertEquals("RejectApplication", cond2.getTransition().getNextState());
+        assertNotNull(cond2.getTransition().getProduceEvents());
+        assertEquals(1, cond2.getTransition().getProduceEvents().size());
+        assertFalse(cond2.getTransition().isCompensate());
+
+
+        assertNotNull(switchState.getDefault());
+        DefaultDefinition defaultDefinition = switchState.getDefault();
+        assertNotNull(defaultDefinition.getTransition());
+        assertEquals("RejectApplication", defaultDefinition.getTransition().getNextState());
+        assertNotNull(defaultDefinition.getTransition().getProduceEvents());
+        assertTrue(defaultDefinition.getTransition().getProduceEvents().isEmpty());
+        assertTrue(defaultDefinition.getTransition().isCompensate());
+
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/features/functionrefs.json", "/features/functionrefs.yml"})
+    public void testFunctionRefs(String workflowLocation) {
+        Workflow workflow = Workflow.fromSource(WorkflowTestUtils.readWorkflowFile(workflowLocation));
+
+        assertNotNull(workflow);
+        assertNotNull(workflow.getId());
+        assertNotNull(workflow.getName());
+        assertNotNull(workflow.getStates());
+
+        assertNotNull(workflow.getStates());
+        assertTrue(workflow.getStates().size() == 1);
+
+        State state = workflow.getStates().get(0);
+        assertTrue(state instanceof OperationState);
+
+        OperationState operationState = (OperationState) workflow.getStates().get(0);
+        assertNotNull(operationState.getActions());
+        assertEquals(2, operationState.getActions().size());
+
+        Action action1 = operationState.getActions().get(0);
+        assertNotNull(action1);
+        assertNotNull(action1.getFunctionRef());
+        FunctionRef functionRef1 = action1.getFunctionRef();
+        assertEquals("creditCheckFunction", functionRef1.getRefName());
+        assertEquals(0, functionRef1.getParameters().size());
+
+        Action action2 = operationState.getActions().get(1);
+        assertNotNull(action2);
+        assertNotNull(action2.getFunctionRef());
+        FunctionRef functionRef2 = action2.getFunctionRef();
+        assertEquals("sendRejectionEmailFunction", functionRef2.getRefName());
+        assertEquals(1, functionRef2.getParameters().size());
+        assertEquals("{{ $.customer }}", functionRef2.getParameters().get("applicant"));
     }
 }

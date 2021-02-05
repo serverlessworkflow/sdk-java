@@ -12,16 +12,12 @@
         {
           "name": "first",
           "condition": "",
-          "transition": {
-            "nextState": "FromFirstCondition"
-          }
+          "transition": "FromFirstCondition"
         },
         {
           "name": "second",
           "condition": "",
-          "transition": {
-            "nextState": "FromSecondCondition"
-          }
+          "transition": "FromSecondCondition"
         },
         {
           "name": "third",

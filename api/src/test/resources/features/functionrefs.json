@@ -1,0 +1,38 @@
+{
+  "id": "functionrefs",
+  "version": "1.0",
+  "name": "Customer Credit Check Workflow",
+  "description": "Perform Customer Credit Check",
+  "functions": [
+    {
+      "name": "creditCheckFunction",
+      "operation": "http://myapis.org/creditcheckapi.json#doCreditCheck"
+    },
+    {
+      "name": "sendRejectionEmailFunction",
+      "operation": "http://myapis.org/creditcheckapi.json#rejectionEmail"
+    }
+  ],
+  "states": [
+    {
+      "name": "TestFunctionRefs",
+      "type": "operation",
+      "actionMode": "sequential",
+      "start": true,
+      "actions": [
+        {
+          "functionRef": "creditCheckFunction"
+        },
+        {
+          "functionRef": {
+            "refName": "sendRejectionEmailFunction",
+            "parameters": {
+              "applicant": "{{ $.customer }}"
+            }
+          }
+        }
+      ],
+      "end": true
+    }
+  ]
+}

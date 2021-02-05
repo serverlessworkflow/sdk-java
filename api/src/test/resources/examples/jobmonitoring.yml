@@ -26,12 +26,10 @@ states:
           dataResultsPath: "{{ $.jobuid }}"
     onErrors:
       - error: "*"
-        transition:
-          nextState: SubmitError
+        transition: SubmitError
     stateDataFilter:
       dataOutputPath: "{{ $.jobuid }}"
-    transition:
-      nextState: WaitForCompletion
+    transition: WaitForCompletion
   - name: SubmitError
     type: subflow
     workflowId: handleJobSubmissionErrorWorkflow
@@ -39,8 +37,7 @@ states:
   - name: WaitForCompletion
     type: delay
     timeDelay: PT5S
-    transition:
-      nextState: GetJobStatus
+    transition: GetJobStatus
   - name: GetJobStatus
     type: operation
     actionMode: sequential
@@ -53,20 +50,16 @@ states:
           dataResultsPath: "{{ $.jobstatus }}"
     stateDataFilter:
       dataOutputPath: "{{ $.jobstatus }}"
-    transition:
-      nextState: DetermineCompletion
+    transition: DetermineCompletion
   - name: DetermineCompletion
     type: switch
     dataConditions:
       - condition: "{{ $[?(@.jobstatus == 'SUCCEEDED')] }}"
-        transition:
-          nextState: JobSucceeded
+        transition: JobSucceeded
       - condition: "{{ $[?(@.jobstatus == 'FAILED')] }}"
-        transition:
-          nextState: JobFailed
+        transition: JobFailed
     default:
-      transition:
-        nextState: WaitForCompletion
+      transition: WaitForCompletion
   - name: JobSucceeded
     type: operation
     actionMode: sequential

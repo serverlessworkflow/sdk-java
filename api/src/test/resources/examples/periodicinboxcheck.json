@@ -27,14 +27,10 @@
       "actionMode": "sequential",
       "actions": [
         {
-          "functionRef": {
-            "refName": "checkInboxFunction"
-          }
+          "functionRef": "checkInboxFunction"
         }
       ],
-      "transition": {
-        "nextState": "SendTextForHighPrioriry"
-      }
+      "transition": "SendTextForHighPrioriry"
     },
     {
       "name": "SendTextForHighPrioriry",
