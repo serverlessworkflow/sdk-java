@@ -19,6 +19,7 @@ package io.serverlessworkflow.api.test;
 import io.serverlessworkflow.api.Workflow;
 import io.serverlessworkflow.api.actions.Action;
 import io.serverlessworkflow.api.defaultdef.DefaultDefinition;
+import io.serverlessworkflow.api.exectimeout.ExecTimeout;
 import io.serverlessworkflow.api.functions.FunctionDefinition;
 import io.serverlessworkflow.api.functions.FunctionRef;
 import io.serverlessworkflow.api.interfaces.State;
@@ -53,7 +54,8 @@ public class MarkupToWorkflowTest {
             "/examples/foreachstatewithactions.json", "/examples/foreachstatewithactions.yml",
             "/examples/periodicinboxcheck.json", "/examples/periodicinboxcheck.yml",
             "/examples/vetappointmentservice.json", "/examples/vetappointmentservice.yml",
-            "/examples/eventbasedtransition.json", "/examples/eventbasedtransition.yml"
+            "/examples/eventbasedtransition.json", "/examples/eventbasedtransition.yml",
+            "/examples/roomreadings.json", "/examples/roomreadings.yml"
     })
     public void testSpecExamplesParsing(String workflowLocation) {
         Workflow workflow = Workflow.fromSource(WorkflowTestUtils.readWorkflowFile(workflowLocation));
@@ -235,5 +237,23 @@ public class MarkupToWorkflowTest {
         assertEquals("sendRejectionEmailFunction", functionRef2.getRefName());
         assertEquals(1, functionRef2.getParameters().size());
         assertEquals("{{ $.customer }}", functionRef2.getParameters().get("applicant"));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/features/keepactiveexectimeout.json", "/features/keepactiveexectimeout.yml"})
+    public void testKeepActiveExecTimeout(String workflowLocation) {
+        Workflow workflow = Workflow.fromSource(WorkflowTestUtils.readWorkflowFile(workflowLocation));
+
+        assertNotNull(workflow);
+        assertNotNull(workflow.getId());
+        assertNotNull(workflow.getName());
+        assertNotNull(workflow.getStates());
+
+        assertTrue(workflow.isKeepActive());
+        assertNotNull(workflow.getExecTimeout());
+
+        ExecTimeout execTimeout = workflow.getExecTimeout();
+        assertEquals("PT1H", execTimeout.getInterval());
+        assertEquals("GenerateReport", execTimeout.getRunBefore());
     }
 }

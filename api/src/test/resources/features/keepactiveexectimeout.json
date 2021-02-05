@@ -1,0 +1,12 @@
+{
+  "id": "keepactiveexectimeout",
+  "name": "Keep Active and Exec Timeout Test Workflow",
+  "version": "1.0",
+  "execTimeout": {
+    "interval": "PT1H",
+    "runBefore": "GenerateReport"
+  },
+  "keepActive": true,
+  "states": [
+  ]
+}

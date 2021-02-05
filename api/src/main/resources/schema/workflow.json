@@ -39,6 +39,15 @@
       "type": "string",
       "description": "URI to JSON Schema that workflow data output adheres to"
     },
+    "execTimeout": {
+      "description": "Workflow execution timeout",
+      "$ref": "exectimeout/exectimeout.json"
+    },
+    "keepActive": {
+      "type": "boolean",
+      "default": false,
+      "description": "If 'true', workflow instances is not terminated when there are no active execution paths. Instance can be terminated via 'terminate end definition' or reaching defined 'execTimeout'"
+    },
     "metadata": {
       "$ref": "metadata/metadata.json"
     },
