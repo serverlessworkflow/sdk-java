@@ -31,14 +31,6 @@
       "type": "string",
       "description": "Serverless Workflow schema version"
     },
-    "dataInputSchema": {
-      "type": "string",
-      "description": "URI to JSON Schema that workflow data input adheres to"
-    },
-    "dataOutputSchema": {
-      "type": "string",
-      "description": "URI to JSON Schema that workflow data output adheres to"
-    },
     "execTimeout": {
       "description": "Workflow execution timeout",
       "$ref": "exectimeout/exectimeout.json"
