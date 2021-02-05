@@ -40,10 +40,6 @@ public interface State {
 
     StateDataFilter getStateDataFilter();
 
-    String getDataInputSchema();
-
-    String getDataOutputSchema();
-
     Transition getTransition();
 
     List<Error> getOnErrors();

@@ -75,16 +75,6 @@ public class WorkflowSerializer extends StdSerializer<Workflow> {
                     workflow.getSchemaVersion());
         }
 
-        if (workflow.getDataInputSchema() != null && !workflow.getDataInputSchema().isEmpty()) {
-            gen.writeObjectField("dataInputSchema",
-                    workflow.getDataInputSchema());
-        }
-
-        if (workflow.getDataOutputSchema() != null && !workflow.getDataOutputSchema().isEmpty()) {
-            gen.writeObjectField("dataOutputSchema",
-                    workflow.getDataOutputSchema());
-        }
-
         if (workflow.getExecTimeout() != null) {
             gen.writeObjectField("execTimeout", workflow.getExecTimeout());
         }

@@ -49,14 +49,6 @@
     "transition": {
       "$ref": "../transitions/transition.json"
     },
-    "dataInputSchema": {
-      "type": "string",
-      "description": "URI to JSON Schema that state data input adheres to"
-    },
-    "dataOutputSchema": {
-      "type": "string",
-      "description": "URI to JSON Schema that state data output adheres to"
-    },
     "onErrors": {
       "type": "array",
       "description": "State error handling definitions",
