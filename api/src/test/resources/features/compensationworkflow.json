@@ -33,9 +33,7 @@
         }
       ],
       "compensatedBy": "CancelPurchase",
-      "transition": {
-        "nextState": "SomeNextWorkflowState"
-      }
+      "transition": "SomeNextWorkflowState"
     },
     {
       "name": "CancelPurchase",

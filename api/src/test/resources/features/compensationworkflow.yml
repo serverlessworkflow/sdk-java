@@ -18,8 +18,7 @@ states:
               parameters:
                 customerid: "{{ $.purchase.customerid }}"
     compensatedBy: CancelPurchase
-    transition:
-      nextState: SomeNextWorkflowState
+    transition: SomeNextWorkflowState
   - name: CancelPurchase
     type: operation
     usedForCompensation: true

@@ -10,12 +10,10 @@ states:
     eventConditions:
       - name: first
         eventRef: firstEvent
-        transition:
-          nextState: FromFirstCondition
+        transition: FromFirstCondition
       - name: second
         eventRef: secondEvent
-        transition:
-          nextState: FromSecondCondition
+        transition: FromSecondCondition
       - name: third
         eventRef: thirdEvent
         end: true

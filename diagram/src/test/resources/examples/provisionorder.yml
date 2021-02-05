@@ -17,18 +17,14 @@ states:
             order: "{{ $.order }}"
     onErrors:
       - error: "MissingOrderId"
-        transition:
-          nextState: MissingId
+        transition: MissingId
       - error: "MissingOrderItem"
-        transition:
-          nextState: MissingItem
+        transition: MissingItem
       - error: "MissingOrderQuantity"
-        transition:
-          nextState: MissingQuantity
+        transition: MissingQuantity
     stateDataFilter:
       dataOutputPath: "{{ $.exceptions }}"
-    transition:
-      nextState: ApplyOrder
+    transition: ApplyOrder
   - name: MissingId
     type: subflow
     workflowId: handleMissingIdExceptionWorkflow

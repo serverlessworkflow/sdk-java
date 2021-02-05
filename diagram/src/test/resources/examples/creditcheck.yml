@@ -25,22 +25,18 @@ states:
           customer: "{{ $.customer }}"
     eventRef: CreditCheckCompletedEvent
     timeout: PT15M
-    transition:
-      nextState: EvaluateDecision
+    transition: EvaluateDecision
   - name: EvaluateDecision
     type: switch
     dataConditions:
       - name: Approved
         condition: "{{ $.creditCheck[?(@.decision == 'Approved')] }}"
-        transition:
-          nextState: StartApplication
+        transition: StartApplication
       - name: Denied
         condition: "{{ $.creditCheck[?(@.decision == 'Denied')] }}"
-        transition:
-          nextState: RejectApplication
+        transition: RejectApplication
     default:
-      transition:
-        nextState: RejectApplication
+      transition: RejectApplication
   - name: StartApplication
     type: subflow
     workflowId: startApplicationWorkflowId

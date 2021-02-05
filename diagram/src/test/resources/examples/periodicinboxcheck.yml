@@ -16,10 +16,8 @@ states:
           expression: 0 0/15 * * * ?
     actionMode: sequential
     actions:
-      - functionRef:
-          refName: checkInboxFunction
-    transition:
-      nextState: SendTextForHighPrioriry
+      - functionRef: checkInboxFunction
+    transition: SendTextForHighPrioriry
   - name: SendTextForHighPrioriry
     type: foreach
     inputCollection: "{{ $.messages }}"

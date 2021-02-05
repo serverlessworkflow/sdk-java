@@ -22,6 +22,7 @@ import io.serverlessworkflow.api.end.End;
 import io.serverlessworkflow.api.events.EventDefinition;
 import io.serverlessworkflow.api.events.OnEvents;
 import io.serverlessworkflow.api.functions.FunctionDefinition;
+import io.serverlessworkflow.api.functions.FunctionRef;
 import io.serverlessworkflow.api.interfaces.Extension;
 import io.serverlessworkflow.api.interfaces.State;
 import io.serverlessworkflow.api.interfaces.WorkflowPropertySource;
@@ -31,6 +32,7 @@ import io.serverlessworkflow.api.start.Start;
 import io.serverlessworkflow.api.states.DefaultState;
 import io.serverlessworkflow.api.states.OperationState;
 import io.serverlessworkflow.api.states.ParallelState;
+import io.serverlessworkflow.api.transitions.Transition;
 import io.serverlessworkflow.api.workflow.Events;
 import io.serverlessworkflow.api.workflow.Functions;
 import io.serverlessworkflow.api.workflow.Retries;
@@ -69,6 +71,8 @@ public class WorkflowModule extends SimpleModule {
         addSerializer(new CallbackStateSerializer());
         addSerializer(new StartDefinitionSerializer());
         addSerializer(new EndDefinitionSerializer());
+        addSerializer(new TransitionSerializer());
+        addSerializer(new FunctionRefSerializer());
         addSerializer(extensionSerializer);
     }
 
@@ -93,7 +97,8 @@ public class WorkflowModule extends SimpleModule {
         addDeserializer(End.class, new EndDefinitionDeserializer(workflowPropertySource));
         addDeserializer(Extension.class, extensionDeserializer);
         addDeserializer(FunctionDefinition.Type.class, new FunctionDefinitionTypeDeserializer(workflowPropertySource));
-
+        addDeserializer(Transition.class, new TransitionDeserializer(workflowPropertySource));
+        addDeserializer(FunctionRef.class, new FunctionRefDeserializer(workflowPropertySource));
     }
 
     public ExtensionSerializer getExtensionSerializer() {

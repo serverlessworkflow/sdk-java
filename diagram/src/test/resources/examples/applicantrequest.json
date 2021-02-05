@@ -17,21 +17,15 @@
       "dataConditions": [
         {
           "condition": "{{ $.applicants[?(@.age >= 18)] }}",
-          "transition": {
-            "nextState": "StartApplication"
-          }
+          "transition": "StartApplication"
         },
         {
           "condition": "{{ $.applicants[?(@.age < 18)] }}",
-          "transition": {
-            "nextState": "RejectApplication"
-          }
+          "transition": "RejectApplication"
         }
       ],
       "default": {
-        "transition": {
-          "nextState": "RejectApplication"
-        }
+        "transition": "RejectApplication"
       }
     },
     {
