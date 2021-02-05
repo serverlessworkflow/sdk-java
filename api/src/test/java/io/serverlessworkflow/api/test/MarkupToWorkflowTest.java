@@ -22,8 +22,6 @@ import io.serverlessworkflow.api.interfaces.State;
 import io.serverlessworkflow.api.states.EventState;
 import io.serverlessworkflow.api.states.OperationState;
 import io.serverlessworkflow.api.test.utils.WorkflowTestUtils;
-import io.serverlessworkflow.api.workflow.Functions;
-import jdk.dynalink.Operation;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
