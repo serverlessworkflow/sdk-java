@@ -21,6 +21,7 @@ import io.serverlessworkflow.api.deserializers.*;
 import io.serverlessworkflow.api.end.End;
 import io.serverlessworkflow.api.events.EventDefinition;
 import io.serverlessworkflow.api.events.OnEvents;
+import io.serverlessworkflow.api.functions.FunctionDefinition;
 import io.serverlessworkflow.api.interfaces.Extension;
 import io.serverlessworkflow.api.interfaces.State;
 import io.serverlessworkflow.api.interfaces.WorkflowPropertySource;
@@ -91,6 +92,7 @@ public class WorkflowModule extends SimpleModule {
         addDeserializer(Start.class, new StartDefinitionDeserializer(workflowPropertySource));
         addDeserializer(End.class, new EndDefinitionDeserializer(workflowPropertySource));
         addDeserializer(Extension.class, extensionDeserializer);
+        addDeserializer(FunctionDefinition.Type.class, new FunctionDefinitionTypeDeserializer(workflowPropertySource));
 
     }
 

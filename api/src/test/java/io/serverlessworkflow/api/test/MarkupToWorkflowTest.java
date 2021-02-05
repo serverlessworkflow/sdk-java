@@ -17,12 +17,17 @@
 package io.serverlessworkflow.api.test;
 
 import io.serverlessworkflow.api.Workflow;
+import io.serverlessworkflow.api.functions.FunctionDefinition;
 import io.serverlessworkflow.api.interfaces.State;
 import io.serverlessworkflow.api.states.EventState;
 import io.serverlessworkflow.api.states.OperationState;
 import io.serverlessworkflow.api.test.utils.WorkflowTestUtils;
+import io.serverlessworkflow.api.workflow.Functions;
+import jdk.dynalink.Operation;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -116,5 +121,32 @@ public class MarkupToWorkflowTest {
         OperationState operationState = (OperationState) secondState;
 
         assertTrue(operationState.isUsedForCompensation());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/features/functiontypes.json", "/features/functiontypes.yml"})
+    public void testFunctionTypes(String workflowLocation) {
+        Workflow workflow = Workflow.fromSource(WorkflowTestUtils.readWorkflowFile(workflowLocation));
+
+        assertNotNull(workflow);
+        assertNotNull(workflow.getId());
+        assertNotNull(workflow.getName());
+        assertNotNull(workflow.getStates());
+
+        assertNotNull(workflow.getStates());
+        assertTrue(workflow.getStates().size() == 1);
+
+        State state = workflow.getStates().get(0);
+        assertTrue(state instanceof OperationState);
+
+        List<FunctionDefinition> functionDefs = workflow.getFunctions().getFunctionDefs();
+        assertNotNull(functionDefs);
+        assertTrue(functionDefs.size() == 2);
+
+        FunctionDefinition restFunc = functionDefs.get(0);
+        assertEquals(restFunc.getType(), FunctionDefinition.Type.REST);
+
+        FunctionDefinition restFunc2 = functionDefs.get(1);
+        assertEquals(restFunc2.getType(), FunctionDefinition.Type.EXPRESSION);
     }
 }
