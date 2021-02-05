@@ -25,6 +25,7 @@ import io.serverlessworkflow.api.functions.FunctionRef;
 import io.serverlessworkflow.api.interfaces.State;
 import io.serverlessworkflow.api.states.EventState;
 import io.serverlessworkflow.api.states.OperationState;
+import io.serverlessworkflow.api.states.SubflowState;
 import io.serverlessworkflow.api.states.SwitchState;
 import io.serverlessworkflow.api.switchconditions.DataCondition;
 import io.serverlessworkflow.api.test.utils.WorkflowTestUtils;
@@ -55,7 +56,8 @@ public class MarkupToWorkflowTest {
             "/examples/periodicinboxcheck.json", "/examples/periodicinboxcheck.yml",
             "/examples/vetappointmentservice.json", "/examples/vetappointmentservice.yml",
             "/examples/eventbasedtransition.json", "/examples/eventbasedtransition.yml",
-            "/examples/roomreadings.json", "/examples/roomreadings.yml"
+            "/examples/roomreadings.json", "/examples/roomreadings.yml",
+            "/examples/checkcarvitals.json", "/examples/checkcarvitals.yml"
     })
     public void testSpecExamplesParsing(String workflowLocation) {
         Workflow workflow = Workflow.fromSource(WorkflowTestUtils.readWorkflowFile(workflowLocation));
@@ -255,5 +257,30 @@ public class MarkupToWorkflowTest {
         ExecTimeout execTimeout = workflow.getExecTimeout();
         assertEquals("PT1H", execTimeout.getInterval());
         assertEquals("GenerateReport", execTimeout.getRunBefore());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/features/checkcarvitals.json", "/features/checkcarvitals.yml"})
+    public void testSubflowStateRepeat(String workflowLocation) {
+        Workflow workflow = Workflow.fromSource(WorkflowTestUtils.readWorkflowFile(workflowLocation));
+
+        assertNotNull(workflow);
+        assertNotNull(workflow.getId());
+        assertNotNull(workflow.getName());
+        assertNotNull(workflow.getStates());
+
+        assertNotNull(workflow.getStates());
+        assertTrue(workflow.getStates().size() == 2);
+
+        State state = workflow.getStates().get(1);
+        assertTrue(state instanceof SubflowState);
+
+        SubflowState subflowState = (SubflowState) workflow.getStates().get(1);
+        assertNotNull(subflowState.getRepeat());
+        assertEquals(10, subflowState.getRepeat().getMax());
+        assertTrue(subflowState.getRepeat().isContinueOnError());
+        assertNotNull(subflowState.getRepeat().getStopOnEvents());
+        assertEquals(1, subflowState.getRepeat().getStopOnEvents().size());
+        assertEquals("CarTurnedOffEvent", subflowState.getRepeat().getStopOnEvents().get(0));
     }
 }
