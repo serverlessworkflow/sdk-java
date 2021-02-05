@@ -22,6 +22,10 @@
       "type": "boolean",
       "default": false,
       "description": "If true, this state is used to compensate another state. Default is false"
+    },
+    "repeat": {
+      "$ref": "../repeat/repeat.json",
+      "description": "SubFlow state repeat exec definition"
     }
   },
   "required": [
