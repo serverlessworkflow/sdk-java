@@ -85,6 +85,14 @@ public class WorkflowSerializer extends StdSerializer<Workflow> {
                     workflow.getDataOutputSchema());
         }
 
+        if (workflow.getExecTimeout() != null) {
+            gen.writeObjectField("execTimeout", workflow.getExecTimeout());
+        }
+
+        if (workflow.isKeepActive()) {
+            gen.writeBooleanField("keepActive", workflow.isKeepActive());
+        }
+
         if (workflow.getMetadata() != null && !workflow.getMetadata().isEmpty()) {
             gen.writeObjectField("metadata",
                     workflow.getMetadata());
