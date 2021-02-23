@@ -1,0 +1,23 @@
+{
+  "id": "functionrefparams",
+  "version": "1.0",
+  "name": "Function Ref Params Test",
+  "states": [
+    {
+      "name": "AddPluto",
+      "type": "operation",
+      "start": true,
+      "actions": [
+        {
+          "functionRef": {
+            "refName": "addPet"
+          }
+        },
+        {
+          "functionRef": "addPet"
+        }
+      ],
+      "end": true
+    }
+  ]
+}

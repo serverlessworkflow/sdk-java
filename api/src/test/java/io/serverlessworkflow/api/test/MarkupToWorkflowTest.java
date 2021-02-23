@@ -316,4 +316,33 @@ public class MarkupToWorkflowTest {
         assertEquals("Pluto", params.get("body").get("name").asText());
         assertEquals("${ .pet.tagnumber }", params.get("body").get("tag").asText());
     }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/features/functionrefnoparams.json", "/features/functionrefnoparams.yml"})
+    public void testFunctionRefNoParams(String workflowLocation) {
+        Workflow workflow = Workflow.fromSource(WorkflowTestUtils.readWorkflowFile(workflowLocation));
+
+        assertNotNull(workflow);
+        assertNotNull(workflow.getId());
+        assertNotNull(workflow.getName());
+        assertNotNull(workflow.getStates());
+
+        assertNotNull(workflow.getStates());
+        assertTrue(workflow.getStates().size() == 1);
+        assertTrue(workflow.getStates().get(0) instanceof OperationState);
+
+        OperationState operationState = (OperationState) workflow.getStates().get(0);
+        assertNotNull(operationState.getActions());
+        assertEquals(2, operationState.getActions().size());
+        List<Action> actions = operationState.getActions();
+        assertNotNull(actions.get(0).getFunctionRef());
+        assertNotNull(actions.get(1).getFunctionRef());
+        assertEquals("addPet", actions.get(0).getFunctionRef().getRefName());
+        assertEquals("addPet", actions.get(1).getFunctionRef().getRefName());
+
+        JsonNode params = actions.get(0).getFunctionRef().getParameters();
+        assertNull(params);
+        JsonNode params2 = actions.get(1).getFunctionRef().getParameters();
+        assertNull(params);
+    }
 }
