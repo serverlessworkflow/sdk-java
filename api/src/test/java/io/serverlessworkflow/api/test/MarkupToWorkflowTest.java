@@ -232,7 +232,7 @@ public class MarkupToWorkflowTest {
         assertNotNull(action1.getFunctionRef());
         FunctionRef functionRef1 = action1.getFunctionRef();
         assertEquals("creditCheckFunction", functionRef1.getRefName());
-        assertEquals(0, functionRef1.getParameters().size());
+        assertNull(functionRef1.getParameters());
 
         Action action2 = operationState.getActions().get(1);
         assertNotNull(action2);
