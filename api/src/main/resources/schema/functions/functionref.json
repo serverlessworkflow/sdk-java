@@ -10,7 +10,7 @@
     "parameters": {
       "type": "object",
       "description": "Function parameters",
-      "existingJavaType": "java.util.Map<String, String>"
+      "existingJavaType": "com.fasterxml.jackson.databind.JsonNode"
     }
   },
   "required": [

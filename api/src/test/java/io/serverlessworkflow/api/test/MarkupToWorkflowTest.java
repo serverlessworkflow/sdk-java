@@ -16,6 +16,7 @@
  */
 package io.serverlessworkflow.api.test;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import io.serverlessworkflow.api.Workflow;
 import io.serverlessworkflow.api.actions.Action;
 import io.serverlessworkflow.api.defaultdef.DefaultDefinition;
@@ -33,6 +34,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -238,7 +240,7 @@ public class MarkupToWorkflowTest {
         FunctionRef functionRef2 = action2.getFunctionRef();
         assertEquals("sendRejectionEmailFunction", functionRef2.getRefName());
         assertEquals(1, functionRef2.getParameters().size());
-        assertEquals("{{ $.customer }}", functionRef2.getParameters().get("applicant"));
+        assertEquals("{{ $.customer }}", functionRef2.getParameters().get("applicant").asText());
     }
 
     @ParameterizedTest
@@ -282,5 +284,36 @@ public class MarkupToWorkflowTest {
         assertNotNull(subflowState.getRepeat().getStopOnEvents());
         assertEquals(1, subflowState.getRepeat().getStopOnEvents().size());
         assertEquals("CarTurnedOffEvent", subflowState.getRepeat().getStopOnEvents().get(0));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/features/functionrefjsonparams.json", "/features/functionrefjsonparams.yml"})
+    public void testFunctionRefJsonParams(String workflowLocation) {
+        Workflow workflow = Workflow.fromSource(WorkflowTestUtils.readWorkflowFile(workflowLocation));
+
+        assertNotNull(workflow);
+        assertNotNull(workflow.getId());
+        assertNotNull(workflow.getName());
+        assertNotNull(workflow.getStates());
+
+        assertNotNull(workflow.getStates());
+        assertTrue(workflow.getStates().size() == 1);
+        assertTrue(workflow.getStates().get(0) instanceof OperationState);
+
+        OperationState operationState = (OperationState) workflow.getStates().get(0);
+        assertNotNull(operationState.getActions());
+        assertEquals(1, operationState.getActions().size());
+        List<Action> actions = operationState.getActions();
+        assertNotNull(actions.get(0).getFunctionRef());
+        assertEquals("addPet", actions.get(0).getFunctionRef().getRefName());
+
+        JsonNode params = actions.get(0).getFunctionRef().getParameters();
+        assertNotNull(params);
+        assertEquals(4, params.size());
+        assertEquals(123, params.get("id").intValue());
+        assertEquals("My Address, 123 MyCity, MyCountry", params.get("address").asText());
+        assertEquals("${ .owner.name }", params.get("owner").asText());
+        assertEquals("Pluto", params.get("body").get("name").asText());
+        assertEquals("${ .pet.tagnumber }", params.get("body").get("tag").asText());
     }
 }

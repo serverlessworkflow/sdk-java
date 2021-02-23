@@ -1,0 +1,29 @@
+{
+  "id": "functionrefparams",
+  "version": "1.0",
+  "name": "Function Ref Params Test",
+  "states": [
+    {
+      "name": "AddPluto",
+      "type": "operation",
+      "start": true,
+      "actions": [
+        {
+          "functionRef": {
+            "refName": "addPet",
+            "parameters": {
+              "body": {
+                "name": "Pluto",
+                "tag": "${ .pet.tagnumber }"
+              },
+              "id": 123,
+              "address": "My Address, 123 MyCity, MyCountry",
+              "owner": "${ .owner.name }"
+            }
+          }
+        }
+      ],
+      "end": true
+    }
+  ]
+}
