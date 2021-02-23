@@ -54,7 +54,6 @@ public class FunctionRefSerializer extends StdSerializer<FunctionRef> {
                     gen.writeObjectField("parameters", functionRef.getParameters());
                 }
 
-
                 gen.writeEndObject();
             }
         }

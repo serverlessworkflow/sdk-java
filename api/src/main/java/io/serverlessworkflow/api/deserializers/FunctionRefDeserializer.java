@@ -28,7 +28,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Map;
 
 public class FunctionRefDeserializer extends StdDeserializer<FunctionRef> {
 
@@ -61,11 +60,12 @@ public class FunctionRefDeserializer extends StdDeserializer<FunctionRef> {
 
         if (!node.isObject()) {
             functionRef.setRefName(node.asText());
-            functionRef.setParameters(new HashMap<>());
+            ObjectMapper objectMapper = new ObjectMapper();
+            functionRef.setParameters(null);
             return functionRef;
         } else {
             if(node.get("parameters") != null) {
-                functionRef.setParameters(mapper.treeToValue(node.get("parameters"), Map.class));
+                functionRef.setParameters(mapper.treeToValue(node.get("parameters"), JsonNode.class));
             }
 
             if(node.get("refName") != null) {
