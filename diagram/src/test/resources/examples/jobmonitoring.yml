@@ -20,7 +20,7 @@ states:
     actions:
       - functionRef:
           refName: submitJob
-          parameters:
+          arguments:
             name: "{{ $.job.name }}"
         actionDataFilter:
           dataResultsPath: "{{ $.jobuid }}"
@@ -44,7 +44,7 @@ states:
     actions:
       - functionRef:
           refName: checkJobStatus
-          parameters:
+          arguments:
             name: "{{ $.jobuid }}"
         actionDataFilter:
           dataResultsPath: "{{ $.jobstatus }}"
@@ -66,7 +66,7 @@ states:
     actions:
       - functionRef:
           refName: reportJobSuceeded
-          parameters:
+          arguments:
             name: "{{ $.jobuid }}"
     end: true
   - name: JobFailed
@@ -75,6 +75,6 @@ states:
     actions:
       - functionRef:
           refName: reportJobFailed
-          parameters:
+          arguments:
             name: "{{ $.jobuid }}"
     end: true

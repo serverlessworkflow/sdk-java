@@ -15,7 +15,7 @@
             {
               "functionRef": {
                 "refName": "DebitCustomerFunction",
-                "parameters": {
+                "arguments": {
                   "customerid": "{{ $.purchase.customerid }}",
                   "amount": "{{ $.purchase.amount }}"
                 }
@@ -24,7 +24,7 @@
             {
               "functionRef": {
                 "refName": "SendPurchaseConfirmationEmailFunction",
-                "parameters": {
+                "arguments": {
                   "customerid": "{{ $.purchase.customerid }}"
                 }
               }
@@ -43,7 +43,7 @@
         {
           "functionRef": {
             "refName": "CreditCustomerFunction",
-            "parameters": {
+            "arguments": {
               "customerid": "{{ $.purchase.customerid }}",
               "amount": "{{ $.purchase.amount }}"
             }
@@ -52,7 +52,7 @@
         {
           "functionRef": {
             "refName": "SendPurchaseCancellationEmailFunction",
-            "parameters": {
+            "arguments": {
               "customerid": "{{ $.purchase.customerid }}"
             }
           }

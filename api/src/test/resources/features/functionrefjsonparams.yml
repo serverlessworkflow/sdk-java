@@ -8,7 +8,7 @@ states:
     actions:
       - functionRef:
           refName: addPet
-          parameters:
+          arguments:
             body:
               name: Pluto
               tag: "${ .pet.tagnumber }"

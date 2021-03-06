@@ -30,7 +30,7 @@
           {
             "functionRef": {
               "refName": "greetingFunction",
-              "parameters": {
+              "arguments": {
                 "name": "{{ $.greet.name }}"
               }
             }

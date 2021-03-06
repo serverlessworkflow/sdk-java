@@ -25,7 +25,7 @@ states:
     actions:
       - functionRef:
           refName: sendRejectionEmailFunction
-          parameters:
+          arguments:
             applicant: "{{ $.applicant }}"
     onErrors:
       - error: TimeoutError

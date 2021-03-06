@@ -41,7 +41,7 @@
         {
           "functionRef": {
             "refName": "sendTextFunction",
-            "parameters": {
+            "arguments": {
               "message": "{{ $.singlemessage }}"
             }
           }

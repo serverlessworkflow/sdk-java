@@ -31,7 +31,7 @@
         {
           "functionRef": {
             "refName": "submitJob",
-            "parameters": {
+            "arguments": {
               "name": "{{ $.job.name }}"
             }
           },
@@ -71,7 +71,7 @@
         {
           "functionRef": {
             "refName": "checkJobStatus",
-            "parameters": {
+            "arguments": {
               "name": "{{ $.jobuid }}"
             }
           },
@@ -110,7 +110,7 @@
         {
           "functionRef": {
             "refName": "reportJobSuceeded",
-            "parameters": {
+            "arguments": {
               "name": "{{ $.jobuid }}"
             }
           }
@@ -126,7 +126,7 @@
         {
           "functionRef": {
             "refName": "reportJobFailed",
-            "parameters": {
+            "arguments": {
               "name": "{{ $.jobuid }}"
             }
           }

@@ -7,9 +7,9 @@
       "description": "Name of the referenced function",
       "minLength": 1
     },
-    "parameters": {
+    "arguments": {
       "type": "object",
-      "description": "Function parameters",
+      "description": "Function arguments",
       "existingJavaType": "com.fasterxml.jackson.databind.JsonNode"
     }
   },

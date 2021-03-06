@@ -27,7 +27,7 @@
         {
           "functionRef": {
             "refName": "provisionOrderFunction",
-            "parameters": {
+            "arguments": {
               "order": "{{ $.singleorder }}"
             }
           }

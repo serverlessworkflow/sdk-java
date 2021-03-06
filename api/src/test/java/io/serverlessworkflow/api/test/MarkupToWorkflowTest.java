@@ -232,15 +232,15 @@ public class MarkupToWorkflowTest {
         assertNotNull(action1.getFunctionRef());
         FunctionRef functionRef1 = action1.getFunctionRef();
         assertEquals("creditCheckFunction", functionRef1.getRefName());
-        assertNull(functionRef1.getParameters());
+        assertNull(functionRef1.getArguments());
 
         Action action2 = operationState.getActions().get(1);
         assertNotNull(action2);
         assertNotNull(action2.getFunctionRef());
         FunctionRef functionRef2 = action2.getFunctionRef();
         assertEquals("sendRejectionEmailFunction", functionRef2.getRefName());
-        assertEquals(1, functionRef2.getParameters().size());
-        assertEquals("{{ $.customer }}", functionRef2.getParameters().get("applicant").asText());
+        assertEquals(1, functionRef2.getArguments().size());
+        assertEquals("{{ $.customer }}", functionRef2.getArguments().get("applicant").asText());
     }
 
     @ParameterizedTest
@@ -307,7 +307,7 @@ public class MarkupToWorkflowTest {
         assertNotNull(actions.get(0).getFunctionRef());
         assertEquals("addPet", actions.get(0).getFunctionRef().getRefName());
 
-        JsonNode params = actions.get(0).getFunctionRef().getParameters();
+        JsonNode params = actions.get(0).getFunctionRef().getArguments();
         assertNotNull(params);
         assertEquals(4, params.size());
         assertEquals(123, params.get("id").intValue());
@@ -340,9 +340,9 @@ public class MarkupToWorkflowTest {
         assertEquals("addPet", actions.get(0).getFunctionRef().getRefName());
         assertEquals("addPet", actions.get(1).getFunctionRef().getRefName());
 
-        JsonNode params = actions.get(0).getFunctionRef().getParameters();
+        JsonNode params = actions.get(0).getFunctionRef().getArguments();
         assertNull(params);
-        JsonNode params2 = actions.get(1).getFunctionRef().getParameters();
+        JsonNode params2 = actions.get(1).getFunctionRef().getArguments();
         assertNull(params);
     }
 }

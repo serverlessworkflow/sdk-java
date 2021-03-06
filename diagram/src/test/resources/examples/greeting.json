@@ -18,7 +18,7 @@
         {
           "functionRef": {
             "refName": "greetingFunction",
-            "parameters": {
+            "arguments": {
               "name": "{{ $.person.name }}"
             }
           },

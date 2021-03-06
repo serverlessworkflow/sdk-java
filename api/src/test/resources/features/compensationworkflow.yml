@@ -10,12 +10,12 @@ states:
         actions:
           - functionRef:
               refName: DebitCustomerFunction
-              parameters:
+              arguments:
                 customerid: "{{ $.purchase.customerid }}"
                 amount: "{{ $.purchase.amount }}"
           - functionRef:
               refName: SendPurchaseConfirmationEmailFunction
-              parameters:
+              arguments:
                 customerid: "{{ $.purchase.customerid }}"
     compensatedBy: CancelPurchase
     transition: SomeNextWorkflowState
@@ -25,12 +25,12 @@ states:
     actions:
       - functionRef:
           refName: CreditCustomerFunction
-          parameters:
+          arguments:
             customerid: "{{ $.purchase.customerid }}"
             amount: "{{ $.purchase.amount }}"
       - functionRef:
           refName: SendPurchaseCancellationEmailFunction
-          parameters:
+          arguments:
             customerid: "{{ $.purchase.customerid }}"
 events:
   - name: NewItemPurchase

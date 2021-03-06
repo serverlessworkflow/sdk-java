@@ -24,7 +24,7 @@ states:
     actions:
       - functionRef:
           refName: ProduceReport
-          parameters:
+          arguments:
             data: "$.readings"
     end:
       terminate: true

@@ -15,6 +15,6 @@ states:
     actions:
       - functionRef:
           refName: restFunction
-          parameters:
+          arguments:
             data: "{{ fn(expressionFunction) }}"
     end: true

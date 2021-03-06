@@ -21,7 +21,7 @@ states:
     action:
       functionRef:
         refName: callCreditCheckMicroservice
-        parameters:
+        arguments:
           customer: "{{ $.customer }}"
     eventRef: CreditCheckCompletedEvent
     timeout: PT15M
@@ -47,6 +47,6 @@ states:
     actions:
       - functionRef:
           refName: sendRejectionEmailFunction
-          parameters:
+          arguments:
             applicant: "{{ $.customer }}"
     end: true

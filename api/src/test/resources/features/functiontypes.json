@@ -23,7 +23,7 @@
         {
           "functionRef": {
             "refName": "restFunction",
-            "parameters": {
+            "arguments": {
               "data": "{{ fn(expressionFunction) }}"
             }
           }

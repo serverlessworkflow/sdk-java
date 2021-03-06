@@ -61,11 +61,11 @@ public class FunctionRefDeserializer extends StdDeserializer<FunctionRef> {
         if (!node.isObject()) {
             functionRef.setRefName(node.asText());
             ObjectMapper objectMapper = new ObjectMapper();
-            functionRef.setParameters(null);
+            functionRef.setArguments(null);
             return functionRef;
         } else {
-            if(node.get("parameters") != null) {
-                functionRef.setParameters(mapper.treeToValue(node.get("parameters"), JsonNode.class));
+            if(node.get("arguments") != null) {
+                functionRef.setArguments(mapper.treeToValue(node.get("arguments"), JsonNode.class));
             }
 
             if(node.get("refName") != null) {

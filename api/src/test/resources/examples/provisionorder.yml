@@ -13,7 +13,7 @@ states:
     actions:
       - functionRef:
           refName: provisionOrderFunction
-          parameters:
+          arguments:
             order: "{{ $.order }}"
     onErrors:
       - error: "MissingOrderId"
