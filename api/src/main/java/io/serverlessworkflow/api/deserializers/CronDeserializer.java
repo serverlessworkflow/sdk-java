@@ -21,57 +21,56 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-import io.serverlessworkflow.api.functions.FunctionRef;
+import io.serverlessworkflow.api.cron.Cron;
 import io.serverlessworkflow.api.interfaces.WorkflowPropertySource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-public class FunctionRefDeserializer extends StdDeserializer<FunctionRef> {
+public class CronDeserializer extends StdDeserializer<Cron> {
 
     private static final long serialVersionUID = 510l;
-    private static Logger logger = LoggerFactory.getLogger(FunctionRefDeserializer.class);
+    private static Logger logger = LoggerFactory.getLogger(CronDeserializer.class);
 
     private WorkflowPropertySource context;
 
-    public FunctionRefDeserializer() {
-        this(FunctionRef.class);
+    public CronDeserializer() {
+        this(Cron.class);
     }
 
-    public FunctionRefDeserializer(Class<?> vc) {
+    public CronDeserializer(Class<?> vc) {
         super(vc);
     }
 
-    public FunctionRefDeserializer(WorkflowPropertySource context) {
-        this(FunctionRef.class);
+    public CronDeserializer(WorkflowPropertySource context) {
+        this(Cron.class);
         this.context = context;
     }
 
     @Override
-    public FunctionRef deserialize(JsonParser jp,
-                                  DeserializationContext ctxt) throws IOException {
+    public Cron deserialize(JsonParser jp,
+                                   DeserializationContext ctxt) throws IOException {
 
         ObjectMapper mapper = (ObjectMapper) jp.getCodec();
         JsonNode node = jp.getCodec().readTree(jp);
 
-        FunctionRef functionRef = new FunctionRef();
+        Cron cron = new Cron();
 
         if (!node.isObject()) {
-            functionRef.setRefName(node.asText());
-            ObjectMapper objectMapper = new ObjectMapper();
-            functionRef.setArguments(null);
-            return functionRef;
+            cron.setExpression(node.asText());
+            return cron;
         } else {
-            if(node.get("arguments") != null) {
-                functionRef.setArguments(mapper.treeToValue(node.get("arguments"), JsonNode.class));
+            if(node.get("expression") != null) {
+                cron.setExpression(node.get("expression").asText());
             }
 
-            if(node.get("refName") != null) {
-                functionRef.setRefName(node.get("refName").asText());
+            if(node.get("validUntil") != null) {
+                cron.setValidUntil(node.get("validUntil").asText());
             }
 
-            return functionRef;
+            return cron;
         }
     }
 }
+
