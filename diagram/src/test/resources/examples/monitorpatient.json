@@ -59,7 +59,7 @@
         "actions": [{
           "functionRef": {
             "refName": "sendTylenolOrder",
-            "parameters": {
+            "arguments": {
               "patientid": "{{ $.patientId }}"
             }
           }
@@ -70,7 +70,7 @@
           "actions": [{
             "functionRef": {
               "refName": "callNurse",
-              "parameters": {
+              "arguments": {
                 "patientid": "{{ $.patientId }}"
               }
             }
@@ -81,7 +81,7 @@
           "actions": [{
             "functionRef": {
               "refName": "callPulmonologist",
-              "parameters": {
+              "arguments": {
                 "patientid": "{{ $.patientId }}"
               }
             }

@@ -25,6 +25,6 @@ states:
     actions:
       - functionRef:
           refName: sendTextFunction
-          parameters:
+          arguments:
             message: "{{ $.singlemessage }}"
     end: true

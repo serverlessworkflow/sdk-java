@@ -33,7 +33,7 @@ states:
         actions:
           - functionRef:
               refName: finalizeApplicationFunction
-              parameters:
+              arguments:
                 student: "{{ $.applicantId }}"
     end:
       terminate: true

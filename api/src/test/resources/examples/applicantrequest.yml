@@ -27,6 +27,6 @@ states:
     actions:
       - functionRef:
           refName: sendRejectionEmailFunction
-          parameters:
+          arguments:
             applicant: "{{ $.applicant }}"
     end: true

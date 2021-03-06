@@ -39,7 +39,7 @@ public class FunctionRefSerializer extends StdSerializer<FunctionRef> {
                           SerializerProvider provider) throws IOException {
 
         if(functionRef != null) {
-            if((functionRef.getParameters() == null || functionRef.getParameters().isEmpty())
+            if((functionRef.getArguments() == null || functionRef.getArguments().isEmpty())
                     && functionRef.getRefName() != null
                     && functionRef.getRefName().length() > 0) {
                 gen.writeString(functionRef.getRefName());
@@ -50,8 +50,8 @@ public class FunctionRefSerializer extends StdSerializer<FunctionRef> {
                     gen.writeStringField("refName", functionRef.getRefName());
                 }
 
-                if (functionRef.getParameters() != null && !functionRef.getParameters().isEmpty()) {
-                    gen.writeObjectField("parameters", functionRef.getParameters());
+                if (functionRef.getArguments() != null && !functionRef.getArguments().isEmpty()) {
+                    gen.writeObjectField("arguments", functionRef.getArguments());
                 }
 
                 gen.writeEndObject();

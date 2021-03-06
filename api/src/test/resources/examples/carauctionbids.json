@@ -32,7 +32,7 @@
           "actions": [{
             "functionRef": {
               "refName": "StoreBidFunction",
-              "parameters": {
+              "arguments": {
                 "bid": "{{ $.bid }}"
               }
             }

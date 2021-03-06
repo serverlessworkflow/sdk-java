@@ -19,7 +19,7 @@
         {
           "functionRef": {
             "refName": "provisionOrderFunction",
-            "parameters": {
+            "arguments": {
               "order": "{{ $.order }}"
             }
           }

@@ -16,6 +16,6 @@ states:
       - functionRef: creditCheckFunction
       - functionRef:
           refName: sendRejectionEmailFunction
-          parameters:
+          arguments:
             applicant: "{{ $.customer }}"
     end: true

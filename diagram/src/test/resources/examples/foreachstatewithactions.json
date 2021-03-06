@@ -20,7 +20,7 @@
         {
           "functionRef": {
             "refName": "sendConfirmationFunction",
-            "parameters": {
+            "arguments": {
               "orderNumber": "{{ $.completedorder.orderNumber }}",
               "email": "{{ $.completedorder.email }}"
             }

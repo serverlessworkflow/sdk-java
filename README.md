@@ -121,7 +121,7 @@ states:
   actions:
   - functionRef:
       refName: greetingFunction
-      parameters:
+      arguments:
         name: "$.greet.name"
     actionDataFilter:
       dataResultsPath: "$.payload.greeting"

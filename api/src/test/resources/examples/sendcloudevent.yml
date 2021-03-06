@@ -19,7 +19,7 @@ states:
     actions:
       - functionRef:
           refName: provisionOrderFunction
-          parameters:
+          arguments:
             order: "{{ $.singleorder }}"
     end:
       produceEvents:

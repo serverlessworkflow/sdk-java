@@ -57,7 +57,7 @@
             {
               "functionRef": {
                 "refName": "finalizeApplicationFunction",
-                "parameters": {
+                "arguments": {
                   "student": "{{ $.applicantId }}"
                 }
               }

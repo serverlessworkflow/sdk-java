@@ -15,7 +15,7 @@ states:
     actions:
       - functionRef:
           refName: solveMathExpressionFunction
-          parameters:
+          arguments:
             expression: "{{ $.singleexpression }}"
     stateDataFilter:
       dataOutputPath: "{{ $.results }}"

@@ -21,7 +21,7 @@
         {
           "functionRef": {
             "refName": "solveMathExpressionFunction",
-            "parameters": {
+            "arguments": {
               "expression": "{{ $.singleexpression }}"
             }
           }
