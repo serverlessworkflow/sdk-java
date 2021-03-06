@@ -345,4 +345,46 @@ public class MarkupToWorkflowTest {
         JsonNode params2 = actions.get(1).getFunctionRef().getArguments();
         assertNull(params);
     }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/features/simpleschedule.json", "/features/simpleschedule.yml"})
+    public void testSimplifiedSchedule(String workflowLocation) {
+        Workflow workflow = Workflow.fromSource(WorkflowTestUtils.readWorkflowFile(workflowLocation));
+
+        assertNotNull(workflow);
+        assertNotNull(workflow.getId());
+        assertNotNull(workflow.getName());
+        assertNotNull(workflow.getStates());
+
+        assertNotNull(workflow.getStates());
+        assertTrue(workflow.getStates().size() == 1);
+        assertTrue(workflow.getStates().get(0) instanceof EventState);
+
+        EventState eventState = (EventState) workflow.getStates().get(0);
+        assertNotNull(eventState.getStart());
+        assertNotNull(eventState.getStart().getSchedule());
+
+        assertEquals("2020-03-20T09:00:00Z/2020-03-20T15:00:00Z", eventState.getStart().getSchedule().getInterval());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/features/simplecron.json", "/features/simplecron.yml"})
+    public void testSimplifiedCron(String workflowLocation) {
+        Workflow workflow = Workflow.fromSource(WorkflowTestUtils.readWorkflowFile(workflowLocation));
+
+        assertNotNull(workflow);
+        assertNotNull(workflow.getId());
+        assertNotNull(workflow.getName());
+        assertNotNull(workflow.getStates());
+
+        assertNotNull(workflow.getStates());
+        assertTrue(workflow.getStates().size() == 2);
+        assertTrue(workflow.getStates().get(0) instanceof OperationState);
+
+        OperationState operationState = (OperationState) workflow.getStates().get(0);
+        assertNotNull(operationState.getStart());
+        assertNotNull(operationState.getStart().getSchedule());
+
+        assertEquals("0 0/15 * * * ?", operationState.getStart().getSchedule().getCron().getExpression());
+    }
 }

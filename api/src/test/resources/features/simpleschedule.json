@@ -26,18 +26,24 @@
       "exclusive": true,
       "onEvents": [
         {
-          "eventRefs": ["CarBidEvent"],
-          "actions": [{
-            "functionRef": {
-              "refName": "StoreBidFunction",
-              "arguments": {
-                "bid": "{{ $.bid }}"
+          "eventRefs": [
+            "CarBidEvent"
+          ],
+          "actions": [
+            {
+              "functionRef": {
+                "refName": "StoreBidFunction",
+                "arguments": {
+                  "bid": "{{ $.bid }}"
+                }
               }
             }
-          }]
+          ]
         }
       ],
-      "end": true
+      "end": {
+        "terminate": true
+      }
     }
   ]
 }

@@ -12,8 +12,7 @@ states:
     type: operation
     start:
       schedule:
-        cron:
-          expression: 0 0/15 * * * ?
+        cron: 0 0/15 * * * ?
     actionMode: sequential
     actions:
       - functionRef: checkInboxFunction

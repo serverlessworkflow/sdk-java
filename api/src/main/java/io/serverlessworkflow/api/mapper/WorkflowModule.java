@@ -17,6 +17,7 @@
 package io.serverlessworkflow.api.mapper;
 
 import com.fasterxml.jackson.databind.module.SimpleModule;
+import io.serverlessworkflow.api.cron.Cron;
 import io.serverlessworkflow.api.deserializers.*;
 import io.serverlessworkflow.api.end.End;
 import io.serverlessworkflow.api.events.EventDefinition;
@@ -73,6 +74,8 @@ public class WorkflowModule extends SimpleModule {
         addSerializer(new EndDefinitionSerializer());
         addSerializer(new TransitionSerializer());
         addSerializer(new FunctionRefSerializer());
+        addSerializer(new CronSerializer());
+        addSerializer(new ScheduleSerializer());
         addSerializer(extensionSerializer);
     }
 
@@ -99,6 +102,8 @@ public class WorkflowModule extends SimpleModule {
         addDeserializer(FunctionDefinition.Type.class, new FunctionDefinitionTypeDeserializer(workflowPropertySource));
         addDeserializer(Transition.class, new TransitionDeserializer(workflowPropertySource));
         addDeserializer(FunctionRef.class, new FunctionRefDeserializer(workflowPropertySource));
+        addDeserializer(Cron.class, new CronDeserializer(workflowPropertySource));
+        addDeserializer(Schedule.class, new ScheduleDeserializer(workflowPropertySource));
     }
 
     public ExtensionSerializer getExtensionSerializer() {

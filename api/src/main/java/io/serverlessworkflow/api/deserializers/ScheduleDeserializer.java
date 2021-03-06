@@ -21,57 +21,64 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-import io.serverlessworkflow.api.functions.FunctionRef;
+import io.serverlessworkflow.api.cron.Cron;
 import io.serverlessworkflow.api.interfaces.WorkflowPropertySource;
+import io.serverlessworkflow.api.schedule.Schedule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
-public class FunctionRefDeserializer extends StdDeserializer<FunctionRef> {
+public class ScheduleDeserializer extends StdDeserializer<Schedule> {
 
     private static final long serialVersionUID = 510l;
-    private static Logger logger = LoggerFactory.getLogger(FunctionRefDeserializer.class);
+    private static Logger logger = LoggerFactory.getLogger(ScheduleDeserializer.class);
 
     private WorkflowPropertySource context;
 
-    public FunctionRefDeserializer() {
-        this(FunctionRef.class);
+    public ScheduleDeserializer() {
+        this(Schedule.class);
     }
 
-    public FunctionRefDeserializer(Class<?> vc) {
+    public ScheduleDeserializer(Class<?> vc) {
         super(vc);
     }
 
-    public FunctionRefDeserializer(WorkflowPropertySource context) {
-        this(FunctionRef.class);
+    public ScheduleDeserializer(WorkflowPropertySource context) {
+        this(Schedule.class);
         this.context = context;
     }
 
     @Override
-    public FunctionRef deserialize(JsonParser jp,
-                                  DeserializationContext ctxt) throws IOException {
+    public Schedule deserialize(JsonParser jp,
+                            DeserializationContext ctxt) throws IOException {
 
         ObjectMapper mapper = (ObjectMapper) jp.getCodec();
         JsonNode node = jp.getCodec().readTree(jp);
 
-        FunctionRef functionRef = new FunctionRef();
+        Schedule schedule = new Schedule();
 
         if (!node.isObject()) {
-            functionRef.setRefName(node.asText());
-            ObjectMapper objectMapper = new ObjectMapper();
-            functionRef.setArguments(null);
-            return functionRef;
+            schedule.setInterval(node.asText());
+            return schedule;
         } else {
-            if(node.get("arguments") != null) {
-                functionRef.setArguments(mapper.treeToValue(node.get("arguments"), JsonNode.class));
+            if(node.get("interval") != null) {
+                schedule.setInterval(node.get("interval").asText());
             }
 
-            if(node.get("refName") != null) {
-                functionRef.setRefName(node.get("refName").asText());
+            if(node.get("cron") != null) {
+                schedule.setCron(mapper.treeToValue(node.get("cron"), Cron.class));
             }
 
-            return functionRef;
+            if(node.get("directInvoke") != null) {
+                schedule.setDirectInvoke(mapper.treeToValue(node.get("directInvoke"), Schedule.DirectInvoke.class));
+            }
+
+            if(node.get("timezone") != null) {
+                schedule.setTimezone(node.get("timezone").asText());
+            }
+
+            return schedule;
         }
     }
 }
