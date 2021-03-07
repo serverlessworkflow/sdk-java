@@ -49,7 +49,7 @@
       "stateDataFilter": {
         "dataOutputPath": "${ .jobuid }"
       },
-      "transition": "WaitForCompletion"
+      "transition": "WaitForCompletion'"
     },
     {
       "name": "SubmitError",
@@ -90,11 +90,11 @@
       "type":"switch",
       "dataConditions": [
         {
-          "condition": "${ $[?(@.jobstatus == 'SUCCEEDED')] }",
+          "condition": "${ .jobStatus == \"SUCCEEDED\" }",
           "transition": "JobSucceeded"
         },
         {
-          "condition": "${ $[?(@.jobstatus == 'FAILED')] }",
+          "condition": "${ .jobStatus == \"FAILED\" }",
           "transition": "JobFailed"
         }
       ],

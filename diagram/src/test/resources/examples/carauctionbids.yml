@@ -24,5 +24,4 @@ states:
               refName: StoreBidFunction
               arguments:
                 bid: "${ .bid }"
-    end:
-      terminate: true
+    end: true

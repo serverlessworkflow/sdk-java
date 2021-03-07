@@ -1,8 +1,8 @@
 id: parallelexec
 version: '1.0'
 name: Parallel Execution Workflow
-start: ParallelExec
 description: Executes two branches in parallel
+start: ParallelExec
 states:
   - name: ParallelExec
     type: parallel
