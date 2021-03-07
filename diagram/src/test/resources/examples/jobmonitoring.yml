@@ -21,14 +21,14 @@ states:
       - functionRef:
           refName: submitJob
           arguments:
-            name: "{{ $.job.name }}"
+            name: "${ .job.name }"
         actionDataFilter:
-          dataResultsPath: "{{ $.jobuid }}"
+          dataResultsPath: "${ .jobuid }"
     onErrors:
       - error: "*"
         transition: SubmitError
     stateDataFilter:
-      dataOutputPath: "{{ $.jobuid }}"
+      dataOutputPath: "${ .jobuid }"
     transition: WaitForCompletion
   - name: SubmitError
     type: subflow
@@ -45,18 +45,18 @@ states:
       - functionRef:
           refName: checkJobStatus
           arguments:
-            name: "{{ $.jobuid }}"
+            name: "${ .jobuid }"
         actionDataFilter:
-          dataResultsPath: "{{ $.jobstatus }}"
+          dataResultsPath: "${ .jobstatus }"
     stateDataFilter:
-      dataOutputPath: "{{ $.jobstatus }}"
+      dataOutputPath: "${ .jobstatus }"
     transition: DetermineCompletion
   - name: DetermineCompletion
     type: switch
     dataConditions:
-      - condition: "{{ $[?(@.jobstatus == 'SUCCEEDED')] }}"
+      - condition: "${ $[?(@.jobstatus == 'SUCCEEDED')] }"
         transition: JobSucceeded
-      - condition: "{{ $[?(@.jobstatus == 'FAILED')] }}"
+      - condition: "${ $[?(@.jobstatus == 'FAILED')] }"
         transition: JobFailed
     default:
       transition: WaitForCompletion
@@ -67,7 +67,7 @@ states:
       - functionRef:
           refName: reportJobSuceeded
           arguments:
-            name: "{{ $.jobuid }}"
+            name: "${ .jobuid }"
     end: true
   - name: JobFailed
     type: operation
@@ -76,5 +76,5 @@ states:
       - functionRef:
           refName: reportJobFailed
           arguments:
-            name: "{{ $.jobuid }}"
+            name: "${ .jobuid }"
     end: true

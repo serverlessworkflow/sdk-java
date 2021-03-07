@@ -33,14 +33,14 @@
     {
       "name": "SendTextForHighPrioriry",
       "type": "foreach",
-      "inputCollection": "{{ $.messages }}",
+      "inputCollection": "${ .messages }",
       "iterationParam": "singlemessage",
       "actions": [
         {
           "functionRef": {
             "refName": "sendTextFunction",
             "arguments": {
-              "message": "{{ $.singlemessage }}"
+              "message": "${ .singlemessage }"
             }
           }
         }

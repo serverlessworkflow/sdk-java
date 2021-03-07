@@ -14,21 +14,21 @@
       "name":"Solve",
       "start": true,
       "type":"foreach",
-      "inputCollection": "{{ $.expressions }}",
+      "inputCollection": "${ .expressions }",
       "iterationParam": "singleexpression",
-      "outputCollection": "{{ $.results }}",
+      "outputCollection": "${ .results }",
       "actions":[
         {
           "functionRef": {
             "refName": "solveMathExpressionFunction",
             "arguments": {
-              "expression": "{{ $.singleexpression }}"
+              "expression": "${ .singleexpression }"
             }
           }
         }
       ],
       "stateDataFilter": {
-        "dataOutputPath": "{{ $.results }}"
+        "dataOutputPath": "${ .results }"
       },
       "end": true
     }

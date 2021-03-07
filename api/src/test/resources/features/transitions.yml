@@ -9,14 +9,14 @@ states:
     type: switch
     start: true
     dataConditions:
-      - condition: "{{ $.applicants[?(@.age >= 18)] }}"
+      - condition: "${ .applicants[?(@.age >= 18)] }"
         transition: StartApplication
-      - condition: "{{ $.applicants[?(@.age < 18)] }}"
+      - condition: "${ .applicants[?(@.age < 18)] }"
         transition:
           nextState: RejectApplication
           produceEvents:
             - eventRef: provisioningCompleteEvent
-              data: "{{ $.provisionedOrders }}"
+              data: "${ .provisionedOrders }"
     default:
       transition:
         nextState: RejectApplication

@@ -12,11 +12,11 @@
       "start": true,
       "dataConditions": [
         {
-          "condition": "{{ $.applicants[?(@.age >= 18)] }}",
+          "condition": "${ .applicants[?(@.age >= 18)] }",
           "transition": "StartApplication"
         },
         {
-          "condition": "{{ $.applicants[?(@.age < 18)] }}",
+          "condition": "${ .applicants[?(@.age < 18)] }",
           "transition": "RejectApplication"
         }
       ],
@@ -39,7 +39,7 @@
           "functionRef": {
             "refName": "sendRejectionEmailFunction",
             "arguments": {
-              "applicant": "{{ $.applicant }}"
+              "applicant": "${ .applicant }"
             }
           }
         }

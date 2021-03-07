@@ -6,7 +6,7 @@ functions:
   - name: restFunction
     operation: http://myapis.org/applicationapi.json#emailRejection
   - name: expressionFunction
-    operation: "$.my.data"
+    operation: ".my.data"
     type: expression
 states:
   - name: CheckFunctions
@@ -16,5 +16,5 @@ states:
       - functionRef:
           refName: restFunction
           arguments:
-            data: "{{ fn(expressionFunction) }}"
+            data: "${ fn(expressionFunction) }"
     end: true

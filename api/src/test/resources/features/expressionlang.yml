@@ -1,0 +1,16 @@
+id: expressionlang
+version: '1.0'
+name: Custom expression lang
+expressionLang: abc
+states:
+  - name: TestFunctionRefs
+    type: operation
+    actionMode: sequential
+    start: true
+    actions:
+      - functionRef: creditCheckFunction
+      - functionRef:
+          refName: sendRejectionEmailFunction
+          arguments:
+            applicant: "${ .customer }"
+    end: true

@@ -10,7 +10,7 @@
     },
     {
       "name": "expressionFunction",
-      "operation": "$.my.data",
+      "operation": ".my.data",
       "type" : "expression"
     }
   ],
@@ -24,7 +24,7 @@
           "functionRef": {
             "refName": "restFunction",
             "arguments": {
-              "data": "{{ fn(expressionFunction) }}"
+              "data": "${ fn(expressionFunction) }"
             }
           }
         }

@@ -17,5 +17,5 @@ states:
       - functionRef:
           refName: sendRejectionEmailFunction
           arguments:
-            applicant: "{{ $.customer }}"
+            applicant: "${ .customer }"
     end: true

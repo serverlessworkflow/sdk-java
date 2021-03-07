@@ -13,7 +13,7 @@ states:
       - functionRef:
           refName: greetingFunction
           arguments:
-            name: "{{ $.person.name }}"
+            name: "${ .person.name }"
         actionDataFilter:
-          dataResultsPath: "{{ $.greeting }}"
+          dataResultsPath: "${ .greeting }"
     end: true

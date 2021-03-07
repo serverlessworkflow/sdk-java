@@ -122,11 +122,11 @@ states:
   - functionRef:
       refName: greetingFunction
       arguments:
-        name: "$.greet.name"
+        name: ".greet.name"
     actionDataFilter:
-      dataResultsPath: "$.payload.greeting"
+      dataResultsPath: ".payload.greeting"
   stateDataFilter:
-    dataOutputPath: "$.greeting"
+    dataOutputPath: ".greeting"
   end: true
 ```
 

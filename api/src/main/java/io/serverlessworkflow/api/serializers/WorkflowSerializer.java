@@ -75,6 +75,11 @@ public class WorkflowSerializer extends StdSerializer<Workflow> {
                     workflow.getSchemaVersion());
         }
 
+        if (workflow.getExtensions() != null && !workflow.getExpressionLang().isEmpty()) {
+            gen.writeStringField("expressionLang",
+                    workflow.getExpressionLang());
+        }
+
         if (workflow.getExecTimeout() != null) {
             gen.writeObjectField("execTimeout", workflow.getExecTimeout());
         }

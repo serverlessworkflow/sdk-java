@@ -60,7 +60,7 @@
           "functionRef": {
             "refName": "sendTylenolOrder",
             "arguments": {
-              "patientid": "{{ $.patientId }}"
+              "patientid": "${ .patientId }"
             }
           }
         }]
@@ -71,7 +71,7 @@
             "functionRef": {
               "refName": "callNurse",
               "arguments": {
-                "patientid": "{{ $.patientId }}"
+                "patientid": "${ .patientId }"
               }
             }
           }]
@@ -82,7 +82,7 @@
             "functionRef": {
               "refName": "callPulmonologist",
               "arguments": {
-                "patientid": "{{ $.patientId }}"
+                "patientid": "${ .patientId }"
               }
             }
           }]
