@@ -25,11 +25,11 @@
           "name": "MakeAppointmentAction",
           "eventRef": {
             "triggerEventRef": "MakeVetAppointment",
-            "data": "{{ $.patientInfo }}",
+            "data": "${ .patientInfo }",
             "resultEventRef":  "VetAppointmentInfo"
           },
           "actionDataFilter": {
-            "dataResultsPath": "{{ $.appointmentInfo }}"
+            "dataResultsPath": "${ .appointmentInfo }"
           },
           "timeout": "PT15M"
         }

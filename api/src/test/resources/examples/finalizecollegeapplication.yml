@@ -34,6 +34,6 @@ states:
           - functionRef:
               refName: finalizeApplicationFunction
               arguments:
-                student: "{{ $.applicantId }}"
+                student: "${ .applicantId }"
     end:
       terminate: true

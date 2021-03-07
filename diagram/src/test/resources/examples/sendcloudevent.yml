@@ -13,15 +13,15 @@ states:
   - name: ProvisionOrdersState
     type: foreach
     start: true
-    inputCollection: "{{ $.orders }}"
+    inputCollection: "${ .orders }"
     iterationParam: singleorder
-    outputCollection: "{{ $.provisionedOrders }}"
+    outputCollection: "${ .provisionedOrders }"
     actions:
       - functionRef:
           refName: provisionOrderFunction
           arguments:
-            order: "{{ $.singleorder }}"
+            order: "${ .singleorder }"
     end:
       produceEvents:
         - eventRef: provisioningCompleteEvent
-          data: "{{ $.provisionedOrders }}"
+          data: "${ .provisionedOrders }"

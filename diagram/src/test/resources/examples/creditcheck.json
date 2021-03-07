@@ -34,7 +34,7 @@
         "functionRef": {
           "refName": "callCreditCheckMicroservice",
           "arguments": {
-            "customer": "{{ $.customer }}"
+            "customer": "${ .customer }"
           }
         }
       },
@@ -48,12 +48,12 @@
       "dataConditions": [
         {
           "name": "Approved",
-          "condition": "{{ $.creditCheck[?(@.decision == 'Approved')] }}",
+          "condition": "${ .creditCheck[?(@.decision == 'Approved')] }",
           "transition": "StartApplication"
         },
         {
           "name": "Denied",
-          "condition": "{{ $.creditCheck[?(@.decision == 'Denied')] }}",
+          "condition": "${ .creditCheck[?(@.decision == 'Denied')] }",
           "transition": "RejectApplication"
         }
       ],
@@ -76,7 +76,7 @@
           "functionRef": {
             "refName": "sendRejectionEmailFunction",
             "arguments": {
-              "applicant": "{{ $.customer }}"
+              "applicant": "${ .customer }"
             }
           }
         }

@@ -34,7 +34,7 @@
               "functionRef": {
                 "refName": "StoreBidFunction",
                 "arguments": {
-                  "bid": "{{ $.bid }}"
+                  "bid": "${ .bid }"
                 }
               }
             }

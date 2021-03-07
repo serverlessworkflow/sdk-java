@@ -23,7 +23,7 @@
             }
           ],
           "eventDataFilter": {
-            "dataOutputPath": "$.readings"
+            "dataOutputPath": ".readings"
           }
         }
       ],
@@ -37,7 +37,7 @@
           "functionRef": {
             "refName": "ProduceReport",
             "arguments": {
-              "data": "$.readings"
+              "data": ".readings"
             }
           }
         }

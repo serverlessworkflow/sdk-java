@@ -13,15 +13,15 @@
     {
       "name":"SendConfirmationForEachCompletedhOrder",
       "type":"foreach",
-      "inputCollection": "{{ $.orders[?(@.completed == true)] }}",
-      "iterationParam": "{{ $.completedorder }}",
+      "inputCollection": "${ .orders[?(@.completed == true)] }",
+      "iterationParam": "${ .completedorder }",
       "actions":[
         {
           "functionRef": {
             "refName": "sendConfirmationFunction",
             "arguments": {
-              "orderNumber": "{{ $.completedorder.orderNumber }}",
-              "email": "{{ $.completedorder.email }}"
+              "orderNumber": "${ .completedorder.orderNumber }",
+              "email": "${ .completedorder.email }"
             }
           }
         }],

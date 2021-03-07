@@ -11,12 +11,12 @@ states:
           - functionRef:
               refName: DebitCustomerFunction
               arguments:
-                customerid: "{{ $.purchase.customerid }}"
-                amount: "{{ $.purchase.amount }}"
+                customerid: "${ .purchase.customerid }"
+                amount: "${ .purchase.amount }"
           - functionRef:
               refName: SendPurchaseConfirmationEmailFunction
               arguments:
-                customerid: "{{ $.purchase.customerid }}"
+                customerid: "${ .purchase.customerid }"
     compensatedBy: CancelPurchase
     transition: SomeNextWorkflowState
   - name: CancelPurchase
@@ -26,12 +26,12 @@ states:
       - functionRef:
           refName: CreditCustomerFunction
           arguments:
-            customerid: "{{ $.purchase.customerid }}"
-            amount: "{{ $.purchase.amount }}"
+            customerid: "${ .purchase.customerid }"
+            amount: "${ .purchase.amount }"
       - functionRef:
           refName: SendPurchaseCancellationEmailFunction
           arguments:
-            customerid: "{{ $.purchase.customerid }}"
+            customerid: "${ .purchase.customerid }"
 events:
   - name: NewItemPurchase
     source: purchasesource

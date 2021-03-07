@@ -14,7 +14,7 @@ states:
       - functionRef:
           refName: provisionOrderFunction
           arguments:
-            order: "{{ $.order }}"
+            order: "${ .order }"
     onErrors:
       - error: "MissingOrderId"
         transition: MissingId
@@ -23,7 +23,7 @@ states:
       - error: "MissingOrderQuantity"
         transition: MissingQuantity
     stateDataFilter:
-      dataOutputPath: "{{ $.exceptions }}"
+      dataOutputPath: "${ .exceptions }"
     transition: ApplyOrder
   - name: MissingId
     type: subflow

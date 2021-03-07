@@ -1,18 +1,8 @@
 {
-  "id": "functionrefs",
+  "id": "expressionlang",
   "version": "1.0",
-  "name": "Customer Credit Check Workflow",
-  "description": "Perform Customer Credit Check",
-  "functions": [
-    {
-      "name": "creditCheckFunction",
-      "operation": "http://myapis.org/creditcheckapi.json#doCreditCheck"
-    },
-    {
-      "name": "sendRejectionEmailFunction",
-      "operation": "http://myapis.org/creditcheckapi.json#rejectionEmail"
-    }
-  ],
+  "name": "Custom expression lang",
+  "expressionLang": "abc",
   "states": [
     {
       "name": "TestFunctionRefs",

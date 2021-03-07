@@ -20,7 +20,7 @@
           "functionRef": {
             "refName": "provisionOrderFunction",
             "arguments": {
-              "order": "{{ $.order }}"
+              "order": "${ .order }"
             }
           }
         }
@@ -40,7 +40,7 @@
         }
       ],
       "stateDataFilter": {
-        "dataOutputPath": "{{ $.exceptions }}"
+        "dataOutputPath": "${ .exceptions }"
       },
       "transition": "ApplyOrder"
     },

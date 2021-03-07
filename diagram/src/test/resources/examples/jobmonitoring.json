@@ -32,11 +32,11 @@
           "functionRef": {
             "refName": "submitJob",
             "arguments": {
-              "name": "{{ $.job.name }}"
+              "name": "${ .job.name }"
             }
           },
           "actionDataFilter": {
-            "dataResultsPath": "{{ $.jobuid }}"
+            "dataResultsPath": "${ .jobuid }"
           }
         }
       ],
@@ -47,7 +47,7 @@
         }
       ],
       "stateDataFilter": {
-        "dataOutputPath": "{{ $.jobuid }}"
+        "dataOutputPath": "${ .jobuid }"
       },
       "transition": "WaitForCompletion"
     },
@@ -72,16 +72,16 @@
           "functionRef": {
             "refName": "checkJobStatus",
             "arguments": {
-              "name": "{{ $.jobuid }}"
+              "name": "${ .jobuid }"
             }
           },
           "actionDataFilter": {
-            "dataResultsPath": "{{ $.jobstatus }}"
+            "dataResultsPath": "${ .jobstatus }"
           }
         }
       ],
       "stateDataFilter": {
-        "dataOutputPath": "{{ $.jobstatus }}"
+        "dataOutputPath": "${ .jobstatus }"
       },
       "transition": "DetermineCompletion"
     },
@@ -90,11 +90,11 @@
       "type":"switch",
       "dataConditions": [
         {
-          "condition": "{{ $[?(@.jobstatus == 'SUCCEEDED')] }}",
+          "condition": "${ $[?(@.jobstatus == 'SUCCEEDED')] }",
           "transition": "JobSucceeded"
         },
         {
-          "condition": "{{ $[?(@.jobstatus == 'FAILED')] }}",
+          "condition": "${ $[?(@.jobstatus == 'FAILED')] }",
           "transition": "JobFailed"
         }
       ],
@@ -111,7 +111,7 @@
           "functionRef": {
             "refName": "reportJobSuceeded",
             "arguments": {
-              "name": "{{ $.jobuid }}"
+              "name": "${ .jobuid }"
             }
           }
         }
@@ -127,7 +127,7 @@
           "functionRef": {
             "refName": "reportJobFailed",
             "arguments": {
-              "name": "{{ $.jobuid }}"
+              "name": "${ .jobuid }"
             }
           }
         }

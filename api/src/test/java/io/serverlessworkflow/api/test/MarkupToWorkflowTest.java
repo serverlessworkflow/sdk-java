@@ -34,7 +34,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -240,7 +239,7 @@ public class MarkupToWorkflowTest {
         FunctionRef functionRef2 = action2.getFunctionRef();
         assertEquals("sendRejectionEmailFunction", functionRef2.getRefName());
         assertEquals(1, functionRef2.getArguments().size());
-        assertEquals("{{ $.customer }}", functionRef2.getArguments().get("applicant").asText());
+        assertEquals("${ .customer }", functionRef2.getArguments().get("applicant").asText());
     }
 
     @ParameterizedTest
@@ -386,5 +385,19 @@ public class MarkupToWorkflowTest {
         assertNotNull(operationState.getStart().getSchedule());
 
         assertEquals("0 0/15 * * * ?", operationState.getStart().getSchedule().getCron().getExpression());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/features/expressionlang.json", "/features/expressionlang.yml"})
+    public void testExpressionLang(String workflowLocation) {
+        Workflow workflow = Workflow.fromSource(WorkflowTestUtils.readWorkflowFile(workflowLocation));
+
+        assertNotNull(workflow);
+        assertNotNull(workflow.getId());
+        assertNotNull(workflow.getName());
+        assertNotNull(workflow.getStates());
+
+        assertNotNull(workflow.getExpressionLang());
+        assertEquals("abc", workflow.getExpressionLang());
     }
 }
