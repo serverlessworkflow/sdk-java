@@ -2,10 +2,10 @@
 id: checkcarvitals
 name: Check Car Vitals Workflow
 version: '1.0'
+start: WhenCarIsOn
 states:
   - name: WhenCarIsOn
     type: event
-    start: true
     onEvents:
       - eventRefs:
           - CarTurnedOnEvent

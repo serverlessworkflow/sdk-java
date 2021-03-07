@@ -3,6 +3,7 @@
   "version": "1.0",
   "name": "Customer Credit Check Workflow",
   "description": "Perform Customer Credit Check",
+  "start": "CheckCredit",
   "functions": [
     {
       "name": "creditCheckFunction",
@@ -29,7 +30,6 @@
     {
       "name": "CheckCredit",
       "type": "callback",
-      "start": true,
       "action": {
         "functionRef": {
           "refName": "callCreditCheckMicroservice",

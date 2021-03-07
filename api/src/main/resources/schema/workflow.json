@@ -27,6 +27,10 @@
       "type": "string",
       "description": "Workflow version"
     },
+    "start": {
+      "$ref": "start/start.json",
+      "description": "Defines workflow start"
+    },
     "schemaVersion": {
       "type": "string",
       "description": "Serverless Workflow schema version"

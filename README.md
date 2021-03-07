@@ -109,6 +109,7 @@ Let's say you have a simple YAML based workflow definition:
 id: greeting
 version: '1.0'
 name: Greeting Workflow
+start: Greet
 description: Greet Someone
 functions:
   - name: greetingFunction
@@ -116,7 +117,6 @@ functions:
 states:
 - name: Greet
   type: operation
-  start: true
   actionMode: sequential
   actions:
   - functionRef:

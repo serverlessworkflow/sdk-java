@@ -40,7 +40,7 @@ public class WorkflowValidationTest {
                 "  \"id\": \"abc\" \n" +
                 "}").validate();
         Assertions.assertNotNull(validationErrors);
-        Assertions.assertEquals(4, validationErrors.size());
+        Assertions.assertEquals(3, validationErrors.size());
     }
 
     @Test
@@ -49,17 +49,17 @@ public class WorkflowValidationTest {
         List<ValidationError> validationErrors = workflowValidator.setSource("---\n" +
                 "id: abc\n").validate();
         Assertions.assertNotNull(validationErrors);
-        Assertions.assertEquals(4, validationErrors.size());
+        Assertions.assertEquals(3, validationErrors.size());
     }
 
     @Test
     public void testFromIncompleteWorkflow() {
         Workflow workflow = new Workflow().withId("test-workflow").withVersion("1.0")
+                .withStart(
+                        new Start()
+                )
                 .withStates(Arrays.asList(
                         new DelayState().withName("delayState").withType(DELAY)
-                                .withStart(
-                                        new Start()
-                                )
                                 .withEnd(
                                         new End()
                                 )
@@ -82,6 +82,7 @@ public class WorkflowValidationTest {
                 "\t\"id\": \"testwf\",\n" +
                 "\t\"name\": \"test workflow\",\n" +
                 "  \"version\": \"1.0\",\n" +
+                "  \"start\": \"SomeState\",\n" +
                 "  \"states\": []\n" +
                 "}").validate();
         Assertions.assertNotNull(validationErrors);
@@ -98,6 +99,7 @@ public class WorkflowValidationTest {
                 "  \"name\": \"Check Inbox Workflow\",\n" +
                 "\"description\": \"Periodically Check Inbox\",\n" +
                 "\"version\": \"1.0\",\n" +
+                "\"start\": \"CheckInbox\",\n" +
                 "\"functions\": [\n" +
                 "\n" +
                 "],\n" +
@@ -105,12 +107,6 @@ public class WorkflowValidationTest {
                 "    {\n" +
                 "        \"name\": \"CheckInbox\",\n" +
                 "        \"type\": \"operation\",\n" +
-                "        \"start\": {\n" +
-                "            \"kind\": \"scheduled\",\n" +
-                "            \"schedule\": {\n" +
-                "                \"cron\": \"0 0/15 * * * ?\"\n" +
-                "            }\n" +
-                "        },\n" +
                 "        \"actionMode\": \"sequential\",\n" +
                 "        \"actions\": [\n" +
                 "            {\n" +

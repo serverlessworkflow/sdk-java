@@ -3,6 +3,7 @@
   "version": "1.0",
   "name": "Job Monitoring",
   "description": "Monitor finished execution of a submitted job",
+  "start": "SubmitJob",
   "functions": [
     {
       "name": "submitJob",
@@ -25,7 +26,6 @@
     {
       "name":"SubmitJob",
       "type":"operation",
-      "start": true,
       "actionMode":"sequential",
       "actions":[
         {

@@ -3,6 +3,7 @@
   "name": "ForEach State With Actions",
   "description": "ForEach State With Actions",
   "version": "1.0",
+  "start": "SendConfirmationForEachCompletedhOrder",
   "functions": [
     {
       "name": "sendConfirmationFunction",
@@ -13,7 +14,6 @@
     {
       "name":"SendConfirmationForEachCompletedhOrder",
       "type":"foreach",
-      "start": true,
       "inputCollection": "${ .orders[?(@.completed == true)] }",
       "iterationParam": "${ .completedorder }",
       "actions":[

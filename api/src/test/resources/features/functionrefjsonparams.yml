@@ -1,10 +1,10 @@
 id: functionrefparams
 version: '1.0'
 name: Function Ref Params Test
+start: AddPluto
 states:
   - name: AddPluto
     type: operation
-    start: true
     actions:
       - functionRef:
           refName: addPet

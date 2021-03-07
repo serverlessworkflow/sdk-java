@@ -3,6 +3,12 @@
   "name": "Check Inbox Workflow",
   "description": "Periodically Check Inbox",
   "version": "1.0",
+  "start": {
+    "stateName": "CheckInbox",
+    "schedule": {
+      "cron": "0 0/15 * * * ?"
+    }
+  },
   "functions": [
     {
       "name": "checkInboxFunction",
@@ -17,11 +23,6 @@
     {
       "name": "CheckInbox",
       "type": "operation",
-      "start": {
-        "schedule": {
-          "cron": "0 0/15 * * * ?"
-        }
-      },
       "actionMode": "sequential",
       "actions": [
         {

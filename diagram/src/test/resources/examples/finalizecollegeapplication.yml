@@ -1,6 +1,7 @@
 id: finalizeCollegeApplication
 name: Finalize College Application
 version: '1.0'
+start: FinalizeApplication
 events:
   - name: ApplicationSubmitted
     type: org.application.submitted
@@ -23,7 +24,6 @@ functions:
 states:
   - name: FinalizeApplication
     type: event
-    start: true
     exclusive: false
     onEvents:
       - eventRefs:

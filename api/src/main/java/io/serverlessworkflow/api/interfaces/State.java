@@ -34,8 +34,6 @@ public interface State {
 
     Type getType();
 
-    Start getStart();
-
     End getEnd();
 
     StateDataFilter getStateDataFilter();

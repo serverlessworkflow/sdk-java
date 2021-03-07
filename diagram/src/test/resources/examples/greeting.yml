@@ -2,13 +2,13 @@ id: greeting
 version: '1.0'
 name: Greeting Workflow
 description: Greet Someone
+start: Greet
 functions:
   - name: greetingFunction
     operation: file://myapis/greetingapis.json#greeting
 states:
   - name: Greet
     type: operation
-    start: true
     actions:
       - functionRef:
           refName: greetingFunction

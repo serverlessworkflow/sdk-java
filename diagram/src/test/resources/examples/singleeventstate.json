@@ -3,6 +3,7 @@
   "name": "Test Events Workflow",
   "description": "This is a test events workflow",
   "version": "1.0",
+  "start": "EventState",
   "events": [
     {
       "name": "event1",
@@ -29,7 +30,6 @@
     {
       "name": "EventState",
       "type": "event",
-      "start": true,
       "end": true,
       "onEvents": [
         {

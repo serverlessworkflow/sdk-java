@@ -2,13 +2,13 @@ id: provisionorders
 version: '1.0'
 name: Provision Orders
 description: Provision Orders and handle errors thrown
+start: ProvisionOrder
 functions:
   - name: provisionOrderFunction
     operation: http://myapis.org/provisioningapi.json#doProvision
 states:
   - name: ProvisionOrder
     type: operation
-    start: true
     actionMode: sequential
     actions:
       - functionRef:

@@ -2,6 +2,7 @@ id: functiontypes
 version: '1.0'
 name: Function Types Workflow
 description: Determine if applicant request is valid
+start: CheckFunctions
 functions:
   - name: restFunction
     operation: http://myapis.org/applicationapi.json#emailRejection
@@ -11,7 +12,6 @@ functions:
 states:
   - name: CheckFunctions
     type: operation
-    start: true
     actions:
       - functionRef:
           refName: restFunction

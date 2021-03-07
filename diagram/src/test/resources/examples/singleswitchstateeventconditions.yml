@@ -3,10 +3,10 @@ id: testSwitch
 name: Test Switch State Workflow
 description: This is a test switch state workflow
 version: '1.0'
+start: SwitchIt
 states:
   - name: SwitchIt
     type: switch
-    start: true
     eventConditions:
       - name: first
         eventRef: firstEvent

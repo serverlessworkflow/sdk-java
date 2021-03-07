@@ -31,10 +31,6 @@
       ],
       "description": "State type"
     },
-    "start": {
-      "$ref": "../start/start.json",
-      "description": "Defines this states start"
-    },
     "end": {
       "$ref": "../end/end.json",
       "description": "Defines this states end"

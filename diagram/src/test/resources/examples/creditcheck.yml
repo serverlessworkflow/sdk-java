@@ -2,6 +2,7 @@
 id: customercreditcheck
 version: '1.0'
 name: Customer Credit Check Workflow
+start: CheckCredit
 description: Perform Customer Credit Check
 functions:
   - name: creditCheckFunction
@@ -17,7 +18,6 @@ events:
 states:
   - name: CheckCredit
     type: callback
-    start: true
     action:
       functionRef:
         refName: callCreditCheckMicroservice

@@ -3,13 +3,13 @@
   "name": "Vet Appointment Workflow",
   "description": "Vet service call via events",
   "version": "1.0",
+  "start": "MakeVetAppointmentState",
   "events": "features/vetappointmenteventrefs.json",
   "retries": "features/vetappointmentretries.json",
   "states": [
     {
       "name": "MakeVetAppointmentState",
       "type": "operation",
-      "start": true,
       "actions": [
         {
           "name": "MakeAppointmentAction",

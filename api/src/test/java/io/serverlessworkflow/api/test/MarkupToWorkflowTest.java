@@ -351,19 +351,19 @@ public class MarkupToWorkflowTest {
         Workflow workflow = Workflow.fromSource(WorkflowTestUtils.readWorkflowFile(workflowLocation));
 
         assertNotNull(workflow);
+
+        assertNotNull(workflow.getStart());
+        assertNotNull(workflow.getStart().getSchedule());
+
+        assertEquals("2020-03-20T09:00:00Z/2020-03-20T15:00:00Z", workflow.getStart().getSchedule().getInterval());
+
         assertNotNull(workflow.getId());
         assertNotNull(workflow.getName());
         assertNotNull(workflow.getStates());
 
         assertNotNull(workflow.getStates());
         assertTrue(workflow.getStates().size() == 1);
-        assertTrue(workflow.getStates().get(0) instanceof EventState);
 
-        EventState eventState = (EventState) workflow.getStates().get(0);
-        assertNotNull(eventState.getStart());
-        assertNotNull(eventState.getStart().getSchedule());
-
-        assertEquals("2020-03-20T09:00:00Z/2020-03-20T15:00:00Z", eventState.getStart().getSchedule().getInterval());
     }
 
     @ParameterizedTest
@@ -372,19 +372,18 @@ public class MarkupToWorkflowTest {
         Workflow workflow = Workflow.fromSource(WorkflowTestUtils.readWorkflowFile(workflowLocation));
 
         assertNotNull(workflow);
+
+        assertNotNull(workflow.getStart());
+        assertNotNull(workflow.getStart().getSchedule());
+
+        assertEquals("0 0/15 * * * ?", workflow.getStart().getSchedule().getCron().getExpression());
+
         assertNotNull(workflow.getId());
         assertNotNull(workflow.getName());
         assertNotNull(workflow.getStates());
 
         assertNotNull(workflow.getStates());
         assertTrue(workflow.getStates().size() == 2);
-        assertTrue(workflow.getStates().get(0) instanceof OperationState);
-
-        OperationState operationState = (OperationState) workflow.getStates().get(0);
-        assertNotNull(operationState.getStart());
-        assertNotNull(operationState.getStart().getSchedule());
-
-        assertEquals("0 0/15 * * * ?", operationState.getStart().getSchedule().getCron().getExpression());
     }
 
     @ParameterizedTest
@@ -399,5 +398,39 @@ public class MarkupToWorkflowTest {
 
         assertNotNull(workflow.getExpressionLang());
         assertEquals("abc", workflow.getExpressionLang());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/features/shortstart.json", "/features/shortstart.yml"})
+    public void testShortStart(String workflowLocation) {
+        Workflow workflow = Workflow.fromSource(WorkflowTestUtils.readWorkflowFile(workflowLocation));
+
+        assertNotNull(workflow);
+        assertNotNull(workflow.getId());
+        assertNotNull(workflow.getName());
+        assertNotNull(workflow.getStates());
+
+        assertNotNull(workflow.getStart());
+        assertEquals("TestFunctionRefs", workflow.getStart().getStateName());
+        assertNull(workflow.getStart().getSchedule());
+
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/features/longstart.json", "/features/longstart.yml"})
+    public void testLongStart(String workflowLocation) {
+        Workflow workflow = Workflow.fromSource(WorkflowTestUtils.readWorkflowFile(workflowLocation));
+
+        assertNotNull(workflow);
+        assertNotNull(workflow.getId());
+        assertNotNull(workflow.getName());
+        assertNotNull(workflow.getStates());
+
+        assertNotNull(workflow.getStart());
+        assertEquals("TestFunctionRefs", workflow.getStart().getStateName());
+        assertNotNull(workflow.getStart().getSchedule());
+        assertNotNull(workflow.getStart().getSchedule().getCron());
+        assertEquals("0 0/15 * * * ?", workflow.getStart().getSchedule().getCron().getExpression());
+
     }
 }

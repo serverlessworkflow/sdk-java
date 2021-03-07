@@ -3,6 +3,7 @@
   "version": "1.0",
   "name": "Event Based Greeting Workflow",
   "description": "Event Based Greeting",
+  "start": "Greet",
   "events": [
     {
       "name": "GreetingEvent",
@@ -20,7 +21,6 @@
     {
       "name":"Greet",
       "type":"event",
-      "start": true,
       "onEvents": [{
         "eventRefs": ["GreetingEvent"],
         "eventDataFilter": {
