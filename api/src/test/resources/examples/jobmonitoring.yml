@@ -1,4 +1,3 @@
----
 id: jobmonitoring
 version: '1.0'
 name: Job Monitoring
@@ -54,9 +53,9 @@ states:
   - name: DetermineCompletion
     type: switch
     dataConditions:
-      - condition: "${ $[?(@.jobstatus == 'SUCCEEDED')] }"
+      - condition: "${ .jobstatus == \"SUCCEEDED\" }"
         transition: JobSucceeded
-      - condition: "${ $[?(@.jobstatus == 'FAILED')] }"
+      - condition: "${ .jobstatus == \"FAILED\" }"
         transition: JobFailed
     default:
       transition: WaitForCompletion

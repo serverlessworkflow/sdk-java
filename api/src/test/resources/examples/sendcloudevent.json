@@ -34,12 +34,10 @@
         }
       ],
       "end": {
-        "produceEvents": [
-          {
-            "eventRef": "provisioningCompleteEvent",
-            "data": "${ .provisionedOrders }"
-          }
-        ]
+        "produceEvents": [{
+          "eventRef": "provisioningCompleteEvent",
+          "data": "${ .provisionedOrders }"
+        }]
       }
     }
   ]

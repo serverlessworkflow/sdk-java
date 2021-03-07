@@ -65,7 +65,9 @@
           ]
         }
       ],
-      "end": true
+      "end": {
+        "terminate": true
+      }
     }
   ]
 }

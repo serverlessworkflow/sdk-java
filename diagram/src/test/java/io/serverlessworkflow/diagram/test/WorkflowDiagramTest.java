@@ -46,10 +46,12 @@ public class WorkflowDiagramTest {
             "/examples/periodicinboxcheck.json", "/examples/periodicinboxcheck.yml",
             "/examples/vetappointmentservice.json", "/examples/vetappointmentservice.yml",
             "/examples/eventbasedtransition.json", "/examples/eventbasedtransition.yml",
-            "/examples/singleeventstate.json", "/examples/singleeventstate.yml",
-            "/examples/singleswitchstateeventconditions.json", "/examples/singleswitchstateeventconditions.yml"
+            "/examples/roomreadings.json", "/examples/roomreadings.yml",
+            "/examples/checkcarvitals.json", "/examples/checkcarvitals.yml",
+            "/examples/booklending.json", "/examples/booklending.yml"
     })
     public void testSpecExamplesParsing(String workflowLocation) throws Exception {
+
         Workflow workflow = Workflow.fromSource(DiagramTestUtils.readWorkflowFile(workflowLocation));
 
         assertNotNull(workflow);
@@ -62,5 +64,6 @@ public class WorkflowDiagramTest {
 
         String diagramSVG = workflowDiagram.getSvgDiagram();
         Assertions.assertNotNull(diagramSVG);
+
     }
 }

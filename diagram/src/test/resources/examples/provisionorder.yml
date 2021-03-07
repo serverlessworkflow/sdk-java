@@ -15,16 +15,16 @@ states:
           refName: provisionOrderFunction
           arguments:
             order: "${ .order }"
-    onErrors:
-      - error: "MissingOrderId"
-        transition: MissingId
-      - error: "MissingOrderItem"
-        transition: MissingItem
-      - error: "MissingOrderQuantity"
-        transition: MissingQuantity
     stateDataFilter:
       dataOutputPath: "${ .exceptions }"
     transition: ApplyOrder
+    onErrors:
+      - error: Missing order id
+        transition: MissingId
+      - error: Missing order item
+        transition: MissingItem
+      - error: Missing order quantity
+        transition: MissingQuantity
   - name: MissingId
     type: subflow
     workflowId: handleMissingIdExceptionWorkflow

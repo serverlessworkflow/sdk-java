@@ -1,4 +1,3 @@
----
 id: customercreditcheck
 version: '1.0'
 name: Customer Credit Check Workflow
@@ -29,11 +28,9 @@ states:
   - name: EvaluateDecision
     type: switch
     dataConditions:
-      - name: Approved
-        condition: "${ .creditCheck[?(@.decision == 'Approved')] }"
+      - condition: "${ .creditCheck | .decision == \"Approved\" }"
         transition: StartApplication
-      - name: Denied
-        condition: "${ .creditCheck[?(@.decision == 'Denied')] }"
+      - condition: "${ .creditCheck | .decision == \"Denied\" }"
         transition: RejectApplication
     default:
       transition: RejectApplication
