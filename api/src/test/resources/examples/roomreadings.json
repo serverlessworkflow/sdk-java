@@ -7,11 +7,11 @@
     "runBefore": "GenerateReport"
   },
   "keepActive": true,
+  "start": "ConsumeReading",
   "states": [
     {
       "name": "ConsumeReading",
       "type": "event",
-      "start": true,
       "onEvents": [
         {
           "eventRefs": ["TemperatureEvent", "HumidityEvent"],

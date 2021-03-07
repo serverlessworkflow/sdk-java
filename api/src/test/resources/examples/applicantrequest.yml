@@ -3,13 +3,13 @@ id: applicantrequest
 version: '1.0'
 name: Applicant Request Decision Workflow
 description: Determine if applicant request is valid
+start: CheckApplication
 functions:
   - name: sendRejectionEmailFunction
     operation: http://myapis.org/applicationapi.json#emailRejection
 states:
   - name: CheckApplication
     type: switch
-    start: true
     dataConditions:
       - condition: "${ .applicants[?(@.age >= 18)] }"
         transition: StartApplication

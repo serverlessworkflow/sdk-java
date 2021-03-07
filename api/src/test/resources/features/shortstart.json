@@ -1,8 +1,7 @@
 {
-  "id": "expressionlang",
+  "id": "shortstart",
   "version": "1.0",
-  "name": "Custom expression lang",
-  "expressionLang": "abc",
+  "name": "Short start",
   "start": "TestFunctionRefs",
   "states": [
     {

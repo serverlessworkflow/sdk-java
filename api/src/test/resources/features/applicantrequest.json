@@ -2,6 +2,7 @@
   "id": "applicantrequest",
   "version": "1.0",
   "name": "Applicant Request Decision Workflow",
+  "start": "CheckApplication",
   "description": "Determine if applicant request is valid",
   "functions": "features/applicantrequestfunctions.json",
   "retries": "features/applicantrequestretries.json",
@@ -9,7 +10,6 @@
     {
       "name":"CheckApplication",
       "type":"switch",
-      "start": true,
       "dataConditions": [
         {
           "condition": "${ .applicants[?(@.age >= 18)] }",

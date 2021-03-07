@@ -39,12 +39,21 @@ public class StartDefinitionSerializer extends StdSerializer<Start> {
                           SerializerProvider provider) throws IOException {
 
         if(start != null) {
-            if(start.getSchedule() == null) {
-                gen.writeBoolean(true);
+            if(start.getStateName() != null && start.getStateName().length() > 0
+                    && start.getSchedule() == null) {
+                gen.writeString(start.getStateName());
             } else {
                 gen.writeStartObject();
-                gen.writeObjectField("schedule",
-                        start.getSchedule());
+
+                if(start.getStateName() != null && start.getStateName().length() > 0) {
+                    gen.writeStringField("stateName", start.getStateName());
+                }
+
+                if(start.getSchedule() != null) {
+                    gen.writeObjectField("schedule",
+                            start.getSchedule());
+                }
+
                 gen.writeEndObject();
             }
         }

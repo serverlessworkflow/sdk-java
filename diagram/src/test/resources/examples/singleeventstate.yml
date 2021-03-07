@@ -3,6 +3,7 @@ id: testEvents
 name: Test Events Workflow
 description: This is a test events workflow
 version: '1.0'
+start: EventState
 events:
   - name: event1
     source: event1source
@@ -19,7 +20,6 @@ events:
 states:
   - name: EventState
     type: event
-    start: true
     end: true
     onEvents:
       - eventRefs:

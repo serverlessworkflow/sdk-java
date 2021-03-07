@@ -2,12 +2,12 @@ id: transitions
 version: '1.0'
 name: Transitions Workflow
 description: Transitions Workflow
+start: DifferentTransitionsTestState
 functions: features/applicantrequestfunctions.json
 retries: features/applicantrequestretries.json
 states:
   - name: DifferentTransitionsTestState
     type: switch
-    start: true
     dataConditions:
       - condition: "${ .applicants[?(@.age >= 18)] }"
         transition: StartApplication

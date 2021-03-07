@@ -35,6 +35,7 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.validation.Validation;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -80,18 +81,16 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
                             workflowSchema.validate(new JSONObject(source));
                         }
                     } catch (ValidationException e) {
-                        // ignore the "functions" and "events" multi-def error
-                        if((!e.getMessage().equals("#/functions: expected type: JSONObject, found: JSONArray") &&
-                                !e.getMessage().equals("#/events: expected type: JSONObject, found: JSONArray"))) {
-                            // main error
-                            addValidationError(e.getMessage(),
-                                    ValidationError.SCHEMA_VALIDATION);
-                            // suberrors
-                            e.getCausingExceptions().stream()
-                                    .map(ValidationException::getMessage)
-                                    .forEach(m -> addValidationError(m,
-                                            ValidationError.SCHEMA_VALIDATION));
-                        }
+                        e.getCausingExceptions().stream()
+                                .map(ValidationException::getMessage)
+                                .forEach(m -> {
+                                    if((!m.equals("#/functions: expected type: JSONObject, found: JSONArray") &&
+                                            !m.equals("#/events: expected type: JSONObject, found: JSONArray") &&
+                                            !m.equals("#/start: expected type: JSONObject, found: String"))) {
+                                    addValidationError(m,
+                                            ValidationError.SCHEMA_VALIDATION);
+                                }});
+
                     }
                 }
             } catch (Exception e) {
@@ -110,7 +109,7 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
 
             List<FunctionDefinition> functions = workflow.getFunctions() != null ? workflow.getFunctions().getFunctionDefs() : null;
 
-            List<EventDefinition> events = workflow.getEvents() != null? workflow.getEvents().getEventDefs() : null;
+            List<EventDefinition> events = workflow.getEvents() != null ? workflow.getEvents().getEventDefs() : null;
 
             if (workflow.getId() == null || workflow.getId().trim().isEmpty()) {
                 addValidationError("Workflow id should not be empty",
@@ -119,6 +118,11 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
 
             if (workflow.getName() == null || workflow.getName().trim().isEmpty()) {
                 addValidationError("Workflow name should not be empty",
+                        ValidationError.WORKFLOW_VALIDATION);
+            }
+
+            if (workflow.getStart() == null) {
+                addValidationError("Workflow must define a starting state",
                         ValidationError.WORKFLOW_VALIDATION);
             }
 
@@ -140,10 +144,6 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
                                 ValidationError.WORKFLOW_VALIDATION);
                     } else {
                         validation.addState(s.getName());
-                    }
-
-                    if (s.getStart() != null) {
-                        validation.addStartState();
                     }
 
                     if (s.getEnd() != null) {
@@ -323,16 +323,6 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
 
                 });
 
-                if (validation.startStates == 0) {
-                    addValidationError("No start state found.",
-                            ValidationError.WORKFLOW_VALIDATION);
-                }
-
-                if (validation.startStates > 1) {
-                    addValidationError("Multiple start states found.",
-                            ValidationError.WORKFLOW_VALIDATION);
-                }
-
                 if (validation.endStates == 0) {
                     addValidationError("No end state found.",
                             ValidationError.WORKFLOW_VALIDATION);
@@ -364,7 +354,7 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
     }
 
     private boolean haveFunctionDefinition(String functionName, List<FunctionDefinition> functions) {
-        if(functions != null) {
+        if (functions != null) {
             FunctionDefinition fun = functions.stream().filter(f -> f.getName().equals(functionName))
                     .findFirst()
                     .orElse(null);
@@ -376,7 +366,7 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
     }
 
     private boolean haveEventsDefinition(String eventName, List<EventDefinition> events) {
-        if(events != null) {
+        if (events != null) {
             EventDefinition eve = events.stream().filter(e -> e.getName().equals(eventName))
                     .findFirst()
                     .orElse(null);
@@ -400,7 +390,6 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
         final Set<String> events = new HashSet<>();
         final Set<String> functions = new HashSet();
         final Set<String> states = new HashSet<>();
-        Integer startStates = 0;
         Integer endStates = 0;
 
         void addFunction(String name) {
@@ -428,10 +417,6 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
             } else {
                 states.add(name);
             }
-        }
-
-        void addStartState() {
-            startStates++;
         }
 
         void addEndState() {

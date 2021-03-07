@@ -3,6 +3,7 @@
   "version": "1.0",
   "name": "Function Types Workflow",
   "description": "Determine if applicant request is valid",
+  "start": "CheckFunctions",
   "functions": [
     {
       "name": "restFunction",
@@ -18,7 +19,6 @@
     {
       "name":"CheckFunctions",
       "type":"operation",
-      "start": true,
       "actions":[
         {
           "functionRef": {

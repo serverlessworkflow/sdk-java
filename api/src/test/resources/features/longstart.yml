@@ -1,8 +1,10 @@
-id: expressionlang
+id: longstart
 version: '1.0'
-name: Custom expression lang
-expressionLang: abc
-start: TestFunctionRefs
+name: Long start
+start:
+  stateName: TestFunctionRefs
+  schedule:
+    cron: 0 0/15 * * * ?
 states:
   - name: TestFunctionRefs
     type: operation

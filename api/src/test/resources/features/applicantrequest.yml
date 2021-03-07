@@ -1,5 +1,6 @@
 id: applicantrequest
 version: '1.0'
+start: CheckApplication
 name: Applicant Request Decision Workflow
 description: Determine if applicant request is valid
 functions: features/applicantrequestfunctions.yml
@@ -7,7 +8,6 @@ retries: features/applicantrequestretries.yml
 states:
   - name: CheckApplication
     type: switch
-    start: true
     dataConditions:
       - condition: "${ .applicants[?(@.age >= 18)] }"
         transition: StartApplication

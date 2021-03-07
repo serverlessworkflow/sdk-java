@@ -1,11 +1,11 @@
 id: helloworld
 version: '1.0'
 name: Hello World Workflow
+start: Hello State
 description: Inject Hello World
 states:
   - name: Hello State
     type: inject
-    start: true
     data:
       result: Hello World!
     end: true

@@ -39,13 +39,11 @@ public class WorkflowToMarkupTest {
     public void testSingleState() {
 
         Workflow workflow = new Workflow().withId("test-workflow").withName("test-workflow-name").withVersion("1.0")
+                .withStart(new Start().withSchedule(
+                        new Schedule().withInterval("PT1S")
+                ))
                 .withStates(Arrays.asList(
                         new DelayState().withName("delayState").withType(DELAY)
-                                .withStart(
-                                        new Start().withSchedule(
-                                                new Schedule().withInterval("PT1S")
-                                        )
-                                )
                                 .withEnd(
                                         new End().withTerminate(true).withCompensate(true)
                                         .withProduceEvents(Arrays.asList(
@@ -57,10 +55,10 @@ public class WorkflowToMarkupTest {
                 );
 
         assertNotNull(workflow);
+        assertNotNull(workflow.getStart());
         assertEquals(1, workflow.getStates().size());
         State state = workflow.getStates().get(0);
         assertTrue(state instanceof DelayState);
-        assertNotNull(state.getStart());
         assertNotNull(state.getEnd());
 
         assertNotNull(Workflow.toJson(workflow));
@@ -71,15 +69,15 @@ public class WorkflowToMarkupTest {
     public void testSingleFunction() {
 
         Workflow workflow = new Workflow().withId("test-workflow").withName("test-workflow-name").withVersion("1.0")
+                .withStart(
+                        new Start()
+                )
                 .withFunctions(new Functions(Arrays.asList(
                         new FunctionDefinition().withName("testFunction")
                                 .withOperation("testSwaggerDef#testOperationId")))
                 )
                 .withStates(Arrays.asList(
                         new DelayState().withName("delayState").withType(DELAY)
-                                .withStart(
-                                        new Start()
-                                )
                                 .withEnd(
                                         new End()
                                 )
@@ -88,6 +86,7 @@ public class WorkflowToMarkupTest {
                 );
 
         assertNotNull(workflow);
+        assertNotNull(workflow.getStart());
         assertEquals(1, workflow.getStates().size());
         State state = workflow.getStates().get(0);
         assertTrue(state instanceof DelayState);
@@ -103,6 +102,9 @@ public class WorkflowToMarkupTest {
     public void testSingleEvent() {
 
         Workflow workflow = new Workflow().withId("test-workflow").withName("test-workflow-name").withVersion("1.0")
+                .withStart(
+                        new Start()
+                )
                 .withEvents(new Events(Arrays.asList(
                         new EventDefinition().withName("testEvent").withSource("testSource").withType("testType")
                                 .withKind(EventDefinition.Kind.PRODUCED)))
@@ -113,9 +115,6 @@ public class WorkflowToMarkupTest {
                 )
                 .withStates(Arrays.asList(
                         new DelayState().withName("delayState").withType(DELAY)
-                                .withStart(
-                                        new Start()
-                                )
                                 .withEnd(
                                         new End()
                                 )
@@ -124,6 +123,7 @@ public class WorkflowToMarkupTest {
                 );
 
         assertNotNull(workflow);
+        assertNotNull(workflow.getStart());
         assertEquals(1, workflow.getStates().size());
         State state = workflow.getStates().get(0);
         assertTrue(state instanceof DelayState);

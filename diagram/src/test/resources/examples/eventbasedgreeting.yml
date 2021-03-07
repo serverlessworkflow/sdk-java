@@ -2,6 +2,7 @@ id: eventbasedgreeting
 version: '1.0'
 name: Event Based Greeting Workflow
 description: Event Based Greeting
+start: Greet
 events:
   - name: GreetingEvent
     type: greetingEventType
@@ -12,7 +13,6 @@ functions:
 states:
   - name: Greet
     type: event
-    start: true
     onEvents:
       - eventRefs:
           - GreetingEvent

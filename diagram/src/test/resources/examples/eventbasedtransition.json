@@ -3,6 +3,7 @@
   "version": "1.0",
   "name": "Event Based Switch Transitions",
   "description": "Event Based Switch Transitions",
+  "start": "CheckVisaStatus",
   "events": [
     {
       "name": "visaApprovedEvent",
@@ -19,7 +20,6 @@
     {
       "name":"CheckVisaStatus",
       "type":"switch",
-      "start": true,
       "eventConditions": [
         {
           "eventRef": "visaApprovedEvent",

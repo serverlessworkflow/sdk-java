@@ -58,10 +58,15 @@ public class StartDefinitionDeserializer extends StdDeserializer<Start> {
 
         Start start = new Start();
 
-        if (node.isBoolean()) {
+        if (!node.isObject()) {
+            start.setStateName(node.asText());
             start.setSchedule(null);
-            return node.asBoolean() ? start : null;
+            return start;
         } else {
+            if(node.get("stateName") != null) {
+                start.setStateName(node.get("stateName").asText());
+            }
+
             if(node.get("schedule") != null) {
                 start.setSchedule(mapper.treeToValue(node.get("schedule"), Schedule.class));
             }

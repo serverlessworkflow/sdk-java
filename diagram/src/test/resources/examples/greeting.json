@@ -3,6 +3,7 @@
   "version": "1.0",
   "name": "Greeting Workflow",
   "description": "Greet Someone",
+  "start": "Greet",
   "functions": [
     {
       "name": "greetingFunction",
@@ -13,7 +14,6 @@
     {
       "name":"Greet",
       "type":"operation",
-      "start": true,
       "actions":[
         {
           "functionRef": {

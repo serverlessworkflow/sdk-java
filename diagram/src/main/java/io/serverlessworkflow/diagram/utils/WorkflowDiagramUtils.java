@@ -41,7 +41,7 @@ public class WorkflowDiagramUtils {
 
     public static State getWorkflowStartState(Workflow workflow) {
         return workflow.getStates().stream()
-                .filter(ws -> ws.getStart() != null)
+                .filter(ws -> ws.getName().equals(workflow.getStart().getStateName()))
                 .findFirst().get();
     }
 
