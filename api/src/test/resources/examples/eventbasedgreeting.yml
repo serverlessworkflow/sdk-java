@@ -17,12 +17,12 @@ states:
       - eventRefs:
           - GreetingEvent
         eventDataFilter:
-          dataOutputPath: "${ .data.greet }"
+          data: "${ .data.greet }"
         actions:
           - functionRef:
               refName: greetingFunction
               arguments:
                 name: "${ .greet.name }"
     stateDataFilter:
-      dataOutputPath: "${ .payload.greeting }"
+      output: "${ .payload.greeting }"
     end: true

@@ -11,11 +11,11 @@
   "properties": {
     "inputCollection": {
       "type": "string",
-      "description": "JsonPath expression selecting an array element of the states data"
+      "description": "Workflow expression selecting an array element of the states data"
     },
     "outputCollection": {
       "type": "string",
-      "description": "JsonPath expression specifying an array element of the states data to add the results of each iteration"
+      "description": "Workflow expression specifying an array element of the states data to add the results of each iteration"
     },
     "iterationParam": {
       "type": "string",

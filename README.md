@@ -126,7 +126,7 @@ states:
     actionDataFilter:
       dataResultsPath: ".payload.greeting"
   stateDataFilter:
-    dataOutputPath: ".greeting"
+    output: ".greeting"
   end: true
 ```
 

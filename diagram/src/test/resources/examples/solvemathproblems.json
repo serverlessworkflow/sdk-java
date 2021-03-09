@@ -28,7 +28,7 @@
         }
       ],
       "stateDataFilter": {
-        "dataOutputPath": "${ .results }"
+        "output": "${ .results }"
       },
       "end": true
     }

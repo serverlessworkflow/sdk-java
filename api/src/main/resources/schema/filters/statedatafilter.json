@@ -2,13 +2,13 @@
   "type": "object",
   "javaType": "io.serverlessworkflow.api.filters.StateDataFilter",
   "properties": {
-    "dataInputPath": {
+    "input": {
       "type": "string",
-      "description": "JSONPath definition that selects parts of the states data input"
+      "description": "Workflow expression to filter the state data input"
     },
-    "dataOutputPath": {
+    "output": {
       "type": "string",
-      "description": "JSONPath definition that selects parts of the states data output"
+      "description": "Workflow expression that filters the state data output"
     }
   },
   "required": []

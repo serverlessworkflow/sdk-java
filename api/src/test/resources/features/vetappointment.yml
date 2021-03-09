@@ -15,7 +15,7 @@ states:
           data: "${ .patientInfo }"
           resultEventRef: VetAppointmentInfo
         actionDataFilter:
-          dataResultsPath: "${ .appointmentInfo }"
+          results: "${ .appointmentInfo }"
         timeout: PT15M
     onErrors:
       - error: TimeoutError

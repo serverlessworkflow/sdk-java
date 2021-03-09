@@ -24,7 +24,7 @@
       "onEvents": [{
         "eventRefs": ["GreetingEvent"],
         "eventDataFilter": {
-          "dataOutputPath": "${ .data.greet }"
+          "data": "${ .data.greet }"
         },
         "actions":[
           {
@@ -38,7 +38,7 @@
         ]
       }],
       "stateDataFilter": {
-        "dataOutputPath": "${ .payload.greeting }"
+        "output": "${ .payload.greeting }"
       },
       "end": true
     }

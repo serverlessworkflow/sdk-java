@@ -2,13 +2,17 @@
   "type": "object",
   "javaType": "io.serverlessworkflow.api.filters.ActionDataFilter",
   "properties": {
-    "dataInputPath": {
+    "fromStateData": {
       "type": "string",
-      "description": "JSONPath definition that selects parts of the states data input to be the action data"
+      "description": "Workflow expression that selects state data that the state action can use"
     },
-    "dataResultsPath": {
+    "results": {
       "type": "string",
-      "description": "JSONPath definition that selects parts of the actions data result, to be merged with the states data"
+      "description": "Workflow expression that filters the actions data results"
+    },
+    "toStateData": {
+      "type": "string",
+      "description": "Workflow expression that selects a state data element to which the action results should be added/merged into. If not specified, denote, the top-level state data element"
     }
   },
   "required": []

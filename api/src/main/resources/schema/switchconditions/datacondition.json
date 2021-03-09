@@ -12,7 +12,7 @@
     },
     "condition": {
       "type": "string",
-      "description": "JsonPath expression evaluated against state data. True if results are not empty"
+      "description": "Workflow expression evaluated against state data. True if results are not empty"
     },
     "transition": {
       "$ref": "../transitions/transition.json",
@@ -20,7 +20,7 @@
     },
     "end": {
       "$ref": "../end/end.json",
-      "description": "Explicit transition to end"
+      "description": "Workflow end definition"
     }
   },
   "required": [
