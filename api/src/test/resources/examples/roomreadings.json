@@ -23,7 +23,7 @@
             }
           ],
           "eventDataFilter": {
-            "dataOutputPath": "${ .readings }"
+            "data": "${ .readings }"
           }
         }
       ],

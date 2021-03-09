@@ -22,12 +22,12 @@ states:
           arguments:
             name: "${ .job.name }"
         actionDataFilter:
-          dataResultsPath: "${ .jobuid }"
+          results: "${ .jobuid }"
     onErrors:
       - error: "*"
         transition: SubmitError
     stateDataFilter:
-      dataOutputPath: "${ .jobuid }"
+      output: "${ .jobuid }"
     transition: WaitForCompletion
   - name: SubmitError
     type: subflow
@@ -46,9 +46,9 @@ states:
           arguments:
             name: "${ .jobuid }"
         actionDataFilter:
-          dataResultsPath: "${ .jobstatus }"
+          results: "${ .jobstatus }"
     stateDataFilter:
-      dataOutputPath: "${ .jobstatus }"
+      output: "${ .jobstatus }"
     transition: DetermineCompletion
   - name: DetermineCompletion
     type: switch

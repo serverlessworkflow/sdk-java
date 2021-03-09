@@ -9,7 +9,7 @@
     },
     "end": {
       "$ref": "../end/end.json",
-      "description": "Explicit transition to end"
+      "description": "Workflow end definition"
     }
   },
   "oneOf": [

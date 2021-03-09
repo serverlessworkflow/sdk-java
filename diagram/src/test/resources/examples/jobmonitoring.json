@@ -36,7 +36,7 @@
             }
           },
           "actionDataFilter": {
-            "dataResultsPath": "${ .jobuid }"
+            "results": "${ .jobuid }"
           }
         }
       ],
@@ -47,7 +47,7 @@
         }
       ],
       "stateDataFilter": {
-        "dataOutputPath": "${ .jobuid }"
+        "output": "${ .jobuid }"
       },
       "transition": "WaitForCompletion'"
     },
@@ -76,12 +76,12 @@
             }
           },
           "actionDataFilter": {
-            "dataResultsPath": "${ .jobstatus }"
+            "results": "${ .jobstatus }"
           }
         }
       ],
       "stateDataFilter": {
-        "dataOutputPath": "${ .jobstatus }"
+        "output": "${ .jobstatus }"
       },
       "transition": "DetermineCompletion"
     },

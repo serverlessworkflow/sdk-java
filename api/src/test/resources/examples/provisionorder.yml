@@ -16,7 +16,7 @@ states:
           arguments:
             order: "${ .order }"
     stateDataFilter:
-      dataOutputPath: "${ .exceptions }"
+      output: "${ .exceptions }"
     transition: ApplyOrder
     onErrors:
       - error: Missing order id

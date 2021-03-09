@@ -18,5 +18,5 @@ states:
           arguments:
             expression: "${ .singleexpression }"
     stateDataFilter:
-      dataOutputPath: "${ .results }"
+      output: "${ .results }"
     end: true

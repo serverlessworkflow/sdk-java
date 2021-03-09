@@ -17,7 +17,7 @@ states:
           - functionRef:
               refName: LogReading
         eventDataFilter:
-          dataOutputPath: "${ .readings }"
+          data: "${ .readings }"
     end: true
   - name: GenerateReport
     type: operation
