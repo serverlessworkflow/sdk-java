@@ -70,10 +70,6 @@ public class ScheduleDeserializer extends StdDeserializer<Schedule> {
                 schedule.setCron(mapper.treeToValue(node.get("cron"), Cron.class));
             }
 
-            if(node.get("directInvoke") != null) {
-                schedule.setDirectInvoke(mapper.treeToValue(node.get("directInvoke"), Schedule.DirectInvoke.class));
-            }
-
             if(node.get("timezone") != null) {
                 schedule.setTimezone(node.get("timezone").asText());
             }

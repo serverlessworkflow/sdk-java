@@ -11,14 +11,6 @@
       "description":  "Schedule cron definition",
       "$ref": "../cron/crondef.json"
     },
-    "directInvoke": {
-      "description": "Define if workflow instances can be created outside of the defined interval/cron",
-      "type": "string",
-      "enum": [
-        "allow",
-        "deny"
-      ]
-    },
     "timezone": {
       "type": "string",
       "description":  "Timezone name used to evaluate the cron expression. Not used for interval as timezone can be specified there directly. If not specified, should default to local machine timezone."
@@ -27,14 +19,12 @@
   "oneOf": [
     {
       "required": [
-        "interval",
-        "directInvoke"
+        "interval"
       ]
     },
     {
       "required": [
-        "cron",
-        "directInvoke"
+        "cron"
       ]
     }
   ]

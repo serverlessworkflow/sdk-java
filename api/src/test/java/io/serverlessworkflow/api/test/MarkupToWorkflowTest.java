@@ -83,10 +83,10 @@ public class MarkupToWorkflowTest {
         assertTrue(workflow.getStates().size() > 0);
 
         assertNotNull(workflow.getFunctions());
-        assertTrue(workflow.getFunctions().getFunctionDefs().size() == 1);
+        assertEquals(1, workflow.getFunctions().getFunctionDefs().size());
 
         assertNotNull(workflow.getRetries());
-        assertTrue(workflow.getRetries().getRetryDefs().size() == 1);
+        assertEquals(1, workflow.getRetries().getRetryDefs().size());
     }
 
     @ParameterizedTest
@@ -101,10 +101,10 @@ public class MarkupToWorkflowTest {
         assertTrue(workflow.getStates().size() > 0);
 
         assertNotNull(workflow.getEvents());
-        assertTrue(workflow.getEvents().getEventDefs().size() == 2);
+        assertEquals(2, workflow.getEvents().getEventDefs().size());
 
         assertNotNull(workflow.getRetries());
-        assertTrue(workflow.getRetries().getRetryDefs().size() == 1);
+        assertEquals(1, workflow.getRetries().getRetryDefs().size());
     }
 
     @ParameterizedTest
@@ -118,7 +118,7 @@ public class MarkupToWorkflowTest {
         assertNotNull(workflow.getStates());
 
         assertNotNull(workflow.getStates());
-        assertTrue(workflow.getStates().size() == 2);
+        assertEquals(2, workflow.getStates().size());
 
         State firstState = workflow.getStates().get(0);
         assertTrue(firstState instanceof EventState);
@@ -143,14 +143,14 @@ public class MarkupToWorkflowTest {
         assertNotNull(workflow.getStates());
 
         assertNotNull(workflow.getStates());
-        assertTrue(workflow.getStates().size() == 1);
+        assertEquals(1, workflow.getStates().size());
 
         State state = workflow.getStates().get(0);
         assertTrue(state instanceof OperationState);
 
         List<FunctionDefinition> functionDefs = workflow.getFunctions().getFunctionDefs();
         assertNotNull(functionDefs);
-        assertTrue(functionDefs.size() == 2);
+        assertEquals(2, functionDefs.size());
 
         FunctionDefinition restFunc = functionDefs.get(0);
         assertEquals(restFunc.getType(), FunctionDefinition.Type.REST);
@@ -170,7 +170,7 @@ public class MarkupToWorkflowTest {
         assertNotNull(workflow.getStates());
 
         assertNotNull(workflow.getStates());
-        assertTrue(workflow.getStates().size() == 1);
+        assertEquals(1, workflow.getStates().size());
 
         State state = workflow.getStates().get(0);
         assertTrue(state instanceof SwitchState);
@@ -218,7 +218,7 @@ public class MarkupToWorkflowTest {
         assertNotNull(workflow.getStates());
 
         assertNotNull(workflow.getStates());
-        assertTrue(workflow.getStates().size() == 1);
+        assertEquals(1, workflow.getStates().size());
 
         State state = workflow.getStates().get(0);
         assertTrue(state instanceof OperationState);
@@ -257,7 +257,7 @@ public class MarkupToWorkflowTest {
         assertNotNull(workflow.getExecTimeout());
 
         ExecTimeout execTimeout = workflow.getExecTimeout();
-        assertEquals("PT1H", execTimeout.getInterval());
+        assertEquals("PT1H", execTimeout.getDuration());
         assertEquals("GenerateReport", execTimeout.getRunBefore());
     }
 
@@ -272,7 +272,7 @@ public class MarkupToWorkflowTest {
         assertNotNull(workflow.getStates());
 
         assertNotNull(workflow.getStates());
-        assertTrue(workflow.getStates().size() == 2);
+        assertEquals(2, workflow.getStates().size());
 
         State state = workflow.getStates().get(1);
         assertTrue(state instanceof SubflowState);
@@ -297,7 +297,7 @@ public class MarkupToWorkflowTest {
         assertNotNull(workflow.getStates());
 
         assertNotNull(workflow.getStates());
-        assertTrue(workflow.getStates().size() == 1);
+        assertEquals(1, workflow.getStates().size());
         assertTrue(workflow.getStates().get(0) instanceof OperationState);
 
         OperationState operationState = (OperationState) workflow.getStates().get(0);
@@ -328,7 +328,7 @@ public class MarkupToWorkflowTest {
         assertNotNull(workflow.getStates());
 
         assertNotNull(workflow.getStates());
-        assertTrue(workflow.getStates().size() == 1);
+        assertEquals(1, workflow.getStates().size());
         assertTrue(workflow.getStates().get(0) instanceof OperationState);
 
         OperationState operationState = (OperationState) workflow.getStates().get(0);
@@ -343,7 +343,7 @@ public class MarkupToWorkflowTest {
         JsonNode params = actions.get(0).getFunctionRef().getArguments();
         assertNull(params);
         JsonNode params2 = actions.get(1).getFunctionRef().getArguments();
-        assertNull(params);
+        assertNull(params2);
     }
 
     @ParameterizedTest
@@ -363,7 +363,7 @@ public class MarkupToWorkflowTest {
         assertNotNull(workflow.getStates());
 
         assertNotNull(workflow.getStates());
-        assertTrue(workflow.getStates().size() == 1);
+        assertEquals(1, workflow.getStates().size());
 
     }
 
@@ -384,7 +384,7 @@ public class MarkupToWorkflowTest {
         assertNotNull(workflow.getStates());
 
         assertNotNull(workflow.getStates());
-        assertTrue(workflow.getStates().size() == 2);
+        assertEquals(2, workflow.getStates().size());
     }
 
     @ParameterizedTest

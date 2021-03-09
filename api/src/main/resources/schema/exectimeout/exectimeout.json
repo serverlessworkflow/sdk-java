@@ -2,9 +2,9 @@
   "type": "object",
   "javaType": "io.serverlessworkflow.api.exectimeout.ExecTimeout",
   "properties": {
-    "interval": {
+    "duration": {
       "type": "string",
-      "description": "Timeout interval (ISO 8601 duration format)",
+      "description": "Timeout duration (ISO 8601 duration format)",
       "minLength": 1
     },
     "interrupt": {
@@ -19,6 +19,6 @@
     }
   },
   "required": [
-    "interval"
+    "duration"
   ]
 }
