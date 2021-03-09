@@ -40,7 +40,6 @@ public class ScheduleSerializer  extends StdSerializer<Schedule> {
 
         if(schedule != null) {
             if(schedule.getCron() == null
-                    && schedule.getDirectInvoke() == null
                     && (schedule.getTimezone() == null || schedule.getTimezone().isEmpty())
                     && schedule.getInterval() != null
                     && schedule.getInterval().length() > 0) {
@@ -54,10 +53,6 @@ public class ScheduleSerializer  extends StdSerializer<Schedule> {
 
                 if(schedule.getCron() != null) {
                     gen.writeObjectField("cron", schedule.getCron());
-                }
-
-                if (schedule.getDirectInvoke() != null) {
-                    gen.writeStringField("directInvoke", schedule.getDirectInvoke().value());
                 }
 
                 if(schedule.getTimezone() != null && schedule.getTimezone().length() > 0) {

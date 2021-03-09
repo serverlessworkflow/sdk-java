@@ -3,7 +3,7 @@ name: Room Temp and Humidity Workflow
 version: '1.0'
 start: ConsumeReading
 execTimeout:
-  interval: PT1H
+  duration: PT1H
   runBefore: GenerateReport
 keepActive: true
 states:
