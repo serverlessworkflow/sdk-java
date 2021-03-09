@@ -117,16 +117,15 @@ functions:
 states:
 - name: Greet
   type: operation
-  actionMode: sequential
   actions:
   - functionRef:
       refName: greetingFunction
       arguments:
-        name: ".greet.name"
+        name: "${ .greet.name }"
     actionDataFilter:
-      dataResultsPath: ".payload.greeting"
+      results: "${ .payload.greeting }"
   stateDataFilter:
-    output: ".greeting"
+    output: "${ .greeting }"
   end: true
 ```
 
@@ -158,7 +157,6 @@ assertTrue(workflow.getStates().get(0) instanceof OperationState);
 OperationState operationState = (OperationState) workflow.getStates().get(0);
 assertEquals("Greet", operationState.getName());
 assertEquals(DefaultState.Type.OPERATION, operationState.getType());
-
 ...
 ```
 
@@ -167,20 +165,21 @@ assertEquals(DefaultState.Type.OPERATION, operationState.getType());
 You can also programmatically create Workflow instances, for example:
 
 ``` java
-Workflow workflow = new Workflow().withId("test-workflow").withName("test-workflow-name").withVersion("1.0")
+Workflow workflow = new Workflow()
+                .withId("test-workflow")
+                .withName("test-workflow-name")
+                .withVersion("1.0")
+                .withStart(new Start().withStateName("MyDelayState"))
                 .withFunctions(new Functions(Arrays.asList(
                         new FunctionDefinition().withName("testFunction")
                                 .withOperation("testSwaggerDef#testOperationId")))
                 )
                 .withStates(Arrays.asList(
-                        new DelayState().withName("delayState").withType(DELAY)
-                                .withStart(
-                                        new Start().withKind(Start.Kind.DEFAULT)
-                                )
-                                .withEnd(
-                                        new End().withKind(End.Kind.DEFAULT)
-                                )
+                        new DelayState().withName("MyDelayState").withType(DELAY)
                                 .withTimeDelay("PT1M")
+                                .withEnd(
+                                        new End().withTerminate(true)
+                                )
                         )
                 );
 ```
@@ -218,16 +217,16 @@ boolean isValidWorkflow = workflowValidator.setSource("WORKFLOW_MODEL_JSON/YAML"
 If you build your Workflow programmatically, you can validate it as well:
 
 ``` java
-Workflow workflow = new Workflow().withId("test-workflow").withVersion("1.0")
+Workflow workflow = new Workflow()
+                .withId("test-workflow")
+                .withVersion("1.0")
+                .withStart(new Start().withStateName("MyDelayState"))
                 .withStates(Arrays.asList(
-                        new DelayState().withName("delayState").withType(DefaultState.Type.DELAY)
-                                .withStart(
-                                        new Start().withKind(Start.Kind.DEFAULT)
-                                )
-                                .withEnd(
-                                        new End().withKind(End.Kind.DEFAULT)
-                                )
+                        new DelayState().withName("MyDelayState").withType(DefaultState.Type.DELAY)
                                 .withTimeDelay("PT1M")
+                                .withEnd(
+                                        new End().withTerminate(true)
+                                )
                 ));
 );
 
