@@ -34,6 +34,7 @@ public class WorkflowDiagramImpl implements WorkflowDiagram {
 
     private String source;
     private Workflow workflow;
+    private boolean showLegend = false;
 
     @Override
     public WorkflowDiagram setWorkflow(Workflow workflow) {
@@ -46,7 +47,6 @@ public class WorkflowDiagramImpl implements WorkflowDiagram {
     public WorkflowDiagram setSource(String source) {
         this.source = source;
         this.workflow = Workflow.fromSource(source);
-
         return this;
     }
 
@@ -55,10 +55,16 @@ public class WorkflowDiagramImpl implements WorkflowDiagram {
         if(workflow == null) {
             throw new IllegalAccessException("Unable to get diagram - no workflow set.");
         }
-        SourceStringReader reader = new SourceStringReader(WorkflowToPlantuml.convert(workflow));
+        SourceStringReader reader = new SourceStringReader(WorkflowToPlantuml.convert(workflow, showLegend));
         final ByteArrayOutputStream os = new ByteArrayOutputStream();
         String desc = reader.generateImage(os, new FileFormatOption(FileFormat.SVG));
         os.close();
         return new String(os.toByteArray(), Charset.forName("UTF-8"));
+    }
+
+    @Override
+    public WorkflowDiagram showLegend(boolean showLegend) {
+        this.showLegend = showLegend;
+        return this;
     }
 }
