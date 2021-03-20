@@ -5,7 +5,7 @@
 
     <groupId>io.serverlessworkflow</groupId>
     <artifactId>serverlessworkflow-parent</artifactId>
-    <version>2.0.x</version>
+    <version>2.0.0.Final</version>
     <packaging>pom</packaging>
 
     <name>Serverless Workflow :: Parent</name>
