@@ -18,9 +18,8 @@ to parse and validate workflow definitions as well as generate the workflow diag
 
 | Latest Releases | Conformance to spec version |
 | :---: | :---: |
-| [1.0.1.Final](https://github.com/serverlessworkflow/sdk-java/releases/) | [v0.5](https://github.com/serverlessworkflow/specification/tree/0.5.x)  |
-| [1.0.2.Final](https://github.com/serverlessworkflow/sdk-java/releases/) | [v0.5](https://github.com/serverlessworkflow/specification/tree/0.5.x) + [Compensation support](https://github.com/serverlessworkflow/specification/blob/master/specification.md#Workflow-Compensation)  |
-| [1.0.3.Final](https://github.com/serverlessworkflow/sdk-java/releases/) | [v0.5](https://github.com/serverlessworkflow/specification/tree/0.5.x) + [Compensation support](https://github.com/serverlessworkflow/specification/blob/master/specification.md#Workflow-Compensation) + [Update to start/end definitions](https://github.com/serverlessworkflow/sdk-java/commit/1addf8d66450830cbc3542c8dfb968b3791aba6f)  |
+| [2.0.0.Final](https://github.com/serverlessworkflow/sdk-java/releases/) | [v0.6](https://github.com/serverlessworkflow/specification/tree/0.6.x) |
+| [1.0.3.Final](https://github.com/serverlessworkflow/sdk-java/releases/) | [v0.5](https://github.com/serverlessworkflow/specification/tree/0.5.x) |
 
 ### Getting Started
 
@@ -58,25 +57,25 @@ b) Add the following dependencies to your pom.xml `dependencies` section:
 <dependency>
     <groupId>io.serverlessworkflow</groupId>
     <artifactId>serverlessworkflow-api</artifactId>
-    <version>2.0.0-SNAPSHOT</version>
+    <version>3.0.0-SNAPSHOT</version>
 </dependency>
 
 <dependency>
     <groupId>io.serverlessworkflow</groupId>
     <artifactId>serverlessworkflow-spi</artifactId>
-    <version>2.0.0-SNAPSHOT</version>
+    <version>3.0.0-SNAPSHOT</version>
 </dependency>
 
 <dependency>
     <groupId>io.serverlessworkflow</groupId>
     <artifactId>serverlessworkflow-validation</artifactId>
-    <version>2.0.0-SNAPSHOT</version>
+    <version>3.0.0-SNAPSHOT</version>
 </dependency>
 
 <dependency>
     <groupId>io.serverlessworkflow</groupId>
     <artifactId>serverlessworkflow-diagram</artifactId>
-    <version>2.0.0-SNAPSHOT</version>
+    <version>3.0.0-SNAPSHOT</version>
 </dependency>
 ```
 
@@ -91,10 +90,10 @@ maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
 b) Add the following dependencies to your build.gradle `dependencies` section:
 
 ```text
-implementation("io.serverlessworkflow:serverlessworkflow-api:2.0.0-SNAPSHOT")
-implementation("io.serverlessworkflow:serverlessworkflow-spi:2.0.0-SNAPSHOT")
-implementation("io.serverlessworkflow:serverlessworkflow-validation:2.0.0-SNAPSHOT")
-implementation("io.serverlessworkflow:serverlessworkflow-diagram:2.0.0-SNAPSHOT")
+implementation("io.serverlessworkflow:serverlessworkflow-api:3.0.0-SNAPSHOT")
+implementation("io.serverlessworkflow:serverlessworkflow-spi:3.0.0-SNAPSHOT")
+implementation("io.serverlessworkflow:serverlessworkflow-validation:3.0.0-SNAPSHOT")
+implementation("io.serverlessworkflow:serverlessworkflow-diagram:3.0.0-SNAPSHOT")
 ```
 
 ### How to Use 
