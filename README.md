@@ -254,7 +254,19 @@ String diagramSVG = workflowDiagram.getSvgDiagram();
 `diagramSVG` includes the diagram SVG source which you can then decide to save to a file, 
 print, or process further.
 
-Here are some generated diagrams from the specification examples:
+By default the diagram legend is now shown. If you want to enable it you can do:
+
+``` java
+Workflow workflow = Workflow.fromSource(source);
+
+WorkflowDiagram workflowDiagram = new WorkflowDiagramImpl();
+workflowDiagram.setWorkflow(workflow)
+               .showLegend(true);
+
+String diagramSVG = workflowDiagram.getSvgDiagram();
+```
+
+Here are some generated diagrams from the specification examples (with legend enabled):
 
 1. [Job Monitoring Example](https://github.com/serverlessworkflow/specification/blob/master/examples/examples.md#Monitor-Job-Example)
 <p align="center">

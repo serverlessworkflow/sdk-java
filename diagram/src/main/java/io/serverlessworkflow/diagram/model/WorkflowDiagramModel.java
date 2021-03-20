@@ -36,9 +36,11 @@ public class WorkflowDiagramModel {
     private List<ModelStateDef> modelStateDefs = new ArrayList<>();
     private List<ModelState> modelStates = new ArrayList<>();
     private List<ModelConnection> modelConnections = new ArrayList<>();
+    private boolean showLegend;
 
-    public WorkflowDiagramModel(Workflow workflow) {
+    public WorkflowDiagramModel(Workflow workflow, boolean showLegend) {
         this.workflow = workflow;
+        this.showLegend = showLegend;
         inspect(workflow);
     }
 
@@ -408,5 +410,9 @@ public class WorkflowDiagramModel {
 
     public void setModelStateDefs(List<ModelStateDef> modelStateDefs) {
         this.modelStateDefs = modelStateDefs;
+    }
+
+    public boolean getShowLegend() {
+        return showLegend;
     }
 }
