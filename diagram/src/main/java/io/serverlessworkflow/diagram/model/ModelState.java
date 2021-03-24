@@ -23,10 +23,12 @@ import java.util.List;
 
 public class ModelState {
     private String name;
+    private String noSpaceName;
     private List<String> stateInfo = new ArrayList<>();
 
     public ModelState(String name) {
         this.name = name;
+        this.noSpaceName = name.replaceAll("\\s", "");
     }
 
     public void addInfo(String info) {
@@ -38,7 +40,7 @@ public class ModelState {
         StringBuffer retBuff = new StringBuffer();
         retBuff.append(System.lineSeparator());
         for(String info : stateInfo) {
-            retBuff.append(name).append(WorkflowDiagramUtils.description)
+            retBuff.append(noSpaceName).append(WorkflowDiagramUtils.description)
                     .append(info).append(System.lineSeparator());
         }
         retBuff.append(System.lineSeparator());
