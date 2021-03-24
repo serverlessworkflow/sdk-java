@@ -24,8 +24,8 @@ public class ModelConnection {
     private String desc;
 
     public ModelConnection(String left, String right, String desc) {
-        this.left = left;
-        this.right = right;
+        this.left = left.replaceAll("\\s", "");
+        this.right = right.replaceAll("\\s", "");
         this.desc = desc;
     }
 

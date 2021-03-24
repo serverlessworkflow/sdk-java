@@ -63,6 +63,7 @@ public class WorkflowDiagramTest {
         workflowDiagram.setWorkflow(workflow);
 
         String diagramSVG = workflowDiagram.getSvgDiagram();
+
         Assertions.assertNotNull(diagramSVG);
 
     }

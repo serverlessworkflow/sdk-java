@@ -55,9 +55,10 @@ public class WorkflowDiagramImpl implements WorkflowDiagram {
         if(workflow == null) {
             throw new IllegalAccessException("Unable to get diagram - no workflow set.");
         }
-        SourceStringReader reader = new SourceStringReader(WorkflowToPlantuml.convert(workflow, showLegend));
+        String diagramSource = WorkflowToPlantuml.convert(workflow, showLegend);
+        SourceStringReader reader = new SourceStringReader(diagramSource);
         final ByteArrayOutputStream os = new ByteArrayOutputStream();
-        String desc = reader.generateImage(os, new FileFormatOption(FileFormat.SVG));
+        reader.generateImage(os, new FileFormatOption(FileFormat.SVG));
         os.close();
         return new String(os.toByteArray(), Charset.forName("UTF-8"));
     }

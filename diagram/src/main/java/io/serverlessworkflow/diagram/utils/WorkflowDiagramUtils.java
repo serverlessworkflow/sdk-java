@@ -35,6 +35,7 @@ public class WorkflowDiagramUtils {
     public static final String legendStart = new StringBuffer().append("legend top center").append(System.lineSeparator()).toString();
     public static final String legendEnd = new StringBuffer().append(System.lineSeparator()).append("endlegend").toString();
     public static final String stateDef = "state ";
+    public static final String stateAsName = " as ";
     public static final String typeDefStart = " << ";
     public static final String typeDefEnd = " >> ";
 
