@@ -25,6 +25,7 @@ import io.serverlessworkflow.diagram.utils.WorkflowDiagramUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 public class WorkflowDiagramModel {
@@ -271,8 +272,8 @@ public class WorkflowDiagramModel {
                 OperationState operationState = (OperationState) state;
 
                 modelState.addInfo("Type: Operation State");
-                modelState.addInfo("Action mode: " + operationState.getActionMode());
-                modelState.addInfo("Num. of actions: " + operationState.getActions().size());
+                modelState.addInfo("Action mode: " + Optional.ofNullable(operationState.getActionMode()).orElse(OperationState.ActionMode.SEQUENTIAL));
+                modelState.addInfo("Num. of actions: " + Optional.ofNullable(operationState.getActions().size()).orElse(0));
             }
 
             if(state instanceof SwitchState) {
