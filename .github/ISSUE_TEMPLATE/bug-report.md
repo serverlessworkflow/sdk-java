@@ -1,6 +1,6 @@
 ---
 name: Bug Report
-about: Report a bug encountered with the Serverless Workflow Specification
+about: Report a bug encountered with the Serverless Workflow Java SDK
 labels: kind/bug
 
 ---
