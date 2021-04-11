@@ -96,7 +96,7 @@
     {
       "name": "Wait two weeks",
       "type": "delay",
-      "timeDelay": "PT2W",
+      "timeDelay": "P2W",
       "transition": "Get Book Status"
     },
     {
