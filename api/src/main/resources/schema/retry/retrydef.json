@@ -1,4 +1,4 @@
-{
+  {
   "type": "object",
   "javaType": "io.serverlessworkflow.api.retry.RetryDefinition",
   "description": "Retry Definition",
@@ -11,6 +11,14 @@
     "delay": {
       "type": "string",
       "description": "Time delay between retry attempts (ISO 8601 duration format)"
+    },
+    "maxDelay": {
+      "type": "string",
+      "description": "Maximum time delay between retry attempts (ISO 8601 duration format)"
+    },
+    "increment": {
+      "type": "string",
+      "description": "Static value by which the delay increases during each attempt (ISO 8601 time format)"
     },
     "multiplier": {
       "type": "string",

@@ -24,12 +24,14 @@ import io.serverlessworkflow.api.exectimeout.ExecTimeout;
 import io.serverlessworkflow.api.functions.FunctionDefinition;
 import io.serverlessworkflow.api.functions.FunctionRef;
 import io.serverlessworkflow.api.interfaces.State;
+import io.serverlessworkflow.api.retry.RetryDefinition;
 import io.serverlessworkflow.api.states.EventState;
 import io.serverlessworkflow.api.states.OperationState;
 import io.serverlessworkflow.api.states.SubflowState;
 import io.serverlessworkflow.api.states.SwitchState;
 import io.serverlessworkflow.api.switchconditions.DataCondition;
 import io.serverlessworkflow.api.test.utils.WorkflowTestUtils;
+import io.serverlessworkflow.api.workflow.Retries;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -432,6 +434,32 @@ public class MarkupToWorkflowTest {
         assertNotNull(workflow.getStart().getSchedule());
         assertNotNull(workflow.getStart().getSchedule().getCron());
         assertEquals("0 0/15 * * * ?", workflow.getStart().getSchedule().getCron().getExpression());
+
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/features/retriesprops.json", "/features/retriesprops.yml"})
+    public void testRetriesProps(String workflowLocation) {
+        Workflow workflow = Workflow.fromSource(WorkflowTestUtils.readWorkflowFile(workflowLocation));
+
+        assertNotNull(workflow);
+        assertNotNull(workflow.getId());
+        assertNotNull(workflow.getName());
+        assertNotNull(workflow.getRetries());
+        assertNotNull(workflow.getStates());
+
+        Retries retries = workflow.getRetries();
+        assertNotNull(retries.getRetryDefs());
+        assertEquals(1, retries.getRetryDefs().size());
+
+        RetryDefinition retryDefinition = retries.getRetryDefs().get(0);
+        assertEquals("Test Retries", retryDefinition.getName());
+        assertEquals("PT1M", retryDefinition.getDelay());
+        assertEquals("PT2M", retryDefinition.getMaxDelay());
+        assertEquals("PT2S", retryDefinition.getIncrement());
+        assertEquals("1.2", retryDefinition.getMultiplier());
+        assertEquals("20", retryDefinition.getMaxAttempts());
+        assertEquals("0.4", retryDefinition.getJitter());
 
     }
 }
