@@ -27,6 +27,10 @@
       "type": "string",
       "description": "Workflow version"
     },
+    "dataInputSchema": {
+      "$ref": "datainputschema/datainputschema.json",
+      "description": "Workflow data input schema"
+    },
     "start": {
       "$ref": "start/start.json",
       "description": "Defines workflow start"
