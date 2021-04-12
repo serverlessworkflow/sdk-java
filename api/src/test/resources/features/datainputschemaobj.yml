@@ -1,0 +1,18 @@
+id: datainputschemaobj
+version: '1.0'
+name: Data Input Schema test
+dataInputSchema:
+  schema: somejsonschema.json
+  failOnValidationErrors: false
+start: TestFunctionRefs
+states:
+  - name: TestFunctionRefs
+    type: operation
+    actionMode: sequential
+    actions:
+      - functionRef: creditCheckFunction
+      - functionRef:
+          refName: sendRejectionEmailFunction
+          arguments:
+            applicant: "${ .customer }"
+    end: true

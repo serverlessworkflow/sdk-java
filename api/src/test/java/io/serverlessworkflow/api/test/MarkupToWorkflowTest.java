@@ -19,6 +19,7 @@ package io.serverlessworkflow.api.test;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.serverlessworkflow.api.Workflow;
 import io.serverlessworkflow.api.actions.Action;
+import io.serverlessworkflow.api.datainputschema.DataInputSchema;
 import io.serverlessworkflow.api.defaultdef.DefaultDefinition;
 import io.serverlessworkflow.api.exectimeout.ExecTimeout;
 import io.serverlessworkflow.api.functions.FunctionDefinition;
@@ -461,5 +462,37 @@ public class MarkupToWorkflowTest {
         assertEquals("20", retryDefinition.getMaxAttempts());
         assertEquals("0.4", retryDefinition.getJitter());
 
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/features/datainputschemastring.json", "/features/datainputschemastring.yml"})
+    public void testDataInputSchemaFromString(String workflowLocation) {
+        Workflow workflow = Workflow.fromSource(WorkflowTestUtils.readWorkflowFile(workflowLocation));
+
+        assertNotNull(workflow);
+        assertNotNull(workflow.getId());
+        assertNotNull(workflow.getName());
+        assertNotNull(workflow.getStates());
+
+        DataInputSchema dataInputSchema = workflow.getDataInputSchema();
+        assertNotNull(dataInputSchema);
+        assertEquals("somejsonschema.json", dataInputSchema.getSchema());
+        assertTrue(dataInputSchema.isFailOnValidationErrors());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/features/datainputschemaobj.json", "/features/datainputschemaobj.yml"})
+    public void testDataInputSchemaFromObject(String workflowLocation) {
+        Workflow workflow = Workflow.fromSource(WorkflowTestUtils.readWorkflowFile(workflowLocation));
+
+        assertNotNull(workflow);
+        assertNotNull(workflow.getId());
+        assertNotNull(workflow.getName());
+        assertNotNull(workflow.getStates());
+
+        DataInputSchema dataInputSchema = workflow.getDataInputSchema();
+        assertNotNull(dataInputSchema);
+        assertEquals("somejsonschema.json", dataInputSchema.getSchema());
+        assertFalse(dataInputSchema.isFailOnValidationErrors());
     }
 }

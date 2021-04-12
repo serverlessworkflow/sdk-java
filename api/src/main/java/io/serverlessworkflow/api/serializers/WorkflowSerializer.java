@@ -70,6 +70,20 @@ public class WorkflowSerializer extends StdSerializer<Workflow> {
                     workflow.getVersion());
         }
 
+        if (workflow.getDataInputSchema() != null) {
+            if (workflow.getDataInputSchema().getSchema() != null
+                    && workflow.getDataInputSchema().getSchema().length() > 0
+                    && workflow.getDataInputSchema().isFailOnValidationErrors()) {
+                gen.writeStringField("dataInputSchema",
+                        workflow.getDataInputSchema().getSchema());
+
+            } else if (workflow.getDataInputSchema().getSchema() != null
+                    && workflow.getDataInputSchema().getSchema().length() > 0
+                    && !workflow.getDataInputSchema().isFailOnValidationErrors()) {
+                gen.writeObjectField("dataInputSchema", workflow.getDataInputSchema());
+            }
+        }
+
         if (workflow.getStart() != null) {
             gen.writeObjectField("start", workflow.getStart());
         }
