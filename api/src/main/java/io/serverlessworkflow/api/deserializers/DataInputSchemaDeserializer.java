@@ -19,21 +19,14 @@ package io.serverlessworkflow.api.deserializers;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import io.serverlessworkflow.api.datainputschema.DataInputSchema;
 import io.serverlessworkflow.api.interfaces.WorkflowPropertySource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 
 public class DataInputSchemaDeserializer extends StdDeserializer<DataInputSchema> {
 
     private static final long serialVersionUID = 510l;
-    private static Logger logger = LoggerFactory.getLogger(DataInputSchema.class);
-
-    private WorkflowPropertySource context;
 
     public DataInputSchemaDeserializer() {
         this(DataInputSchema.class);
@@ -45,14 +38,12 @@ public class DataInputSchemaDeserializer extends StdDeserializer<DataInputSchema
 
     public DataInputSchemaDeserializer(WorkflowPropertySource context) {
         this(DataInputSchema.class);
-        this.context = context;
     }
 
     @Override
     public DataInputSchema deserialize(JsonParser jp,
                                        DeserializationContext ctxt) throws IOException {
 
-        ObjectMapper mapper = (ObjectMapper) jp.getCodec();
         JsonNode node = jp.getCodec().readTree(jp);
 
         DataInputSchema dataInputSchema = new DataInputSchema();
