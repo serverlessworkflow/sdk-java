@@ -33,9 +33,9 @@ public class ModelConnection {
     public String toString() {
         StringBuffer retBuff = new StringBuffer();
         retBuff.append(System.lineSeparator());
-        retBuff.append(left == WorkflowDiagramUtils.wfStart ? WorkflowDiagramUtils.startEnd : left);
+        retBuff.append(left.equals(WorkflowDiagramUtils.wfStart ? WorkflowDiagramUtils.startEnd : left));
         retBuff.append(WorkflowDiagramUtils.connection);
-        retBuff.append(right == WorkflowDiagramUtils.wfEnd ? WorkflowDiagramUtils.startEnd : right);
+        retBuff.append(right.equlas(WorkflowDiagramUtils.wfEnd ? WorkflowDiagramUtils.startEnd : right));
         if (desc != null && desc.trim().length() > 0) {
             retBuff.append(WorkflowDiagramUtils.description).append(desc);
         }
