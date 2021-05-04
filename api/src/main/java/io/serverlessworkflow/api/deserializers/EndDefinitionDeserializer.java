@@ -25,8 +25,6 @@ import io.serverlessworkflow.api.end.End;
 import io.serverlessworkflow.api.interfaces.WorkflowPropertySource;
 import io.serverlessworkflow.api.produce.ProduceEvent;
 import io.serverlessworkflow.api.start.Start;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -35,7 +33,6 @@ import java.util.List;
 public class EndDefinitionDeserializer extends StdDeserializer<End> {
 
     private static final long serialVersionUID = 510l;
-    private static Logger logger = LoggerFactory.getLogger(EndDefinitionDeserializer.class);
 
     private WorkflowPropertySource context;
 
