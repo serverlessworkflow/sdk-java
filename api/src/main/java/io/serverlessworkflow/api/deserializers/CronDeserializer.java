@@ -19,19 +19,15 @@ package io.serverlessworkflow.api.deserializers;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import io.serverlessworkflow.api.cron.Cron;
 import io.serverlessworkflow.api.interfaces.WorkflowPropertySource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
 public class CronDeserializer extends StdDeserializer<Cron> {
 
     private static final long serialVersionUID = 510l;
-    private static Logger logger = LoggerFactory.getLogger(CronDeserializer.class);
 
     private WorkflowPropertySource context;
 
