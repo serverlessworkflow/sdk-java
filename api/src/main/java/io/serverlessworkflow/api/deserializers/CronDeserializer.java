@@ -52,7 +52,6 @@ public class CronDeserializer extends StdDeserializer<Cron> {
     public Cron deserialize(JsonParser jp,
                                    DeserializationContext ctxt) throws IOException {
 
-        ObjectMapper mapper = (ObjectMapper) jp.getCodec();
         JsonNode node = jp.getCodec().readTree(jp);
 
         Cron cron = new Cron();
