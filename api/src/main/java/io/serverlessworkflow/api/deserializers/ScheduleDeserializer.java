@@ -24,15 +24,12 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import io.serverlessworkflow.api.cron.Cron;
 import io.serverlessworkflow.api.interfaces.WorkflowPropertySource;
 import io.serverlessworkflow.api.schedule.Schedule;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
 public class ScheduleDeserializer extends StdDeserializer<Schedule> {
 
     private static final long serialVersionUID = 510l;
-    private static Logger logger = LoggerFactory.getLogger(ScheduleDeserializer.class);
 
     private WorkflowPropertySource context;
 
