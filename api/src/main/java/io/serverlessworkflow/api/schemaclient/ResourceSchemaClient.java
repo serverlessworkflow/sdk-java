@@ -31,6 +31,7 @@ public class ResourceSchemaClient implements SchemaClient {
                 "fallbackClient cannot be null");
     }
 
+    @Override
     public InputStream get(String path) {
         path = path.substring("https://wg-serverless.org/".length());
         return this.getClass().getResourceAsStream(baseResourcePath + path);
