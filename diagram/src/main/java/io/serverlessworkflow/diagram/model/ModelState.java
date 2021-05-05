@@ -37,7 +37,7 @@ public class ModelState {
 
     @Override
     public String toString() {
-        StringBuffer retBuff = new StringBuffer();
+        StringBuilder retBuff = new StringBuilder();
         retBuff.append(System.lineSeparator());
         for(String info : stateInfo) {
             retBuff.append(noSpaceName).append(WorkflowDiagramUtils.description)

@@ -49,7 +49,7 @@ public class WorkflowDiagramModel {
         // title
         setTitle(workflow.getName());
         if (workflow.getVersion() != null && workflow.getVersion().trim().length() > 0) {
-            StringBuffer titleBuf = new StringBuffer()
+            StringBuilder titleBuf = new StringBuilder()
                     .append(workflow.getName())
                     .append(WorkflowDiagramUtils.versionSeparator)
                     .append(workflow.getVersion());
@@ -58,7 +58,7 @@ public class WorkflowDiagramModel {
 
         // legend
         if (workflow.getDescription() != null && workflow.getDescription().trim().length() > 0) {
-            StringBuffer legendBuff = new StringBuffer()
+            StringBuilder legendBuff = new StringBuilder()
                     .append(WorkflowDiagramUtils.legendStart)
                     .append(workflow.getDescription())
                     .append(WorkflowDiagramUtils.legendEnd);

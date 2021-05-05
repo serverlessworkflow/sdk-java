@@ -31,7 +31,7 @@ public class ModelConnection {
 
     @Override
     public String toString() {
-        StringBuffer retBuff = new StringBuffer();
+        StringBuilder retBuff = new StringBuilder();
         retBuff.append(System.lineSeparator());
         retBuff.append(left.equals(WorkflowDiagramUtils.wfStart) ? WorkflowDiagramUtils.startEnd : left);
         retBuff.append(WorkflowDiagramUtils.connection);
