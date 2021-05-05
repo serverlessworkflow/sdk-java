@@ -22,15 +22,12 @@ import io.serverlessworkflow.diagram.utils.WorkflowToPlantuml;
 import net.sourceforge.plantuml.FileFormat;
 import net.sourceforge.plantuml.FileFormatOption;
 import net.sourceforge.plantuml.SourceStringReader;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.Charset;
 
 public class WorkflowDiagramImpl implements WorkflowDiagram {
 
-    private static final Logger logger = LoggerFactory.getLogger(WorkflowDiagramImpl.class);
 
     private String source;
     private Workflow workflow;
