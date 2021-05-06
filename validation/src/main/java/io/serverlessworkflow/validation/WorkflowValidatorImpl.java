@@ -45,7 +45,7 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
 
     private static final Logger logger = LoggerFactory.getLogger(WorkflowValidatorImpl.class);
     private boolean schemaValidationEnabled = true;
-    private List<ValidationError> validationErrors = new ArrayList();
+    private List<ValidationError> validationErrors = new ArrayList<>();
     private Schema workflowSchema = WorkflowSchemaLoader.getWorkflowSchema();
     private String source;
     private Workflow workflow;
@@ -388,7 +388,7 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
     private class Validation {
 
         final Set<String> events = new HashSet<>();
-        final Set<String> functions = new HashSet();
+        final Set<String> functions = new HashSet<>();
         final Set<String> states = new HashSet<>();
         Integer endStates = 0;
 
