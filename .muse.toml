@@ -1,0 +1,4 @@
+# Ignore results from target directory
+ignoreFiles = """
+target/
+"""
