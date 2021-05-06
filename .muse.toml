@@ -1,0 +1,5 @@
+# Ignore results from target directory
+ignoreFiles = """
+**/target/generated-sources/src/main/java/io/serverlessworkflow/api/states/DefaultState.java
+**/target/generated-sources/src/main/java/io/serverlessworkflow/api/error/Error.java
+"""

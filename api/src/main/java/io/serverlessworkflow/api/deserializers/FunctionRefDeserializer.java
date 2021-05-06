@@ -23,16 +23,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import io.serverlessworkflow.api.functions.FunctionRef;
 import io.serverlessworkflow.api.interfaces.WorkflowPropertySource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
 public class FunctionRefDeserializer extends StdDeserializer<FunctionRef> {
 
     private static final long serialVersionUID = 510l;
-    private static Logger logger = LoggerFactory.getLogger(FunctionRefDeserializer.class);
 
+    @SuppressWarnings("unused")
     private WorkflowPropertySource context;
 
     public FunctionRefDeserializer() {
@@ -59,7 +57,6 @@ public class FunctionRefDeserializer extends StdDeserializer<FunctionRef> {
 
         if (!node.isObject()) {
             functionRef.setRefName(node.asText());
-            ObjectMapper objectMapper = new ObjectMapper();
             functionRef.setArguments(null);
             return functionRef;
         } else {

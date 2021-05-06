@@ -31,6 +31,7 @@ public class StartDefinitionDeserializer extends StdDeserializer<Start> {
 
     private static final long serialVersionUID = 510l;
 
+    @SuppressWarnings("unused")
     private WorkflowPropertySource context;
 
     public StartDefinitionDeserializer() {

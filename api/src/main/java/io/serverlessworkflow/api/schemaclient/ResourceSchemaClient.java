@@ -23,6 +23,7 @@ import java.util.Objects;
 
 public class ResourceSchemaClient implements SchemaClient {
 
+    @SuppressWarnings("unused")
     private final SchemaClient fallbackClient;
     private final String baseResourcePath = "/schema/";
 
@@ -31,6 +32,7 @@ public class ResourceSchemaClient implements SchemaClient {
                 "fallbackClient cannot be null");
     }
 
+    @Override
     public InputStream get(String path) {
         path = path.substring("https://wg-serverless.org/".length());
         return this.getClass().getResourceAsStream(baseResourcePath + path);

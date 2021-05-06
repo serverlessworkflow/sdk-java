@@ -32,7 +32,8 @@ public class WorkflowDiagramUtils {
     public static final String description = " : ";
     public static final String title = "title ";
     public static final String footer = "center footer Serverless Workflow Specification - serverlessworkflow.io";
-    public static final String legendEnd = new StringBuffer().append(System.lineSeparator()).append("endlegend").toString();
+    public static final String legendStart = new StringBuilder().append("legend top center").append(System.lineSeparator()).toString();
+    public static final String legendEnd = new StringBuilder().append(System.lineSeparator()).append("endlegend").toString();
     public static final String stateDef = "state ";
     public static final String stateAsName = " as ";
     public static final String typeDefStart = " << ";

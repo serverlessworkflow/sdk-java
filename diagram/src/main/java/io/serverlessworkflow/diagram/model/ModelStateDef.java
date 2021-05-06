@@ -31,7 +31,7 @@ public class ModelStateDef {
 
     @Override
     public String toString() {
-        StringBuffer retBuff = new StringBuffer();
+        StringBuilder retBuff = new StringBuilder();
         retBuff.append(WorkflowDiagramUtils.stateDef)
                 .append(noSpaceName)
                 .append(WorkflowDiagramUtils.stateAsName)

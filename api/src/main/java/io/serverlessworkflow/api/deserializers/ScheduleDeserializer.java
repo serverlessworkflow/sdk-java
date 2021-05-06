@@ -31,6 +31,7 @@ public class ScheduleDeserializer extends StdDeserializer<Schedule> {
 
     private static final long serialVersionUID = 510l;
 
+    @SuppressWarnings("unused")
     private WorkflowPropertySource context;
 
     public ScheduleDeserializer() {

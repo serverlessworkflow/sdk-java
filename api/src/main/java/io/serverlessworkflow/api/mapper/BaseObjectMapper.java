@@ -29,7 +29,7 @@ public class BaseObjectMapper extends ObjectMapper {
                             WorkflowPropertySource workflowPropertySource) {
         super(factory);
 
-        workflowModule = new WorkflowModule((workflowPropertySource));
+        workflowModule = new WorkflowModule(workflowPropertySource);
 
         configure(SerializationFeature.INDENT_OUTPUT,
                 true);

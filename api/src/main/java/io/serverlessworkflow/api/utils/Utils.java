@@ -23,6 +23,8 @@ import java.io.InputStreamReader;
 import java.util.stream.Collectors;
 
 public class Utils {
+
+    @SuppressWarnings("DefaultCharset")
     public static String getResourceFileAsString(String fileName) throws IOException {
         ClassLoader classLoader = ClassLoader.getSystemClassLoader();
         try (InputStream is = classLoader.getResourceAsStream(fileName)) {
