@@ -30,6 +30,7 @@ public class FunctionRefDeserializer extends StdDeserializer<FunctionRef> {
 
     private static final long serialVersionUID = 510l;
 
+    @SuppressWarnings("unused")
     private WorkflowPropertySource context;
 
     public FunctionRefDeserializer() {

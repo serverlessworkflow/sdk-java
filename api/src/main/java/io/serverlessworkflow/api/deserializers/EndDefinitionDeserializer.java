@@ -34,6 +34,7 @@ public class EndDefinitionDeserializer extends StdDeserializer<End> {
 
     private static final long serialVersionUID = 510l;
 
+    @SuppressWarnings("unused")
     private WorkflowPropertySource context;
 
     public EndDefinitionDeserializer() {

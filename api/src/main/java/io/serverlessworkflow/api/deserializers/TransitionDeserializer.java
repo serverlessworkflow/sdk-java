@@ -33,6 +33,7 @@ public class TransitionDeserializer extends StdDeserializer<Transition> {
 
     private static final long serialVersionUID = 510l;
 
+    @SuppressWarnings("unused")
     private WorkflowPropertySource context;
 
     public TransitionDeserializer() {

@@ -39,6 +39,7 @@ public class FunctionsDeserializer extends StdDeserializer<Functions> {
     private static final long serialVersionUID = 510l;
     private static Logger logger = LoggerFactory.getLogger(FunctionsDeserializer.class);
 
+    @SuppressWarnings("unused")
     private WorkflowPropertySource context;
 
     public FunctionsDeserializer() {

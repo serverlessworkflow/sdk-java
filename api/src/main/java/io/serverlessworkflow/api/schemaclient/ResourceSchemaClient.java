@@ -23,6 +23,7 @@ import java.util.Objects;
 
 public class ResourceSchemaClient implements SchemaClient {
 
+    @SuppressWarnings("unused")
     private final SchemaClient fallbackClient;
     private final String baseResourcePath = "/schema/";
 
