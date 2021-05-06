@@ -26,6 +26,6 @@ public class YamlObjectMapper extends BaseObjectMapper {
     }
 
     public YamlObjectMapper(WorkflowPropertySource context) {
-        super((new YAMLFactory()).enable(Feature.MINIMIZE_QUOTES), context);
+        super(new YAMLFactory().enable(Feature.MINIMIZE_QUOTES), context);
     }
 }
