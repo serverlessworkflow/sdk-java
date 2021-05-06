@@ -39,6 +39,7 @@ public class RetriesDeserializer extends StdDeserializer<Retries> {
     private static final long serialVersionUID = 510l;
     private static Logger logger = LoggerFactory.getLogger(RetriesDeserializer.class);
 
+    @SuppressWarnings("unused")
     private WorkflowPropertySource context;
 
     public RetriesDeserializer() {

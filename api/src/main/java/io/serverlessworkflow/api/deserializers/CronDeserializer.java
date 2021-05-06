@@ -29,6 +29,7 @@ public class CronDeserializer extends StdDeserializer<Cron> {
 
     private static final long serialVersionUID = 510l;
 
+    @SuppressWarnings("unused")
     private WorkflowPropertySource context;
 
     public CronDeserializer() {

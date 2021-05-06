@@ -22,6 +22,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ModelState {
+
+    @SuppressWarnings("unused")
     private String name;
     private String noSpaceName;
     private List<String> stateInfo = new ArrayList<>();

@@ -39,6 +39,7 @@ public class EventsDeserializer extends StdDeserializer<Events> {
     private static final long serialVersionUID = 510l;
     private static Logger logger = LoggerFactory.getLogger(EventsDeserializer.class);
 
+    @SuppressWarnings("unused")
     private WorkflowPropertySource context;
 
     public EventsDeserializer() {

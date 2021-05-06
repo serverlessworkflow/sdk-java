@@ -29,6 +29,7 @@ import java.nio.charset.Charset;
 public class WorkflowDiagramImpl implements WorkflowDiagram {
 
 
+    @SuppressWarnings("unused")
     private String source;
     private Workflow workflow;
     private boolean showLegend = false;
