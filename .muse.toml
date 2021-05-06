@@ -1,4 +1,4 @@
 # Ignore results from target directory
 ignoreFiles = """
-target/
+api/target/
 """
