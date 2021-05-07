@@ -6,6 +6,7 @@
 Provides the Java API/SPI and Model Validation for the [Serverless Workflow Specification](https://github.com/serverlessworkflow/specification)
 
 With the SDK you can:
+
 * Parse workflow JSON and YAML definitions
 * Programmatically build workflow definitions
 * Validate workflow definitions (both schema and workflow integrity validation)
@@ -277,4 +278,3 @@ Here are some generated diagrams from the specification examples (with legend en
 <p align="center">
 <img src="img/provisionorders.png" alt="Send Cloud Event on Workflow complation"/>
 </p>
-
