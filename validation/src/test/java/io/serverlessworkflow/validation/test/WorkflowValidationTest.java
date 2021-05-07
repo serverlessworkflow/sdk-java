@@ -70,9 +70,10 @@ public class WorkflowValidationTest {
         WorkflowValidator workflowValidator = new WorkflowValidatorImpl();
         List<ValidationError> validationErrors = workflowValidator.setWorkflow(workflow).validate();
         Assertions.assertNotNull(validationErrors);
-        Assertions.assertEquals(1, validationErrors.size());
+        Assertions.assertEquals(2, validationErrors.size());
 
         Assertions.assertEquals("Workflow name should not be empty", validationErrors.get(0).getMessage());
+        Assertions.assertEquals("No state name found that matches the workflow start definition", validationErrors.get(1).getMessage());
     }
 
     @Test
@@ -131,6 +132,7 @@ public class WorkflowValidationTest {
                 "    }\n" +
                 "]\n" +
                 "}").validate();
+
         Assertions.assertNotNull(validationErrors);
         Assertions.assertEquals(1, validationErrors.size());
 
