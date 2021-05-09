@@ -21,11 +21,15 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.serverlessworkflow.api.Workflow;
 import io.serverlessworkflow.api.actions.Action;
 import io.serverlessworkflow.api.branches.Branch;
+import io.serverlessworkflow.api.error.Error;
 import io.serverlessworkflow.api.events.EventDefinition;
 import io.serverlessworkflow.api.events.OnEvents;
 import io.serverlessworkflow.api.functions.FunctionDefinition;
+import io.serverlessworkflow.api.interfaces.State;
 import io.serverlessworkflow.api.interfaces.WorkflowValidator;
+import io.serverlessworkflow.api.retry.RetryDefinition;
 import io.serverlessworkflow.api.states.*;
+import io.serverlessworkflow.api.switchconditions.DataCondition;
 import io.serverlessworkflow.api.switchconditions.EventCondition;
 import io.serverlessworkflow.api.validation.ValidationError;
 import io.serverlessworkflow.api.validation.WorkflowSchemaLoader;
@@ -86,10 +90,11 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
                                 .forEach(m -> {
                                     if((!m.equals("#/functions: expected type: JSONObject, found: JSONArray") &&
                                             !m.equals("#/events: expected type: JSONObject, found: JSONArray") &&
-                                            !m.equals("#/start: expected type: JSONObject, found: String"))) {
-                                    addValidationError(m,
-                                            ValidationError.SCHEMA_VALIDATION);
-                                }});
+                                            !m.equals("#/start: expected type: JSONObject, found: String") &&
+                                            !m.equals("#/retries: expected type: JSONObject, found: JSONArray"))) {
+                                        addValidationError(m,
+                                                ValidationError.SCHEMA_VALIDATION);
+                                    }});
 
                     }
                 }
@@ -136,6 +141,21 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
                         ValidationError.WORKFLOW_VALIDATION);
             }
 
+            if (workflow.getStates() != null && !workflow.getStates().isEmpty()) {
+                boolean existingStateWithStartProperty = false;
+                String startProperty = workflow.getStart().getStateName();
+                for (State s : workflow.getStates()) {
+                    if (s.getName().equals(startProperty)) {
+                        existingStateWithStartProperty = true;
+                        break;
+                    }
+                }
+                if (!existingStateWithStartProperty) {
+                    addValidationError("No state name found that matches the workflow start definition",
+                            ValidationError.WORKFLOW_VALIDATION);
+                }
+            }
+
             Validation validation = new Validation();
             if (workflow.getStates() != null && !workflow.getStates().isEmpty()) {
                 workflow.getStates().forEach(s -> {
@@ -150,12 +170,37 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
                         validation.addEndState();
                     }
 
+                    if (workflow.getRetries() != null){
+                        List<RetryDefinition> retryDefs = workflow.getRetries().getRetryDefs();
+                        if(s.getOnErrors() == null || s.getOnErrors().isEmpty()){
+                            addValidationError("No onErrors found for state" + s.getName() + " but retries is defined",
+                                    ValidationError.WORKFLOW_VALIDATION);
+                        }else {
+                            for(Error e:s.getOnErrors()){
+                                if(e.getRetryRef() == null || e.getRetryRef().isEmpty()){
+                                    addValidationError("No retryRef found for onErrors" + e.getError(),
+                                            ValidationError.WORKFLOW_VALIDATION);
+                                }
+                                else {
+                                    boolean validRetryDefinition = false;
+                                    for(RetryDefinition rd:retryDefs){
+                                        if(rd.getName().equals(e.getRetryRef())){
+                                            validRetryDefinition = true;
+                                            break;
+                                        }
+                                    }
+                                    if(!validRetryDefinition) {
+                                        addValidationError(e.getRetryRef() +" is not a valid retryRef",
+                                                ValidationError.WORKFLOW_VALIDATION);
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+
                     if (s instanceof OperationState) {
                         OperationState operationState = (OperationState) s;
-                        if (operationState.getActions() == null || operationState.getActions().size() < 1) {
-                            addValidationError("Operation State has no actions defined",
-                                    ValidationError.WORKFLOW_VALIDATION);
-                        }
 
                         List<Action> actions = operationState.getActions();
                         for (Action action : actions) {
@@ -203,10 +248,6 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
                         }
                         List<OnEvents> eventsActionsList = eventState.getOnEvents();
                         for (OnEvents onEvents : eventsActionsList) {
-                            if (onEvents.getActions() == null || onEvents.getActions().size() < 1) {
-                                addValidationError("Event State eventsActions has no actions",
-                                        ValidationError.WORKFLOW_VALIDATION);
-                            }
 
                             List<String> eventRefs = onEvents.getEventRefs();
                             if (eventRefs == null || eventRefs.size() < 1) {
@@ -243,6 +284,18 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
                                     addValidationError("Switch state event condition eventRef does not reference a defined workflow event",
                                             ValidationError.WORKFLOW_VALIDATION);
                                 }
+                                if(ec.getEnd()!=null){
+                                    validation.addEndState();
+                                }
+                            }
+                        }
+
+                        if (switchState.getDataConditions() != null && switchState.getDataConditions().size() > 0) {
+                            List<DataCondition> dataConditions = switchState.getDataConditions();
+                            for (DataCondition dc : dataConditions) {
+                                if(dc.getEnd()!=null){
+                                    validation.addEndState();
+                                }
                             }
                         }
                     }
@@ -257,16 +310,17 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
 
                     if (s instanceof ParallelState) {
                         ParallelState parallelState = (ParallelState) s;
-                        if (parallelState.getBranches() == null || parallelState.getBranches().size() < 1) {
-                            addValidationError("Parallel state should have branches",
+
+                        if (parallelState.getBranches() == null || parallelState.getBranches().size() < 2) {
+                            addValidationError("Parallel state should have at lest two branches",
                                     ValidationError.WORKFLOW_VALIDATION);
                         }
 
+
                         List<Branch> branches = parallelState.getBranches();
                         for (Branch branch : branches) {
-                            if ((branch.getActions() == null || branch.getActions().size() < 1)
-                                    && (branch.getWorkflowId() == null || branch.getWorkflowId().length() < 1)) {
-                                addValidationError("Parallel state should define either actions or workflow id",
+                            if(branch.getWorkflowId() == null || branch.getWorkflowId().length() < 1) {
+                                addValidationError("Parallel state should define workflow id",
                                         ValidationError.WORKFLOW_VALIDATION);
                             }
                         }
@@ -282,7 +336,7 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
 
                     if (s instanceof InjectState) {
                         InjectState injectState = (InjectState) s;
-                        if (injectState.getData() == null) {
+                        if (injectState.getData() == null || injectState.getData().isEmpty()) {
                             addValidationError("InjectState should have non-null data",
                                     ValidationError.WORKFLOW_VALIDATION);
                         }
@@ -300,9 +354,8 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
                                     ValidationError.WORKFLOW_VALIDATION);
                         }
 
-                        if ((forEachState.getActions() == null || forEachState.getActions().size() < 1)
-                                && (forEachState.getWorkflowId() == null || forEachState.getWorkflowId().length() < 1)) {
-                            addValidationError("ForEach state should define either actions or workflow id",
+                        if (forEachState.getWorkflowId() == null || forEachState.getWorkflowId().length() < 1) {
+                            addValidationError("ForEach state should define a workflow id",
                                     ValidationError.WORKFLOW_VALIDATION);
                         }
                     }
