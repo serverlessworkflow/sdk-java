@@ -112,6 +112,46 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <configuration>
+                    <checkstyleRules>
+                        <module name="Checker">
+                            <module name="RegexpHeader">
+                                <property name="header" value="${checkstyle.header.template}"/>
+                                <property name="fileExtensions" value="${checkstyle.header.extensions}"/>
+                            </module>
+                            <module name="TreeWalker">
+                                <module name="RegexpSinglelineJava">
+                                    <property name="format" value="@author"/>
+                                    <property name="message" value="No @author tag allowed"/>
+                                </module>
+                            </module>
+                        </module>
+                    </checkstyleRules>
+                    <outputFile>${project.build.directory}/checkstyle.log</outputFile>
+                    <includeTestSourceDirectory>true</includeTestSourceDirectory>
+                    <includeResources>true</includeResources>
+                    <includeTestResources>true</includeTestResources>
+                    <consoleOutput>false</consoleOutput>
+                    <failsOnError>false</failsOnError>
+                    <logViolationsToConsole>${checkstyle.logViolationsToConsole}</logViolationsToConsole>
+                    <failOnViolation>${checkstyle.failOnViolation}</failOnViolation>
+                    <sourceDirectories>
+                        <sourceDirectory>${project.build.sourceDirectory}</sourceDirectory>
+                        <sourceDirectory>${project.build.testSourceDirectory}</sourceDirectory>
+                    </sourceDirectories>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 </project>
