@@ -1,18 +1,17 @@
 /*
  * Copyright 2020-Present The Serverless Workflow Specification Authors
- * <p>
+ *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * <p>
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * <p>
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
  */
 package io.serverlessworkflow.diagram.model;
 
@@ -82,7 +81,7 @@ public class WorkflowDiagramModel {
     }
 
     private void inspectStateDefinitions(Workflow workflow) {
-        for(State state : workflow.getStates()) {
+        for (State state : workflow.getStates()) {
             modelStateDefs.add(new ModelStateDef(state.getName(), state.getType().value()));
         }
     }
@@ -92,48 +91,48 @@ public class WorkflowDiagramModel {
         modelConnections.add(new ModelConnection(WorkflowDiagramUtils.wfStart, workflowStartState.getName(), ""));
 
         List<State> workflowStates = workflow.getStates();
-        for(State state : workflowStates) {
-            if(state instanceof SwitchState) {
+        for (State state : workflowStates) {
+            if (state instanceof SwitchState) {
                 SwitchState switchState = (SwitchState) state;
-                if(switchState.getDataConditions() != null && switchState.getDataConditions().size() > 0) {
-                    for(DataCondition dataCondition : switchState.getDataConditions()) {
+                if (switchState.getDataConditions() != null && switchState.getDataConditions().size() > 0) {
+                    for (DataCondition dataCondition : switchState.getDataConditions()) {
 
-                        if(dataCondition.getTransition() != null) {
-                            if(dataCondition.getTransition().getProduceEvents() != null && dataCondition.getTransition().getProduceEvents().size() > 0) {
+                        if (dataCondition.getTransition() != null) {
+                            if (dataCondition.getTransition().getProduceEvents() != null && dataCondition.getTransition().getProduceEvents().size() > 0) {
                                 List<String> producedEvents = dataCondition.getTransition().getProduceEvents().stream()
                                         .map(t -> t.getEventRef())
                                         .collect(Collectors.toList());
 
                                 String desc = "";
-                                if(dataCondition.getName() != null && dataCondition.getName().trim().length() > 0) {
+                                if (dataCondition.getName() != null && dataCondition.getName().trim().length() > 0) {
                                     desc = dataCondition.getName();
                                 }
                                 desc += " Produced Events: " + producedEvents.stream().collect(Collectors.joining(","));
                                 modelConnections.add(new ModelConnection(switchState.getName(), dataCondition.getTransition().getNextState(), desc));
                             } else {
                                 String desc = "";
-                                if(dataCondition.getName() != null && dataCondition.getName().trim().length() > 0) {
+                                if (dataCondition.getName() != null && dataCondition.getName().trim().length() > 0) {
                                     desc = dataCondition.getName();
                                 }
                                 modelConnections.add(new ModelConnection(switchState.getName(), dataCondition.getTransition().getNextState(), desc));
                             }
                         }
 
-                        if(dataCondition.getEnd() != null) {
-                            if(dataCondition.getEnd().getProduceEvents() != null && dataCondition.getEnd().getProduceEvents().size() > 0) {
+                        if (dataCondition.getEnd() != null) {
+                            if (dataCondition.getEnd().getProduceEvents() != null && dataCondition.getEnd().getProduceEvents().size() > 0) {
                                 List<String> producedEvents = dataCondition.getEnd().getProduceEvents().stream()
                                         .map(t -> t.getEventRef())
                                         .collect(Collectors.toList());
 
                                 String desc = "";
-                                if(dataCondition.getName() != null && dataCondition.getName().trim().length() > 0) {
+                                if (dataCondition.getName() != null && dataCondition.getName().trim().length() > 0) {
                                     desc = dataCondition.getName();
                                 }
                                 desc += " Produced Events: " + producedEvents.stream().collect(Collectors.joining(","));
                                 modelConnections.add(new ModelConnection(switchState.getName(), WorkflowDiagramUtils.wfEnd, desc));
                             } else {
                                 String desc = "";
-                                if(dataCondition.getName() != null && dataCondition.getName().trim().length() > 0) {
+                                if (dataCondition.getName() != null && dataCondition.getName().trim().length() > 0) {
                                     desc = dataCondition.getName();
                                 }
                                 modelConnections.add(new ModelConnection(switchState.getName(), WorkflowDiagramUtils.wfEnd, desc));
@@ -143,45 +142,45 @@ public class WorkflowDiagramModel {
                     }
                 }
 
-                if(switchState.getEventConditions() != null && switchState.getEventConditions().size() > 0) {
-                    for(EventCondition eventCondition : switchState.getEventConditions()) {
+                if (switchState.getEventConditions() != null && switchState.getEventConditions().size() > 0) {
+                    for (EventCondition eventCondition : switchState.getEventConditions()) {
 
-                        if(eventCondition.getTransition() != null) {
-                            if(eventCondition.getTransition().getProduceEvents() != null && eventCondition.getTransition().getProduceEvents().size() > 0) {
+                        if (eventCondition.getTransition() != null) {
+                            if (eventCondition.getTransition().getProduceEvents() != null && eventCondition.getTransition().getProduceEvents().size() > 0) {
                                 List<String> producedEvents = eventCondition.getTransition().getProduceEvents().stream()
                                         .map(t -> t.getEventRef())
                                         .collect(Collectors.toList());
 
                                 String desc = "";
-                                if(eventCondition.getName() != null && eventCondition.getName().trim().length() > 0) {
+                                if (eventCondition.getName() != null && eventCondition.getName().trim().length() > 0) {
                                     desc = eventCondition.getName();
                                 }
                                 desc += " Produced Events: " + producedEvents.stream().collect(Collectors.joining(","));
                                 modelConnections.add(new ModelConnection(switchState.getName(), eventCondition.getTransition().getNextState(), desc));
                             } else {
                                 String desc = "";
-                                if(eventCondition.getName() != null && eventCondition.getName().trim().length() > 0) {
+                                if (eventCondition.getName() != null && eventCondition.getName().trim().length() > 0) {
                                     desc = eventCondition.getName();
                                 }
                                 modelConnections.add(new ModelConnection(switchState.getName(), eventCondition.getTransition().getNextState(), desc));
                             }
                         }
 
-                        if(eventCondition.getEnd() != null) {
-                            if(eventCondition.getEnd().getProduceEvents() != null && eventCondition.getEnd().getProduceEvents().size() > 0) {
+                        if (eventCondition.getEnd() != null) {
+                            if (eventCondition.getEnd().getProduceEvents() != null && eventCondition.getEnd().getProduceEvents().size() > 0) {
                                 List<String> producedEvents = eventCondition.getEnd().getProduceEvents().stream()
                                         .map(t -> t.getEventRef())
                                         .collect(Collectors.toList());
 
                                 String desc = "";
-                                if(eventCondition.getName() != null && eventCondition.getName().trim().length() > 0) {
+                                if (eventCondition.getName() != null && eventCondition.getName().trim().length() > 0) {
                                     desc = eventCondition.getName();
                                 }
                                 desc += " Produced Events: " + producedEvents.stream().collect(Collectors.joining(","));
                                 modelConnections.add(new ModelConnection(switchState.getName(), WorkflowDiagramUtils.wfEnd, desc));
                             } else {
                                 String desc = "";
-                                if(eventCondition.getName() != null && eventCondition.getName().trim().length() > 0) {
+                                if (eventCondition.getName() != null && eventCondition.getName().trim().length() > 0) {
                                     desc = eventCondition.getName();
                                 }
                                 modelConnections.add(new ModelConnection(switchState.getName(), WorkflowDiagramUtils.wfEnd, desc));
@@ -192,9 +191,9 @@ public class WorkflowDiagramModel {
                 }
 
                 // default
-                if(switchState.getDefault() != null) {
-                    if(switchState.getDefault().getTransition() != null) {
-                        if(switchState.getDefault().getTransition().getProduceEvents() != null && switchState.getDefault().getTransition().getProduceEvents().size() > 0) {
+                if (switchState.getDefault() != null) {
+                    if (switchState.getDefault().getTransition() != null) {
+                        if (switchState.getDefault().getTransition().getProduceEvents() != null && switchState.getDefault().getTransition().getProduceEvents().size() > 0) {
                             List<String> producedEvents = switchState.getDefault().getTransition().getProduceEvents().stream()
                                     .map(t -> t.getEventRef())
                                     .collect(Collectors.toList());
@@ -208,8 +207,8 @@ public class WorkflowDiagramModel {
                         }
                     }
 
-                    if(switchState.getDefault().getEnd() != null) {
-                        if(switchState.getDefault().getEnd().getProduceEvents() != null && switchState.getDefault().getEnd().getProduceEvents().size() > 0) {
+                    if (switchState.getDefault().getEnd() != null) {
+                        if (switchState.getDefault().getEnd().getProduceEvents() != null && switchState.getDefault().getEnd().getProduceEvents().size() > 0) {
                             List<String> producedEvents = switchState.getDefault().getEnd().getProduceEvents().stream()
                                     .map(t -> t.getEventRef())
                                     .collect(Collectors.toList());
@@ -224,8 +223,8 @@ public class WorkflowDiagramModel {
                     }
                 }
             } else {
-                if(state.getTransition() != null) {
-                    if(state.getTransition().getProduceEvents() != null && state.getTransition().getProduceEvents().size() > 0) {
+                if (state.getTransition() != null) {
+                    if (state.getTransition().getProduceEvents() != null && state.getTransition().getProduceEvents().size() > 0) {
                         List<String> producedEvents = state.getTransition().getProduceEvents().stream()
                                 .map(t -> t.getEventRef())
                                 .collect(Collectors.toList());
@@ -237,8 +236,8 @@ public class WorkflowDiagramModel {
                     }
                 }
 
-                if(state.getEnd() != null) {
-                    if(state.getEnd().getProduceEvents() != null && state.getEnd().getProduceEvents().size() > 0) {
+                if (state.getEnd() != null) {
+                    if (state.getEnd().getProduceEvents() != null && state.getEnd().getProduceEvents().size() > 0) {
                         List<String> producedEvents = state.getEnd().getProduceEvents().stream()
                                 .map(t -> t.getEventRef())
                                 .collect(Collectors.toList());
@@ -255,10 +254,10 @@ public class WorkflowDiagramModel {
 
     private void inspectStatesInfo(Workflow workflow) {
         List<State> workflowStates = workflow.getStates();
-        for(State state : workflowStates) {
+        for (State state : workflowStates) {
             ModelState modelState = new ModelState(state.getName());
 
-            if(state instanceof EventState) {
+            if (state instanceof EventState) {
                 EventState eventState = (EventState) state;
 
                 List<String> events = eventState.getOnEvents().stream()
@@ -270,7 +269,7 @@ public class WorkflowDiagramModel {
 
             }
 
-            if(state instanceof OperationState) {
+            if (state instanceof OperationState) {
                 OperationState operationState = (OperationState) state;
 
                 modelState.addInfo("Type: Operation State");
@@ -278,41 +277,41 @@ public class WorkflowDiagramModel {
                 modelState.addInfo("Num. of actions: " + Optional.ofNullable(operationState.getActions().size()).orElse(0));
             }
 
-            if(state instanceof SwitchState) {
+            if (state instanceof SwitchState) {
                 SwitchState switchState = (SwitchState) state;
 
 
                 modelState.addInfo("Type: Switch State");
-                if(switchState.getDataConditions() != null && switchState.getDataConditions().size() > 0) {
+                if (switchState.getDataConditions() != null && switchState.getDataConditions().size() > 0) {
                     modelState.addInfo("Condition type: data-based");
                     modelState.addInfo("Num. of conditions: " + switchState.getDataConditions().size());
                 }
 
-                if(switchState.getEventConditions() != null && switchState.getEventConditions().size() > 0) {
+                if (switchState.getEventConditions() != null && switchState.getEventConditions().size() > 0) {
                     modelState.addInfo("Condition type: event-based");
                     modelState.addInfo("Num. of conditions: " + switchState.getEventConditions().size());
                 }
 
-                if(switchState.getDefault() != null) {
-                    if(switchState.getDefault().getTransition() != null) {
+                if (switchState.getDefault() != null) {
+                    if (switchState.getDefault().getTransition() != null) {
                         modelState.addInfo("Default to: " + switchState.getDefault().getTransition().getNextState());
                     }
 
-                    if(switchState.getDefault().getEnd() != null) {
+                    if (switchState.getDefault().getEnd() != null) {
                         modelState.addInfo("Default to: End");
                     }
                 }
 
             }
 
-            if(state instanceof DelayState) {
+            if (state instanceof DelayState) {
                 DelayState delayState = (DelayState) state;
 
                 modelState.addInfo("Type: Delay State");
                 modelState.addInfo("Delay: " + delayState.getTimeDelay());
             }
 
-            if(state instanceof ParallelState) {
+            if (state instanceof ParallelState) {
                 ParallelState parallelState = (ParallelState) state;
 
                 modelState.addInfo("Type: Parallel State");
@@ -320,32 +319,32 @@ public class WorkflowDiagramModel {
                 modelState.addInfo("Num. of branches: " + parallelState.getBranches().size());
             }
 
-            if(state instanceof SubflowState) {
+            if (state instanceof SubflowState) {
                 SubflowState subflowState = (SubflowState) state;
 
                 modelState.addInfo("Type: SubFlow State");
                 modelState.addInfo("Workflow ID: " + subflowState.getWorkflowId());
             }
 
-            if(state instanceof InjectState) {
+            if (state instanceof InjectState) {
                 modelState.addInfo("Type: Inject State");
             }
 
-            if(state instanceof ForEachState) {
+            if (state instanceof ForEachState) {
                 ForEachState forEachState = (ForEachState) state;
 
                 modelState.addInfo("Type: ForEach State");
                 modelState.addInfo("Input collection: " + forEachState.getInputCollection());
-                if(forEachState.getActions() != null && forEachState.getActions().size() > 0) {
+                if (forEachState.getActions() != null && forEachState.getActions().size() > 0) {
                     modelState.addInfo("Num. of actions: " + forEachState.getActions().size());
                 }
 
-                if(forEachState.getWorkflowId() != null && forEachState.getWorkflowId().length() > 0) {
+                if (forEachState.getWorkflowId() != null && forEachState.getWorkflowId().length() > 0) {
                     modelState.addInfo("Workflow ID: " + forEachState.getWorkflowId());
                 }
             }
 
-            if(state instanceof CallbackState) {
+            if (state instanceof CallbackState) {
                 CallbackState callbackState = (CallbackState) state;
 
                 modelState.addInfo("Type: Callback State");
