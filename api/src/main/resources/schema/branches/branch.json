@@ -14,10 +14,6 @@
         "type": "object",
         "$ref": "../actions/action.json"
       }
-    },
-    "workflowId": {
-      "type": "string",
-      "description": "Unique Id of a workflow to be executed in this branch"
     }
   },
   "oneOf": [
@@ -29,8 +25,7 @@
     },
     {
       "required": [
-        "name",
-        "workflowId "
+        "name"
       ]
     }
   ]

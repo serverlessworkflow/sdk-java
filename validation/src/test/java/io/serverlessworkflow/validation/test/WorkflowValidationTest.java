@@ -124,7 +124,6 @@ public class WorkflowValidationTest {
                 "        \"type\": \"foreach\",\n" +
                 "        \"inputCollection\": \"${ .message }\",\n" +
                 "        \"iterationParam\": \"${ .singlemessage }\",\n" +
-                "        \"workflowId\": \"sendMessageWorkflowId\",\n" +
                 "        \"end\": {\n" +
                 "            \"kind\": \"default\"\n" +
                 "        }\n" +

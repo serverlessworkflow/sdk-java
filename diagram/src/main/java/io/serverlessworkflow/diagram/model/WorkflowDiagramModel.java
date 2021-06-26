@@ -331,10 +331,6 @@ public class WorkflowDiagramModel {
                 if (forEachState.getActions() != null && forEachState.getActions().size() > 0) {
                     modelState.addInfo("Num. of actions: " + forEachState.getActions().size());
                 }
-
-                if (forEachState.getWorkflowId() != null && forEachState.getWorkflowId().length() > 0) {
-                    modelState.addInfo("Workflow ID: " + forEachState.getWorkflowId());
-                }
             }
 
             if (state instanceof CallbackState) {

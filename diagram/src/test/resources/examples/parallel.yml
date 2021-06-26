@@ -9,7 +9,5 @@ states:
     completionType: allOf
     branches:
       - name: ShortDelayBranch
-        workflowId: shortdelayworkflowid
       - name: LongDelayBranch
-        workflowId: longdelayworkflowid
     end: true
