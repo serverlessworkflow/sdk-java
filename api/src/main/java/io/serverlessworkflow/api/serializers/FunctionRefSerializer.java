@@ -39,6 +39,7 @@ public class FunctionRefSerializer extends StdSerializer<FunctionRef> {
 
         if (functionRef != null) {
             if ((functionRef.getArguments() == null || functionRef.getArguments().isEmpty())
+                    && (functionRef.getSelectionSet() == null || functionRef.getSelectionSet().isEmpty())
                     && functionRef.getRefName() != null
                     && functionRef.getRefName().length() > 0) {
                 gen.writeString(functionRef.getRefName());
@@ -51,6 +52,10 @@ public class FunctionRefSerializer extends StdSerializer<FunctionRef> {
 
                 if (functionRef.getArguments() != null && !functionRef.getArguments().isEmpty()) {
                     gen.writeObjectField("arguments", functionRef.getArguments());
+                }
+
+                if (functionRef.getSelectionSet() != null && functionRef.getSelectionSet().length() > 0) {
+                    gen.writeStringField("selectionSet", functionRef.getSelectionSet());
                 }
 
                 gen.writeEndObject();
