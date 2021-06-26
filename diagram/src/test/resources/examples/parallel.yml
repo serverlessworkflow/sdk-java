@@ -6,7 +6,7 @@ start: ParallelExec
 states:
   - name: ParallelExec
     type: parallel
-    completionType: and
+    completionType: allOf
     branches:
       - name: ShortDelayBranch
         workflowId: shortdelayworkflowid
