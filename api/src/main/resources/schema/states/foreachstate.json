@@ -35,10 +35,6 @@
         "$ref": "../actions/action.json"
       }
     },
-    "workflowId": {
-      "type": "string",
-      "description": "Unique Id of a workflow to be executed for each of the elements of inputCollection"
-    },
     "usedForCompensation": {
       "type": "boolean",
       "default": false,
@@ -52,7 +48,6 @@
         "type",
         "inputCollection",
         "inputParameter",
-        "workflowId",
         "end"
       ]
     },
@@ -62,7 +57,6 @@
         "type",
         "inputCollection",
         "inputParameter",
-        "workflowId",
         "transition"
       ]
     },
@@ -73,7 +67,6 @@
         "type",
         "inputCollection",
         "inputParameter",
-        "workflowId",
         "end"
       ]
     },
@@ -84,7 +77,6 @@
         "type",
         "inputCollection",
         "inputParameter",
-        "workflowId",
         "transition"
       ]
     },

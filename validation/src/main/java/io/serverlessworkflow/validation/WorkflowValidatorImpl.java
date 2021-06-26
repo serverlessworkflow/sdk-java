@@ -314,14 +314,6 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
                                     ValidationError.WORKFLOW_VALIDATION);
                         }
 
-
-                        List<Branch> branches = parallelState.getBranches();
-                        for (Branch branch : branches) {
-                            if (branch.getWorkflowId() == null || branch.getWorkflowId().length() < 1) {
-                                addValidationError("Parallel state should define workflow id",
-                                        ValidationError.WORKFLOW_VALIDATION);
-                            }
-                        }
                     }
 
                     if (s instanceof InjectState) {
@@ -341,11 +333,6 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
 
                         if (forEachState.getIterationParam() == null || forEachState.getIterationParam().isEmpty()) {
                             addValidationError("ForEach state should have a valid iteration parameter",
-                                    ValidationError.WORKFLOW_VALIDATION);
-                        }
-
-                        if (forEachState.getWorkflowId() == null || forEachState.getWorkflowId().length() < 1) {
-                            addValidationError("ForEach state should define a workflow id",
                                     ValidationError.WORKFLOW_VALIDATION);
                         }
                     }

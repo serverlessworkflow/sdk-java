@@ -11,12 +11,10 @@
       "completionType": "allOf",
       "branches": [
         {
-          "name": "ShortDelayBranch",
-          "workflowId": "shortdelayworkflowid"
+          "name": "ShortDelayBranch"
         },
         {
-          "name": "LongDelayBranch",
-          "workflowId": "longdelayworkflowid"
+          "name": "LongDelayBranch"
         }
       ],
       "end": true
