@@ -1,7 +1,7 @@
 {
   "type": "object",
-  "javaType": "io.serverlessworkflow.api.defaultdef.DefaultDefinition",
-  "description": "Switch state default definition",
+  "javaType": "io.serverlessworkflow.api.defaultdef.DefaultConditionDefinition",
+  "description": "Switch state default condition definition",
   "properties": {
     "transition": {
       "$ref": "../transitions/transition.json",

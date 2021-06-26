@@ -17,7 +17,7 @@ states:
           produceEvents:
             - eventRef: provisioningCompleteEvent
               data: "${ .provisionedOrders }"
-    default:
+    defaultCondition:
       transition:
         nextState: RejectApplication
         compensate: true

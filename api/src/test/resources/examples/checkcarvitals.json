@@ -41,7 +41,7 @@
           }
         }
       ],
-      "default": {
+      "defaultCondition": {
         "transition": "WaitTwoMinutes"
       }
     },
@@ -76,7 +76,7 @@
           }
         }
       ],
-      "default": {
+      "defaultCondition": {
         "transition": "CheckVitals"
       }
     }

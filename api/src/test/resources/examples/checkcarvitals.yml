@@ -20,7 +20,7 @@ states:
           produceEvents:
             - eventRef: DisplayFailedChecksOnDashboard
               data: "${ .evaluations }"
-    default:
+    defaultCondition:
       transition: WaitTwoMinutes
   - name: WaitTwoMinutes
     type: event
@@ -39,7 +39,7 @@ states:
         end:
           produceEvents:
             - eventRef: VitalsCheckingStopped
-    default:
+    defaultCondition:
       transition: CheckVitals
 events:
   - name: StopVitalsCheck

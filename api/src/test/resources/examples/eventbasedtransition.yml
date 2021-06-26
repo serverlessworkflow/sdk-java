@@ -19,7 +19,7 @@ states:
       - eventRef: visaRejectedEvent
         transition: HandleRejectedVisa
     eventTimeout: PT1H
-    default:
+    defaultCondition:
       transition: HandleNoVisaDecision
   - name: HandleApprovedVisa
     type: operation

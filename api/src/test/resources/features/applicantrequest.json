@@ -24,7 +24,7 @@
           "transition": "RejectApplication"
         }
       ],
-      "default": {
+      "defaultCondition": {
         "transition": "RejectApplication"
       }
     },

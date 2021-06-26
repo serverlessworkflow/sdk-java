@@ -19,7 +19,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import io.serverlessworkflow.api.Workflow;
 import io.serverlessworkflow.api.actions.Action;
 import io.serverlessworkflow.api.datainputschema.DataInputSchema;
-import io.serverlessworkflow.api.defaultdef.DefaultDefinition;
+import io.serverlessworkflow.api.defaultdef.DefaultConditionDefinition;
 import io.serverlessworkflow.api.exectimeout.ExecTimeout;
 import io.serverlessworkflow.api.functions.FunctionDefinition;
 import io.serverlessworkflow.api.functions.FunctionRef;
@@ -196,8 +196,8 @@ public class MarkupToWorkflowTest {
         assertFalse(cond2.getTransition().isCompensate());
 
 
-        assertNotNull(switchState.getDefault());
-        DefaultDefinition defaultDefinition = switchState.getDefault();
+        assertNotNull(switchState.getDefaultCondition());
+        DefaultConditionDefinition defaultDefinition = switchState.getDefaultCondition();
         assertNotNull(defaultDefinition.getTransition());
         assertEquals("RejectApplication", defaultDefinition.getTransition().getNextState());
         assertNotNull(defaultDefinition.getTransition().getProduceEvents());
