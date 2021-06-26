@@ -191,25 +191,25 @@ public class WorkflowDiagramModel {
                 }
 
                 // default
-                if (switchState.getDefault() != null) {
-                    if (switchState.getDefault().getTransition() != null) {
-                        if (switchState.getDefault().getTransition().getProduceEvents() != null && switchState.getDefault().getTransition().getProduceEvents().size() > 0) {
-                            List<String> producedEvents = switchState.getDefault().getTransition().getProduceEvents().stream()
+                if (switchState.getDefaultCondition() != null) {
+                    if (switchState.getDefaultCondition().getTransition() != null) {
+                        if (switchState.getDefaultCondition().getTransition().getProduceEvents() != null && switchState.getDefaultCondition().getTransition().getProduceEvents().size() > 0) {
+                            List<String> producedEvents = switchState.getDefaultCondition().getTransition().getProduceEvents().stream()
                                     .map(t -> t.getEventRef())
                                     .collect(Collectors.toList());
 
                             String desc = "default - ";
                             desc += " Produced Events: " + producedEvents.stream().collect(Collectors.joining(","));
-                            modelConnections.add(new ModelConnection(switchState.getName(), switchState.getDefault().getTransition().getNextState(), desc));
+                            modelConnections.add(new ModelConnection(switchState.getName(), switchState.getDefaultCondition().getTransition().getNextState(), desc));
                         } else {
                             String desc = "default";
-                            modelConnections.add(new ModelConnection(switchState.getName(), switchState.getDefault().getTransition().getNextState(), desc));
+                            modelConnections.add(new ModelConnection(switchState.getName(), switchState.getDefaultCondition().getTransition().getNextState(), desc));
                         }
                     }
 
-                    if (switchState.getDefault().getEnd() != null) {
-                        if (switchState.getDefault().getEnd().getProduceEvents() != null && switchState.getDefault().getEnd().getProduceEvents().size() > 0) {
-                            List<String> producedEvents = switchState.getDefault().getEnd().getProduceEvents().stream()
+                    if (switchState.getDefaultCondition().getEnd() != null) {
+                        if (switchState.getDefaultCondition().getEnd().getProduceEvents() != null && switchState.getDefaultCondition().getEnd().getProduceEvents().size() > 0) {
+                            List<String> producedEvents = switchState.getDefaultCondition().getEnd().getProduceEvents().stream()
                                     .map(t -> t.getEventRef())
                                     .collect(Collectors.toList());
 
@@ -292,12 +292,12 @@ public class WorkflowDiagramModel {
                     modelState.addInfo("Num. of conditions: " + switchState.getEventConditions().size());
                 }
 
-                if (switchState.getDefault() != null) {
-                    if (switchState.getDefault().getTransition() != null) {
-                        modelState.addInfo("Default to: " + switchState.getDefault().getTransition().getNextState());
+                if (switchState.getDefaultCondition() != null) {
+                    if (switchState.getDefaultCondition().getTransition() != null) {
+                        modelState.addInfo("Default to: " + switchState.getDefaultCondition().getTransition().getNextState());
                     }
 
-                    if (switchState.getDefault().getEnd() != null) {
+                    if (switchState.getDefaultCondition().getEnd() != null) {
                         modelState.addInfo("Default to: End");
                     }
                 }

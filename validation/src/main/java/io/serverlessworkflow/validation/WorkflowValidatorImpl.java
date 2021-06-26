@@ -270,7 +270,7 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
                                     ValidationError.WORKFLOW_VALIDATION);
                         }
 
-                        if (switchState.getDefault() == null) {
+                        if (switchState.getDefaultCondition() == null) {
                             addValidationError("Switch state should define a default transition",
                                     ValidationError.WORKFLOW_VALIDATION);
                         }

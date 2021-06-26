@@ -58,7 +58,7 @@ states:
         transition: JobSucceeded
       - condition: ${ .jobStatus == "FAILED" }
         transition: JobFailed
-    default:
+    defaultCondition:
       transition: WaitForCompletion
   - name: JobSucceeded
     type: operation
