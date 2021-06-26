@@ -10,6 +10,11 @@
     "workflowId": {
       "type": "string",
       "description": "Unique id of the sub-workflow to be invoked"
+    },
+    "version": {
+      "type": "string",
+      "description": "Version of the sub-workflow to be invoked",
+      "minLength": 1
     }
   },
   "required": [

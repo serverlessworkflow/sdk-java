@@ -3,6 +3,7 @@ id: testEvents
 name: Test Events Workflow
 description: This is a test events workflow
 version: '1.0'
+specVersion: '0.7'
 start: EventState
 events:
   - name: event1

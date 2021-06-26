@@ -1,6 +1,7 @@
 id: CompensationWorkflow
 name: Compensation Workflow
 version: '1.0'
+specVersion: '0.7'
 states:
   - name: NewItemPurchase
     type: event

@@ -1,6 +1,7 @@
 id: booklending
 name: Book Lending Workflow
 version: '1.0'
+specVersion: '0.7'
 start: Book Lending Request
 states:
   - name: Book Lending Request

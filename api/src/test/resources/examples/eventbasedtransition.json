@@ -1,6 +1,7 @@
 {
   "id": "eventbasedswitch",
   "version": "1.0",
+  "specVersion": "0.7",
   "name": "Event Based Switch Transitions",
   "description": "Event Based Switch Transitions",
   "start": "CheckVisaStatus",

@@ -67,6 +67,10 @@ public class SubFlowRefDeserializer extends StdDeserializer<SubFlowRef> {
                 subflowRef.setWorkflowId(node.get("workflowId").asText());
             }
 
+            if (node.get("version") != null) {
+                subflowRef.setVersion(node.get("version").asText());
+            }
+
             return subflowRef;
         }
     }

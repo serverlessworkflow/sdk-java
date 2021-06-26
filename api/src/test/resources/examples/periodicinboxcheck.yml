@@ -6,6 +6,7 @@ start:
   schedule:
     cron: 0 0/15 * * * ?
 version: '1.0'
+specVersion: '0.7'
 functions:
   - name: checkInboxFunction
     operation: http://myapis.org/inboxapi.json#checkNewMessages

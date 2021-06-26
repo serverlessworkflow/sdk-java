@@ -2,6 +2,7 @@
   "id": "finalizeCollegeApplication",
   "name": "Finalize College Application",
   "version": "1.0",
+  "specVersion": "0.7",
   "start": "FinalizeApplication",
   "events": [
     {

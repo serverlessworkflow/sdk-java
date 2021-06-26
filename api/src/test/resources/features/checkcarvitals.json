@@ -2,6 +2,7 @@
   "id": "checkcarvitals",
   "name": "Check Car Vitals Workflow",
   "version": "1.0",
+  "specVersion": "0.7",
   "start": "WhenCarIsOn",
   "states": [
     {
