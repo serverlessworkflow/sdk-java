@@ -499,6 +499,7 @@ public class MarkupToWorkflowTest {
         SubFlowRef secondSubflowRef = secondAction.getSubFlowRef();
         assertEquals("subflowrefworkflowid", secondSubflowRef.getWorkflowId());
         assertFalse(secondSubflowRef.isWaitForCompletion());
+        assertEquals("1.0", secondSubflowRef.getVersion());
 
     }
 }

@@ -2,6 +2,7 @@
   "id": "vitalscheck",
   "name": "Car Vitals Check",
   "version": "1.0",
+  "specVersion": "0.7",
   "start": "CheckVitals",
   "states": [
     {

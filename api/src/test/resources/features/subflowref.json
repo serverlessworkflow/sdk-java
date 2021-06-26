@@ -1,6 +1,7 @@
 {
   "id": "subflowrefworkflow",
   "version": "1.0",
+  "specVersion": "0.7",
   "name": "SubflowRef Workflow",
   "start": "SubflowRef",
   "states":[
@@ -14,7 +15,8 @@
         {
           "subFlowRef": {
             "workflowId": "subflowrefworkflowid",
-            "waitForCompletion": false
+            "waitForCompletion": false,
+            "version": "1.0"
           }
         }
       ],

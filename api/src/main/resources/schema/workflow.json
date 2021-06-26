@@ -35,7 +35,7 @@
       "$ref": "start/start.json",
       "description": "Defines workflow start"
     },
-    "schemaVersion": {
+    "specVersion": {
       "type": "string",
       "description": "Serverless Workflow schema version"
     },

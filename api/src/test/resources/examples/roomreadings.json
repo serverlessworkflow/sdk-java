@@ -2,6 +2,7 @@
   "id": "roomreadings",
   "name": "Room Temp and Humidity Workflow",
   "version": "1.0",
+  "specVersion": "0.7",
   "start": "ConsumeReading",
   "execTimeout": {
     "duration": "PT1H",

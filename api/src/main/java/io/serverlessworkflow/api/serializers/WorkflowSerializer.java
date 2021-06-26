@@ -87,9 +87,9 @@ public class WorkflowSerializer extends StdSerializer<Workflow> {
             gen.writeObjectField("start", workflow.getStart());
         }
 
-        if (workflow.getSchemaVersion() != null && !workflow.getSchemaVersion().isEmpty()) {
-            gen.writeStringField("schemaVersion",
-                    workflow.getSchemaVersion());
+        if (workflow.getSpecVersion() != null && !workflow.getSpecVersion().isEmpty()) {
+            gen.writeStringField("specVersion",
+                    workflow.getSpecVersion());
         }
 
         if (workflow.getExtensions() != null && !workflow.getExpressionLang().isEmpty()) {

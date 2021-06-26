@@ -1,6 +1,7 @@
 id: patientVitalsWorkflow
 name: Monitor Patient Vitals
 version: '1.0'
+specVersion: '0.7'
 start: Monitor Vitals
 events:
   - name: HighBodyTemperature

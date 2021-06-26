@@ -1,5 +1,6 @@
 id: functionrefparams
 version: '1.0'
+specVersion: '0.7'
 name: Function Ref Params Test
 start: AddPluto
 states:

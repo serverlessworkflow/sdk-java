@@ -1,5 +1,6 @@
 id: greeting
 version: '1.0'
+specVersion: '0.7'
 name: Greeting Workflow
 description: Greet Someone
 start: Greet

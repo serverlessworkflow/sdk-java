@@ -1,5 +1,6 @@
 id: datainputschemaobj
 version: '1.0'
+specVersion: '0.7'
 name: Data Input Schema test
 dataInputSchema:
   schema: somejsonschema.json
