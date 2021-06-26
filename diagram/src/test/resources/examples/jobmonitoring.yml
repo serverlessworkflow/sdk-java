@@ -30,8 +30,9 @@ states:
       output: "${ .jobuid }"
     transition: WaitForCompletion
   - name: SubmitError
-    type: subflow
-    workflowId: handleJobSubmissionErrorWorkflow
+    type: operation
+    actions:
+      - subFlowRef: handleJobSubmissionErrorWorkflow
     end: true
   - name: WaitForCompletion
     type: delay
@@ -53,9 +54,9 @@ states:
   - name: DetermineCompletion
     type: switch
     dataConditions:
-      - condition: "${ .jobstatus == \"SUCCEEDED\" }"
+      - condition: ${ .jobStatus == "SUCCEEDED" }
         transition: JobSucceeded
-      - condition: "${ .jobstatus == \"FAILED\" }"
+      - condition: ${ .jobStatus == "FAILED" }
         transition: JobFailed
     default:
       transition: WaitForCompletion

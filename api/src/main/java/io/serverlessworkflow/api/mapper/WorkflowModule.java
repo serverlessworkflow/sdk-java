@@ -24,6 +24,7 @@ import io.serverlessworkflow.api.events.EventDefinition;
 import io.serverlessworkflow.api.events.OnEvents;
 import io.serverlessworkflow.api.functions.FunctionDefinition;
 import io.serverlessworkflow.api.functions.FunctionRef;
+import io.serverlessworkflow.api.functions.SubFlowRef;
 import io.serverlessworkflow.api.interfaces.Extension;
 import io.serverlessworkflow.api.interfaces.State;
 import io.serverlessworkflow.api.interfaces.WorkflowPropertySource;
@@ -66,7 +67,6 @@ public class WorkflowModule extends SimpleModule {
         addSerializer(new OperationStateSerializer());
         addSerializer(new ParallelStateSerializer());
         addSerializer(new SwitchStateSerializer());
-        addSerializer(new SubflowStateSerializer());
         addSerializer(new InjectStateSerializer());
         addSerializer(new ForEachStateSerializer());
         addSerializer(new CallbackStateSerializer());
@@ -76,6 +76,7 @@ public class WorkflowModule extends SimpleModule {
         addSerializer(new FunctionRefSerializer());
         addSerializer(new CronSerializer());
         addSerializer(new ScheduleSerializer());
+        addSerializer(new SubFlowRefSerializer());
         addSerializer(extensionSerializer);
     }
 
@@ -101,6 +102,7 @@ public class WorkflowModule extends SimpleModule {
         addDeserializer(FunctionDefinition.Type.class, new FunctionDefinitionTypeDeserializer(workflowPropertySource));
         addDeserializer(Transition.class, new TransitionDeserializer(workflowPropertySource));
         addDeserializer(FunctionRef.class, new FunctionRefDeserializer(workflowPropertySource));
+        addDeserializer(SubFlowRef.class, new SubFlowRefDeserializer(workflowPropertySource));
         addDeserializer(Cron.class, new CronDeserializer(workflowPropertySource));
         addDeserializer(Schedule.class, new ScheduleDeserializer(workflowPropertySource));
         addDeserializer(DataInputSchema.class, new DataInputSchemaDeserializer(workflowPropertySource));

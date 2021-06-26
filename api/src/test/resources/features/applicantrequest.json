@@ -2,21 +2,25 @@
   "id": "applicantrequest",
   "version": "1.0",
   "name": "Applicant Request Decision Workflow",
-  "start": "CheckApplication",
   "description": "Determine if applicant request is valid",
-  "functions": "features/applicantrequestfunctions.json",
-  "retries": "features/applicantrequestretries.json",
+  "start": "CheckApplication",
+  "functions": [
+    {
+      "name": "sendRejectionEmailFunction",
+      "operation": "http://myapis.org/applicationapi.json#emailRejection"
+    }
+  ],
   "states":[
     {
       "name":"CheckApplication",
       "type":"switch",
       "dataConditions": [
         {
-          "condition": "${ .applicants[?(@.age >= 18)] }",
+          "condition": "${ .applicants | .age >= 18 }",
           "transition": "StartApplication"
         },
         {
-          "condition": "${ .applicants[?(@.age < 18)] }",
+          "condition": "${ .applicants | .age < 18 }",
           "transition": "RejectApplication"
         }
       ],
@@ -26,8 +30,12 @@
     },
     {
       "name": "StartApplication",
-      "type": "subflow",
-      "workflowId": "startApplicationWorkflowId",
+      "type": "operation",
+      "actions": [
+        {
+          "subFlowRef": "startApplicationWorkflowId"
+        }
+      ],
       "end": true
     },
     {
@@ -42,14 +50,6 @@
               "applicant": "${ .applicant }"
             }
           }
-        }
-      ],
-      "onErrors": [
-        {
-          "error": "TimeoutError",
-          "code": "500",
-          "retryRef": "TimeoutRetryStrategy",
-          "end": true
         }
       ],
       "end": true

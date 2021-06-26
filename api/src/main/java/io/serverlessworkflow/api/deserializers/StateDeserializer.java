@@ -87,10 +87,6 @@ public class StateDeserializer extends StdDeserializer<State> {
                 return mapper.treeToValue(node,
                         ParallelState.class);
 
-            case SUBFLOW:
-                return mapper.treeToValue(node,
-                        SubflowState.class);
-
             case INJECT:
                 return mapper.treeToValue(node,
                         InjectState.class);

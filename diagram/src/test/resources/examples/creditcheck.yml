@@ -28,15 +28,16 @@ states:
   - name: EvaluateDecision
     type: switch
     dataConditions:
-      - condition: "${ .creditCheck | .decision == \"Approved\" }"
+      - condition: ${ .creditCheck | .decision == "Approved" }
         transition: StartApplication
-      - condition: "${ .creditCheck | .decision == \"Denied\" }"
+      - condition: ${ .creditCheck | .decision == "Denied" }
         transition: RejectApplication
     default:
       transition: RejectApplication
   - name: StartApplication
-    type: subflow
-    workflowId: startApplicationWorkflowId
+    type: operation
+    actions:
+      - subFlowRef: startApplicationWorkflowId
     end: true
   - name: RejectApplication
     type: operation

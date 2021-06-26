@@ -1,4 +1,3 @@
----
 id: checkcarvitals
 name: Check Car Vitals Workflow
 version: '1.0'
@@ -11,18 +10,32 @@ states:
           - CarTurnedOnEvent
     transition: DoCarVitalsChecks
   - name: DoCarVitalsChecks
-    type: subflow
-    workflowId: vitalscheck
-    repeat:
-      max: 10
-      continueOnError: true
-      stopOnEvents:
-        - CarTurnedOffEvent
+    type: operation
+    actions:
+      - subFlowRef:
+          workflowId: vitalscheck
+          waitForCompletion: false
+    transition: WaitForCarStopped
+  - name: WaitForCarStopped
+    type: event
+    onEvents:
+      - eventRefs:
+          - CarTurnedOffEvent
+        actions:
+          - eventRef:
+              triggerEventRef: StopVitalsCheck
+              resultEventRef: VitalsCheckingStopped
     end: true
 events:
   - name: CarTurnedOnEvent
     type: car.events
-    source: my/car/start
+    source: my/car
   - name: CarTurnedOffEvent
     type: car.events
-    source: my/car/start
+    source: my/car
+  - name: StopVitalsCheck
+    type: car.events
+    source: my/car
+  - name: VitalsCheckingStopped
+    type: car.events
+    source: my/car

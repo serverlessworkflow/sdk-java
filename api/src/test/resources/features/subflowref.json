@@ -1,0 +1,24 @@
+{
+  "id": "subflowrefworkflow",
+  "version": "1.0",
+  "name": "SubflowRef Workflow",
+  "start": "SubflowRef",
+  "states":[
+    {
+      "name": "SubflowRef",
+      "type": "operation",
+      "actions": [
+        {
+          "subFlowRef": "subflowRefReference"
+        },
+        {
+          "subFlowRef": {
+            "workflowId": "subflowrefworkflowid",
+            "waitForCompletion": false
+          }
+        }
+      ],
+      "end": true
+    }
+  ]
+}

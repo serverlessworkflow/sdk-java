@@ -49,12 +49,16 @@
       "stateDataFilter": {
         "output": "${ .jobuid }"
       },
-      "transition": "WaitForCompletion'"
+      "transition": "WaitForCompletion"
     },
     {
       "name": "SubmitError",
-      "type": "subflow",
-      "workflowId": "handleJobSubmissionErrorWorkflow",
+      "type": "operation",
+      "actions": [
+        {
+          "subFlowRef": "handleJobSubmissionErrorWorkflow"
+        }
+      ],
       "end": true
     },
     {

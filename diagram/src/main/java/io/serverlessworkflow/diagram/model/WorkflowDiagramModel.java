@@ -319,13 +319,6 @@ public class WorkflowDiagramModel {
                 modelState.addInfo("Num. of branches: " + parallelState.getBranches().size());
             }
 
-            if (state instanceof SubflowState) {
-                SubflowState subflowState = (SubflowState) state;
-
-                modelState.addInfo("Type: SubFlow State");
-                modelState.addInfo("Workflow ID: " + subflowState.getWorkflowId());
-            }
-
             if (state instanceof InjectState) {
                 modelState.addInfo("Type: Inject State");
             }

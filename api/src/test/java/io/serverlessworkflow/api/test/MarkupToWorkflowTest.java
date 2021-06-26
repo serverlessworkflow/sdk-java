@@ -23,11 +23,11 @@ import io.serverlessworkflow.api.defaultdef.DefaultDefinition;
 import io.serverlessworkflow.api.exectimeout.ExecTimeout;
 import io.serverlessworkflow.api.functions.FunctionDefinition;
 import io.serverlessworkflow.api.functions.FunctionRef;
+import io.serverlessworkflow.api.functions.SubFlowRef;
 import io.serverlessworkflow.api.interfaces.State;
 import io.serverlessworkflow.api.retry.RetryDefinition;
 import io.serverlessworkflow.api.states.EventState;
 import io.serverlessworkflow.api.states.OperationState;
-import io.serverlessworkflow.api.states.SubflowState;
 import io.serverlessworkflow.api.states.SwitchState;
 import io.serverlessworkflow.api.switchconditions.DataCondition;
 import io.serverlessworkflow.api.test.utils.WorkflowTestUtils;
@@ -86,9 +86,6 @@ public class MarkupToWorkflowTest {
 
         assertNotNull(workflow.getFunctions());
         assertEquals(1, workflow.getFunctions().getFunctionDefs().size());
-
-        assertNotNull(workflow.getRetries());
-        assertEquals(1, workflow.getRetries().getRetryDefs().size());
     }
 
     @ParameterizedTest
@@ -261,31 +258,6 @@ public class MarkupToWorkflowTest {
         ExecTimeout execTimeout = workflow.getExecTimeout();
         assertEquals("PT1H", execTimeout.getDuration());
         assertEquals("GenerateReport", execTimeout.getRunBefore());
-    }
-
-    @ParameterizedTest
-    @ValueSource(strings = {"/features/checkcarvitals.json", "/features/checkcarvitals.yml"})
-    public void testSubflowStateRepeat(String workflowLocation) {
-        Workflow workflow = Workflow.fromSource(WorkflowTestUtils.readWorkflowFile(workflowLocation));
-
-        assertNotNull(workflow);
-        assertNotNull(workflow.getId());
-        assertNotNull(workflow.getName());
-        assertNotNull(workflow.getStates());
-
-        assertNotNull(workflow.getStates());
-        assertEquals(2, workflow.getStates().size());
-
-        State state = workflow.getStates().get(1);
-        assertTrue(state instanceof SubflowState);
-
-        SubflowState subflowState = (SubflowState) workflow.getStates().get(1);
-        assertNotNull(subflowState.getRepeat());
-        assertEquals(10, subflowState.getRepeat().getMax());
-        assertTrue(subflowState.getRepeat().isContinueOnError());
-        assertNotNull(subflowState.getRepeat().getStopOnEvents());
-        assertEquals(1, subflowState.getRepeat().getStopOnEvents().size());
-        assertEquals("CarTurnedOffEvent", subflowState.getRepeat().getStopOnEvents().get(0));
     }
 
     @ParameterizedTest
@@ -493,5 +465,40 @@ public class MarkupToWorkflowTest {
         assertNotNull(dataInputSchema);
         assertEquals("somejsonschema.json", dataInputSchema.getSchema());
         assertFalse(dataInputSchema.isFailOnValidationErrors());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/features/subflowref.json", "/features/subflowref.yml"})
+    public void testSubFlowRef(String workflowLocation) {
+        Workflow workflow = Workflow.fromSource(WorkflowTestUtils.readWorkflowFile(workflowLocation));
+
+        assertNotNull(workflow);
+        assertNotNull(workflow.getId());
+        assertNotNull(workflow.getName());
+        assertNotNull(workflow.getStates());
+
+        assertNotNull(workflow.getStates());
+        assertEquals(1, workflow.getStates().size());
+
+        assertTrue(workflow.getStates().get(0) instanceof OperationState);
+
+        OperationState operationState = (OperationState) workflow.getStates().get(0);
+
+        List<Action> actions = operationState.getActions();
+        assertNotNull(actions);
+        assertEquals(2, actions.size());
+
+        Action firstAction = operationState.getActions().get(0);
+        assertNotNull(firstAction.getSubFlowRef());
+        SubFlowRef firstSubflowRef = firstAction.getSubFlowRef();
+        assertEquals("subflowRefReference", firstSubflowRef.getWorkflowId());
+        assertTrue(firstSubflowRef.isWaitForCompletion());
+
+        Action secondAction = operationState.getActions().get(1);
+        assertNotNull(secondAction.getSubFlowRef());
+        SubFlowRef secondSubflowRef = secondAction.getSubFlowRef();
+        assertEquals("subflowrefworkflowid", secondSubflowRef.getWorkflowId());
+        assertFalse(secondSubflowRef.isWaitForCompletion());
+
     }
 }
