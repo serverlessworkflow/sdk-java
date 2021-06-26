@@ -67,6 +67,10 @@ public class FunctionRefDeserializer extends StdDeserializer<FunctionRef> {
                 functionRef.setRefName(node.get("refName").asText());
             }
 
+            if (node.get("selectionSet") != null) {
+                functionRef.setSelectionSet(node.get("selectionSet").asText());
+            }
+
             return functionRef;
         }
     }

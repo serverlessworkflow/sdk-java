@@ -11,6 +11,10 @@
       "type": "object",
       "description": "Function arguments",
       "existingJavaType": "com.fasterxml.jackson.databind.JsonNode"
+    },
+    "selectionSet": {
+      "type": "string",
+      "description": "Only used if function type is 'graphql'. A string containing a valid GraphQL selection set"
     }
   },
   "required": [

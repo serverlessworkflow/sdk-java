@@ -18,6 +18,7 @@
       "enum": [
         "rest",
         "rpc",
+        "graphql",
         "expression"
       ],
       "default": "rest"
