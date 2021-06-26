@@ -53,8 +53,12 @@
     },
     {
       "name": "SubmitError",
-      "type": "subflow",
-      "workflowId": "handleJobSubmissionErrorWorkflow",
+      "type": "operation",
+      "actions": [
+        {
+          "subFlowRef": "handleJobSubmissionErrorWorkflow"
+        }
+      ],
       "end": true
     },
     {

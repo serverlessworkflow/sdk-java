@@ -1,25 +1,62 @@
-id: checkcarvitals
-name: Check Car Vitals Workflow
+id: vitalscheck
+name: Car Vitals Check
 version: '1.0'
-start: WhenCarIsOn
+start: CheckVitals
 states:
-  - name: WhenCarIsOn
+  - name: CheckVitals
+    type: operation
+    actions:
+      - functionRef: checkTirePressure
+      - functionRef: checkOilPressure
+      - functionRef: checkCoolantLevel
+      - functionRef: checkBattery
+    transition: EvaluateChecks
+  - name: EvaluateChecks
+    type: switch
+    dataConditions:
+      - name: Some Evaluations failed
+        condition: ".evaluations[?(@.check == 'failed')]"
+        end:
+          produceEvents:
+            - eventRef: DisplayFailedChecksOnDashboard
+              data: "${ .evaluations }"
+    default:
+      transition: WaitTwoMinutes
+  - name: WaitTwoMinutes
     type: event
     onEvents:
       - eventRefs:
-          - CarTurnedOnEvent
-    transition: DoCarVitalsChecks
-  - name: DoCarVitalsChecks
-    type: subflow
-    workflowId: vitalscheck
-    repeat:
-      stopOnEvents:
-        - CarTurnedOffEvent
-    end: true
+          - StopVitalsCheck
+        eventDataFilter:
+          toStateData: "${ .stopReceived }"
+    timeout: PT2M
+    transition: ShouldStopOrContinue
+  - name: ShouldStopOrContinue
+    type: switch
+    dataConditions:
+      - name: Stop Event Received
+        condition: ${ has("stopReceived") }
+        end:
+          produceEvents:
+            - eventRef: VitalsCheckingStopped
+    default:
+      transition: CheckVitals
 events:
-  - name: CarTurnedOnEvent
+  - name: StopVitalsCheck
     type: car.events
-    source: my/car/start
-  - name: CarTurnedOffEvent
+    source: my/car
+  - name: VitalsCheckingStopped
     type: car.events
-    source: my/car/start
+    source: my/car
+  - name: DisplayFailedChecksOnDashboard
+    kind: produced
+    type: my.car.events
+functions:
+  - name: checkTirePressure
+    operation: mycarservices.json#checktirepressure
+  - name: checkOilPressure
+    operation: mycarservices.json#checkoilpressure
+  - name: checkCoolantLevel
+    operation: mycarservices.json#checkcoolantlevel
+  - name: checkBattery
+    operation: mycarservices.json#checkbattery

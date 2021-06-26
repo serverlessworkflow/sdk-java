@@ -1,0 +1,18 @@
+{
+  "type": "object",
+  "javaType": "io.serverlessworkflow.api.functions.SubFlowRef",
+  "properties": {
+    "waitForCompletion": {
+      "type": "boolean",
+      "default": true,
+      "description": "Workflow execution must wait for sub-workflow to finish before continuing"
+    },
+    "workflowId": {
+      "type": "string",
+      "description": "Unique id of the sub-workflow to be invoked"
+    }
+  },
+  "required": [
+    "workflowId"
+  ]
+}

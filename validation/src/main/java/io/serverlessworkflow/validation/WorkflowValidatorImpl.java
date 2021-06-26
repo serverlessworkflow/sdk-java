@@ -324,14 +324,6 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
                         }
                     }
 
-                    if (s instanceof SubflowState) {
-                        SubflowState subflowState = (SubflowState) s;
-                        if (subflowState.getWorkflowId() == null || subflowState.getWorkflowId().isEmpty()) {
-                            addValidationError("SubflowState should have a valid workflow id",
-                                    ValidationError.WORKFLOW_VALIDATION);
-                        }
-                    }
-
                     if (s instanceof InjectState) {
                         InjectState injectState = (InjectState) s;
                         if (injectState.getData() == null || injectState.getData().isEmpty()) {

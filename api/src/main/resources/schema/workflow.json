@@ -100,10 +100,6 @@
             "$ref": "states/switchstate.json"
           },
           {
-            "title": "SubFlow State",
-            "$ref": "states/subflowstate.json"
-          },
-          {
             "title": "Relay State",
             "$ref": "states/injectstate.json"
           },

@@ -15,7 +15,6 @@ skinparam state {
   BorderColor<< switch >> #92a0f2
   BorderColor<< delay >> #b83b5e
   BorderColor<< parallel >> #6a2c70
-  BorderColor<< subflow >> #87753c
   BorderColor<< inject >> #1e5f74
   BorderColor<< foreach >> #931a25
   BorderColor<< callback >> #ffcb8e
@@ -39,8 +38,8 @@ state "[(${diagram.title})]" as workflow << workflow >> {
 [# th:if="${diagram.showLegend}" ]
 legend center
 State Types and Border Colors:
-| Event | Operation | Switch | Delay | Parallel | SubFlow | Inject | ForEach | CallBack |
-|<#7fe5f0>|<#bada55>|<#92a0f2>|<#b83b5e>|<#6a2c70>|<#87753c>|<#1e5f74>|<#931a25>|<#ffcb8e>|
+| Event | Operation | Switch | Delay | Parallel | Inject | ForEach | CallBack |
+|<#7fe5f0>|<#bada55>|<#92a0f2>|<#b83b5e>|<#6a2c70>|<#1e5f74>|<#931a25>|<#ffcb8e>|
 endlegend
 [/]
 

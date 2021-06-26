@@ -1,23 +1,25 @@
 id: applicantrequest
 version: '1.0'
-start: CheckApplication
 name: Applicant Request Decision Workflow
 description: Determine if applicant request is valid
-functions: features/applicantrequestfunctions.yml
-retries: features/applicantrequestretries.yml
+start: CheckApplication
+functions:
+  - name: sendRejectionEmailFunction
+    operation: http://myapis.org/applicationapi.json#emailRejection
 states:
   - name: CheckApplication
     type: switch
     dataConditions:
-      - condition: "${ .applicants[?(@.age >= 18)] }"
+      - condition: "${ .applicants | .age >= 18 }"
         transition: StartApplication
-      - condition: "${ .applicants[?(@.age < 18)] }"
+      - condition: "${ .applicants | .age < 18 }"
         transition: RejectApplication
     default:
       transition: RejectApplication
   - name: StartApplication
-    type: subflow
-    workflowId: startApplicationWorkflowId
+    type: operation
+    actions:
+      - subFlowRef: startApplicationWorkflowId
     end: true
   - name: RejectApplication
     type: operation
@@ -27,9 +29,4 @@ states:
           refName: sendRejectionEmailFunction
           arguments:
             applicant: "${ .applicant }"
-    onErrors:
-      - error: TimeoutError
-        code: '500'
-        retryRef: TimeoutRetryStrategy
-        end: true
     end: true

@@ -17,36 +17,43 @@ package io.serverlessworkflow.api.serializers;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.ser.BeanSerializerFactory;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
-import com.fasterxml.jackson.databind.type.TypeFactory;
-import io.serverlessworkflow.api.states.DefaultState;
-import io.serverlessworkflow.api.states.SubflowState;
+import io.serverlessworkflow.api.functions.SubFlowRef;
 
 import java.io.IOException;
 
-public class SubflowStateSerializer extends StdSerializer<SubflowState> {
+public class SubFlowRefSerializer extends StdSerializer<SubFlowRef> {
 
-    public SubflowStateSerializer() {
-        this(SubflowState.class);
+    public SubFlowRefSerializer() {
+        this(SubFlowRef.class);
     }
 
-    protected SubflowStateSerializer(Class<SubflowState> t) {
+    protected SubFlowRefSerializer(Class<SubFlowRef> t) {
         super(t);
     }
 
     @Override
-    public void serialize(SubflowState subflowState,
+    public void serialize(SubFlowRef subflowRef,
                           JsonGenerator gen,
                           SerializerProvider provider) throws IOException {
 
-        // set defaults for end state
-        subflowState.setType(DefaultState.Type.SUBFLOW);
+        if (subflowRef != null) {
+            if ((subflowRef.getWorkflowId() == null || subflowRef.getWorkflowId().isEmpty())
+                    && subflowRef.isWaitForCompletion()) {
+                gen.writeString(subflowRef.getWorkflowId());
+            } else {
+                gen.writeStartObject();
 
-        // serialize after setting default bean values...
-        BeanSerializerFactory.instance.createSerializer(provider,
-                TypeFactory.defaultInstance().constructType(SubflowState.class)).serialize(subflowState,
-                gen,
-                provider);
+                if (subflowRef.getWorkflowId() != null && subflowRef.getWorkflowId().length() > 0) {
+                    gen.writeStringField("workflowId", subflowRef.getWorkflowId());
+                }
+
+                if (!subflowRef.isWaitForCompletion()) {
+                    gen.writeBooleanField("waitForCompletion", false);
+                }
+
+                gen.writeEndObject();
+            }
+        }
     }
 }

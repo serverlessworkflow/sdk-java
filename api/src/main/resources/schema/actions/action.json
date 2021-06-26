@@ -15,6 +15,10 @@
       "description": "References a 'trigger' and 'result' reusable event definitions",
       "$ref": "../events/eventref.json"
     },
+    "subFlowRef": {
+      "description": "References a sub-workflow to invoke",
+      "$ref": "../functions/subflowref.json"
+    },
     "timeout": {
       "type": "string",
       "description": "Time period to wait for function execution to complete"
@@ -32,6 +36,11 @@
     {
       "required": [
         "eventRef"
+      ]
+    },
+    {
+      "required": [
+        "subFlowRef"
       ]
     }
   ]
