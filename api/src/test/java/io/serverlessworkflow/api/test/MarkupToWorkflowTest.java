@@ -31,7 +31,9 @@ import io.serverlessworkflow.api.states.OperationState;
 import io.serverlessworkflow.api.states.SwitchState;
 import io.serverlessworkflow.api.switchconditions.DataCondition;
 import io.serverlessworkflow.api.test.utils.WorkflowTestUtils;
+import io.serverlessworkflow.api.workflow.Constants;
 import io.serverlessworkflow.api.workflow.Retries;
+import io.serverlessworkflow.api.workflow.Secrets;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -500,6 +502,47 @@ public class MarkupToWorkflowTest {
         assertEquals("subflowrefworkflowid", secondSubflowRef.getWorkflowId());
         assertFalse(secondSubflowRef.isWaitForCompletion());
         assertEquals("1.0", secondSubflowRef.getVersion());
+
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/features/secrets.json", "/features/secrets.yml"})
+    public void testSecrets(String workflowLocation) {
+        Workflow workflow = Workflow.fromSource(WorkflowTestUtils.readWorkflowFile(workflowLocation));
+
+        assertNotNull(workflow);
+        assertNotNull(workflow.getId());
+        assertNotNull(workflow.getName());
+        assertNotNull(workflow.getStates());
+
+        assertNotNull(workflow.getSecrets());
+        Secrets secrets = workflow.getSecrets();
+        assertNotNull(secrets.getSecretDefs());
+        assertEquals(3, secrets.getSecretDefs().size());
+
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/features/constants.json", "/features/constants.yml"})
+    public void testConstants(String workflowLocation) {
+        Workflow workflow = Workflow.fromSource(WorkflowTestUtils.readWorkflowFile(workflowLocation));
+
+        assertNotNull(workflow);
+        assertNotNull(workflow.getId());
+        assertNotNull(workflow.getName());
+        assertNotNull(workflow.getStates());
+
+        assertNotNull(workflow.getConstants());
+        Constants constants = workflow.getConstants();
+        assertNotNull(constants.getConstantsDef());
+
+        JsonNode constantObj = constants.getConstantsDef();
+        assertNotNull(constantObj.get("Translations"));
+        JsonNode translationNode = constantObj.get("Translations");
+        assertNotNull(translationNode.get("Dog"));
+        JsonNode translationDogNode = translationNode.get("Dog");
+        JsonNode serbianTranslationNode = translationDogNode.get("Serbian");
+        assertEquals("pas", serbianTranslationNode.asText());
 
     }
 }

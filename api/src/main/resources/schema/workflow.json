@@ -72,6 +72,16 @@
       "existingJavaType": "io.serverlessworkflow.api.workflow.Retries",
       "description": "Workflow retry definitions"
     },
+    "secrets": {
+      "type": "object",
+      "existingJavaType": "io.serverlessworkflow.api.workflow.Secrets",
+      "description": "Workflow secrets definitions"
+    },
+    "constants": {
+      "type": "object",
+      "existingJavaType": "io.serverlessworkflow.api.workflow.Constants",
+      "description": "Workflow constants definitions"
+    },
     "states": {
       "type": "array",
       "description": "State Definitions",

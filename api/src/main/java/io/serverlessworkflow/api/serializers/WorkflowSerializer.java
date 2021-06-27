@@ -16,6 +16,7 @@
 package io.serverlessworkflow.api.serializers;
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import io.serverlessworkflow.api.Workflow;
@@ -141,6 +142,21 @@ public class WorkflowSerializer extends StdSerializer<Workflow> {
         } else {
             gen.writeArrayFieldStart("retries");
             gen.writeEndArray();
+        }
+
+        if (workflow.getSecrets() != null && !workflow.getSecrets().getSecretDefs().isEmpty()) {
+            gen.writeArrayFieldStart("secrets");
+            for (String secretDef : workflow.getSecrets().getSecretDefs()) {
+                gen.writeString(secretDef);
+            }
+            gen.writeEndArray();
+        } else {
+            gen.writeArrayFieldStart("secrets");
+            gen.writeEndArray();
+        }
+
+        if (workflow.getConstants() != null && !workflow.getConstants().getConstantsDef().isEmpty()) {
+            gen.writeObjectField("constants", workflow.getConstants().getConstantsDef());
         }
 
         if (workflow.getStates() != null && !workflow.getStates().isEmpty()) {
