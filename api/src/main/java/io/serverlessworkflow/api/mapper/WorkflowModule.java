@@ -35,9 +35,7 @@ import io.serverlessworkflow.api.states.DefaultState;
 import io.serverlessworkflow.api.states.OperationState;
 import io.serverlessworkflow.api.states.ParallelState;
 import io.serverlessworkflow.api.transitions.Transition;
-import io.serverlessworkflow.api.workflow.Events;
-import io.serverlessworkflow.api.workflow.Functions;
-import io.serverlessworkflow.api.workflow.Retries;
+import io.serverlessworkflow.api.workflow.*;
 
 public class WorkflowModule extends SimpleModule {
 
@@ -94,6 +92,8 @@ public class WorkflowModule extends SimpleModule {
         addDeserializer(EventDefinition.Kind.class, new EventDefinitionKindDeserializer(workflowPropertySource));
         addDeserializer(ParallelState.CompletionType.class, new ParallelStateCompletionTypeDeserializer(workflowPropertySource));
         addDeserializer(Retries.class, new RetriesDeserializer(workflowPropertySource));
+        addDeserializer(Secrets.class, new SecretsDeserializer(workflowPropertySource));
+        addDeserializer(Constants.class, new ConstantsDeserializer(workflowPropertySource));
         addDeserializer(Functions.class, new FunctionsDeserializer(workflowPropertySource));
         addDeserializer(Events.class, new EventsDeserializer(workflowPropertySource));
         addDeserializer(Start.class, new StartDefinitionDeserializer(workflowPropertySource));
