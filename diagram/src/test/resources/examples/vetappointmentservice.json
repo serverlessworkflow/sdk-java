@@ -31,10 +31,12 @@
           },
           "actionDataFilter": {
             "results": "${ .appointmentInfo }"
-          },
-          "timeout": "PT15M"
+          }
         }
       ],
+      "timeouts": {
+        "actionExecTimeout": "PT15M"
+      },
       "end": true
     }
   ]

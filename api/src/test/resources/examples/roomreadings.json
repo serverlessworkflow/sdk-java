@@ -4,9 +4,11 @@
   "version": "1.0",
   "specVersion": "0.7",
   "start": "ConsumeReading",
-  "execTimeout": {
-    "duration": "PT1H",
-    "runBefore": "GenerateReport"
+  "timeouts": {
+    "workflowExecTimeout": {
+      "duration": "PT1H",
+      "runBefore": "GenerateReport"
+    }
   },
   "keepActive": true,
   "states": [

@@ -57,7 +57,9 @@
           }
         }
       ],
-      "timeout": "PT2M",
+      "timeouts": {
+        "eventTimeout": "PT2M"
+      },
       "transition": "ShouldStopOrContinue"
     },
     {

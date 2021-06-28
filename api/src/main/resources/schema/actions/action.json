@@ -19,10 +19,6 @@
       "description": "References a sub-workflow to invoke",
       "$ref": "../functions/subflowref.json"
     },
-    "timeout": {
-      "type": "string",
-      "description": "Time period to wait for function execution to complete"
-    },
     "actionDataFilter": {
       "$ref": "../filters/actiondatafilter.json"
     }

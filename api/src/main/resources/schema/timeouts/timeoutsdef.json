@@ -1,0 +1,31 @@
+{
+  "type": "object",
+  "javaType": "io.serverlessworkflow.api.timeouts.TimeoutsDefinition",
+  "description": "Timeouts Definition",
+  "properties": {
+    "workflowExecTimeout": {
+      "$ref": "workflowexectimeout.json"
+    },
+    "stateExecTimeout": {
+      "type": "string",
+      "description": "State execution timeout duration (ISO 8601 duration format)",
+      "minLength": 1
+    },
+    "actionExecTimeout": {
+      "type": "string",
+      "description": "Single actions definition execution timeout duration (ISO 8601 duration format)",
+      "minLength": 1
+    },
+    "branchExecTimeout": {
+      "type": "string",
+      "description": "Single branch execution timeout duration (ISO 8601 duration format)",
+      "minLength": 1
+    },
+    "eventTimeout": {
+      "type": "string",
+      "description": "Timeout duration to wait for consuming defined events (ISO 8601 duration format)",
+      "minLength": 1
+    }
+  },
+  "required": []
+}

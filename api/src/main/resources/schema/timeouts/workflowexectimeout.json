@@ -1,16 +1,16 @@
 {
   "type": "object",
-  "javaType": "io.serverlessworkflow.api.exectimeout.ExecTimeout",
+  "javaType": "io.serverlessworkflow.api.timeouts.WorkflowExecTimeout",
   "properties": {
     "duration": {
       "type": "string",
-      "description": "Timeout duration (ISO 8601 duration format)",
+      "description": "Workflow execution timeout duration (ISO 8601 duration format). If not specified should be 'unlimited'",
       "minLength": 1
     },
     "interrupt": {
       "type": "boolean",
       "description": "If `false`, workflow instance is allowed to finish current execution. If `true`, current workflow execution is abrupted.",
-      "default": false
+      "default": true
     },
     "runBefore": {
       "type": "string",

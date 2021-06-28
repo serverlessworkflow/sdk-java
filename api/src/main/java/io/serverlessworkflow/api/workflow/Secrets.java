@@ -21,6 +21,16 @@ public class Secrets {
     private String refValue;
     private List<String> secretDefs;
 
+    public Secrets() {}
+
+    public Secrets(String refValue) {
+        this.refValue = refValue;
+    }
+
+    public Secrets(List<String> secretDefs) {
+        this.secretDefs = secretDefs;
+    }
+
     public String getRefValue() {
         return refValue;
     }

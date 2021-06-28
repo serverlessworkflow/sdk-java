@@ -45,10 +45,6 @@
       "default": "jq",
       "minLength": 1
     },
-    "execTimeout": {
-      "description": "Workflow execution timeout",
-      "$ref": "exectimeout/exectimeout.json"
-    },
     "keepActive": {
       "type": "boolean",
       "default": false,
@@ -81,6 +77,9 @@
       "type": "object",
       "existingJavaType": "io.serverlessworkflow.api.workflow.Constants",
       "description": "Workflow constants definitions"
+    },
+    "timeouts": {
+      "$ref": "timeouts/timeoutsdef.json"
     },
     "states": {
       "type": "array",

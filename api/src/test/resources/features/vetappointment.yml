@@ -4,8 +4,8 @@ description: Vet service call via events
 version: '1.0'
 specVersion: '0.7'
 start: MakeVetAppointmentState
-events: features/vetappointmenteventrefs.yml
-retries: features/vetappointmentretries.yml
+events: features/vetappointmenteventrefs.json
+retries: features/vetappointmentretries.json
 states:
   - name: MakeVetAppointmentState
     type: operation
@@ -17,7 +17,8 @@ states:
           resultEventRef: VetAppointmentInfo
         actionDataFilter:
           results: "${ .appointmentInfo }"
-        timeout: PT15M
+    timeouts:
+      actionExecTimeout: PT15M
     onErrors:
       - error: TimeoutError
         code: '500'
