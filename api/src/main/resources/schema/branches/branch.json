@@ -14,6 +14,9 @@
         "type": "object",
         "$ref": "../actions/action.json"
       }
+    },
+    "timeouts": {
+      "$ref": "../timeouts/timeoutsdef.json"
     }
   },
   "oneOf": [

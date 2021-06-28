@@ -18,9 +18,9 @@ package io.serverlessworkflow.api.test;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.serverlessworkflow.api.Workflow;
 import io.serverlessworkflow.api.actions.Action;
+import io.serverlessworkflow.api.branches.Branch;
 import io.serverlessworkflow.api.datainputschema.DataInputSchema;
 import io.serverlessworkflow.api.defaultdef.DefaultConditionDefinition;
-import io.serverlessworkflow.api.exectimeout.ExecTimeout;
 import io.serverlessworkflow.api.functions.FunctionDefinition;
 import io.serverlessworkflow.api.functions.FunctionRef;
 import io.serverlessworkflow.api.functions.SubFlowRef;
@@ -28,9 +28,11 @@ import io.serverlessworkflow.api.interfaces.State;
 import io.serverlessworkflow.api.retry.RetryDefinition;
 import io.serverlessworkflow.api.states.EventState;
 import io.serverlessworkflow.api.states.OperationState;
+import io.serverlessworkflow.api.states.ParallelState;
 import io.serverlessworkflow.api.states.SwitchState;
 import io.serverlessworkflow.api.switchconditions.DataCondition;
 import io.serverlessworkflow.api.test.utils.WorkflowTestUtils;
+import io.serverlessworkflow.api.timeouts.WorkflowExecTimeout;
 import io.serverlessworkflow.api.workflow.Constants;
 import io.serverlessworkflow.api.workflow.Retries;
 import io.serverlessworkflow.api.workflow.Secrets;
@@ -255,9 +257,10 @@ public class MarkupToWorkflowTest {
         assertNotNull(workflow.getStates());
 
         assertTrue(workflow.isKeepActive());
-        assertNotNull(workflow.getExecTimeout());
+        assertNotNull(workflow.getTimeouts());
+        assertNotNull(workflow.getTimeouts().getWorkflowExecTimeout());
 
-        ExecTimeout execTimeout = workflow.getExecTimeout();
+        WorkflowExecTimeout execTimeout = workflow.getTimeouts().getWorkflowExecTimeout();
         assertEquals("PT1H", execTimeout.getDuration());
         assertEquals("GenerateReport", execTimeout.getRunBefore());
     }
@@ -543,6 +546,55 @@ public class MarkupToWorkflowTest {
         JsonNode translationDogNode = translationNode.get("Dog");
         JsonNode serbianTranslationNode = translationDogNode.get("Serbian");
         assertEquals("pas", serbianTranslationNode.asText());
+
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/features/timeouts.json", "/features/timeouts.yml"})
+    public void testTimeouts(String workflowLocation) {
+        Workflow workflow = Workflow.fromSource(WorkflowTestUtils.readWorkflowFile(workflowLocation));
+
+        assertNotNull(workflow);
+        assertNotNull(workflow.getId());
+        assertNotNull(workflow.getName());
+        assertNotNull(workflow.getStates());
+
+        assertNotNull(workflow.getTimeouts());
+        assertNotNull(workflow.getTimeouts().getWorkflowExecTimeout());
+
+        WorkflowExecTimeout execTimeout = workflow.getTimeouts().getWorkflowExecTimeout();
+        assertEquals("PT1H", execTimeout.getDuration());
+        assertEquals("GenerateReport", execTimeout.getRunBefore());
+
+        assertNotNull(workflow.getStates());
+        assertEquals(2, workflow.getStates().size());
+        assertTrue(workflow.getStates().get(0) instanceof EventState);
+
+        EventState firstState = (EventState) workflow.getStates().get(0);
+        assertNotNull(firstState.getTimeouts());
+        assertNotNull(firstState.getTimeouts().getStateExecTimeout());
+        assertNotNull(firstState.getTimeouts().getEventTimeout());
+        assertEquals("PT5M", firstState.getTimeouts().getStateExecTimeout());
+        assertEquals("PT2M", firstState.getTimeouts().getEventTimeout());
+
+
+        assertTrue(workflow.getStates().get(1) instanceof ParallelState);
+        ParallelState secondState = (ParallelState) workflow.getStates().get(1);
+        assertNotNull(secondState.getTimeouts());
+        assertNotNull(secondState.getTimeouts().getStateExecTimeout());
+        assertEquals("PT5M", secondState.getTimeouts().getStateExecTimeout());
+
+        assertNotNull(secondState.getBranches());
+        assertEquals(2, secondState.getBranches().size());
+        List<Branch> branches = secondState.getBranches();
+
+        assertNotNull(branches.get(0).getTimeouts());
+        assertNotNull(branches.get(0).getTimeouts().getBranchExecTimeout());
+        assertEquals("PT3S", branches.get(0).getTimeouts().getBranchExecTimeout());
+
+        assertNotNull(branches.get(1).getTimeouts());
+        assertNotNull(branches.get(1).getTimeouts().getBranchExecTimeout());
+        assertEquals("PT4S", branches.get(1).getTimeouts().getBranchExecTimeout());
 
     }
 }

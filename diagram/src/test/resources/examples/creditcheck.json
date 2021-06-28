@@ -40,7 +40,9 @@
         }
       },
       "eventRef": "CreditCheckCompletedEvent",
-      "timeout": "PT15M",
+      "timeouts": {
+        "stateExecTimeout": "PT15M"
+      },
       "transition": "EvaluateDecision"
     },
     {

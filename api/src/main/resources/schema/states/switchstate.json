@@ -25,10 +25,6 @@
         "$ref": "../switchconditions/datacondition.json"
       }
     },
-    "eventTimeout": {
-      "type": "string",
-      "description": "If eventConditions is used, defines the time period to wait for events (ISO 8601 format)"
-    },
     "defaultCondition": {
       "description": "Default transition of the workflow if there is no matching data conditions. Can include a transition or end definition",
       "$ref": "../defaultcondition/defaultconditiondef.json"

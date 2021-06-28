@@ -98,10 +98,6 @@ public class WorkflowSerializer extends StdSerializer<Workflow> {
                     workflow.getExpressionLang());
         }
 
-        if (workflow.getExecTimeout() != null) {
-            gen.writeObjectField("execTimeout", workflow.getExecTimeout());
-        }
-
         if (workflow.isKeepActive()) {
             gen.writeBooleanField("keepActive", workflow.isKeepActive());
         }
@@ -157,6 +153,10 @@ public class WorkflowSerializer extends StdSerializer<Workflow> {
 
         if (workflow.getConstants() != null && !workflow.getConstants().getConstantsDef().isEmpty()) {
             gen.writeObjectField("constants", workflow.getConstants().getConstantsDef());
+        }
+
+        if(workflow.getTimeouts() != null ) {
+            gen.writeObjectField("timeouts", workflow.getTimeouts());
         }
 
         if (workflow.getStates() != null && !workflow.getStates().isEmpty()) {

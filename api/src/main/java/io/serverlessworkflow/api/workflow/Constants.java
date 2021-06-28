@@ -23,6 +23,16 @@ public class Constants {
     private String refValue;
     private JsonNode constantsDef;
 
+    public Constants() {}
+
+    public Constants(String refValue) {
+        this.refValue = refValue;
+    }
+
+    public Constants(JsonNode constantsDef) {
+        this.constantsDef = constantsDef;
+    }
+
     public String getRefValue() {
         return refValue;
     }

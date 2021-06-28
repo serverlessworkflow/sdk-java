@@ -21,10 +21,6 @@
         "type": "object",
         "$ref": "../events/onevents.json"
       }
-    },
-    "timeout": {
-      "type": "string",
-      "description": "Time period to wait for incoming events (ISO 8601 format)"
     }
   },
   "required": [

@@ -34,6 +34,7 @@ import io.serverlessworkflow.api.start.Start;
 import io.serverlessworkflow.api.states.DefaultState;
 import io.serverlessworkflow.api.states.OperationState;
 import io.serverlessworkflow.api.states.ParallelState;
+import io.serverlessworkflow.api.timeouts.TimeoutsDefinition;
 import io.serverlessworkflow.api.transitions.Transition;
 import io.serverlessworkflow.api.workflow.*;
 

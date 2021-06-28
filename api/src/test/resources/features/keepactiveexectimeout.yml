@@ -2,8 +2,9 @@ id: keepactiveexectimeout
 name: Keep Active and Exec Timeout Test Workflow
 version: '1.0'
 specVersion: '0.7'
-execTimeout:
-  duration: PT1H
-  runBefore: GenerateReport
+timeouts:
+  workflowExecTimeout:
+    duration: PT1H
+    runBefore: GenerateReport
 keepActive: true
 states: []

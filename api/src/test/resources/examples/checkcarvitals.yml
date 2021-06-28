@@ -30,7 +30,8 @@ states:
           - StopVitalsCheck
         eventDataFilter:
           toStateData: "${ .stopReceived }"
-    timeout: PT2M
+    timeouts:
+      eventTimeout: PT2M
     transition: ShouldStopOrContinue
   - name: ShouldStopOrContinue
     type: switch

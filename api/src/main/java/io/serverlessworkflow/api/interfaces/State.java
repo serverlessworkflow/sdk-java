@@ -19,6 +19,7 @@ import io.serverlessworkflow.api.end.End;
 import io.serverlessworkflow.api.error.Error;
 import io.serverlessworkflow.api.filters.StateDataFilter;
 import io.serverlessworkflow.api.states.DefaultState.Type;
+import io.serverlessworkflow.api.timeouts.TimeoutsDefinition;
 import io.serverlessworkflow.api.transitions.Transition;
 
 import java.util.List;
@@ -43,4 +44,6 @@ public interface State {
     String getCompensatedBy();
 
     Map<String, String> getMetadata();
+
+    TimeoutsDefinition getTimeouts();
 }

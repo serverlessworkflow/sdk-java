@@ -24,7 +24,8 @@ states:
         arguments:
           customer: "${ .customer }"
     eventRef: CreditCheckCompletedEvent
-    timeout: PT15M
+    timeouts:
+      stateExecTimeout: PT15M
     transition: EvaluateDecision
   - name: EvaluateDecision
     type: switch
