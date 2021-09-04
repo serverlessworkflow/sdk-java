@@ -7,9 +7,7 @@
       "$ref": "workflowexectimeout.json"
     },
     "stateExecTimeout": {
-      "type": "string",
-      "description": "State execution timeout duration (ISO 8601 duration format)",
-      "minLength": 1
+      "$ref": "stateexectimeout.json"
     },
     "actionExecTimeout": {
       "type": "string",
