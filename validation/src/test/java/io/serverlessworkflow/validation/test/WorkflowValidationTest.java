@@ -19,7 +19,7 @@ import io.serverlessworkflow.api.Workflow;
 import io.serverlessworkflow.api.end.End;
 import io.serverlessworkflow.api.interfaces.WorkflowValidator;
 import io.serverlessworkflow.api.start.Start;
-import io.serverlessworkflow.api.states.DelayState;
+import io.serverlessworkflow.api.states.SleepState;
 import io.serverlessworkflow.api.validation.ValidationError;
 import io.serverlessworkflow.validation.WorkflowValidatorImpl;
 import org.junit.jupiter.api.Assertions;
@@ -28,7 +28,7 @@ import org.junit.jupiter.api.Test;
 import java.util.Arrays;
 import java.util.List;
 
-import static io.serverlessworkflow.api.states.DefaultState.Type.DELAY;
+import static io.serverlessworkflow.api.states.DefaultState.Type.SLEEP;
 
 public class WorkflowValidationTest {
 
@@ -58,11 +58,11 @@ public class WorkflowValidationTest {
                         new Start()
                 )
                 .withStates(Arrays.asList(
-                        new DelayState().withName("delayState").withType(DELAY)
+                        new SleepState().withName("sleepState").withType(SLEEP)
                                 .withEnd(
                                         new End()
                                 )
-                                .withTimeDelay("PT1M")
+                                .withDuration("PT1M")
                         )
                 );
 

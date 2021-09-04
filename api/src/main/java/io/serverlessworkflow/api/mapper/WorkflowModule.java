@@ -63,7 +63,7 @@ public class WorkflowModule extends SimpleModule {
     private void addDefaultSerializers() {
         addSerializer(new WorkflowSerializer());
         addSerializer(new EventStateSerializer());
-        addSerializer(new DelayStateSerializer());
+        addSerializer(new SleepStateSerializer());
         addSerializer(new OperationStateSerializer());
         addSerializer(new ParallelStateSerializer());
         addSerializer(new SwitchStateSerializer());

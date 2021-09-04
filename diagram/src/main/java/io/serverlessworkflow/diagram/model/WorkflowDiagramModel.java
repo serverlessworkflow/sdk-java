@@ -304,11 +304,11 @@ public class WorkflowDiagramModel {
 
             }
 
-            if (state instanceof DelayState) {
-                DelayState delayState = (DelayState) state;
+            if (state instanceof SleepState) {
+                SleepState sleepState = (SleepState) state;
 
-                modelState.addInfo("Type: Delay State");
-                modelState.addInfo("Delay: " + delayState.getTimeDelay());
+                modelState.addInfo("Type: Sleep State");
+                modelState.addInfo("Duration: " + sleepState.getDuration());
             }
 
             if (state instanceof ParallelState) {

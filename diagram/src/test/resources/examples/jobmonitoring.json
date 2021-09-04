@@ -64,8 +64,8 @@
     },
     {
       "name": "WaitForCompletion",
-      "type": "delay",
-      "timeDelay": "PT5S",
+      "type": "sleep",
+      "duration": "PT5S",
       "transition": "GetJobStatus"
     },
     {
