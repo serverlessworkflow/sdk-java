@@ -16,8 +16,6 @@ states:
     type: operation
     actions: []
     onErrors:
-      - error: TimeoutError
-        code: '500'
-        retryRef: Test Retries
+      - errorRef: TimeoutError
         end: true
     end: true

@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import io.serverlessworkflow.api.Workflow;
+import io.serverlessworkflow.api.error.ErrorDefinition;
 import io.serverlessworkflow.api.events.EventDefinition;
 import io.serverlessworkflow.api.functions.FunctionDefinition;
 import io.serverlessworkflow.api.interfaces.Extension;
@@ -102,6 +103,10 @@ public class WorkflowSerializer extends StdSerializer<Workflow> {
             gen.writeBooleanField("keepActive", workflow.isKeepActive());
         }
 
+        if (workflow.isAutoRetries()) {
+            gen.writeBooleanField("autoRetries", workflow.isAutoRetries());
+        }
+
         if (workflow.getMetadata() != null && !workflow.getMetadata().isEmpty()) {
             gen.writeObjectField("metadata",
                     workflow.getMetadata());
@@ -137,6 +142,17 @@ public class WorkflowSerializer extends StdSerializer<Workflow> {
             gen.writeEndArray();
         } else {
             gen.writeArrayFieldStart("retries");
+            gen.writeEndArray();
+        }
+
+        if (workflow.getErrors() != null && !workflow.getErrors().getErrorDefs().isEmpty()) {
+            gen.writeArrayFieldStart("errors");
+            for (ErrorDefinition error : workflow.getErrors().getErrorDefs()) {
+                gen.writeObject(error);
+            }
+            gen.writeEndArray();
+        } else {
+            gen.writeArrayFieldStart("errors");
             gen.writeEndArray();
         }
 

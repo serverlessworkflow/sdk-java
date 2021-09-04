@@ -25,7 +25,7 @@ states:
         actionDataFilter:
           results: "${ .jobuid }"
     onErrors:
-      - error: "*"
+      - errorRef: "AllErrors"
         transition: SubmitError
     stateDataFilter:
       output: "${ .jobuid }"

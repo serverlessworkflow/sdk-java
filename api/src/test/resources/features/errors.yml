@@ -1,0 +1,26 @@
+id: functionrefparams
+version: '1.0'
+specVersion: '0.7'
+name: Function Ref Params Test
+start: AddPluto
+autoRetries: true
+errors:
+  - name: ErrorA
+    code: '400'
+  - name: ErrorB
+    code: '500'
+states:
+  - name: AddPluto
+    type: operation
+    actions:
+      - functionRef: addPet
+        retryRef: testRetry
+        nonRetryableErrors:
+          - A
+          - B
+    onErrors:
+      - errorRefs:
+          - A
+          - B
+        end: true
+    end: true

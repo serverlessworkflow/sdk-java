@@ -169,34 +169,6 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
                         validation.addEndState();
                     }
 
-                    if (workflow.getRetries() != null) {
-                        List<RetryDefinition> retryDefs = workflow.getRetries().getRetryDefs();
-                        if (s.getOnErrors() == null || s.getOnErrors().isEmpty()) {
-                            addValidationError("No onErrors found for state" + s.getName() + " but retries is defined",
-                                    ValidationError.WORKFLOW_VALIDATION);
-                        } else {
-                            for (Error e : s.getOnErrors()) {
-                                if (e.getRetryRef() == null || e.getRetryRef().isEmpty()) {
-                                    addValidationError("No retryRef found for onErrors" + e.getError(),
-                                            ValidationError.WORKFLOW_VALIDATION);
-                                } else {
-                                    boolean validRetryDefinition = false;
-                                    for (RetryDefinition rd : retryDefs) {
-                                        if (rd.getName().equals(e.getRetryRef())) {
-                                            validRetryDefinition = true;
-                                            break;
-                                        }
-                                    }
-                                    if (!validRetryDefinition) {
-                                        addValidationError(e.getRetryRef() + " is not a valid retryRef",
-                                                ValidationError.WORKFLOW_VALIDATION);
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-
                     if (s instanceof OperationState) {
                         OperationState operationState = (OperationState) s;
 

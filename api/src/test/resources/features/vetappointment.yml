@@ -20,8 +20,6 @@ states:
     timeouts:
       actionExecTimeout: PT15M
     onErrors:
-      - error: TimeoutError
-        code: '500'
-        retryRef: TimeoutRetryStrategy
+      - errorRef: TimeoutError
         end: true
     end: true

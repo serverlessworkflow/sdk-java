@@ -1,0 +1,23 @@
+{
+  "type": "object",
+  "javaType": "io.serverlessworkflow.api.error.ErrorDefinition",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Domain-specific error name",
+      "minLength": 1
+    },
+    "code": {
+      "type": "string",
+      "description": "Error code. Can be used in addition to the name to help runtimes resolve to technical errors/exceptions. Should not be defined if error is set to '*'",
+      "minLength": 1
+    },
+    "description": {
+      "type": "string",
+      "description": "Error description"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

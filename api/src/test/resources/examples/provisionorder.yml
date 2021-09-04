@@ -20,11 +20,11 @@ states:
       output: "${ .exceptions }"
     transition: ApplyOrder
     onErrors:
-      - error: Missing order id
+      - errorRef: Missing order id
         transition: MissingId
-      - error: Missing order item
+      - errorRef: Missing order item
         transition: MissingItem
-      - error: Missing order quantity
+      - errorRef: Missing order quantity
         transition: MissingQuantity
   - name: MissingId
     type: operation
