@@ -35,6 +35,7 @@ import io.serverlessworkflow.api.start.Start;
 import io.serverlessworkflow.api.states.DefaultState;
 import io.serverlessworkflow.api.states.OperationState;
 import io.serverlessworkflow.api.states.ParallelState;
+import io.serverlessworkflow.api.timeouts.StateExecTimeout;
 import io.serverlessworkflow.api.transitions.Transition;
 import io.serverlessworkflow.api.workflow.*;
 
@@ -77,6 +78,7 @@ public class WorkflowModule extends SimpleModule {
         addSerializer(new ScheduleSerializer());
         addSerializer(new SubFlowRefSerializer());
         addSerializer(new AuthDefinitionSerializer());
+        addSerializer(new StateExecTimeoutSerializer());
         addSerializer(extensionSerializer);
     }
 
@@ -109,6 +111,7 @@ public class WorkflowModule extends SimpleModule {
         addDeserializer(Schedule.class, new ScheduleDeserializer(workflowPropertySource));
         addDeserializer(DataInputSchema.class, new DataInputSchemaDeserializer(workflowPropertySource));
         addDeserializer(AuthDefinition.class, new AuthDefinitionDeserializer(workflowPropertySource));
+        addDeserializer(StateExecTimeout.class, new StateExecTimeoutDeserializer(workflowPropertySource));
     }
 
     public ExtensionSerializer getExtensionSerializer() {

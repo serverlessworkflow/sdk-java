@@ -575,7 +575,7 @@ public class MarkupToWorkflowTest {
         assertNotNull(firstState.getTimeouts());
         assertNotNull(firstState.getTimeouts().getStateExecTimeout());
         assertNotNull(firstState.getTimeouts().getEventTimeout());
-        assertEquals("PT5M", firstState.getTimeouts().getStateExecTimeout());
+        assertEquals("PT5M", firstState.getTimeouts().getStateExecTimeout().getTotal());
         assertEquals("PT2M", firstState.getTimeouts().getEventTimeout());
 
 
@@ -583,7 +583,7 @@ public class MarkupToWorkflowTest {
         ParallelState secondState = (ParallelState) workflow.getStates().get(1);
         assertNotNull(secondState.getTimeouts());
         assertNotNull(secondState.getTimeouts().getStateExecTimeout());
-        assertEquals("PT5M", secondState.getTimeouts().getStateExecTimeout());
+        assertEquals("PT5M", secondState.getTimeouts().getStateExecTimeout().getTotal());
 
         assertNotNull(secondState.getBranches());
         assertEquals(2, secondState.getBranches().size());
@@ -658,7 +658,5 @@ public class MarkupToWorkflowTest {
         assertEquals("clientCredentials", auth.getOauth().getGrantType().value());
         assertEquals("${ $SECRETS.clientid }", auth.getOauth().getClientId());
         assertEquals("${ $SECRETS.clientsecret }", auth.getOauth().getClientSecret());
-
-        System.out.println("****************\n\n " + Workflow.toJson(workflow));
     }
 }
