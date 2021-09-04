@@ -15,7 +15,6 @@
         {
           "subFlowRef": {
             "workflowId": "subflowrefworkflowid",
-            "waitForCompletion": false,
             "version": "1.0"
           }
         }

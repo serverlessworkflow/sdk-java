@@ -21,8 +21,7 @@
       "actions": [
         {
           "subFlowRef": {
-            "workflowId": "vitalscheck",
-            "waitForCompletion": false
+            "workflowId": "vitalscheck"
           }
         }
       ],

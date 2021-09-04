@@ -498,13 +498,11 @@ public class MarkupToWorkflowTest {
         assertNotNull(firstAction.getSubFlowRef());
         SubFlowRef firstSubflowRef = firstAction.getSubFlowRef();
         assertEquals("subflowRefReference", firstSubflowRef.getWorkflowId());
-        assertTrue(firstSubflowRef.isWaitForCompletion());
 
         Action secondAction = operationState.getActions().get(1);
         assertNotNull(secondAction.getSubFlowRef());
         SubFlowRef secondSubflowRef = secondAction.getSubFlowRef();
         assertEquals("subflowrefworkflowid", secondSubflowRef.getWorkflowId());
-        assertFalse(secondSubflowRef.isWaitForCompletion());
         assertEquals("1.0", secondSubflowRef.getVersion());
 
     }

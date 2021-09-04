@@ -39,7 +39,6 @@ public class SubFlowRefSerializer extends StdSerializer<SubFlowRef> {
 
         if (subflowRef != null) {
             if ((subflowRef.getWorkflowId() == null || subflowRef.getWorkflowId().isEmpty())
-                    && subflowRef.isWaitForCompletion()
                     && (subflowRef.getVersion() == null || subflowRef.getVersion().isEmpty())) {
                 gen.writeString(subflowRef.getWorkflowId());
             } else {
@@ -47,10 +46,6 @@ public class SubFlowRefSerializer extends StdSerializer<SubFlowRef> {
 
                 if (subflowRef.getWorkflowId() != null && subflowRef.getWorkflowId().length() > 0) {
                     gen.writeStringField("workflowId", subflowRef.getWorkflowId());
-                }
-
-                if (!subflowRef.isWaitForCompletion()) {
-                    gen.writeBooleanField("waitForCompletion", false);
                 }
 
                 if (subflowRef.getVersion() != null && subflowRef.getVersion().length() > 0) {

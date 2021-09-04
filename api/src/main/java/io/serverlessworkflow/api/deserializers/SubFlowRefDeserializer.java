@@ -56,13 +56,8 @@ public class SubFlowRefDeserializer extends StdDeserializer<SubFlowRef> {
 
         if (!node.isObject()) {
             subflowRef.setWorkflowId(node.asText());
-            subflowRef.setWaitForCompletion(true);
             return subflowRef;
         } else {
-            if (node.get("waitForCompletion") != null) {
-                subflowRef.setWaitForCompletion(node.get("waitForCompletion").asBoolean());
-            }
-
             if (node.get("workflowId") != null) {
                 subflowRef.setWorkflowId(node.get("workflowId").asText());
             }

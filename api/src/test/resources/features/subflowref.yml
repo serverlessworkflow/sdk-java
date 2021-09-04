@@ -11,6 +11,5 @@ states:
       - subFlowRef: subflowRefReference
       - subFlowRef:
           workflowId: subflowrefworkflowid
-          waitForCompletion: false
           version: '1.0'
     end: true

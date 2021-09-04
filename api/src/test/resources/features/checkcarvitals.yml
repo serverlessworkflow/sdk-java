@@ -15,7 +15,6 @@ states:
     actions:
       - subFlowRef:
           workflowId: vitalscheck
-          waitForCompletion: false
     transition: WaitForCarStopped
   - name: WaitForCarStopped
     type: event
