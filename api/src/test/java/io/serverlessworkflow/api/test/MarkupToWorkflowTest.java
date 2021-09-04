@@ -657,4 +657,47 @@ public class MarkupToWorkflowTest {
         assertEquals("${ $SECRETS.clientid }", auth.getOauth().getClientId());
         assertEquals("${ $SECRETS.clientsecret }", auth.getOauth().getClientSecret());
     }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/features/actionssleep.json", "/features/actionssleep.yml"})
+    public void testActionsSleep(String workflowLocation) {
+        Workflow workflow = Workflow.fromSource(WorkflowTestUtils.readWorkflowFile(workflowLocation));
+
+        assertNotNull(workflow);
+        assertNotNull(workflow.getId());
+        assertNotNull(workflow.getName());
+        assertNotNull(workflow.getStates());
+
+        assertNotNull(workflow.getStates());
+        assertEquals(1, workflow.getStates().size());
+
+        State state = workflow.getStates().get(0);
+        assertTrue(state instanceof OperationState);
+
+        OperationState operationState = (OperationState) workflow.getStates().get(0);
+        assertNotNull(operationState.getActions());
+        assertEquals(2, operationState.getActions().size());
+
+        Action action1 = operationState.getActions().get(0);
+        assertNotNull(action1);
+        assertNotNull(action1.getFunctionRef());
+        assertNotNull(action1.getSleep());
+        assertEquals("PT5S", action1.getSleep().getBefore());
+        assertEquals("PT10S", action1.getSleep().getAfter());
+        FunctionRef functionRef1 = action1.getFunctionRef();
+        assertEquals("creditCheckFunction", functionRef1.getRefName());
+        assertNull(functionRef1.getArguments());
+
+        Action action2 = operationState.getActions().get(1);
+        assertNotNull(action2);
+        assertNotNull(action2.getFunctionRef());
+        assertNotNull(action2.getSleep());
+        assertEquals("PT5S", action2.getSleep().getBefore());
+        assertEquals("PT10S", action2.getSleep().getAfter());
+        FunctionRef functionRef2 = action2.getFunctionRef();
+        assertEquals("sendRejectionEmailFunction", functionRef2.getRefName());
+        assertEquals(1, functionRef2.getArguments().size());
+        assertEquals("${ .customer }", functionRef2.getArguments().get("applicant").asText());
+
+    }
 }

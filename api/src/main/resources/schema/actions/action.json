@@ -19,6 +19,9 @@
       "description": "References a sub-workflow to invoke",
       "$ref": "../functions/subflowref.json"
     },
+    "sleep": {
+      "$ref": "../sleep/sleep.json"
+    },
     "actionDataFilter": {
       "$ref": "../filters/actiondatafilter.json"
     }
