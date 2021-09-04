@@ -700,4 +700,40 @@ public class MarkupToWorkflowTest {
         assertEquals("${ .customer }", functionRef2.getArguments().get("applicant").asText());
 
     }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/features/errors.json", "/features/errors.yml"})
+    public void testErrorsParams(String workflowLocation) {
+        Workflow workflow = Workflow.fromSource(WorkflowTestUtils.readWorkflowFile(workflowLocation));
+
+        assertNotNull(workflow);
+        assertNotNull(workflow.getId());
+        assertNotNull(workflow.getName());
+        assertNotNull(workflow.getStates());
+        assertTrue(workflow.isAutoRetries());
+
+        assertNotNull(workflow.getStates());
+        assertEquals(1, workflow.getStates().size());
+
+        assertNotNull(workflow.getErrors());
+        assertEquals(2, workflow.getErrors().getErrorDefs().size());
+
+        assertTrue(workflow.getStates().get(0) instanceof OperationState);
+
+        OperationState operationState = (OperationState) workflow.getStates().get(0);
+        assertNotNull(operationState.getActions());
+        assertEquals(1, operationState.getActions().size());
+        List<Action> actions = operationState.getActions();
+        assertNotNull(actions.get(0).getFunctionRef());
+        assertEquals("addPet", actions.get(0).getFunctionRef().getRefName());
+        assertNotNull(actions.get(0).getRetryRef());
+        assertEquals("testRetry", actions.get(0).getRetryRef());
+        assertNotNull(actions.get(0).getNonRetryableErrors());
+        assertEquals(2, actions.get(0).getNonRetryableErrors().size());
+
+        assertNotNull(operationState.getOnErrors());
+        assertEquals(1, operationState.getOnErrors().size());
+        assertNotNull(operationState.getOnErrors().get(0).getErrorRefs());
+        assertEquals(2, operationState.getOnErrors().get(0).getErrorRefs().size());
+    }
 }

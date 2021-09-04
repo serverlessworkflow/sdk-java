@@ -112,6 +112,7 @@ public class WorkflowModule extends SimpleModule {
         addDeserializer(DataInputSchema.class, new DataInputSchemaDeserializer(workflowPropertySource));
         addDeserializer(AuthDefinition.class, new AuthDefinitionDeserializer(workflowPropertySource));
         addDeserializer(StateExecTimeout.class, new StateExecTimeoutDeserializer(workflowPropertySource));
+        addDeserializer(Errors.class, new ErrorsDeserializer(workflowPropertySource));
     }
 
     public ExtensionSerializer getExtensionSerializer() {

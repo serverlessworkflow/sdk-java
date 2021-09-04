@@ -50,6 +50,11 @@
       "default": false,
       "description": "If 'true', workflow instances is not terminated when there are no active execution paths. Instance can be terminated via 'terminate end definition' or reaching defined 'execTimeout'"
     },
+    "autoRetries": {
+      "type": "boolean",
+      "default": false,
+      "description": "If set to true, actions should automatically be retried on unchecked errors. Default is false"
+    },
     "metadata": {
       "$ref": "metadata/metadata.json"
     },
@@ -62,6 +67,11 @@
       "type": "object",
       "existingJavaType": "io.serverlessworkflow.api.workflow.Functions",
       "description": "Workflow function definitions"
+    },
+    "errors": {
+      "type": "object",
+      "existingJavaType": "io.serverlessworkflow.api.workflow.Errors",
+      "description": "Workflow error definitions"
     },
     "retries": {
       "type": "object",

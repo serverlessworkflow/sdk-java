@@ -2,20 +2,18 @@
   "type": "object",
   "javaType": "io.serverlessworkflow.api.error.Error",
   "properties": {
-    "error": {
+    "errorRef": {
       "type": "string",
-      "description": "Domain-specific error name, or '*' to indicate all possible errors",
+      "description": "Reference to a unique workflow error definition. Used of errorRefs is not used",
       "minLength": 1
     },
-    "code": {
-      "type": "string",
-      "description": "Error code. Can be used in addition to the name to help runtimes resolve to technical errors/exceptions. Should not be defined if error is set to '*'",
-      "minLength": 1
-    },
-    "retryRef": {
-      "type": "string",
-      "description": "References a unique name of a retry definition.",
-      "minLength": 1
+    "errorRefs": {
+      "type": "array",
+      "description": "References one or more workflow error definitions. Used if errorRef is not used",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
     },
     "transition": {
       "$ref": "../transitions/transition.json",

@@ -29,9 +29,7 @@
       },
       "onErrors": [
         {
-          "error": "TimeoutError",
-          "code": "500",
-          "retryRef": "TimeoutRetryStrategy",
+          "errorRef": "TimeoutError",
           "end": true
         }
       ],

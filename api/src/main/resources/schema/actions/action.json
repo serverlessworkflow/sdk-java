@@ -22,6 +22,26 @@
     "sleep": {
       "$ref": "../sleep/sleep.json"
     },
+    "retryRef": {
+      "type": "string",
+      "description": "References a defined workflow retry definition. If not defined the default retry policy is assumed"
+    },
+    "nonRetryableErrors": {
+      "type": "array",
+      "description": "List of unique references to defined workflow errors for which the action should not be retried. Used only when `autoRetries` is set to `true`",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    },
+    "retryableErrors": {
+      "type": "array",
+      "description": "List of unique references to defined workflow errors for which the action should be retried. Used only when `autoRetries` is set to `false`",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    },
     "actionDataFilter": {
       "$ref": "../filters/actiondatafilter.json"
     }
