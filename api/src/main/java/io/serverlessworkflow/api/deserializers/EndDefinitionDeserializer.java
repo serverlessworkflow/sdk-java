@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import io.serverlessworkflow.api.end.ContinueAs;
 import io.serverlessworkflow.api.end.End;
 import io.serverlessworkflow.api.interfaces.WorkflowPropertySource;
 import io.serverlessworkflow.api.produce.ProduceEvent;
@@ -62,6 +63,7 @@ public class EndDefinitionDeserializer extends StdDeserializer<End> {
             end.setProduceEvents(null);
             end.setCompensate(false);
             end.setTerminate(false);
+            end.setContinueAs(null);
             return node.asBoolean() ? end : null;
         } else {
             if (node.get("produceEvents") != null) {
@@ -82,6 +84,10 @@ public class EndDefinitionDeserializer extends StdDeserializer<End> {
                 end.setCompensate(node.get("compensate").asBoolean());
             } else {
                 end.setCompensate(false);
+            }
+
+            if(node.get("continueAs") != null) {
+                end.setContinueAs(mapper.treeToValue(node.get("continueAs"), ContinueAs.class));
             }
 
             return end;
