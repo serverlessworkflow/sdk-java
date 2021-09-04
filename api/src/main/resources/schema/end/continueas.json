@@ -1,0 +1,28 @@
+{
+  "type": "object",
+  "javaType": "io.serverlessworkflow.api.end.ContinueAs",
+  "description": "End definition continue as",
+  "properties": {
+    "workflowId": {
+      "type": "string",
+      "description": "Unique id of the workflow to continue execution as"
+    },
+    "version": {
+      "type": "string",
+      "description": "Version of the workflow to continue execution as",
+      "minLength": 1
+    },
+    "data": {
+      "type": [
+        "string"
+      ],
+      "description": "Expression which selects parts of the states data output to become the workflow data input of continued execution"
+    },
+    "workflowExecTimeout": {
+      "$ref": "../timeouts/workflowexectimeout.json"
+    }
+  },
+  "required": [
+    "kind"
+  ]
+}s

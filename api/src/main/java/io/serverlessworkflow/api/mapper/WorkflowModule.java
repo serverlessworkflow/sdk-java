@@ -20,6 +20,7 @@ import io.serverlessworkflow.api.auth.AuthDefinition;
 import io.serverlessworkflow.api.cron.Cron;
 import io.serverlessworkflow.api.datainputschema.DataInputSchema;
 import io.serverlessworkflow.api.deserializers.*;
+import io.serverlessworkflow.api.end.ContinueAs;
 import io.serverlessworkflow.api.end.End;
 import io.serverlessworkflow.api.events.EventDefinition;
 import io.serverlessworkflow.api.events.OnEvents;
@@ -79,6 +80,7 @@ public class WorkflowModule extends SimpleModule {
         addSerializer(new SubFlowRefSerializer());
         addSerializer(new AuthDefinitionSerializer());
         addSerializer(new StateExecTimeoutSerializer());
+        addSerializer(new ContinueAsSerializer());
         addSerializer(extensionSerializer);
     }
 
@@ -113,6 +115,7 @@ public class WorkflowModule extends SimpleModule {
         addDeserializer(AuthDefinition.class, new AuthDefinitionDeserializer(workflowPropertySource));
         addDeserializer(StateExecTimeout.class, new StateExecTimeoutDeserializer(workflowPropertySource));
         addDeserializer(Errors.class, new ErrorsDeserializer(workflowPropertySource));
+        addDeserializer(ContinueAs.class, new ContinueAsDeserializer(workflowPropertySource));
     }
 
     public ExtensionSerializer getExtensionSerializer() {

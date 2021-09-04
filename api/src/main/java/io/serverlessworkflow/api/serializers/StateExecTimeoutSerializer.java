@@ -38,7 +38,7 @@ public class StateExecTimeoutSerializer extends StdSerializer<StateExecTimeout> 
                           SerializerProvider provider) throws IOException {
 
         if (stateExecTimeout != null) {
-            if ((stateExecTimeout.getTotal() != null && stateExecTimeout.getTotal().isEmpty())
+            if ((stateExecTimeout.getTotal() != null && !stateExecTimeout.getTotal().isEmpty())
                     && (stateExecTimeout.getSingle() == null || stateExecTimeout.getSingle().isEmpty())) {
                 gen.writeString(stateExecTimeout.getTotal());
             } else {
