@@ -25,14 +25,14 @@ import io.serverlessworkflow.api.interfaces.State;
 import io.serverlessworkflow.api.produce.ProduceEvent;
 import io.serverlessworkflow.api.schedule.Schedule;
 import io.serverlessworkflow.api.start.Start;
-import io.serverlessworkflow.api.states.DelayState;
+import io.serverlessworkflow.api.states.SleepState;
 import io.serverlessworkflow.api.workflow.Events;
 import io.serverlessworkflow.api.workflow.Functions;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 
-import static io.serverlessworkflow.api.states.DefaultState.Type.DELAY;
+import static io.serverlessworkflow.api.states.DefaultState.Type.SLEEP;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class WorkflowToMarkupTest {
@@ -44,14 +44,14 @@ public class WorkflowToMarkupTest {
                         new Schedule().withInterval("PT1S")
                 ))
                 .withStates(Arrays.asList(
-                        new DelayState().withName("delayState").withType(DELAY)
+                        new SleepState().withName("sleepState").withType(SLEEP)
                                 .withEnd(
                                         new End().withTerminate(true).withCompensate(true)
                                                 .withProduceEvents(Arrays.asList(
                                                         new ProduceEvent().withEventRef("someEvent")
                                                 ))
                                 )
-                                .withTimeDelay("PT1M")
+                                .withDuration("PT1M")
                         )
                 );
 
@@ -59,7 +59,7 @@ public class WorkflowToMarkupTest {
         assertNotNull(workflow.getStart());
         assertEquals(1, workflow.getStates().size());
         State state = workflow.getStates().get(0);
-        assertTrue(state instanceof DelayState);
+        assertTrue(state instanceof SleepState);
         assertNotNull(state.getEnd());
 
         assertNotNull(Workflow.toJson(workflow));
@@ -78,11 +78,11 @@ public class WorkflowToMarkupTest {
                                 .withOperation("testSwaggerDef#testOperationId")))
                 )
                 .withStates(Arrays.asList(
-                        new DelayState().withName("delayState").withType(DELAY)
+                        new SleepState().withName("delayState").withType(SLEEP)
                                 .withEnd(
                                         new End()
                                 )
-                                .withTimeDelay("PT1M")
+                                .withDuration("PT1M")
                         )
                 );
 
@@ -90,7 +90,7 @@ public class WorkflowToMarkupTest {
         assertNotNull(workflow.getStart());
         assertEquals(1, workflow.getStates().size());
         State state = workflow.getStates().get(0);
-        assertTrue(state instanceof DelayState);
+        assertTrue(state instanceof SleepState);
         assertNotNull(workflow.getFunctions());
         assertEquals(1, workflow.getFunctions().getFunctionDefs().size());
         assertEquals("testFunction", workflow.getFunctions().getFunctionDefs().get(0).getName());
@@ -115,11 +115,11 @@ public class WorkflowToMarkupTest {
                                 .withOperation("testSwaggerDef#testOperationId")))
                 )
                 .withStates(Arrays.asList(
-                        new DelayState().withName("delayState").withType(DELAY)
+                        new SleepState().withName("delayState").withType(SLEEP)
                                 .withEnd(
                                         new End()
                                 )
-                                .withTimeDelay("PT1M")
+                                .withDuration("PT1M")
                         )
                 );
 
@@ -127,7 +127,7 @@ public class WorkflowToMarkupTest {
         assertNotNull(workflow.getStart());
         assertEquals(1, workflow.getStates().size());
         State state = workflow.getStates().get(0);
-        assertTrue(state instanceof DelayState);
+        assertTrue(state instanceof SleepState);
         assertNotNull(workflow.getFunctions());
         assertEquals(1, workflow.getFunctions().getFunctionDefs().size());
         assertEquals("testFunction", workflow.getFunctions().getFunctionDefs().get(0).getName());

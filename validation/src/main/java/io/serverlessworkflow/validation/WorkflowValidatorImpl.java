@@ -298,10 +298,10 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
                         }
                     }
 
-                    if (s instanceof DelayState) {
-                        DelayState delayState = (DelayState) s;
-                        if (delayState.getTimeDelay() == null || delayState.getTimeDelay().length() < 1) {
-                            addValidationError("Delay state should have a non-empty time delay",
+                    if (s instanceof SleepState) {
+                        SleepState sleepState = (SleepState) s;
+                        if (sleepState.getDuration() == null || sleepState.getDuration().length() < 1) {
+                            addValidationError("Sleep state should have a non-empty time delay",
                                     ValidationError.WORKFLOW_VALIDATION);
                         }
                     }

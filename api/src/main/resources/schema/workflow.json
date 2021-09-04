@@ -92,8 +92,8 @@
         "existingJavaType": "io.serverlessworkflow.api.interfaces.State",
         "anyOf": [
           {
-            "title": "Delay State",
-            "$ref": "states/delaystate.json"
+            "title": "Sleep State",
+            "$ref": "states/sleepstate.json"
           },
           {
             "title": "Event State",

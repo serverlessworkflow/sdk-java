@@ -80,9 +80,9 @@ public class StateDeserializer extends StdDeserializer<State> {
             case SWITCH:
                 return mapper.treeToValue(node,
                         SwitchState.class);
-            case DELAY:
+            case SLEEP:
                 return mapper.treeToValue(node,
-                        DelayState.class);
+                        SleepState.class);
             case PARALLEL:
                 return mapper.treeToValue(node,
                         ParallelState.class);

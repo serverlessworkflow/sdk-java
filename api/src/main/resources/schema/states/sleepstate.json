@@ -1,6 +1,6 @@
 {
   "type": "object",
-  "javaType": "io.serverlessworkflow.api.states.DelayState",
+  "javaType": "io.serverlessworkflow.api.states.SleepState",
   "javaInterfaces": [
     "io.serverlessworkflow.api.interfaces.State"
   ],
@@ -9,9 +9,9 @@
     "$ref": "defaultstate.json"
   },
   "properties": {
-    "timeDelay": {
+    "duration": {
       "type": "string",
-      "description": "Amount of time (ISO 8601 format) to delay"
+      "description": "Duration (ISO 8601 duration format) to sleep"
     },
     "usedForCompensation": {
       "type": "boolean",
@@ -20,6 +20,6 @@
     }
   },
   "required": [
-    "timeDelay"
+    "duration"
   ]
 }

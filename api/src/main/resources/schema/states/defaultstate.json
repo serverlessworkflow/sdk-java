@@ -22,7 +22,7 @@
         "event",
         "operation",
         "switch",
-        "delay",
+        "sleep",
         "parallel",
         "subflow",
         "inject",
