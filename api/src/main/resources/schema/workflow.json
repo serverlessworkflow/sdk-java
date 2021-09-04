@@ -81,6 +81,9 @@
     "timeouts": {
       "$ref": "timeouts/timeoutsdef.json"
     },
+    "auth": {
+      "$ref": "auth/auth.json"
+    },
     "states": {
       "type": "array",
       "description": "State Definitions",

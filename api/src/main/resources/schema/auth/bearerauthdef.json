@@ -1,0 +1,17 @@
+{
+  "type": "object",
+  "javaType": "io.serverlessworkflow.api.auth.BearerAuthDefinition",
+  "properties": {
+    "token": {
+      "type": "string",
+      "description": "String or a workflow expression. Contains the token",
+      "minLength": 1
+    },
+    "metadata": {
+      "$ref": "../metadata/metadata.json"
+    }
+  },
+  "required": [
+    "token"
+  ]
+}

@@ -16,6 +16,8 @@
 package io.serverlessworkflow.api.test;
 
 import io.serverlessworkflow.api.Workflow;
+import io.serverlessworkflow.api.auth.AuthDefinition;
+import io.serverlessworkflow.api.auth.BasicAuthDefinition;
 import io.serverlessworkflow.api.end.End;
 import io.serverlessworkflow.api.events.EventDefinition;
 import io.serverlessworkflow.api.functions.FunctionDefinition;
@@ -136,5 +138,26 @@ public class WorkflowToMarkupTest {
 
         assertNotNull(Workflow.toJson(workflow));
         assertNotNull(Workflow.toYaml(workflow));
+    }
+
+    @Test
+    public void testAuth() {
+        Workflow workflow = new Workflow().withId("test-workflow").withName("test-workflow-name").withVersion("1.0")
+                .withStart(
+                        new Start()
+                )
+                .withAuth(
+                        new AuthDefinition().withName("authname").withScheme(AuthDefinition.Scheme.BASIC)
+                                .withBasicauth(new BasicAuthDefinition().withUsername("testuser").withPassword("testPassword")));
+
+        assertNotNull(workflow);
+        assertNotNull(workflow.getAuth());
+        assertNotNull(workflow.getAuth().getName());
+        assertEquals("authname", workflow.getAuth().getName());
+        assertNotNull(workflow.getAuth().getScheme());
+        assertEquals("basic", workflow.getAuth().getScheme().value());
+        assertNotNull(workflow.getAuth().getBasicauth());
+        assertEquals("testuser", workflow.getAuth().getBasicauth().getUsername());
+        assertEquals("testPassword", workflow.getAuth().getBasicauth().getPassword());
     }
 }
