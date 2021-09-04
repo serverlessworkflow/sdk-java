@@ -40,6 +40,7 @@ public class EndDefinitionSerializer extends StdSerializer<End> {
 
         if (end != null) {
             if ((end.getProduceEvents() == null || end.getProduceEvents().size() < 1)
+                    && end.getContinueAs() == null
                     && !end.isCompensate() && !end.isTerminate()) {
                 gen.writeBoolean(true);
             } else {
@@ -59,6 +60,10 @@ public class EndDefinitionSerializer extends StdSerializer<End> {
 
                 if (end.isCompensate()) {
                     gen.writeBooleanField("compensate", true);
+                }
+
+                if(end.getContinueAs() != null) {
+                    gen.writeObjectField("continueAs", end.getContinueAs());
                 }
 
                 gen.writeEndObject();

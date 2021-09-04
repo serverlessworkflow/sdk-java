@@ -22,6 +22,7 @@ import io.serverlessworkflow.api.auth.AuthDefinition;
 import io.serverlessworkflow.api.branches.Branch;
 import io.serverlessworkflow.api.datainputschema.DataInputSchema;
 import io.serverlessworkflow.api.defaultdef.DefaultConditionDefinition;
+import io.serverlessworkflow.api.end.End;
 import io.serverlessworkflow.api.functions.FunctionDefinition;
 import io.serverlessworkflow.api.functions.FunctionRef;
 import io.serverlessworkflow.api.functions.SubFlowRef;
@@ -735,5 +736,53 @@ public class MarkupToWorkflowTest {
         assertEquals(1, operationState.getOnErrors().size());
         assertNotNull(operationState.getOnErrors().get(0).getErrorRefs());
         assertEquals(2, operationState.getOnErrors().get(0).getErrorRefs().size());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/features/continueasstring.json", "/features/continueasstring.yml"})
+    public void testContinueAsString(String workflowLocation) {
+        Workflow workflow = Workflow.fromSource(WorkflowTestUtils.readWorkflowFile(workflowLocation));
+
+        assertNotNull(workflow);
+        assertNotNull(workflow.getId());
+        assertNotNull(workflow.getName());
+        assertNotNull(workflow.getStates());
+
+        assertNotNull(workflow.getStates());
+        assertEquals(1, workflow.getStates().size());
+
+        OperationState operationState = (OperationState) workflow.getStates().get(0);
+        assertNotNull(operationState.getEnd());
+        End end = operationState.getEnd();
+        assertNotNull(end.getContinueAs());
+        assertNotNull(end.getContinueAs().getWorkflowId());
+        assertEquals("myworkflowid", end.getContinueAs().getWorkflowId());
+        
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/features/continueasobject.json", "/features/continueasobject.yml"})
+    public void testContinueAsObject(String workflowLocation) {
+        Workflow workflow = Workflow.fromSource(WorkflowTestUtils.readWorkflowFile(workflowLocation));
+
+        assertNotNull(workflow);
+        assertNotNull(workflow.getId());
+        assertNotNull(workflow.getName());
+        assertNotNull(workflow.getStates());
+
+        assertNotNull(workflow.getStates());
+        assertEquals(1, workflow.getStates().size());
+
+        OperationState operationState = (OperationState) workflow.getStates().get(0);
+        assertNotNull(operationState.getEnd());
+        End end = operationState.getEnd();
+        assertNotNull(end.getContinueAs());
+        assertNotNull(end.getContinueAs().getWorkflowId());
+        assertEquals("myworkflowid", end.getContinueAs().getWorkflowId());
+        assertEquals("1.0", end.getContinueAs().getVersion());
+        assertEquals("${ .data }", end.getContinueAs().getData());
+        assertNotNull(end.getContinueAs().getWorkflowExecTimeout());
+        assertEquals("PT1M", end.getContinueAs().getWorkflowExecTimeout().getDuration());
+
     }
 }

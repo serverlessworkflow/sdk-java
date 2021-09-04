@@ -20,6 +20,9 @@
       "type": "boolean",
       "default": false,
       "description": "If set to true, triggers workflow compensation when before workflow executin completes. Default is false"
+    },
+    "continueAs": {
+      "$ref": "continueas.json"
     }
   },
   "required": [
