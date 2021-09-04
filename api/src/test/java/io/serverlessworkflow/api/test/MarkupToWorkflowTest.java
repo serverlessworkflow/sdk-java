@@ -18,6 +18,7 @@ package io.serverlessworkflow.api.test;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.serverlessworkflow.api.Workflow;
 import io.serverlessworkflow.api.actions.Action;
+import io.serverlessworkflow.api.auth.AuthDefinition;
 import io.serverlessworkflow.api.branches.Branch;
 import io.serverlessworkflow.api.datainputschema.DataInputSchema;
 import io.serverlessworkflow.api.defaultdef.DefaultConditionDefinition;
@@ -596,5 +597,68 @@ public class MarkupToWorkflowTest {
         assertNotNull(branches.get(1).getTimeouts().getBranchExecTimeout());
         assertEquals("PT4S", branches.get(1).getTimeouts().getBranchExecTimeout());
 
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/features/authbasic.json", "/features/authbasic.yml"})
+    public void testAuthBasic(String workflowLocation) {
+        Workflow workflow = Workflow.fromSource(WorkflowTestUtils.readWorkflowFile(workflowLocation));
+
+        assertNotNull(workflow);
+        assertNotNull(workflow.getId());
+        assertNotNull(workflow.getName());
+
+        assertNotNull(workflow.getAuth());
+        AuthDefinition auth = workflow.getAuth();
+        assertNotNull(auth.getName());
+        assertEquals("authname", auth.getName());
+        assertNotNull(auth.getScheme());
+        assertEquals("basic", auth.getScheme().value());
+        assertNotNull(auth.getBasicauth());
+        assertEquals("testuser", auth.getBasicauth().getUsername());
+        assertEquals("testpassword", auth.getBasicauth().getPassword());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/features/authbearer.json", "/features/authbearer.yml"})
+    public void testAuthBearer(String workflowLocation) {
+        Workflow workflow = Workflow.fromSource(WorkflowTestUtils.readWorkflowFile(workflowLocation));
+
+        assertNotNull(workflow);
+        assertNotNull(workflow.getId());
+        assertNotNull(workflow.getName());
+
+        assertNotNull(workflow.getAuth());
+        AuthDefinition auth = workflow.getAuth();
+        assertNotNull(auth.getName());
+        assertEquals("authname", auth.getName());
+        assertNotNull(auth.getScheme());
+        assertEquals("bearer", auth.getScheme().value());
+        assertNotNull(auth.getBearerauth());
+        assertEquals("testtoken", auth.getBearerauth().getToken());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/features/authoauth.json", "/features/authoauth.yml"})
+    public void testAuthOAuth(String workflowLocation) {
+        Workflow workflow = Workflow.fromSource(WorkflowTestUtils.readWorkflowFile(workflowLocation));
+
+        assertNotNull(workflow);
+        assertNotNull(workflow.getId());
+        assertNotNull(workflow.getName());
+
+        assertNotNull(workflow.getAuth());
+        AuthDefinition auth = workflow.getAuth();
+        assertNotNull(auth.getName());
+        assertEquals("authname", auth.getName());
+        assertNotNull(auth.getScheme());
+        assertEquals("oauth2", auth.getScheme().value());
+        assertNotNull(auth.getOauth());
+        assertEquals("testauthority", auth.getOauth().getAuthority());
+        assertEquals("clientCredentials", auth.getOauth().getGrantType().value());
+        assertEquals("${ $SECRETS.clientid }", auth.getOauth().getClientId());
+        assertEquals("${ $SECRETS.clientsecret }", auth.getOauth().getClientSecret());
+
+        System.out.println("****************\n\n " + Workflow.toJson(workflow));
     }
 }

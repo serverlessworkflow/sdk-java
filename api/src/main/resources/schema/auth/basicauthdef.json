@@ -1,0 +1,23 @@
+{
+  "type": "object",
+  "javaType": "io.serverlessworkflow.api.auth.BasicAuthDefinition",
+  "properties": {
+    "username": {
+      "type": "string",
+      "description": "String or a workflow expression. Contains the user name",
+      "minLength": 1
+    },
+    "password": {
+      "type": "string",
+      "description": "String or a workflow expression. Contains the user password",
+      "minLength": 1
+    },
+    "metadata": {
+      "$ref": "../metadata/metadata.json"
+    }
+  },
+  "required": [
+    "username",
+    "password"
+  ]
+}
