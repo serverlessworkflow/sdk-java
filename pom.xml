@@ -63,7 +63,7 @@
         <version.thymeleaf>3.0.11.RELEASE</version.thymeleaf>
         <version.plantuml>8059</version.plantuml>
         <version.graphviz>0.17.0</version.graphviz>
-        <version.fmt-maven-plugin>2.12</version.fmt-maven-plugin>
+        <version.fmt-maven-plugin>2.9</version.fmt-maven-plugin>
 
         <!-- Checkstyle props -->
         <checkstyle.failOnViolation>true</checkstyle.failOnViolation>
