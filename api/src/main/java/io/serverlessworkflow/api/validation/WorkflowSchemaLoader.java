@@ -23,16 +23,18 @@ import org.json.JSONObject;
 import org.json.JSONTokener;
 
 public class WorkflowSchemaLoader {
-    private static final JSONObject workflowSchema = new JSONObject(new JSONTokener(
-            WorkflowSchemaLoader.class.getResourceAsStream("/schema/workflow.json")));
+  private static final JSONObject workflowSchema =
+      new JSONObject(
+          new JSONTokener(WorkflowSchemaLoader.class.getResourceAsStream("/schema/workflow.json")));
 
-    public static Schema getWorkflowSchema() {
-        SchemaLoader schemaLoader = SchemaLoader.builder()
-                .schemaClient(new ResourceSchemaClient(new DefaultSchemaClient()))
-                .schemaJson(workflowSchema)
-                .resolutionScope("classpath:schema")
-                .draftV7Support()
-                .build();
-        return schemaLoader.load().build();
-    }
+  public static Schema getWorkflowSchema() {
+    SchemaLoader schemaLoader =
+        SchemaLoader.builder()
+            .schemaClient(new ResourceSchemaClient(new DefaultSchemaClient()))
+            .schemaJson(workflowSchema)
+            .resolutionScope("classpath:schema")
+            .draftV7Support()
+            .build();
+    return schemaLoader.load().build();
+  }
 }

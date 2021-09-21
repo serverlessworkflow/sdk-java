@@ -22,31 +22,28 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import io.serverlessworkflow.api.states.DefaultState;
 import io.serverlessworkflow.api.states.SleepState;
-
 import java.io.IOException;
 
 public class SleepStateSerializer extends StdSerializer<SleepState> {
 
-    public SleepStateSerializer() {
-        this(SleepState.class);
-    }
+  public SleepStateSerializer() {
+    this(SleepState.class);
+  }
 
-    protected SleepStateSerializer(Class<SleepState> t) {
-        super(t);
-    }
+  protected SleepStateSerializer(Class<SleepState> t) {
+    super(t);
+  }
 
-    @Override
-    public void serialize(SleepState delayState,
-                          JsonGenerator gen,
-                          SerializerProvider provider) throws IOException {
+  @Override
+  public void serialize(SleepState delayState, JsonGenerator gen, SerializerProvider provider)
+      throws IOException {
 
-        // set defaults for delay state
-        delayState.setType(DefaultState.Type.SLEEP);
+    // set defaults for delay state
+    delayState.setType(DefaultState.Type.SLEEP);
 
-        // serialize after setting default bean values...
-        BeanSerializerFactory.instance.createSerializer(provider,
-                TypeFactory.defaultInstance().constructType(SleepState.class)).serialize(delayState,
-                gen,
-                provider);
-    }
+    // serialize after setting default bean values...
+    BeanSerializerFactory.instance
+        .createSerializer(provider, TypeFactory.defaultInstance().constructType(SleepState.class))
+        .serialize(delayState, gen, provider);
+  }
 }

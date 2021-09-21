@@ -16,5 +16,5 @@
 package io.serverlessworkflow.api.interfaces;
 
 public interface Extension {
-    String getExtensionId();
+  String getExtensionId();
 }

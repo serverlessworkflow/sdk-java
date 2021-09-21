@@ -17,35 +17,33 @@ package io.serverlessworkflow.api.workflow;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
-import java.util.List;
-
 public class Constants {
-    private String refValue;
-    private JsonNode constantsDef;
+  private String refValue;
+  private JsonNode constantsDef;
 
-    public Constants() {}
+  public Constants() {}
 
-    public Constants(String refValue) {
-        this.refValue = refValue;
-    }
+  public Constants(String refValue) {
+    this.refValue = refValue;
+  }
 
-    public Constants(JsonNode constantsDef) {
-        this.constantsDef = constantsDef;
-    }
+  public Constants(JsonNode constantsDef) {
+    this.constantsDef = constantsDef;
+  }
 
-    public String getRefValue() {
-        return refValue;
-    }
+  public String getRefValue() {
+    return refValue;
+  }
 
-    public void setRefValue(String refValue) {
-        this.refValue = refValue;
-    }
+  public void setRefValue(String refValue) {
+    this.refValue = refValue;
+  }
 
-    public JsonNode getConstantsDef() {
-        return constantsDef;
-    }
+  public JsonNode getConstantsDef() {
+    return constantsDef;
+  }
 
-    public void setConstantsDef(JsonNode constantsDef) {
-        this.constantsDef = constantsDef;
-    }
+  public void setConstantsDef(JsonNode constantsDef) {
+    this.constantsDef = constantsDef;
+  }
 }

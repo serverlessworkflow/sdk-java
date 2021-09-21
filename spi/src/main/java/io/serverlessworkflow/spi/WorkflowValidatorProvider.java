@@ -16,36 +16,36 @@
 package io.serverlessworkflow.spi;
 
 import io.serverlessworkflow.api.interfaces.WorkflowValidator;
+import java.util.Iterator;
+import java.util.ServiceLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Iterator;
-import java.util.ServiceLoader;
-
 public class WorkflowValidatorProvider {
-    private WorkflowValidator workflowValidator;
+  private WorkflowValidator workflowValidator;
 
-    private static Logger logger = LoggerFactory.getLogger(WorkflowValidatorProvider.class);
+  private static Logger logger = LoggerFactory.getLogger(WorkflowValidatorProvider.class);
 
-    public WorkflowValidatorProvider() {
-        ServiceLoader<WorkflowValidator> foundWorkflowValidators = ServiceLoader.load(WorkflowValidator.class);
-        Iterator<WorkflowValidator> it = foundWorkflowValidators.iterator();
-        if (it.hasNext()) {
-            workflowValidator = it.next();
-            logger.info("Found workflow validator: " + workflowValidator.toString());
-        }
+  public WorkflowValidatorProvider() {
+    ServiceLoader<WorkflowValidator> foundWorkflowValidators =
+        ServiceLoader.load(WorkflowValidator.class);
+    Iterator<WorkflowValidator> it = foundWorkflowValidators.iterator();
+    if (it.hasNext()) {
+      workflowValidator = it.next();
+      logger.info("Found workflow validator: " + workflowValidator.toString());
     }
+  }
 
-    private static class LazyHolder {
+  private static class LazyHolder {
 
-        static final WorkflowValidatorProvider INSTANCE = new WorkflowValidatorProvider();
-    }
+    static final WorkflowValidatorProvider INSTANCE = new WorkflowValidatorProvider();
+  }
 
-    public static WorkflowValidatorProvider getInstance() {
-        return LazyHolder.INSTANCE;
-    }
+  public static WorkflowValidatorProvider getInstance() {
+    return LazyHolder.INSTANCE;
+  }
 
-    public WorkflowValidator get() {
-        return workflowValidator;
-    }
+  public WorkflowValidator get() {
+    return workflowValidator;
+  }
 }

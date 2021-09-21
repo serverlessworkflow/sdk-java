@@ -24,78 +24,74 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.serverlessworkflow.api.interfaces.WorkflowPropertySource;
 import io.serverlessworkflow.api.utils.Utils;
 import io.serverlessworkflow.api.workflow.Constants;
+import java.io.IOException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+public class ConstantsDeserializer extends StdDeserializer<Constants> {
 
-public class ConstantsDeserializer extends StdDeserializer<Constants>  {
+  private static final long serialVersionUID = 510l;
+  private static Logger logger = LoggerFactory.getLogger(ConstantsDeserializer.class);
 
-    private static final long serialVersionUID = 510l;
-    private static Logger logger = LoggerFactory.getLogger(ConstantsDeserializer.class);
+  @SuppressWarnings("unused")
+  private WorkflowPropertySource context;
 
-    @SuppressWarnings("unused")
-    private WorkflowPropertySource context;
+  public ConstantsDeserializer() {
+    this(Constants.class);
+  }
 
-    public ConstantsDeserializer() {
-        this(Constants.class);
-    }
+  public ConstantsDeserializer(Class<?> vc) {
+    super(vc);
+  }
 
-    public ConstantsDeserializer(Class<?> vc) {
-        super(vc);
-    }
+  public ConstantsDeserializer(WorkflowPropertySource context) {
+    this(Constants.class);
+    this.context = context;
+  }
 
-    public ConstantsDeserializer(WorkflowPropertySource context) {
-        this(Constants.class);
-        this.context = context;
-    }
+  @Override
+  public Constants deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
 
-    @Override
-    public Constants deserialize(JsonParser jp,
-                               DeserializationContext ctxt) throws IOException {
+    ObjectMapper mapper = (ObjectMapper) jp.getCodec();
+    JsonNode node = jp.getCodec().readTree(jp);
 
-        ObjectMapper mapper = (ObjectMapper) jp.getCodec();
-        JsonNode node = jp.getCodec().readTree(jp);
+    Constants constants = new Constants();
+    JsonNode constantsDefinition = null;
 
-        Constants constants = new Constants();
-        JsonNode constantsDefinition = null;
+    if (node.isObject()) {
+      constantsDefinition = node;
+    } else {
+      String constantsFileDef = node.asText();
+      String constantsFileSrc = Utils.getResourceFileAsString(constantsFileDef);
+      JsonNode constantsRefNode;
+      ObjectMapper jsonWriter = new ObjectMapper();
+      if (constantsFileSrc != null && constantsFileSrc.trim().length() > 0) {
+        // if its a yaml def convert to json first
+        if (!constantsFileSrc.trim().startsWith("{")) {
+          // convert yaml to json to validate
+          ObjectMapper yamlReader = new ObjectMapper(new YAMLFactory());
+          Object obj = yamlReader.readValue(constantsFileSrc, Object.class);
 
-        if (node.isObject()) {
-            constantsDefinition = node;
+          constantsRefNode =
+              jsonWriter.readTree(new JSONObject(jsonWriter.writeValueAsString(obj)).toString());
         } else {
-            String constantsFileDef = node.asText();
-            String constantsFileSrc = Utils.getResourceFileAsString(constantsFileDef);
-            JsonNode constantsRefNode;
-            ObjectMapper jsonWriter = new ObjectMapper();
-            if (constantsFileSrc != null && constantsFileSrc.trim().length() > 0) {
-                // if its a yaml def convert to json first
-                if (!constantsFileSrc.trim().startsWith("{")) {
-                    // convert yaml to json to validate
-                    ObjectMapper yamlReader = new ObjectMapper(new YAMLFactory());
-                    Object obj = yamlReader.readValue(constantsFileSrc, Object.class);
-
-                    constantsRefNode = jsonWriter.readTree(new JSONObject(jsonWriter.writeValueAsString(obj)).toString());
-                } else {
-                    constantsRefNode = jsonWriter.readTree(new JSONObject(constantsFileSrc).toString());
-                }
-
-                JsonNode refConstants = constantsRefNode.get("constants");
-                if (refConstants != null) {
-                    constantsDefinition = refConstants;
-                } else {
-                    logger.error("Unable to find constants definitions in reference file: {}", constantsFileSrc);
-                }
-
-            } else {
-                logger.error("Unable to load constants defs reference file: {}", constantsFileSrc);
-            }
-
+          constantsRefNode = jsonWriter.readTree(new JSONObject(constantsFileSrc).toString());
         }
-        constants.setConstantsDef(constantsDefinition);
-        return constants;
 
+        JsonNode refConstants = constantsRefNode.get("constants");
+        if (refConstants != null) {
+          constantsDefinition = refConstants;
+        } else {
+          logger.error(
+              "Unable to find constants definitions in reference file: {}", constantsFileSrc);
+        }
+
+      } else {
+        logger.error("Unable to load constants defs reference file: {}", constantsFileSrc);
+      }
     }
+    constants.setConstantsDef(constantsDefinition);
+    return constants;
+  }
 }

@@ -18,11 +18,11 @@ package io.serverlessworkflow.api.interfaces;
 import io.serverlessworkflow.api.Workflow;
 
 public interface WorkflowDiagram {
-    WorkflowDiagram setWorkflow(Workflow workflow);
+  WorkflowDiagram setWorkflow(Workflow workflow);
 
-    WorkflowDiagram setSource(String source);
+  WorkflowDiagram setSource(String source);
 
-    String getSvgDiagram() throws Exception;
+  String getSvgDiagram() throws Exception;
 
-    WorkflowDiagram showLegend(boolean showLegend);
+  WorkflowDiagram showLegend(boolean showLegend);
 }

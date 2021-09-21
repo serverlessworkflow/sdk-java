@@ -25,58 +25,56 @@ import io.serverlessworkflow.api.auth.BasicAuthDefinition;
 import io.serverlessworkflow.api.auth.BearerAuthDefinition;
 import io.serverlessworkflow.api.auth.OauthDefinition;
 import io.serverlessworkflow.api.interfaces.WorkflowPropertySource;
-
 import java.io.IOException;
 
 public class AuthDefinitionDeserializer extends StdDeserializer<AuthDefinition> {
 
-    private static final long serialVersionUID = 510l;
+  private static final long serialVersionUID = 510l;
 
-    @SuppressWarnings("unused")
-    private WorkflowPropertySource context;
+  @SuppressWarnings("unused")
+  private WorkflowPropertySource context;
 
-    public AuthDefinitionDeserializer() {
-        this(AuthDefinition.class);
+  public AuthDefinitionDeserializer() {
+    this(AuthDefinition.class);
+  }
+
+  public AuthDefinitionDeserializer(Class<?> vc) {
+    super(vc);
+  }
+
+  public AuthDefinitionDeserializer(WorkflowPropertySource context) {
+    this(AuthDefinition.class);
+    this.context = context;
+  }
+
+  @Override
+  public AuthDefinition deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
+
+    ObjectMapper mapper = (ObjectMapper) jp.getCodec();
+    JsonNode node = jp.getCodec().readTree(jp);
+
+    AuthDefinition authDefinition = new AuthDefinition();
+
+    if (node.get("name") != null) {
+      authDefinition.setName(node.get("name").asText());
     }
 
-    public AuthDefinitionDeserializer(Class<?> vc) {
-        super(vc);
+    if (node.get("scheme") != null) {
+      authDefinition.setScheme(AuthDefinition.Scheme.fromValue(node.get("scheme").asText()));
     }
 
-    public AuthDefinitionDeserializer(WorkflowPropertySource context) {
-        this(AuthDefinition.class);
-        this.context = context;
+    if (node.get("properties") != null) {
+      JsonNode propsNode = node.get("properties");
+
+      if (propsNode.get("grantType") != null) {
+        authDefinition.setOauth(mapper.treeToValue(propsNode, OauthDefinition.class));
+      } else if (propsNode.get("token") != null) {
+        authDefinition.setBearerauth(mapper.treeToValue(propsNode, BearerAuthDefinition.class));
+      } else {
+        authDefinition.setBasicauth(mapper.treeToValue(propsNode, BasicAuthDefinition.class));
+      }
     }
 
-    @Override
-    public AuthDefinition deserialize(JsonParser jp,
-                            DeserializationContext ctxt) throws IOException {
-
-        ObjectMapper mapper = (ObjectMapper) jp.getCodec();
-        JsonNode node = jp.getCodec().readTree(jp);
-
-        AuthDefinition authDefinition = new AuthDefinition();
-
-        if(node.get("name") != null) {
-            authDefinition.setName(node.get("name").asText());
-        }
-
-        if(node.get("scheme") != null) {
-            authDefinition.setScheme(AuthDefinition.Scheme.fromValue(node.get("scheme").asText()));
-        }
-
-        if(node.get("properties") != null) {
-            JsonNode propsNode = node.get("properties");
-
-            if(propsNode.get("grantType") != null) {
-                authDefinition.setOauth(mapper.treeToValue(propsNode, OauthDefinition.class));
-            } else if(propsNode.get("token") != null) {
-                authDefinition.setBearerauth(mapper.treeToValue(propsNode, BearerAuthDefinition.class));
-            } else {
-                authDefinition.setBasicauth(mapper.treeToValue(propsNode, BasicAuthDefinition.class));
-            }
-        }
-
-        return authDefinition;
-    }
+    return authDefinition;
+  }
 }

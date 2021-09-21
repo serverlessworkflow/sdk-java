@@ -19,54 +19,50 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import io.serverlessworkflow.api.auth.AuthDefinition;
-
 import java.io.IOException;
 
 public class AuthDefinitionSerializer extends StdSerializer<AuthDefinition> {
 
-    public AuthDefinitionSerializer() {
-        this(AuthDefinition.class);
-    }
+  public AuthDefinitionSerializer() {
+    this(AuthDefinition.class);
+  }
 
-    protected AuthDefinitionSerializer(Class<AuthDefinition> t) {
-        super(t);
-    }
+  protected AuthDefinitionSerializer(Class<AuthDefinition> t) {
+    super(t);
+  }
 
-    @Override
-    public void serialize(AuthDefinition authDefinition,
-                          JsonGenerator gen,
-                          SerializerProvider provider) throws IOException {
+  @Override
+  public void serialize(
+      AuthDefinition authDefinition, JsonGenerator gen, SerializerProvider provider)
+      throws IOException {
 
-        gen.writeStartObject();
-        if (authDefinition != null) {
-            if (authDefinition.getName() != null && !authDefinition.getName().isEmpty()) {
-                gen.writeStringField("name",
-                        authDefinition.getName());
-            }
+    gen.writeStartObject();
+    if (authDefinition != null) {
+      if (authDefinition.getName() != null && !authDefinition.getName().isEmpty()) {
+        gen.writeStringField("name", authDefinition.getName());
+      }
 
-            if (authDefinition.getScheme() != null) {
-                gen.writeStringField("scheme",
-                        authDefinition.getScheme().value());
-            }
+      if (authDefinition.getScheme() != null) {
+        gen.writeStringField("scheme", authDefinition.getScheme().value());
+      }
 
-            if (authDefinition.getBasicauth() != null || authDefinition.getBearerauth() != null
-                    || authDefinition.getOauth() != null) {
+      if (authDefinition.getBasicauth() != null
+          || authDefinition.getBearerauth() != null
+          || authDefinition.getOauth() != null) {
 
-                if(authDefinition.getBasicauth() != null) {
-                    gen.writeObjectField("properties", authDefinition.getBasicauth());
-                }
-
-                if(authDefinition.getBearerauth() != null) {
-                    gen.writeObjectField("properties", authDefinition.getBearerauth());
-                }
-
-                if(authDefinition.getOauth() != null) {
-                    gen.writeObjectField("properties", authDefinition.getOauth());
-                }
-
-            }
+        if (authDefinition.getBasicauth() != null) {
+          gen.writeObjectField("properties", authDefinition.getBasicauth());
         }
-        gen.writeEndObject();
-    }
-}
 
+        if (authDefinition.getBearerauth() != null) {
+          gen.writeObjectField("properties", authDefinition.getBearerauth());
+        }
+
+        if (authDefinition.getOauth() != null) {
+          gen.writeObjectField("properties", authDefinition.getOauth());
+        }
+      }
+    }
+    gen.writeEndObject();
+  }
+}

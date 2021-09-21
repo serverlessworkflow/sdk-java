@@ -22,20 +22,18 @@ import io.serverlessworkflow.api.interfaces.WorkflowPropertySource;
 
 public class BaseObjectMapper extends ObjectMapper {
 
-    private WorkflowModule workflowModule;
+  private WorkflowModule workflowModule;
 
-    public BaseObjectMapper(JsonFactory factory,
-                            WorkflowPropertySource workflowPropertySource) {
-        super(factory);
+  public BaseObjectMapper(JsonFactory factory, WorkflowPropertySource workflowPropertySource) {
+    super(factory);
 
-        workflowModule = new WorkflowModule(workflowPropertySource);
+    workflowModule = new WorkflowModule(workflowPropertySource);
 
-        configure(SerializationFeature.INDENT_OUTPUT,
-                true);
-        registerModule(workflowModule);
-    }
+    configure(SerializationFeature.INDENT_OUTPUT, true);
+    registerModule(workflowModule);
+  }
 
-    public WorkflowModule getWorkflowModule() {
-        return workflowModule;
-    }
+  public WorkflowModule getWorkflowModule() {
+    return workflowModule;
+  }
 }

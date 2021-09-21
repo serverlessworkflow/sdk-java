@@ -21,51 +21,50 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import io.serverlessworkflow.api.interfaces.WorkflowPropertySource;
 import io.serverlessworkflow.api.timeouts.StateExecTimeout;
-
 import java.io.IOException;
 
 public class StateExecTimeoutDeserializer extends StdDeserializer<StateExecTimeout> {
 
-    private static final long serialVersionUID = 510l;
+  private static final long serialVersionUID = 510l;
 
-    @SuppressWarnings("unused")
-    private WorkflowPropertySource context;
+  @SuppressWarnings("unused")
+  private WorkflowPropertySource context;
 
-    public StateExecTimeoutDeserializer() {
-        this(StateExecTimeout.class);
+  public StateExecTimeoutDeserializer() {
+    this(StateExecTimeout.class);
+  }
+
+  public StateExecTimeoutDeserializer(Class<?> vc) {
+    super(vc);
+  }
+
+  public StateExecTimeoutDeserializer(WorkflowPropertySource context) {
+    this(StateExecTimeout.class);
+    this.context = context;
+  }
+
+  @Override
+  public StateExecTimeout deserialize(JsonParser jp, DeserializationContext ctxt)
+      throws IOException {
+
+    JsonNode node = jp.getCodec().readTree(jp);
+
+    StateExecTimeout stateExecTimeout = new StateExecTimeout();
+
+    if (!node.isObject()) {
+      stateExecTimeout.setTotal(node.asText());
+      stateExecTimeout.setSingle(null);
+      return stateExecTimeout;
+    } else {
+      if (node.get("single") != null) {
+        stateExecTimeout.setSingle(node.get("single").asText());
+      }
+
+      if (node.get("total") != null) {
+        stateExecTimeout.setTotal(node.get("total").asText());
+      }
+
+      return stateExecTimeout;
     }
-
-    public StateExecTimeoutDeserializer(Class<?> vc) {
-        super(vc);
-    }
-
-    public StateExecTimeoutDeserializer(WorkflowPropertySource context) {
-        this(StateExecTimeout.class);
-        this.context = context;
-    }
-
-    @Override
-    public StateExecTimeout deserialize(JsonParser jp,
-                                        DeserializationContext ctxt) throws IOException {
-
-        JsonNode node = jp.getCodec().readTree(jp);
-
-        StateExecTimeout stateExecTimeout = new StateExecTimeout();
-
-        if (!node.isObject()) {
-            stateExecTimeout.setTotal(node.asText());
-            stateExecTimeout.setSingle(null);
-            return stateExecTimeout;
-        } else {
-            if (node.get("single") != null) {
-                stateExecTimeout.setSingle(node.get("single").asText());
-            }
-
-            if (node.get("total") != null) {
-                stateExecTimeout.setTotal(node.get("total").asText());
-            }
-
-            return stateExecTimeout;
-        }
-    }
+  }
 }

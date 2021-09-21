@@ -26,17 +26,17 @@ import org.junit.jupiter.api.Test;
 
 public class ServiceProvidersTest {
 
-    @Test
-    public void testWorkflowValidatorProvider() {
-        WorkflowValidator validator = WorkflowValidatorProvider.getInstance().get();
-        Assertions.assertNotNull(validator);
-        Assertions.assertTrue(validator instanceof TestWorkflowValidator);
-    }
+  @Test
+  public void testWorkflowValidatorProvider() {
+    WorkflowValidator validator = WorkflowValidatorProvider.getInstance().get();
+    Assertions.assertNotNull(validator);
+    Assertions.assertTrue(validator instanceof TestWorkflowValidator);
+  }
 
-    @Test
-    public void testWorkflowPropertySourceProvider() {
-        WorkflowPropertySource propertySource = WorkflowPropertySourceProvider.getInstance().get();
-        Assertions.assertNotNull(propertySource);
-        Assertions.assertTrue(propertySource instanceof TestWorkflowPropertySource);
-    }
+  @Test
+  public void testWorkflowPropertySourceProvider() {
+    WorkflowPropertySource propertySource = WorkflowPropertySourceProvider.getInstance().get();
+    Assertions.assertNotNull(propertySource);
+    Assertions.assertTrue(propertySource instanceof TestWorkflowPropertySource);
+  }
 }

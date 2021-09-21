@@ -19,48 +19,45 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import io.serverlessworkflow.api.functions.FunctionRef;
-
 import java.io.IOException;
 
 public class FunctionRefSerializer extends StdSerializer<FunctionRef> {
 
-    public FunctionRefSerializer() {
-        this(FunctionRef.class);
-    }
+  public FunctionRefSerializer() {
+    this(FunctionRef.class);
+  }
 
-    protected FunctionRefSerializer(Class<FunctionRef> t) {
-        super(t);
-    }
+  protected FunctionRefSerializer(Class<FunctionRef> t) {
+    super(t);
+  }
 
-    @Override
-    public void serialize(FunctionRef functionRef,
-                          JsonGenerator gen,
-                          SerializerProvider provider) throws IOException {
+  @Override
+  public void serialize(FunctionRef functionRef, JsonGenerator gen, SerializerProvider provider)
+      throws IOException {
 
-        if (functionRef != null) {
-            if ((functionRef.getArguments() == null || functionRef.getArguments().isEmpty())
-                    && (functionRef.getSelectionSet() == null || functionRef.getSelectionSet().isEmpty())
-                    && functionRef.getRefName() != null
-                    && functionRef.getRefName().length() > 0) {
-                gen.writeString(functionRef.getRefName());
-            } else {
-                gen.writeStartObject();
+    if (functionRef != null) {
+      if ((functionRef.getArguments() == null || functionRef.getArguments().isEmpty())
+          && (functionRef.getSelectionSet() == null || functionRef.getSelectionSet().isEmpty())
+          && functionRef.getRefName() != null
+          && functionRef.getRefName().length() > 0) {
+        gen.writeString(functionRef.getRefName());
+      } else {
+        gen.writeStartObject();
 
-                if (functionRef.getRefName() != null && functionRef.getRefName().length() > 0) {
-                    gen.writeStringField("refName", functionRef.getRefName());
-                }
-
-                if (functionRef.getArguments() != null && !functionRef.getArguments().isEmpty()) {
-                    gen.writeObjectField("arguments", functionRef.getArguments());
-                }
-
-                if (functionRef.getSelectionSet() != null && functionRef.getSelectionSet().length() > 0) {
-                    gen.writeStringField("selectionSet", functionRef.getSelectionSet());
-                }
-
-                gen.writeEndObject();
-            }
+        if (functionRef.getRefName() != null && functionRef.getRefName().length() > 0) {
+          gen.writeStringField("refName", functionRef.getRefName());
         }
-    }
-}
 
+        if (functionRef.getArguments() != null && !functionRef.getArguments().isEmpty()) {
+          gen.writeObjectField("arguments", functionRef.getArguments());
+        }
+
+        if (functionRef.getSelectionSet() != null && functionRef.getSelectionSet().length() > 0) {
+          gen.writeStringField("selectionSet", functionRef.getSelectionSet());
+        }
+
+        gen.writeEndObject();
+      }
+    }
+  }
+}

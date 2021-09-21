@@ -22,11 +22,11 @@ import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
 public class WorkflowToPlantuml {
-    public static String convert(Workflow workflow, boolean showLegend) {
-        TemplateEngine plantUmlTemplateEngine = ThymeleafConfig.templateEngine;
-        Context context = new Context();
-        context.setVariable("diagram", new WorkflowDiagramModel(workflow, showLegend));
+  public static String convert(Workflow workflow, boolean showLegend) {
+    TemplateEngine plantUmlTemplateEngine = ThymeleafConfig.templateEngine;
+    Context context = new Context();
+    context.setVariable("diagram", new WorkflowDiagramModel(workflow, showLegend));
 
-        return plantUmlTemplateEngine.process("workflow-template", context);
-    }
+    return plantUmlTemplateEngine.process("workflow-template", context);
+  }
 }

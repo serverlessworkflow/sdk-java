@@ -22,31 +22,29 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import io.serverlessworkflow.api.states.CallbackState;
 import io.serverlessworkflow.api.states.DefaultState;
-
 import java.io.IOException;
 
 public class CallbackStateSerializer extends StdSerializer<CallbackState> {
 
-    public CallbackStateSerializer() {
-        this(CallbackState.class);
-    }
+  public CallbackStateSerializer() {
+    this(CallbackState.class);
+  }
 
-    protected CallbackStateSerializer(Class<CallbackState> t) {
-        super(t);
-    }
+  protected CallbackStateSerializer(Class<CallbackState> t) {
+    super(t);
+  }
 
-    @Override
-    public void serialize(CallbackState callbackState,
-                          JsonGenerator gen,
-                          SerializerProvider provider) throws IOException {
+  @Override
+  public void serialize(CallbackState callbackState, JsonGenerator gen, SerializerProvider provider)
+      throws IOException {
 
-        // set defaults for callback state
-        callbackState.setType(DefaultState.Type.CALLBACK);
+    // set defaults for callback state
+    callbackState.setType(DefaultState.Type.CALLBACK);
 
-        // serialize after setting default bean values...
-        BeanSerializerFactory.instance.createSerializer(provider,
-                TypeFactory.defaultInstance().constructType(CallbackState.class)).serialize(callbackState,
-                gen,
-                provider);
-    }
+    // serialize after setting default bean values...
+    BeanSerializerFactory.instance
+        .createSerializer(
+            provider, TypeFactory.defaultInstance().constructType(CallbackState.class))
+        .serialize(callbackState, gen, provider);
+  }
 }

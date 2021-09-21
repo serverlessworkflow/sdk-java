@@ -18,52 +18,54 @@ package io.serverlessworkflow.diagram.model;
 import io.serverlessworkflow.diagram.utils.WorkflowDiagramUtils;
 
 public class ModelConnection {
-    private String left;
-    private String right;
-    private String desc;
+  private String left;
+  private String right;
+  private String desc;
 
-    public ModelConnection(String left, String right, String desc) {
-        this.left = left.replaceAll("\\s", "");
-        this.right = right.replaceAll("\\s", "");
-        this.desc = desc;
+  public ModelConnection(String left, String right, String desc) {
+    this.left = left.replaceAll("\\s", "");
+    this.right = right.replaceAll("\\s", "");
+    this.desc = desc;
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder retBuff = new StringBuilder();
+    retBuff.append(System.lineSeparator());
+    retBuff.append(
+        left.equals(WorkflowDiagramUtils.wfStart) ? WorkflowDiagramUtils.startEnd : left);
+    retBuff.append(WorkflowDiagramUtils.connection);
+    retBuff.append(
+        right.equals(WorkflowDiagramUtils.wfEnd) ? WorkflowDiagramUtils.startEnd : right);
+    if (desc != null && desc.trim().length() > 0) {
+      retBuff.append(WorkflowDiagramUtils.description).append(desc);
     }
+    retBuff.append(System.lineSeparator());
 
-    @Override
-    public String toString() {
-        StringBuilder retBuff = new StringBuilder();
-        retBuff.append(System.lineSeparator());
-        retBuff.append(left.equals(WorkflowDiagramUtils.wfStart) ? WorkflowDiagramUtils.startEnd : left);
-        retBuff.append(WorkflowDiagramUtils.connection);
-        retBuff.append(right.equals(WorkflowDiagramUtils.wfEnd) ? WorkflowDiagramUtils.startEnd : right);
-        if (desc != null && desc.trim().length() > 0) {
-            retBuff.append(WorkflowDiagramUtils.description).append(desc);
-        }
-        retBuff.append(System.lineSeparator());
+    return retBuff.toString();
+  }
 
-        return retBuff.toString();
-    }
+  public String getLeft() {
+    return left;
+  }
 
-    public String getLeft() {
-        return left;
-    }
+  public void setLeft(String left) {
+    this.left = left;
+  }
 
-    public void setLeft(String left) {
-        this.left = left;
-    }
+  public String getRight() {
+    return right;
+  }
 
-    public String getRight() {
-        return right;
-    }
+  public void setRight(String right) {
+    this.right = right;
+  }
 
-    public void setRight(String right) {
-        this.right = right;
-    }
+  public String getDesc() {
+    return desc;
+  }
 
-    public String getDesc() {
-        return desc;
-    }
-
-    public void setDesc(String desc) {
-        this.desc = desc;
-    }
+  public void setDesc(String desc) {
+    this.desc = desc;
+  }
 }

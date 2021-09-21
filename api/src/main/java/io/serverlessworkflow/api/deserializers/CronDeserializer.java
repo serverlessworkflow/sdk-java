@@ -21,51 +21,48 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import io.serverlessworkflow.api.cron.Cron;
 import io.serverlessworkflow.api.interfaces.WorkflowPropertySource;
-
 import java.io.IOException;
 
 public class CronDeserializer extends StdDeserializer<Cron> {
 
-    private static final long serialVersionUID = 510l;
+  private static final long serialVersionUID = 510l;
 
-    @SuppressWarnings("unused")
-    private WorkflowPropertySource context;
+  @SuppressWarnings("unused")
+  private WorkflowPropertySource context;
 
-    public CronDeserializer() {
-        this(Cron.class);
+  public CronDeserializer() {
+    this(Cron.class);
+  }
+
+  public CronDeserializer(Class<?> vc) {
+    super(vc);
+  }
+
+  public CronDeserializer(WorkflowPropertySource context) {
+    this(Cron.class);
+    this.context = context;
+  }
+
+  @Override
+  public Cron deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
+
+    JsonNode node = jp.getCodec().readTree(jp);
+
+    Cron cron = new Cron();
+
+    if (!node.isObject()) {
+      cron.setExpression(node.asText());
+      return cron;
+    } else {
+      if (node.get("expression") != null) {
+        cron.setExpression(node.get("expression").asText());
+      }
+
+      if (node.get("validUntil") != null) {
+        cron.setValidUntil(node.get("validUntil").asText());
+      }
+
+      return cron;
     }
-
-    public CronDeserializer(Class<?> vc) {
-        super(vc);
-    }
-
-    public CronDeserializer(WorkflowPropertySource context) {
-        this(Cron.class);
-        this.context = context;
-    }
-
-    @Override
-    public Cron deserialize(JsonParser jp,
-                            DeserializationContext ctxt) throws IOException {
-
-        JsonNode node = jp.getCodec().readTree(jp);
-
-        Cron cron = new Cron();
-
-        if (!node.isObject()) {
-            cron.setExpression(node.asText());
-            return cron;
-        } else {
-            if (node.get("expression") != null) {
-                cron.setExpression(node.get("expression").asText());
-            }
-
-            if (node.get("validUntil") != null) {
-                cron.setValidUntil(node.get("validUntil").asText());
-            }
-
-            return cron;
-        }
-    }
+  }
 }
-

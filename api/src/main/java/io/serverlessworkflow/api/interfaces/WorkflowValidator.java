@@ -17,20 +17,19 @@ package io.serverlessworkflow.api.interfaces;
 
 import io.serverlessworkflow.api.Workflow;
 import io.serverlessworkflow.api.validation.ValidationError;
-
 import java.util.List;
 
 public interface WorkflowValidator {
 
-    WorkflowValidator setWorkflow(Workflow workflow);
+  WorkflowValidator setWorkflow(Workflow workflow);
 
-    WorkflowValidator setSource(String source);
+  WorkflowValidator setSource(String source);
 
-    List<ValidationError> validate();
+  List<ValidationError> validate();
 
-    boolean isValid();
+  boolean isValid();
 
-    WorkflowValidator setSchemaValidationEnabled(boolean schemaValidationEnabled);
+  WorkflowValidator setSchemaValidationEnabled(boolean schemaValidationEnabled);
 
-    WorkflowValidator reset();
+  WorkflowValidator reset();
 }

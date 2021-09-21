@@ -16,36 +16,36 @@
 package io.serverlessworkflow.spi;
 
 import io.serverlessworkflow.api.interfaces.WorkflowDiagram;
+import java.util.Iterator;
+import java.util.ServiceLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Iterator;
-import java.util.ServiceLoader;
-
 public class WorkflowDiagramProvider {
-    private WorkflowDiagram workflowDiagram;
+  private WorkflowDiagram workflowDiagram;
 
-    private static Logger logger = LoggerFactory.getLogger(WorkflowDiagramProvider.class);
+  private static Logger logger = LoggerFactory.getLogger(WorkflowDiagramProvider.class);
 
-    public WorkflowDiagramProvider() {
-        ServiceLoader<WorkflowDiagram> foundWorkflowDiagrams = ServiceLoader.load(WorkflowDiagram.class);
-        Iterator<WorkflowDiagram> it = foundWorkflowDiagrams.iterator();
-        if (it.hasNext()) {
-            workflowDiagram = it.next();
-            logger.info("Found workflow diagram: " + workflowDiagram.toString());
-        }
+  public WorkflowDiagramProvider() {
+    ServiceLoader<WorkflowDiagram> foundWorkflowDiagrams =
+        ServiceLoader.load(WorkflowDiagram.class);
+    Iterator<WorkflowDiagram> it = foundWorkflowDiagrams.iterator();
+    if (it.hasNext()) {
+      workflowDiagram = it.next();
+      logger.info("Found workflow diagram: " + workflowDiagram.toString());
     }
+  }
 
-    private static class LazyHolder {
+  private static class LazyHolder {
 
-        static final WorkflowDiagramProvider INSTANCE = new WorkflowDiagramProvider();
-    }
+    static final WorkflowDiagramProvider INSTANCE = new WorkflowDiagramProvider();
+  }
 
-    public static WorkflowDiagramProvider getInstance() {
-        return WorkflowDiagramProvider.LazyHolder.INSTANCE;
-    }
+  public static WorkflowDiagramProvider getInstance() {
+    return WorkflowDiagramProvider.LazyHolder.INSTANCE;
+  }
 
-    public WorkflowDiagram get() {
-        return workflowDiagram;
-    }
+  public WorkflowDiagram get() {
+    return workflowDiagram;
+  }
 }

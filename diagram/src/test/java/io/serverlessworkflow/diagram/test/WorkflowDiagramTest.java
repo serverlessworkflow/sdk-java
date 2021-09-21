@@ -15,6 +15,8 @@
  */
 package io.serverlessworkflow.diagram.test;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
 import io.serverlessworkflow.api.Workflow;
 import io.serverlessworkflow.api.interfaces.WorkflowDiagram;
 import io.serverlessworkflow.diagram.WorkflowDiagramImpl;
@@ -23,47 +25,66 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-
 public class WorkflowDiagramTest {
 
-    @ParameterizedTest
-    @ValueSource(strings = {"/examples/applicantrequest.json", "/examples/applicantrequest.yml",
-            "/examples/carauctionbids.json", "/examples/carauctionbids.yml",
-            "/examples/creditcheck.json", "/examples/creditcheck.yml",
-            "/examples/eventbasedgreeting.json", "/examples/eventbasedgreeting.yml",
-            "/examples/finalizecollegeapplication.json", "/examples/finalizecollegeapplication.yml",
-            "/examples/greeting.json", "/examples/greeting.yml",
-            "/examples/helloworld.json", "/examples/helloworld.yml",
-            "/examples/jobmonitoring.json", "/examples/jobmonitoring.yml",
-            "/examples/monitorpatient.json", "/examples/monitorpatient.yml",
-            "/examples/parallel.json", "/examples/parallel.yml",
-            "/examples/provisionorder.json", "/examples/provisionorder.yml",
-            "/examples/sendcloudevent.json", "/examples/sendcloudevent.yml",
-            "/examples/solvemathproblems.json", "/examples/solvemathproblems.yml",
-            "/examples/foreachstatewithactions.json", "/examples/foreachstatewithactions.yml",
-            "/examples/periodicinboxcheck.json", "/examples/periodicinboxcheck.yml",
-            "/examples/vetappointmentservice.json", "/examples/vetappointmentservice.yml",
-            "/examples/eventbasedtransition.json", "/examples/eventbasedtransition.yml",
-            "/examples/roomreadings.json", "/examples/roomreadings.yml",
-            "/examples/checkcarvitals.json", "/examples/checkcarvitals.yml",
-            "/examples/booklending.json", "/examples/booklending.yml"
-    })
-    public void testSpecExamplesParsing(String workflowLocation) throws Exception {
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "/examples/applicantrequest.json",
+        "/examples/applicantrequest.yml",
+        "/examples/carauctionbids.json",
+        "/examples/carauctionbids.yml",
+        "/examples/creditcheck.json",
+        "/examples/creditcheck.yml",
+        "/examples/eventbasedgreeting.json",
+        "/examples/eventbasedgreeting.yml",
+        "/examples/finalizecollegeapplication.json",
+        "/examples/finalizecollegeapplication.yml",
+        "/examples/greeting.json",
+        "/examples/greeting.yml",
+        "/examples/helloworld.json",
+        "/examples/helloworld.yml",
+        "/examples/jobmonitoring.json",
+        "/examples/jobmonitoring.yml",
+        "/examples/monitorpatient.json",
+        "/examples/monitorpatient.yml",
+        "/examples/parallel.json",
+        "/examples/parallel.yml",
+        "/examples/provisionorder.json",
+        "/examples/provisionorder.yml",
+        "/examples/sendcloudevent.json",
+        "/examples/sendcloudevent.yml",
+        "/examples/solvemathproblems.json",
+        "/examples/solvemathproblems.yml",
+        "/examples/foreachstatewithactions.json",
+        "/examples/foreachstatewithactions.yml",
+        "/examples/periodicinboxcheck.json",
+        "/examples/periodicinboxcheck.yml",
+        "/examples/vetappointmentservice.json",
+        "/examples/vetappointmentservice.yml",
+        "/examples/eventbasedtransition.json",
+        "/examples/eventbasedtransition.yml",
+        "/examples/roomreadings.json",
+        "/examples/roomreadings.yml",
+        "/examples/checkcarvitals.json",
+        "/examples/checkcarvitals.yml",
+        "/examples/booklending.json",
+        "/examples/booklending.yml"
+      })
+  public void testSpecExamplesParsing(String workflowLocation) throws Exception {
 
-        Workflow workflow = Workflow.fromSource(DiagramTestUtils.readWorkflowFile(workflowLocation));
+    Workflow workflow = Workflow.fromSource(DiagramTestUtils.readWorkflowFile(workflowLocation));
 
-        assertNotNull(workflow);
-        assertNotNull(workflow.getId());
-        assertNotNull(workflow.getName());
-        assertNotNull(workflow.getStates());
+    assertNotNull(workflow);
+    assertNotNull(workflow.getId());
+    assertNotNull(workflow.getName());
+    assertNotNull(workflow.getStates());
 
-        WorkflowDiagram workflowDiagram = new WorkflowDiagramImpl();
-        workflowDiagram.setWorkflow(workflow);
+    WorkflowDiagram workflowDiagram = new WorkflowDiagramImpl();
+    workflowDiagram.setWorkflow(workflow);
 
-        String diagramSVG = workflowDiagram.getSvgDiagram();
+    String diagramSVG = workflowDiagram.getSvgDiagram();
 
-        Assertions.assertNotNull(diagramSVG);
-
-    }
+    Assertions.assertNotNull(diagramSVG);
+  }
 }

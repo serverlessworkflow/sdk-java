@@ -15,25 +15,24 @@
  */
 package io.serverlessworkflow.api.schemaclient;
 
-import org.everit.json.schema.loader.SchemaClient;
-
 import java.io.InputStream;
 import java.util.Objects;
+import org.everit.json.schema.loader.SchemaClient;
 
 public class ResourceSchemaClient implements SchemaClient {
 
-    @SuppressWarnings("unused")
-    private final SchemaClient fallbackClient;
-    private final String baseResourcePath = "/schema/";
+  @SuppressWarnings("unused")
+  private final SchemaClient fallbackClient;
 
-    public ResourceSchemaClient(SchemaClient fallbackClient) {
-        this.fallbackClient = Objects.requireNonNull(fallbackClient,
-                "fallbackClient cannot be null");
-    }
+  private final String baseResourcePath = "/schema/";
 
-    @Override
-    public InputStream get(String path) {
-        path = path.substring("https://wg-serverless.org/".length());
-        return this.getClass().getResourceAsStream(baseResourcePath + path);
-    }
+  public ResourceSchemaClient(SchemaClient fallbackClient) {
+    this.fallbackClient = Objects.requireNonNull(fallbackClient, "fallbackClient cannot be null");
+  }
+
+  @Override
+  public InputStream get(String path) {
+    path = path.substring("https://wg-serverless.org/".length());
+    return this.getClass().getResourceAsStream(baseResourcePath + path);
+  }
 }
