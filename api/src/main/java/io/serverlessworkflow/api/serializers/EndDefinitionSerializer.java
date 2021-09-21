@@ -20,54 +20,53 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import io.serverlessworkflow.api.end.End;
 import io.serverlessworkflow.api.produce.ProduceEvent;
-
 import java.io.IOException;
 
 public class EndDefinitionSerializer extends StdSerializer<End> {
 
-    public EndDefinitionSerializer() {
-        this(End.class);
-    }
+  public EndDefinitionSerializer() {
+    this(End.class);
+  }
 
-    protected EndDefinitionSerializer(Class<End> t) {
-        super(t);
-    }
+  protected EndDefinitionSerializer(Class<End> t) {
+    super(t);
+  }
 
-    @Override
-    public void serialize(End end,
-                          JsonGenerator gen,
-                          SerializerProvider provider) throws IOException {
+  @Override
+  public void serialize(End end, JsonGenerator gen, SerializerProvider provider)
+      throws IOException {
 
-        if (end != null) {
-            if ((end.getProduceEvents() == null || end.getProduceEvents().size() < 1)
-                    && end.getContinueAs() == null
-                    && !end.isCompensate() && !end.isTerminate()) {
-                gen.writeBoolean(true);
-            } else {
-                gen.writeStartObject();
+    if (end != null) {
+      if ((end.getProduceEvents() == null || end.getProduceEvents().size() < 1)
+          && end.getContinueAs() == null
+          && !end.isCompensate()
+          && !end.isTerminate()) {
+        gen.writeBoolean(true);
+      } else {
+        gen.writeStartObject();
 
-                if (end.isTerminate()) {
-                    gen.writeBooleanField("terminate", true);
-                }
-
-                if (end.getProduceEvents() != null && !end.getProduceEvents().isEmpty()) {
-                    gen.writeArrayFieldStart("produceEvents");
-                    for (ProduceEvent produceEvent : end.getProduceEvents()) {
-                        gen.writeObject(produceEvent);
-                    }
-                    gen.writeEndArray();
-                }
-
-                if (end.isCompensate()) {
-                    gen.writeBooleanField("compensate", true);
-                }
-
-                if(end.getContinueAs() != null) {
-                    gen.writeObjectField("continueAs", end.getContinueAs());
-                }
-
-                gen.writeEndObject();
-            }
+        if (end.isTerminate()) {
+          gen.writeBooleanField("terminate", true);
         }
+
+        if (end.getProduceEvents() != null && !end.getProduceEvents().isEmpty()) {
+          gen.writeArrayFieldStart("produceEvents");
+          for (ProduceEvent produceEvent : end.getProduceEvents()) {
+            gen.writeObject(produceEvent);
+          }
+          gen.writeEndArray();
+        }
+
+        if (end.isCompensate()) {
+          gen.writeBooleanField("compensate", true);
+        }
+
+        if (end.getContinueAs() != null) {
+          gen.writeObjectField("continueAs", end.getContinueAs());
+        }
+
+        gen.writeEndObject();
+      }
     }
+  }
 }

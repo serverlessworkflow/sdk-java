@@ -16,34 +16,29 @@
 package io.serverlessworkflow.spi.test.providers;
 
 import io.serverlessworkflow.api.interfaces.WorkflowPropertySource;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
 public class TestWorkflowPropertySource implements WorkflowPropertySource {
 
-    private Properties source = new Properties();
+  private Properties source = new Properties();
 
-    @Override
-    public Properties getPropertySource() {
-        Map<String, String> propertySourcetMap = new HashMap<>();
-        propertySourcetMap.put("wfname",
-                "test-wf");
-        propertySourcetMap.put("delaystate.name",
-                "delay-state");
-        propertySourcetMap.put("delaystate.timedelay",
-                "PT5S");
-        propertySourcetMap.put("delaystate.type",
-                "DELAY");
+  @Override
+  public Properties getPropertySource() {
+    Map<String, String> propertySourcetMap = new HashMap<>();
+    propertySourcetMap.put("wfname", "test-wf");
+    propertySourcetMap.put("delaystate.name", "delay-state");
+    propertySourcetMap.put("delaystate.timedelay", "PT5S");
+    propertySourcetMap.put("delaystate.type", "DELAY");
 
-        source.putAll(propertySourcetMap);
+    source.putAll(propertySourcetMap);
 
-        return source;
-    }
+    return source;
+  }
 
-    @Override
-    public void setPropertySource(Properties source) {
-        this.source = source;
-    }
+  @Override
+  public void setPropertySource(Properties source) {
+    this.source = source;
+  }
 }

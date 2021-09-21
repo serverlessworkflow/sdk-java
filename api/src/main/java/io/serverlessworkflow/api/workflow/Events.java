@@ -16,37 +16,35 @@
 package io.serverlessworkflow.api.workflow;
 
 import io.serverlessworkflow.api.events.EventDefinition;
-
 import java.util.List;
 
 public class Events {
-    private String refValue;
-    private List<EventDefinition> eventDefs;
+  private String refValue;
+  private List<EventDefinition> eventDefs;
 
-    public Events() {
-    }
+  public Events() {}
 
-    public Events(List<EventDefinition> eventDefs) {
-        this.eventDefs = eventDefs;
-    }
+  public Events(List<EventDefinition> eventDefs) {
+    this.eventDefs = eventDefs;
+  }
 
-    public Events(String refValue) {
-        this.refValue = refValue;
-    }
+  public Events(String refValue) {
+    this.refValue = refValue;
+  }
 
-    public String getRefValue() {
-        return refValue;
-    }
+  public String getRefValue() {
+    return refValue;
+  }
 
-    public void setRefValue(String refValue) {
-        this.refValue = refValue;
-    }
+  public void setRefValue(String refValue) {
+    this.refValue = refValue;
+  }
 
-    public List<EventDefinition> getEventDefs() {
-        return eventDefs;
-    }
+  public List<EventDefinition> getEventDefs() {
+    return eventDefs;
+  }
 
-    public void setEventDefs(List<EventDefinition> eventDefs) {
-        this.eventDefs = eventDefs;
-    }
+  public void setEventDefs(List<EventDefinition> eventDefs) {
+    this.eventDefs = eventDefs;
+  }
 }

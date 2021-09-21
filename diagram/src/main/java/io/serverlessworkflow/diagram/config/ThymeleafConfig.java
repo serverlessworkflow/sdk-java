@@ -21,21 +21,21 @@ import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 import org.thymeleaf.templateresolver.ITemplateResolver;
 
 public class ThymeleafConfig {
-    public static TemplateEngine templateEngine;
+  public static TemplateEngine templateEngine;
 
-    static {
-        templateEngine = new TemplateEngine();
-        templateEngine.addTemplateResolver(plantUmlTemplateResolver());
-    }
+  static {
+    templateEngine = new TemplateEngine();
+    templateEngine.addTemplateResolver(plantUmlTemplateResolver());
+  }
 
-    private static ITemplateResolver plantUmlTemplateResolver() {
-        ClassLoaderTemplateResolver templateResolver = new ClassLoaderTemplateResolver();
-        templateResolver.setPrefix("/templates/plantuml/");
-        templateResolver.setSuffix(".txt");
-        templateResolver.setTemplateMode(TemplateMode.TEXT);
-        templateResolver.setCharacterEncoding("UTF8");
-        templateResolver.setCheckExistence(true);
-        templateResolver.setCacheable(false);
-        return templateResolver;
-    }
+  private static ITemplateResolver plantUmlTemplateResolver() {
+    ClassLoaderTemplateResolver templateResolver = new ClassLoaderTemplateResolver();
+    templateResolver.setPrefix("/templates/plantuml/");
+    templateResolver.setSuffix(".txt");
+    templateResolver.setTemplateMode(TemplateMode.TEXT);
+    templateResolver.setCharacterEncoding("UTF8");
+    templateResolver.setCheckExistence(true);
+    templateResolver.setCacheable(false);
+    return templateResolver;
+  }
 }

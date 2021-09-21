@@ -16,37 +16,35 @@
 package io.serverlessworkflow.api.workflow;
 
 import io.serverlessworkflow.api.retry.RetryDefinition;
-
 import java.util.List;
 
 public class Retries {
-    private String refValue;
-    private List<RetryDefinition> retryDefs;
+  private String refValue;
+  private List<RetryDefinition> retryDefs;
 
-    public Retries() {
-    }
+  public Retries() {}
 
-    public Retries(List<RetryDefinition> retryDefs) {
-        this.retryDefs = retryDefs;
-    }
+  public Retries(List<RetryDefinition> retryDefs) {
+    this.retryDefs = retryDefs;
+  }
 
-    public Retries(String refValue) {
-        this.refValue = refValue;
-    }
+  public Retries(String refValue) {
+    this.refValue = refValue;
+  }
 
-    public String getRefValue() {
-        return refValue;
-    }
+  public String getRefValue() {
+    return refValue;
+  }
 
-    public void setRefValue(String refValue) {
-        this.refValue = refValue;
-    }
+  public void setRefValue(String refValue) {
+    this.refValue = refValue;
+  }
 
-    public List<RetryDefinition> getRetryDefs() {
-        return retryDefs;
-    }
+  public List<RetryDefinition> getRetryDefs() {
+    return retryDefs;
+  }
 
-    public void setRetryDefs(List<RetryDefinition> retryDefs) {
-        this.retryDefs = retryDefs;
-    }
+  public void setRetryDefs(List<RetryDefinition> retryDefs) {
+    this.retryDefs = retryDefs;
+  }
 }

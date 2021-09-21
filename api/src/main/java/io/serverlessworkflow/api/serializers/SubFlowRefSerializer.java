@@ -19,41 +19,39 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import io.serverlessworkflow.api.functions.SubFlowRef;
-
 import java.io.IOException;
 
 public class SubFlowRefSerializer extends StdSerializer<SubFlowRef> {
 
-    public SubFlowRefSerializer() {
-        this(SubFlowRef.class);
-    }
+  public SubFlowRefSerializer() {
+    this(SubFlowRef.class);
+  }
 
-    protected SubFlowRefSerializer(Class<SubFlowRef> t) {
-        super(t);
-    }
+  protected SubFlowRefSerializer(Class<SubFlowRef> t) {
+    super(t);
+  }
 
-    @Override
-    public void serialize(SubFlowRef subflowRef,
-                          JsonGenerator gen,
-                          SerializerProvider provider) throws IOException {
+  @Override
+  public void serialize(SubFlowRef subflowRef, JsonGenerator gen, SerializerProvider provider)
+      throws IOException {
 
-        if (subflowRef != null) {
-            if ((subflowRef.getWorkflowId() == null || subflowRef.getWorkflowId().isEmpty())
-                    && (subflowRef.getVersion() == null || subflowRef.getVersion().isEmpty())) {
-                gen.writeString(subflowRef.getWorkflowId());
-            } else {
-                gen.writeStartObject();
+    if (subflowRef != null) {
+      if ((subflowRef.getWorkflowId() == null || subflowRef.getWorkflowId().isEmpty())
+          && (subflowRef.getVersion() == null || subflowRef.getVersion().isEmpty())) {
+        gen.writeString(subflowRef.getWorkflowId());
+      } else {
+        gen.writeStartObject();
 
-                if (subflowRef.getWorkflowId() != null && subflowRef.getWorkflowId().length() > 0) {
-                    gen.writeStringField("workflowId", subflowRef.getWorkflowId());
-                }
-
-                if (subflowRef.getVersion() != null && subflowRef.getVersion().length() > 0) {
-                    gen.writeStringField("version", subflowRef.getVersion());
-                }
-
-                gen.writeEndObject();
-            }
+        if (subflowRef.getWorkflowId() != null && subflowRef.getWorkflowId().length() > 0) {
+          gen.writeStringField("workflowId", subflowRef.getWorkflowId());
         }
+
+        if (subflowRef.getVersion() != null && subflowRef.getVersion().length() > 0) {
+          gen.writeStringField("version", subflowRef.getVersion());
+        }
+
+        gen.writeEndObject();
+      }
     }
+  }
 }

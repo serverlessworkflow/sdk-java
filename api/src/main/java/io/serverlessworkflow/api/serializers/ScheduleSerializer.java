@@ -19,47 +19,45 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import io.serverlessworkflow.api.schedule.Schedule;
-
 import java.io.IOException;
 
 public class ScheduleSerializer extends StdSerializer<Schedule> {
 
-    public ScheduleSerializer() {
-        this(Schedule.class);
-    }
+  public ScheduleSerializer() {
+    this(Schedule.class);
+  }
 
-    protected ScheduleSerializer(Class<Schedule> t) {
-        super(t);
-    }
+  protected ScheduleSerializer(Class<Schedule> t) {
+    super(t);
+  }
 
-    @Override
-    public void serialize(Schedule schedule,
-                          JsonGenerator gen,
-                          SerializerProvider provider) throws IOException {
+  @Override
+  public void serialize(Schedule schedule, JsonGenerator gen, SerializerProvider provider)
+      throws IOException {
 
-        if (schedule != null) {
-            if (schedule.getCron() == null
-                    && (schedule.getTimezone() == null || schedule.getTimezone().isEmpty())
-                    && schedule.getInterval() != null
-                    && schedule.getInterval().length() > 0) {
-                gen.writeString(schedule.getInterval());
-            } else {
-                gen.writeStartObject();
+    if (schedule != null) {
+      if (schedule.getCron() == null
+          && (schedule.getTimezone() == null || schedule.getTimezone().isEmpty())
+          && schedule.getInterval() != null
+          && schedule.getInterval().length() > 0) {
+        gen.writeString(schedule.getInterval());
+      } else {
+        gen.writeStartObject();
 
-                if (schedule.getInterval() != null && schedule.getInterval().length() > 0) {
-                    gen.writeStringField("interval", schedule.getInterval());
-                }
-
-                if (schedule.getCron() != null) {
-                    gen.writeObjectField("cron", schedule.getCron());
-                }
-
-                if (schedule.getTimezone() != null && schedule.getTimezone().length() > 0) {
-                    gen.writeStringField("timezone", schedule.getTimezone());
-                }
-
-                gen.writeEndObject();
-            }
+        if (schedule.getInterval() != null && schedule.getInterval().length() > 0) {
+          gen.writeStringField("interval", schedule.getInterval());
         }
+
+        if (schedule.getCron() != null) {
+          gen.writeObjectField("cron", schedule.getCron());
+        }
+
+        if (schedule.getTimezone() != null && schedule.getTimezone().length() > 0) {
+          gen.writeStringField("timezone", schedule.getTimezone());
+        }
+
+        gen.writeEndObject();
+      }
     }
+  }
 }

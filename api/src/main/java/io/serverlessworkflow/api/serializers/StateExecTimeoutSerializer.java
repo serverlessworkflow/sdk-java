@@ -19,42 +19,40 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import io.serverlessworkflow.api.timeouts.StateExecTimeout;
-
 import java.io.IOException;
 
 public class StateExecTimeoutSerializer extends StdSerializer<StateExecTimeout> {
 
-    public StateExecTimeoutSerializer() {
-        this(StateExecTimeout.class);
-    }
+  public StateExecTimeoutSerializer() {
+    this(StateExecTimeout.class);
+  }
 
-    protected StateExecTimeoutSerializer(Class<StateExecTimeout> t) {
-        super(t);
-    }
+  protected StateExecTimeoutSerializer(Class<StateExecTimeout> t) {
+    super(t);
+  }
 
-    @Override
-    public void serialize(StateExecTimeout stateExecTimeout,
-                          JsonGenerator gen,
-                          SerializerProvider provider) throws IOException {
+  @Override
+  public void serialize(
+      StateExecTimeout stateExecTimeout, JsonGenerator gen, SerializerProvider provider)
+      throws IOException {
 
-        if (stateExecTimeout != null) {
-            if ((stateExecTimeout.getTotal() != null && !stateExecTimeout.getTotal().isEmpty())
-                    && (stateExecTimeout.getSingle() == null || stateExecTimeout.getSingle().isEmpty())) {
-                gen.writeString(stateExecTimeout.getTotal());
-            } else {
-                gen.writeStartObject();
+    if (stateExecTimeout != null) {
+      if ((stateExecTimeout.getTotal() != null && !stateExecTimeout.getTotal().isEmpty())
+          && (stateExecTimeout.getSingle() == null || stateExecTimeout.getSingle().isEmpty())) {
+        gen.writeString(stateExecTimeout.getTotal());
+      } else {
+        gen.writeStartObject();
 
-                if (stateExecTimeout.getTotal() != null && stateExecTimeout.getTotal().length() > 0) {
-                    gen.writeStringField("total", stateExecTimeout.getTotal());
-                }
-
-                if (stateExecTimeout.getSingle() != null && stateExecTimeout.getSingle().length() > 0) {
-                    gen.writeStringField("single", stateExecTimeout.getSingle());
-                }
-
-                gen.writeEndObject();
-            }
+        if (stateExecTimeout.getTotal() != null && stateExecTimeout.getTotal().length() > 0) {
+          gen.writeStringField("total", stateExecTimeout.getTotal());
         }
-    }
-}
 
+        if (stateExecTimeout.getSingle() != null && stateExecTimeout.getSingle().length() > 0) {
+          gen.writeStringField("single", stateExecTimeout.getSingle());
+        }
+
+        gen.writeEndObject();
+      }
+    }
+  }
+}

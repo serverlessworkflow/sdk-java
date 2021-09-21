@@ -16,36 +16,36 @@
 package io.serverlessworkflow.spi;
 
 import io.serverlessworkflow.api.interfaces.WorkflowPropertySource;
+import java.util.Iterator;
+import java.util.ServiceLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Iterator;
-import java.util.ServiceLoader;
-
 public class WorkflowPropertySourceProvider {
-    private WorkflowPropertySource workflowPropertySource;
+  private WorkflowPropertySource workflowPropertySource;
 
-    private static Logger logger = LoggerFactory.getLogger(WorkflowValidatorProvider.class);
+  private static Logger logger = LoggerFactory.getLogger(WorkflowValidatorProvider.class);
 
-    public WorkflowPropertySourceProvider() {
-        ServiceLoader<WorkflowPropertySource> foundPropertyContext = ServiceLoader.load(WorkflowPropertySource.class);
-        Iterator<WorkflowPropertySource> it = foundPropertyContext.iterator();
-        if (it.hasNext()) {
-            workflowPropertySource = it.next();
-            logger.info("Found property source: " + workflowPropertySource.toString());
-        }
+  public WorkflowPropertySourceProvider() {
+    ServiceLoader<WorkflowPropertySource> foundPropertyContext =
+        ServiceLoader.load(WorkflowPropertySource.class);
+    Iterator<WorkflowPropertySource> it = foundPropertyContext.iterator();
+    if (it.hasNext()) {
+      workflowPropertySource = it.next();
+      logger.info("Found property source: " + workflowPropertySource.toString());
     }
+  }
 
-    private static class LazyHolder {
+  private static class LazyHolder {
 
-        static final WorkflowPropertySourceProvider INSTANCE = new WorkflowPropertySourceProvider();
-    }
+    static final WorkflowPropertySourceProvider INSTANCE = new WorkflowPropertySourceProvider();
+  }
 
-    public static WorkflowPropertySourceProvider getInstance() {
-        return WorkflowPropertySourceProvider.LazyHolder.INSTANCE;
-    }
+  public static WorkflowPropertySourceProvider getInstance() {
+    return WorkflowPropertySourceProvider.LazyHolder.INSTANCE;
+  }
 
-    public WorkflowPropertySource get() {
-        return workflowPropertySource;
-    }
+  public WorkflowPropertySource get() {
+    return workflowPropertySource;
+  }
 }

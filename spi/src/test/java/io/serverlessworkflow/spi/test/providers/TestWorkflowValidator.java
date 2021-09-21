@@ -18,38 +18,37 @@ package io.serverlessworkflow.spi.test.providers;
 import io.serverlessworkflow.api.Workflow;
 import io.serverlessworkflow.api.interfaces.WorkflowValidator;
 import io.serverlessworkflow.api.validation.ValidationError;
-
 import java.util.List;
 
 public class TestWorkflowValidator implements WorkflowValidator {
 
-    @Override
-    public WorkflowValidator setWorkflow(Workflow workflow) {
-        return this;
-    }
+  @Override
+  public WorkflowValidator setWorkflow(Workflow workflow) {
+    return this;
+  }
 
-    @Override
-    public WorkflowValidator setSource(String source) {
-        return this;
-    }
+  @Override
+  public WorkflowValidator setSource(String source) {
+    return this;
+  }
 
-    @Override
-    public List<ValidationError> validate() {
-        return null;
-    }
+  @Override
+  public List<ValidationError> validate() {
+    return null;
+  }
 
-    @Override
-    public boolean isValid() {
-        return false;
-    }
+  @Override
+  public boolean isValid() {
+    return false;
+  }
 
-    @Override
-    public WorkflowValidator setSchemaValidationEnabled(boolean schemaValidationEnabled) {
-        return this;
-    }
+  @Override
+  public WorkflowValidator setSchemaValidationEnabled(boolean schemaValidationEnabled) {
+    return this;
+  }
 
-    @Override
-    public WorkflowValidator reset() {
-        return this;
-    }
+  @Override
+  public WorkflowValidator reset() {
+    return this;
+  }
 }

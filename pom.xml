@@ -63,6 +63,7 @@
         <version.thymeleaf>3.0.11.RELEASE</version.thymeleaf>
         <version.plantuml>8059</version.plantuml>
         <version.graphviz>0.17.0</version.graphviz>
+        <version.fmt-maven-plugin>2.9</version.fmt-maven-plugin>
 
         <!-- Checkstyle props -->
         <checkstyle.failOnViolation>true</checkstyle.failOnViolation>
@@ -278,6 +279,11 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-checkstyle-plugin</artifactId>
                     <version>${version.checkstyle.plugin}</version>
+                </plugin>
+                <plugin>
+                    <groupId>com.coveo</groupId>
+                    <artifactId>fmt-maven-plugin</artifactId>
+                    <version>${version.fmt-maven-plugin}</version>
                 </plugin>
             </plugins>
         </pluginManagement>

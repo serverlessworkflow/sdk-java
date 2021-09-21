@@ -19,7 +19,7 @@ import java.util.Properties;
 
 public interface WorkflowPropertySource {
 
-    Properties getPropertySource();
+  Properties getPropertySource();
 
-    void setPropertySource(Properties source);
+  void setPropertySource(Properties source);
 }

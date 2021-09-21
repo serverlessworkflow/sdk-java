@@ -15,5 +15,4 @@
  */
 package io.serverlessworkflow.api.interfaces;
 
-public interface SwitchCondition {
-}
+public interface SwitchCondition {}

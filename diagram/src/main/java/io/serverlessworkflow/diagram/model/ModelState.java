@@ -16,36 +16,39 @@
 package io.serverlessworkflow.diagram.model;
 
 import io.serverlessworkflow.diagram.utils.WorkflowDiagramUtils;
-
 import java.util.ArrayList;
 import java.util.List;
 
 public class ModelState {
 
-    @SuppressWarnings("unused")
-    private String name;
-    private String noSpaceName;
-    private List<String> stateInfo = new ArrayList<>();
+  @SuppressWarnings("unused")
+  private String name;
 
-    public ModelState(String name) {
-        this.name = name;
-        this.noSpaceName = name.replaceAll("\\s", "");
+  private String noSpaceName;
+  private List<String> stateInfo = new ArrayList<>();
+
+  public ModelState(String name) {
+    this.name = name;
+    this.noSpaceName = name.replaceAll("\\s", "");
+  }
+
+  public void addInfo(String info) {
+    stateInfo.add(info);
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder retBuff = new StringBuilder();
+    retBuff.append(System.lineSeparator());
+    for (String info : stateInfo) {
+      retBuff
+          .append(noSpaceName)
+          .append(WorkflowDiagramUtils.description)
+          .append(info)
+          .append(System.lineSeparator());
     }
+    retBuff.append(System.lineSeparator());
 
-    public void addInfo(String info) {
-        stateInfo.add(info);
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder retBuff = new StringBuilder();
-        retBuff.append(System.lineSeparator());
-        for (String info : stateInfo) {
-            retBuff.append(noSpaceName).append(WorkflowDiagramUtils.description)
-                    .append(info).append(System.lineSeparator());
-        }
-        retBuff.append(System.lineSeparator());
-
-        return retBuff.toString();
-    }
+    return retBuff.toString();
+  }
 }

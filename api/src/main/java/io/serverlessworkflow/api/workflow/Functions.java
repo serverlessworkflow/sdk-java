@@ -16,37 +16,35 @@
 package io.serverlessworkflow.api.workflow;
 
 import io.serverlessworkflow.api.functions.FunctionDefinition;
-
 import java.util.List;
 
 public class Functions {
-    private String refValue;
-    private List<FunctionDefinition> functionDefs;
+  private String refValue;
+  private List<FunctionDefinition> functionDefs;
 
-    public Functions() {
-    }
+  public Functions() {}
 
-    public Functions(List<FunctionDefinition> functionDefs) {
-        this.functionDefs = functionDefs;
-    }
+  public Functions(List<FunctionDefinition> functionDefs) {
+    this.functionDefs = functionDefs;
+  }
 
-    public Functions(String refValue) {
-        this.refValue = refValue;
-    }
+  public Functions(String refValue) {
+    this.refValue = refValue;
+  }
 
-    public String getRefValue() {
-        return refValue;
-    }
+  public String getRefValue() {
+    return refValue;
+  }
 
-    public void setRefValue(String refValue) {
-        this.refValue = refValue;
-    }
+  public void setRefValue(String refValue) {
+    this.refValue = refValue;
+  }
 
-    public List<FunctionDefinition> getFunctionDefs() {
-        return functionDefs;
-    }
+  public List<FunctionDefinition> getFunctionDefs() {
+    return functionDefs;
+  }
 
-    public void setFunctionDefs(List<FunctionDefinition> functionDefs) {
-        this.functionDefs = functionDefs;
-    }
+  public void setFunctionDefs(List<FunctionDefinition> functionDefs) {
+    this.functionDefs = functionDefs;
+  }
 }

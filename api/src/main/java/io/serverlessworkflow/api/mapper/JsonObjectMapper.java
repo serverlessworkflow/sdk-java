@@ -19,12 +19,11 @@ import io.serverlessworkflow.api.interfaces.WorkflowPropertySource;
 
 public class JsonObjectMapper extends BaseObjectMapper {
 
-    public JsonObjectMapper() {
-        this(null);
-    }
+  public JsonObjectMapper() {
+    this(null);
+  }
 
-    public JsonObjectMapper(WorkflowPropertySource context) {
-        super(null,
-                context);
-    }
+  public JsonObjectMapper(WorkflowPropertySource context) {
+    super(null, context);
+  }
 }

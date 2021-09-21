@@ -23,55 +23,50 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import io.serverlessworkflow.api.interfaces.WorkflowPropertySource;
 import io.serverlessworkflow.api.schedule.Schedule;
 import io.serverlessworkflow.api.start.Start;
-
 import java.io.IOException;
 
 public class StartDefinitionDeserializer extends StdDeserializer<Start> {
 
-    private static final long serialVersionUID = 510l;
+  private static final long serialVersionUID = 510l;
 
-    @SuppressWarnings("unused")
-    private WorkflowPropertySource context;
+  @SuppressWarnings("unused")
+  private WorkflowPropertySource context;
 
-    public StartDefinitionDeserializer() {
-        this(Start.class);
+  public StartDefinitionDeserializer() {
+    this(Start.class);
+  }
+
+  public StartDefinitionDeserializer(Class<?> vc) {
+    super(vc);
+  }
+
+  public StartDefinitionDeserializer(WorkflowPropertySource context) {
+    this(Start.class);
+    this.context = context;
+  }
+
+  @Override
+  public Start deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
+
+    ObjectMapper mapper = (ObjectMapper) jp.getCodec();
+    JsonNode node = jp.getCodec().readTree(jp);
+
+    Start start = new Start();
+
+    if (!node.isObject()) {
+      start.setStateName(node.asText());
+      start.setSchedule(null);
+      return start;
+    } else {
+      if (node.get("stateName") != null) {
+        start.setStateName(node.get("stateName").asText());
+      }
+
+      if (node.get("schedule") != null) {
+        start.setSchedule(mapper.treeToValue(node.get("schedule"), Schedule.class));
+      }
+
+      return start;
     }
-
-    public StartDefinitionDeserializer(Class<?> vc) {
-        super(vc);
-    }
-
-    public StartDefinitionDeserializer(WorkflowPropertySource context) {
-        this(Start.class);
-        this.context = context;
-    }
-
-    @Override
-    public Start deserialize(JsonParser jp,
-                             DeserializationContext ctxt) throws IOException {
-
-        ObjectMapper mapper = (ObjectMapper) jp.getCodec();
-        JsonNode node = jp.getCodec().readTree(jp);
-
-        Start start = new Start();
-
-        if (!node.isObject()) {
-            start.setStateName(node.asText());
-            start.setSchedule(null);
-            return start;
-        } else {
-            if (node.get("stateName") != null) {
-                start.setStateName(node.get("stateName").asText());
-            }
-
-            if (node.get("schedule") != null) {
-                start.setSchedule(mapper.treeToValue(node.get("schedule"), Schedule.class));
-            }
-
-            return start;
-
-        }
-
-    }
+  }
 }
-

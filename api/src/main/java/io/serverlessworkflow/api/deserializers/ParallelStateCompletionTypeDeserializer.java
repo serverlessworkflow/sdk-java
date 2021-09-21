@@ -20,51 +20,52 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import io.serverlessworkflow.api.interfaces.WorkflowPropertySource;
 import io.serverlessworkflow.api.states.ParallelState;
+import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
+public class ParallelStateCompletionTypeDeserializer
+    extends StdDeserializer<ParallelState.CompletionType> {
 
-public class ParallelStateCompletionTypeDeserializer extends StdDeserializer<ParallelState.CompletionType> {
+  private static final long serialVersionUID = 510l;
+  private static Logger logger =
+      LoggerFactory.getLogger(ParallelStateCompletionTypeDeserializer.class);
 
-    private static final long serialVersionUID = 510l;
-    private static Logger logger = LoggerFactory.getLogger(ParallelStateCompletionTypeDeserializer.class);
+  private WorkflowPropertySource context;
 
-    private WorkflowPropertySource context;
+  public ParallelStateCompletionTypeDeserializer() {
+    this(ParallelState.CompletionType.class);
+  }
 
-    public ParallelStateCompletionTypeDeserializer() {
-        this(ParallelState.CompletionType.class);
-    }
+  public ParallelStateCompletionTypeDeserializer(WorkflowPropertySource context) {
+    this(ParallelState.CompletionType.class);
+    this.context = context;
+  }
 
-    public ParallelStateCompletionTypeDeserializer(WorkflowPropertySource context) {
-        this(ParallelState.CompletionType.class);
-        this.context = context;
-    }
+  public ParallelStateCompletionTypeDeserializer(Class<?> vc) {
+    super(vc);
+  }
 
-    public ParallelStateCompletionTypeDeserializer(Class<?> vc) {
-        super(vc);
-    }
+  @Override
+  public ParallelState.CompletionType deserialize(JsonParser jp, DeserializationContext ctxt)
+      throws IOException {
 
-    @Override
-    public ParallelState.CompletionType deserialize(JsonParser jp,
-                                                    DeserializationContext ctxt) throws IOException {
+    String value = jp.getText();
+    if (context != null) {
+      try {
+        String result = context.getPropertySource().getProperty(value);
 
-        String value = jp.getText();
-        if (context != null) {
-            try {
-                String result = context.getPropertySource().getProperty(value);
-
-                if (result != null) {
-                    return ParallelState.CompletionType.fromValue(result);
-                } else {
-                    return ParallelState.CompletionType.fromValue(jp.getText());
-                }
-            } catch (Exception e) {
-                logger.info("Exception trying to evaluate property: {}", e.getMessage());
-                return ParallelState.CompletionType.fromValue(jp.getText());
-            }
+        if (result != null) {
+          return ParallelState.CompletionType.fromValue(result);
         } else {
-            return ParallelState.CompletionType.fromValue(jp.getText());
+          return ParallelState.CompletionType.fromValue(jp.getText());
         }
+      } catch (Exception e) {
+        logger.info("Exception trying to evaluate property: {}", e.getMessage());
+        return ParallelState.CompletionType.fromValue(jp.getText());
+      }
+    } else {
+      return ParallelState.CompletionType.fromValue(jp.getText());
     }
+  }
 }

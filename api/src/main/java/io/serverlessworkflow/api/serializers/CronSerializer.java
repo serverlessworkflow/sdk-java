@@ -19,42 +19,40 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import io.serverlessworkflow.api.cron.Cron;
-
 import java.io.IOException;
 
 public class CronSerializer extends StdSerializer<Cron> {
 
-    public CronSerializer() {
-        this(Cron.class);
-    }
+  public CronSerializer() {
+    this(Cron.class);
+  }
 
-    protected CronSerializer(Class<Cron> t) {
-        super(t);
-    }
+  protected CronSerializer(Class<Cron> t) {
+    super(t);
+  }
 
-    @Override
-    public void serialize(Cron cron,
-                          JsonGenerator gen,
-                          SerializerProvider provider) throws IOException {
+  @Override
+  public void serialize(Cron cron, JsonGenerator gen, SerializerProvider provider)
+      throws IOException {
 
-        if (cron != null) {
-            if ((cron.getValidUntil() == null || cron.getValidUntil().isEmpty())
-                    && cron.getExpression() != null
-                    && cron.getExpression().length() > 0) {
-                gen.writeString(cron.getExpression());
-            } else {
-                gen.writeStartObject();
+    if (cron != null) {
+      if ((cron.getValidUntil() == null || cron.getValidUntil().isEmpty())
+          && cron.getExpression() != null
+          && cron.getExpression().length() > 0) {
+        gen.writeString(cron.getExpression());
+      } else {
+        gen.writeStartObject();
 
-                if (cron.getExpression() != null && cron.getExpression().length() > 0) {
-                    gen.writeStringField("expression", cron.getExpression());
-                }
-
-                if (cron.getValidUntil() != null && cron.getValidUntil().length() > 0) {
-                    gen.writeStringField("validUntil", cron.getValidUntil());
-                }
-
-                gen.writeEndObject();
-            }
+        if (cron.getExpression() != null && cron.getExpression().length() > 0) {
+          gen.writeStringField("expression", cron.getExpression());
         }
+
+        if (cron.getValidUntil() != null && cron.getValidUntil().length() > 0) {
+          gen.writeStringField("validUntil", cron.getValidUntil());
+        }
+
+        gen.writeEndObject();
+      }
     }
+  }
 }

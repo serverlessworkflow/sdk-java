@@ -22,31 +22,29 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import io.serverlessworkflow.api.states.DefaultState;
 import io.serverlessworkflow.api.states.ParallelState;
-
 import java.io.IOException;
 
 public class ParallelStateSerializer extends StdSerializer<ParallelState> {
 
-    public ParallelStateSerializer() {
-        this(ParallelState.class);
-    }
+  public ParallelStateSerializer() {
+    this(ParallelState.class);
+  }
 
-    protected ParallelStateSerializer(Class<ParallelState> t) {
-        super(t);
-    }
+  protected ParallelStateSerializer(Class<ParallelState> t) {
+    super(t);
+  }
 
-    @Override
-    public void serialize(ParallelState parallelState,
-                          JsonGenerator gen,
-                          SerializerProvider provider) throws IOException {
+  @Override
+  public void serialize(ParallelState parallelState, JsonGenerator gen, SerializerProvider provider)
+      throws IOException {
 
-        // set defaults for end state
-        parallelState.setType(DefaultState.Type.PARALLEL);
+    // set defaults for end state
+    parallelState.setType(DefaultState.Type.PARALLEL);
 
-        // serialize after setting default bean values...
-        BeanSerializerFactory.instance.createSerializer(provider,
-                TypeFactory.defaultInstance().constructType(ParallelState.class)).serialize(parallelState,
-                gen,
-                provider);
-    }
+    // serialize after setting default bean values...
+    BeanSerializerFactory.instance
+        .createSerializer(
+            provider, TypeFactory.defaultInstance().constructType(ParallelState.class))
+        .serialize(parallelState, gen, provider);
+  }
 }

@@ -20,52 +20,51 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import io.serverlessworkflow.api.interfaces.WorkflowPropertySource;
 import io.serverlessworkflow.api.states.DefaultState;
+import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-
 public class DefaultStateTypeDeserializer extends StdDeserializer<DefaultState.Type> {
 
-    private static final long serialVersionUID = 510l;
-    private static Logger logger = LoggerFactory.getLogger(DefaultStateTypeDeserializer.class);
+  private static final long serialVersionUID = 510l;
+  private static Logger logger = LoggerFactory.getLogger(DefaultStateTypeDeserializer.class);
 
-    private WorkflowPropertySource context;
+  private WorkflowPropertySource context;
 
-    public DefaultStateTypeDeserializer() {
-        this(DefaultState.Type.class);
-    }
+  public DefaultStateTypeDeserializer() {
+    this(DefaultState.Type.class);
+  }
 
-    public DefaultStateTypeDeserializer(WorkflowPropertySource context) {
-        this(DefaultState.Type.class);
-        this.context = context;
-    }
+  public DefaultStateTypeDeserializer(WorkflowPropertySource context) {
+    this(DefaultState.Type.class);
+    this.context = context;
+  }
 
-    public DefaultStateTypeDeserializer(Class<?> vc) {
-        super(vc);
-    }
+  public DefaultStateTypeDeserializer(Class<?> vc) {
+    super(vc);
+  }
 
-    @Override
-    public DefaultState.Type deserialize(JsonParser jp,
-                                         DeserializationContext ctxt) throws IOException {
+  @Override
+  public DefaultState.Type deserialize(JsonParser jp, DeserializationContext ctxt)
+      throws IOException {
 
-        String value = jp.getText();
+    String value = jp.getText();
 
-        if (context != null) {
-            try {
-                String result = context.getPropertySource().getProperty(value);
+    if (context != null) {
+      try {
+        String result = context.getPropertySource().getProperty(value);
 
-                if (result != null) {
-                    return DefaultState.Type.fromValue(result);
-                } else {
-                    return DefaultState.Type.fromValue(jp.getText());
-                }
-            } catch (Exception e) {
-                logger.info("Exception trying to evaluate property: {}", e.getMessage());
-                return DefaultState.Type.fromValue(jp.getText());
-            }
+        if (result != null) {
+          return DefaultState.Type.fromValue(result);
         } else {
-            return DefaultState.Type.fromValue(jp.getText());
+          return DefaultState.Type.fromValue(jp.getText());
         }
+      } catch (Exception e) {
+        logger.info("Exception trying to evaluate property: {}", e.getMessage());
+        return DefaultState.Type.fromValue(jp.getText());
+      }
+    } else {
+      return DefaultState.Type.fromValue(jp.getText());
     }
+  }
 }

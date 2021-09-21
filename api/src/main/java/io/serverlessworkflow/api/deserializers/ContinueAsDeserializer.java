@@ -23,63 +23,61 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import io.serverlessworkflow.api.end.ContinueAs;
 import io.serverlessworkflow.api.interfaces.WorkflowPropertySource;
 import io.serverlessworkflow.api.timeouts.WorkflowExecTimeout;
-
 import java.io.IOException;
 
 public class ContinueAsDeserializer extends StdDeserializer<ContinueAs> {
 
-    private static final long serialVersionUID = 510l;
+  private static final long serialVersionUID = 510l;
 
-    @SuppressWarnings("unused")
-    private WorkflowPropertySource context;
+  @SuppressWarnings("unused")
+  private WorkflowPropertySource context;
 
-    public ContinueAsDeserializer() {
-        this(ContinueAs.class);
+  public ContinueAsDeserializer() {
+    this(ContinueAs.class);
+  }
+
+  public ContinueAsDeserializer(Class<?> vc) {
+    super(vc);
+  }
+
+  public ContinueAsDeserializer(WorkflowPropertySource context) {
+    this(ContinueAs.class);
+    this.context = context;
+  }
+
+  @Override
+  public ContinueAs deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
+
+    ObjectMapper mapper = (ObjectMapper) jp.getCodec();
+    JsonNode node = jp.getCodec().readTree(jp);
+
+    ContinueAs continueAs = new ContinueAs();
+
+    if (!node.isObject()) {
+      continueAs.setWorkflowId(node.asText());
+      continueAs.setVersion(null);
+      continueAs.setData(null);
+      continueAs.setWorkflowExecTimeout(null);
+      return continueAs;
+    } else {
+      if (node.get("workflowId") != null) {
+        continueAs.setWorkflowId(node.get("workflowId").asText());
+      }
+
+      if (node.get("version") != null) {
+        continueAs.setVersion(node.get("version").asText());
+      }
+
+      if (node.get("data") != null) {
+        continueAs.setData(node.get("data").asText());
+      }
+
+      if (node.get("workflowExecTimeout") != null) {
+        continueAs.setWorkflowExecTimeout(
+            mapper.treeToValue(node.get("workflowExecTimeout"), WorkflowExecTimeout.class));
+      }
+
+      return continueAs;
     }
-
-    public ContinueAsDeserializer(Class<?> vc) {
-        super(vc);
-    }
-
-    public ContinueAsDeserializer(WorkflowPropertySource context) {
-        this(ContinueAs.class);
-        this.context = context;
-    }
-
-    @Override
-    public ContinueAs deserialize(JsonParser jp,
-                                        DeserializationContext ctxt) throws IOException {
-
-        ObjectMapper mapper = (ObjectMapper) jp.getCodec();
-        JsonNode node = jp.getCodec().readTree(jp);
-
-        ContinueAs continueAs = new ContinueAs();
-
-        if (!node.isObject()) {
-            continueAs.setWorkflowId(node.asText());
-            continueAs.setVersion(null);
-            continueAs.setData(null);
-            continueAs.setWorkflowExecTimeout(null);
-            return continueAs;
-        } else {
-            if (node.get("workflowId") != null) {
-                continueAs.setWorkflowId(node.get("workflowId").asText());
-            }
-
-            if (node.get("version") != null) {
-                continueAs.setVersion(node.get("version").asText());
-            }
-
-            if (node.get("data") != null) {
-                continueAs.setData(node.get("data").asText());
-            }
-
-            if (node.get("workflowExecTimeout") != null) {
-                continueAs.setWorkflowExecTimeout(mapper.treeToValue(node.get("workflowExecTimeout"), WorkflowExecTimeout.class));
-            }
-
-            return continueAs;
-        }
-    }
+  }
 }
-

@@ -16,37 +16,35 @@
 package io.serverlessworkflow.api.workflow;
 
 import io.serverlessworkflow.api.error.ErrorDefinition;
-
 import java.util.List;
 
 public class Errors {
-    private String refValue;
-    private List<ErrorDefinition> errorDefs;
+  private String refValue;
+  private List<ErrorDefinition> errorDefs;
 
-    public Errors() {
-    }
+  public Errors() {}
 
-    public Errors(List<ErrorDefinition> errorDefs) {
-        this.errorDefs = errorDefs;
-    }
+  public Errors(List<ErrorDefinition> errorDefs) {
+    this.errorDefs = errorDefs;
+  }
 
-    public Errors(String refValue) {
-        this.refValue = refValue;
-    }
+  public Errors(String refValue) {
+    this.refValue = refValue;
+  }
 
-    public String getRefValue() {
-        return refValue;
-    }
+  public String getRefValue() {
+    return refValue;
+  }
 
-    public void setRefValue(String refValue) {
-        this.refValue = refValue;
-    }
+  public void setRefValue(String refValue) {
+    this.refValue = refValue;
+  }
 
-    public List<ErrorDefinition> getErrorDefs() {
-        return errorDefs;
-    }
+  public List<ErrorDefinition> getErrorDefs() {
+    return errorDefs;
+  }
 
-    public void setErrorDefs(List<ErrorDefinition> errorDefs) {
-        this.errorDefs = errorDefs;
-    }
+  public void setErrorDefs(List<ErrorDefinition> errorDefs) {
+    this.errorDefs = errorDefs;
+  }
 }

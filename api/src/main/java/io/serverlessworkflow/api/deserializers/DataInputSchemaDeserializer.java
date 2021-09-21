@@ -21,44 +21,42 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import io.serverlessworkflow.api.datainputschema.DataInputSchema;
 import io.serverlessworkflow.api.interfaces.WorkflowPropertySource;
-
 import java.io.IOException;
 
 public class DataInputSchemaDeserializer extends StdDeserializer<DataInputSchema> {
 
-    private static final long serialVersionUID = 510l;
+  private static final long serialVersionUID = 510l;
 
-    public DataInputSchemaDeserializer() {
-        this(DataInputSchema.class);
+  public DataInputSchemaDeserializer() {
+    this(DataInputSchema.class);
+  }
+
+  public DataInputSchemaDeserializer(Class<?> vc) {
+    super(vc);
+  }
+
+  public DataInputSchemaDeserializer(WorkflowPropertySource context) {
+    this(DataInputSchema.class);
+  }
+
+  @Override
+  public DataInputSchema deserialize(JsonParser jp, DeserializationContext ctxt)
+      throws IOException {
+
+    JsonNode node = jp.getCodec().readTree(jp);
+
+    DataInputSchema dataInputSchema = new DataInputSchema();
+
+    if (!node.isObject()) {
+      dataInputSchema.setSchema(node.asText());
+      dataInputSchema.setFailOnValidationErrors(true); // default
+
+      return dataInputSchema;
+    } else {
+      dataInputSchema.setSchema(node.get("schema").asText());
+      dataInputSchema.setFailOnValidationErrors(node.get("failOnValidationErrors").asBoolean());
+
+      return dataInputSchema;
     }
-
-    public DataInputSchemaDeserializer(Class<?> vc) {
-        super(vc);
-    }
-
-    public DataInputSchemaDeserializer(WorkflowPropertySource context) {
-        this(DataInputSchema.class);
-    }
-
-    @Override
-    public DataInputSchema deserialize(JsonParser jp,
-                                       DeserializationContext ctxt) throws IOException {
-
-        JsonNode node = jp.getCodec().readTree(jp);
-
-        DataInputSchema dataInputSchema = new DataInputSchema();
-
-        if (!node.isObject()) {
-            dataInputSchema.setSchema(node.asText());
-            dataInputSchema.setFailOnValidationErrors(true); // default
-
-            return dataInputSchema;
-        } else {
-            dataInputSchema.setSchema(node.get("schema").asText());
-            dataInputSchema.setFailOnValidationErrors(node.get("failOnValidationErrors").asBoolean());
-
-            return dataInputSchema;
-        }
-    }
+  }
 }
-

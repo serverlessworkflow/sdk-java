@@ -42,87 +42,92 @@ import io.serverlessworkflow.api.workflow.*;
 
 public class WorkflowModule extends SimpleModule {
 
-    private static final long serialVersionUID = 510l;
+  private static final long serialVersionUID = 510l;
 
-    private WorkflowPropertySource workflowPropertySource;
-    private ExtensionSerializer extensionSerializer;
-    private ExtensionDeserializer extensionDeserializer;
+  private WorkflowPropertySource workflowPropertySource;
+  private ExtensionSerializer extensionSerializer;
+  private ExtensionDeserializer extensionDeserializer;
 
-    public WorkflowModule() {
-        this(null);
-    }
+  public WorkflowModule() {
+    this(null);
+  }
 
-    public WorkflowModule(WorkflowPropertySource workflowPropertySource) {
-        super("workflow-module");
-        this.workflowPropertySource = workflowPropertySource;
-        extensionSerializer = new ExtensionSerializer();
-        extensionDeserializer = new ExtensionDeserializer(workflowPropertySource);
-        addDefaultSerializers();
-        addDefaultDeserializers();
-    }
+  public WorkflowModule(WorkflowPropertySource workflowPropertySource) {
+    super("workflow-module");
+    this.workflowPropertySource = workflowPropertySource;
+    extensionSerializer = new ExtensionSerializer();
+    extensionDeserializer = new ExtensionDeserializer(workflowPropertySource);
+    addDefaultSerializers();
+    addDefaultDeserializers();
+  }
 
-    private void addDefaultSerializers() {
-        addSerializer(new WorkflowSerializer());
-        addSerializer(new EventStateSerializer());
-        addSerializer(new SleepStateSerializer());
-        addSerializer(new OperationStateSerializer());
-        addSerializer(new ParallelStateSerializer());
-        addSerializer(new SwitchStateSerializer());
-        addSerializer(new InjectStateSerializer());
-        addSerializer(new ForEachStateSerializer());
-        addSerializer(new CallbackStateSerializer());
-        addSerializer(new StartDefinitionSerializer());
-        addSerializer(new EndDefinitionSerializer());
-        addSerializer(new TransitionSerializer());
-        addSerializer(new FunctionRefSerializer());
-        addSerializer(new CronSerializer());
-        addSerializer(new ScheduleSerializer());
-        addSerializer(new SubFlowRefSerializer());
-        addSerializer(new AuthDefinitionSerializer());
-        addSerializer(new StateExecTimeoutSerializer());
-        addSerializer(new ContinueAsSerializer());
-        addSerializer(extensionSerializer);
-    }
+  private void addDefaultSerializers() {
+    addSerializer(new WorkflowSerializer());
+    addSerializer(new EventStateSerializer());
+    addSerializer(new SleepStateSerializer());
+    addSerializer(new OperationStateSerializer());
+    addSerializer(new ParallelStateSerializer());
+    addSerializer(new SwitchStateSerializer());
+    addSerializer(new InjectStateSerializer());
+    addSerializer(new ForEachStateSerializer());
+    addSerializer(new CallbackStateSerializer());
+    addSerializer(new StartDefinitionSerializer());
+    addSerializer(new EndDefinitionSerializer());
+    addSerializer(new TransitionSerializer());
+    addSerializer(new FunctionRefSerializer());
+    addSerializer(new CronSerializer());
+    addSerializer(new ScheduleSerializer());
+    addSerializer(new SubFlowRefSerializer());
+    addSerializer(new AuthDefinitionSerializer());
+    addSerializer(new StateExecTimeoutSerializer());
+    addSerializer(new ContinueAsSerializer());
+    addSerializer(extensionSerializer);
+  }
 
-    private void addDefaultDeserializers() {
-        addDeserializer(State.class,
-                new StateDeserializer(workflowPropertySource));
-        addDeserializer(String.class,
-                new StringValueDeserializer(workflowPropertySource));
-        addDeserializer(OnEvents.ActionMode.class,
-                new OnEventsActionModeDeserializer(workflowPropertySource));
-        addDeserializer(OperationState.ActionMode.class,
-                new OperationStateActionModeDeserializer(workflowPropertySource));
-        addDeserializer(DefaultState.Type.class,
-                new DefaultStateTypeDeserializer(workflowPropertySource));
-        addDeserializer(EventDefinition.Kind.class, new EventDefinitionKindDeserializer(workflowPropertySource));
-        addDeserializer(ParallelState.CompletionType.class, new ParallelStateCompletionTypeDeserializer(workflowPropertySource));
-        addDeserializer(Retries.class, new RetriesDeserializer(workflowPropertySource));
-        addDeserializer(Secrets.class, new SecretsDeserializer(workflowPropertySource));
-        addDeserializer(Constants.class, new ConstantsDeserializer(workflowPropertySource));
-        addDeserializer(Functions.class, new FunctionsDeserializer(workflowPropertySource));
-        addDeserializer(Events.class, new EventsDeserializer(workflowPropertySource));
-        addDeserializer(Start.class, new StartDefinitionDeserializer(workflowPropertySource));
-        addDeserializer(End.class, new EndDefinitionDeserializer(workflowPropertySource));
-        addDeserializer(Extension.class, extensionDeserializer);
-        addDeserializer(FunctionDefinition.Type.class, new FunctionDefinitionTypeDeserializer(workflowPropertySource));
-        addDeserializer(Transition.class, new TransitionDeserializer(workflowPropertySource));
-        addDeserializer(FunctionRef.class, new FunctionRefDeserializer(workflowPropertySource));
-        addDeserializer(SubFlowRef.class, new SubFlowRefDeserializer(workflowPropertySource));
-        addDeserializer(Cron.class, new CronDeserializer(workflowPropertySource));
-        addDeserializer(Schedule.class, new ScheduleDeserializer(workflowPropertySource));
-        addDeserializer(DataInputSchema.class, new DataInputSchemaDeserializer(workflowPropertySource));
-        addDeserializer(AuthDefinition.class, new AuthDefinitionDeserializer(workflowPropertySource));
-        addDeserializer(StateExecTimeout.class, new StateExecTimeoutDeserializer(workflowPropertySource));
-        addDeserializer(Errors.class, new ErrorsDeserializer(workflowPropertySource));
-        addDeserializer(ContinueAs.class, new ContinueAsDeserializer(workflowPropertySource));
-    }
+  private void addDefaultDeserializers() {
+    addDeserializer(State.class, new StateDeserializer(workflowPropertySource));
+    addDeserializer(String.class, new StringValueDeserializer(workflowPropertySource));
+    addDeserializer(
+        OnEvents.ActionMode.class, new OnEventsActionModeDeserializer(workflowPropertySource));
+    addDeserializer(
+        OperationState.ActionMode.class,
+        new OperationStateActionModeDeserializer(workflowPropertySource));
+    addDeserializer(
+        DefaultState.Type.class, new DefaultStateTypeDeserializer(workflowPropertySource));
+    addDeserializer(
+        EventDefinition.Kind.class, new EventDefinitionKindDeserializer(workflowPropertySource));
+    addDeserializer(
+        ParallelState.CompletionType.class,
+        new ParallelStateCompletionTypeDeserializer(workflowPropertySource));
+    addDeserializer(Retries.class, new RetriesDeserializer(workflowPropertySource));
+    addDeserializer(Secrets.class, new SecretsDeserializer(workflowPropertySource));
+    addDeserializer(Constants.class, new ConstantsDeserializer(workflowPropertySource));
+    addDeserializer(Functions.class, new FunctionsDeserializer(workflowPropertySource));
+    addDeserializer(Events.class, new EventsDeserializer(workflowPropertySource));
+    addDeserializer(Start.class, new StartDefinitionDeserializer(workflowPropertySource));
+    addDeserializer(End.class, new EndDefinitionDeserializer(workflowPropertySource));
+    addDeserializer(Extension.class, extensionDeserializer);
+    addDeserializer(
+        FunctionDefinition.Type.class,
+        new FunctionDefinitionTypeDeserializer(workflowPropertySource));
+    addDeserializer(Transition.class, new TransitionDeserializer(workflowPropertySource));
+    addDeserializer(FunctionRef.class, new FunctionRefDeserializer(workflowPropertySource));
+    addDeserializer(SubFlowRef.class, new SubFlowRefDeserializer(workflowPropertySource));
+    addDeserializer(Cron.class, new CronDeserializer(workflowPropertySource));
+    addDeserializer(Schedule.class, new ScheduleDeserializer(workflowPropertySource));
+    addDeserializer(DataInputSchema.class, new DataInputSchemaDeserializer(workflowPropertySource));
+    addDeserializer(AuthDefinition.class, new AuthDefinitionDeserializer(workflowPropertySource));
+    addDeserializer(
+        StateExecTimeout.class, new StateExecTimeoutDeserializer(workflowPropertySource));
+    addDeserializer(Errors.class, new ErrorsDeserializer(workflowPropertySource));
+    addDeserializer(ContinueAs.class, new ContinueAsDeserializer(workflowPropertySource));
+  }
 
-    public ExtensionSerializer getExtensionSerializer() {
-        return extensionSerializer;
-    }
+  public ExtensionSerializer getExtensionSerializer() {
+    return extensionSerializer;
+  }
 
-    public ExtensionDeserializer getExtensionDeserializer() {
-        return extensionDeserializer;
-    }
+  public ExtensionDeserializer getExtensionDeserializer() {
+    return extensionDeserializer;
+  }
 }

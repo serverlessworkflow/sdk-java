@@ -19,54 +19,49 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import io.serverlessworkflow.api.end.ContinueAs;
-
 import java.io.IOException;
 
 public class ContinueAsSerializer extends StdSerializer<ContinueAs> {
 
-    public ContinueAsSerializer() {
-        this(ContinueAs.class);
-    }
+  public ContinueAsSerializer() {
+    this(ContinueAs.class);
+  }
 
-    protected ContinueAsSerializer(Class<ContinueAs> t) {
-        super(t);
-    }
+  protected ContinueAsSerializer(Class<ContinueAs> t) {
+    super(t);
+  }
 
-    @Override
-    public void serialize(ContinueAs continueAs,
-                          JsonGenerator gen,
-                          SerializerProvider provider) throws IOException {
+  @Override
+  public void serialize(ContinueAs continueAs, JsonGenerator gen, SerializerProvider provider)
+      throws IOException {
 
-        if (continueAs != null) {
-            if ((continueAs.getWorkflowId() != null && !continueAs.getWorkflowId().isEmpty())
-                    && (continueAs.getVersion() == null || continueAs.getVersion().isEmpty())
-                    && (continueAs.getData() == null || continueAs.getData().isEmpty())
-                    && continueAs.getWorkflowExecTimeout() == null ) {
-                gen.writeString(continueAs.getWorkflowId());
-            } else {
-                gen.writeStartObject();
+    if (continueAs != null) {
+      if ((continueAs.getWorkflowId() != null && !continueAs.getWorkflowId().isEmpty())
+          && (continueAs.getVersion() == null || continueAs.getVersion().isEmpty())
+          && (continueAs.getData() == null || continueAs.getData().isEmpty())
+          && continueAs.getWorkflowExecTimeout() == null) {
+        gen.writeString(continueAs.getWorkflowId());
+      } else {
+        gen.writeStartObject();
 
-                if (continueAs.getWorkflowId() != null && continueAs.getWorkflowId().length() > 0) {
-                    gen.writeStringField("workflowId", continueAs.getWorkflowId());
-                }
-
-                if (continueAs.getVersion() != null && continueAs.getVersion().length() > 0) {
-                    gen.writeStringField("version", continueAs.getVersion());
-                }
-
-                if (continueAs.getData() != null && continueAs.getData().length() > 0) {
-                    gen.writeStringField("data", continueAs.getData());
-                }
-
-                if (continueAs.getWorkflowExecTimeout() != null) {
-                    gen.writeObjectField("workflowExecTimeout", continueAs.getWorkflowExecTimeout());
-                }
-
-
-                gen.writeEndObject();
-            }
+        if (continueAs.getWorkflowId() != null && continueAs.getWorkflowId().length() > 0) {
+          gen.writeStringField("workflowId", continueAs.getWorkflowId());
         }
+
+        if (continueAs.getVersion() != null && continueAs.getVersion().length() > 0) {
+          gen.writeStringField("version", continueAs.getVersion());
+        }
+
+        if (continueAs.getData() != null && continueAs.getData().length() > 0) {
+          gen.writeStringField("data", continueAs.getData());
+        }
+
+        if (continueAs.getWorkflowExecTimeout() != null) {
+          gen.writeObjectField("workflowExecTimeout", continueAs.getWorkflowExecTimeout());
+        }
+
+        gen.writeEndObject();
+      }
     }
+  }
 }
-
-

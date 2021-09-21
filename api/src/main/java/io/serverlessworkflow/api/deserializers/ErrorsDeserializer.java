@@ -25,83 +25,79 @@ import io.serverlessworkflow.api.error.ErrorDefinition;
 import io.serverlessworkflow.api.interfaces.WorkflowPropertySource;
 import io.serverlessworkflow.api.utils.Utils;
 import io.serverlessworkflow.api.workflow.Errors;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
 public class ErrorsDeserializer extends StdDeserializer<Errors> {
 
-    private static final long serialVersionUID = 510l;
-    private static Logger logger = LoggerFactory.getLogger(ErrorsDeserializer.class);
+  private static final long serialVersionUID = 510l;
+  private static Logger logger = LoggerFactory.getLogger(ErrorsDeserializer.class);
 
-    @SuppressWarnings("unused")
-    private WorkflowPropertySource context;
+  @SuppressWarnings("unused")
+  private WorkflowPropertySource context;
 
-    public ErrorsDeserializer() {
-        this(Errors.class);
-    }
+  public ErrorsDeserializer() {
+    this(Errors.class);
+  }
 
-    public ErrorsDeserializer(Class<?> vc) {
-        super(vc);
-    }
+  public ErrorsDeserializer(Class<?> vc) {
+    super(vc);
+  }
 
-    public ErrorsDeserializer(WorkflowPropertySource context) {
-        this(Errors.class);
-        this.context = context;
-    }
+  public ErrorsDeserializer(WorkflowPropertySource context) {
+    this(Errors.class);
+    this.context = context;
+  }
 
-    @Override
-    public Errors deserialize(JsonParser jp,
-                               DeserializationContext ctxt) throws IOException {
+  @Override
+  public Errors deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
 
-        ObjectMapper mapper = (ObjectMapper) jp.getCodec();
-        JsonNode node = jp.getCodec().readTree(jp);
+    ObjectMapper mapper = (ObjectMapper) jp.getCodec();
+    JsonNode node = jp.getCodec().readTree(jp);
 
-        Errors errors = new Errors();
-        List<ErrorDefinition> errorDefinitions = new ArrayList<>();
+    Errors errors = new Errors();
+    List<ErrorDefinition> errorDefinitions = new ArrayList<>();
 
-        if (node.isArray()) {
-            for (final JsonNode nodeEle : node) {
-                errorDefinitions.add(mapper.treeToValue(nodeEle, ErrorDefinition.class));
-            }
+    if (node.isArray()) {
+      for (final JsonNode nodeEle : node) {
+        errorDefinitions.add(mapper.treeToValue(nodeEle, ErrorDefinition.class));
+      }
+    } else {
+      String errorsFileDef = node.asText();
+      String errorsFileSrc = Utils.getResourceFileAsString(errorsFileDef);
+      JsonNode errorsRefNode;
+      ObjectMapper jsonWriter = new ObjectMapper();
+      if (errorsFileSrc != null && errorsFileSrc.trim().length() > 0) {
+        // if its a yaml def convert to json first
+        if (!errorsFileSrc.trim().startsWith("{")) {
+          // convert yaml to json to validate
+          ObjectMapper yamlReader = new ObjectMapper(new YAMLFactory());
+          Object obj = yamlReader.readValue(errorsFileSrc, Object.class);
+
+          errorsRefNode =
+              jsonWriter.readTree(new JSONObject(jsonWriter.writeValueAsString(obj)).toString());
         } else {
-            String errorsFileDef = node.asText();
-            String errorsFileSrc = Utils.getResourceFileAsString(errorsFileDef);
-            JsonNode errorsRefNode;
-            ObjectMapper jsonWriter = new ObjectMapper();
-            if (errorsFileSrc != null && errorsFileSrc.trim().length() > 0) {
-                // if its a yaml def convert to json first
-                if (!errorsFileSrc.trim().startsWith("{")) {
-                    // convert yaml to json to validate
-                    ObjectMapper yamlReader = new ObjectMapper(new YAMLFactory());
-                    Object obj = yamlReader.readValue(errorsFileSrc, Object.class);
-
-                    errorsRefNode = jsonWriter.readTree(new JSONObject(jsonWriter.writeValueAsString(obj)).toString());
-                } else {
-                    errorsRefNode = jsonWriter.readTree(new JSONObject(errorsFileSrc).toString());
-                }
-
-                JsonNode refErrors = errorsRefNode.get("errors");
-                if (refErrors != null) {
-                    for (final JsonNode nodeEle : refErrors) {
-                        errorDefinitions.add(mapper.treeToValue(nodeEle, ErrorDefinition.class));
-                    }
-                } else {
-                    logger.error("Unable to find error definitions in reference file: {}", errorsFileSrc);
-                }
-
-            } else {
-                logger.error("Unable to load errors defs reference file: {}", errorsFileSrc);
-            }
-
+          errorsRefNode = jsonWriter.readTree(new JSONObject(errorsFileSrc).toString());
         }
-        errors.setErrorDefs(errorDefinitions);
-        return errors;
 
+        JsonNode refErrors = errorsRefNode.get("errors");
+        if (refErrors != null) {
+          for (final JsonNode nodeEle : refErrors) {
+            errorDefinitions.add(mapper.treeToValue(nodeEle, ErrorDefinition.class));
+          }
+        } else {
+          logger.error("Unable to find error definitions in reference file: {}", errorsFileSrc);
+        }
+
+      } else {
+        logger.error("Unable to load errors defs reference file: {}", errorsFileSrc);
+      }
     }
+    errors.setErrorDefs(errorDefinitions);
+    return errors;
+  }
 }
-

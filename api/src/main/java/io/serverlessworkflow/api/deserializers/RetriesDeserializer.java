@@ -25,82 +25,79 @@ import io.serverlessworkflow.api.interfaces.WorkflowPropertySource;
 import io.serverlessworkflow.api.retry.RetryDefinition;
 import io.serverlessworkflow.api.utils.Utils;
 import io.serverlessworkflow.api.workflow.Retries;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
 public class RetriesDeserializer extends StdDeserializer<Retries> {
 
-    private static final long serialVersionUID = 510l;
-    private static Logger logger = LoggerFactory.getLogger(RetriesDeserializer.class);
+  private static final long serialVersionUID = 510l;
+  private static Logger logger = LoggerFactory.getLogger(RetriesDeserializer.class);
 
-    @SuppressWarnings("unused")
-    private WorkflowPropertySource context;
+  @SuppressWarnings("unused")
+  private WorkflowPropertySource context;
 
-    public RetriesDeserializer() {
-        this(Retries.class);
-    }
+  public RetriesDeserializer() {
+    this(Retries.class);
+  }
 
-    public RetriesDeserializer(Class<?> vc) {
-        super(vc);
-    }
+  public RetriesDeserializer(Class<?> vc) {
+    super(vc);
+  }
 
-    public RetriesDeserializer(WorkflowPropertySource context) {
-        this(Retries.class);
-        this.context = context;
-    }
+  public RetriesDeserializer(WorkflowPropertySource context) {
+    this(Retries.class);
+    this.context = context;
+  }
 
-    @Override
-    public Retries deserialize(JsonParser jp,
-                               DeserializationContext ctxt) throws IOException {
+  @Override
+  public Retries deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
 
-        ObjectMapper mapper = (ObjectMapper) jp.getCodec();
-        JsonNode node = jp.getCodec().readTree(jp);
+    ObjectMapper mapper = (ObjectMapper) jp.getCodec();
+    JsonNode node = jp.getCodec().readTree(jp);
 
-        Retries retries = new Retries();
-        List<RetryDefinition> retryDefinitions = new ArrayList<>();
+    Retries retries = new Retries();
+    List<RetryDefinition> retryDefinitions = new ArrayList<>();
 
-        if (node.isArray()) {
-            for (final JsonNode nodeEle : node) {
-                retryDefinitions.add(mapper.treeToValue(nodeEle, RetryDefinition.class));
-            }
+    if (node.isArray()) {
+      for (final JsonNode nodeEle : node) {
+        retryDefinitions.add(mapper.treeToValue(nodeEle, RetryDefinition.class));
+      }
+    } else {
+      String retriesFileDef = node.asText();
+      String retriesFileSrc = Utils.getResourceFileAsString(retriesFileDef);
+      JsonNode retriesRefNode;
+      ObjectMapper jsonWriter = new ObjectMapper();
+      if (retriesFileSrc != null && retriesFileSrc.trim().length() > 0) {
+        // if its a yaml def convert to json first
+        if (!retriesFileSrc.trim().startsWith("{")) {
+          // convert yaml to json to validate
+          ObjectMapper yamlReader = new ObjectMapper(new YAMLFactory());
+          Object obj = yamlReader.readValue(retriesFileSrc, Object.class);
+
+          retriesRefNode =
+              jsonWriter.readTree(new JSONObject(jsonWriter.writeValueAsString(obj)).toString());
         } else {
-            String retriesFileDef = node.asText();
-            String retriesFileSrc = Utils.getResourceFileAsString(retriesFileDef);
-            JsonNode retriesRefNode;
-            ObjectMapper jsonWriter = new ObjectMapper();
-            if (retriesFileSrc != null && retriesFileSrc.trim().length() > 0) {
-                // if its a yaml def convert to json first
-                if (!retriesFileSrc.trim().startsWith("{")) {
-                    // convert yaml to json to validate
-                    ObjectMapper yamlReader = new ObjectMapper(new YAMLFactory());
-                    Object obj = yamlReader.readValue(retriesFileSrc, Object.class);
-
-                    retriesRefNode = jsonWriter.readTree(new JSONObject(jsonWriter.writeValueAsString(obj)).toString());
-                } else {
-                    retriesRefNode = jsonWriter.readTree(new JSONObject(retriesFileSrc).toString());
-                }
-
-                JsonNode refRetries = retriesRefNode.get("retries");
-                if (refRetries != null) {
-                    for (final JsonNode nodeEle : refRetries) {
-                        retryDefinitions.add(mapper.treeToValue(nodeEle, RetryDefinition.class));
-                    }
-                } else {
-                    logger.error("Unable to find retries definitions in reference file: {}", retriesFileSrc);
-                }
-
-            } else {
-                logger.error("Unable to load retries defs reference file: {}", retriesFileSrc);
-            }
-
+          retriesRefNode = jsonWriter.readTree(new JSONObject(retriesFileSrc).toString());
         }
-        retries.setRetryDefs(retryDefinitions);
-        return retries;
 
+        JsonNode refRetries = retriesRefNode.get("retries");
+        if (refRetries != null) {
+          for (final JsonNode nodeEle : refRetries) {
+            retryDefinitions.add(mapper.treeToValue(nodeEle, RetryDefinition.class));
+          }
+        } else {
+          logger.error("Unable to find retries definitions in reference file: {}", retriesFileSrc);
+        }
+
+      } else {
+        logger.error("Unable to load retries defs reference file: {}", retriesFileSrc);
+      }
     }
+    retries.setRetryDefs(retryDefinitions);
+    return retries;
+  }
 }

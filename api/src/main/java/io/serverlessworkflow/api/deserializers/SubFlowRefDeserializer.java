@@ -22,52 +22,49 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import io.serverlessworkflow.api.functions.SubFlowRef;
 import io.serverlessworkflow.api.interfaces.WorkflowPropertySource;
-
 import java.io.IOException;
 
 public class SubFlowRefDeserializer extends StdDeserializer<SubFlowRef> {
 
-    private static final long serialVersionUID = 510l;
+  private static final long serialVersionUID = 510l;
 
-    @SuppressWarnings("unused")
-    private WorkflowPropertySource context;
+  @SuppressWarnings("unused")
+  private WorkflowPropertySource context;
 
-    public SubFlowRefDeserializer() {
-        this(SubFlowRef.class);
+  public SubFlowRefDeserializer() {
+    this(SubFlowRef.class);
+  }
+
+  public SubFlowRefDeserializer(Class<?> vc) {
+    super(vc);
+  }
+
+  public SubFlowRefDeserializer(WorkflowPropertySource context) {
+    this(SubFlowRef.class);
+    this.context = context;
+  }
+
+  @Override
+  public SubFlowRef deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
+
+    ObjectMapper mapper = (ObjectMapper) jp.getCodec();
+    JsonNode node = jp.getCodec().readTree(jp);
+
+    SubFlowRef subflowRef = new SubFlowRef();
+
+    if (!node.isObject()) {
+      subflowRef.setWorkflowId(node.asText());
+      return subflowRef;
+    } else {
+      if (node.get("workflowId") != null) {
+        subflowRef.setWorkflowId(node.get("workflowId").asText());
+      }
+
+      if (node.get("version") != null) {
+        subflowRef.setVersion(node.get("version").asText());
+      }
+
+      return subflowRef;
     }
-
-    public SubFlowRefDeserializer(Class<?> vc) {
-        super(vc);
-    }
-
-    public SubFlowRefDeserializer(WorkflowPropertySource context) {
-        this(SubFlowRef.class);
-        this.context = context;
-    }
-
-    @Override
-    public SubFlowRef deserialize(JsonParser jp,
-                                  DeserializationContext ctxt) throws IOException {
-
-        ObjectMapper mapper = (ObjectMapper) jp.getCodec();
-        JsonNode node = jp.getCodec().readTree(jp);
-
-        SubFlowRef subflowRef = new SubFlowRef();
-
-        if (!node.isObject()) {
-            subflowRef.setWorkflowId(node.asText());
-            return subflowRef;
-        } else {
-            if (node.get("workflowId") != null) {
-                subflowRef.setWorkflowId(node.get("workflowId").asText());
-            }
-
-            if (node.get("version") != null) {
-                subflowRef.setVersion(node.get("version").asText());
-            }
-
-            return subflowRef;
-        }
-    }
+  }
 }
-

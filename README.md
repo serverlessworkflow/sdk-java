@@ -34,6 +34,9 @@ git clone https://github.com/serverlessworkflow/sdk-java.git
 mvn clean install
 ```
 
+The project uses [Google's code styleguide](https://google.github.io/styleguide/javaguide.html).
+Your changes should be automatically formatted during the build.
+
 To use it in your projects you can:
 
 #### Maven projects:

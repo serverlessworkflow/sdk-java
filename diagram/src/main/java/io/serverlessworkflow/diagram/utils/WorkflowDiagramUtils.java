@@ -18,42 +18,44 @@ package io.serverlessworkflow.diagram.utils;
 import io.serverlessworkflow.api.Workflow;
 import io.serverlessworkflow.api.interfaces.State;
 import io.serverlessworkflow.api.states.DefaultState;
-
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class WorkflowDiagramUtils {
-    public static final String versionSeparator = " v";
-    public static final String wfStart = "wfstart";
-    public static final String wfEnd = "wfend";
-    public static final String startEnd = "[*]";
-    public static final String connection = " --> ";
-    public static final String description = " : ";
-    public static final String title = "title ";
-    public static final String footer = "center footer Serverless Workflow Specification - serverlessworkflow.io";
-    public static final String legendStart = new StringBuilder().append("legend top center").append(System.lineSeparator()).toString();
-    public static final String legendEnd = new StringBuilder().append(System.lineSeparator()).append("endlegend").toString();
-    public static final String stateDef = "state ";
-    public static final String stateAsName = " as ";
-    public static final String typeDefStart = " << ";
-    public static final String typeDefEnd = " >> ";
+  public static final String versionSeparator = " v";
+  public static final String wfStart = "wfstart";
+  public static final String wfEnd = "wfend";
+  public static final String startEnd = "[*]";
+  public static final String connection = " --> ";
+  public static final String description = " : ";
+  public static final String title = "title ";
+  public static final String footer =
+      "center footer Serverless Workflow Specification - serverlessworkflow.io";
+  public static final String legendStart =
+      new StringBuilder().append("legend top center").append(System.lineSeparator()).toString();
+  public static final String legendEnd =
+      new StringBuilder().append(System.lineSeparator()).append("endlegend").toString();
+  public static final String stateDef = "state ";
+  public static final String stateAsName = " as ";
+  public static final String typeDefStart = " << ";
+  public static final String typeDefEnd = " >> ";
 
+  public static State getWorkflowStartState(Workflow workflow) {
+    return workflow.getStates().stream()
+        .filter(ws -> ws.getName().equals(workflow.getStart().getStateName()))
+        .findFirst()
+        .get();
+  }
 
-    public static State getWorkflowStartState(Workflow workflow) {
-        return workflow.getStates().stream()
-                .filter(ws -> ws.getName().equals(workflow.getStart().getStateName()))
-                .findFirst().get();
-    }
+  public static List<State> getStatesByType(Workflow workflow, DefaultState.Type type) {
+    return workflow.getStates().stream()
+        .filter(ws -> ws.getType() == type)
+        .collect(Collectors.toList());
+  }
 
-    public static List<State> getStatesByType(Workflow workflow, DefaultState.Type type) {
-        return workflow.getStates().stream()
-                .filter(ws -> ws.getType() == type)
-                .collect(Collectors.toList());
-    }
-
-    public static List<State> getWorkflowEndStates(Workflow workflow) {
-        return workflow.getStates().stream()
-                .filter(ws -> ws.getEnd() != null)
-                .collect(Collectors.toList());
-    }
+  public static List<State> getWorkflowEndStates(Workflow workflow) {
+    return workflow.getStates().stream()
+        .filter(ws -> ws.getEnd() != null)
+        .collect(Collectors.toList());
+  }
 }

@@ -21,29 +21,28 @@ import io.serverlessworkflow.api.filters.StateDataFilter;
 import io.serverlessworkflow.api.states.DefaultState.Type;
 import io.serverlessworkflow.api.timeouts.TimeoutsDefinition;
 import io.serverlessworkflow.api.transitions.Transition;
-
 import java.util.List;
 import java.util.Map;
 
 public interface State {
 
-    String getId();
+  String getId();
 
-    String getName();
+  String getName();
 
-    Type getType();
+  Type getType();
 
-    End getEnd();
+  End getEnd();
 
-    StateDataFilter getStateDataFilter();
+  StateDataFilter getStateDataFilter();
 
-    Transition getTransition();
+  Transition getTransition();
 
-    List<Error> getOnErrors();
+  List<Error> getOnErrors();
 
-    String getCompensatedBy();
+  String getCompensatedBy();
 
-    Map<String, String> getMetadata();
+  Map<String, String> getMetadata();
 
-    TimeoutsDefinition getTimeouts();
+  TimeoutsDefinition getTimeouts();
 }

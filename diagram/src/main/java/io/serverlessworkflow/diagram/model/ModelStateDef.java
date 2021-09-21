@@ -18,26 +18,27 @@ package io.serverlessworkflow.diagram.model;
 import io.serverlessworkflow.diagram.utils.WorkflowDiagramUtils;
 
 public class ModelStateDef {
-    private String name;
-    private String type;
-    private String noSpaceName;
+  private String name;
+  private String type;
+  private String noSpaceName;
 
-    public ModelStateDef(String name, String type) {
-        this.name = name;
-        this.type = type;
-        this.noSpaceName = name.replaceAll("\\s", "");
-    }
+  public ModelStateDef(String name, String type) {
+    this.name = name;
+    this.type = type;
+    this.noSpaceName = name.replaceAll("\\s", "");
+  }
 
-    @Override
-    public String toString() {
-        StringBuilder retBuff = new StringBuilder();
-        retBuff.append(WorkflowDiagramUtils.stateDef)
-                .append(noSpaceName)
-                .append(WorkflowDiagramUtils.stateAsName)
-                .append("\"" + name + "\"")
-                .append(WorkflowDiagramUtils.typeDefStart)
-                .append(type)
-                .append(WorkflowDiagramUtils.typeDefEnd);
-        return retBuff.toString();
-    }
+  @Override
+  public String toString() {
+    StringBuilder retBuff = new StringBuilder();
+    retBuff
+        .append(WorkflowDiagramUtils.stateDef)
+        .append(noSpaceName)
+        .append(WorkflowDiagramUtils.stateAsName)
+        .append("\"" + name + "\"")
+        .append(WorkflowDiagramUtils.typeDefStart)
+        .append(type)
+        .append(WorkflowDiagramUtils.typeDefEnd);
+    return retBuff.toString();
+  }
 }

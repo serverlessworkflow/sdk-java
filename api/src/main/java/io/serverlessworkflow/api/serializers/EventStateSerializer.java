@@ -22,31 +22,28 @@ import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import io.serverlessworkflow.api.states.DefaultState;
 import io.serverlessworkflow.api.states.EventState;
-
 import java.io.IOException;
 
 public class EventStateSerializer extends StdSerializer<EventState> {
 
-    public EventStateSerializer() {
-        this(EventState.class);
-    }
+  public EventStateSerializer() {
+    this(EventState.class);
+  }
 
-    protected EventStateSerializer(Class<EventState> t) {
-        super(t);
-    }
+  protected EventStateSerializer(Class<EventState> t) {
+    super(t);
+  }
 
-    @Override
-    public void serialize(EventState eventState,
-                          JsonGenerator gen,
-                          SerializerProvider provider) throws IOException {
+  @Override
+  public void serialize(EventState eventState, JsonGenerator gen, SerializerProvider provider)
+      throws IOException {
 
-        // set defaults for end state
-        eventState.setType(DefaultState.Type.EVENT);
+    // set defaults for end state
+    eventState.setType(DefaultState.Type.EVENT);
 
-        // serialize after setting default bean values...
-        BeanSerializerFactory.instance.createSerializer(provider,
-                TypeFactory.defaultInstance().constructType(EventState.class)).serialize(eventState,
-                gen,
-                provider);
-    }
+    // serialize after setting default bean values...
+    BeanSerializerFactory.instance
+        .createSerializer(provider, TypeFactory.defaultInstance().constructType(EventState.class))
+        .serialize(eventState, gen, provider);
+  }
 }

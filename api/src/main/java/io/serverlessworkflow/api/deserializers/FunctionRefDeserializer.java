@@ -22,56 +22,54 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import io.serverlessworkflow.api.functions.FunctionRef;
 import io.serverlessworkflow.api.interfaces.WorkflowPropertySource;
-
 import java.io.IOException;
 
 public class FunctionRefDeserializer extends StdDeserializer<FunctionRef> {
 
-    private static final long serialVersionUID = 510l;
+  private static final long serialVersionUID = 510l;
 
-    @SuppressWarnings("unused")
-    private WorkflowPropertySource context;
+  @SuppressWarnings("unused")
+  private WorkflowPropertySource context;
 
-    public FunctionRefDeserializer() {
-        this(FunctionRef.class);
+  public FunctionRefDeserializer() {
+    this(FunctionRef.class);
+  }
+
+  public FunctionRefDeserializer(Class<?> vc) {
+    super(vc);
+  }
+
+  public FunctionRefDeserializer(WorkflowPropertySource context) {
+    this(FunctionRef.class);
+    this.context = context;
+  }
+
+  @Override
+  public FunctionRef deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
+
+    ObjectMapper mapper = (ObjectMapper) jp.getCodec();
+    JsonNode node = jp.getCodec().readTree(jp);
+
+    FunctionRef functionRef = new FunctionRef();
+
+    if (!node.isObject()) {
+      functionRef.setRefName(node.asText());
+      functionRef.setArguments(null);
+      return functionRef;
+    } else {
+      if (node.get("arguments") != null) {
+        functionRef.setArguments(mapper.treeToValue(node.get("arguments"), JsonNode.class));
+      }
+
+      if (node.get("refName") != null) {
+        functionRef.setRefName(node.get("refName").asText());
+      }
+
+      if (node.get("selectionSet") != null) {
+        functionRef.setSelectionSet(node.get("selectionSet").asText());
+      }
+
+      return functionRef;
     }
-
-    public FunctionRefDeserializer(Class<?> vc) {
-        super(vc);
-    }
-
-    public FunctionRefDeserializer(WorkflowPropertySource context) {
-        this(FunctionRef.class);
-        this.context = context;
-    }
-
-    @Override
-    public FunctionRef deserialize(JsonParser jp,
-                                   DeserializationContext ctxt) throws IOException {
-
-        ObjectMapper mapper = (ObjectMapper) jp.getCodec();
-        JsonNode node = jp.getCodec().readTree(jp);
-
-        FunctionRef functionRef = new FunctionRef();
-
-        if (!node.isObject()) {
-            functionRef.setRefName(node.asText());
-            functionRef.setArguments(null);
-            return functionRef;
-        } else {
-            if (node.get("arguments") != null) {
-                functionRef.setArguments(mapper.treeToValue(node.get("arguments"), JsonNode.class));
-            }
-
-            if (node.get("refName") != null) {
-                functionRef.setRefName(node.get("refName").asText());
-            }
-
-            if (node.get("selectionSet") != null) {
-                functionRef.setSelectionSet(node.get("selectionSet").asText());
-            }
-
-            return functionRef;
-        }
-    }
+  }
 }

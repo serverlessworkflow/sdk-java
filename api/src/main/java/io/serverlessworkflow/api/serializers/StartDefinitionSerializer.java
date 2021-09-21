@@ -19,42 +19,40 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import io.serverlessworkflow.api.start.Start;
-
 import java.io.IOException;
 
 public class StartDefinitionSerializer extends StdSerializer<Start> {
 
-    public StartDefinitionSerializer() {
-        this(Start.class);
-    }
+  public StartDefinitionSerializer() {
+    this(Start.class);
+  }
 
-    protected StartDefinitionSerializer(Class<Start> t) {
-        super(t);
-    }
+  protected StartDefinitionSerializer(Class<Start> t) {
+    super(t);
+  }
 
-    @Override
-    public void serialize(Start start,
-                          JsonGenerator gen,
-                          SerializerProvider provider) throws IOException {
+  @Override
+  public void serialize(Start start, JsonGenerator gen, SerializerProvider provider)
+      throws IOException {
 
-        if (start != null) {
-            if (start.getStateName() != null && start.getStateName().length() > 0
-                    && start.getSchedule() == null) {
-                gen.writeString(start.getStateName());
-            } else {
-                gen.writeStartObject();
+    if (start != null) {
+      if (start.getStateName() != null
+          && start.getStateName().length() > 0
+          && start.getSchedule() == null) {
+        gen.writeString(start.getStateName());
+      } else {
+        gen.writeStartObject();
 
-                if (start.getStateName() != null && start.getStateName().length() > 0) {
-                    gen.writeStringField("stateName", start.getStateName());
-                }
-
-                if (start.getSchedule() != null) {
-                    gen.writeObjectField("schedule",
-                            start.getSchedule());
-                }
-
-                gen.writeEndObject();
-            }
+        if (start.getStateName() != null && start.getStateName().length() > 0) {
+          gen.writeStringField("stateName", start.getStateName());
         }
+
+        if (start.getSchedule() != null) {
+          gen.writeObjectField("schedule", start.getSchedule());
+        }
+
+        gen.writeEndObject();
+      }
     }
+  }
 }

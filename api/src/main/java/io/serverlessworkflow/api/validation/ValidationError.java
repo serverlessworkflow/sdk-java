@@ -16,33 +16,31 @@
 package io.serverlessworkflow.api.validation;
 
 public class ValidationError {
-    private static final String MSG_FORMAT = "%s:%s";
-    public static final String SCHEMA_VALIDATION = "schemavalidation";
-    public static final String WORKFLOW_VALIDATION = "workflowvalidation";
+  private static final String MSG_FORMAT = "%s:%s";
+  public static final String SCHEMA_VALIDATION = "schemavalidation";
+  public static final String WORKFLOW_VALIDATION = "workflowvalidation";
 
-    private String message;
-    private String type;
+  private String message;
+  private String type;
 
-    public String getMessage() {
-        return message;
-    }
+  public String getMessage() {
+    return message;
+  }
 
-    public void setMessage(String message) {
-        this.message = message;
-    }
+  public void setMessage(String message) {
+    this.message = message;
+  }
 
-    public String getType() {
-        return type;
-    }
+  public String getType() {
+    return type;
+  }
 
-    public void setType(String type) {
-        this.type = type;
-    }
+  public void setType(String type) {
+    this.type = type;
+  }
 
-    @Override
-    public String toString() {
-        return String.format(MSG_FORMAT,
-                type,
-                message);
-    }
+  @Override
+  public String toString() {
+    return String.format(MSG_FORMAT, type, message);
+  }
 }
