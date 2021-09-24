@@ -29,6 +29,7 @@
         <module>spi</module>
         <module>validation</module>
         <module>diagram</module>
+        <module>utils</module>
     </modules>
 
     <properties>
