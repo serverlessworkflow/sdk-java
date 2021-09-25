@@ -16,44 +16,47 @@
 
 package io.serverlessworkflow.util;
 
-import com.adelean.inject.resources.junit.jupiter.GivenTextResource;
-import com.adelean.inject.resources.junit.jupiter.TestWithResources;
+import static org.junit.jupiter.api.Assertions.*;
+
 import io.serverlessworkflow.api.Workflow;
 import io.serverlessworkflow.api.interfaces.State;
 import io.serverlessworkflow.util.testutil.TestUtils;
-import org.junit.jupiter.api.Assertions;
+import io.serverlessworkflow.utils.WorkflowUtils;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
-import java.util.Optional;
-
-@TestWithResources
 class StartStateTest {
 
-    @GivenTextResource("/start/workflowwithstartstate.yml")
-    static String WORKFLOW_WITH_START_SPECIFIED;
+  @ParameterizedTest
+  @ValueSource(strings = {"/start/workflowwithstartstate.yml"})
+  public void testGetStartState(String workflowWithStartState) {
+    Workflow workflow = TestUtils.createWorkflowFromTestResource(workflowWithStartState);
+    State startingState = WorkflowUtils.getStartingState(workflow);
+    assertNotNull(startingState);
+    assertEquals(startingState.getName(), workflow.getStart().getStateName());
+  }
 
-    @GivenTextResource("/start/workflowwithstartnotspecified.yml")
-    static String WORKFLOW_WITH_START_NOT_SPECIFIED;
+  @ParameterizedTest
+  @ValueSource(strings = {"/start/workflowwithstartnotspecified.yml"})
+  public void testGetStartStateForWorkflowWithStartNotSpecified(
+      String workflowWithStartStateNotSpecified) {
+    Workflow workflow =
+        TestUtils.createWorkflowFromTestResource(workflowWithStartStateNotSpecified);
+    State startingState = WorkflowUtils.getStartingState(workflow);
+    assertEquals(workflow.getStates().get(0).getName(), startingState.getName());
+  }
 
-    @Test
-    public void testGetStartState() {
-        Workflow workflow = TestUtils.createWorkflow(WORKFLOW_WITH_START_SPECIFIED);
-        Optional<State> startingState = Workflows.getStartingState(workflow);
-        Assertions.assertTrue(startingState.isPresent());
-        Assertions.assertEquals(startingState.get().getName(), workflow.getStart().getStateName());
-    }
+  @ParameterizedTest
+  @ValueSource(strings = {"/start/workflowwithnostate.yml"})
+  public void testGetStartStateForWorkflowWithNoState(String workflowWithNoState) {
+    Workflow workflow = TestUtils.createWorkflowFromTestResource(workflowWithNoState);
+    State startingState = WorkflowUtils.getStartingState(workflow);
+    assertNull(startingState);
+  }
 
-    @Test
-    public void testGetStartStateForWorkflowWithStartNotSpecified() {
-        Workflow workflow = TestUtils.createWorkflow(WORKFLOW_WITH_START_NOT_SPECIFIED);
-        Optional<State> startingState = Workflows.getStartingState(workflow);
-        Assertions.assertTrue(startingState.isPresent());
-        Assertions.assertEquals(workflow.getStates().get(0).getName(), startingState.get().getName());
-    }
-
-    @Test
-    public void testGetStateForNullWorkflow() {
-        Assertions.assertThrows(NullPointerException.class, () -> Workflows.getStartingState(null));
-    }
+  @Test
+  public void testGetStateForNullWorkflow() {
+    assertThrows(NullPointerException.class, () -> WorkflowUtils.getStartingState(null));
+  }
 }
-

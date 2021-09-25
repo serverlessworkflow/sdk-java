@@ -10,7 +10,7 @@
     </parent>
 
     <artifactId>serverlessworkflow-util</artifactId>
-    <name>Serverless Workflow :: Util</name>
+    <name>Serverless Workflow :: Utils</name>
     <version>${project.parent.version}</version>
     <packaging>jar</packaging>
     <description>Java SDK for Serverless Workflow Specification</description>
@@ -58,19 +58,6 @@
             <artifactId>assertj-core</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>com.adelean</groupId>
-            <artifactId>inject-resources-core</artifactId>
-            <version>0.1.0</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>com.adelean</groupId>
-            <artifactId>inject-resources-junit-jupiter</artifactId>
-            <version>0.1.0</version>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
 
     <build>
@@ -115,17 +102,26 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>com.coveo</groupId>
+                <artifactId>fmt-maven-plugin</artifactId>
+                <configuration>
+                    <sourceDirectory>src/main/java</sourceDirectory>
+                    <testSourceDirectory>src/test/java</testSourceDirectory>
+                    <verbose>false</verbose>
+                    <filesNamePattern>.*\.java</filesNamePattern>
+                    <skip>false</skip>
+                    <skipSortingImports>false</skipSortingImports>
+                    <style>google</style>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>format</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
-<!--inject-resources-junit-repository-->
-    <repositories>
-        <repository>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-            <id>central</id>
-            <name>bintray</name>
-            <url>https://jcenter.bintray.com</url>
-        </repository>
-    </repositories>
 </project>
