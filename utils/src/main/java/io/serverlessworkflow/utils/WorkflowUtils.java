@@ -21,9 +21,9 @@ import io.serverlessworkflow.api.start.Start;
 
 /** Provides common utility methods to provide most often needed answers from a workflow */
 public final class WorkflowUtils {
-  private static int DEFAULT_STATE = 0;
+  private static int DEFAULT_STARTING_STATE_POSITION = 0;
   /**
-   * Gets State matching Start state.If start is not present returns first state otherwise Returns
+   * Gets State matching Start state.If start is not present returns first state otherwise returns
    * null
    *
    * @param workflow workflow
@@ -36,7 +36,7 @@ public final class WorkflowUtils {
 
     Start start = workflow.getStart();
     if (start == null) {
-      return workflow.getStates().get(DEFAULT_STATE);
+      return workflow.getStates().get(DEFAULT_STARTING_STATE_POSITION);
     } else {
       return workflow.getStates().stream()
           .filter(state -> state.getName().equals(start.getStateName()))
