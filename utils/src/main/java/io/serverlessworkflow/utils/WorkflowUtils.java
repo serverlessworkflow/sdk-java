@@ -18,27 +18,25 @@ package io.serverlessworkflow.utils;
 import io.serverlessworkflow.api.Workflow;
 import io.serverlessworkflow.api.interfaces.State;
 import io.serverlessworkflow.api.start.Start;
-import java.util.Objects;
 
 /** Provides common utility methods to provide most often needed answers from a workflow */
 public final class WorkflowUtils {
-
+  private static int DEFAULT_STATE = 0;
   /**
-   * Gets State matching Start state name If start is not present returns first state Returns null
-   * otherwise
+   * Gets State matching Start state.If start is not present returns first state otherwise Returns
+   * null
    *
    * @param workflow workflow
    * @return {@code state} when present else returns {@code null}
    */
   public static State getStartingState(Workflow workflow) {
-    Objects.requireNonNull(workflow);
-    if (workflow.getStates() == null || workflow.getStates().isEmpty()) {
+    if (workflow == null || workflow.getStates() == null || workflow.getStates().isEmpty()) {
       return null;
     }
 
     Start start = workflow.getStart();
     if (start == null) {
-      return workflow.getStates().stream().findFirst().get();
+      return workflow.getStates().get(DEFAULT_STATE);
     } else {
       return workflow.getStates().stream()
           .filter(state -> state.getName().equals(start.getStateName()))

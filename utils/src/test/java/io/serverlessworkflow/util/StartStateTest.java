@@ -57,6 +57,7 @@ class StartStateTest {
 
   @Test
   public void testGetStateForNullWorkflow() {
-    assertThrows(NullPointerException.class, () -> WorkflowUtils.getStartingState(null));
+    State startingState = WorkflowUtils.getStartingState(null);
+    assertNull(startingState);
   }
 }
