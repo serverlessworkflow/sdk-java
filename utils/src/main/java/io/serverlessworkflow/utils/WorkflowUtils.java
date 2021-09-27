@@ -21,7 +21,7 @@ import io.serverlessworkflow.api.start.Start;
 
 /** Provides common utility methods to provide most often needed answers from a workflow */
 public final class WorkflowUtils {
-  private static int DEFAULT_STARTING_STATE_POSITION = 0;
+  private static final int DEFAULT_STARTING_STATE_POSITION = 0;
   /**
    * Gets State matching Start state.If start is not present returns first state otherwise returns
    * null

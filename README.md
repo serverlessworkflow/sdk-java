@@ -11,6 +11,7 @@ With the SDK you can:
 * Programmatically build workflow definitions
 * Validate workflow definitions (both schema and workflow integrity validation)
 * Generate workflow diagram (SVG)
+* Set of utilities to help runtimes interpret the Serverless Workflow object model
 
 Serverless Workflow Java SDK is **not** a workflow runtime implementation but can be used by Java runtime implementations
 to parse and validate workflow definitions as well as generate the workflow diagram (SVG).
@@ -82,6 +83,12 @@ b) Add the following dependencies to your pom.xml `dependencies` section:
     <artifactId>serverlessworkflow-diagram</artifactId>
     <version>4.0.0-SNAPSHOT</version>
 </dependency>
+
+<dependency>
+    <groupId>io.serverlessworkflow</groupId>
+    <artifactId>serverlessworkflow-util</artifactId>
+    <version>4.0.0-SNAPSHOT</version>
+</dependency>
 ```
 
 #### Gradle projects:
@@ -99,6 +106,7 @@ implementation("io.serverlessworkflow:serverlessworkflow-api:4.0.0-SNAPSHOT")
 implementation("io.serverlessworkflow:serverlessworkflow-spi:4.0.0-SNAPSHOT")
 implementation("io.serverlessworkflow:serverlessworkflow-validation:4.0.0-SNAPSHOT")
 implementation("io.serverlessworkflow:serverlessworkflow-diagram:4.0.0-SNAPSHOT")
+implementation("io.serverlessworkflow:serverlessworkflow-util:4.0.0-SNAPSHOT")
 ```
 
 ### How to Use 
