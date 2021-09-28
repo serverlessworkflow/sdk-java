@@ -18,6 +18,9 @@ package io.serverlessworkflow.utils;
 import io.serverlessworkflow.api.Workflow;
 import io.serverlessworkflow.api.interfaces.State;
 import io.serverlessworkflow.api.start.Start;
+import io.serverlessworkflow.api.states.DefaultState;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /** Provides common utility methods to provide most often needed answers from a workflow */
 public final class WorkflowUtils {
@@ -43,5 +46,22 @@ public final class WorkflowUtils {
           .findFirst()
           .get();
     }
+  }
+
+  /**
+   * Gets List of States matching stateType
+   *
+   * @param workflow
+   * @param stateType
+   * @return {@code List<State>}. Returns {@code null} when workflow is null.
+   */
+  public static List<State> getStates(Workflow workflow, DefaultState.Type stateType) {
+    if (workflow == null || workflow.getStates() == null) {
+      return null;
+    }
+
+    return workflow.getStates().stream()
+        .filter(state -> state.getType() == stateType)
+        .collect(Collectors.toList());
   }
 }
