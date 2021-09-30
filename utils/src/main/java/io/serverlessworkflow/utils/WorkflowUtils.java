@@ -16,6 +16,7 @@
 package io.serverlessworkflow.utils;
 
 import io.serverlessworkflow.api.Workflow;
+import io.serverlessworkflow.api.events.EventDefinition;
 import io.serverlessworkflow.api.interfaces.State;
 import io.serverlessworkflow.api.start.Start;
 import io.serverlessworkflow.api.states.DefaultState;
@@ -62,6 +63,43 @@ public final class WorkflowUtils {
 
     return workflow.getStates().stream()
         .filter(state -> state.getType() == stateType)
+        .collect(Collectors.toList());
+  }
+
+  /**
+   * @return {@code List<io.serverlessworkflow.api.events.EventDefinition>}. Returns {@code NULL}
+   *     when workflow is null or when workflow does not contain events
+   */
+  public static List<EventDefinition> getConsumedEvents(Workflow workflow) {
+    return getEvents(workflow, EventDefinition.Kind.CONSUMED);
+  }
+
+  /**
+   * @return {@code List<io.serverlessworkflow.api.events.EventDefinition>}. Returns {@code NULL}
+   *     when workflow is null or when workflow does not contain events
+   */
+  public static List<EventDefinition> getProducedEvents(Workflow workflow) {
+    return getEvents(workflow, EventDefinition.Kind.PRODUCED);
+  }
+
+  /**
+   * Gets list of event definition matching eventKind
+   *
+   * @param workflow
+   * @return {@code List<io.serverlessworkflow.api.events.EventDefinition>}. Returns {@code NULL}
+   *     when workflow is null or when workflow does not contain events
+   */
+  public static List<EventDefinition> getEvents(Workflow workflow, EventDefinition.Kind eventKind) {
+    if (workflow == null || workflow.getEvents() == null) {
+      return null;
+    }
+    List<EventDefinition> eventDefs = workflow.getEvents().getEventDefs();
+    if (eventDefs == null) {
+      return null;
+    }
+
+    return eventDefs.stream()
+        .filter(eventDef -> eventDef.getKind() == eventKind)
         .collect(Collectors.toList());
   }
 }
