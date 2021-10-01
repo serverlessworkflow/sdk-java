@@ -28,27 +28,52 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-class EventsTest {
+class DefinedEventsTest {
   @ParameterizedTest
   @ValueSource(strings = {"/events/workflowwithevents.yml"})
-  public void testGetConsumedEvents(String workflowEvents) {
+  public void testGetDefinedConsumedEvents(String workflowEvents) {
     int consumedEventsCount = 2;
     Workflow workflow = TestUtils.createWorkflowFromTestResource(workflowEvents);
-    List<EventDefinition> consumedEvents = WorkflowUtils.getConsumedEvents(workflow);
+    List<EventDefinition> consumedEvents = WorkflowUtils.getDefinedConsumedEvents(workflow);
     assertEquals(consumedEventsCount, consumedEvents.size());
   }
 
   @ParameterizedTest
   @ValueSource(strings = {"/events/workflowwithevents.yml"})
-  public void testGetProducedEvents(String workflowEvents) {
+  public void testGetDefinedroducedEvents(String workflowEvents) {
     int producedEventsCounts = 1;
     Workflow workflow = TestUtils.createWorkflowFromTestResource(workflowEvents);
-    List<EventDefinition> producedEvents = WorkflowUtils.getProducedEvents(workflow);
+    List<EventDefinition> producedEvents = WorkflowUtils.getDefinedProducedEvents(workflow);
     assertEquals(producedEventsCounts, producedEvents.size());
   }
 
+  @ParameterizedTest
+  @ValueSource(strings = {"/events/workflowwithevents.yml"})
+  public void testGetDefinedConsumedEventsCount(String workflowEvents) {
+    int consumedEventsCountExpected = 2;
+    Workflow workflow = TestUtils.createWorkflowFromTestResource(workflowEvents);
+    int consumedEventsCount = WorkflowUtils.getDefinedConsumedEventsCount(workflow);
+    assertEquals(consumedEventsCountExpected, consumedEventsCount);
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"/events/workflowwithevents.yml"})
+  public void testGetDefinedroducedEventsCount(String workflowEvents) {
+    int producedEventsCountExpected = 1;
+    Workflow workflow = TestUtils.createWorkflowFromTestResource(workflowEvents);
+    int producedEventsCount = WorkflowUtils.getDefinedProducedEventsCount(workflow);
+    assertEquals(producedEventsCountExpected, producedEventsCount);
+  }
+
   @Test
-  public void testGetEventsForNullWorkflow() {
-    assertNull(WorkflowUtils.getEvents(null, EventDefinition.Kind.CONSUMED));
+  public void testGetDefinedEventsForNullWorkflow() {
+    assertNull(WorkflowUtils.getDefinedEvents(null, EventDefinition.Kind.CONSUMED));
+  }
+
+  @Test
+  public void testGetDefinedEventsCountForNullWorkflow() {
+    int expectedCount = 0;
+    assertEquals(
+        expectedCount, WorkflowUtils.getDefinedEventsCount(null, EventDefinition.Kind.PRODUCED));
   }
 }
