@@ -181,7 +181,7 @@ public final class WorkflowUtils {
         }
       } else if (state instanceof CallbackState) {
         CallbackState callbackState = (CallbackState) state;
-        eventReferences.add(callbackState.getEventRef());
+        if (callbackState.getEventRef() != null) eventReferences.add(callbackState.getEventRef());
       } else if (state instanceof EventState) {
         EventState eventState = (EventState) state;
         if (eventState.getOnEvents() != null) {
