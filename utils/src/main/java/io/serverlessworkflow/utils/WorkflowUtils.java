@@ -19,8 +19,14 @@ import io.serverlessworkflow.api.Workflow;
 import io.serverlessworkflow.api.events.EventDefinition;
 import io.serverlessworkflow.api.interfaces.State;
 import io.serverlessworkflow.api.start.Start;
+import io.serverlessworkflow.api.states.CallbackState;
 import io.serverlessworkflow.api.states.DefaultState;
+import io.serverlessworkflow.api.states.EventState;
+import io.serverlessworkflow.api.states.SwitchState;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /** Provides common utility methods to provide most often needed answers from a workflow */
@@ -119,5 +125,81 @@ public final class WorkflowUtils {
   /** @return {@code int} Returns count of Defined Produced Event Count */
   public static int getDefinedProducedEventsCount(Workflow workflow) {
     return getDefinedEventsCount(workflow, EventDefinition.Kind.PRODUCED);
+  }
+
+  /**
+   * Gets Consumed Events of parent workflow Iterates through states in parent workflow and collects
+   * all the ConsumedEvents. Sub Workflows of the Workflow <strong>are not</strong> considered for
+   * getting Consumed Events
+   *
+   * @return Returns {@code List<EventDefinition>}
+   */
+  public static List<EventDefinition> getWorkflowConsumedEvents(Workflow workflow) {
+    return getWorkflowEventDefinitions(workflow, EventDefinition.Kind.CONSUMED);
+  }
+
+  /**
+   * Gets Produced Events of parent workflow Iterates through states in parent workflow and collects
+   * all the Produced Events.
+   *
+   * @return Returns {@code List<EventDefinition>}
+   */
+  public static List<EventDefinition> getWorkflowProducedEvents(Workflow workflow) {
+    return null;
+  }
+
+  /**
+   * Gets Events of parent workflow matching {@code EventDefinition.Kind} Iterates through states in
+   * parent workflow and collects all the events matching {@code EventDefinition.Kind} .
+   *
+   * @return Returns {@code List<EventDefinition>}
+   */
+  private static List<EventDefinition> getWorkflowEventDefinitions(
+      Workflow workflow, EventDefinition.Kind eventKind) {
+    if (workflow == null || workflow.getStates() == null || workflow.getStates().size() == 0) {
+      return null;
+    }
+    List<EventDefinition> definedConsumedEvents = getDefinedEvents(workflow, eventKind);
+    if (definedConsumedEvents == null) return null;
+    Set<String> uniqEventReferences = new HashSet<>();
+    List<String> eventReferencesFromState = getWorkflowConsumedEventsFromState(workflow);
+    uniqEventReferences.addAll(eventReferencesFromState);
+    return definedConsumedEvents.stream()
+        .filter(x -> uniqEventReferences.contains(x.getName()))
+        .collect(Collectors.toList());
+  }
+
+  private static List<String> getWorkflowConsumedEventsFromState(Workflow workflow) {
+    List<String> eventReferences = new ArrayList<>();
+    for (State state : workflow.getStates()) {
+      if (state instanceof SwitchState) {
+        SwitchState switchState = (SwitchState) state;
+        if (switchState.getEventConditions() != null) {
+          switchState
+              .getEventConditions()
+              .forEach(eventCondition -> eventReferences.add(eventCondition.getEventRef()));
+        }
+      } else if (state instanceof CallbackState) {
+        CallbackState callbackState = (CallbackState) state;
+        eventReferences.add(callbackState.getEventRef());
+      } else if (state instanceof EventState) {
+        EventState eventState = (EventState) state;
+        if (eventState.getOnEvents() != null) {
+          eventState
+              .getOnEvents()
+              .forEach(onEvents -> eventReferences.addAll(onEvents.getEventRefs()));
+        }
+      }
+    }
+    return eventReferences;
+  }
+
+  /**
+   * @return Returns {@code int } Count of the workflow consumed events. <strong>Does not</strong>
+   *     consider sub-workflows
+   */
+  public static int getWorkflowConsumedEventsCount(Workflow workflow) {
+    List<EventDefinition> workflowConsumedEvents = getWorkflowConsumedEvents(workflow);
+    return workflowConsumedEvents == null ? 0 : workflowConsumedEvents.size();
   }
 }
