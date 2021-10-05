@@ -154,7 +154,8 @@ public final class WorkflowUtils {
     Set<String> uniqueEvents = new HashSet<>();
     for (State state : workflow.getStates()) {
       End end = state.getEnd();
-      if (end != null || end.getProduceEvents() != null || end.getProduceEvents().size() != 0) {
+      if (end == null) continue;
+      if (end.getProduceEvents() != null || end.getProduceEvents().size() != 0) {
         end.getProduceEvents()
             .forEach(produceEvent -> uniqueEvents.add(produceEvent.getEventRef()));
       }
