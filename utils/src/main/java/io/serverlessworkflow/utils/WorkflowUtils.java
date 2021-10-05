@@ -16,6 +16,7 @@
 package io.serverlessworkflow.utils;
 
 import io.serverlessworkflow.api.Workflow;
+import io.serverlessworkflow.api.end.End;
 import io.serverlessworkflow.api.events.EventDefinition;
 import io.serverlessworkflow.api.interfaces.State;
 import io.serverlessworkflow.api.start.Start;
@@ -145,7 +146,22 @@ public final class WorkflowUtils {
    * @return Returns {@code List<EventDefinition>}
    */
   public static List<EventDefinition> getWorkflowProducedEvents(Workflow workflow) {
-    return null;
+    if (workflow == null || workflow.getStates() == null || workflow.getStates().size() == 0) {
+      return null;
+    }
+    List<EventDefinition> definedProducedEvents =
+        getDefinedEvents(workflow, EventDefinition.Kind.PRODUCED);
+    Set<String> uniqueEvents = new HashSet<>();
+    for (State state : workflow.getStates()) {
+      End end = state.getEnd();
+      if (end != null || end.getProduceEvents() != null || end.getProduceEvents().size() != 0) {
+        end.getProduceEvents()
+            .forEach(produceEvent -> uniqueEvents.add(produceEvent.getEventRef()));
+      }
+    }
+    return definedProducedEvents.stream()
+        .filter(eventDefinition -> uniqueEvents.contains(eventDefinition.getName()))
+        .collect(Collectors.toList());
   }
 
   /**
@@ -201,5 +217,14 @@ public final class WorkflowUtils {
   public static int getWorkflowConsumedEventsCount(Workflow workflow) {
     List<EventDefinition> workflowConsumedEvents = getWorkflowConsumedEvents(workflow);
     return workflowConsumedEvents == null ? 0 : workflowConsumedEvents.size();
+  }
+
+  /**
+   * @return Returns {@code int} Count of the workflow produced events. <strong>Does not</strong>
+   *     consider sub-workflows in the count
+   */
+  public static int getWorkflowProducedEventsCount(Workflow workflow) {
+    List<EventDefinition> workflowProducedEvents = getWorkflowProducedEvents(workflow);
+    return workflowProducedEvents == null ? 0 : workflowProducedEvents.size();
   }
 }

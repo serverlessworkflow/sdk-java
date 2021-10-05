@@ -50,4 +50,27 @@ public class EventsTest {
     int workflowConsumedEventsCount = WorkflowUtils.getWorkflowConsumedEventsCount(workflow);
     Arrays.asList(expectedEventsCount, workflowConsumedEventsCount);
   }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"/events/workflowwithproducedevents.yml"})
+  public void testGetWorkflowProducedEvents(String workflowProducedEvents) {
+    int expectedEventsCount = 1;
+    Collection<String> expectedProducedEvent = Arrays.asList("ApplicationSubmitted");
+    Workflow workflow = TestUtils.createWorkflowFromTestResource(workflowProducedEvents);
+    List<EventDefinition> producedEvents = WorkflowUtils.getWorkflowProducedEvents(workflow);
+    assertNotNull(producedEvents);
+    assertEquals(expectedEventsCount, producedEvents.size());
+    for (EventDefinition producedEvent : producedEvents) {
+      assertTrue(expectedProducedEvent.contains(producedEvent.getName()));
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"/events/workflowwithproducedevents.yml"})
+  public void testGetWorkflowProducedEventsCount(String workflowProducedEvents) {
+    int expectedEventsCount = 1;
+    Workflow workflow = TestUtils.createWorkflowFromTestResource(workflowProducedEvents);
+    int producedEventsCount = WorkflowUtils.getWorkflowProducedEventsCount(workflow);
+    assertEquals(expectedEventsCount, producedEventsCount);
+  }
 }
