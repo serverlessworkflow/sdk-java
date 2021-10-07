@@ -157,9 +157,12 @@ public final class WorkflowUtils {
 
     List<String> uniqueWorkflowEventsFromStates = getUniqueWorkflowEventsFromStates(workflow);
     List<EventDefinition> definedConsumedEvents = getDefinedEvents(workflow, eventKind);
+    if(definedConsumedEvents == null) {
+      return null;
+    }
     return definedConsumedEvents.stream()
-        .filter(definedEvent -> uniqueWorkflowEventsFromStates.contains(definedEvent.getName()))
-        .collect(Collectors.toList());
+            .filter(definedEvent -> uniqueWorkflowEventsFromStates.contains(definedEvent.getName()))
+            .collect(Collectors.toList());
   }
 
   /** Returns a list of unique event names from workflow states */
