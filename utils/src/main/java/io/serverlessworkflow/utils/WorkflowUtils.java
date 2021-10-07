@@ -16,6 +16,7 @@
 package io.serverlessworkflow.utils;
 
 import io.serverlessworkflow.api.Workflow;
+import io.serverlessworkflow.api.events.EventDefinition;
 import io.serverlessworkflow.api.interfaces.State;
 import io.serverlessworkflow.api.start.Start;
 import io.serverlessworkflow.api.states.DefaultState;
@@ -25,6 +26,7 @@ import java.util.stream.Collectors;
 /** Provides common utility methods to provide most often needed answers from a workflow */
 public final class WorkflowUtils {
   private static final int DEFAULT_STARTING_STATE_POSITION = 0;
+
   /**
    * Gets State matching Start state.If start is not present returns first state otherwise returns
    * null
@@ -63,5 +65,59 @@ public final class WorkflowUtils {
     return workflow.getStates().stream()
         .filter(state -> state.getType() == stateType)
         .collect(Collectors.toList());
+  }
+
+  /**
+   * @return {@code List<io.serverlessworkflow.api.events.EventDefinition>}. Returns {@code NULL}
+   *     when workflow is null or when workflow does not contain events
+   */
+  public static List<EventDefinition> getDefinedConsumedEvents(Workflow workflow) {
+    return getDefinedEvents(workflow, EventDefinition.Kind.CONSUMED);
+  }
+
+  /**
+   * @return {@code List<io.serverlessworkflow.api.events.EventDefinition>}. Returns {@code NULL}
+   *     when workflow is null or when workflow does not contain events
+   */
+  public static List<EventDefinition> getDefinedProducedEvents(Workflow workflow) {
+    return getDefinedEvents(workflow, EventDefinition.Kind.PRODUCED);
+  }
+
+  /**
+   * Gets list of event definition matching eventKind
+   *
+   * @param workflow
+   * @return {@code List<io.serverlessworkflow.api.events.EventDefinition>}. Returns {@code NULL}
+   *     when workflow is null or when workflow does not contain events
+   */
+  public static List<EventDefinition> getDefinedEvents(
+      Workflow workflow, EventDefinition.Kind eventKind) {
+    if (workflow == null || workflow.getEvents() == null) {
+      return null;
+    }
+    List<EventDefinition> eventDefs = workflow.getEvents().getEventDefs();
+    if (eventDefs == null) {
+      return null;
+    }
+
+    return eventDefs.stream()
+        .filter(eventDef -> eventDef.getKind() == eventKind)
+        .collect(Collectors.toList());
+  }
+
+  /** @return {@code int} Returns count of defined event count matching eventKind */
+  public static int getDefinedEventsCount(Workflow workflow, EventDefinition.Kind eventKind) {
+    List<EventDefinition> definedEvents = getDefinedEvents(workflow, eventKind);
+    return definedEvents == null ? 0 : definedEvents.size();
+  }
+
+  /** @return {@code int} Returns count of Defined Consumed Event Count */
+  public static int getDefinedConsumedEventsCount(Workflow workflow) {
+    return getDefinedEventsCount(workflow, EventDefinition.Kind.CONSUMED);
+  }
+
+  /** @return {@code int} Returns count of Defined Produced Event Count */
+  public static int getDefinedProducedEventsCount(Workflow workflow) {
+    return getDefinedEventsCount(workflow, EventDefinition.Kind.PRODUCED);
   }
 }
