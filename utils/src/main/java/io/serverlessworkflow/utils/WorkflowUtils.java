@@ -16,18 +16,13 @@
 package io.serverlessworkflow.utils;
 
 import io.serverlessworkflow.api.Workflow;
-import io.serverlessworkflow.api.end.End;
+import io.serverlessworkflow.api.actions.Action;
+import io.serverlessworkflow.api.branches.Branch;
 import io.serverlessworkflow.api.events.EventDefinition;
 import io.serverlessworkflow.api.interfaces.State;
 import io.serverlessworkflow.api.start.Start;
-import io.serverlessworkflow.api.states.CallbackState;
-import io.serverlessworkflow.api.states.DefaultState;
-import io.serverlessworkflow.api.states.EventState;
-import io.serverlessworkflow.api.states.SwitchState;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import io.serverlessworkflow.api.states.*;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /** Provides common utility methods to provide most often needed answers from a workflow */
@@ -35,14 +30,14 @@ public final class WorkflowUtils {
   private static final int DEFAULT_STARTING_STATE_POSITION = 0;
 
   /**
-   * Gets State matching Start state.If start is not present returns first state otherwise returns
-   * null
+   * Gets State matching Start state. If start is not present returns first state. If start is
+   * present, returns the matching start State. If matching state is not present, returns null
    *
    * @param workflow workflow
    * @return {@code state} when present else returns {@code null}
    */
   public static State getStartingState(Workflow workflow) {
-    if (workflow == null || workflow.getStates() == null || workflow.getStates().isEmpty()) {
+    if (!hasStates(workflow)) {
       return null;
     }
 
@@ -50,10 +45,11 @@ public final class WorkflowUtils {
     if (start == null) {
       return workflow.getStates().get(DEFAULT_STARTING_STATE_POSITION);
     } else {
-      return workflow.getStates().stream()
-          .filter(state -> state.getName().equals(start.getStateName()))
-          .findFirst()
-          .get();
+      Optional<State> startingState =
+          workflow.getStates().stream()
+              .filter(state -> state.getName().equals(start.getStateName()))
+              .findFirst();
+      return startingState.orElse(null);
     }
   }
 
@@ -65,7 +61,7 @@ public final class WorkflowUtils {
    * @return {@code List<State>}. Returns {@code null} when workflow is null.
    */
   public static List<State> getStates(Workflow workflow, DefaultState.Type stateType) {
-    if (workflow == null || workflow.getStates() == null) {
+    if (!hasStates(workflow)) {
       return null;
     }
 
@@ -99,14 +95,11 @@ public final class WorkflowUtils {
    */
   public static List<EventDefinition> getDefinedEvents(
       Workflow workflow, EventDefinition.Kind eventKind) {
-    if (workflow == null || workflow.getEvents() == null) {
-      return null;
-    }
-    List<EventDefinition> eventDefs = workflow.getEvents().getEventDefs();
-    if (eventDefs == null) {
+    if (!hasEventDefs(workflow)) {
       return null;
     }
 
+    List<EventDefinition> eventDefs = workflow.getEvents().getEventDefs();
     return eventDefs.stream()
         .filter(eventDef -> eventDef.getKind() == eventKind)
         .collect(Collectors.toList());
@@ -141,27 +134,13 @@ public final class WorkflowUtils {
 
   /**
    * Gets Produced Events of parent workflow Iterates through states in parent workflow and collects
-   * all the Produced Events.
+   * all the ConsumedEvents. Sub Workflows of the Workflow <strong>are not</strong> considered for
+   * getting Consumed Events
    *
    * @return Returns {@code List<EventDefinition>}
    */
   public static List<EventDefinition> getWorkflowProducedEvents(Workflow workflow) {
-    if (workflow == null || workflow.getStates() == null || workflow.getStates().size() == 0) {
-      return null;
-    }
-    List<EventDefinition> definedProducedEvents =
-        getDefinedEvents(workflow, EventDefinition.Kind.PRODUCED);
-    Set<String> uniqueEvents = new HashSet<>();
-    for (State state : workflow.getStates()) {
-      End end = state.getEnd();
-      if (end != null && end.getProduceEvents() != null && end.getProduceEvents().size() != 0) {
-        end.getProduceEvents()
-            .forEach(produceEvent -> uniqueEvents.add(produceEvent.getEventRef()));
-      }
-    }
-    return definedProducedEvents.stream()
-        .filter(eventDefinition -> uniqueEvents.contains(eventDefinition.getName()))
-        .collect(Collectors.toList());
+    return getWorkflowEventDefinitions(workflow, EventDefinition.Kind.PRODUCED);
   }
 
   /**
@@ -172,21 +151,24 @@ public final class WorkflowUtils {
    */
   private static List<EventDefinition> getWorkflowEventDefinitions(
       Workflow workflow, EventDefinition.Kind eventKind) {
-    if (workflow == null || workflow.getStates() == null || workflow.getStates().size() == 0) {
+    if (!hasStates(workflow)) {
       return null;
     }
+
+    List<String> uniqueWorkflowEventsFromStates = getUniqueWorkflowEventsFromStates(workflow);
     List<EventDefinition> definedConsumedEvents = getDefinedEvents(workflow, eventKind);
-    if (definedConsumedEvents == null) return null;
-    Set<String> uniqEventReferences = new HashSet<>();
-    List<String> eventReferencesFromState = getWorkflowConsumedEventsFromState(workflow);
-    uniqEventReferences.addAll(eventReferencesFromState);
+    if(definedConsumedEvents == null) {
+      return null;
+    }
     return definedConsumedEvents.stream()
-        .filter(x -> uniqEventReferences.contains(x.getName()))
-        .collect(Collectors.toList());
+            .filter(definedEvent -> uniqueWorkflowEventsFromStates.contains(definedEvent.getName()))
+            .collect(Collectors.toList());
   }
 
-  private static List<String> getWorkflowConsumedEventsFromState(Workflow workflow) {
+  /** Returns a list of unique event names from workflow states */
+  private static List<String> getUniqueWorkflowEventsFromStates(Workflow workflow) {
     List<String> eventReferences = new ArrayList<>();
+
     for (State state : workflow.getStates()) {
       if (state instanceof SwitchState) {
         SwitchState switchState = (SwitchState) state;
@@ -198,16 +180,46 @@ public final class WorkflowUtils {
       } else if (state instanceof CallbackState) {
         CallbackState callbackState = (CallbackState) state;
         if (callbackState.getEventRef() != null) eventReferences.add(callbackState.getEventRef());
+        if (callbackState.getAction() != null && callbackState.getAction().getEventRef() != null) {
+          eventReferences.addAll(getActionEvents(callbackState.getAction()));
+        }
       } else if (state instanceof EventState) {
         EventState eventState = (EventState) state;
         if (eventState.getOnEvents() != null) {
           eventState
               .getOnEvents()
-              .forEach(onEvents -> eventReferences.addAll(onEvents.getEventRefs()));
+              .forEach(
+                  onEvents -> {
+                    eventReferences.addAll(onEvents.getEventRefs());
+                    if (onEvents.getActions() != null) {
+                      for (Action action : onEvents.getActions()) {
+                        eventReferences.addAll(getActionEvents(action));
+                      }
+                    }
+                  });
+        }
+      } else if (state instanceof OperationState) {
+        OperationState operationState = (OperationState) state;
+        if (operationState.getActions() != null) {
+          for (Action action : operationState.getActions()) {
+            eventReferences.addAll(getActionEvents(action));
+          }
+        }
+      } else if (state instanceof ParallelState) {
+        ParallelState parallelState = (ParallelState) state;
+        if (parallelState.getBranches() != null) {
+          for (Branch branch : parallelState.getBranches()) {
+            if (branch.getActions() != null) {
+              for (Action action : branch.getActions()) {
+                eventReferences.addAll(getActionEvents(action));
+              }
+            }
+          }
         }
       }
     }
-    return eventReferences;
+
+    return eventReferences.stream().distinct().collect(Collectors.toList());
   }
 
   /**
@@ -226,5 +238,34 @@ public final class WorkflowUtils {
   public static int getWorkflowProducedEventsCount(Workflow workflow) {
     List<EventDefinition> workflowProducedEvents = getWorkflowProducedEvents(workflow);
     return workflowProducedEvents == null ? 0 : workflowProducedEvents.size();
+  }
+
+  /** Returns true if workflow has states, otherwise false */
+  private static boolean hasStates(Workflow workflow) {
+    return workflow != null && workflow.getStates() != null && !workflow.getStates().isEmpty();
+  }
+
+  /** Returns true if workflow has events definitions, otherwise false */
+  private static boolean hasEventDefs(Workflow workflow) {
+    return workflow != null
+        && workflow.getEvents() != null
+        && workflow.getEvents().getEventDefs() != null
+        && !workflow.getEvents().getEventDefs().isEmpty();
+  }
+
+  /** Gets event refs of an action */
+  private static List<String> getActionEvents(Action action) {
+    List<String> actionEvents = new ArrayList<>();
+
+    if (action != null && action.getEventRef() != null) {
+      if (action.getEventRef().getTriggerEventRef() != null) {
+        actionEvents.add(action.getEventRef().getTriggerEventRef());
+      }
+      if (action.getEventRef().getResultEventRef() != null) {
+        actionEvents.add(action.getEventRef().getResultEventRef());
+      }
+    }
+
+    return actionEvents;
   }
 }
