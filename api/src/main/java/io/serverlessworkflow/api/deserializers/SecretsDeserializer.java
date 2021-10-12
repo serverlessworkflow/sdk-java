@@ -54,7 +54,6 @@ public class SecretsDeserializer extends StdDeserializer<Secrets> {
 
   @Override
   public Secrets deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
-    ObjectMapper mapper = (ObjectMapper) jp.getCodec();
     JsonNode node = jp.getCodec().readTree(jp);
 
     Secrets secrets = new Secrets();

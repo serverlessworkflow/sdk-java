@@ -53,7 +53,6 @@ public class ConstantsDeserializer extends StdDeserializer<Constants> {
   @Override
   public Constants deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
 
-    ObjectMapper mapper = (ObjectMapper) jp.getCodec();
     JsonNode node = jp.getCodec().readTree(jp);
 
     Constants constants = new Constants();
