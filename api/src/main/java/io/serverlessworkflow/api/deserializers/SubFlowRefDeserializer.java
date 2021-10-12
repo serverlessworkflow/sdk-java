@@ -18,7 +18,6 @@ package io.serverlessworkflow.api.deserializers;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import io.serverlessworkflow.api.functions.SubFlowRef;
 import io.serverlessworkflow.api.interfaces.WorkflowPropertySource;
@@ -47,7 +46,6 @@ public class SubFlowRefDeserializer extends StdDeserializer<SubFlowRef> {
   @Override
   public SubFlowRef deserialize(JsonParser jp, DeserializationContext ctxt) throws IOException {
 
-    ObjectMapper mapper = (ObjectMapper) jp.getCodec();
     JsonNode node = jp.getCodec().readTree(jp);
 
     SubFlowRef subflowRef = new SubFlowRef();
