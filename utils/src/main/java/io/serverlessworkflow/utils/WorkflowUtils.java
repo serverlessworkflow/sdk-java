@@ -19,6 +19,7 @@ import io.serverlessworkflow.api.Workflow;
 import io.serverlessworkflow.api.actions.Action;
 import io.serverlessworkflow.api.branches.Branch;
 import io.serverlessworkflow.api.events.EventDefinition;
+import io.serverlessworkflow.api.functions.FunctionDefinition;
 import io.serverlessworkflow.api.interfaces.State;
 import io.serverlessworkflow.api.start.Start;
 import io.serverlessworkflow.api.states.*;
@@ -157,12 +158,12 @@ public final class WorkflowUtils {
 
     List<String> uniqueWorkflowEventsFromStates = getUniqueWorkflowEventsFromStates(workflow);
     List<EventDefinition> definedConsumedEvents = getDefinedEvents(workflow, eventKind);
-    if(definedConsumedEvents == null) {
+    if (definedConsumedEvents == null) {
       return null;
     }
     return definedConsumedEvents.stream()
-            .filter(definedEvent -> uniqueWorkflowEventsFromStates.contains(definedEvent.getName()))
-            .collect(Collectors.toList());
+        .filter(definedEvent -> uniqueWorkflowEventsFromStates.contains(definedEvent.getName()))
+        .collect(Collectors.toList());
   }
 
   /** Returns a list of unique event names from workflow states */
@@ -238,6 +239,24 @@ public final class WorkflowUtils {
   public static int getWorkflowProducedEventsCount(Workflow workflow) {
     List<EventDefinition> workflowProducedEvents = getWorkflowProducedEvents(workflow);
     return workflowProducedEvents == null ? 0 : workflowProducedEvents.size();
+  }
+
+  /** @return Returns function definition for actions */
+  public static List<FunctionDefinition> getFunctionDefinitionsForAction(
+      Workflow workflow, String action) {
+    if (hasFunctionDefs(workflow)) {
+      return workflow.getFunctions().getFunctionDefs().stream()
+          .filter(functionDef -> functionDef.getName().equals(action))
+          .collect(Collectors.toList());
+    }
+    return null;
+  }
+
+  private static boolean hasFunctionDefs(Workflow workflow) {
+    return workflow != null
+        && workflow.getFunctions() != null
+        && workflow.getFunctions().getFunctionDefs() != null
+        && !workflow.getFunctions().getFunctionDefs().isEmpty();
   }
 
   /** Returns true if workflow has states, otherwise false */
