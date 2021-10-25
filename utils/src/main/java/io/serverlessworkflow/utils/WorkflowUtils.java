@@ -19,7 +19,9 @@ import io.serverlessworkflow.api.Workflow;
 import io.serverlessworkflow.api.actions.Action;
 import io.serverlessworkflow.api.branches.Branch;
 import io.serverlessworkflow.api.events.EventDefinition;
+import io.serverlessworkflow.api.events.OnEvents;
 import io.serverlessworkflow.api.functions.FunctionDefinition;
+import io.serverlessworkflow.api.functions.FunctionRef;
 import io.serverlessworkflow.api.interfaces.State;
 import io.serverlessworkflow.api.start.Start;
 import io.serverlessworkflow.api.states.*;
@@ -242,13 +244,83 @@ public final class WorkflowUtils {
   }
 
   /** @return Returns function definition for actions */
-  public static List<FunctionDefinition> getFunctionDefinitionsForAction(
+  public static FunctionDefinition getFunctionDefinitionsForAction(
       Workflow workflow, String action) {
-    if (hasFunctionDefs(workflow)) {
-      return workflow.getFunctions().getFunctionDefs().stream()
-          .filter(functionDef -> functionDef.getName().equals(action))
-          .collect(Collectors.toList());
+    if (!hasFunctionDefs(workflow)) return null;
+    FunctionRef functionRef = getFunctionRefFromAction(workflow, action);
+    if (functionRef == null) return null;
+    final Optional<FunctionDefinition> functionDefinition =
+        workflow.getFunctions().getFunctionDefs().stream()
+            .filter(functionDef -> functionDef.getName().equals(functionRef.getRefName()))
+            .distinct()
+            .findFirst();
+
+    return functionDefinition.isPresent() ? functionDefinition.get() : null;
+  }
+
+  private static FunctionRef getFunctionRefFromAction(Workflow workflow, String action) {
+    if (!hasStates(workflow)) return null;
+
+    for (State state : workflow.getStates()) {
+      if (state instanceof EventState) {
+        EventState eventState = (EventState) state;
+        List<OnEvents> onEvents = eventState.getOnEvents();
+        if (onEvents != null) {
+          for (OnEvents onEvent : onEvents) {
+            if (onEvent != null) {
+              List<Action> onEventActions = onEvent.getActions();
+              if (onEventActions != null) {
+                for (Action onEventAction : onEventActions) {
+                  if (onEventAction != null
+                      && onEventAction.getName() != null
+                      && onEventAction.getName().equals(action))
+                    return onEventAction.getFunctionRef();
+                }
+              }
+            }
+          }
+        }
+      } else if (state instanceof CallbackState) {
+        CallbackState callbackState = (CallbackState) state;
+        final Action callbackStateAction = callbackState.getAction();
+        if (callbackStateAction != null
+            && callbackStateAction.getName() != null
+            && callbackStateAction.getName().equals(action)) {
+          return callbackStateAction.getFunctionRef();
+        }
+
+      } else if (state instanceof OperationState) {
+        OperationState operationState = (OperationState) state;
+        final List<Action> operationStateActions = operationState.getActions();
+        if (operationStateActions != null) {
+          for (Action operationStateAction : operationStateActions) {
+            if (operationStateAction != null
+                && operationStateAction.getName() != null
+                && operationStateAction.getName().equals(action)) {
+              return operationStateAction.getFunctionRef();
+            }
+          }
+        }
+      } else if (state instanceof ParallelState) {
+        ParallelState parallelState = (ParallelState) state;
+        List<Branch> parallelStateBranches = parallelState.getBranches();
+        if (parallelStateBranches != null) {
+          for (Branch branch : parallelStateBranches) {
+            List<Action> branchActions = branch.getActions();
+            if (branchActions != null) {
+              for (Action branchAction : branchActions) {
+                if (branchAction != null
+                    && branchAction.getName() != null
+                    && branchAction.getName().equals(action)) {
+                  return branchAction.getFunctionRef();
+                }
+              }
+            }
+          }
+        }
+      }
     }
+
     return null;
   }
 

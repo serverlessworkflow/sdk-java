@@ -16,14 +16,12 @@
 
 package io.serverlessworkflow.util;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 import io.serverlessworkflow.api.Workflow;
 import io.serverlessworkflow.api.functions.FunctionDefinition;
 import io.serverlessworkflow.util.testutil.TestUtils;
 import io.serverlessworkflow.utils.WorkflowUtils;
-import java.util.List;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -32,12 +30,13 @@ public class FunctionDefinitionsTest {
   @ParameterizedTest
   @ValueSource(strings = {"/funcdefinitiontest/functiondefinition.yml"})
   public void testFunctionDefsForAction(String funcDefinitions) {
-    String actionLookUp = "finalizeApplicationFunction";
-    int expectedCount = 1;
+    String actionLookUp = "finalizeApplicationAction";
+    String expectedFunctionRefName = "finalizeApplicationFunction";
     Workflow workflow = TestUtils.createWorkflowFromTestResource(funcDefinitions);
-    List<FunctionDefinition> finalizeApplicationFunction =
+    FunctionDefinition finalizeApplicationFunctionDefinition =
         WorkflowUtils.getFunctionDefinitionsForAction(workflow, actionLookUp);
-    assertEquals(expectedCount, finalizeApplicationFunction.size());
+    assertNotNull(finalizeApplicationFunctionDefinition);
+    assertEquals(expectedFunctionRefName, finalizeApplicationFunctionDefinition.getName());
   }
 
   @ParameterizedTest
@@ -46,9 +45,9 @@ public class FunctionDefinitionsTest {
     String actionLookUp = "finalizeApplicationFunctionNotPresent";
     int expectedCount = 0;
     Workflow workflow = TestUtils.createWorkflowFromTestResource(funcDefinitions);
-    List<FunctionDefinition> finalizeApplicationFunction =
+    FunctionDefinition finalizeApplicationFunctionDefinition =
         WorkflowUtils.getFunctionDefinitionsForAction(workflow, actionLookUp);
-    assertEquals(expectedCount, finalizeApplicationFunction.size());
+    assertNull(finalizeApplicationFunctionDefinition);
   }
 
   @ParameterizedTest
