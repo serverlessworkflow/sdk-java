@@ -318,6 +318,18 @@ public final class WorkflowUtils {
             }
           }
         }
+      } else if (state instanceof ForEachState) {
+        ForEachState forEachState = (ForEachState) state;
+        List<Action> forEachStateActions = forEachState.getActions();
+        if (forEachStateActions != null) {
+          for (Action forEachStateAction : forEachStateActions) {
+            if (forEachStateAction != null
+                && forEachStateAction.getName() != null
+                && forEachStateAction.getName().equals(action)) {
+              return forEachStateAction.getFunctionRef();
+            }
+          }
+        }
       }
     }
 
