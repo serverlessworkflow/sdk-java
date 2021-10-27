@@ -258,6 +258,97 @@ public final class WorkflowUtils {
     return functionDefinition.isPresent() ? functionDefinition.get() : null;
   }
 
+  /** @return : Returns @{code List<Action>} which uses a function defintion */
+  public static List<Action> getActionsForFunctionDefinition(
+      Workflow workflow, String functionDefinitionName) {
+    if (!hasFunctionDefs(workflow, functionDefinitionName)) return null;
+    return getActionsWhichUsesFunctionDefinition(workflow, functionDefinitionName);
+  }
+
+  private static List<Action> getActionsWhichUsesFunctionDefinition(
+      Workflow workflow, String functionDefinitionName) {
+    List<Action> actions = new ArrayList<>();
+    for (State state : workflow.getStates()) {
+      if (state instanceof EventState) {
+        EventState eventState = (EventState) state;
+        List<OnEvents> onEvents = eventState.getOnEvents();
+        if (onEvents != null) {
+          for (OnEvents onEvent : onEvents) {
+            if (onEvent != null) {
+              List<Action> onEventActions = onEvent.getActions();
+              if (onEventActions != null) {
+                for (Action onEventAction : onEventActions) {
+                  if (doesActionUsesFuntionDefinition(functionDefinitionName, onEventAction))
+                    actions.add(onEventAction);
+                }
+              }
+            }
+          }
+        }
+      } else if (state instanceof CallbackState) {
+        CallbackState callbackState = (CallbackState) state;
+        final Action callbackStateAction = callbackState.getAction();
+        if (doesActionUsesFuntionDefinition(functionDefinitionName, callbackStateAction)) {
+          actions.add(callbackStateAction);
+        }
+
+      } else if (state instanceof OperationState) {
+        OperationState operationState = (OperationState) state;
+        final List<Action> operationStateActions = operationState.getActions();
+        if (operationStateActions != null) {
+          for (Action operationStateAction : operationStateActions) {
+            if (doesActionUsesFuntionDefinition(functionDefinitionName, operationStateAction)) {
+              actions.add(operationStateAction);
+            }
+          }
+        }
+      } else if (state instanceof ParallelState) {
+        ParallelState parallelState = (ParallelState) state;
+        List<Branch> parallelStateBranches = parallelState.getBranches();
+        if (parallelStateBranches != null) {
+          for (Branch branch : parallelStateBranches) {
+            List<Action> branchActions = branch.getActions();
+            if (branchActions != null) {
+              for (Action branchAction : branchActions) {
+                if (doesActionUsesFuntionDefinition(functionDefinitionName, branchAction)) {
+                  actions.add(branchAction);
+                }
+              }
+            }
+          }
+        }
+      } else if (state instanceof ForEachState) {
+        ForEachState forEachState = (ForEachState) state;
+        List<Action> forEachStateActions = forEachState.getActions();
+        if (forEachStateActions != null) {
+          for (Action forEachStateAction : forEachStateActions) {
+            if (doesActionUsesFuntionDefinition(functionDefinitionName, forEachStateAction)) {
+              actions.add(forEachStateAction);
+            }
+          }
+        }
+      }
+    }
+
+    return actions;
+  }
+
+  private static boolean doesActionUsesFuntionDefinition(
+      String functionDefinitionName, Action forEachStateAction) {
+    return forEachStateAction != null
+        && forEachStateAction.getFunctionRef() != null
+        && forEachStateAction.getFunctionRef().getRefName() != null
+        && forEachStateAction.getFunctionRef().getRefName().equals(functionDefinitionName);
+  }
+
+  private static boolean hasFunctionDefs(Workflow workflow, String functionDefinitionName) {
+    if (!hasFunctionDefs(workflow)) return false;
+    List<FunctionDefinition> functionDefs = workflow.getFunctions().getFunctionDefs();
+    return functionDefs.stream()
+        .anyMatch(
+            functionDefinition -> functionDefinition.getName().equals(functionDefinitionName));
+  }
+
   private static FunctionRef getFunctionRefFromAction(Workflow workflow, String action) {
     if (!hasStates(workflow)) return null;
 

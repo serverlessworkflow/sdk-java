@@ -19,9 +19,11 @@ package io.serverlessworkflow.util;
 import static org.junit.jupiter.api.Assertions.*;
 
 import io.serverlessworkflow.api.Workflow;
+import io.serverlessworkflow.api.actions.Action;
 import io.serverlessworkflow.api.functions.FunctionDefinition;
 import io.serverlessworkflow.util.testutil.TestUtils;
 import io.serverlessworkflow.utils.WorkflowUtils;
+import java.util.List;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -43,7 +45,6 @@ public class FunctionDefinitionsTest {
   @ValueSource(strings = {"/funcdefinitiontest/functiondefinition.yml"})
   public void testFunctionDefsForActionNotPresent(String funcDefinitions) {
     String actionLookUp = "finalizeApplicationFunctionNotPresent";
-    int expectedCount = 0;
     Workflow workflow = TestUtils.createWorkflowFromTestResource(funcDefinitions);
     FunctionDefinition finalizeApplicationFunctionDefinition =
         WorkflowUtils.getFunctionDefinitionsForAction(workflow, actionLookUp);
@@ -54,5 +55,16 @@ public class FunctionDefinitionsTest {
   @ValueSource(strings = {"/funcdefinitiontest/functiondefinition.yml"})
   public void testFunctionDefsForNullWorkflow(String funcDefinitions) {
     assertNull(WorkflowUtils.getFunctionDefinitionsForAction(null, "TestAction"));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"/funcdefinitiontest/functiondefinition.yml"})
+  public void testGetActionsForFunctionDefinition(String funcDefinitions) {
+    String functionRefName = "finalizeApplicationFunction";
+    int expectedActionCount = 2;
+    Workflow workflow = TestUtils.createWorkflowFromTestResource(funcDefinitions);
+    List<Action> actionsForFunctionDefinition =
+        WorkflowUtils.getActionsForFunctionDefinition(workflow, functionRefName);
+    assertEquals(expectedActionCount, actionsForFunctionDefinition.size());
   }
 }
