@@ -278,7 +278,7 @@ public final class WorkflowUtils {
               List<Action> onEventActions = onEvent.getActions();
               if (onEventActions != null) {
                 for (Action onEventAction : onEventActions) {
-                  if (doesActionUsesFuntionDefinition(functionDefinitionName, onEventAction))
+                  if (checkIfActionUsesFunctionDefinition(functionDefinitionName, onEventAction))
                     actions.add(onEventAction);
                 }
               }
@@ -288,7 +288,7 @@ public final class WorkflowUtils {
       } else if (state instanceof CallbackState) {
         CallbackState callbackState = (CallbackState) state;
         final Action callbackStateAction = callbackState.getAction();
-        if (doesActionUsesFuntionDefinition(functionDefinitionName, callbackStateAction)) {
+        if (checkIfActionUsesFunctionDefinition(functionDefinitionName, callbackStateAction)) {
           actions.add(callbackStateAction);
         }
 
@@ -297,7 +297,7 @@ public final class WorkflowUtils {
         final List<Action> operationStateActions = operationState.getActions();
         if (operationStateActions != null) {
           for (Action operationStateAction : operationStateActions) {
-            if (doesActionUsesFuntionDefinition(functionDefinitionName, operationStateAction)) {
+            if (checkIfActionUsesFunctionDefinition(functionDefinitionName, operationStateAction)) {
               actions.add(operationStateAction);
             }
           }
@@ -310,7 +310,7 @@ public final class WorkflowUtils {
             List<Action> branchActions = branch.getActions();
             if (branchActions != null) {
               for (Action branchAction : branchActions) {
-                if (doesActionUsesFuntionDefinition(functionDefinitionName, branchAction)) {
+                if (checkIfActionUsesFunctionDefinition(functionDefinitionName, branchAction)) {
                   actions.add(branchAction);
                 }
               }
@@ -322,7 +322,7 @@ public final class WorkflowUtils {
         List<Action> forEachStateActions = forEachState.getActions();
         if (forEachStateActions != null) {
           for (Action forEachStateAction : forEachStateActions) {
-            if (doesActionUsesFuntionDefinition(functionDefinitionName, forEachStateAction)) {
+            if (checkIfActionUsesFunctionDefinition(functionDefinitionName, forEachStateAction)) {
               actions.add(forEachStateAction);
             }
           }
@@ -333,12 +333,12 @@ public final class WorkflowUtils {
     return actions;
   }
 
-  private static boolean doesActionUsesFuntionDefinition(
-      String functionDefinitionName, Action forEachStateAction) {
-    return forEachStateAction != null
-        && forEachStateAction.getFunctionRef() != null
-        && forEachStateAction.getFunctionRef().getRefName() != null
-        && forEachStateAction.getFunctionRef().getRefName().equals(functionDefinitionName);
+  private static boolean checkIfActionUsesFunctionDefinition(
+      String functionDefinitionName, Action action) {
+    return action != null
+        && action.getFunctionRef() != null
+        && action.getFunctionRef().getRefName() != null
+        && action.getFunctionRef().getRefName().equals(functionDefinitionName);
   }
 
   private static boolean hasFunctionDefs(Workflow workflow, String functionDefinitionName) {
