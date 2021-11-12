@@ -29,7 +29,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 public class EventsTest {
   @ParameterizedTest
   @ValueSource(strings = {"/events/workflowwithevents.yml"})
-  public void testGetDefinedConsumedEvents(String workflowEvents) {
+  public void testGetConsumedEvents(String workflowEvents) {
     int expectedEventsCount = 2;
     Collection<String> expectedConsumedEvent =
         Arrays.asList("SATScoresReceived", "RecommendationLetterReceived");
@@ -44,7 +44,7 @@ public class EventsTest {
 
   @ParameterizedTest
   @ValueSource(strings = {"/events/workflowwithevents.yml"})
-  public void testGetDefinedConsumedEventsCount(String workflowEvents) {
+  public void testGetConsumedEventsCount(String workflowEvents) {
     int expectedEventsCount = 2;
     Workflow workflow = TestUtils.createWorkflowFromTestResource(workflowEvents);
     int workflowConsumedEventsCount = WorkflowUtils.getWorkflowConsumedEventsCount(workflow);
