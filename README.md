@@ -141,7 +141,7 @@ states:
   end: true
 ```
 
-To parse it and create a Workflow intance you can do:
+To parse it and create a Workflow instance you can do:
 
 ``` java
 Workflow workflow = Workflow.fromSource(source);
@@ -288,5 +288,43 @@ Here are some generated diagrams from the specification examples (with legend en
 
 2. [Send CloudEvent on Workflow completion Example](https://github.com/serverlessworkflow/specification/blob/master/examples/examples.md#send-cloudevent-on-workfow-completion-example)
 <p align="center">
-<img src="img/provisionorders.png" alt="Send Cloud Event on Workflow complation"/>
+<img src="img/provisionorders.png" alt="Send Cloud Event on Workflow completion"/>
 </p>
+
+#### Using Workflow Utils
+Workflow utils provide a number of useful methods for extracting information from workflow definitions.
+Once you have a `Workflow` instance, you can use it
+##### Get Starting State
+```Java
+State startingState = WorkflowUtils.getStartingState(workflow);
+```
+##### Get States by State Type
+```Java
+    List<State> states = WorkflowUtils.getStates(workflow, DefaultState.Type.EVENT);
+```
+##### Get Consumed-Events, Produced-Events and their count
+```Java
+ List<EventDefinition> consumedEvents = WorkflowUtils.getWorkflowConsumedEvents(workflow);
+ int consumedEventsCount = WorkflowUtils.getWorkflowConsumedEventsCount(workflow);
+
+ List<EventDefinition> producedEvents = WorkflowUtils.getWorkflowProducedEvents(workflow);
+ int producedEventsCount = WorkflowUtils.getWorkflowProducedEventsCount(workflow);
+ ```
+##### Get Defined Consumed-Events, Defined Produced-Events and their count
+```Java
+ List<EventDefinition> consumedEvents = WorkflowUtils.getWorkflowConsumedEventsCount(workflow);
+ int consumedEventsCount = WorkflowUtils.getWorkflowConsumedEventsCount(workflow);
+
+ List<EventDefinition> producedEvents = WorkflowUtils.getWorkflowProducedEvents(workflow);
+ int producedEventsCount = WorkflowUtils.getWorkflowProducedEventsCount(workflow);
+ ```
+##### Get Function definitions which is used by an action
+```Java
+FunctionDefinition finalizeApplicationFunctionDefinition =
+        WorkflowUtils.getFunctionDefinitionsForAction(workflow, "finalizeApplicationAction");
+```
+##### Get Actions which uses a Function definition
+```Java
+ List<Action> actionsForFunctionDefinition =
+        WorkflowUtils.getActionsForFunctionDefinition(workflow, functionRefName);
+```
