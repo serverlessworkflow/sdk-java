@@ -292,7 +292,7 @@ Here are some generated diagrams from the specification examples (with legend en
 </p>
 
 #### Using Workflow Utils
-Workflow utility allows you to interpret the Serverless Workflow Model.
+Workflow utils provide a number of useful methods for extracting information from workflow definitions.
 Once you have a `Workflow` instance, you can use it
 ##### Get Starting State
 ```Java
