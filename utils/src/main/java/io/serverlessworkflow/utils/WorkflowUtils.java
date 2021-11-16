@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
 /** Provides common utility methods to provide most often needed answers from a workflow */
 public final class WorkflowUtils {
   private static final int DEFAULT_STARTING_STATE_POSITION = 0;
+  private static final int DEFAULT_STATE_COUNT = 0;
 
   /**
    * Gets State matching Start state. If start is not present returns first state. If start is
@@ -263,6 +264,25 @@ public final class WorkflowUtils {
       Workflow workflow, String functionDefinitionName) {
     if (!hasFunctionDefs(workflow, functionDefinitionName)) return null;
     return getActionsWhichUsesFunctionDefinition(workflow, functionDefinitionName);
+  }
+
+  /**
+   * Gets Num of State in the workflow does not consider child workflow
+   * @param workflow
+   * @return
+   */
+  public static int getNumOfStates(Workflow workflow) {
+    return hasStates(workflow) ? workflow.getStates().size() : DEFAULT_STATE_COUNT;
+  }
+
+  /**
+   *
+   * @param workflow
+   * @param type
+   * @return
+   */
+  public static int getNumOfStates(Workflow workflow,DefaultState.Type type) {
+    return hasStates(workflow) ? workflow.getStates().size() : DEFAULT_STATE_COUNT;
   }
 
   private static List<Action> getActionsWhichUsesFunctionDefinition(
