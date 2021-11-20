@@ -19,6 +19,7 @@ package io.serverlessworkflow.util;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import io.serverlessworkflow.api.Workflow;
+import io.serverlessworkflow.api.states.DefaultState;
 import io.serverlessworkflow.util.testutil.TestUtils;
 import io.serverlessworkflow.utils.WorkflowUtils;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -39,5 +40,14 @@ public class GetNumTests {
     Workflow workflow = TestUtils.createWorkflowFromTestResource(workflowWithStates);
     int expectedStatesCount = 0;
     assertEquals(expectedStatesCount, WorkflowUtils.getNumOfStates(workflow));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"/getStates/workflowwithstates.yml"})
+  public void testGetNumStatesOfEventType(String workflowWithStates) {
+    Workflow workflow = TestUtils.createWorkflowFromTestResource(workflowWithStates);
+    int expectedStatesCount = 2;
+    assertEquals(
+        expectedStatesCount, WorkflowUtils.getNumOfStates(workflow, DefaultState.Type.EVENT));
   }
 }
