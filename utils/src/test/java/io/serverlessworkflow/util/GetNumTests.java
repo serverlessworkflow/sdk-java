@@ -50,4 +50,12 @@ public class GetNumTests {
     assertEquals(
         expectedStatesCount, WorkflowUtils.getNumOfStates(workflow, DefaultState.Type.EVENT));
   }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"/events/workflowwithevents.yml"})
+  public void testGetNumEndStates(String workflowWithStates) {
+    Workflow workflow = TestUtils.createWorkflowFromTestResource(workflowWithStates);
+    int expectedEndStatesCount = 2;
+    assertEquals(expectedEndStatesCount, WorkflowUtils.getNumOfEndStates(workflow));
+  }
 }
