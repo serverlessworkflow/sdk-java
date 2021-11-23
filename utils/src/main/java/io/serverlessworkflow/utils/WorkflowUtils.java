@@ -290,6 +290,12 @@ public final class WorkflowUtils {
         : DEFAULT_STATE_COUNT;
   }
 
+  public static long getNumOfEndStates(Workflow workflow) {
+    return hasStates(workflow)
+        ? workflow.getStates().stream().filter(state -> state.getEnd() != null).count()
+        : DEFAULT_STATE_COUNT;
+  }
+
   private static List<Action> getActionsWhichUsesFunctionDefinition(
       Workflow workflow, String functionDefinitionName) {
     List<Action> actions = new ArrayList<>();
