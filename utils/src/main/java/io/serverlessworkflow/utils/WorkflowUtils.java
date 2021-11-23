@@ -320,10 +320,9 @@ public final class WorkflowUtils {
         }
         DefaultConditionDefinition defaultCondition = switchState.getDefaultCondition();
         if (defaultCondition != null) {
-          count = defaultCondition.getEnd() != null ? 1 : 0;
+          count = (defaultCondition.getEnd() != null) ? count + 1 : count;
         }
       }
-
       return count;
     } else {
       return DEFAULT_STATE_COUNT;
