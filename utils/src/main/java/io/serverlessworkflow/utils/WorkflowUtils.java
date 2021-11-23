@@ -18,6 +18,7 @@ package io.serverlessworkflow.utils;
 import io.serverlessworkflow.api.Workflow;
 import io.serverlessworkflow.api.actions.Action;
 import io.serverlessworkflow.api.branches.Branch;
+import io.serverlessworkflow.api.defaultdef.DefaultConditionDefinition;
 import io.serverlessworkflow.api.events.EventDefinition;
 import io.serverlessworkflow.api.events.OnEvents;
 import io.serverlessworkflow.api.functions.FunctionDefinition;
@@ -25,6 +26,8 @@ import io.serverlessworkflow.api.functions.FunctionRef;
 import io.serverlessworkflow.api.interfaces.State;
 import io.serverlessworkflow.api.start.Start;
 import io.serverlessworkflow.api.states.*;
+import io.serverlessworkflow.api.switchconditions.DataCondition;
+import io.serverlessworkflow.api.switchconditions.EventCondition;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -291,9 +294,40 @@ public final class WorkflowUtils {
   }
 
   public static long getNumOfEndStates(Workflow workflow) {
-    return hasStates(workflow)
-        ? workflow.getStates().stream().filter(state -> state.getEnd() != null).count()
-        : DEFAULT_STATE_COUNT;
+    if (hasStates(workflow)) {
+      long count = workflow.getStates().stream().filter(state -> state.getEnd() != null).count();
+      List<State> switchStates =
+          workflow.getStates().stream()
+              .filter(state -> state instanceof SwitchState)
+              .collect(Collectors.toList());
+      for (State state : switchStates) {
+        SwitchState switchState = (SwitchState) state;
+        List<EventCondition> eventConditions = switchState.getEventConditions();
+        if (eventConditions != null) {
+          count =
+              count
+                  + eventConditions.stream()
+                      .filter(eventCondition -> eventCondition.getEnd() != null)
+                      .count();
+        }
+        List<DataCondition> dataConditions = switchState.getDataConditions();
+        if (dataConditions != null) {
+          count =
+              count
+                  + dataConditions.stream()
+                      .filter(dataCondition -> dataCondition.getEnd() != null)
+                      .count();
+        }
+        DefaultConditionDefinition defaultCondition = switchState.getDefaultCondition();
+        if (defaultCondition != null) {
+          count = defaultCondition.getEnd() != null ? 1 : 0;
+        }
+      }
+
+      return count;
+    } else {
+      return DEFAULT_STATE_COUNT;
+    }
   }
 
   private static List<Action> getActionsWhichUsesFunctionDefinition(
