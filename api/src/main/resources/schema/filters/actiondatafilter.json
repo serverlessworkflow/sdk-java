@@ -13,6 +13,11 @@
     "toStateData": {
       "type": "string",
       "description": "Workflow expression that selects a state data element to which the action results should be added/merged into. If not specified, denote, the top-level state data element"
+    },
+    "useResults": {
+      "type": "boolean",
+      "description": "If set to false, action data results are not added/merged to state data. In this case 'results' and 'toStateData' should be ignored. Default is true.",
+      "default": true
     }
   },
   "required": []

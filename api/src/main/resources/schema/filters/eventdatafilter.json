@@ -9,6 +9,11 @@
     "toStateData": {
       "type": "string",
       "description": " Workflow expression that selects a state data element to which the event payload should be added/merged into. If not specified, denotes, the top-level state data element."
+    },
+    "useData": {
+      "type": "boolean",
+      "description": "If set to false, event payload is not added/merged to state data. In this case 'data' and 'toStateData' should be ignored. Default is true.",
+      "default": true
     }
   },
   "required": []
