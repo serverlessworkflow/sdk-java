@@ -55,6 +55,7 @@ public class FunctionRefDeserializer extends StdDeserializer<FunctionRef> {
     if (!node.isObject()) {
       functionRef.setRefName(node.asText());
       functionRef.setArguments(null);
+      functionRef.setInvoke(FunctionRef.Invoke.SYNC);
       return functionRef;
     } else {
       if (node.get("arguments") != null) {
@@ -67,6 +68,10 @@ public class FunctionRefDeserializer extends StdDeserializer<FunctionRef> {
 
       if (node.get("selectionSet") != null) {
         functionRef.setSelectionSet(node.get("selectionSet").asText());
+      }
+
+      if (node.get("invoke") != null) {
+        functionRef.setInvoke(FunctionRef.Invoke.fromValue(node.get("invoke").asText()));
       }
 
       return functionRef;

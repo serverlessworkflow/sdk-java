@@ -10,6 +10,24 @@
       "type": "string",
       "description": "Version of the sub-workflow to be invoked",
       "minLength": 1
+    },
+    "onParentComplete": {
+      "type": "string",
+      "enum": [
+        "continue",
+        "terminate"
+      ],
+      "description": "If invoke is 'async', specifies how subflow execution should behave when parent workflow completes. Default is 'terminate'",
+      "default": "terminate"
+    },
+    "invoke": {
+      "type": "string",
+      "enum": [
+        "sync",
+        "async"
+      ],
+      "description": "Specifies if the function should be invoked sync or async. Default is sync.",
+      "default": "sync"
     }
   },
   "required": [

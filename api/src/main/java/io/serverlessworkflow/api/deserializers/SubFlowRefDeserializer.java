@@ -62,6 +62,15 @@ public class SubFlowRefDeserializer extends StdDeserializer<SubFlowRef> {
         subflowRef.setVersion(node.get("version").asText());
       }
 
+      if (node.get("onParentComplete") != null) {
+        subflowRef.setOnParentComplete(
+            SubFlowRef.OnParentComplete.fromValue(node.get("onParentComplete").asText()));
+      }
+
+      if (node.get("invoke") != null) {
+        subflowRef.setInvoke(SubFlowRef.Invoke.fromValue(node.get("invoke").asText()));
+      }
+
       return subflowRef;
     }
   }
