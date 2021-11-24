@@ -15,6 +15,15 @@
     "selectionSet": {
       "type": "string",
       "description": "Only used if function type is 'graphql'. A string containing a valid GraphQL selection set"
+    },
+    "invoke": {
+      "type": "string",
+      "enum": [
+        "sync",
+        "async"
+      ],
+      "description": "Specifies if the function should be invoked sync or async. Default is sync.",
+      "default": "sync"
     }
   },
   "required": [

@@ -25,6 +25,7 @@ import io.serverlessworkflow.api.branches.Branch;
 import io.serverlessworkflow.api.datainputschema.DataInputSchema;
 import io.serverlessworkflow.api.defaultdef.DefaultConditionDefinition;
 import io.serverlessworkflow.api.end.End;
+import io.serverlessworkflow.api.events.EventRef;
 import io.serverlessworkflow.api.functions.FunctionDefinition;
 import io.serverlessworkflow.api.functions.FunctionRef;
 import io.serverlessworkflow.api.functions.SubFlowRef;
@@ -797,5 +798,42 @@ public class MarkupToWorkflowTest {
     assertEquals("${ .data }", end.getContinueAs().getData());
     assertNotNull(end.getContinueAs().getWorkflowExecTimeout());
     assertEquals("PT1M", end.getContinueAs().getWorkflowExecTimeout().getDuration());
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"/features/invoke.json", "/features/invoke.yml"})
+  public void testFunctionInvoke(String workflowLocation) {
+    Workflow workflow = Workflow.fromSource(WorkflowTestUtils.readWorkflowFile(workflowLocation));
+
+    assertNotNull(workflow);
+    assertNotNull(workflow.getId());
+    assertNotNull(workflow.getName());
+    assertNotNull(workflow.getStates());
+
+    assertNotNull(workflow.getStates());
+    assertEquals(1, workflow.getStates().size());
+
+    OperationState operationState = (OperationState) workflow.getStates().get(0);
+    assertNotNull(operationState.getEnd());
+    assertNotNull(operationState.getActions());
+    assertEquals(3, operationState.getActions().size());
+
+    Action action1 = operationState.getActions().get(0);
+    assertNotNull(action1.getFunctionRef());
+    assertNotNull(action1.getFunctionRef().getInvoke());
+    assertEquals(FunctionRef.Invoke.ASYNC, action1.getFunctionRef().getInvoke());
+
+    Action action2 = operationState.getActions().get(1);
+    assertNotNull(action2.getSubFlowRef());
+    assertNotNull(action2.getSubFlowRef().getOnParentComplete());
+    assertEquals(
+        SubFlowRef.OnParentComplete.CONTINUE, action2.getSubFlowRef().getOnParentComplete());
+    assertNotNull(action2.getSubFlowRef().getInvoke());
+    assertEquals(SubFlowRef.Invoke.ASYNC, action2.getSubFlowRef().getInvoke());
+
+    Action action3 = operationState.getActions().get(2);
+    assertNotNull(action3.getEventRef());
+    assertNotNull(action3.getEventRef().getInvoke());
+    assertEquals(EventRef.Invoke.ASYNC, action3.getEventRef().getInvoke());
   }
 }

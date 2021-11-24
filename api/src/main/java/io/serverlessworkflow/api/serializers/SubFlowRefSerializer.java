@@ -18,6 +18,7 @@ package io.serverlessworkflow.api.serializers;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import io.serverlessworkflow.api.functions.FunctionRef;
 import io.serverlessworkflow.api.functions.SubFlowRef;
 import java.io.IOException;
 
@@ -37,7 +38,9 @@ public class SubFlowRefSerializer extends StdSerializer<SubFlowRef> {
 
     if (subflowRef != null) {
       if ((subflowRef.getWorkflowId() == null || subflowRef.getWorkflowId().isEmpty())
-          && (subflowRef.getVersion() == null || subflowRef.getVersion().isEmpty())) {
+          && (subflowRef.getVersion() == null || subflowRef.getVersion().isEmpty())
+          && (subflowRef.getInvoke() == null
+              || subflowRef.getInvoke().equals(FunctionRef.Invoke.SYNC))) {
         gen.writeString(subflowRef.getWorkflowId());
       } else {
         gen.writeStartObject();
@@ -48,6 +51,14 @@ public class SubFlowRefSerializer extends StdSerializer<SubFlowRef> {
 
         if (subflowRef.getVersion() != null && subflowRef.getVersion().length() > 0) {
           gen.writeStringField("version", subflowRef.getVersion());
+        }
+
+        if (subflowRef.getOnParentComplete() != null) {
+          gen.writeStringField("onParentComplete", subflowRef.getOnParentComplete().value());
+        }
+
+        if (subflowRef.getInvoke() != null) {
+          gen.writeStringField("invoke", subflowRef.getInvoke().value());
         }
 
         gen.writeEndObject();
