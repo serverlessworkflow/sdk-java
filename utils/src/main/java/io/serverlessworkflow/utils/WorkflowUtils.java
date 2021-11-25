@@ -293,6 +293,28 @@ public final class WorkflowUtils {
         : DEFAULT_STATE_COUNT;
   }
 
+  /**
+   * Returns workflow state from provided name, or null if not found.
+   *
+   * @param workflow
+   * @param name
+   * @return
+   */
+  public static State getStateWithName(Workflow workflow, String name) {
+    if (!hasStates(workflow)) {
+      return null;
+    }
+
+    Optional<State> state =
+        workflow.getStates().stream().filter(s -> s.getName().equals(name)).findFirst();
+
+    if (state.isPresent()) {
+      return state.get();
+    } else {
+      return null;
+    }
+  }
+
   public static long getNumOfEndStates(Workflow workflow) {
     if (hasStates(workflow)) {
       long count = workflow.getStates().stream().filter(state -> state.getEnd() != null).count();

@@ -21,6 +21,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import io.serverlessworkflow.api.Workflow;
 import io.serverlessworkflow.api.interfaces.State;
 import io.serverlessworkflow.api.states.DefaultState;
+import io.serverlessworkflow.api.states.EventState;
 import io.serverlessworkflow.util.testutil.TestUtils;
 import io.serverlessworkflow.utils.WorkflowUtils;
 import java.util.List;
@@ -40,6 +41,21 @@ class GetStatesTest {
     List<State> notMatchingStates = WorkflowUtils.getStates(workflow, DefaultState.Type.SLEEP);
     assertEquals(matchingEvents, matchingStates.size());
     assertEquals(notMatchingEvents, notMatchingStates.size());
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"/getStates/workflowwithstates.yml"})
+  public void testGetStateByName(String workflowWithState) {
+    Workflow workflow = TestUtils.createWorkflowFromTestResource(workflowWithState);
+
+    State finalizeApplicationState =
+        WorkflowUtils.getStateWithName(workflow, "FinalizeApplication");
+    assertNotNull(finalizeApplicationState);
+    assertTrue(finalizeApplicationState instanceof EventState);
+
+    State cancelApplicationState = WorkflowUtils.getStateWithName(workflow, "CancelApplication");
+    assertNotNull(cancelApplicationState);
+    assertTrue(cancelApplicationState instanceof EventState);
   }
 
   @Test
