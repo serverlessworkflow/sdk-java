@@ -45,7 +45,7 @@ class GetStatesTest {
 
   @ParameterizedTest
   @ValueSource(strings = {"/getStates/workflowwithstates.yml"})
-  public void getStateByName(String workflowWithState) {
+  public void testGetStateByName(String workflowWithState) {
     Workflow workflow = TestUtils.createWorkflowFromTestResource(workflowWithState);
 
     State finalizeApplicationState =
