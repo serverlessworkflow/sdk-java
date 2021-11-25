@@ -48,6 +48,11 @@
     },
     "actionDataFilter": {
       "$ref": "../filters/actiondatafilter.json"
+    },
+    "condition": {
+      "description": "Expression, if defined, must evaluate to true for this action to be performed. If false, action is disregarded",
+      "type": "string",
+      "minLength": 1
     }
   },
   "oneOf": [

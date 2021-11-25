@@ -747,6 +747,8 @@ public class MarkupToWorkflowTest {
     assertEquals("testRetry", actions.get(0).getRetryRef());
     assertNotNull(actions.get(0).getNonRetryableErrors());
     assertEquals(2, actions.get(0).getNonRetryableErrors().size());
+    assertNotNull(actions.get(0).getCondition());
+    assertEquals("${ .data }", actions.get(0).getCondition());
 
     assertNotNull(operationState.getOnErrors());
     assertEquals(1, operationState.getOnErrors().size());
