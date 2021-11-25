@@ -18,6 +18,7 @@ states:
         nonRetryableErrors:
           - A
           - B
+        condition: "${ .data }"
     onErrors:
       - errorRefs:
           - A

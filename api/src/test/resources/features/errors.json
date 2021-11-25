@@ -23,7 +23,8 @@
         {
           "functionRef": "addPet",
           "retryRef": "testRetry",
-          "nonRetryableErrors": ["A", "B"]
+          "nonRetryableErrors": ["A", "B"],
+          "condition": "${ .data }"
         }
       ],
       "onErrors": [
