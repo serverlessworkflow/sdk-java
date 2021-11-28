@@ -1,7 +1,7 @@
 {
   "id": "functiontypes",
   "version": "1.0",
-  "specVersion": "0.7",
+  "specVersion": "0.8",
   "name": "Function Types Workflow",
   "description": "Determine if applicant request is valid",
   "start": "CheckFunctions",

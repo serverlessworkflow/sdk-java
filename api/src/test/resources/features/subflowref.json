@@ -1,7 +1,7 @@
 {
   "id": "subflowrefworkflow",
   "version": "1.0",
-  "specVersion": "0.7",
+  "specVersion": "0.8",
   "name": "SubflowRef Workflow",
   "start": "SubflowRef",
   "states":[
