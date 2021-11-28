@@ -1,6 +1,6 @@
 id: expressionlang
 version: '1.0'
-specVersion: '0.7'
+specVersion: '0.8'
 name: Custom expression lang
 expressionLang: abc
 start: TestFunctionRefs

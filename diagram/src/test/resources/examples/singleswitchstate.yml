@@ -3,7 +3,7 @@ id: testSwitch
 name: Test Switch State Workflow
 description: This is a test switch state workflow
 version: '1.0'
-specVersion: '0.7'
+specVersion: '0.8'
 start: SwitchIt
 states:
   - name: SwitchIt

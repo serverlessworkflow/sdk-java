@@ -9,7 +9,7 @@
     }
   },
   "version": "1.0",
-  "specVersion": "0.7",
+  "specVersion": "0.8",
   "functions": [
     {
       "name": "checkInboxFunction",

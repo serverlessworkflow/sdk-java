@@ -1,7 +1,7 @@
 {
   "id": "functionrefparams",
   "version": "1.0",
-  "specVersion": "0.7",
+  "specVersion": "0.8",
   "name": "Function Ref Params Test",
   "start": "AddPluto",
   "states": [
