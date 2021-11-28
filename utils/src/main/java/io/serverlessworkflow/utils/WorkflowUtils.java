@@ -15,6 +15,10 @@
  */
 package io.serverlessworkflow.utils;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.serverlessworkflow.api.Workflow;
 import io.serverlessworkflow.api.actions.Action;
 import io.serverlessworkflow.api.branches.Branch;
@@ -157,7 +161,7 @@ public final class WorkflowUtils {
    *
    * @return Returns {@code List<EventDefinition>}
    */
-  private static List<EventDefinition> getWorkflowEventDefinitions(
+  public static List<EventDefinition> getWorkflowEventDefinitions(
       Workflow workflow, EventDefinition.Kind eventKind) {
     if (!hasStates(workflow)) {
       return null;
@@ -174,7 +178,7 @@ public final class WorkflowUtils {
   }
 
   /** Returns a list of unique event names from workflow states */
-  private static List<String> getUniqueWorkflowEventsFromStates(Workflow workflow) {
+  public static List<String> getUniqueWorkflowEventsFromStates(Workflow workflow) {
     List<String> eventReferences = new ArrayList<>();
 
     for (State state : workflow.getStates()) {
@@ -351,7 +355,7 @@ public final class WorkflowUtils {
     }
   }
 
-  private static List<Action> getActionsWhichUsesFunctionDefinition(
+  public static List<Action> getActionsWhichUsesFunctionDefinition(
       Workflow workflow, String functionDefinitionName) {
     List<Action> actions = new ArrayList<>();
     for (State state : workflow.getStates()) {
@@ -419,7 +423,7 @@ public final class WorkflowUtils {
     return actions;
   }
 
-  private static boolean checkIfActionUsesFunctionDefinition(
+  public static boolean checkIfActionUsesFunctionDefinition(
       String functionDefinitionName, Action action) {
     return action != null
         && action.getFunctionRef() != null
@@ -427,7 +431,7 @@ public final class WorkflowUtils {
         && action.getFunctionRef().getRefName().equals(functionDefinitionName);
   }
 
-  private static boolean hasFunctionDefs(Workflow workflow, String functionDefinitionName) {
+  public static boolean hasFunctionDefs(Workflow workflow, String functionDefinitionName) {
     if (!hasFunctionDefs(workflow)) return false;
     List<FunctionDefinition> functionDefs = workflow.getFunctions().getFunctionDefs();
     return functionDefs.stream()
@@ -435,7 +439,7 @@ public final class WorkflowUtils {
             functionDefinition -> functionDefinition.getName().equals(functionDefinitionName));
   }
 
-  private static FunctionRef getFunctionRefFromAction(Workflow workflow, String action) {
+  public static FunctionRef getFunctionRefFromAction(Workflow workflow, String action) {
     if (!hasStates(workflow)) return null;
 
     for (State state : workflow.getStates()) {
@@ -513,7 +517,7 @@ public final class WorkflowUtils {
     return null;
   }
 
-  private static boolean hasFunctionDefs(Workflow workflow) {
+  public static boolean hasFunctionDefs(Workflow workflow) {
     return workflow != null
         && workflow.getFunctions() != null
         && workflow.getFunctions().getFunctionDefs() != null
@@ -521,12 +525,12 @@ public final class WorkflowUtils {
   }
 
   /** Returns true if workflow has states, otherwise false */
-  private static boolean hasStates(Workflow workflow) {
+  public static boolean hasStates(Workflow workflow) {
     return workflow != null && workflow.getStates() != null && !workflow.getStates().isEmpty();
   }
 
   /** Returns true if workflow has events definitions, otherwise false */
-  private static boolean hasEventDefs(Workflow workflow) {
+  public static boolean hasEventDefs(Workflow workflow) {
     return workflow != null
         && workflow.getEvents() != null
         && workflow.getEvents().getEventDefs() != null
@@ -534,7 +538,7 @@ public final class WorkflowUtils {
   }
 
   /** Gets event refs of an action */
-  private static List<String> getActionEvents(Action action) {
+  public static List<String> getActionEvents(Action action) {
     List<String> actionEvents = new ArrayList<>();
 
     if (action != null && action.getEventRef() != null) {
@@ -547,5 +551,74 @@ public final class WorkflowUtils {
     }
 
     return actionEvents;
+  }
+
+  /**
+   * Merges two JsonNode
+   *
+   * @param mainNode
+   * @param updateNode
+   * @return merged JsonNode
+   */
+  public static JsonNode mergeNodes(JsonNode mainNode, JsonNode updateNode) {
+
+    Iterator<String> fieldNames = updateNode.fieldNames();
+    while (fieldNames.hasNext()) {
+
+      String fieldName = fieldNames.next();
+      JsonNode jsonNode = mainNode.get(fieldName);
+      // if field exists and is an embedded object
+      if (jsonNode != null && jsonNode.isObject()) {
+        mergeNodes(jsonNode, updateNode.get(fieldName));
+      } else {
+        if (mainNode instanceof ObjectNode) {
+          // Overwrite field
+          JsonNode value = updateNode.get(fieldName);
+          ((ObjectNode) mainNode).put(fieldName, value);
+        }
+      }
+    }
+
+    return mainNode;
+  }
+
+  /**
+   * Adds node as field
+   *
+   * @param mainNode
+   * @param toAddNode
+   * @param fieldName
+   * @return original, main node with field added
+   */
+  public static JsonNode addNode(JsonNode mainNode, JsonNode toAddNode, String fieldName) {
+    ((ObjectNode) mainNode).put(fieldName, toAddNode);
+    return mainNode;
+  }
+
+  /**
+   * Adds array with name
+   *
+   * @param mainNode
+   * @param toAddArray
+   * @param arrayName
+   * @return original, main node with array added
+   */
+  public static JsonNode addArray(JsonNode mainNode, ArrayNode toAddArray, String arrayName) {
+    ((ObjectNode) mainNode).put(arrayName, toAddArray);
+    return mainNode;
+  }
+
+  /**
+   * Adds a object field
+   *
+   * @param mainNode
+   * @param toAddValue
+   * @param fieldName
+   * @return original, main node with field added
+   */
+  public static JsonNode addFieldValue(JsonNode mainNode, Object toAddValue, String fieldName) {
+    ObjectMapper mapper = new ObjectMapper();
+    ((ObjectNode) mainNode).put(fieldName, mapper.valueToTree(toAddValue));
+    return mainNode;
   }
 }
