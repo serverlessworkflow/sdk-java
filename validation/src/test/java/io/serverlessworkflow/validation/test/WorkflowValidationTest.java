@@ -146,7 +146,7 @@ public class WorkflowValidationTest {
   }
 
   @Test
-  public void testValidatateWorkflowForOptionalStartStateAndWorkflowName() {
+  public void testValidateWorkflowForOptionalStartStateAndWorkflowName() {
     Workflow workflow =
         new Workflow()
             .withId("test-workflow")
