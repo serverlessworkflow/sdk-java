@@ -67,13 +67,10 @@ public class WorkflowValidationTest {
     WorkflowValidator workflowValidator = new WorkflowValidatorImpl();
     List<ValidationError> validationErrors = workflowValidator.setWorkflow(workflow).validate();
     Assertions.assertNotNull(validationErrors);
-    Assertions.assertEquals(2, validationErrors.size());
-
-    Assertions.assertEquals(
-        "Workflow name should not be empty", validationErrors.get(0).getMessage());
+    Assertions.assertEquals(1, validationErrors.size());
     Assertions.assertEquals(
         "No state name found that matches the workflow start definition",
-        validationErrors.get(1).getMessage());
+        validationErrors.get(0).getMessage());
   }
 
   @Test
@@ -146,5 +143,72 @@ public class WorkflowValidationTest {
     Assertions.assertEquals(
         "Operation State action functionRef does not reference an existing workflow function definition",
         validationErrors.get(0).getMessage());
+  }
+
+  @Test
+  public void testValidatateWorkflowForOptionalStartStateAndWorkflowName() {
+    Workflow workflow =
+        new Workflow()
+            .withId("test-workflow")
+            .withVersion("1.0")
+            .withStates(
+                Arrays.asList(
+                    new SleepState()
+                        .withName("sleepState")
+                        .withType(SLEEP)
+                        .withEnd(new End())
+                        .withDuration("PT1M")));
+
+    WorkflowValidator workflowValidator = new WorkflowValidatorImpl();
+    List<ValidationError> validationErrors = workflowValidator.setWorkflow(workflow).validate();
+    Assertions.assertNotNull(validationErrors);
+    Assertions.assertEquals(0, validationErrors.size());
+  }
+
+  @Test
+  public void testValidateWorkflowForOptionalIterationParam() {
+    WorkflowValidator workflowValidator = new WorkflowValidatorImpl();
+    List<ValidationError> validationErrors =
+        workflowValidator
+            .setSource(
+                "{\n"
+                    + "\"id\": \"checkInbox\",\n"
+                    + "  \"name\": \"Check Inbox Workflow\",\n"
+                    + "\"description\": \"Periodically Check Inbox\",\n"
+                    + "\"version\": \"1.0\",\n"
+                    + "\"start\": \"CheckInbox\",\n"
+                    + "\"functions\": [\n"
+                    + "\n"
+                    + "],\n"
+                    + "\"states\": [\n"
+                    + "    {\n"
+                    + "        \"name\": \"CheckInbox\",\n"
+                    + "        \"type\": \"operation\",\n"
+                    + "        \"actionMode\": \"sequential\",\n"
+                    + "        \"actions\": [\n"
+                    + "            {\n"
+                    + "                \"functionRef\": {\n"
+                    + "                    \"refName\": \"checkInboxFunction\"\n"
+                    + "                }\n"
+                    + "            }\n"
+                    + "        ],\n"
+                    + "        \"transition\": {\n"
+                    + "            \"nextState\": \"SendTextForHighPrioriry\"\n"
+                    + "        }\n"
+                    + "    },\n"
+                    + "    {\n"
+                    + "        \"name\": \"SendTextForHighPrioriry\",\n"
+                    + "        \"type\": \"foreach\",\n"
+                    + "        \"inputCollection\": \"${ .message }\",\n"
+                    + "        \"end\": {\n"
+                    + "            \"kind\": \"default\"\n"
+                    + "        }\n"
+                    + "    }\n"
+                    + "]\n"
+                    + "}")
+            .validate();
+
+    Assertions.assertNotNull(validationErrors);
+    Assertions.assertEquals(1, validationErrors.size()); // validation error raised for functionref not for iterationParam
   }
 }

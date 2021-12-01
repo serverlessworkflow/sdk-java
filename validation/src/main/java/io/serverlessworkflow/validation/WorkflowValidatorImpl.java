@@ -116,16 +116,6 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
         addValidationError("Workflow id should not be empty", ValidationError.WORKFLOW_VALIDATION);
       }
 
-      if (workflow.getName() == null || workflow.getName().trim().isEmpty()) {
-        addValidationError(
-            "Workflow name should not be empty", ValidationError.WORKFLOW_VALIDATION);
-      }
-
-      if (workflow.getStart() == null) {
-        addValidationError(
-            "Workflow must define a starting state", ValidationError.WORKFLOW_VALIDATION);
-      }
-
       if (workflow.getVersion() == null || workflow.getVersion().trim().isEmpty()) {
         addValidationError(
             "Workflow version should not be empty", ValidationError.WORKFLOW_VALIDATION);
@@ -137,12 +127,16 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
 
       if (workflow.getStates() != null && !workflow.getStates().isEmpty()) {
         boolean existingStateWithStartProperty = false;
-        String startProperty = workflow.getStart().getStateName();
-        for (State s : workflow.getStates()) {
-          if (s.getName().equals(startProperty)) {
-            existingStateWithStartProperty = true;
-            break;
+        if (workflow.getStart() != null) {
+          String startProperty = workflow.getStart().getStateName();
+          for (State s : workflow.getStates()) {
+            if (s.getName().equals(startProperty)) {
+              existingStateWithStartProperty = true;
+              break;
+            }
           }
+        } else {
+          existingStateWithStartProperty = true;
         }
         if (!existingStateWithStartProperty) {
           addValidationError(
@@ -323,13 +317,6 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
                         || forEachState.getInputCollection().isEmpty()) {
                       addValidationError(
                           "ForEach state should have a valid inputCollection",
-                          ValidationError.WORKFLOW_VALIDATION);
-                    }
-
-                    if (forEachState.getIterationParam() == null
-                        || forEachState.getIterationParam().isEmpty()) {
-                      addValidationError(
-                          "ForEach state should have a valid iteration parameter",
                           ValidationError.WORKFLOW_VALIDATION);
                     }
                   }
