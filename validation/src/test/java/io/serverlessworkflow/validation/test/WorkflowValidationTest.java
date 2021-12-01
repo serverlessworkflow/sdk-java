@@ -209,6 +209,8 @@ public class WorkflowValidationTest {
             .validate();
 
     Assertions.assertNotNull(validationErrors);
-    Assertions.assertEquals(1, validationErrors.size()); // validation error raised for functionref not for iterationParam
+    Assertions.assertEquals(
+        1,
+        validationErrors.size()); // validation error raised for functionref not for iterationParam
   }
 }
