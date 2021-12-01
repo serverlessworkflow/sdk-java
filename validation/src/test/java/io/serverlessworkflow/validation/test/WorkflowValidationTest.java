@@ -146,7 +146,7 @@ public class WorkflowValidationTest {
   }
 
   @Test
-  public void testValidatateWorkflowWithNoStartStateandNameSpecified() {
+  public void testValidatateWorkflowForOptionalStartStateAndWorkflowName() {
     Workflow workflow =
         new Workflow()
             .withId("test-workflow")
@@ -163,5 +163,52 @@ public class WorkflowValidationTest {
     List<ValidationError> validationErrors = workflowValidator.setWorkflow(workflow).validate();
     Assertions.assertNotNull(validationErrors);
     Assertions.assertEquals(0, validationErrors.size());
+  }
+
+  @Test
+  public void testValidateWorkflowForOptionalIterationParam() {
+    WorkflowValidator workflowValidator = new WorkflowValidatorImpl();
+    List<ValidationError> validationErrors =
+        workflowValidator
+            .setSource(
+                "{\n"
+                    + "\"id\": \"checkInbox\",\n"
+                    + "  \"name\": \"Check Inbox Workflow\",\n"
+                    + "\"description\": \"Periodically Check Inbox\",\n"
+                    + "\"version\": \"1.0\",\n"
+                    + "\"start\": \"CheckInbox\",\n"
+                    + "\"functions\": [\n"
+                    + "\n"
+                    + "],\n"
+                    + "\"states\": [\n"
+                    + "    {\n"
+                    + "        \"name\": \"CheckInbox\",\n"
+                    + "        \"type\": \"operation\",\n"
+                    + "        \"actionMode\": \"sequential\",\n"
+                    + "        \"actions\": [\n"
+                    + "            {\n"
+                    + "                \"functionRef\": {\n"
+                    + "                    \"refName\": \"checkInboxFunction\"\n"
+                    + "                }\n"
+                    + "            }\n"
+                    + "        ],\n"
+                    + "        \"transition\": {\n"
+                    + "            \"nextState\": \"SendTextForHighPrioriry\"\n"
+                    + "        }\n"
+                    + "    },\n"
+                    + "    {\n"
+                    + "        \"name\": \"SendTextForHighPrioriry\",\n"
+                    + "        \"type\": \"foreach\",\n"
+                    + "        \"inputCollection\": \"${ .message }\",\n"
+                    + "        \"end\": {\n"
+                    + "            \"kind\": \"default\"\n"
+                    + "        }\n"
+                    + "    }\n"
+                    + "]\n"
+                    + "}")
+            .validate();
+
+    Assertions.assertNotNull(validationErrors);
+    Assertions.assertEquals(1, validationErrors.size()); // validation error raised for functionref not for iterationParam
   }
 }
