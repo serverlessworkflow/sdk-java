@@ -319,13 +319,6 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
                           "ForEach state should have a valid inputCollection",
                           ValidationError.WORKFLOW_VALIDATION);
                     }
-
-                    if (forEachState.getIterationParam() == null
-                        || forEachState.getIterationParam().isEmpty()) {
-                      addValidationError(
-                          "ForEach state should have a valid iteration parameter",
-                          ValidationError.WORKFLOW_VALIDATION);
-                    }
                   }
 
                   if (s instanceof CallbackState) {
