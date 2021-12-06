@@ -621,4 +621,19 @@ public final class WorkflowUtils {
     ((ObjectNode) mainNode).put(fieldName, mapper.valueToTree(toAddValue));
     return mainNode;
   }
+
+  /**
+   * Returns a list of function definitions that have the given type.
+   *
+   * @param workflow
+   * @param type
+   * @return list of functions defs or null
+   */
+  public static List<FunctionDefinition> getFunctionDefinitionsWithType(
+      Workflow workflow, FunctionDefinition.Type type) {
+    if (!hasFunctionDefs(workflow)) return null;
+    return workflow.getFunctions().getFunctionDefs().stream()
+        .filter(fd -> fd.getType().equals(type))
+        .collect(Collectors.toList());
+  }
 }
