@@ -636,4 +636,20 @@ public final class WorkflowUtils {
         .filter(fd -> fd.getType().equals(type))
         .collect(Collectors.toList());
   }
+
+  /**
+   * Returns function definition with provided name
+   *
+   * @param workflow
+   * @param name
+   * @return function definition or null
+   */
+  public static FunctionDefinition getFunctionDefinitionWithName(Workflow workflow, String name) {
+    if (!hasFunctionDefs(workflow)) return null;
+    Optional<FunctionDefinition> funcDef =
+        workflow.getFunctions().getFunctionDefs().stream()
+            .filter(fd -> fd.getName().equals(name))
+            .findFirst();
+    return funcDef.orElse(null);
+  }
 }

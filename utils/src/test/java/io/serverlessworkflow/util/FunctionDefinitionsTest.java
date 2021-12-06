@@ -67,4 +67,12 @@ public class FunctionDefinitionsTest {
         WorkflowUtils.getActionsForFunctionDefinition(workflow, functionRefName);
     assertEquals(expectedActionCount, actionsForFunctionDefinition.size());
   }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"/funcdefinitiontest/functiondefinition.yml"})
+  public void testGetFunctionDefinitionWithName(String funcDefinitions) {
+    Workflow workflow = TestUtils.createWorkflowFromTestResource(funcDefinitions);
+    assertNotNull(
+        WorkflowUtils.getFunctionDefinitionWithName(workflow, "finalizeApplicationFunction"));
+  }
 }
