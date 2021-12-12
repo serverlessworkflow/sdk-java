@@ -20,7 +20,7 @@ to parse and validate workflow definitions as well as generate the workflow diag
 
 | Latest Releases | Conformance to spec version |
 | :---: | :---: |
-| [4.0.0.Final](https://github.com/serverlessworkflow/sdk-java/releases/) | [v0.8](https://github.com/serverlessworkflow/specification/tree/0.8.x) |
+| [4.0.1.Final](https://github.com/serverlessworkflow/sdk-java/releases/) | [v0.8](https://github.com/serverlessworkflow/specification/tree/0.8.x) |
 | [3.0.0.Final](https://github.com/serverlessworkflow/sdk-java/releases/) | [v0.7](https://github.com/serverlessworkflow/specification/tree/0.7.x) |
 | [2.0.0.Final](https://github.com/serverlessworkflow/sdk-java/releases/) | [v0.6](https://github.com/serverlessworkflow/specification/tree/0.6.x) |
 | [1.0.3.Final](https://github.com/serverlessworkflow/sdk-java/releases/) | [v0.5](https://github.com/serverlessworkflow/specification/tree/0.5.x) |
@@ -43,71 +43,50 @@ To use it in your projects you can:
 
 #### Maven projects:
 
-a) Add the following repository to your pom.xml `repositories` section:
-
-```xml
-<repository>
-    <id>oss.sonatype.org-snapshot</id>
-    <url>http://oss.sonatype.org/content/repositories/snapshots</url>
-    <releases>
-        <enabled>false</enabled>
-    </releases>
-    <snapshots>
-        <enabled>true</enabled>
-    </snapshots>
-</repository>
-```
-
-b) Add the following dependencies to your pom.xml `dependencies` section:
+Add the following dependencies to your pom.xml `dependencies` section:
 
 ```xml
 <dependency>
     <groupId>io.serverlessworkflow</groupId>
     <artifactId>serverlessworkflow-api</artifactId>
-    <version>4.0.x</version>
+    <version>4.0.1.Final</version>
 </dependency>
 
 <dependency>
     <groupId>io.serverlessworkflow</groupId>
     <artifactId>serverlessworkflow-spi</artifactId>
-    <version>4.0.x</version>
+    <version>4.0.1.Final</version>
 </dependency>
 
 <dependency>
     <groupId>io.serverlessworkflow</groupId>
     <artifactId>serverlessworkflow-validation</artifactId>
-    <version>4.0.x</version>
+    <version>4.0.1.Final</version>
 </dependency>
 
 <dependency>
     <groupId>io.serverlessworkflow</groupId>
     <artifactId>serverlessworkflow-diagram</artifactId>
-    <version>4.0.x</version>
+    <version>4.0.1.Final</version>
 </dependency>
 
 <dependency>
     <groupId>io.serverlessworkflow</groupId>
     <artifactId>serverlessworkflow-util</artifactId>
-    <version>4.0.x</version>
+    <version>4.0.1.Final</version>
 </dependency>
 ```
 
 #### Gradle projects:
 
-a) Add the following repositories to your build.gradle `repositories` section:
+Add the following dependencies to your build.gradle `dependencies` section:
 
 ```text
-maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
-```
-
-b) Add the following dependencies to your build.gradle `dependencies` section:
-
-```text
-implementation("io.serverlessworkflow:serverlessworkflow-api:4.0.x")
-implementation("io.serverlessworkflow:serverlessworkflow-spi:4.0.x")
-implementation("io.serverlessworkflow:serverlessworkflow-validation:4.0.x")
-implementation("io.serverlessworkflow:serverlessworkflow-diagram:4.0.x")
-implementation("io.serverlessworkflow:serverlessworkflow-util:4.0.x")
+implementation("io.serverlessworkflow:serverlessworkflow-api:4.0.1.Final")
+implementation("io.serverlessworkflow:serverlessworkflow-spi:4.0.1.Final")
+implementation("io.serverlessworkflow:serverlessworkflow-validation:4.0.1.Final")
+implementation("io.serverlessworkflow:serverlessworkflow-diagram:4.0.1.Final")
+implementation("io.serverlessworkflow:serverlessworkflow-util:4.0.1.Final")
 ```
 
 ### How to Use 
