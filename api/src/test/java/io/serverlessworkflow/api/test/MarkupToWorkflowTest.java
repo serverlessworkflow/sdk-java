@@ -838,4 +838,18 @@ public class MarkupToWorkflowTest {
     assertNotNull(action3.getEventRef().getInvoke());
     assertEquals(EventRef.Invoke.ASYNC, action3.getEventRef().getInvoke());
   }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"/features/annotations.json", "/features/annotations.yml"})
+  public void testAnnotations(String workflowLocation) {
+    Workflow workflow = Workflow.fromSource(WorkflowTestUtils.readWorkflowFile(workflowLocation));
+
+    assertNotNull(workflow);
+    assertNotNull(workflow.getId());
+    assertNotNull(workflow.getName());
+
+    assertNotNull(workflow.getAnnotations());
+    List<String> annotations = workflow.getAnnotations();
+    assertEquals(4, annotations.size());
+  }
 }
