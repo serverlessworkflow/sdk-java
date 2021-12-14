@@ -1,0 +1,8 @@
+id: test-workflow
+name: test-workflow-name
+version: '1.0'
+annotations:
+  - a
+  - b
+  - c
+  - d

@@ -27,6 +27,14 @@
       "type": "string",
       "description": "Workflow version"
     },
+    "annotations": {
+      "type": "array",
+      "description": "List of helpful terms describing the workflows intended purpose, subject areas, or other important qualities",
+      "minItems": 1,
+      "items": {
+        "type": "string"
+      }
+    },
     "dataInputSchema": {
       "$ref": "datainputschema/datainputschema.json",
       "description": "Workflow data input schema"
