@@ -22,6 +22,8 @@ public interface WorkflowDiagram {
 
   WorkflowDiagram setSource(String source);
 
+  WorkflowDiagram setTemplate(String template);
+
   String getSvgDiagram() throws Exception;
 
   WorkflowDiagram showLegend(boolean showLegend);
