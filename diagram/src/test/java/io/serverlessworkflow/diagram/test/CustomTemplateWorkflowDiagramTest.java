@@ -45,6 +45,6 @@ public class CustomTemplateWorkflowDiagramTest {
 
     Assertions.assertNotNull(diagramSVG);
     // custom template uses #0000FF as start node color
-    Assertions.assertTrue(diagramSVG.contains("#0000FF"));
+    Assertions.assertTrue(diagramSVG.contains("customcolor"));
   }
 }
