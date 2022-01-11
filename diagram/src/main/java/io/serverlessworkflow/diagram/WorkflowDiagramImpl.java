@@ -26,8 +26,13 @@ import net.sourceforge.plantuml.SourceStringReader;
 
 public class WorkflowDiagramImpl implements WorkflowDiagram {
 
+  public static final String DEFAULT_TEMPLATE = "workflow-template";
+
   @SuppressWarnings("unused")
   private String source;
+
+  @SuppressWarnings("unused")
+  private String template = DEFAULT_TEMPLATE;
 
   private Workflow workflow;
   private boolean showLegend = false;
@@ -47,11 +52,17 @@ public class WorkflowDiagramImpl implements WorkflowDiagram {
   }
 
   @Override
+  public WorkflowDiagram setTemplate(String template) {
+    this.template = template;
+    return this;
+  }
+
+  @Override
   public String getSvgDiagram() throws Exception {
     if (workflow == null) {
       throw new IllegalAccessException("Unable to get diagram - no workflow set.");
     }
-    String diagramSource = WorkflowToPlantuml.convert(workflow, showLegend);
+    String diagramSource = WorkflowToPlantuml.convert(template, workflow, showLegend);
     SourceStringReader reader = new SourceStringReader(diagramSource);
     final ByteArrayOutputStream os = new ByteArrayOutputStream();
     reader.generateImage(os, new FileFormatOption(FileFormat.SVG));
