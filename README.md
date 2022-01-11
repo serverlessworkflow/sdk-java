@@ -267,6 +267,22 @@ String diagramSVG = workflowDiagram.getSvgDiagram();
 `diagramSVG` includes the diagram SVG source which you can then decide to save to a file, 
 print, or process further.
 
+In case default visualization of the workflow is not sufficient you can provide custom workflow template to be 
+used while generating the SVG file. Easiest is to start off from the default template and customize it to your needs.
+
+Custom template must be on the classpath in `templates/plantuml` directory and must use `.txt` extension. Next
+template is set on `WorkflowDiagram` instance as shown below.
+
+``` java
+Workflow workflow = Workflow.fromSource(source);
+
+WorkflowDiagram workflowDiagram = new WorkflowDiagramImpl();
+workflowDiagram.setWorkflow(workflow);
+workflowDiagram.setTemplate("custom-template");
+
+String diagramSVG = workflowDiagram.getSvgDiagram();
+```
+
 By default the diagram legend is now shown. If you want to enable it you can do:
 
 ``` java
