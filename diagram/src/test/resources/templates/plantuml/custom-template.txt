@@ -3,7 +3,7 @@ skinparam backgroundColor White
 skinparam legendBackgroundColor White
 skinparam legendBorderColor White
 skinparam state {
-  StartColor #0000FF
+  StartColor Green
   EndColor Orange
   BackgroundColor GhostWhite
   BackgroundColor<< workflow >> White
@@ -39,7 +39,7 @@ state "[(${diagram.title})]" as workflow << workflow >> {
 legend center
 State Types and Border Colors:
 | Event | Operation | Switch | Sleep | Parallel | Inject | ForEach | CallBack |
-|<#7fe5f0>|<#bada55>|<#92a0f2>|<#b83b5e>|<#6a2c70>|<#1e5f74>|<#931a25>|<#ffcb8e>|
+|<#7fe5f0>|<#bada55>|<#92a0f2>|<#b83b5e>|<#6a2c70>|<#1e5f74>|<#931a25>|<customcolor>|
 endlegend
 [/]
 
