@@ -39,12 +39,14 @@ public class CustomTemplateWorkflowDiagramTest {
     assertNotNull(workflow.getStates());
 
     WorkflowDiagram workflowDiagram =
-        new WorkflowDiagramImpl().setWorkflow(workflow).setTemplate("custom-template");
+        new WorkflowDiagramImpl()
+            .showLegend(true)
+            .setWorkflow(workflow)
+            .setTemplate("custom-template");
 
     String diagramSVG = workflowDiagram.getSvgDiagram();
-
     Assertions.assertNotNull(diagramSVG);
-    // custom template uses #0000FF as start node color
-    Assertions.assertTrue(diagramSVG.contains("#0000FF"));
+    // check custom template "customcolor" in the legend
+    Assertions.assertTrue(diagramSVG.contains("customcolor"));
   }
 }
