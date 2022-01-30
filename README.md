@@ -20,14 +20,19 @@ to parse and validate workflow definitions as well as generate the workflow diag
 
 | Latest Releases | Conformance to spec version |
 | :---: | :---: |
-| [4.0.1.Final](https://github.com/serverlessworkflow/sdk-java/releases/) | [v0.8](https://github.com/serverlessworkflow/specification/tree/0.8.x) |
+| [4.0.2.Final](https://github.com/serverlessworkflow/sdk-java/releases/) | [v0.8](https://github.com/serverlessworkflow/specification/tree/0.8.x) |
 | [3.0.0.Final](https://github.com/serverlessworkflow/sdk-java/releases/) | [v0.7](https://github.com/serverlessworkflow/specification/tree/0.7.x) |
 | [2.0.0.Final](https://github.com/serverlessworkflow/sdk-java/releases/) | [v0.6](https://github.com/serverlessworkflow/specification/tree/0.6.x) |
 | [1.0.3.Final](https://github.com/serverlessworkflow/sdk-java/releases/) | [v0.5](https://github.com/serverlessworkflow/specification/tree/0.5.x) |
 
 ### Getting Started
 
-#### Building locally
+#### Using the latest release
+
+See instructions how to define dependencies for the latest SDK release
+for both Maven and Gradle [here](https://github.com/serverlessworkflow/sdk-java/blob/4.0.x/README.md).
+
+#### Building SNAPSHOT locally
 
 To build project and run tests locally:
 
@@ -38,8 +43,6 @@ mvn clean install
 
 The project uses [Google's code styleguide](https://google.github.io/styleguide/javaguide.html).
 Your changes should be automatically formatted during the build.
-
-To use it in your projects you can:
 
 #### Maven projects:
 
