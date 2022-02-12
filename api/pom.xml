@@ -103,7 +103,7 @@
                     <includeConstructors>true</includeConstructors>
                     <constructorsRequiredPropertiesOnly>true</constructorsRequiredPropertiesOnly>
                     <serializable>true</serializable>
-                    <targetVersion>1.8</targetVersion>
+                    <targetVersion>${java.version}</targetVersion>
                     <usePrimitives>true</usePrimitives>
                 </configuration>
                 <executions>
