@@ -25,6 +25,13 @@ to parse and validate workflow definitions as well as generate the workflow diag
 | [2.0.0.Final](https://github.com/serverlessworkflow/sdk-java/releases/) | [v0.6](https://github.com/serverlessworkflow/specification/tree/0.6.x) |
 | [1.0.3.Final](https://github.com/serverlessworkflow/sdk-java/releases/) | [v0.5](https://github.com/serverlessworkflow/specification/tree/0.5.x) |
 
+### JDK Version
+
+| SDK Version | JDK Version |
+| :---: | :---: |
+| 5.0.0 and after | 11 |
+| 4.0.x and before | 8 | 
+
 ### Getting Started
 
 #### Using the latest release
