@@ -24,6 +24,11 @@
         "$ref": "../correlation/correlationdef.json"
       }
     },
+    "dataOnly": {
+      "type": "boolean",
+      "default": true,
+      "description": "If `true`, only the Event payload is accessible to consuming Workflow states. If `false`, both event payload and context attributes should be accessible "
+    },
     "kind": {
       "type" : "string",
       "enum": ["consumed", "produced"],
