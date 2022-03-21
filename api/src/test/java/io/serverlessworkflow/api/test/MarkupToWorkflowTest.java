@@ -25,6 +25,7 @@ import io.serverlessworkflow.api.branches.Branch;
 import io.serverlessworkflow.api.datainputschema.DataInputSchema;
 import io.serverlessworkflow.api.defaultdef.DefaultConditionDefinition;
 import io.serverlessworkflow.api.end.End;
+import io.serverlessworkflow.api.events.EventDefinition;
 import io.serverlessworkflow.api.events.EventRef;
 import io.serverlessworkflow.api.functions.FunctionDefinition;
 import io.serverlessworkflow.api.functions.FunctionRef;
@@ -39,6 +40,7 @@ import io.serverlessworkflow.api.switchconditions.DataCondition;
 import io.serverlessworkflow.api.test.utils.WorkflowTestUtils;
 import io.serverlessworkflow.api.timeouts.WorkflowExecTimeout;
 import io.serverlessworkflow.api.workflow.Constants;
+import io.serverlessworkflow.api.workflow.Events;
 import io.serverlessworkflow.api.workflow.Retries;
 import io.serverlessworkflow.api.workflow.Secrets;
 import java.util.List;
@@ -851,5 +853,26 @@ public class MarkupToWorkflowTest {
     assertNotNull(workflow.getAnnotations());
     List<String> annotations = workflow.getAnnotations();
     assertEquals(4, annotations.size());
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"/features/eventdefdataonly.json", "/features/eventdefdataonly.yml"})
+  public void testEventDefDataOnly(String workflowLocation) {
+    Workflow workflow = Workflow.fromSource(WorkflowTestUtils.readWorkflowFile(workflowLocation));
+
+    assertNotNull(workflow);
+    assertNotNull(workflow.getId());
+    assertNotNull(workflow.getName());
+
+    assertNotNull(workflow.getEvents());
+    Events events = workflow.getEvents();
+    assertNotNull(workflow.getEvents().getEventDefs());
+    assertEquals(2, events.getEventDefs().size());
+    EventDefinition eventDefOne = events.getEventDefs().get(0);
+    EventDefinition eventDefTwo = events.getEventDefs().get(1);
+    assertEquals("visaApprovedEvent", eventDefOne.getName());
+    assertFalse(eventDefOne.isDataOnly());
+    assertEquals("visaRejectedEvent", eventDefTwo.getName());
+    assertTrue(eventDefTwo.isDataOnly());
   }
 }
