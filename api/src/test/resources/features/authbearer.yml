@@ -2,7 +2,7 @@ id: test-workflow
 name: test-workflow-name
 version: '1.0'
 auth:
-  name: authname
-  scheme: bearer
-  properties:
-    token: testtoken
+  - name: authname
+    scheme: bearer
+    properties:
+      token: testtoken

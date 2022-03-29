@@ -2,7 +2,7 @@
   "id" : "test-workflow",
   "name" : "test-workflow-name",
   "version" : "1.0",
-  "auth" : {
+  "auth" : [{
     "name" : "authname",
     "scheme" : "oauth2",
     "properties" : {
@@ -11,5 +11,5 @@
       "clientId": "${ $SECRETS.clientid }",
       "clientSecret": "${ $SECRETS.clientsecret }"
     }
-  }
+  }]
 }

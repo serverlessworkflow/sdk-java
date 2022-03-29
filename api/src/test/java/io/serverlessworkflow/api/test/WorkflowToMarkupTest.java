@@ -16,7 +16,9 @@
 package io.serverlessworkflow.api.test;
 
 import static io.serverlessworkflow.api.states.DefaultState.Type.SLEEP;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.serverlessworkflow.api.Workflow;
 import io.serverlessworkflow.api.auth.AuthDefinition;
@@ -29,6 +31,7 @@ import io.serverlessworkflow.api.produce.ProduceEvent;
 import io.serverlessworkflow.api.schedule.Schedule;
 import io.serverlessworkflow.api.start.Start;
 import io.serverlessworkflow.api.states.SleepState;
+import io.serverlessworkflow.api.workflow.Auth;
 import io.serverlessworkflow.api.workflow.Events;
 import io.serverlessworkflow.api.workflow.Functions;
 import java.util.Arrays;
@@ -162,22 +165,24 @@ public class WorkflowToMarkupTest {
             .withVersion("1.0")
             .withStart(new Start())
             .withAuth(
-                new AuthDefinition()
-                    .withName("authname")
-                    .withScheme(AuthDefinition.Scheme.BASIC)
-                    .withBasicauth(
-                        new BasicAuthDefinition()
-                            .withUsername("testuser")
-                            .withPassword("testPassword")));
+                new Auth(
+                    new AuthDefinition()
+                        .withName("authname")
+                        .withScheme(AuthDefinition.Scheme.BASIC)
+                        .withBasicauth(
+                            new BasicAuthDefinition()
+                                .withUsername("testuser")
+                                .withPassword("testPassword"))));
 
     assertNotNull(workflow);
     assertNotNull(workflow.getAuth());
-    assertNotNull(workflow.getAuth().getName());
-    assertEquals("authname", workflow.getAuth().getName());
-    assertNotNull(workflow.getAuth().getScheme());
-    assertEquals("basic", workflow.getAuth().getScheme().value());
-    assertNotNull(workflow.getAuth().getBasicauth());
-    assertEquals("testuser", workflow.getAuth().getBasicauth().getUsername());
-    assertEquals("testPassword", workflow.getAuth().getBasicauth().getPassword());
+    assertNotNull(workflow.getAuth().getAuthDefs().get(0));
+    assertEquals("authname", workflow.getAuth().getAuthDefs().get(0).getName());
+    assertNotNull(workflow.getAuth().getAuthDefs().get(0).getScheme());
+    assertEquals("basic", workflow.getAuth().getAuthDefs().get(0).getScheme().value());
+    assertNotNull(workflow.getAuth().getAuthDefs().get(0).getBasicauth());
+    assertEquals("testuser", workflow.getAuth().getAuthDefs().get(0).getBasicauth().getUsername());
+    assertEquals(
+        "testPassword", workflow.getAuth().getAuthDefs().get(0).getBasicauth().getPassword());
   }
 }
