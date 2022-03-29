@@ -167,8 +167,8 @@ public class WorkflowSerializer extends StdSerializer<Workflow> {
       gen.writeObjectField("timeouts", workflow.getTimeouts());
     }
 
-    if (workflow.getAuth() != null) {
-      gen.writeObjectField("auth", workflow.getAuth());
+    if (workflow.getAuth() != null && !workflow.getAuth().getAuthDefs().isEmpty()) {
+      gen.writeObjectField("auth", workflow.getAuth().getAuthDefs());
     }
 
     if (workflow.getStates() != null && !workflow.getStates().isEmpty()) {

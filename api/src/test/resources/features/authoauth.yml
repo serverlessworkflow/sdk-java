@@ -2,10 +2,10 @@ id: test-workflow
 name: test-workflow-name
 version: '1.0'
 auth:
-  name: authname
-  scheme: oauth2
-  properties:
-    authority: testauthority
-    grantType: clientCredentials
-    clientId: "${ $SECRETS.clientid }"
-    clientSecret: "${ $SECRETS.clientsecret }"
+  - name: authname
+    scheme: oauth2
+    properties:
+      authority: testauthority
+      grantType: clientCredentials
+      clientId: "${ $SECRETS.clientid }"
+      clientSecret: "${ $SECRETS.clientsecret }"
