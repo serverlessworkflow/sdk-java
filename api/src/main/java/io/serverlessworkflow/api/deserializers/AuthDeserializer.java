@@ -84,17 +84,17 @@ public class AuthDeserializer extends StdDeserializer<Auth> {
           authRefNode = jsonWriter.readTree(new JSONObject(authFileSrc).toString());
         }
 
-        JsonNode refAuth = authRefNode.get("retries");
+        JsonNode refAuth = authRefNode.get("auth");
         if (refAuth != null) {
           for (final JsonNode nodeEle : refAuth) {
             authDefinitions.add(mapper.treeToValue(nodeEle, AuthDefinition.class));
           }
         } else {
-          logger.error("Unable to find retries definitions in reference file: {}", authFileSrc);
+          logger.error("Unable to find auth definitions in reference file: {}", authFileSrc);
         }
 
       } else {
-        logger.error("Unable to load retries defs reference file: {}", authFileSrc);
+        logger.error("Unable to load auth defs reference file: {}", authFileSrc);
       }
     }
     auth.setAuthDefs(authDefinitions);
