@@ -100,7 +100,9 @@
       "$ref": "timeouts/timeoutsdef.json"
     },
     "auth": {
-      "$ref": "auth/auth.json"
+      "type": "object",
+      "existingJavaType": "io.serverlessworkflow.api.workflow.Auth",
+      "description": "Workflow Auth definitions"
     },
     "states": {
       "type": "array",

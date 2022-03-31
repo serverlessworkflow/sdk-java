@@ -2,8 +2,8 @@ id: test-workflow
 name: test-workflow-name
 version: '1.0'
 auth:
-  name: authname
-  scheme: basic
-  properties:
-    username: testuser
-    password: testpassword
+  - name: authname
+    scheme: basic
+    properties:
+      username: testuser
+      password: testpassword

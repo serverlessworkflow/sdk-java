@@ -627,7 +627,7 @@ public class MarkupToWorkflowTest {
     assertNotNull(workflow.getName());
 
     assertNotNull(workflow.getAuth());
-    AuthDefinition auth = workflow.getAuth();
+    AuthDefinition auth = workflow.getAuth().getAuthDefs().get(0);
     assertNotNull(auth.getName());
     assertEquals("authname", auth.getName());
     assertNotNull(auth.getScheme());
@@ -647,7 +647,7 @@ public class MarkupToWorkflowTest {
     assertNotNull(workflow.getName());
 
     assertNotNull(workflow.getAuth());
-    AuthDefinition auth = workflow.getAuth();
+    AuthDefinition auth = workflow.getAuth().getAuthDefs().get(0);
     assertNotNull(auth.getName());
     assertEquals("authname", auth.getName());
     assertNotNull(auth.getScheme());
@@ -666,7 +666,7 @@ public class MarkupToWorkflowTest {
     assertNotNull(workflow.getName());
 
     assertNotNull(workflow.getAuth());
-    AuthDefinition auth = workflow.getAuth();
+    AuthDefinition auth = workflow.getAuth().getAuthDefs().get(0);
     assertNotNull(auth.getName());
     assertEquals("authname", auth.getName());
     assertNotNull(auth.getScheme());
