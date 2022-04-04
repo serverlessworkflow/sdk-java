@@ -330,7 +330,7 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
                           ValidationError.WORKFLOW_VALIDATION);
                     }
 
-                    if (haveFunctionDefinition(
+                    if (!haveFunctionDefinition(
                         callbackState.getAction().getFunctionRef().getRefName(), functions)) {
                       addValidationError(
                           "CallbackState action function ref does not reference a defined workflow function definition",
