@@ -213,4 +213,48 @@ public class WorkflowValidationTest {
         1,
         validationErrors.size()); // validation error raised for functionref not for iterationParam
   }
+
+  @Test
+  public void testMissingFunctionRefForCallbackState() {
+    WorkflowValidator workflowValidator = new WorkflowValidatorImpl();
+    List<ValidationError> validationErrors =
+        workflowValidator
+            .setSource(
+                "{\n"
+                    + "  \"id\": \"callbackstatemissingfuncref\",\n"
+                    + "  \"version\": \"1.0\",\n"
+                    + "  \"specVersion\": \"0.8\",\n"
+                    + "  \"name\": \"Callback State Test\",\n"
+                    + "  \"start\": \"CheckCredit\",\n"
+                    + "  \"states\": [\n"
+                    + "    {\n"
+                    + "      \"name\": \"CheckCredit\",\n"
+                    + "      \"type\": \"callback\",\n"
+                    + "      \"action\": {\n"
+                    + "        \"functionRef\": {\n"
+                    + "          \"refName\": \"callCreditCheckMicroservice\",\n"
+                    + "          \"arguments\": {\n"
+                    + "            \"customer\": \"${ .customer }\"\n"
+                    + "          }\n"
+                    + "        }\n"
+                    + "      },\n"
+                    + "      \"eventRef\": \"CreditCheckCompletedEvent\",\n"
+                    + "      \"timeouts\": {\n"
+                    + "        \"stateExecTimeout\": \"PT15M\"\n"
+                    + "      },\n"
+                    + "      \"end\": true\n"
+                    + "    }\n"
+                    + "  ]\n"
+                    + "}")
+            .validate();
+
+    Assertions.assertNotNull(validationErrors);
+    Assertions.assertEquals(2, validationErrors.size());
+    Assertions.assertEquals(
+        "CallbackState event ref does not reference a defined workflow event definition",
+        validationErrors.get(0).getMessage());
+    Assertions.assertEquals(
+        "CallbackState action function ref does not reference a defined workflow function definition",
+        validationErrors.get(1).getMessage());
+  }
 }
