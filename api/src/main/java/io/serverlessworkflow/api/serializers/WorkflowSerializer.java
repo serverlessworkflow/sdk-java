@@ -159,8 +159,12 @@ public class WorkflowSerializer extends StdSerializer<Workflow> {
       gen.writeEndArray();
     }
 
-    if (workflow.getConstants() != null && !workflow.getConstants().getConstantsDef().isEmpty()) {
-      gen.writeObjectField("constants", workflow.getConstants().getConstantsDef());
+    if (workflow.getConstants() != null) {
+      if (!workflow.getConstants().getConstantsDef().isEmpty()) {  
+          gen.writeObjectField("constants", workflow.getConstants().getConstantsDef());
+      } else if (workflow.getConstants().getRefValue() != null) {
+          gen.writeStringField("constants", workflow.getConstants().getRefValue());
+      }
     }
 
     if (workflow.getTimeouts() != null) {

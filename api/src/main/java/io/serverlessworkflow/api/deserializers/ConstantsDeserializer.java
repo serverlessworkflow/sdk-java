@@ -62,6 +62,7 @@ public class ConstantsDeserializer extends StdDeserializer<Constants> {
       constantsDefinition = node;
     } else {
       String constantsFileDef = node.asText();
+      constants.setRefValue(constantsFileDef);
       String constantsFileSrc = Utils.getResourceFileAsString(constantsFileDef);
       JsonNode constantsRefNode;
       ObjectMapper jsonWriter = new ObjectMapper();
