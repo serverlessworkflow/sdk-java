@@ -1,0 +1,17 @@
+{
+  "id": "secrets",
+  "version": "1.0",
+  "specVersion": "0.8",
+  "name": "Custom secrets flow",
+  "expressionLang": "abc",
+  "start": "TestFunctionRefs",
+  "constants": "constantValues.json",
+  "states": [
+    {
+      "name": "TestFunctionRefs",
+      "type": "operation",
+      "actions": [],
+      "end": true
+    }
+  ]
+}

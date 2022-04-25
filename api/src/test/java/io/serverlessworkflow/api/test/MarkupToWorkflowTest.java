@@ -571,6 +571,21 @@ public class MarkupToWorkflowTest {
   }
 
   @ParameterizedTest
+  @ValueSource(strings = {"/features/constantsRef.json", "/features/constantsRef.yml"})
+  public void testConstantsRef(String workflowLocation) {
+    Workflow workflow = Workflow.fromSource(WorkflowTestUtils.readWorkflowFile(workflowLocation));
+
+    assertNotNull(workflow);
+    assertNotNull(workflow.getId());
+    assertNotNull(workflow.getName());
+    assertNotNull(workflow.getStates());
+
+    assertNotNull(workflow.getConstants());
+    Constants constants = workflow.getConstants();
+    assertEquals("constantValues.json", constants.getRefValue());
+  }
+
+  @ParameterizedTest
   @ValueSource(strings = {"/features/timeouts.json", "/features/timeouts.yml"})
   public void testTimeouts(String workflowLocation) {
     Workflow workflow = Workflow.fromSource(WorkflowTestUtils.readWorkflowFile(workflowLocation));
