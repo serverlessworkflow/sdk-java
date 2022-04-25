@@ -5,7 +5,7 @@
   "name": "Custom secrets flow",
   "expressionLang": "abc",
   "start": "TestFunctionRefs",
-  "constants": "contantsValues.json",
+  "constants": "constantValues.json",
   "states": [
     {
       "name": "TestFunctionRefs",

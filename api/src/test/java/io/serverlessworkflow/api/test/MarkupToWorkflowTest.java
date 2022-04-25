@@ -569,8 +569,7 @@ public class MarkupToWorkflowTest {
     JsonNode serbianTranslationNode = translationDogNode.get("Serbian");
     assertEquals("pas", serbianTranslationNode.asText());
   }
-  
-  
+
   @ParameterizedTest
   @ValueSource(strings = {"/features/constantsRef.json", "/features/constantsRef.yml"})
   public void testConstantsRef(String workflowLocation) {
@@ -583,9 +582,8 @@ public class MarkupToWorkflowTest {
 
     assertNotNull(workflow.getConstants());
     Constants constants = workflow.getConstants();
-    assertNotNull(constants.getRefValue());
+    assertEquals("constantValues.json", constants.getRefValue());
   }
-  
 
   @ParameterizedTest
   @ValueSource(strings = {"/features/timeouts.json", "/features/timeouts.yml"})

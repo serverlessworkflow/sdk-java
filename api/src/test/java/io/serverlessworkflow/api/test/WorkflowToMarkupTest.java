@@ -32,6 +32,7 @@ import io.serverlessworkflow.api.schedule.Schedule;
 import io.serverlessworkflow.api.start.Start;
 import io.serverlessworkflow.api.states.SleepState;
 import io.serverlessworkflow.api.workflow.Auth;
+import io.serverlessworkflow.api.workflow.Constants;
 import io.serverlessworkflow.api.workflow.Events;
 import io.serverlessworkflow.api.workflow.Functions;
 import java.util.Arrays;
@@ -47,6 +48,7 @@ public class WorkflowToMarkupTest {
             .withName("test-workflow-name")
             .withVersion("1.0")
             .withStart(new Start().withSchedule(new Schedule().withInterval("PT1S")))
+            .withConstants(new Constants("constantsValues.json"))
             .withStates(
                 Arrays.asList(
                     new SleepState()
@@ -62,11 +64,13 @@ public class WorkflowToMarkupTest {
 
     assertNotNull(workflow);
     assertNotNull(workflow.getStart());
+    Constants constants = workflow.getConstants();
+    assertNotNull(constants);
+    assertEquals("constantsValues.json", constants.getRefValue());
     assertEquals(1, workflow.getStates().size());
     State state = workflow.getStates().get(0);
     assertTrue(state instanceof SleepState);
     assertNotNull(state.getEnd());
-
     assertNotNull(Workflow.toJson(workflow));
     assertNotNull(Workflow.toYaml(workflow));
   }
