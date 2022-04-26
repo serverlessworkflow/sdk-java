@@ -18,17 +18,23 @@ package io.serverlessworkflow.validation;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.serverlessworkflow.api.Workflow;
-import io.serverlessworkflow.api.actions.Action;
 import io.serverlessworkflow.api.events.EventDefinition;
 import io.serverlessworkflow.api.events.OnEvents;
 import io.serverlessworkflow.api.functions.FunctionDefinition;
 import io.serverlessworkflow.api.interfaces.State;
 import io.serverlessworkflow.api.interfaces.WorkflowValidator;
-import io.serverlessworkflow.api.states.*;
+import io.serverlessworkflow.api.states.CallbackState;
+import io.serverlessworkflow.api.states.EventState;
+import io.serverlessworkflow.api.states.ForEachState;
+import io.serverlessworkflow.api.states.InjectState;
+import io.serverlessworkflow.api.states.ParallelState;
+import io.serverlessworkflow.api.states.SleepState;
+import io.serverlessworkflow.api.states.SwitchState;
 import io.serverlessworkflow.api.switchconditions.DataCondition;
 import io.serverlessworkflow.api.switchconditions.EventCondition;
 import io.serverlessworkflow.api.validation.ValidationError;
 import io.serverlessworkflow.api.validation.WorkflowSchemaLoader;
+import io.serverlessworkflow.validation.state.StatesValidator;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -43,7 +49,10 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
 
   private static final Logger logger = LoggerFactory.getLogger(WorkflowValidatorImpl.class);
   private boolean schemaValidationEnabled = true;
-  private List<ValidationError> validationErrors = new ArrayList<>();
+  private final List<ValidationError> validationErrors = new ArrayList<>();
+
+  private final StatesValidator statesValidator = new StatesValidator(validationErrors);
+
   private Schema workflowSchema = WorkflowSchemaLoader.getWorkflowSchema();
   private String source;
   private Workflow workflow;
@@ -121,6 +130,8 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
             "Workflow version should not be empty", ValidationError.WORKFLOW_VALIDATION);
       }
 
+      statesValidator.hasValidStates(workflow);
+
       if (workflow.getStates() == null || workflow.getStates().isEmpty()) {
         addValidationError("No states found", ValidationError.WORKFLOW_VALIDATION);
       }
@@ -151,65 +162,8 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
             .getStates()
             .forEach(
                 s -> {
-                  if (s.getName() != null && s.getName().trim().isEmpty()) {
-                    addValidationError(
-                        "State name should not be empty", ValidationError.WORKFLOW_VALIDATION);
-                  } else {
-                    validation.addState(s.getName());
-                  }
-
                   if (s.getEnd() != null) {
                     validation.addEndState();
-                  }
-
-                  if (s instanceof OperationState) {
-                    OperationState operationState = (OperationState) s;
-
-                    List<Action> actions = operationState.getActions();
-                    for (Action action : actions) {
-                      if (action.getFunctionRef() != null) {
-                        if (action.getFunctionRef().getRefName().isEmpty()) {
-                          addValidationError(
-                              "Operation State action functionRef should not be null or empty",
-                              ValidationError.WORKFLOW_VALIDATION);
-                        }
-
-                        if (!haveFunctionDefinition(
-                            action.getFunctionRef().getRefName(), functions)) {
-                          addValidationError(
-                              "Operation State action functionRef does not reference an existing workflow function definition",
-                              ValidationError.WORKFLOW_VALIDATION);
-                        }
-                      }
-
-                      if (action.getEventRef() != null) {
-                        if (action.getEventRef().getTriggerEventRef().isEmpty()) {
-                          addValidationError(
-                              "Operation State action trigger eventRef does not reference an existing workflow event definition",
-                              ValidationError.WORKFLOW_VALIDATION);
-                        }
-
-                        if (action.getEventRef().getResultEventRef().isEmpty()) {
-                          addValidationError(
-                              "Operation State action results eventRef does not reference an existing workflow event definition",
-                              ValidationError.WORKFLOW_VALIDATION);
-                        }
-
-                        if (!haveEventsDefinition(
-                            action.getEventRef().getTriggerEventRef(), events)) {
-                          addValidationError(
-                              "Operation State action trigger event def does not reference an existing workflow event definition",
-                              ValidationError.WORKFLOW_VALIDATION);
-                        }
-
-                        if (!haveEventsDefinition(
-                            action.getEventRef().getResultEventRef(), events)) {
-                          addValidationError(
-                              "Operation State action results event def does not reference an existing workflow event definition",
-                              ValidationError.WORKFLOW_VALIDATION);
-                        }
-                      }
-                    }
                   }
 
                   if (s instanceof EventState) {
