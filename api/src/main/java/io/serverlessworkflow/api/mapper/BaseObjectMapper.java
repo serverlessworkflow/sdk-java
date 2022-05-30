@@ -15,10 +15,12 @@
  */
 package io.serverlessworkflow.api.mapper;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import io.serverlessworkflow.api.interfaces.WorkflowPropertySource;
+import java.util.Map;
 
 public class BaseObjectMapper extends ObjectMapper {
 
@@ -31,6 +33,11 @@ public class BaseObjectMapper extends ObjectMapper {
 
     configure(SerializationFeature.INDENT_OUTPUT, true);
     registerModule(workflowModule);
+    configure(SerializationFeature.WRITE_EMPTY_JSON_ARRAYS, false);
+    configOverride(Map.class)
+        .setInclude(
+            JsonInclude.Value.construct(
+                JsonInclude.Include.NON_NULL, JsonInclude.Include.NON_NULL));
   }
 
   public WorkflowModule getWorkflowModule() {

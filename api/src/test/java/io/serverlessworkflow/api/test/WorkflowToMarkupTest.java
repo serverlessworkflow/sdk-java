@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import io.serverlessworkflow.api.Workflow;
 import io.serverlessworkflow.api.auth.AuthDefinition;
 import io.serverlessworkflow.api.auth.BasicAuthDefinition;
+import io.serverlessworkflow.api.defaultdef.DefaultConditionDefinition;
 import io.serverlessworkflow.api.end.End;
 import io.serverlessworkflow.api.events.EventDefinition;
 import io.serverlessworkflow.api.functions.FunctionDefinition;
@@ -31,6 +32,10 @@ import io.serverlessworkflow.api.produce.ProduceEvent;
 import io.serverlessworkflow.api.schedule.Schedule;
 import io.serverlessworkflow.api.start.Start;
 import io.serverlessworkflow.api.states.SleepState;
+import io.serverlessworkflow.api.states.SwitchState;
+import io.serverlessworkflow.api.switchconditions.DataCondition;
+import io.serverlessworkflow.api.switchconditions.EventCondition;
+import io.serverlessworkflow.api.transitions.Transition;
 import io.serverlessworkflow.api.workflow.Auth;
 import io.serverlessworkflow.api.workflow.Constants;
 import io.serverlessworkflow.api.workflow.Events;
@@ -188,5 +193,47 @@ public class WorkflowToMarkupTest {
     assertEquals("testuser", workflow.getAuth().getAuthDefs().get(0).getBasicauth().getUsername());
     assertEquals(
         "testPassword", workflow.getAuth().getAuthDefs().get(0).getBasicauth().getPassword());
+  }
+
+  @Test
+  public void testSwitchConditionWithTransition() {
+    Workflow workflow =
+        new Workflow()
+            .withId("test-workflow")
+            .withName("test-workflow-name")
+            .withVersion("1.0")
+            .withSpecVersion("0.8")
+            .withStates(
+                Arrays.asList(
+                    new SwitchState()
+                        .withDataConditions(
+                            Arrays.asList(
+                                new DataCondition()
+                                    .withCondition("test-condition")
+                                    .withTransition(
+                                        new Transition().withNextState("test-next-state"))))
+                        .withDefaultCondition(
+                            new DefaultConditionDefinition()
+                                .withTransition(new Transition("test-next-state-default")))));
+    assertNotNull(Workflow.toJson(workflow));
+    assertNotNull(Workflow.toYaml(workflow));
+  }
+
+  @Test
+  public void testSwitchConditionWithEnd() {
+    Workflow workflow =
+        new Workflow()
+            .withId("test-workflow")
+            .withName("test-workflow-name")
+            .withVersion("1.0")
+            .withSpecVersion("0.8")
+            .withStates(
+                Arrays.asList(
+                    new SwitchState()
+                        .withEventConditions(Arrays.asList(new EventCondition().withEnd(new End())))
+                        .withDefaultCondition(
+                            new DefaultConditionDefinition().withEnd(new End()))));
+    assertNotNull(Workflow.toJson(workflow));
+    assertNotNull(Workflow.toYaml(workflow));
   }
 }
