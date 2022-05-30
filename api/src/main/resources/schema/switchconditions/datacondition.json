@@ -23,8 +23,18 @@
       "description": "Workflow end definition"
     }
   },
-  "required": [
-    "condition",
-    "transition"
+  "oneOf": [
+    {
+      "required": [
+        "condition",
+        "transition"
+      ]
+    },
+    {
+      "required": [
+        "condition",
+        "end"
+      ]
+    }
   ]
 }
