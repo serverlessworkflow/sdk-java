@@ -8,6 +8,11 @@
       "description":  "URI of the JSON Schema used to validate the workflow data input",
       "minLength": 1
     },
+    "schemaContent":  {
+      "type": "object",
+      "description": "The JSON Schema object used to validate the workflow data input",
+      "existingJavaType": "com.fasterxml.jackson.databind.JsonNode"
+    },
     "failOnValidationErrors": {
       "type": "boolean",
       "default": true,
@@ -15,7 +20,6 @@
     }
   },
   "required": [
-    "schema",
     "failOnValidationErrors"
   ]
 }
