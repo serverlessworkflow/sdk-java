@@ -229,8 +229,7 @@ public class MarkupToWorkflowTest {
     DefaultConditionDefinition defaultDefinition = switchState.getDefaultCondition();
     assertNotNull(defaultDefinition.getTransition());
     assertEquals("RejectApplication", defaultDefinition.getTransition().getNextState());
-    assertNotNull(defaultDefinition.getTransition().getProduceEvents());
-    assertTrue(defaultDefinition.getTransition().getProduceEvents().isEmpty());
+    assertNull(defaultDefinition.getTransition().getProduceEvents());
     assertTrue(defaultDefinition.getTransition().isCompensate());
   }
 

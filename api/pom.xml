@@ -97,6 +97,7 @@
                     <outputDirectory>${project.build.directory}/generated-sources/src/main/java</outputDirectory>
                     <includeJsr303Annotations>true</includeJsr303Annotations>
                     <generateBuilders>true</generateBuilders>
+                    <initializeCollections>false</initializeCollections>
                     <includeAdditionalProperties>false</includeAdditionalProperties>
                     <includeToString>false</includeToString>
                     <includeHashcodeAndEquals>false</includeHashcodeAndEquals>
