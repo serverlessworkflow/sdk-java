@@ -40,8 +40,19 @@
             <version>[2.13.0,)</version>
         </dependency>
         <dependency>
-            <groupId>javax.validation</groupId>
-            <artifactId>validation-api</artifactId>
+            <groupId>jakarta.validation</groupId>
+            <artifactId>jakarta.validation-api</artifactId>
+            <version>3.0.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.hibernate.validator</groupId>
+            <artifactId>hibernate-validator</artifactId>
+            <version>7.0.3.Final</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish</groupId>
+            <artifactId>jakarta.el</artifactId>
+            <version>4.0.2</version>
         </dependency>
         <dependency>
             <groupId>org.json</groupId>
@@ -96,6 +107,7 @@
                     <targetPackage>io.serverlessworkflow.api.types</targetPackage>
                     <outputDirectory>${project.build.directory}/generated-sources/src/main/java</outputDirectory>
                     <includeJsr303Annotations>true</includeJsr303Annotations>
+                    <useJakartaValidation>true</useJakartaValidation>
                     <generateBuilders>true</generateBuilders>
                     <includeAdditionalProperties>false</includeAdditionalProperties>
                     <includeToString>false</includeToString>

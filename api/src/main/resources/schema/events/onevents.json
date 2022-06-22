@@ -6,6 +6,7 @@
     "eventRefs": {
       "type": "array",
       "description": "References one or more unique event names in the defined workflow events",
+      "minItems": 1,
       "items": {
         "type": "object",
         "existingJavaType": "java.lang.String"

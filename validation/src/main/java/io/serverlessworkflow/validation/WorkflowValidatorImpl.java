@@ -15,6 +15,7 @@
  */
 package io.serverlessworkflow.validation;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.serverlessworkflow.api.Workflow;
@@ -24,11 +25,22 @@ import io.serverlessworkflow.api.events.OnEvents;
 import io.serverlessworkflow.api.functions.FunctionDefinition;
 import io.serverlessworkflow.api.interfaces.State;
 import io.serverlessworkflow.api.interfaces.WorkflowValidator;
-import io.serverlessworkflow.api.states.*;
+import io.serverlessworkflow.api.states.CallbackState;
+import io.serverlessworkflow.api.states.EventState;
+import io.serverlessworkflow.api.states.ForEachState;
+import io.serverlessworkflow.api.states.InjectState;
+import io.serverlessworkflow.api.states.OperationState;
+import io.serverlessworkflow.api.states.ParallelState;
+import io.serverlessworkflow.api.states.SleepState;
+import io.serverlessworkflow.api.states.SwitchState;
 import io.serverlessworkflow.api.switchconditions.DataCondition;
 import io.serverlessworkflow.api.switchconditions.EventCondition;
 import io.serverlessworkflow.api.validation.ValidationError;
 import io.serverlessworkflow.api.validation.WorkflowSchemaLoader;
+import io.serverlessworkflow.api.workflow.BaseWorkflow;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validator;
+import jakarta.validation.ValidatorFactory;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -43,10 +55,19 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
 
   private static final Logger logger = LoggerFactory.getLogger(WorkflowValidatorImpl.class);
   private boolean schemaValidationEnabled = true;
-  private List<ValidationError> validationErrors = new ArrayList<>();
-  private Schema workflowSchema = WorkflowSchemaLoader.getWorkflowSchema();
+  private final List<ValidationError> validationErrors = new ArrayList<>();
+  private final Schema workflowSchema = WorkflowSchemaLoader.getWorkflowSchema();
   private String source;
   private Workflow workflow;
+
+  private final Validator validator;
+
+  public WorkflowValidatorImpl() {
+    try (ValidatorFactory validatorFactory =
+        jakarta.validation.Validation.buildDefaultValidatorFactory()) {
+      validator = validatorFactory.getValidator();
+    }
+  }
 
   @Override
   public WorkflowValidator setWorkflow(Workflow workflow) {
@@ -63,67 +84,30 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
   @Override
   public List<ValidationError> validate() {
     validationErrors.clear();
-    if (workflow == null) {
+    if (workflow == null && source != null && schemaValidationEnabled) {
       try {
-        if (schemaValidationEnabled && source != null) {
-          try {
-            if (!source.trim().startsWith("{")) {
-              // convert yaml to json to validate
-              ObjectMapper yamlReader = new ObjectMapper(new YAMLFactory());
-              Object obj = yamlReader.readValue(source, Object.class);
-
-              ObjectMapper jsonWriter = new ObjectMapper();
-
-              workflowSchema.validate(new JSONObject(jsonWriter.writeValueAsString(obj)));
-            } else {
-              workflowSchema.validate(new JSONObject(source));
-            }
-          } catch (ValidationException e) {
-            e.getCausingExceptions().stream()
-                .map(ValidationException::getMessage)
-                .forEach(
-                    m -> {
-                      if ((!m.equals("#/functions: expected type: JSONObject, found: JSONArray")
-                          && !m.equals("#/events: expected type: JSONObject, found: JSONArray")
-                          && !m.equals("#/start: expected type: JSONObject, found: String")
-                          && !m.equals("#/retries: expected type: JSONObject, found: JSONArray"))) {
-                        addValidationError(m, ValidationError.SCHEMA_VALIDATION);
-                      }
-                    });
-          }
-        }
+        runSchemaValidations();
       } catch (Exception e) {
-        logger.error("Schema validation exception: " + e.getMessage());
+        logger.error("Schema validation exception: {}", e.getMessage());
       }
     }
 
     // if there are schema validation errors
     // there is no point of doing the workflow validation
-    if (validationErrors.size() > 0) {
+    if (!validationErrors.isEmpty()) {
       return validationErrors;
     } else {
       if (workflow == null) {
-        workflow = Workflow.fromSource(source);
+        workflow = BaseWorkflow.fromSource(source);
       }
+
+      runBeanValidations();
 
       List<FunctionDefinition> functions =
           workflow.getFunctions() != null ? workflow.getFunctions().getFunctionDefs() : null;
 
       List<EventDefinition> events =
           workflow.getEvents() != null ? workflow.getEvents().getEventDefs() : null;
-
-      if (workflow.getId() == null || workflow.getId().trim().isEmpty()) {
-        addValidationError("Workflow id should not be empty", ValidationError.WORKFLOW_VALIDATION);
-      }
-
-      if (workflow.getVersion() == null || workflow.getVersion().trim().isEmpty()) {
-        addValidationError(
-            "Workflow version should not be empty", ValidationError.WORKFLOW_VALIDATION);
-      }
-
-      if (workflow.getStates() == null || workflow.getStates().isEmpty()) {
-        addValidationError("No states found", ValidationError.WORKFLOW_VALIDATION);
-      }
 
       if (workflow.getStates() != null && !workflow.getStates().isEmpty()) {
         boolean existingStateWithStartProperty = false;
@@ -151,10 +135,7 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
             .getStates()
             .forEach(
                 s -> {
-                  if (s.getName() != null && s.getName().trim().isEmpty()) {
-                    addValidationError(
-                        "State name should not be empty", ValidationError.WORKFLOW_VALIDATION);
-                  } else {
+                  if (s.getName() != null && !s.getName().trim().isEmpty()) {
                     validation.addState(s.getName());
                   }
 
@@ -167,19 +148,12 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
 
                     List<Action> actions = operationState.getActions();
                     for (Action action : actions) {
-                      if (action.getFunctionRef() != null) {
-                        if (action.getFunctionRef().getRefName().isEmpty()) {
-                          addValidationError(
-                              "Operation State action functionRef should not be null or empty",
-                              ValidationError.WORKFLOW_VALIDATION);
-                        }
-
-                        if (!haveFunctionDefinition(
-                            action.getFunctionRef().getRefName(), functions)) {
-                          addValidationError(
-                              "Operation State action functionRef does not reference an existing workflow function definition",
-                              ValidationError.WORKFLOW_VALIDATION);
-                        }
+                      if (action.getFunctionRef() != null
+                          && !haveFunctionDefinition(
+                              action.getFunctionRef().getRefName(), functions)) {
+                        addValidationError(
+                            "Operation State action functionRef does not reference an existing workflow function definition",
+                            ValidationError.WORKFLOW_VALIDATION);
                       }
 
                       if (action.getEventRef() != null) {
@@ -214,7 +188,7 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
 
                   if (s instanceof EventState) {
                     EventState eventState = (EventState) s;
-                    if (eventState.getOnEvents() == null || eventState.getOnEvents().size() < 1) {
+                    if (eventState.getOnEvents() == null || eventState.getOnEvents().isEmpty()) {
                       addValidationError(
                           "Event State has no eventActions defined",
                           ValidationError.WORKFLOW_VALIDATION);
@@ -223,11 +197,7 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
                     for (OnEvents onEvents : eventsActionsList) {
 
                       List<String> eventRefs = onEvents.getEventRefs();
-                      if (eventRefs == null || eventRefs.size() < 1) {
-                        addValidationError(
-                            "Event State eventsActions has no event refs",
-                            ValidationError.WORKFLOW_VALIDATION);
-                      } else {
+                      if (eventRefs != null && !eventRefs.isEmpty()) {
                         for (String eventRef : eventRefs) {
                           if (!haveEventsDefinition(eventRef, events)) {
                             addValidationError(
@@ -242,9 +212,9 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
                   if (s instanceof SwitchState) {
                     SwitchState switchState = (SwitchState) s;
                     if ((switchState.getDataConditions() == null
-                            || switchState.getDataConditions().size() < 1)
+                            || switchState.getDataConditions().isEmpty())
                         && (switchState.getEventConditions() == null
-                            || switchState.getEventConditions().size() < 1)) {
+                            || switchState.getEventConditions().isEmpty())) {
                       addValidationError(
                           "Switch state should define either data or event conditions",
                           ValidationError.WORKFLOW_VALIDATION);
@@ -257,7 +227,7 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
                     }
 
                     if (switchState.getEventConditions() != null
-                        && switchState.getEventConditions().size() > 0) {
+                        && !switchState.getEventConditions().isEmpty()) {
                       List<EventCondition> eventConditions = switchState.getEventConditions();
                       for (EventCondition ec : eventConditions) {
                         if (!haveEventsDefinition(ec.getEventRef(), events)) {
@@ -272,7 +242,7 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
                     }
 
                     if (switchState.getDataConditions() != null
-                        && switchState.getDataConditions().size() > 0) {
+                        && !switchState.getDataConditions().isEmpty()) {
                       List<DataCondition> dataConditions = switchState.getDataConditions();
                       for (DataCondition dc : dataConditions) {
                         if (dc.getEnd() != null) {
@@ -284,7 +254,7 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
 
                   if (s instanceof SleepState) {
                     SleepState sleepState = (SleepState) s;
-                    if (sleepState.getDuration() == null || sleepState.getDuration().length() < 1) {
+                    if (sleepState.getDuration() == null || sleepState.getDuration().isEmpty()) {
                       addValidationError(
                           "Sleep state should have a non-empty time delay",
                           ValidationError.WORKFLOW_VALIDATION);
@@ -345,6 +315,46 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
       }
 
       return validationErrors;
+    }
+  }
+
+  private void runBeanValidations() {
+    Set<ConstraintViolation<Workflow>> violations = validator.validate(workflow);
+
+    if (!violations.isEmpty()) {
+      violations.forEach(
+          violation ->
+              addValidationError(
+                  violation.getPropertyPath().toString() + ": " + violation.getMessage(),
+                  ValidationError.WORKFLOW_VALIDATION));
+    }
+  }
+
+  private void runSchemaValidations() throws JsonProcessingException {
+    try {
+      if (!source.trim().startsWith("{")) {
+        // convert yaml to json to validate
+        ObjectMapper yamlReader = new ObjectMapper(new YAMLFactory());
+        Object obj = yamlReader.readValue(source, Object.class);
+
+        ObjectMapper jsonWriter = new ObjectMapper();
+
+        workflowSchema.validate(new JSONObject(jsonWriter.writeValueAsString(obj)));
+      } else {
+        workflowSchema.validate(new JSONObject(source));
+      }
+    } catch (ValidationException e) {
+      e.getCausingExceptions().stream()
+          .map(ValidationException::getMessage)
+          .forEach(
+              m -> {
+                if ((!m.equals("#/functions: expected type: JSONObject, found: JSONArray")
+                    && !m.equals("#/events: expected type: JSONObject, found: JSONArray")
+                    && !m.equals("#/start: expected type: JSONObject, found: String")
+                    && !m.equals("#/retries: expected type: JSONObject, found: JSONArray"))) {
+                  addValidationError(m, ValidationError.SCHEMA_VALIDATION);
+                }
+              });
     }
   }
 

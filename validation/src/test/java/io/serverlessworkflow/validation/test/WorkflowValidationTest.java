@@ -24,7 +24,7 @@ import io.serverlessworkflow.api.start.Start;
 import io.serverlessworkflow.api.states.SleepState;
 import io.serverlessworkflow.api.validation.ValidationError;
 import io.serverlessworkflow.validation.WorkflowValidatorImpl;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -54,10 +54,14 @@ public class WorkflowValidationTest {
     Workflow workflow =
         new Workflow()
             .withId("test-workflow")
+            .withName("Test workflow")
+            /* We need to force null annotations while https://github.com/serverlessworkflow/sdk-java/issues/204 is not
+            fixed */
+            .withAnnotations(null)
             .withVersion("1.0")
             .withStart(new Start())
             .withStates(
-                Arrays.asList(
+                Collections.singletonList(
                     new SleepState()
                         .withName("sleepState")
                         .withType(SLEEP)
@@ -90,7 +94,8 @@ public class WorkflowValidationTest {
     Assertions.assertNotNull(validationErrors);
     Assertions.assertEquals(1, validationErrors.size());
 
-    Assertions.assertEquals("No states found", validationErrors.get(0).getMessage());
+    Assertions.assertEquals(
+        "#/states: expected minimum item count: 1, found: 0", validationErrors.get(0).getMessage());
   }
 
   @Test
@@ -103,6 +108,10 @@ public class WorkflowValidationTest {
                     + "\"id\": \"checkInbox\",\n"
                     + "  \"name\": \"Check Inbox Workflow\",\n"
                     + "\"description\": \"Periodically Check Inbox\",\n"
+                    /*
+                    annotations is needed while https://github.com/serverlessworkflow/sdk-java/issues/204 is not fixed
+                     */
+                    + "\"annotations\": [ \"test\"],\n"
                     + "\"version\": \"1.0\",\n"
                     + "\"start\": \"CheckInbox\",\n"
                     + "\"functions\": [\n"
@@ -117,7 +126,15 @@ public class WorkflowValidationTest {
                     + "            {\n"
                     + "                \"functionRef\": {\n"
                     + "                    \"refName\": \"checkInboxFunction\"\n"
-                    + "                }\n"
+                    + "                },\n"
+                    /*
+                    nonRetryableErrors is needed while https://github.com/serverlessworkflow/sdk-java/issues/204 is not fixed
+                     */
+                    + "                \"nonRetryableErrors\": [ \"an_error\"],\n"
+                    /*
+                    retryableErrors is needed while https://github.com/serverlessworkflow/sdk-java/issues/204 is not fixed
+                     */
+                    + "                \"retryableErrors\": [ \"an_error\"]\n"
                     + "            }\n"
                     + "        ],\n"
                     + "        \"transition\": {\n"
@@ -150,9 +167,13 @@ public class WorkflowValidationTest {
     Workflow workflow =
         new Workflow()
             .withId("test-workflow")
+            .withName("test workflow")
             .withVersion("1.0")
+            /* We need to force null annotations while https://github.com/serverlessworkflow/sdk-java/issues/204 is not
+            fixed */
+            .withAnnotations(null)
             .withStates(
-                Arrays.asList(
+                Collections.singletonList(
                     new SleepState()
                         .withName("sleepState")
                         .withType(SLEEP)
@@ -175,6 +196,10 @@ public class WorkflowValidationTest {
                     + "\"id\": \"checkInbox\",\n"
                     + "  \"name\": \"Check Inbox Workflow\",\n"
                     + "\"description\": \"Periodically Check Inbox\",\n"
+                    /*
+                    annotations is needed while https://github.com/serverlessworkflow/sdk-java/issues/204 is not fixed
+                     */
+                    + "\"annotations\": [ \"test\"],\n"
                     + "\"version\": \"1.0\",\n"
                     + "\"start\": \"CheckInbox\",\n"
                     + "\"functions\": [\n"
@@ -189,7 +214,15 @@ public class WorkflowValidationTest {
                     + "            {\n"
                     + "                \"functionRef\": {\n"
                     + "                    \"refName\": \"checkInboxFunction\"\n"
-                    + "                }\n"
+                    + "                },\n"
+                    /*
+                    nonRetryableErrors is needed while https://github.com/serverlessworkflow/sdk-java/issues/204 is not fixed
+                     */
+                    + "                \"nonRetryableErrors\": [ \"an_error\"],\n"
+                    /*
+                    retryableErrors is needed while https://github.com/serverlessworkflow/sdk-java/issues/204 is not fixed
+                     */
+                    + "                \"retryableErrors\": [ \"an_error\"]\n"
                     + "            }\n"
                     + "        ],\n"
                     + "        \"transition\": {\n"
@@ -225,6 +258,10 @@ public class WorkflowValidationTest {
                     + "  \"version\": \"1.0\",\n"
                     + "  \"specVersion\": \"0.8\",\n"
                     + "  \"name\": \"Callback State Test\",\n"
+                    /*
+                    annotations is needed while https://github.com/serverlessworkflow/sdk-java/issues/204 is not fixed
+                     */
+                    + "\"annotations\": [ \"test\"],\n"
                     + "  \"start\": \"CheckCredit\",\n"
                     + "  \"states\": [\n"
                     + "    {\n"
@@ -236,7 +273,15 @@ public class WorkflowValidationTest {
                     + "          \"arguments\": {\n"
                     + "            \"customer\": \"${ .customer }\"\n"
                     + "          }\n"
-                    + "        }\n"
+                    + "        },\n"
+                    /*
+                    nonRetryableErrors is needed while https://github.com/serverlessworkflow/sdk-java/issues/204 is not fixed
+                     */
+                    + "        \"nonRetryableErrors\": [ \"an_error\"],\n"
+                    /*
+                    retryableErrors is needed while https://github.com/serverlessworkflow/sdk-java/issues/204 is not fixed
+                     */
+                    + "        \"retryableErrors\": [ \"an_error\"]\n"
                     + "      },\n"
                     + "      \"eventRef\": \"CreditCheckCompletedEvent\",\n"
                     + "      \"timeouts\": {\n"

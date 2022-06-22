@@ -25,7 +25,8 @@
     },
     "version": {
       "type": "string",
-      "description": "Workflow version"
+      "description": "Workflow version",
+      "minLength": 1
     },
     "annotations": {
       "type": "array",
@@ -144,7 +145,8 @@
             "$ref": "states/callbackstate.json"
           }
         ]
-      }
+      },
+      "minItems": 1
     },
     "extensions": {
       "type": "array",
