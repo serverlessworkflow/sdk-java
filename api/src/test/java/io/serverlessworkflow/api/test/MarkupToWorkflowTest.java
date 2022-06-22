@@ -492,9 +492,17 @@ public class MarkupToWorkflowTest {
     assertNotNull(workflow.getName());
     assertNotNull(workflow.getStates());
 
+    assertNotNull(workflow.getDataInputSchema());
     DataInputSchema dataInputSchema = workflow.getDataInputSchema();
-    assertNotNull(dataInputSchema);
-    assertEquals("somejsonschema.json", dataInputSchema.getSchema());
+    assertNotNull(dataInputSchema.getSchemaContent());
+
+    JsonNode schemaObj = dataInputSchema.getSchemaContent();
+    assertNotNull(schemaObj.get("properties"));
+    JsonNode properties = schemaObj.get("properties");
+    assertNotNull(properties.get("firstName"));
+    JsonNode typeNode = properties.get("firstName");
+    JsonNode stringNode = typeNode.get("type");
+    assertEquals("string", stringNode.asText());
     assertFalse(dataInputSchema.isFailOnValidationErrors());
   }
 

@@ -47,16 +47,14 @@ public class DataInputSchemaDeserializer extends StdDeserializer<DataInputSchema
 
     DataInputSchema dataInputSchema = new DataInputSchema();
 
-    if (!node.isObject()) {
-      dataInputSchema.setSchema(node.asText());
-      dataInputSchema.setFailOnValidationErrors(true); // default
-
-      return dataInputSchema;
-    } else {
+    if (node.get("schemaContent") == null || node.get("schemaContent").isEmpty() ||
+            !node.get("schemaContent").isObject()) {
       dataInputSchema.setSchema(node.get("schema").asText());
+      dataInputSchema.setFailOnValidationErrors(true); // default
+    } else {
+      dataInputSchema.setSchemaContent(node.get("schemaContent"));
       dataInputSchema.setFailOnValidationErrors(node.get("failOnValidationErrors").asBoolean());
-
-      return dataInputSchema;
     }
+    return dataInputSchema;
   }
 }
