@@ -57,7 +57,7 @@ public class ExtensionDeserializer extends StdDeserializer<Extension> {
     ObjectMapper mapper = (ObjectMapper) jp.getCodec();
     JsonNode node = jp.getCodec().readTree(jp);
 
-    String extensionId = node.get("extensionid").asText();
+    String extensionId = node.get("extensionId").asText();
 
     if (context != null) {
       try {
