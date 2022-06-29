@@ -3,7 +3,10 @@
   "version": "1.0",
   "specVersion": "0.8",
   "name": "Data Input Schema test",
-  "dataInputSchema": "somejsonschema.json",
+  "dataInputSchema":  {
+    "schema": "features/somejsonschema.json",
+    "failOnValidationErrors": true
+  },
   "start": "TestFunctionRefs",
   "states": [
     {
