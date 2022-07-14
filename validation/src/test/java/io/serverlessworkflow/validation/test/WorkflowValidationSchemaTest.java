@@ -23,6 +23,19 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 public class WorkflowValidationSchemaTest {
+
+  @Test
+  public void testIncompleteJsonWithSchemaValidation() {
+    WorkflowValidator workflowValidator =
+            new WorkflowValidatorImpl();
+    List<ValidationError> validationErrors =
+            workflowValidator.setSource("{\"id\": \"abc\"}").validate();
+    Assertions.assertNotNull(validationErrors);
+    Assertions.assertEquals(1, validationErrors.size());
+    Assertions.assertTrue(
+            validationErrors.get(0).getMessage().indexOf("required key [specVersion] not found") > 0);
+  }
+
   @Test
   public void testSchemaWorkflowMissingStates() {
     WorkflowValidator workflowValidator = new WorkflowValidatorImpl();
@@ -49,8 +62,9 @@ public class WorkflowValidationSchemaTest {
             .validate();
     Assertions.assertNotNull(validationErrors);
     Assertions.assertEquals(1, validationErrors.size());
-
     Assertions.assertTrue(
-        validationErrors.get(0).getMessage().indexOf("required key [id] not found") > 0);
+            validationErrors.get(0).getMessage().indexOf("required key [id] not found") > 0);
+    Assertions.assertTrue(
+            validationErrors.get(0).getMessage().indexOf("required key [key] not found") > 0);
   }
 }
