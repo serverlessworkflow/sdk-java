@@ -62,31 +62,32 @@ public class DataInputSchemaDeserializer extends StdDeserializer<DataInputSchema
       String schemaFileDef = node.isObject() ? node.get("schema").asText() : node.asText();
       dataInputSchema.setFailOnValidationErrors(true);
       dataInputSchema.setRefValue(schemaFileDef);
-      String schemaFileSrc = Utils.getResourceFileAsString(schemaFileDef);
+      String schemaFileContent = Utils.getResourceFileAsString(schemaFileDef);
       JsonNode schemaRefNode;
       ObjectMapper jsonWriter = new ObjectMapper();
-      if (schemaFileSrc != null && schemaFileSrc.trim().length() > 0) {
+      if (schemaFileContent != null && schemaFileContent.trim().length() > 0) {
         // if its a yaml def convert to json first
-        if (!schemaFileSrc.trim().startsWith("{")) {
+        if (!schemaFileContent.trim().startsWith("{")) {
           // convert yaml to json to validate
           ObjectMapper yamlReader = new ObjectMapper(new YAMLFactory());
-          Object obj = yamlReader.readValue(schemaFileSrc, Object.class);
-
+          Object schemaObj = yamlReader.readValue(schemaFileContent, Object.class);
           schemaRefNode =
-              jsonWriter.readTree(new JSONObject(jsonWriter.writeValueAsString(obj)).toString());
+              jsonWriter.readTree(
+                  new JSONObject(jsonWriter.writeValueAsString(schemaObj)).toString());
         } else {
-          schemaRefNode = jsonWriter.readTree(new JSONObject(schemaFileSrc).toString());
+          schemaRefNode = jsonWriter.readTree(new JSONObject(schemaFileContent).toString());
         }
 
         JsonNode schemaRef = schemaRefNode.get("schema");
         if (schemaRef != null) {
           schemaDefinition = schemaRef;
         } else {
-          logger.error("Unable to find schema definitions in reference file: {}", schemaFileSrc);
+          logger.error(
+              "Unable to find schema definitions in reference file: {}", schemaFileContent);
         }
 
       } else {
-        logger.error("Unable to load schema defs reference file: {}", schemaFileSrc);
+        logger.error("Unable to load schema defs reference file: {}", schemaFileContent);
       }
     }
     dataInputSchema.setSchemaDef(schemaDefinition);

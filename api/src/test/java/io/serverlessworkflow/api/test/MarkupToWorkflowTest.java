@@ -484,6 +484,22 @@ public class MarkupToWorkflowTest {
   }
 
   @ParameterizedTest
+  @ValueSource(strings = {"/features/datainputschemawithnullschema.json"})
+  public void testDataInputSchemaWithNullSchema(String workflowLocation) {
+    Workflow workflow = Workflow.fromSource(WorkflowTestUtils.readWorkflowFile(workflowLocation));
+
+    assertNotNull(workflow);
+    assertNotNull(workflow.getId());
+    assertNotNull(workflow.getName());
+    assertNotNull(workflow.getStates());
+
+    DataInputSchema dataInputSchema = workflow.getDataInputSchema();
+    assertNotNull(dataInputSchema);
+    assertEquals("null", dataInputSchema.getRefValue());
+    assertTrue(dataInputSchema.isFailOnValidationErrors());
+  }
+
+  @ParameterizedTest
   @ValueSource(strings = {"/features/datainputschemaobj.json", "/features/datainputschemaobj.yml"})
   public void testDataInputSchemaFromObject(String workflowLocation) {
     Workflow workflow = Workflow.fromSource(WorkflowTestUtils.readWorkflowFile(workflowLocation));
