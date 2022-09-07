@@ -3,20 +3,7 @@
   "version": "1.0",
   "specVersion": "0.8",
   "name": "Data Input Schema test",
-  "dataInputSchema": {
-    "schema":{
-      "title": "MyJSONSchema",
-      "properties":{
-        "firstName":{
-          "type": "string"
-        },
-        "lastName":{
-          "type": "string"
-        }
-      }
-    },
-    "failOnValidationErrors": false
-  },
+  "dataInputSchema": "features/somejsonschema.json",
   "start": "TestFunctionRefs",
   "states": [
     {

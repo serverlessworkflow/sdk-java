@@ -18,7 +18,6 @@ package io.serverlessworkflow.api.mapper;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import io.serverlessworkflow.api.auth.AuthDefinition;
 import io.serverlessworkflow.api.cron.Cron;
-import io.serverlessworkflow.api.datainputschema.DataInputSchema;
 import io.serverlessworkflow.api.deserializers.*;
 import io.serverlessworkflow.api.end.ContinueAs;
 import io.serverlessworkflow.api.end.End;

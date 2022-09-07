@@ -19,13 +19,16 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-import io.serverlessworkflow.api.datainputschema.DataInputSchema;
 import io.serverlessworkflow.api.interfaces.WorkflowPropertySource;
+import io.serverlessworkflow.api.workflow.DataInputSchema;
 import java.io.IOException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DataInputSchemaDeserializer extends StdDeserializer<DataInputSchema> {
 
   private static final long serialVersionUID = 510l;
+  private static Logger logger = LoggerFactory.getLogger(DataInputSchemaDeserializer.class);
 
   public DataInputSchemaDeserializer() {
     this(DataInputSchema.class);
@@ -46,17 +49,17 @@ public class DataInputSchemaDeserializer extends StdDeserializer<DataInputSchema
     JsonNode node = jp.getCodec().readTree(jp);
 
     DataInputSchema dataInputSchema = new DataInputSchema();
+    JsonNode schemaDefinition = null;
 
-    if (!node.isObject()) {
-      dataInputSchema.setSchema(node.asText());
-      dataInputSchema.setFailOnValidationErrors(true); // default
-
-      return dataInputSchema;
-    } else {
-      dataInputSchema.setSchema(node.get("schema").asText());
+    if (node.isObject() && node.get("schema").isObject() && !node.get("schema").isEmpty()) {
+      schemaDefinition = node.get("schema");
       dataInputSchema.setFailOnValidationErrors(node.get("failOnValidationErrors").asBoolean());
-
-      return dataInputSchema;
+      dataInputSchema.setSchemaDef(schemaDefinition);
+    } else {
+      String schemaFileDef = node.isObject() ? node.get("schema").asText() : node.asText();
+      dataInputSchema.setFailOnValidationErrors(true);
+      dataInputSchema.setRefValue(schemaFileDef);
     }
+    return dataInputSchema;
   }
 }

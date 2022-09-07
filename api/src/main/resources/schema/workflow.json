@@ -36,7 +36,8 @@
       }
     },
     "dataInputSchema": {
-      "$ref": "datainputschema/datainputschema.json",
+      "type": "object",
+      "existingJavaType": "io.serverlessworkflow.api.workflow.DataInputSchema",
       "description": "Workflow data input schema"
     },
     "start": {

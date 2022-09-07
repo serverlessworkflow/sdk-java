@@ -22,7 +22,6 @@ import io.serverlessworkflow.api.Workflow;
 import io.serverlessworkflow.api.actions.Action;
 import io.serverlessworkflow.api.auth.AuthDefinition;
 import io.serverlessworkflow.api.branches.Branch;
-import io.serverlessworkflow.api.datainputschema.DataInputSchema;
 import io.serverlessworkflow.api.defaultdef.DefaultConditionDefinition;
 import io.serverlessworkflow.api.end.End;
 import io.serverlessworkflow.api.events.EventDefinition;
@@ -39,10 +38,7 @@ import io.serverlessworkflow.api.states.SwitchState;
 import io.serverlessworkflow.api.switchconditions.DataCondition;
 import io.serverlessworkflow.api.test.utils.WorkflowTestUtils;
 import io.serverlessworkflow.api.timeouts.WorkflowExecTimeout;
-import io.serverlessworkflow.api.workflow.Constants;
-import io.serverlessworkflow.api.workflow.Events;
-import io.serverlessworkflow.api.workflow.Retries;
-import io.serverlessworkflow.api.workflow.Secrets;
+import io.serverlessworkflow.api.workflow.*;
 import java.util.List;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -467,7 +463,12 @@ public class MarkupToWorkflowTest {
 
   @ParameterizedTest
   @ValueSource(
-      strings = {"/features/datainputschemastring.json", "/features/datainputschemastring.yml"})
+      strings = {
+        "/features/datainputschemastring.json",
+        "/features/datainputschemastring.yml",
+        "/features/datainputschemaobjstring.json",
+        "/features/datainputschemaobjstring.yml"
+      })
   public void testDataInputSchemaFromString(String workflowLocation) {
     Workflow workflow = Workflow.fromSource(WorkflowTestUtils.readWorkflowFile(workflowLocation));
 
@@ -478,7 +479,23 @@ public class MarkupToWorkflowTest {
 
     DataInputSchema dataInputSchema = workflow.getDataInputSchema();
     assertNotNull(dataInputSchema);
-    assertEquals("somejsonschema.json", dataInputSchema.getSchema());
+    assertEquals("features/somejsonschema.json", dataInputSchema.getRefValue());
+    assertTrue(dataInputSchema.isFailOnValidationErrors());
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"/features/datainputschemawithnullschema.json"})
+  public void testDataInputSchemaWithNullSchema(String workflowLocation) {
+    Workflow workflow = Workflow.fromSource(WorkflowTestUtils.readWorkflowFile(workflowLocation));
+
+    assertNotNull(workflow);
+    assertNotNull(workflow.getId());
+    assertNotNull(workflow.getName());
+    assertNotNull(workflow.getStates());
+
+    DataInputSchema dataInputSchema = workflow.getDataInputSchema();
+    assertNotNull(dataInputSchema);
+    assertEquals("null", dataInputSchema.getRefValue());
     assertTrue(dataInputSchema.isFailOnValidationErrors());
   }
 
@@ -492,9 +509,17 @@ public class MarkupToWorkflowTest {
     assertNotNull(workflow.getName());
     assertNotNull(workflow.getStates());
 
+    assertNotNull(workflow.getDataInputSchema());
     DataInputSchema dataInputSchema = workflow.getDataInputSchema();
-    assertNotNull(dataInputSchema);
-    assertEquals("somejsonschema.json", dataInputSchema.getSchema());
+    assertNotNull(dataInputSchema.getSchemaDef());
+
+    JsonNode schemaObj = dataInputSchema.getSchemaDef();
+    assertNotNull(schemaObj.get("properties"));
+    JsonNode properties = schemaObj.get("properties");
+    assertNotNull(properties.get("firstName"));
+    JsonNode typeNode = properties.get("firstName");
+    JsonNode stringNode = typeNode.get("type");
+    assertEquals("string", stringNode.asText());
     assertFalse(dataInputSchema.isFailOnValidationErrors());
   }
 

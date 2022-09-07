@@ -3,9 +3,7 @@ id: datainputschemaobj
 version: '1.0'
 specVersion: '0.8'
 name: Data Input Schema test
-dataInputSchema:
-  schema: features/somejsonschema.json
-  failOnValidationErrors: true
+dataInputSchema: features/somejsonschema.json
 start: TestFunctionRefs
 states:
   - name: TestFunctionRefs
