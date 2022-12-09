@@ -28,8 +28,8 @@ public class RouterRest implements IRouterRest {
 
   /***
    * Get image SVG from string.
-   * @param serverlessRequest
-   * @return
+   * @param serverlessRequest The serverless request.
+   * @return String from SVG image
    */
   @Bean
   @Override
