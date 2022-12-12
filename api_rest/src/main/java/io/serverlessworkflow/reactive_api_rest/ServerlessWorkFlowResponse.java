@@ -20,10 +20,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder(toBuilder = true)
 public class ServerlessWorkFlowResponse {
   private String response;
+
+  public String getResponse() {
+    return response;
+  }
+
+  public void setResponse(String response) {
+    this.response = response;
+  }
 }
