@@ -15,8 +15,17 @@
  */
 package io.serverlessworkflow.reactive_api_rest;
 
-public class RouterPaths {
+public class ServerlessWorkFlowResponse {
+  private String response;
 
-  // get string of SVG from YAML or JSON file
-  public static final String GETTING_SVG_FROM_WORKFLOW = "/api/get_svg_from_workflow";
+  public ServerlessWorkFlowResponse() {
+  }
+
+  public String getResponse() {
+    return response;
+  }
+
+  public void setResponse(String response) {
+    this.response = response;
+  }
 }

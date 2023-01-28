@@ -355,3 +355,27 @@ FunctionDefinition finalizeApplicationFunctionDefinition =
  List<Action> actionsForFunctionDefinition =
         WorkflowUtils.getActionsForFunctionDefinition(workflow, functionRefName);
 ```
+
+#### Extra
+
+SDK includes extra functionalities which are not part of core modules but 
+are very useful and can be used as addons to the core:
+
+##### Diagram REST
+This is a Spring Boot app which builds a rest api for diagram generation. 
+It was contributed by our community member David Marques.
+
+To start using it:
+
+```
+cd diagram-rest
+mvn clean install spring-boot:run
+```
+
+Then you can get the diagram SVG for a workflow definition for example:
+
+```
+curl -X POST localhost:8090/diagram -d '{"id":"booklending","name":"Book Lending Workflow","version":"1.0","specVersion":"0.8","start":"Book Lending Request","states":[{"name":"Book Lending Request","type":"event","onEvents":[{"eventRefs":["Book Lending Request Event"]}],"transition":"Get Book Status"},{"name":"Get Book Status","type":"operation","actions":[{"functionRef":{"refName":"Get status for book","arguments":{"bookid":"${ .book.id }"}}}],"transition":"Book Status Decision"},{"name":"Book Status Decision","type":"switch","dataConditions":[{"name":"Book is on loan","condition":"${ .book.status == \"onloan\" }","transition":"Report Status To Lender"},{"name":"Check is available","condition":"${ .book.status == \"available\" }","transition":"Check Out Book"}]},{"name":"Report Status To Lender","type":"operation","actions":[{"functionRef":{"refName":"Send status to lender","arguments":{"bookid":"${ .book.id }","message":"Book ${ .book.title } is already on loan"}}}],"transition":"Wait for Lender response"},{"name":"Wait for Lender response","type":"switch","eventConditions":[{"name":"Hold Book","eventRef":"Hold Book Event","transition":"Request Hold"},{"name":"Decline Book Hold","eventRef":"Decline Hold Event","transition":"Cancel Request"}]},{"name":"Request Hold","type":"operation","actions":[{"functionRef":{"refName":"Request hold for lender","arguments":{"bookid":"${ .book.id }","lender":"${ .lender }"}}}],"transition":"Wait two weeks"},{"name":"Wait two weeks","type":"sleep","duration":"P2W","transition":"Get Book Status"},{"name":"Check Out Book","type":"operation","actions":[{"functionRef":{"refName":"Check out book with id","arguments":{"bookid":"${ .book.id }"}}},{"functionRef":{"refName":"Notify Lender for checkout","arguments":{"bookid":"${ .book.id }","lender":"${ .lender }"}}}],"end":true}],"functions":[],"events":[]}'
+```
+
+

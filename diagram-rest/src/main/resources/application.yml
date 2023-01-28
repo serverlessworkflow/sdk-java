@@ -9,4 +9,4 @@ server:
   port: 8090
 spring:
   application:
-    name: "Serverless-workflow"
+    name: "Serverless Workflow Diagram Rest API"
