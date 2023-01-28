@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.*;
         DiagramRequestHelper.class
 })
 @WebFluxTest
-class ServerlesRequestHelperTest {
+class DiagramGenerationTest {
 
     private DiagramRequestHelper serverlesRequestHelper;
 
