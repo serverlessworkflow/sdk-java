@@ -66,6 +66,7 @@ class ServerlesRequestHelperTest {
     @Test
     void getSvg() {
         Mono<ServerlessWorkFlowResponse> monoSvg = serverlesRequestHelper.getSvg(input);
+        monoSvg.subscribe(result -> { assertNotNull(result); assertNotNull(result.getResponse());});
         StepVerifier.create(monoSvg)
                 .expectNextMatches(serverlessWorkFlowResponse -> serverlessWorkFlowResponse.
                         getResponse()

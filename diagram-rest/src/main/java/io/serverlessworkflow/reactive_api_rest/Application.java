@@ -15,8 +15,12 @@
  */
 package io.serverlessworkflow.reactive_api_rest;
 
-public class ControllerErrorException extends Exception {
-  public ControllerErrorException(String errorMessage) {
-    super(errorMessage);
-  }
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class Application {
+	public static void main(String[] args) {
+		SpringApplication.run(Application.class, args);
+	}
 }

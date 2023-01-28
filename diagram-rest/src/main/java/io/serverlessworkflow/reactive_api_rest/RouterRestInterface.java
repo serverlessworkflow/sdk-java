@@ -26,12 +26,12 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
-public interface IRouterRest {
+public interface RouterRestInterface {
 
   @RouterOperations(
       value = {
         @RouterOperation(
-            path = RouterPaths.GETTING_SVG_FROM_WORKFLOW,
+            path = "/diagram",
             produces = {MediaType.APPLICATION_JSON_VALUE},
             method = RequestMethod.POST,
             beanClass = ServerlessRequest.class,
@@ -48,11 +48,6 @@ public interface IRouterRest {
                                   schema =
                                       @Schema(implementation = ServerlessWorkFlowResponse.class)))
                     }
-                    /*,
-                    security = @SecurityRequirement(
-                            name = "bearer-key",
-                            scopes = {}
-                    )*/
                     ))
       })
   RouterFunction<ServerResponse> servelessRouterFunction(ServerlessRequest serverlessRequest);

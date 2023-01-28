@@ -18,16 +18,14 @@ package io.serverlessworkflow.reactive_api_rest;
 import io.serverlessworkflow.api.Workflow;
 import io.serverlessworkflow.api.interfaces.WorkflowDiagram;
 import io.serverlessworkflow.diagram.WorkflowDiagramImpl;
-import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 @Component
-@RequiredArgsConstructor
 public class ServerlesRequestHelper {
 
-  public Mono<ServerlessWorkFlowResponse> getSvg(String workFlow) {
-    String diagramSVG = "";
+  public static Mono<ServerlessWorkFlowResponse> getSvg(String workFlow) {
+    String diagramSVG;
     Workflow workflow = Workflow.fromSource(workFlow);
 
     ServerlessWorkFlowResponse response = new ServerlessWorkFlowResponse();

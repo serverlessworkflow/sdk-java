@@ -24,17 +24,10 @@ import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
 @Configuration
-public class RouterRest implements IRouterRest {
-
-  /***
-   * Get image SVG from string.
-   * @param serverlessRequest The serverless request.
-   * @return String from SVG image
-   */
+public class RouterRest implements RouterRestInterface {
   @Bean
-  @Override
   public RouterFunction<ServerResponse> servelessRouterFunction(ServerlessRequest serverlessRequest) {
-    return route(POST(RouterPaths.GETTING_SVG_FROM_WORKFLOW),
+    return route(POST("/diagram"),
             serverlessRequest::getDiagramSVGFromWorkFlow);
   }
 

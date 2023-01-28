@@ -24,9 +24,10 @@ public class DataInputSchema {
 
   public DataInputSchema() {}
 
-  public DataInputSchema(String refValue){
+  public DataInputSchema(String refValue) {
     this.refValue = refValue;
   }
+
   public String getRefValue() {
     return refValue;
   }
