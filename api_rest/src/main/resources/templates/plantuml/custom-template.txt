@@ -1,0 +1,46 @@
+@startuml
+skinparam backgroundColor White
+skinparam legendBackgroundColor White
+skinparam legendBorderColor White
+skinparam state {
+  StartColor Green
+  EndColor Orange
+  BackgroundColor GhostWhite
+  BackgroundColor<< workflow >> White
+  BorderColor Black
+  ArrowColor Black
+
+  BorderColor<< event >> #7fe5f0
+  BorderColor<< operation >> #bada55
+  BorderColor<< switch >> #92a0f2
+  BorderColor<< sleep >> #b83b5e
+  BorderColor<< parallel >> #6a2c70
+  BorderColor<< inject >> #1e5f74
+  BorderColor<< foreach >> #931a25
+  BorderColor<< callback >> #ffcb8e
+}
+state "[(${diagram.title})]" as workflow << workflow >> {
+
+[# th:each="stateDef : ${diagram.modelStateDefs}" ]
+[(${stateDef.toString()})]
+[/]
+
+[# th:each="state : ${diagram.modelStates}" ]
+[(${state.toString()})]
+[/]
+
+[# th:each="connection : ${diagram.modelConnections}" ]
+[(${connection.toString()})]
+[/]
+
+}
+
+[# th:if="${diagram.showLegend}" ]
+legend center
+State Types and Border Colors:
+| Event | Operation | Switch | Sleep | Parallel | Inject | ForEach | CallBack |
+|<#7fe5f0>|<#bada55>|<#92a0f2>|<#b83b5e>|<#6a2c70>|<#1e5f74>|<#931a25>|<customcolor>|
+endlegend
+[/]
+
+@enduml

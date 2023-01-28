@@ -26,6 +26,7 @@
 
     <modules>
         <module>api</module>
+        <module>api_rest</module>
         <module>spi</module>
         <module>validation</module>
         <module>diagram</module>
