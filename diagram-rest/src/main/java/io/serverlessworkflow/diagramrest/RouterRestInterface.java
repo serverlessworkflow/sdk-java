@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.reactive_api_rest;
+package io.serverlessworkflow.diagramrest;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -21,7 +21,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import org.springdoc.core.annotations.RouterOperation;
 import org.springdoc.core.annotations.RouterOperations;
-import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
@@ -32,9 +31,9 @@ public interface RouterRestInterface {
       value = {
         @RouterOperation(
             path = "/diagram",
-            produces = {MediaType.APPLICATION_JSON_VALUE},
+            produces = {"application/xml"},
             method = RequestMethod.POST,
-            beanClass = ServerlessRequest.class,
+            beanClass = DiagramRequest.class,
             beanMethod = "getDiagramSVGFromWorkFlow",
             operation =
                 @Operation(
@@ -46,11 +45,11 @@ public interface RouterRestInterface {
                           content =
                               @Content(
                                   schema =
-                                      @Schema(implementation = ServerlessWorkFlowResponse.class)))
+                                      @Schema(implementation = String.class)))
                     }
                     ))
       })
-  RouterFunction<ServerResponse> servelessRouterFunction(ServerlessRequest serverlessRequest);
+  RouterFunction<ServerResponse> diagramRouterFunction(DiagramRequest serverlessRequest);
 
 
 }

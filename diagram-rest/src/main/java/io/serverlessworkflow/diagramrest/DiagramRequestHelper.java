@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.reactive_api_rest;
+package io.serverlessworkflow.diagramrest;
 
 import io.serverlessworkflow.api.Workflow;
 import io.serverlessworkflow.api.interfaces.WorkflowDiagram;
@@ -22,13 +22,11 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 @Component
-public class ServerlesRequestHelper {
+public class DiagramRequestHelper {
 
-  public static Mono<ServerlessWorkFlowResponse> getSvg(String workFlow) {
+  public static Mono<String> getSvg(String workFlow) {
     String diagramSVG;
     Workflow workflow = Workflow.fromSource(workFlow);
-
-    ServerlessWorkFlowResponse response = new ServerlessWorkFlowResponse();
 
     WorkflowDiagram workflowDiagram =
         new WorkflowDiagramImpl()
@@ -39,12 +37,8 @@ public class ServerlesRequestHelper {
     try {
       diagramSVG = workflowDiagram.getSvgDiagram();
     } catch (Exception e) {
-      response.setResponse(e.getMessage());
-      return Mono.just(response);
+      return Mono.just(e.getMessage());
     }
-
-    response.setResponse(diagramSVG);
-
-    return Mono.just(response);
+    return Mono.just(diagramSVG);
   }
 }
