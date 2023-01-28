@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.reactive_api_rest;
+package io.serverlessworkflow.diagramrest;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,13 +29,13 @@ import static org.junit.jupiter.api.Assertions.*;
 @ExtendWith(SpringExtension.class)
 @ContextConfiguration(classes = {
         RouterRest.class,
-        ServerlessRequest.class,
-        ServerlesRequestHelper.class
+        DiagramRequest.class,
+        DiagramRequestHelper.class
 })
 @WebFluxTest
 class ServerlesRequestHelperTest {
 
-    private ServerlesRequestHelper serverlesRequestHelper;
+    private DiagramRequestHelper serverlesRequestHelper;
 
     public static final String input = "id: greeting\n" +
             "version: '1.0'\n" +
@@ -60,16 +60,15 @@ class ServerlesRequestHelperTest {
 
     @BeforeEach
     void setUp() {
-        serverlesRequestHelper = new ServerlesRequestHelper();
+        serverlesRequestHelper = new DiagramRequestHelper();
     }
 
     @Test
     void getSvg() {
-        Mono<ServerlessWorkFlowResponse> monoSvg = serverlesRequestHelper.getSvg(input);
-        monoSvg.subscribe(result -> { assertNotNull(result); assertNotNull(result.getResponse());});
+        Mono<String> monoSvg = serverlesRequestHelper.getSvg(input);
+        monoSvg.subscribe(result -> { assertNotNull(result); assertNotNull(result);});
         StepVerifier.create(monoSvg)
-                .expectNextMatches(serverlessWorkFlowResponse -> serverlessWorkFlowResponse.
-                        getResponse()
+                .expectNextMatches(serverlessWorkFlowResponse -> serverlessWorkFlowResponse
                         .contains("svg"))
                 .verifyComplete();
     }

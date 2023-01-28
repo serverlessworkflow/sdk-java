@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.reactive_api_rest;
+package io.serverlessworkflow.diagramrest;
 
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
@@ -22,7 +22,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
 
 @Component
-public class ServerlessRequest {
+public class DiagramRequest {
 
   /**
    * Get the SVG diagram of a workflow from API Request
@@ -32,12 +32,12 @@ public class ServerlessRequest {
    */
   public Mono<ServerResponse> getDiagramSVGFromWorkFlow(ServerRequest sRequest) {
     return ServerResponse.ok()
-        .contentType(MediaType.APPLICATION_JSON)
+        .contentType(MediaType.APPLICATION_XML)
         .body(
             sRequest
                 .bodyToMono(String.class)
-                .flatMap(ServerlesRequestHelper::getSvg)
+                .flatMap(DiagramRequestHelper::getSvg)
                 .onErrorMap(e -> new IllegalArgumentException(e.getMessage())),
-            ServerlessWorkFlowResponse.class);
+            String.class);
   }
 }

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.reactive_api_rest;
+package io.serverlessworkflow.diagramrest;
 
 import static org.springframework.web.reactive.function.server.RequestPredicates.POST;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
@@ -26,7 +26,7 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 @Configuration
 public class RouterRest implements RouterRestInterface {
   @Bean
-  public RouterFunction<ServerResponse> servelessRouterFunction(ServerlessRequest serverlessRequest) {
+  public RouterFunction<ServerResponse> diagramRouterFunction(DiagramRequest serverlessRequest) {
     return route(POST("/diagram"),
             serverlessRequest::getDiagramSVGFromWorkFlow);
   }
