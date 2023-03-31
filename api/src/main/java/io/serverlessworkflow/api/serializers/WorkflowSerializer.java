@@ -110,9 +110,6 @@ public class WorkflowSerializer extends StdSerializer<Workflow> {
         gen.writeObject(eventDefinition);
       }
       gen.writeEndArray();
-    } else {
-      gen.writeArrayFieldStart("events");
-      gen.writeEndArray();
     }
 
     if (workflow.getFunctions() != null && !workflow.getFunctions().getFunctionDefs().isEmpty()) {
@@ -120,9 +117,6 @@ public class WorkflowSerializer extends StdSerializer<Workflow> {
       for (FunctionDefinition function : workflow.getFunctions().getFunctionDefs()) {
         gen.writeObject(function);
       }
-      gen.writeEndArray();
-    } else {
-      gen.writeArrayFieldStart("functions");
       gen.writeEndArray();
     }
 
@@ -132,9 +126,6 @@ public class WorkflowSerializer extends StdSerializer<Workflow> {
         gen.writeObject(retry);
       }
       gen.writeEndArray();
-    } else {
-      gen.writeArrayFieldStart("retries");
-      gen.writeEndArray();
     }
 
     if (workflow.getErrors() != null && !workflow.getErrors().getErrorDefs().isEmpty()) {
@@ -143,9 +134,6 @@ public class WorkflowSerializer extends StdSerializer<Workflow> {
         gen.writeObject(error);
       }
       gen.writeEndArray();
-    } else {
-      gen.writeArrayFieldStart("errors");
-      gen.writeEndArray();
     }
 
     if (workflow.getSecrets() != null && !workflow.getSecrets().getSecretDefs().isEmpty()) {
@@ -153,9 +141,6 @@ public class WorkflowSerializer extends StdSerializer<Workflow> {
       for (String secretDef : workflow.getSecrets().getSecretDefs()) {
         gen.writeString(secretDef);
       }
-      gen.writeEndArray();
-    } else {
-      gen.writeArrayFieldStart("secrets");
       gen.writeEndArray();
     }
 
@@ -181,9 +166,6 @@ public class WorkflowSerializer extends StdSerializer<Workflow> {
       for (State state : workflow.getStates()) {
         gen.writeObject(state);
       }
-      gen.writeEndArray();
-    } else {
-      gen.writeArrayFieldStart("states");
       gen.writeEndArray();
     }
 
