@@ -40,8 +40,8 @@
             <version>[2.13.0,)</version>
         </dependency>
         <dependency>
-            <groupId>javax.validation</groupId>
-            <artifactId>validation-api</artifactId>
+            <groupId>jakarta.validation</groupId>
+            <artifactId>jakarta.validation-api</artifactId>
         </dependency>
         <dependency>
             <groupId>org.json</groupId>
@@ -106,6 +106,7 @@
                     <serializable>true</serializable>
                     <targetVersion>${java.version}</targetVersion>
                     <usePrimitives>true</usePrimitives>
+                    <useJakartaValidation>true</useJakartaValidation>
                 </configuration>
                 <executions>
                     <execution>
