@@ -112,8 +112,10 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
       List<EventDefinition> events =
           workflow.getEvents() != null ? workflow.getEvents().getEventDefs() : null;
 
-      if (workflow.getId() == null || workflow.getId().trim().isEmpty()) {
-        addValidationError("Workflow id should not be empty", ValidationError.WORKFLOW_VALIDATION);
+      if ((workflow.getId() == null || workflow.getId().trim().isEmpty())
+          && (workflow.getKey() == null || workflow.getKey().trim().isEmpty())) {
+        addValidationError(
+            "Workflow id or key should not be empty", ValidationError.WORKFLOW_VALIDATION);
       }
 
       if (workflow.getVersion() == null || workflow.getVersion().trim().isEmpty()) {
