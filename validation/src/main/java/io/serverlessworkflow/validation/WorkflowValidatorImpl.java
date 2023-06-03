@@ -79,17 +79,7 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
               workflowSchema.validate(new JSONObject(source));
             }
           } catch (ValidationException e) {
-            e.getCausingExceptions().stream()
-                .map(ValidationException::getMessage)
-                .forEach(
-                    m -> {
-                      if ((!m.equals("#/functions: expected type: JSONObject, found: JSONArray")
-                          && !m.equals("#/events: expected type: JSONObject, found: JSONArray")
-                          && !m.equals("#/start: expected type: JSONObject, found: String")
-                          && !m.equals("#/retries: expected type: JSONObject, found: JSONArray"))) {
-                        addValidationError(m, ValidationError.SCHEMA_VALIDATION);
-                      }
-                    });
+            addValidationError(e.toJSON().toString(), ValidationError.SCHEMA_VALIDATION);
           }
         }
       } catch (Exception e) {

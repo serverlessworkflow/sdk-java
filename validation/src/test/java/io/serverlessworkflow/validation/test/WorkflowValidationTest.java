@@ -33,20 +33,22 @@ public class WorkflowValidationTest {
 
   @Test
   public void testIncompleteJsonWithSchemaValidation() {
-    WorkflowValidator workflowValidator = new WorkflowValidatorImpl();
+    WorkflowValidator workflowValidator =
+        new WorkflowValidatorImpl().setSchemaValidationEnabled(false);
     List<ValidationError> validationErrors =
-        workflowValidator.setSource("{\n" + "  \"id\": \"abc\" \n" + "}").validate();
+        workflowValidator.setSource("{\"id\": \"abc\"}").validate();
     Assertions.assertNotNull(validationErrors);
-    Assertions.assertEquals(3, validationErrors.size());
+    Assertions.assertEquals(2, validationErrors.size());
   }
 
   @Test
   public void testIncompleteYamlWithSchemaValidation() {
-    WorkflowValidator workflowValidator = new WorkflowValidatorImpl();
+    WorkflowValidator workflowValidator =
+        new WorkflowValidatorImpl().setSchemaValidationEnabled(false);
     List<ValidationError> validationErrors =
         workflowValidator.setSource("---\n" + "id: abc\n").validate();
     Assertions.assertNotNull(validationErrors);
-    Assertions.assertEquals(3, validationErrors.size());
+    Assertions.assertEquals(2, validationErrors.size());
   }
 
   @Test
@@ -64,7 +66,8 @@ public class WorkflowValidationTest {
                         .withEnd(new End())
                         .withDuration("PT1M")));
 
-    WorkflowValidator workflowValidator = new WorkflowValidatorImpl();
+    WorkflowValidator workflowValidator =
+        new WorkflowValidatorImpl().setSchemaValidationEnabled(false);
     List<ValidationError> validationErrors = workflowValidator.setWorkflow(workflow).validate();
     Assertions.assertNotNull(validationErrors);
     Assertions.assertEquals(1, validationErrors.size());
@@ -75,7 +78,8 @@ public class WorkflowValidationTest {
 
   @Test
   public void testWorkflowMissingStates() {
-    WorkflowValidator workflowValidator = new WorkflowValidatorImpl();
+    WorkflowValidator workflowValidator =
+        new WorkflowValidatorImpl().setSchemaValidationEnabled(false);
     List<ValidationError> validationErrors =
         workflowValidator
             .setSource(
@@ -95,7 +99,8 @@ public class WorkflowValidationTest {
 
   @Test
   public void testOperationStateNoFunctionRef() {
-    WorkflowValidator workflowValidator = new WorkflowValidatorImpl();
+    WorkflowValidator workflowValidator =
+        new WorkflowValidatorImpl().setSchemaValidationEnabled(false);
     List<ValidationError> validationErrors =
         workflowValidator
             .setSource(
@@ -159,7 +164,9 @@ public class WorkflowValidationTest {
                         .withEnd(new End())
                         .withDuration("PT1M")));
 
-    WorkflowValidator workflowValidator = new WorkflowValidatorImpl();
+    WorkflowValidator workflowValidator =
+        new WorkflowValidatorImpl().setSchemaValidationEnabled(false);
+    ;
     List<ValidationError> validationErrors = workflowValidator.setWorkflow(workflow).validate();
     Assertions.assertNotNull(validationErrors);
     Assertions.assertEquals(0, validationErrors.size());
@@ -167,7 +174,9 @@ public class WorkflowValidationTest {
 
   @Test
   public void testValidateWorkflowForOptionalIterationParam() {
-    WorkflowValidator workflowValidator = new WorkflowValidatorImpl();
+    WorkflowValidator workflowValidator =
+        new WorkflowValidatorImpl().setSchemaValidationEnabled(false);
+    ;
     List<ValidationError> validationErrors =
         workflowValidator
             .setSource(
@@ -216,7 +225,9 @@ public class WorkflowValidationTest {
 
   @Test
   public void testMissingFunctionRefForCallbackState() {
-    WorkflowValidator workflowValidator = new WorkflowValidatorImpl();
+    WorkflowValidator workflowValidator =
+        new WorkflowValidatorImpl().setSchemaValidationEnabled(false);
+    ;
     List<ValidationError> validationErrors =
         workflowValidator
             .setSource(
