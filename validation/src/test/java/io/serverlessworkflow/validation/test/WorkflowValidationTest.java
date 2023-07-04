@@ -44,8 +44,9 @@ public class WorkflowValidationTest {
   public void testIncompleteYamlWithSchemaValidation() {
     WorkflowValidator workflowValidator = new WorkflowValidatorImpl();
     List<ValidationError> validationErrors =
-        workflowValidator.setSource("---\n" + "id: abc\n").validate();
+        workflowValidator.setSource("---\n" + "key: abc\n").validate();
     Assertions.assertNotNull(validationErrors);
+    System.out.println(validationErrors);
     Assertions.assertEquals(3, validationErrors.size());
   }
 
@@ -94,6 +95,27 @@ public class WorkflowValidationTest {
   }
 
   @Test
+  public void testWorkflowMissingStatesIdAndKey() {
+    WorkflowValidator workflowValidator = new WorkflowValidatorImpl();
+    List<ValidationError> validationErrors =
+        workflowValidator
+            .setSource(
+                "{\n"
+                    + "\t\"name\": \"test workflow\",\n"
+                    + "  \"version\": \"1.0\",\n"
+                    + "  \"start\": \"SomeState\",\n"
+                    + "  \"states\": []\n"
+                    + "}")
+            .validate();
+    Assertions.assertNotNull(validationErrors);
+    Assertions.assertEquals(2, validationErrors.size());
+
+    Assertions.assertEquals(
+        "Workflow id or key should not be empty", validationErrors.get(0).getMessage());
+    Assertions.assertEquals("No states found", validationErrors.get(1).getMessage());
+  }
+
+  @Test
   public void testOperationStateNoFunctionRef() {
     WorkflowValidator workflowValidator = new WorkflowValidatorImpl();
     List<ValidationError> validationErrors =
@@ -101,7 +123,7 @@ public class WorkflowValidationTest {
             .setSource(
                 "{\n"
                     + "\"id\": \"checkInbox\",\n"
-                    + "  \"name\": \"Check Inbox Workflow\",\n"
+                    + "\"name\": \"Check Inbox Workflow\",\n"
                     + "\"description\": \"Periodically Check Inbox\",\n"
                     + "\"version\": \"1.0\",\n"
                     + "\"start\": \"CheckInbox\",\n"
@@ -140,6 +162,7 @@ public class WorkflowValidationTest {
     Assertions.assertNotNull(validationErrors);
     Assertions.assertEquals(1, validationErrors.size());
 
+    // validationErrors.stream().forEach(v -> System.out.println(v.toString()));
     Assertions.assertEquals(
         "Operation State action functionRef does not reference an existing workflow function definition",
         validationErrors.get(0).getMessage());

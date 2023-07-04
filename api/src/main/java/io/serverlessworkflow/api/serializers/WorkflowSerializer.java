@@ -53,6 +53,9 @@ public class WorkflowSerializer extends StdSerializer<Workflow> {
       gen.writeStringField("id", generateUniqueId());
     }
 
+    if (workflow.getKey() != null) {
+      gen.writeStringField("key", workflow.getKey());
+    }
     gen.writeStringField("name", workflow.getName());
 
     if (workflow.getDescription() != null && !workflow.getDescription().isEmpty()) {
