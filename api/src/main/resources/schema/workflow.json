@@ -11,8 +11,11 @@
   "properties": {
     "id": {
       "type": "string",
-      "description": "Workflow unique identifier",
-      "minLength": 1
+      "description": "Workflow unique identifier"
+    },
+    "key": {
+      "type": "string",
+      "description": "Workflow Domain-specific identifier"
     },
     "name": {
       "type": "string",
@@ -155,10 +158,14 @@
       }
     }
   },
-  "required": [
-    "id",
-    "name",
-    "version",
-    "states"
-  ]
+ "required": [
+        "name",
+        "version",
+        "states"
+ ],
+ "dependencies":
+  {
+    "id": { "not": { "required": ["key"] } },
+    "key": { "not": { "required": ["id"] } }
+  }
 }

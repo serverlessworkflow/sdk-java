@@ -105,11 +105,52 @@ public class MarkupToWorkflowTest {
 
   @ParameterizedTest
   @ValueSource(strings = {"/features/applicantrequest.json", "/features/applicantrequest.yml"})
-  public void testSpecFreatureFunctionRef(String workflowLocation) {
+  public void testSpecFeatureFunctionRef(String workflowLocation) {
     Workflow workflow = Workflow.fromSource(WorkflowTestUtils.readWorkflowFile(workflowLocation));
 
     assertNotNull(workflow);
+    assertNull(workflow.getKey());
     assertNotNull(workflow.getId());
+    assertNotNull(workflow.getName());
+    assertNotNull(workflow.getStates());
+    assertTrue(workflow.getStates().size() > 0);
+
+    assertNotNull(workflow.getFunctions());
+    assertEquals(1, workflow.getFunctions().getFunctionDefs().size());
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "/features/applicantrequest-with-key.json",
+        "/features/applicantrequest-with-key.yml"
+      })
+  public void testSpecFeatureFunctionRefWithKey(String workflowLocation) {
+    Workflow workflow = Workflow.fromSource(WorkflowTestUtils.readWorkflowFile(workflowLocation));
+
+    assertNotNull(workflow);
+    assertEquals("applicant-key-request", workflow.getKey());
+    assertNull(workflow.getId());
+    assertNotNull(workflow.getName());
+    assertNotNull(workflow.getStates());
+    assertTrue(workflow.getStates().size() > 0);
+
+    assertNotNull(workflow.getFunctions());
+    assertEquals(1, workflow.getFunctions().getFunctionDefs().size());
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "/features/applicantrequest-with-id-and-key.json",
+        "/features/applicantrequest-with-id-and-key.yml"
+      })
+  public void testSpecFeatureFunctionRefWithIdAndKey(String workflowLocation) {
+    Workflow workflow = Workflow.fromSource(WorkflowTestUtils.readWorkflowFile(workflowLocation));
+
+    assertNotNull(workflow);
+    assertEquals("applicant-key-request", workflow.getKey());
+    assertEquals("applicant-with-key-and-id", workflow.getId());
     assertNotNull(workflow.getName());
     assertNotNull(workflow.getStates());
     assertTrue(workflow.getStates().size() > 0);
