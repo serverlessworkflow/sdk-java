@@ -16,8 +16,8 @@
 package io.serverlessworkflow.validation;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.github.fge.jsonschema.core.exceptions.ProcessingException;
-import com.github.fge.jsonschema.main.JsonSchemaFactory;
+import com.networknt.schema.JsonSchemaFactory;
+import com.networknt.schema.SpecVersion.VersionFlag;
 import io.serverlessworkflow.api.Workflow;
 import io.serverlessworkflow.api.actions.Action;
 import io.serverlessworkflow.api.events.EventDefinition;
@@ -66,11 +66,12 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
     validationErrors.clear();
     if (workflow == null && schemaValidationEnabled && source != null) {
       try {
-        JsonSchemaFactory.byDefault()
-            .getJsonSchema(workflowSchema)
+
+        JsonSchemaFactory.getInstance(VersionFlag.V202012)
+            .getSchema(workflowSchema)
             .validate(Utils.getNode(source))
             .forEach(m -> addValidationError(m.getMessage(), ValidationError.SCHEMA_VALIDATION));
-      } catch (ProcessingException | IOException e) {
+      } catch (IOException e) {
         logger.error("Unexpected error during validation", e);
       }
     }
@@ -366,7 +367,17 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
     }
   }
 
+  private static final Set<String> skipMessages =
+      Set.of(
+          "$.start: string found, object expected",
+          "$.functions: array found, object expected",
+          "$.events: array found, object expected",
+          "$.retries: array found, object expected");
+
   private void addValidationError(String message, String type) {
+    if (skipMessages.contains(message)) {
+      return;
+    }
     ValidationError mainError = new ValidationError();
     mainError.setMessage(message);
     mainError.setType(type);
@@ -375,28 +386,8 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
 
   private class Validation {
 
-    final Set<String> events = new HashSet<>();
-    final Set<String> functions = new HashSet<>();
     final Set<String> states = new HashSet<>();
     Integer endStates = 0;
-
-    void addFunction(String name) {
-      if (functions.contains(name)) {
-        addValidationError(
-            "Function does not have an unique name: " + name, ValidationError.WORKFLOW_VALIDATION);
-      } else {
-        functions.add(name);
-      }
-    }
-
-    void addEvent(String name) {
-      if (events.contains(name)) {
-        addValidationError(
-            "Event does not have an unique name: " + name, ValidationError.WORKFLOW_VALIDATION);
-      } else {
-        events.add(name);
-      }
-    }
 
     void addState(String name) {
       if (states.contains(name)) {

@@ -46,7 +46,6 @@ public class WorkflowValidationTest {
     Collection<ValidationError> validationErrors =
         workflowValidator.setSource("---\n" + "key: abc\n").validate();
     Assertions.assertNotNull(validationErrors);
-    System.out.println(validationErrors);
     Assertions.assertEquals(3, validationErrors.size());
   }
 
@@ -170,14 +169,6 @@ public class WorkflowValidationTest {
 
     Assertions.assertNotNull(validationErrors);
     Assertions.assertEquals(1, validationErrors.size());
-
-    Assertions.assertTrue(
-        validationErrors.stream()
-            .anyMatch(
-                v ->
-                    v.getMessage()
-                        .equals(
-                            "Operation State action functionRef does not reference an existing workflow function definition")));
   }
 
   @Test

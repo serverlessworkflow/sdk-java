@@ -67,9 +67,7 @@ public class RetriesDeserializer extends StdDeserializer<Retries> {
     } else {
       String retriesFileDef = node.asText();
       String retriesFileSrc = Utils.getResourceFileAsString(retriesFileDef);
-      ;
       if (retriesFileSrc != null && retriesFileSrc.trim().length() > 0) {
-        // if its a yaml def convert to json first
         JsonNode retriesRefNode = Utils.getNode(retriesFileSrc);
         JsonNode refRetries = retriesRefNode.get("retries");
         if (refRetries != null) {
