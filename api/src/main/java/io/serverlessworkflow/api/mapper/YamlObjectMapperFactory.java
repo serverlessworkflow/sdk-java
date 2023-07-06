@@ -13,23 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.api.interfaces;
+package io.serverlessworkflow.api.mapper;
 
-import io.serverlessworkflow.api.Workflow;
-import io.serverlessworkflow.api.validation.ValidationError;
-import java.util.Collection;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
-public interface WorkflowValidator {
+public class YamlObjectMapperFactory {
 
-  WorkflowValidator setWorkflow(Workflow workflow);
+  private static final ObjectMapper instance = new YamlObjectMapper();
 
-  WorkflowValidator setSource(String source);
-
-  Collection<ValidationError> validate();
-
-  boolean isValid();
-
-  WorkflowValidator setSchemaValidationEnabled(boolean schemaValidationEnabled);
-
-  WorkflowValidator reset();
+  public static final ObjectMapper mapper() {
+    return instance;
+  }
 }

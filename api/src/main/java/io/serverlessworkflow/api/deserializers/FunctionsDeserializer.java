@@ -20,7 +20,6 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.serverlessworkflow.api.functions.FunctionDefinition;
 import io.serverlessworkflow.api.interfaces.WorkflowPropertySource;
 import io.serverlessworkflow.api.utils.Utils;
@@ -28,7 +27,6 @@ import io.serverlessworkflow.api.workflow.Functions;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,20 +67,9 @@ public class FunctionsDeserializer extends StdDeserializer<Functions> {
       String functionsFileDef = node.asText();
       String functionsFileSrc = Utils.getResourceFileAsString(functionsFileDef);
       JsonNode functionsRefNode;
-      ObjectMapper jsonWriter = new ObjectMapper();
       if (functionsFileSrc != null && functionsFileSrc.trim().length() > 0) {
         // if its a yaml def convert to json first
-        if (!functionsFileSrc.trim().startsWith("{")) {
-          // convert yaml to json to validate
-          ObjectMapper yamlReader = new ObjectMapper(new YAMLFactory());
-          Object obj = yamlReader.readValue(functionsFileSrc, Object.class);
-
-          functionsRefNode =
-              jsonWriter.readTree(new JSONObject(jsonWriter.writeValueAsString(obj)).toString());
-        } else {
-          functionsRefNode = jsonWriter.readTree(new JSONObject(functionsFileSrc).toString());
-        }
-
+        functionsRefNode = Utils.getNode(functionsFileSrc);
         JsonNode refFunctions = functionsRefNode.get("functions");
         if (refFunctions != null) {
           for (final JsonNode nodeEle : refFunctions) {

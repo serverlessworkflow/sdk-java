@@ -35,11 +35,10 @@
             <artifactId>commons-lang3</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>com.github.erosb</groupId>
-            <artifactId>everit-json-schema</artifactId>
+       <dependency>
+         <groupId>com.github.java-json-tools</groupId>
+         <artifactId>json-schema-validator</artifactId>
         </dependency>
-
         <!-- test -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>

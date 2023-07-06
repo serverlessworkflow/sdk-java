@@ -15,6 +15,11 @@
  */
 package io.serverlessworkflow.api.utils;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.serverlessworkflow.api.mapper.JsonObjectMapperFactory;
+import io.serverlessworkflow.api.mapper.YamlObjectMapperFactory;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,5 +38,15 @@ public class Utils {
         return reader.lines().collect(Collectors.joining(System.lineSeparator()));
       }
     }
+  }
+
+  public static ObjectMapper getObjectMapper(String source) {
+    return !source.trim().startsWith("{")
+        ? YamlObjectMapperFactory.mapper()
+        : JsonObjectMapperFactory.mapper();
+  }
+
+  public static JsonNode getNode(String source) throws JsonProcessingException {
+    return getObjectMapper(source).readTree(source);
   }
 }

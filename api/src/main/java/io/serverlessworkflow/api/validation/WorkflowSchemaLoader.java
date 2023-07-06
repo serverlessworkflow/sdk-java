@@ -15,26 +15,23 @@
  */
 package io.serverlessworkflow.api.validation;
 
-import io.serverlessworkflow.api.schemaclient.ResourceSchemaClient;
-import org.everit.json.schema.Schema;
-import org.everit.json.schema.loader.SchemaLoader;
-import org.everit.json.schema.loader.internal.DefaultSchemaClient;
-import org.json.JSONObject;
-import org.json.JSONTokener;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 
 public class WorkflowSchemaLoader {
-  private static final JSONObject workflowSchema =
-      new JSONObject(
-          new JSONTokener(WorkflowSchemaLoader.class.getResourceAsStream("/schema/workflow.json")));
 
-  public static Schema getWorkflowSchema() {
-    SchemaLoader schemaLoader =
-        SchemaLoader.builder()
-            .schemaClient(new ResourceSchemaClient(new DefaultSchemaClient()))
-            .schemaJson(workflowSchema)
-            .resolutionScope("classpath:schema")
-            .draftV7Support()
-            .build();
-    return schemaLoader.load().build();
+  public static JsonNode getWorkflowSchema() {
+    try {
+      return ObjectMapperHolder.objectMapper.readTree(
+          WorkflowSchemaLoader.class.getResourceAsStream("/schema/workflow.json"));
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
+  }
+
+  private static class ObjectMapperHolder {
+    public static final ObjectMapper objectMapper = new ObjectMapper();
   }
 }
