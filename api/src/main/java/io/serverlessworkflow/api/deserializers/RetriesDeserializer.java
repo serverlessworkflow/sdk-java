@@ -20,7 +20,6 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.serverlessworkflow.api.interfaces.WorkflowPropertySource;
 import io.serverlessworkflow.api.retry.RetryDefinition;
 import io.serverlessworkflow.api.utils.Utils;
@@ -28,7 +27,6 @@ import io.serverlessworkflow.api.workflow.Retries;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,21 +67,10 @@ public class RetriesDeserializer extends StdDeserializer<Retries> {
     } else {
       String retriesFileDef = node.asText();
       String retriesFileSrc = Utils.getResourceFileAsString(retriesFileDef);
-      JsonNode retriesRefNode;
-      ObjectMapper jsonWriter = new ObjectMapper();
+      ;
       if (retriesFileSrc != null && retriesFileSrc.trim().length() > 0) {
         // if its a yaml def convert to json first
-        if (!retriesFileSrc.trim().startsWith("{")) {
-          // convert yaml to json to validate
-          ObjectMapper yamlReader = new ObjectMapper(new YAMLFactory());
-          Object obj = yamlReader.readValue(retriesFileSrc, Object.class);
-
-          retriesRefNode =
-              jsonWriter.readTree(new JSONObject(jsonWriter.writeValueAsString(obj)).toString());
-        } else {
-          retriesRefNode = jsonWriter.readTree(new JSONObject(retriesFileSrc).toString());
-        }
-
+        JsonNode retriesRefNode = Utils.getNode(retriesFileSrc);
         JsonNode refRetries = retriesRefNode.get("retries");
         if (refRetries != null) {
           for (final JsonNode nodeEle : refRetries) {
