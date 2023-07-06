@@ -35,10 +35,9 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
         </dependency>
-
-       <dependency>
-         <groupId>com.github.java-json-tools</groupId>
-         <artifactId>json-schema-validator</artifactId>
+        <dependency>
+          <groupId>com.networknt</groupId>
+          <artifactId>json-schema-validator</artifactId>
         </dependency>
         <!-- test -->
         <dependency>
