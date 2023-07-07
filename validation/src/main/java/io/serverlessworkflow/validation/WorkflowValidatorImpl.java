@@ -64,13 +64,14 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
   @Override
   public Collection<ValidationError> validate() {
     validationErrors.clear();
-    if (workflow == null && schemaValidationEnabled && source != null) {
+    if (workflow == null) {
       try {
-
-        JsonSchemaFactory.getInstance(VersionFlag.V202012)
-            .getSchema(workflowSchema)
-            .validate(Utils.getNode(source))
-            .forEach(m -> addValidationError(m.getMessage(), ValidationError.SCHEMA_VALIDATION));
+        if (schemaValidationEnabled && source != null) {
+          JsonSchemaFactory.getInstance(VersionFlag.V7)
+              .getSchema(workflowSchema)
+              .validate(Utils.getNode(source))
+              .forEach(m -> addValidationError(m.getMessage(), ValidationError.SCHEMA_VALIDATION));
+        }
       } catch (IOException e) {
         logger.error("Unexpected error during validation", e);
       }
@@ -163,17 +164,6 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
                     }
 
                     if (action.getEventRef() != null) {
-                      if (action.getEventRef().getTriggerEventRef().isEmpty()) {
-                        addValidationError(
-                            "Operation State action trigger eventRef does not reference an existing workflow event definition",
-                            ValidationError.WORKFLOW_VALIDATION);
-                      }
-
-                      if (action.getEventRef().getResultEventRef().isEmpty()) {
-                        addValidationError(
-                            "Operation State action results eventRef does not reference an existing workflow event definition",
-                            ValidationError.WORKFLOW_VALIDATION);
-                      }
 
                       if (!haveEventsDefinition(
                           action.getEventRef().getTriggerEventRef(), events)) {
@@ -357,22 +347,19 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
   }
 
   private boolean haveEventsDefinition(String eventName, List<EventDefinition> events) {
+    if (eventName == null) {
+      return true;
+    }
     if (events != null) {
       EventDefinition eve =
           events.stream().filter(e -> e.getName().equals(eventName)).findFirst().orElse(null);
-
       return eve == null ? false : true;
     } else {
       return false;
     }
   }
 
-  private static final Set<String> skipMessages =
-      Set.of(
-          "$.start: string found, object expected",
-          "$.functions: array found, object expected",
-          "$.events: array found, object expected",
-          "$.retries: array found, object expected");
+  private static final Set<String> skipMessages = Set.of("$.start: string found, object expected");
 
   private void addValidationError(String message, String type) {
     if (skipMessages.contains(message)) {
@@ -385,7 +372,6 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
   }
 
   private class Validation {
-
     final Set<String> states = new HashSet<>();
     Integer endStates = 0;
 
