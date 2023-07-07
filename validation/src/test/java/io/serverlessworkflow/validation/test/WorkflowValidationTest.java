@@ -15,14 +15,26 @@
  */
 package io.serverlessworkflow.validation.test;
 
+import static io.serverlessworkflow.api.states.DefaultState.Type.OPERATION;
 import static io.serverlessworkflow.api.states.DefaultState.Type.SLEEP;
 
 import io.serverlessworkflow.api.Workflow;
+import io.serverlessworkflow.api.actions.Action;
 import io.serverlessworkflow.api.end.End;
+import io.serverlessworkflow.api.events.EventDefinition;
+import io.serverlessworkflow.api.events.EventRef;
+import io.serverlessworkflow.api.functions.FunctionDefinition;
+import io.serverlessworkflow.api.functions.FunctionDefinition.Type;
+import io.serverlessworkflow.api.functions.FunctionRef;
 import io.serverlessworkflow.api.interfaces.WorkflowValidator;
+import io.serverlessworkflow.api.retry.RetryDefinition;
 import io.serverlessworkflow.api.start.Start;
+import io.serverlessworkflow.api.states.OperationState;
 import io.serverlessworkflow.api.states.SleepState;
 import io.serverlessworkflow.api.validation.ValidationError;
+import io.serverlessworkflow.api.workflow.Events;
+import io.serverlessworkflow.api.workflow.Functions;
+import io.serverlessworkflow.api.workflow.Retries;
 import io.serverlessworkflow.validation.WorkflowValidatorImpl;
 import java.util.Arrays;
 import java.util.Collection;
@@ -121,6 +133,50 @@ public class WorkflowValidationTest {
                         || v.getMessage().equals("Workflow id or key should not be empty"))
             .count(),
         2);
+  }
+
+  @Test
+  void testFunctionCall() {
+    Workflow workflow =
+        new Workflow()
+            .withId("test-workflow")
+            .withVersion("1.0")
+            .withStart(new Start().withStateName("start"))
+            .withFunctions(
+                new Functions(
+                    Arrays.asList(new FunctionDefinition("expression").withType(Type.EXPRESSION))))
+            .withStates(
+                Arrays.asList(
+                    new OperationState()
+                        .withName("start")
+                        .withType(OPERATION)
+                        .withActions(
+                            Arrays.asList(
+                                new Action().withFunctionRef(new FunctionRef("expression"))))
+                        .withEnd(new End())));
+    Assertions.assertTrue(new WorkflowValidatorImpl().setWorkflow(workflow).validate().isEmpty());
+  }
+
+  @Test
+  void testEventCall() {
+    Workflow workflow =
+        new Workflow()
+            .withId("test-workflow")
+            .withVersion("1.0")
+            .withStart(new Start().withStateName("start"))
+            .withEvents(new Events(Arrays.asList(new EventDefinition().withName("event"))))
+            .withRetries(new Retries(Arrays.asList(new RetryDefinition("start", "PT1S"))))
+            .withStates(
+                Arrays.asList(
+                    new OperationState()
+                        .withName("start")
+                        .withType(OPERATION)
+                        .withActions(
+                            Arrays.asList(
+                                new Action()
+                                    .withEventRef(new EventRef().withTriggerEventRef("event"))))
+                        .withEnd(new End())));
+    Assertions.assertTrue(new WorkflowValidatorImpl().setWorkflow(workflow).validate().isEmpty());
   }
 
   @Test
