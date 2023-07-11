@@ -11,7 +11,6 @@
 
     <artifactId>serverlessworkflow-util</artifactId>
     <name>Serverless Workflow :: Utils</name>
-    <version>${project.parent.version}</version>
     <packaging>jar</packaging>
     <description>Java SDK for Serverless Workflow Specification</description>
 
