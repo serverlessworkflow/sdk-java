@@ -11,7 +11,6 @@
 
     <artifactId>serverlessworkflow-diagram</artifactId>
     <name>Serverless Workflow :: Diagram</name>
-    <version>${project.parent.version}</version>
     <packaging>jar</packaging>
     <description>Java SDK for Serverless Workflow Specification</description>
 
