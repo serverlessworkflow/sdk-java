@@ -15,8 +15,6 @@
  */
 package io.serverlessworkflow.api.validation;
 
-import java.util.Objects;
-
 public class ValidationError {
   private static final String MSG_FORMAT = "%s:%s";
   public static final String SCHEMA_VALIDATION = "schemavalidation";
@@ -44,19 +42,5 @@ public class ValidationError {
   @Override
   public String toString() {
     return String.format(MSG_FORMAT, type, message);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(message, type);
-  }
-
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) return true;
-    if (obj == null) return false;
-    if (getClass() != obj.getClass()) return false;
-    ValidationError other = (ValidationError) obj;
-    return Objects.equals(message, other.message) && Objects.equals(type, other.type);
   }
 }

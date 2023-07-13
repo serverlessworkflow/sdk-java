@@ -32,9 +32,8 @@ import io.serverlessworkflow.api.utils.Utils;
 import io.serverlessworkflow.api.validation.ValidationError;
 import io.serverlessworkflow.api.validation.WorkflowSchemaLoader;
 import java.io.IOException;
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import org.slf4j.Logger;
@@ -44,7 +43,7 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
 
   private static final Logger logger = LoggerFactory.getLogger(WorkflowValidatorImpl.class);
   private boolean schemaValidationEnabled = true;
-  private Collection<ValidationError> validationErrors = new LinkedHashSet<>();
+  private List<ValidationError> validationErrors = new ArrayList<>();
   private JsonNode workflowSchema = WorkflowSchemaLoader.getWorkflowSchema();
   private String source;
   private Workflow workflow;
@@ -62,7 +61,7 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
   }
 
   @Override
-  public Collection<ValidationError> validate() {
+  public List<ValidationError> validate() {
     validationErrors.clear();
     if (workflow == null) {
       try {
@@ -359,7 +358,8 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
     }
   }
 
-  private static final Set<String> skipMessages = Set.of("$.start: string found, object expected");
+  private static final Set<String> skipMessages =
+      Set.of("$.start: string found, object expected", "$.functions: array found, object expected");
 
   private void addValidationError(String message, String type) {
     if (skipMessages.contains(message)) {

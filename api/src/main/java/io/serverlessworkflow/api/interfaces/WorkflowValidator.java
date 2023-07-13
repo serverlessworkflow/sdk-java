@@ -17,7 +17,7 @@ package io.serverlessworkflow.api.interfaces;
 
 import io.serverlessworkflow.api.Workflow;
 import io.serverlessworkflow.api.validation.ValidationError;
-import java.util.Collection;
+import java.util.List;
 
 public interface WorkflowValidator {
 
@@ -25,7 +25,7 @@ public interface WorkflowValidator {
 
   WorkflowValidator setSource(String source);
 
-  Collection<ValidationError> validate();
+  List<ValidationError> validate();
 
   boolean isValid();
 
