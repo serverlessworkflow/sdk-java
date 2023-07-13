@@ -37,7 +37,7 @@ import io.serverlessworkflow.api.workflow.Functions;
 import io.serverlessworkflow.api.workflow.Retries;
 import io.serverlessworkflow.validation.WorkflowValidatorImpl;
 import java.util.Arrays;
-import java.util.Collection;
+import java.util.List;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -46,7 +46,7 @@ public class WorkflowValidationTest {
   @Test
   public void testIncompleteJsonWithSchemaValidation() {
     WorkflowValidator workflowValidator = new WorkflowValidatorImpl();
-    Collection<ValidationError> validationErrors =
+    List<ValidationError> validationErrors =
         workflowValidator.setSource("{\n" + "  \"id\": \"abc\" \n" + "}").validate();
     Assertions.assertNotNull(validationErrors);
     Assertions.assertEquals(3, validationErrors.size());
@@ -55,7 +55,7 @@ public class WorkflowValidationTest {
   @Test
   public void testIncompleteYamlWithSchemaValidation() {
     WorkflowValidator workflowValidator = new WorkflowValidatorImpl();
-    Collection<ValidationError> validationErrors =
+    List<ValidationError> validationErrors =
         workflowValidator.setSource("---\n" + "key: abc\n").validate();
     Assertions.assertNotNull(validationErrors);
     Assertions.assertEquals(3, validationErrors.size());
@@ -77,22 +77,18 @@ public class WorkflowValidationTest {
                         .withDuration("PT1M")));
 
     WorkflowValidator workflowValidator = new WorkflowValidatorImpl();
-    Collection<ValidationError> validationErrors =
-        workflowValidator.setWorkflow(workflow).validate();
+    List<ValidationError> validationErrors = workflowValidator.setWorkflow(workflow).validate();
     Assertions.assertNotNull(validationErrors);
     Assertions.assertEquals(1, validationErrors.size());
-    Assertions.assertTrue(
-        validationErrors.stream()
-            .anyMatch(
-                v ->
-                    v.getMessage()
-                        .equals("No state name found that matches the workflow start definition")));
+    Assertions.assertEquals(
+        "No state name found that matches the workflow start definition",
+        validationErrors.get(0).getMessage());
   }
 
   @Test
   public void testWorkflowMissingStates() {
     WorkflowValidator workflowValidator = new WorkflowValidatorImpl();
-    Collection<ValidationError> validationErrors =
+    List<ValidationError> validationErrors =
         workflowValidator
             .setSource(
                 "{\n"
@@ -106,14 +102,13 @@ public class WorkflowValidationTest {
     Assertions.assertNotNull(validationErrors);
     Assertions.assertEquals(1, validationErrors.size());
 
-    Assertions.assertTrue(
-        validationErrors.stream().anyMatch(v -> v.getMessage().equals("No states found")));
+    Assertions.assertEquals("No states found", validationErrors.get(0).getMessage());
   }
 
   @Test
   public void testWorkflowMissingStatesIdAndKey() {
     WorkflowValidator workflowValidator = new WorkflowValidatorImpl();
-    Collection<ValidationError> validationErrors =
+    List<ValidationError> validationErrors =
         workflowValidator
             .setSource(
                 "{\n"
@@ -125,14 +120,175 @@ public class WorkflowValidationTest {
             .validate();
     Assertions.assertNotNull(validationErrors);
     Assertions.assertEquals(2, validationErrors.size());
+
     Assertions.assertEquals(
-        validationErrors.stream()
-            .filter(
-                v ->
-                    v.getMessage().equals("No states found")
-                        || v.getMessage().equals("Workflow id or key should not be empty"))
-            .count(),
-        2);
+        "Workflow id or key should not be empty", validationErrors.get(0).getMessage());
+    Assertions.assertEquals("No states found", validationErrors.get(1).getMessage());
+  }
+
+  @Test
+  public void testOperationStateNoFunctionRef() {
+    WorkflowValidator workflowValidator = new WorkflowValidatorImpl();
+    List<ValidationError> validationErrors =
+        workflowValidator
+            .setSource(
+                "{\n"
+                    + "\"id\": \"checkInbox\",\n"
+                    + "\"name\": \"Check Inbox Workflow\",\n"
+                    + "\"description\": \"Periodically Check Inbox\",\n"
+                    + "\"version\": \"1.0\",\n"
+                    + "\"start\": \"CheckInbox\",\n"
+                    + "\"functions\": [\n"
+                    + "\n"
+                    + "],\n"
+                    + "\"states\": [\n"
+                    + "    {\n"
+                    + "        \"name\": \"CheckInbox\",\n"
+                    + "        \"type\": \"operation\",\n"
+                    + "        \"actionMode\": \"sequential\",\n"
+                    + "        \"actions\": [\n"
+                    + "            {\n"
+                    + "                \"functionRef\": {\n"
+                    + "                    \"refName\": \"checkInboxFunction\"\n"
+                    + "                }\n"
+                    + "            }\n"
+                    + "        ],\n"
+                    + "        \"transition\": {\n"
+                    + "            \"nextState\": \"SendTextForHighPrioriry\"\n"
+                    + "        }\n"
+                    + "    },\n"
+                    + "    {\n"
+                    + "        \"name\": \"SendTextForHighPrioriry\",\n"
+                    + "        \"type\": \"foreach\",\n"
+                    + "        \"inputCollection\": \"${ .message }\",\n"
+                    + "        \"iterationParam\": \"${ .singlemessage }\",\n"
+                    + "        \"end\": {\n"
+                    + "            \"kind\": \"default\"\n"
+                    + "        }\n"
+                    + "    }\n"
+                    + "]\n"
+                    + "}")
+            .validate();
+
+    Assertions.assertNotNull(validationErrors);
+    Assertions.assertEquals(1, validationErrors.size());
+
+    Assertions.assertEquals(
+        "Operation State action functionRef does not reference an existing workflow function definition",
+        validationErrors.get(0).getMessage());
+  }
+
+  @Test
+  public void testValidateWorkflowForOptionalStartStateAndWorkflowName() {
+    Workflow workflow =
+        new Workflow()
+            .withId("test-workflow")
+            .withVersion("1.0")
+            .withStates(
+                Arrays.asList(
+                    new SleepState()
+                        .withName("sleepState")
+                        .withType(SLEEP)
+                        .withEnd(new End())
+                        .withDuration("PT1M")));
+
+    WorkflowValidator workflowValidator = new WorkflowValidatorImpl();
+    List<ValidationError> validationErrors = workflowValidator.setWorkflow(workflow).validate();
+    Assertions.assertNotNull(validationErrors);
+    Assertions.assertEquals(0, validationErrors.size());
+  }
+
+  @Test
+  public void testValidateWorkflowForOptionalIterationParam() {
+    WorkflowValidator workflowValidator = new WorkflowValidatorImpl();
+    List<ValidationError> validationErrors =
+        workflowValidator
+            .setSource(
+                "{\n"
+                    + "\"id\": \"checkInbox\",\n"
+                    + "  \"name\": \"Check Inbox Workflow\",\n"
+                    + "\"description\": \"Periodically Check Inbox\",\n"
+                    + "\"version\": \"1.0\",\n"
+                    + "\"start\": \"CheckInbox\",\n"
+                    + "\"functions\": [\n"
+                    + "\n"
+                    + "],\n"
+                    + "\"states\": [\n"
+                    + "    {\n"
+                    + "        \"name\": \"CheckInbox\",\n"
+                    + "        \"type\": \"operation\",\n"
+                    + "        \"actionMode\": \"sequential\",\n"
+                    + "        \"actions\": [\n"
+                    + "            {\n"
+                    + "                \"functionRef\": {\n"
+                    + "                    \"refName\": \"checkInboxFunction\"\n"
+                    + "                }\n"
+                    + "            }\n"
+                    + "        ],\n"
+                    + "        \"transition\": {\n"
+                    + "            \"nextState\": \"SendTextForHighPrioriry\"\n"
+                    + "        }\n"
+                    + "    },\n"
+                    + "    {\n"
+                    + "        \"name\": \"SendTextForHighPrioriry\",\n"
+                    + "        \"type\": \"foreach\",\n"
+                    + "        \"inputCollection\": \"${ .message }\",\n"
+                    + "        \"end\": {\n"
+                    + "            \"kind\": \"default\"\n"
+                    + "        }\n"
+                    + "    }\n"
+                    + "]\n"
+                    + "}")
+            .validate();
+
+    Assertions.assertNotNull(validationErrors);
+    Assertions.assertEquals(
+        1,
+        validationErrors.size()); // validation error raised for functionref not for iterationParam
+  }
+
+  @Test
+  public void testMissingFunctionRefForCallbackState() {
+    WorkflowValidator workflowValidator = new WorkflowValidatorImpl();
+    List<ValidationError> validationErrors =
+        workflowValidator
+            .setSource(
+                "{\n"
+                    + "  \"id\": \"callbackstatemissingfuncref\",\n"
+                    + "  \"version\": \"1.0\",\n"
+                    + "  \"specVersion\": \"0.8\",\n"
+                    + "  \"name\": \"Callback State Test\",\n"
+                    + "  \"start\": \"CheckCredit\",\n"
+                    + "  \"states\": [\n"
+                    + "    {\n"
+                    + "      \"name\": \"CheckCredit\",\n"
+                    + "      \"type\": \"callback\",\n"
+                    + "      \"action\": {\n"
+                    + "        \"functionRef\": {\n"
+                    + "          \"refName\": \"callCreditCheckMicroservice\",\n"
+                    + "          \"arguments\": {\n"
+                    + "            \"customer\": \"${ .customer }\"\n"
+                    + "          }\n"
+                    + "        }\n"
+                    + "      },\n"
+                    + "      \"eventRef\": \"CreditCheckCompletedEvent\",\n"
+                    + "      \"timeouts\": {\n"
+                    + "        \"stateExecTimeout\": \"PT15M\"\n"
+                    + "      },\n"
+                    + "      \"end\": true\n"
+                    + "    }\n"
+                    + "  ]\n"
+                    + "}")
+            .validate();
+
+    Assertions.assertNotNull(validationErrors);
+    Assertions.assertEquals(2, validationErrors.size());
+    Assertions.assertEquals(
+        "CallbackState event ref does not reference a defined workflow event definition",
+        validationErrors.get(0).getMessage());
+    Assertions.assertEquals(
+        "CallbackState action function ref does not reference a defined workflow function definition",
+        validationErrors.get(1).getMessage());
   }
 
   @Test
@@ -177,171 +333,5 @@ public class WorkflowValidationTest {
                                     .withEventRef(new EventRef().withTriggerEventRef("event"))))
                         .withEnd(new End())));
     Assertions.assertTrue(new WorkflowValidatorImpl().setWorkflow(workflow).validate().isEmpty());
-  }
-
-  @Test
-  public void testOperationStateNoFunctionRef() {
-    WorkflowValidator workflowValidator = new WorkflowValidatorImpl();
-    Collection<ValidationError> validationErrors =
-        workflowValidator
-            .setSource(
-                "{\n"
-                    + "\"id\": \"checkInbox\",\n"
-                    + "\"name\": \"Check Inbox Workflow\",\n"
-                    + "\"description\": \"Periodically Check Inbox\",\n"
-                    + "\"version\": \"1.0\",\n"
-                    + "\"start\": \"CheckInbox\",\n"
-                    + "\"functions\": [\n"
-                    + "\n"
-                    + "],\n"
-                    + "\"states\": [\n"
-                    + "    {\n"
-                    + "        \"name\": \"CheckInbox\",\n"
-                    + "        \"type\": \"operation\",\n"
-                    + "        \"actionMode\": \"sequential\",\n"
-                    + "        \"actions\": [\n"
-                    + "            {\n"
-                    + "                \"functionRef\": {\n"
-                    + "                    \"refName\": \"checkInboxFunction\"\n"
-                    + "                }\n"
-                    + "            }\n"
-                    + "        ],\n"
-                    + "        \"transition\": {\n"
-                    + "            \"nextState\": \"SendTextForHighPrioriry\"\n"
-                    + "        }\n"
-                    + "    },\n"
-                    + "    {\n"
-                    + "        \"name\": \"SendTextForHighPrioriry\",\n"
-                    + "        \"type\": \"foreach\",\n"
-                    + "        \"inputCollection\": \"${ .message }\",\n"
-                    + "        \"iterationParam\": \"${ .singlemessage }\",\n"
-                    + "        \"end\": {\n"
-                    + "            \"kind\": \"default\"\n"
-                    + "        }\n"
-                    + "    }\n"
-                    + "]\n"
-                    + "}")
-            .validate();
-
-    Assertions.assertNotNull(validationErrors);
-    Assertions.assertEquals(1, validationErrors.size());
-  }
-
-  @Test
-  public void testValidateWorkflowForOptionalStartStateAndWorkflowName() {
-    Workflow workflow =
-        new Workflow()
-            .withId("test-workflow")
-            .withVersion("1.0")
-            .withStates(
-                Arrays.asList(
-                    new SleepState()
-                        .withName("sleepState")
-                        .withType(SLEEP)
-                        .withEnd(new End())
-                        .withDuration("PT1M")));
-
-    WorkflowValidator workflowValidator = new WorkflowValidatorImpl();
-    Collection<ValidationError> validationErrors =
-        workflowValidator.setWorkflow(workflow).validate();
-    Assertions.assertNotNull(validationErrors);
-    Assertions.assertEquals(0, validationErrors.size());
-  }
-
-  @Test
-  public void testValidateWorkflowForOptionalIterationParam() {
-    WorkflowValidator workflowValidator = new WorkflowValidatorImpl();
-    Collection<ValidationError> validationErrors =
-        workflowValidator
-            .setSource(
-                "{\n"
-                    + "\"id\": \"checkInbox\",\n"
-                    + "  \"name\": \"Check Inbox Workflow\",\n"
-                    + "\"description\": \"Periodically Check Inbox\",\n"
-                    + "\"version\": \"1.0\",\n"
-                    + "\"start\": \"CheckInbox\",\n"
-                    + "\"functions\": [\n"
-                    + "\n"
-                    + "],\n"
-                    + "\"states\": [\n"
-                    + "    {\n"
-                    + "        \"name\": \"CheckInbox\",\n"
-                    + "        \"type\": \"operation\",\n"
-                    + "        \"actionMode\": \"sequential\",\n"
-                    + "        \"actions\": [\n"
-                    + "            {\n"
-                    + "                \"functionRef\": {\n"
-                    + "                    \"refName\": \"checkInboxFunction\"\n"
-                    + "                }\n"
-                    + "            }\n"
-                    + "        ],\n"
-                    + "        \"transition\": {\n"
-                    + "            \"nextState\": \"SendTextForHighPrioriry\"\n"
-                    + "        }\n"
-                    + "    },\n"
-                    + "    {\n"
-                    + "        \"name\": \"SendTextForHighPrioriry\",\n"
-                    + "        \"type\": \"foreach\",\n"
-                    + "        \"inputCollection\": \"${ .message }\",\n"
-                    + "        \"end\": {\n"
-                    + "            \"kind\": \"default\"\n"
-                    + "        }\n"
-                    + "    }\n"
-                    + "]\n"
-                    + "}")
-            .validate();
-
-    Assertions.assertNotNull(validationErrors);
-    Assertions.assertEquals(1, validationErrors.size());
-  }
-
-  @Test
-  public void testMissingFunctionRefForCallbackState() {
-    WorkflowValidator workflowValidator = new WorkflowValidatorImpl();
-    Collection<ValidationError> validationErrors =
-        workflowValidator
-            .setSource(
-                "{\n"
-                    + "  \"id\": \"callbackstatemissingfuncref\",\n"
-                    + "  \"version\": \"1.0\",\n"
-                    + "  \"specVersion\": \"0.8\",\n"
-                    + "  \"name\": \"Callback State Test\",\n"
-                    + "  \"start\": \"CheckCredit\",\n"
-                    + "  \"states\": [\n"
-                    + "    {\n"
-                    + "      \"name\": \"CheckCredit\",\n"
-                    + "      \"type\": \"callback\",\n"
-                    + "      \"action\": {\n"
-                    + "        \"functionRef\": {\n"
-                    + "          \"refName\": \"callCreditCheckMicroservice\",\n"
-                    + "          \"arguments\": {\n"
-                    + "            \"customer\": \"${ .customer }\"\n"
-                    + "          }\n"
-                    + "        }\n"
-                    + "      },\n"
-                    + "      \"eventRef\": \"CreditCheckCompletedEvent\",\n"
-                    + "      \"timeouts\": {\n"
-                    + "        \"stateExecTimeout\": \"PT15M\"\n"
-                    + "      },\n"
-                    + "      \"end\": true\n"
-                    + "    }\n"
-                    + "  ]\n"
-                    + "}")
-            .validate();
-
-    Assertions.assertNotNull(validationErrors);
-    Assertions.assertEquals(2, validationErrors.size());
-    Assertions.assertEquals(
-        validationErrors.stream()
-            .filter(
-                v ->
-                    v.getMessage()
-                            .equals(
-                                "CallbackState event ref does not reference a defined workflow event definition")
-                        || v.getMessage()
-                            .equals(
-                                "CallbackState action function ref does not reference a defined workflow function definition"))
-            .count(),
-        2);
   }
 }
