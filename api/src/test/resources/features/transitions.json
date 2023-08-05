@@ -23,7 +23,11 @@
             "produceEvents": [
               {
                 "eventRef": "provisioningCompleteEvent",
-                "data": "${ .provisionedOrders }"
+                "data": "${ .provisionedOrders }",
+                "contextAttributes": {
+                  "order_location": "IN",
+                  "order_type": "online"
+                }
               }
             ]
           }

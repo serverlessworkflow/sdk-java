@@ -40,6 +40,8 @@ import io.serverlessworkflow.api.test.utils.WorkflowTestUtils;
 import io.serverlessworkflow.api.timeouts.WorkflowExecTimeout;
 import io.serverlessworkflow.api.workflow.*;
 import java.util.List;
+import java.util.Map;
+
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -260,6 +262,11 @@ public class MarkupToWorkflowTest {
     assertEquals("RejectApplication", cond2.getTransition().getNextState());
     assertNotNull(cond2.getTransition().getProduceEvents());
     assertEquals(1, cond2.getTransition().getProduceEvents().size());
+    assertNotNull(cond2.getTransition().getProduceEvents().get(0).getContextAttributes());
+    Map<String, String> contextAttributes = cond2.getTransition().getProduceEvents().get(0).getContextAttributes();
+    assertEquals(2, contextAttributes.size());
+    assertEquals("IN", contextAttributes.get("order_location"));
+    assertEquals("online", contextAttributes.get("order_type"));
     assertFalse(cond2.getTransition().isCompensate());
 
     assertNotNull(switchState.getDefaultCondition());
