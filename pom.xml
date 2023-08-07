@@ -43,7 +43,7 @@
         <version.compiler.plugin>3.8.1</version.compiler.plugin>
         <version.surefire.plugin>2.22.0</version.surefire.plugin>
         <version.failsafe.plugin>2.22.0</version.failsafe.plugin>
-        <version.checkstyle.plugin>3.1.1</version.checkstyle.plugin>
+        <version.checkstyle.plugin>3.3.0</version.checkstyle.plugin>
         <version.deploy.plugin>2.8.2</version.deploy.plugin>
 
         <version.org.slf4j>1.7.25</version.org.slf4j>
