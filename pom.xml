@@ -63,7 +63,7 @@
         <version.json>20230618</version.json>
         <version.thymeleaf>3.0.11.RELEASE</version.thymeleaf>
         <version.plantuml>8059</version.plantuml>
-        <version.graphviz>0.17.0</version.graphviz>
+        <version.graphviz>0.18.1</version.graphviz>
         <version.fmt-maven-plugin>2.9</version.fmt-maven-plugin>
         <version.jar.plugin>3.2.0</version.jar.plugin>
         <!-- Checkstyle props -->
