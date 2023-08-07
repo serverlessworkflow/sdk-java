@@ -44,7 +44,7 @@
         <version.surefire.plugin>2.22.0</version.surefire.plugin>
         <version.failsafe.plugin>2.22.0</version.failsafe.plugin>
         <version.checkstyle.plugin>3.1.1</version.checkstyle.plugin>
-        <version.deploy.plugin>2.8.2</version.deploy.plugin>
+        <version.deploy.plugin>3.1.1</version.deploy.plugin>
 
         <version.org.slf4j>1.7.25</version.org.slf4j>
         <version.com.fasterxml.jackson>2.10.3</version.com.fasterxml.jackson>
