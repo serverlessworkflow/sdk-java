@@ -53,7 +53,7 @@
         <version.org.junit>5.${version.org.junit.minor}</version.org.junit>
         <version.org.junit.jupiter>${version.org.junit}</version.org.junit.jupiter>
         <version.org.mockito>3.0.0</version.org.mockito>
-        <version.ch.qos.logback>1.4.8</version.ch.qos.logback>
+        <version.ch.qos.logback>1.4.9</version.ch.qos.logback>
         <version.org.assertj>3.13.2</version.org.assertj>
         <version.jsonschema2pojo-maven-plugin>1.0.1</version.jsonschema2pojo-maven-plugin>
         <commons.lang.version>3.13.0</commons.lang.version>
