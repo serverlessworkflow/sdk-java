@@ -38,7 +38,7 @@
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <version.maven>3.6.2</version.maven>
-        <version.enforcer.plugin>3.0.0-M2</version.enforcer.plugin>
+        <version.enforcer.plugin>3.3.0</version.enforcer.plugin>
         <version.jdk>${java.version}</version.jdk>
         <version.compiler.plugin>3.8.1</version.compiler.plugin>
         <version.surefire.plugin>2.22.0</version.surefire.plugin>
