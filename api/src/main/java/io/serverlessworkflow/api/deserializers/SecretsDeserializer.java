@@ -18,16 +18,13 @@ package io.serverlessworkflow.api.deserializers;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.serverlessworkflow.api.interfaces.WorkflowPropertySource;
 import io.serverlessworkflow.api.utils.Utils;
 import io.serverlessworkflow.api.workflow.Secrets;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,21 +63,9 @@ public class SecretsDeserializer extends StdDeserializer<Secrets> {
     } else {
       String secretsFileDef = node.asText();
       String secretsFileSrc = Utils.getResourceFileAsString(secretsFileDef);
-      JsonNode secretsRefNode;
-      ObjectMapper jsonWriter = new ObjectMapper();
       if (secretsFileSrc != null && secretsFileSrc.trim().length() > 0) {
         // if its a yaml def convert to json first
-        if (!secretsFileSrc.trim().startsWith("{")) {
-          // convert yaml to json to validate
-          ObjectMapper yamlReader = new ObjectMapper(new YAMLFactory());
-          Object obj = yamlReader.readValue(secretsFileSrc, Object.class);
-
-          secretsRefNode =
-              jsonWriter.readTree(new JSONObject(jsonWriter.writeValueAsString(obj)).toString());
-        } else {
-          secretsRefNode = jsonWriter.readTree(new JSONObject(secretsFileSrc).toString());
-        }
-
+        JsonNode secretsRefNode = Utils.getNode(secretsFileSrc);
         JsonNode refSecrets = secretsRefNode.get("secrets");
         if (refSecrets != null) {
           for (final JsonNode nodeEle : refSecrets) {

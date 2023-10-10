@@ -20,7 +20,6 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.serverlessworkflow.api.events.EventDefinition;
 import io.serverlessworkflow.api.interfaces.WorkflowPropertySource;
 import io.serverlessworkflow.api.utils.Utils;
@@ -28,7 +27,6 @@ import io.serverlessworkflow.api.workflow.Events;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,21 +67,9 @@ public class EventsDeserializer extends StdDeserializer<Events> {
     } else {
       String eventsFileDef = node.asText();
       String eventsFileSrc = Utils.getResourceFileAsString(eventsFileDef);
-      JsonNode eventsRefNode;
-      ObjectMapper jsonWriter = new ObjectMapper();
       if (eventsFileSrc != null && eventsFileSrc.trim().length() > 0) {
         // if its a yaml def convert to json first
-        if (!eventsFileSrc.trim().startsWith("{")) {
-          // convert yaml to json to validate
-          ObjectMapper yamlReader = new ObjectMapper(new YAMLFactory());
-          Object obj = yamlReader.readValue(eventsFileSrc, Object.class);
-
-          eventsRefNode =
-              jsonWriter.readTree(new JSONObject(jsonWriter.writeValueAsString(obj)).toString());
-        } else {
-          eventsRefNode = jsonWriter.readTree(new JSONObject(eventsFileSrc).toString());
-        }
-
+        JsonNode eventsRefNode = Utils.getNode(eventsFileSrc);
         JsonNode refEvents = eventsRefNode.get("events");
         if (refEvents != null) {
           for (final JsonNode nodeEle : refEvents) {
