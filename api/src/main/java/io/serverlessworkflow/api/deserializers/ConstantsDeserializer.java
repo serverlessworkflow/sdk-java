@@ -18,14 +18,11 @@ package io.serverlessworkflow.api.deserializers;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.serverlessworkflow.api.interfaces.WorkflowPropertySource;
 import io.serverlessworkflow.api.utils.Utils;
 import io.serverlessworkflow.api.workflow.Constants;
 import java.io.IOException;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,21 +61,8 @@ public class ConstantsDeserializer extends StdDeserializer<Constants> {
       String constantsFileDef = node.asText();
       constants.setRefValue(constantsFileDef);
       String constantsFileSrc = Utils.getResourceFileAsString(constantsFileDef);
-      JsonNode constantsRefNode;
-      ObjectMapper jsonWriter = new ObjectMapper();
       if (constantsFileSrc != null && constantsFileSrc.trim().length() > 0) {
-        // if its a yaml def convert to json first
-        if (!constantsFileSrc.trim().startsWith("{")) {
-          // convert yaml to json to validate
-          ObjectMapper yamlReader = new ObjectMapper(new YAMLFactory());
-          Object obj = yamlReader.readValue(constantsFileSrc, Object.class);
-
-          constantsRefNode =
-              jsonWriter.readTree(new JSONObject(jsonWriter.writeValueAsString(obj)).toString());
-        } else {
-          constantsRefNode = jsonWriter.readTree(new JSONObject(constantsFileSrc).toString());
-        }
-
+        JsonNode constantsRefNode = Utils.getNode(constantsFileSrc);
         JsonNode refConstants = constantsRefNode.get("constants");
         if (refConstants != null) {
           constantsDefinition = refConstants;

@@ -11,7 +11,6 @@
 
     <artifactId>serverlessworkflow-api</artifactId>
     <name>Serverless Workflow :: API</name>
-    <version>${project.parent.version}</version>
     <packaging>jar</packaging>
     <description>Java SDK for Serverless Workflow Specification</description>
 
@@ -27,31 +26,19 @@
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
-            <version>[2.13.0,)</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-            <version>[2.13.0,)</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.dataformat</groupId>
             <artifactId>jackson-dataformat-yaml</artifactId>
-            <version>[2.13.0,)</version>
         </dependency>
         <dependency>
             <groupId>jakarta.validation</groupId>
             <artifactId>jakarta.validation-api</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.json</groupId>
-            <artifactId>json</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.github.erosb</groupId>
-            <artifactId>everit-json-schema</artifactId>
-        </dependency>
-
         <!-- test -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>

@@ -40,6 +40,8 @@ import io.serverlessworkflow.api.test.utils.WorkflowTestUtils;
 import io.serverlessworkflow.api.timeouts.WorkflowExecTimeout;
 import io.serverlessworkflow.api.workflow.*;
 import java.util.List;
+import java.util.Map;
+
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -101,11 +103,52 @@ public class MarkupToWorkflowTest {
 
   @ParameterizedTest
   @ValueSource(strings = {"/features/applicantrequest.json", "/features/applicantrequest.yml"})
-  public void testSpecFreatureFunctionRef(String workflowLocation) {
+  public void testSpecFeatureFunctionRef(String workflowLocation) {
     Workflow workflow = Workflow.fromSource(WorkflowTestUtils.readWorkflowFile(workflowLocation));
 
     assertNotNull(workflow);
+    assertNull(workflow.getKey());
     assertNotNull(workflow.getId());
+    assertNotNull(workflow.getName());
+    assertNotNull(workflow.getStates());
+    assertTrue(workflow.getStates().size() > 0);
+
+    assertNotNull(workflow.getFunctions());
+    assertEquals(1, workflow.getFunctions().getFunctionDefs().size());
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "/features/applicantrequest-with-key.json",
+        "/features/applicantrequest-with-key.yml"
+      })
+  public void testSpecFeatureFunctionRefWithKey(String workflowLocation) {
+    Workflow workflow = Workflow.fromSource(WorkflowTestUtils.readWorkflowFile(workflowLocation));
+
+    assertNotNull(workflow);
+    assertEquals("applicant-key-request", workflow.getKey());
+    assertNull(workflow.getId());
+    assertNotNull(workflow.getName());
+    assertNotNull(workflow.getStates());
+    assertTrue(workflow.getStates().size() > 0);
+
+    assertNotNull(workflow.getFunctions());
+    assertEquals(1, workflow.getFunctions().getFunctionDefs().size());
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "/features/applicantrequest-with-id-and-key.json",
+        "/features/applicantrequest-with-id-and-key.yml"
+      })
+  public void testSpecFeatureFunctionRefWithIdAndKey(String workflowLocation) {
+    Workflow workflow = Workflow.fromSource(WorkflowTestUtils.readWorkflowFile(workflowLocation));
+
+    assertNotNull(workflow);
+    assertEquals("applicant-key-request", workflow.getKey());
+    assertEquals("applicant-with-key-and-id", workflow.getId());
     assertNotNull(workflow.getName());
     assertNotNull(workflow.getStates());
     assertTrue(workflow.getStates().size() > 0);
@@ -219,6 +262,11 @@ public class MarkupToWorkflowTest {
     assertEquals("RejectApplication", cond2.getTransition().getNextState());
     assertNotNull(cond2.getTransition().getProduceEvents());
     assertEquals(1, cond2.getTransition().getProduceEvents().size());
+    assertNotNull(cond2.getTransition().getProduceEvents().get(0).getContextAttributes());
+    Map<String, String> contextAttributes = cond2.getTransition().getProduceEvents().get(0).getContextAttributes();
+    assertEquals(2, contextAttributes.size());
+    assertEquals("IN", contextAttributes.get("order_location"));
+    assertEquals("online", contextAttributes.get("order_type"));
     assertFalse(cond2.getTransition().isCompensate());
 
     assertNotNull(switchState.getDefaultCondition());

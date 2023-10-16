@@ -13,25 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.api.validation;
+package io.serverlessworkflow.api.mapper;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.IOException;
-import java.io.UncheckedIOException;
 
-public class WorkflowSchemaLoader {
+public class JsonObjectMapperFactory {
 
-  public static JsonNode getWorkflowSchema() {
-    try {
-      return ObjectMapperHolder.objectMapper.readTree(
-          WorkflowSchemaLoader.class.getResourceAsStream("/schema/workflow.json"));
-    } catch (IOException e) {
-      throw new UncheckedIOException(e);
-    }
-  }
+  private static final ObjectMapper instance = new JsonObjectMapper();
 
-  private static class ObjectMapperHolder {
-    public static final ObjectMapper objectMapper = new ObjectMapper();
+  public static final ObjectMapper mapper() {
+    return instance;
   }
 }

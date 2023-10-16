@@ -20,7 +20,6 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.serverlessworkflow.api.auth.AuthDefinition;
 import io.serverlessworkflow.api.interfaces.WorkflowPropertySource;
 import io.serverlessworkflow.api.utils.Utils;
@@ -28,7 +27,6 @@ import io.serverlessworkflow.api.workflow.Auth;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,21 +67,8 @@ public class AuthDeserializer extends StdDeserializer<Auth> {
     } else {
       String authFileDef = node.asText();
       String authFileSrc = Utils.getResourceFileAsString(authFileDef);
-      JsonNode authRefNode;
-      ObjectMapper jsonWriter = new ObjectMapper();
       if (authFileSrc != null && authFileSrc.trim().length() > 0) {
-        // if its a yaml def convert to json first
-        if (!authFileSrc.trim().startsWith("{")) {
-          // convert yaml to json to validate
-          ObjectMapper yamlReader = new ObjectMapper(new YAMLFactory());
-          Object obj = yamlReader.readValue(authFileSrc, Object.class);
-
-          authRefNode =
-              jsonWriter.readTree(new JSONObject(jsonWriter.writeValueAsString(obj)).toString());
-        } else {
-          authRefNode = jsonWriter.readTree(new JSONObject(authFileSrc).toString());
-        }
-
+        JsonNode authRefNode = Utils.getNode(authFileSrc);
         JsonNode refAuth = authRefNode.get("auth");
         if (refAuth != null) {
           for (final JsonNode nodeEle : refAuth) {
