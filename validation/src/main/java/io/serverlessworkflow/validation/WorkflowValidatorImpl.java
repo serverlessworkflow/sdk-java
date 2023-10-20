@@ -359,7 +359,12 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
   }
 
   private static final Set<String> skipMessages =
-      Set.of("$.start: string found, object expected", "$.functions: array found, object expected");
+      new HashSet<String>() {
+        {
+          add("$.start: string found, object expected");
+          add("$.functions: array found, object expected");
+        }
+      };
 
   private void addValidationError(String message, String type) {
     if (skipMessages.contains(message)) {
