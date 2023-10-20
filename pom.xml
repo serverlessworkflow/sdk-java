@@ -91,7 +91,6 @@
     <!-- Checkstyle props -->
     <checkstyle.failOnViolation>true</checkstyle.failOnViolation>
     <checkstyle.header.template><![CDATA[
->>>>>>> fdc9b5f (Introduce Release Workflow)
 ^\/\*$\n^
 \* Copyright \d\d\d\d-Present The Serverless Workflow Specification Authors$\n^
 \*$\n^
