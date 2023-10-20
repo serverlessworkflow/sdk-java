@@ -117,24 +117,18 @@ public final class WorkflowUtils {
         .collect(Collectors.toList());
   }
 
-  /**
-   * @return {@code int} Returns count of defined event count matching eventKind
-   */
+  /** @return {@code int} Returns count of defined event count matching eventKind */
   public static int getDefinedEventsCount(Workflow workflow, EventDefinition.Kind eventKind) {
     List<EventDefinition> definedEvents = getDefinedEvents(workflow, eventKind);
     return definedEvents == null ? 0 : definedEvents.size();
   }
 
-  /**
-   * @return {@code int} Returns count of Defined Consumed Event Count
-   */
+  /** @return {@code int} Returns count of Defined Consumed Event Count */
   public static int getDefinedConsumedEventsCount(Workflow workflow) {
     return getDefinedEventsCount(workflow, EventDefinition.Kind.CONSUMED);
   }
 
-  /**
-   * @return {@code int} Returns count of Defined Produced Event Count
-   */
+  /** @return {@code int} Returns count of Defined Produced Event Count */
   public static int getDefinedProducedEventsCount(Workflow workflow) {
     return getDefinedEventsCount(workflow, EventDefinition.Kind.PRODUCED);
   }
@@ -258,9 +252,7 @@ public final class WorkflowUtils {
     return workflowProducedEvents == null ? 0 : workflowProducedEvents.size();
   }
 
-  /**
-   * @return Returns function definition for actions
-   */
+  /** @return Returns function definition for actions */
   public static FunctionDefinition getFunctionDefinitionsForAction(
       Workflow workflow, String action) {
     if (!hasFunctionDefs(workflow)) return null;
@@ -275,9 +267,7 @@ public final class WorkflowUtils {
     return functionDefinition.isPresent() ? functionDefinition.get() : null;
   }
 
-  /**
-   * @return : Returns @{code List<Action>} which uses a function defintion
-   */
+  /** @return : Returns @{code List<Action>} which uses a function defintion */
   public static List<Action> getActionsForFunctionDefinition(
       Workflow workflow, String functionDefinitionName) {
     if (!hasFunctionDefs(workflow, functionDefinitionName)) return null;
