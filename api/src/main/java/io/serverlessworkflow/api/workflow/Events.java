@@ -17,8 +17,9 @@ package io.serverlessworkflow.api.workflow;
 
 import io.serverlessworkflow.api.events.EventDefinition;
 import java.util.List;
+import java.io.Serializable;
 
-public class Events {
+public class Events implements Serializable {
   private String refValue;
   private List<EventDefinition> eventDefs;
 
