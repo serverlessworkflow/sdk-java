@@ -16,9 +16,10 @@
 package io.serverlessworkflow.api.workflow;
 
 import io.serverlessworkflow.api.error.ErrorDefinition;
+import java.io.Serializable;
 import java.util.List;
 
-public class Errors {
+public class Errors implements Serializable {
   private String refValue;
   private List<ErrorDefinition> errorDefs;
 
