@@ -11,7 +11,8 @@
   "properties": {
     "id": {
       "type": "string",
-      "description": "Workflow unique identifier"
+      "description": "Workflow unique identifier",
+      "minLength": 1
     },
     "key": {
       "type": "string",
