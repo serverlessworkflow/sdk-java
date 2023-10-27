@@ -161,6 +161,7 @@
     }
   },
  "required": [
+        "id",
         "name",
         "version",
         "states"
