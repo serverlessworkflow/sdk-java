@@ -6,7 +6,7 @@
 
   <groupId>io.serverlessworkflow</groupId>
   <artifactId>serverlessworkflow-parent</artifactId>
-  <version>4.0.x</version>
+  <version>4.0.5-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <name>Serverless Workflow :: Parent</name>
@@ -65,6 +65,8 @@
     <version.jar.plugin>3.2.0</version.jar.plugin>
     <version.jdk>${java.version}</version.jdk>
     <version.jsonschema2pojo-maven-plugin>1.0.1</version.jsonschema2pojo-maven-plugin>
+    <version.javadoc.plugin>3.6.0</version.javadoc.plugin>
+    <version.release.plugin>2.3.2</version.release.plugin>
     <version.source.plugin>3.3.0</version.source.plugin>
     <version.surefire.plugin>2.22.0</version.surefire.plugin>
 
