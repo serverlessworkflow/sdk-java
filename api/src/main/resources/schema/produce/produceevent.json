@@ -10,6 +10,11 @@
     "data": {
       "type": "string",
       "description": "Workflow expression which selects parts of the states data output to become the data of the produced event"
+    },
+    "contextAttributes": {
+      "type": "object",
+      "description": "Add additional event extension context attributes",
+      "existingJavaType": "java.util.Map<String, String>"
     }
   },
   "required": [

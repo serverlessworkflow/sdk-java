@@ -20,7 +20,6 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.serverlessworkflow.api.error.ErrorDefinition;
 import io.serverlessworkflow.api.interfaces.WorkflowPropertySource;
 import io.serverlessworkflow.api.utils.Utils;
@@ -28,7 +27,6 @@ import io.serverlessworkflow.api.workflow.Errors;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,21 +67,8 @@ public class ErrorsDeserializer extends StdDeserializer<Errors> {
     } else {
       String errorsFileDef = node.asText();
       String errorsFileSrc = Utils.getResourceFileAsString(errorsFileDef);
-      JsonNode errorsRefNode;
-      ObjectMapper jsonWriter = new ObjectMapper();
       if (errorsFileSrc != null && errorsFileSrc.trim().length() > 0) {
-        // if its a yaml def convert to json first
-        if (!errorsFileSrc.trim().startsWith("{")) {
-          // convert yaml to json to validate
-          ObjectMapper yamlReader = new ObjectMapper(new YAMLFactory());
-          Object obj = yamlReader.readValue(errorsFileSrc, Object.class);
-
-          errorsRefNode =
-              jsonWriter.readTree(new JSONObject(jsonWriter.writeValueAsString(obj)).toString());
-        } else {
-          errorsRefNode = jsonWriter.readTree(new JSONObject(errorsFileSrc).toString());
-        }
-
+        JsonNode errorsRefNode = Utils.getNode(errorsFileSrc);
         JsonNode refErrors = errorsRefNode.get("errors");
         if (refErrors != null) {
           for (final JsonNode nodeEle : refErrors) {
