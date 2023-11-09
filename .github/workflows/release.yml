@@ -50,7 +50,7 @@ jobs:
           mvn -B release:perform -Darguments=-DperformRelease -DperformRelease -Prelease
         env:
           MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
-          MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
+          MAVEN_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
 
       - name: Push changes to ${{github.base_ref}} branch
         run: |
