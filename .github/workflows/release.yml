@@ -48,6 +48,7 @@ jobs:
         run: |
           git checkout -b release
           mvn -B release:prepare -Prelease -DreleaseVersion=${{steps.metadata.outputs.current-version}} -DdevelopmentVersion=${{steps.metadata.outputs.next-version}}
+          cat release.properties
           git checkout ${{github.base_ref}}
           git rebase release
           mvn -B release:perform -Darguments=-DperformRelease -DperformRelease -Prelease
