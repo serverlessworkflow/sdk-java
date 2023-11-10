@@ -46,13 +46,14 @@ jobs:
 
       - name: Maven release ${{steps.metadata.outputs.current-version}}
         run: |
+          git checkout -b release
           mvn -B release:prepare -Prelease -DreleaseVersion=${{steps.metadata.outputs.current-version}} -DdevelopmentVersion=${{steps.metadata.outputs.next-version}}
+          git checkout ${{github.base_ref}}
+          git rebase release
           mvn -B release:perform -Darguments=-DperformRelease -DperformRelease -Prelease
         env:
           MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
 
-      - name: Push changes to ${{github.base_ref}} branch
-        run: |
-          git push
-          git push origin ${{steps.metadata.outputs.current-version}}
+      - name: Push tags
+        run: git push && git push --tags

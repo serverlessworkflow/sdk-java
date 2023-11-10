@@ -66,7 +66,7 @@
     <version.jdk>${java.version}</version.jdk>
     <version.jsonschema2pojo-maven-plugin>1.0.1</version.jsonschema2pojo-maven-plugin>
     <version.javadoc.plugin>3.6.0</version.javadoc.plugin>
-    <version.release.plugin>2.3.2</version.release.plugin>
+    <version.release.plugin>2.5.3</version.release.plugin>
     <version.source.plugin>3.3.0</version.source.plugin>
     <version.surefire.plugin>2.22.0</version.surefire.plugin>
 
@@ -277,6 +277,9 @@
           <groupId>org.apache.maven.plugins</groupId>
           <artifactId>maven-gpg-plugin</artifactId>
           <version>${version.gpg.plugin}</version>
+          <configuration>
+            <skip>true</skip>
+          </configuration>
         </plugin>
         <plugin>
           <artifactId>maven-deploy-plugin</artifactId>
