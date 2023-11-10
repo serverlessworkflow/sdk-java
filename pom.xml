@@ -66,7 +66,7 @@
     <version.jdk>${java.version}</version.jdk>
     <version.jsonschema2pojo-maven-plugin>1.0.1</version.jsonschema2pojo-maven-plugin>
     <version.javadoc.plugin>3.6.0</version.javadoc.plugin>
-    <version.release.plugin>2.3.2</version.release.plugin>
+    <version.release.plugin>3.0.1</version.release.plugin>
     <version.source.plugin>3.3.0</version.source.plugin>
     <version.surefire.plugin>2.22.0</version.surefire.plugin>
 
@@ -433,7 +433,7 @@
 
   <distributionManagement>
     <snapshotRepository>
-      <id>ossrh</id>
+      <id>ossrh-snapshots</id>
       <url>https://oss.sonatype.org/content/repositories/snapshots</url>
     </snapshotRepository>
     <repository>
