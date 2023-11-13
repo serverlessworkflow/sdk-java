@@ -59,7 +59,7 @@
     <version.compiler.plugin>3.8.1</version.compiler.plugin>
     <version.deploy.plugin>2.8.2</version.deploy.plugin>
     <version.enforcer.plugin>3.0.0-M2</version.enforcer.plugin>
-    <version.failsafe.plugin>3.1.2</version.failsafe.plugin>
+    <version.failsafe.plugin>3.2.2</version.failsafe.plugin>
     <version.fmt-maven-plugin>2.21.1</version.fmt-maven-plugin>
     <version.gpg.plugin>3.1.0</version.gpg.plugin>
     <version.jar.plugin>3.2.0</version.jar.plugin>
