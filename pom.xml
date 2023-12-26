@@ -66,7 +66,7 @@
     <version.jdk>${java.version}</version.jdk>
     <version.jsonschema2pojo-maven-plugin>1.0.1</version.jsonschema2pojo-maven-plugin>
     <version.source.plugin>3.3.0</version.source.plugin>
-    <version.surefire.plugin>3.2.2</version.surefire.plugin>
+    <version.surefire.plugin>3.2.3</version.surefire.plugin>
 
 
     <!-- Dependencies versions, please keep in alphabetical order -->
