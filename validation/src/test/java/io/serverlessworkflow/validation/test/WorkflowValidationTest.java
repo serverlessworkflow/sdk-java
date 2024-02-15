@@ -122,7 +122,7 @@ public class WorkflowValidationTest {
     Assertions.assertEquals(1, validationErrors.size());
 
     Assertions.assertEquals(
-        "$.id: is missing but it is required", validationErrors.get(0).getMessage());
+        "$: required property 'id' not found", validationErrors.get(0).getMessage());
   }
 
   @Test
