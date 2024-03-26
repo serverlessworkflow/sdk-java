@@ -15,9 +15,10 @@
  */
 package io.serverlessworkflow.api.workflow;
 
+import java.io.Serializable;
 import java.util.List;
 
-public class Secrets {
+public class Secrets implements Serializable {
   private String refValue;
   private List<String> secretDefs;
 

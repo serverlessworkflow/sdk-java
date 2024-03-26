@@ -16,9 +16,10 @@
 package io.serverlessworkflow.api.workflow;
 
 import io.serverlessworkflow.api.retry.RetryDefinition;
+import java.io.Serializable;
 import java.util.List;
 
-public class Retries {
+public class Retries implements Serializable {
   private String refValue;
   private List<RetryDefinition> retryDefs;
 

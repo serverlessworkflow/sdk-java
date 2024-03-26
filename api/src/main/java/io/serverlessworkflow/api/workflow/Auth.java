@@ -17,10 +17,11 @@
 package io.serverlessworkflow.api.workflow;
 
 import io.serverlessworkflow.api.auth.AuthDefinition;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Auth {
+public class Auth implements Serializable {
   private String refValue;
   private List<AuthDefinition> authDefs;
 
