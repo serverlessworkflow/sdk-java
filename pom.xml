@@ -46,7 +46,6 @@
     <module>utils</module>
   </modules>
 
-<<<<<<< issue_225
     <properties>
       <java.version>11</java.version>
       <maven.compiler.source>${java.version}</maven.compiler.source>
@@ -92,7 +91,6 @@
       <!-- Checkstyle props -->
       <checkstyle.failOnViolation>true</checkstyle.failOnViolation>
       <checkstyle.header.template><![CDATA[
-=======
   <properties>
     <java.version>11</java.version>
     <maven.compiler.source>${java.version}</maven.compiler.source>
@@ -138,7 +136,6 @@
     <!-- Checkstyle props -->
     <checkstyle.failOnViolation>true</checkstyle.failOnViolation>
     <checkstyle.header.template><![CDATA[
->>>>>>> main
 ^\/\*$\n^
 \* Copyright \d\d\d\d-Present The Serverless Workflow Specification Authors$\n^
 \*$\n^
@@ -276,7 +273,6 @@
     </dependencies>
   </dependencyManagement>
 
-<<<<<<< issue_225
     <dependencyManagement>
         <dependencies>
             <dependency>
@@ -340,7 +336,6 @@
                 <artifactId>graphviz-java</artifactId>
                 <version>${version.graphviz}</version>
             </dependency>
-=======
   <build>
     <plugins>
       <!-- Set properties containing the scm revision -->
@@ -381,7 +376,6 @@
         </configuration>
       </plugin>
     </plugins>
->>>>>>> main
 
     <pluginManagement>
       <plugins>
