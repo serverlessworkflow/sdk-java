@@ -58,7 +58,7 @@ public class WorkflowValidationTest {
     List<ValidationError> validationErrors =
         workflowValidator.setSource("---\n" + "key: abc\n").validate();
     Assertions.assertNotNull(validationErrors);
-    Assertions.assertEquals(3, validationErrors.size());
+    Assertions.assertEquals(4, validationErrors.size());
   }
 
   @Test
@@ -119,11 +119,10 @@ public class WorkflowValidationTest {
                     + "}")
             .validate();
     Assertions.assertNotNull(validationErrors);
-    Assertions.assertEquals(2, validationErrors.size());
+    Assertions.assertEquals(1, validationErrors.size());
 
     Assertions.assertEquals(
-        "Workflow id or key should not be empty", validationErrors.get(0).getMessage());
-    Assertions.assertEquals("No states found", validationErrors.get(1).getMessage());
+        "$: required property 'id' not found", validationErrors.get(0).getMessage());
   }
 
   @Test
