@@ -16,9 +16,10 @@
 package io.serverlessworkflow.api.workflow;
 
 import io.serverlessworkflow.api.functions.FunctionDefinition;
+import java.io.Serializable;
 import java.util.List;
 
-public class Functions {
+public class Functions implements Serializable {
   private String refValue;
   private List<FunctionDefinition> functionDefs;
 

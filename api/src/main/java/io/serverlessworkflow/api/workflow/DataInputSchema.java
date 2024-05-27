@@ -16,8 +16,9 @@
 package io.serverlessworkflow.api.workflow;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import java.io.Serializable;
 
-public class DataInputSchema {
+public class DataInputSchema implements Serializable {
   private String refValue;
   private JsonNode schemaDef;
   private boolean failOnValidationErrors = true;
