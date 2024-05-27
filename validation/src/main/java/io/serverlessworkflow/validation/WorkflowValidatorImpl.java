@@ -25,6 +25,7 @@ import io.serverlessworkflow.api.events.OnEvents;
 import io.serverlessworkflow.api.functions.FunctionDefinition;
 import io.serverlessworkflow.api.interfaces.State;
 import io.serverlessworkflow.api.interfaces.WorkflowValidator;
+import io.serverlessworkflow.api.retry.RetryDefinition;
 import io.serverlessworkflow.api.states.*;
 import io.serverlessworkflow.api.switchconditions.DataCondition;
 import io.serverlessworkflow.api.switchconditions.EventCondition;
@@ -78,7 +79,7 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
 
     // if there are schema validation errors
     // there is no point of doing the workflow validation
-    if (validationErrors.size() > 0) {
+    if (!validationErrors.isEmpty()) {
       return validationErrors;
     } else if (workflow == null) {
       workflow = Workflow.fromSource(source);
@@ -99,6 +100,19 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
     if (workflow.getVersion() == null || workflow.getVersion().trim().isEmpty()) {
       addValidationError(
           "Workflow version should not be empty", ValidationError.WORKFLOW_VALIDATION);
+    }
+
+    if (workflow.getRetries() != null && workflow.getRetries().getRetryDefs() != null) {
+      workflow
+          .getRetries()
+          .getRetryDefs()
+          .forEach(
+              r -> {
+                if (r.getName() == null || r.getName().isEmpty()) {
+                  addValidationError(
+                      "Retry name should not be empty", ValidationError.WORKFLOW_VALIDATION);
+                }
+              });
     }
 
     if (workflow.getStates() == null || workflow.getStates().isEmpty()) {
@@ -149,7 +163,7 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
 
                 if (s instanceof EventState) {
                   EventState eventState = (EventState) s;
-                  if (eventState.getOnEvents() == null || eventState.getOnEvents().size() < 1) {
+                  if (eventState.getOnEvents() == null || eventState.getOnEvents().isEmpty()) {
                     addValidationError(
                         "Event State has no eventActions defined",
                         ValidationError.WORKFLOW_VALIDATION);
@@ -158,13 +172,13 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
                   for (OnEvents onEvents : eventsActionsList) {
 
                     List<String> eventRefs = onEvents.getEventRefs();
-                    if (eventRefs == null || eventRefs.size() < 1) {
+                    if (eventRefs == null || eventRefs.isEmpty()) {
                       addValidationError(
                           "Event State eventsActions has no event refs",
                           ValidationError.WORKFLOW_VALIDATION);
                     } else {
                       for (String eventRef : eventRefs) {
-                        if (!haveEventsDefinition(eventRef, events)) {
+                        if (isMissingEventsDefinition(eventRef, events)) {
                           addValidationError(
                               "Event State eventsActions eventRef does not match a declared workflow event definition",
                               ValidationError.WORKFLOW_VALIDATION);
@@ -177,9 +191,9 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
                 if (s instanceof SwitchState) {
                   SwitchState switchState = (SwitchState) s;
                   if ((switchState.getDataConditions() == null
-                          || switchState.getDataConditions().size() < 1)
+                          || switchState.getDataConditions().isEmpty())
                       && (switchState.getEventConditions() == null
-                          || switchState.getEventConditions().size() < 1)) {
+                          || switchState.getEventConditions().isEmpty())) {
                     addValidationError(
                         "Switch state should define either data or event conditions",
                         ValidationError.WORKFLOW_VALIDATION);
@@ -192,10 +206,10 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
                   }
 
                   if (switchState.getEventConditions() != null
-                      && switchState.getEventConditions().size() > 0) {
+                      && !switchState.getEventConditions().isEmpty()) {
                     List<EventCondition> eventConditions = switchState.getEventConditions();
                     for (EventCondition ec : eventConditions) {
-                      if (!haveEventsDefinition(ec.getEventRef(), events)) {
+                      if (isMissingEventsDefinition(ec.getEventRef(), events)) {
                         addValidationError(
                             "Switch state event condition eventRef does not reference a defined workflow event",
                             ValidationError.WORKFLOW_VALIDATION);
@@ -207,7 +221,7 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
                   }
 
                   if (switchState.getDataConditions() != null
-                      && switchState.getDataConditions().size() > 0) {
+                      && !switchState.getDataConditions().isEmpty()) {
                     List<DataCondition> dataConditions = switchState.getDataConditions();
                     for (DataCondition dc : dataConditions) {
                       if (dc.getEnd() != null) {
@@ -219,7 +233,7 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
 
                 if (s instanceof SleepState) {
                   SleepState sleepState = (SleepState) s;
-                  if (sleepState.getDuration() == null || sleepState.getDuration().length() < 1) {
+                  if (sleepState.getDuration() == null || sleepState.getDuration().isEmpty()) {
                     addValidationError(
                         "Sleep state should have a non-empty time delay",
                         ValidationError.WORKFLOW_VALIDATION);
@@ -260,13 +274,13 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
                 if (s instanceof CallbackState) {
                   CallbackState callbackState = (CallbackState) s;
 
-                  if (!haveEventsDefinition(callbackState.getEventRef(), events)) {
+                  if (isMissingEventsDefinition(callbackState.getEventRef(), events)) {
                     addValidationError(
                         "CallbackState event ref does not reference a defined workflow event definition",
                         ValidationError.WORKFLOW_VALIDATION);
                   }
 
-                  if (!haveFunctionDefinition(
+                  if (isMissingFunctionDefinition(
                       callbackState.getAction().getFunctionRef().getRefName(), functions)) {
                     addValidationError(
                         "CallbackState action function ref does not reference a defined workflow function definition",
@@ -316,7 +330,7 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
               ValidationError.WORKFLOW_VALIDATION);
         }
 
-        if (!haveFunctionDefinition(action.getFunctionRef().getRefName(), functions)) {
+        if (isMissingFunctionDefinition(action.getFunctionRef().getRefName(), functions)) {
           addValidationError(
               String.format(
                   "State action '%s' functionRef does not reference an existing workflow function definition",
@@ -327,7 +341,7 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
 
       if (action.getEventRef() != null) {
 
-        if (!haveEventsDefinition(action.getEventRef().getTriggerEventRef(), events)) {
+        if (isMissingEventsDefinition(action.getEventRef().getTriggerEventRef(), events)) {
           addValidationError(
               String.format(
                   "State action '%s' trigger event def does not reference an existing workflow event definition",
@@ -335,7 +349,7 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
               ValidationError.WORKFLOW_VALIDATION);
         }
 
-        if (!haveEventsDefinition(action.getEventRef().getResultEventRef(), events)) {
+        if (isMissingEventsDefinition(action.getEventRef().getResultEventRef(), events)) {
           addValidationError(
               String.format(
                   "State action '%s' results event def does not reference an existing workflow event definition",
@@ -343,35 +357,61 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
               ValidationError.WORKFLOW_VALIDATION);
         }
       }
+
+      if (action.getRetryRef() != null
+              && isMissingRetryDefinition(
+              action.getRetryRef(), workflow.getRetries().getRetryDefs())) {
+        addValidationError(
+                String.format(
+                        "Operation State action '%s' retryRef does not reference an existing workflow retry definition",
+                        action.getName()),
+                ValidationError.WORKFLOW_VALIDATION);
+      }
     }
   }
 
-  private boolean haveFunctionDefinition(String functionName, List<FunctionDefinition> functions) {
+  private boolean isMissingFunctionDefinition(
+      String functionName, List<FunctionDefinition> functions) {
     if (functions != null) {
-      FunctionDefinition fun =
-          functions.stream().filter(f -> f.getName().equals(functionName)).findFirst().orElse(null);
-
-      return fun == null ? false : true;
+      return functions.stream()
+              .filter(f -> f.getName().equals(functionName))
+              .findFirst()
+              .orElse(null)
+          == null;
     } else {
-      return false;
-    }
-  }
-
-  private boolean haveEventsDefinition(String eventName, List<EventDefinition> events) {
-    if (eventName == null) {
       return true;
     }
-    if (events != null) {
-      EventDefinition eve =
-          events.stream().filter(e -> e.getName().equals(eventName)).findFirst().orElse(null);
-      return eve == null ? false : true;
-    } else {
+  }
+
+  private boolean isMissingEventsDefinition(String eventName, List<EventDefinition> events) {
+    if (eventName == null) {
       return false;
+    }
+    if (events != null) {
+      return events.stream().filter(e -> e.getName().equals(eventName)).findFirst().orElse(null)
+          == null;
+    } else {
+      return true;
+    }
+  }
+
+  private boolean isMissingRetryDefinition(String retryName, List<RetryDefinition> retries) {
+    if (retries != null) {
+      return retries.stream()
+              .filter(f -> f.getName() != null && f.getName().equals(retryName))
+              .findFirst()
+              .orElse(null)
+          == null;
+    } else {
+      return true;
     }
   }
 
   private static final Set<String> skipMessages =
-      Set.of("$.start: string found, object expected", "$.functions: array found, object expected");
+      Set.of(
+          "$.start: string found, object expected",
+          "$.functions: array found, object expected",
+          "$.retries: array found, object expected");
 
   private void addValidationError(String message, String type) {
     if (skipMessages.contains(message)) {
