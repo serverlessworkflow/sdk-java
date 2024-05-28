@@ -359,13 +359,12 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
       }
 
       if (action.getRetryRef() != null
-              && isMissingRetryDefinition(
-              action.getRetryRef(), workflow.getRetries().getRetryDefs())) {
+          && isMissingRetryDefinition(action.getRetryRef(), workflow.getRetries().getRetryDefs())) {
         addValidationError(
-                String.format(
-                        "Operation State action '%s' retryRef does not reference an existing workflow retry definition",
-                        action.getName()),
-                ValidationError.WORKFLOW_VALIDATION);
+            String.format(
+                "Operation State action '%s' retryRef does not reference an existing workflow retry definition",
+                action.getName()),
+            ValidationError.WORKFLOW_VALIDATION);
       }
     }
   }
@@ -391,8 +390,8 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
   }
 
   private boolean isMissingRetryDefinition(String retryName, List<RetryDefinition> retries) {
-    return retries == null || ! retries.stream()
-              .anyMatch(f -> f.getName() != null && f.getName().equals(retryName));
+    return retries == null
+        || !retries.stream().anyMatch(f -> f.getName() != null && f.getName().equals(retryName));
   }
 
   private static final Set<String> skipMessages =
