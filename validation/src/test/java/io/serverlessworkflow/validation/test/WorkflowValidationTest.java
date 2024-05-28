@@ -367,4 +367,69 @@ public class WorkflowValidationTest {
         "State action 'callFn' functionRef does not reference an existing workflow function definition",
         validationErrors.get(0).getMessage());
   }
+
+  /**
+   * @see <a href="https://github.com/serverlessworkflow/sdk-java/issues/213">Retry definition
+   *     validation doesn't work</a>
+   */
+  @Test
+  public void testValidateRetry() {
+    WorkflowValidator workflowValidator = new WorkflowValidatorImpl();
+    List<ValidationError> validationErrors =
+        workflowValidator
+            .setSource(
+                "{\n"
+                    + "  \"id\": \"workflow_1\",\n"
+                    + "  \"name\": \"workflow_1\",\n"
+                    + "  \"description\": \"workflow_1\",\n"
+                    + "  \"version\": \"1.0\",\n"
+                    + "  \"specVersion\": \"0.8\",\n"
+                    + "  \"start\": \"Task1\",\n"
+                    + "  \"functions\": [\n"
+                    + "    {\n"
+                    + "      \"name\": \"increment\",\n"
+                    + "      \"type\": \"custom\",\n"
+                    + "      \"operation\": \"worker\"\n"
+                    + "    }\n"
+                    + "  ],\n"
+                    + "  \"retries\": [\n"
+                    + "    {\n"
+                    + "      \"maxAttempts\": 3\n"
+                    + "    },\n"
+                    + "    {\n"
+                    + "      \"name\": \"testRetry\" \n"
+                    + "    }\n"
+                    + "  ],\n"
+                    + "  \"states\": [\n"
+                    + "    {\n"
+                    + "      \"name\": \"Task1\",\n"
+                    + "      \"type\": \"operation\",\n"
+                    + "      \"actionMode\": \"sequential\",\n"
+                    + "      \"actions\": [\n"
+                    + "        {\n"
+                    + "          \"functionRef\": {\n"
+                    + "            \"refName\": \"increment\",\n"
+                    + "            \"arguments\": {\n"
+                    + "              \"input\": \"some text\"\n"
+                    + "            }\n"
+                    + "          },\n"
+                    + "          \"retryRef\": \"const\",\n"
+                    + "          \"actionDataFilter\": {\n"
+                    + "            \"toStateData\": \"${ .result }\"\n"
+                    + "          }\n"
+                    + "        }\n"
+                    + "      ],\n"
+                    + "      \"end\": true\n"
+                    + "    }\n"
+                    + "  ]\n"
+                    + "}")
+            .validate();
+
+    Assertions.assertNotNull(validationErrors);
+    Assertions.assertEquals(2, validationErrors.size());
+    Assertions.assertEquals("Retry name should not be empty", validationErrors.get(0).getMessage());
+    Assertions.assertEquals(
+        "Operation State action 'null' retryRef does not reference an existing workflow retry definition",
+        validationErrors.get(1).getMessage());
+  }
 }
