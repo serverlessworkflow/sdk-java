@@ -373,11 +373,7 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
   private boolean isMissingFunctionDefinition(
       String functionName, List<FunctionDefinition> functions) {
     if (functions != null) {
-      return functions.stream()
-              .filter(f -> f.getName().equals(functionName))
-              .findFirst()
-              .orElse(null)
-          == null;
+      return !functions.stream().anyMatch(f -> f.getName().equals(functionName));
     } else {
       return true;
     }
@@ -388,23 +384,15 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
       return false;
     }
     if (events != null) {
-      return events.stream().filter(e -> e.getName().equals(eventName)).findFirst().orElse(null)
-          == null;
+      return !events.stream().anyMatch(e -> e.getName().equals(eventName));
     } else {
       return true;
     }
   }
 
   private boolean isMissingRetryDefinition(String retryName, List<RetryDefinition> retries) {
-    if (retries != null) {
-      return retries.stream()
-              .filter(f -> f.getName() != null && f.getName().equals(retryName))
-              .findFirst()
-              .orElse(null)
-          == null;
-    } else {
-      return true;
-    }
+    return retries == null || ! retries.stream()
+              .anyMatch(f -> f.getName() != null && f.getName().equals(retryName));
   }
 
   private static final Set<String> skipMessages =
