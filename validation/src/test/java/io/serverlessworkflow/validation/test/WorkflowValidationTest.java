@@ -18,9 +18,11 @@ package io.serverlessworkflow.validation.test;
 import static io.serverlessworkflow.api.states.DefaultState.Type.OPERATION;
 import static io.serverlessworkflow.api.states.DefaultState.Type.SLEEP;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.serverlessworkflow.api.Workflow;
 import io.serverlessworkflow.api.actions.Action;
 import io.serverlessworkflow.api.end.End;
+import io.serverlessworkflow.api.error.ErrorDefinition;
 import io.serverlessworkflow.api.events.EventDefinition;
 import io.serverlessworkflow.api.events.EventRef;
 import io.serverlessworkflow.api.functions.FunctionDefinition;
@@ -30,9 +32,11 @@ import io.serverlessworkflow.api.interfaces.WorkflowValidator;
 import io.serverlessworkflow.api.retry.RetryDefinition;
 import io.serverlessworkflow.api.start.Start;
 import io.serverlessworkflow.api.states.ForEachState;
+import io.serverlessworkflow.api.states.InjectState;
 import io.serverlessworkflow.api.states.OperationState;
 import io.serverlessworkflow.api.states.SleepState;
 import io.serverlessworkflow.api.validation.ValidationError;
+import io.serverlessworkflow.api.workflow.Errors;
 import io.serverlessworkflow.api.workflow.Events;
 import io.serverlessworkflow.api.workflow.Functions;
 import io.serverlessworkflow.api.workflow.Retries;
@@ -376,60 +380,83 @@ public class WorkflowValidationTest {
   public void testValidateRetry() {
     WorkflowValidator workflowValidator = new WorkflowValidatorImpl();
     List<ValidationError> validationErrors =
-        workflowValidator
-            .setSource(
-                "{\n"
-                    + "  \"id\": \"workflow_1\",\n"
-                    + "  \"name\": \"workflow_1\",\n"
-                    + "  \"description\": \"workflow_1\",\n"
-                    + "  \"version\": \"1.0\",\n"
-                    + "  \"specVersion\": \"0.8\",\n"
-                    + "  \"start\": \"Task1\",\n"
-                    + "  \"functions\": [\n"
-                    + "    {\n"
-                    + "      \"name\": \"increment\",\n"
-                    + "      \"type\": \"custom\",\n"
-                    + "      \"operation\": \"worker\"\n"
-                    + "    }\n"
-                    + "  ],\n"
-                    + "  \"retries\": [\n"
-                    + "    {\n"
-                    + "      \"maxAttempts\": 3\n"
-                    + "    },\n"
-                    + "    {\n"
-                    + "      \"name\": \"testRetry\" \n"
-                    + "    }\n"
-                    + "  ],\n"
-                    + "  \"states\": [\n"
-                    + "    {\n"
-                    + "      \"name\": \"Task1\",\n"
-                    + "      \"type\": \"operation\",\n"
-                    + "      \"actionMode\": \"sequential\",\n"
-                    + "      \"actions\": [\n"
-                    + "        {\n"
-                    + "          \"functionRef\": {\n"
-                    + "            \"refName\": \"increment\",\n"
-                    + "            \"arguments\": {\n"
-                    + "              \"input\": \"some text\"\n"
-                    + "            }\n"
-                    + "          },\n"
-                    + "          \"retryRef\": \"const\",\n"
-                    + "          \"actionDataFilter\": {\n"
-                    + "            \"toStateData\": \"${ .result }\"\n"
-                    + "          }\n"
-                    + "        }\n"
-                    + "      ],\n"
-                    + "      \"end\": true\n"
-                    + "    }\n"
-                    + "  ]\n"
-                    + "}")
-            .validate();
+            workflowValidator
+                    .setSource(
+                            "{\n"
+                                    + "  \"id\": \"workflow_1\",\n"
+                                    + "  \"name\": \"workflow_1\",\n"
+                                    + "  \"description\": \"workflow_1\",\n"
+                                    + "  \"version\": \"1.0\",\n"
+                                    + "  \"specVersion\": \"0.8\",\n"
+                                    + "  \"start\": \"Task1\",\n"
+                                    + "  \"functions\": [\n"
+                                    + "    {\n"
+                                    + "      \"name\": \"increment\",\n"
+                                    + "      \"type\": \"custom\",\n"
+                                    + "      \"operation\": \"worker\"\n"
+                                    + "    }\n"
+                                    + "  ],\n"
+                                    + "  \"retries\": [\n"
+                                    + "    {\n"
+                                    + "      \"maxAttempts\": 3\n"
+                                    + "    },\n"
+                                    + "    {\n"
+                                    + "      \"name\": \"testRetry\" \n"
+                                    + "    }\n"
+                                    + "  ],\n"
+                                    + "  \"states\": [\n"
+                                    + "    {\n"
+                                    + "      \"name\": \"Task1\",\n"
+                                    + "      \"type\": \"operation\",\n"
+                                    + "      \"actionMode\": \"sequential\",\n"
+                                    + "      \"actions\": [\n"
+                                    + "        {\n"
+                                    + "          \"functionRef\": {\n"
+                                    + "            \"refName\": \"increment\",\n"
+                                    + "            \"arguments\": {\n"
+                                    + "              \"input\": \"some text\"\n"
+                                    + "            }\n"
+                                    + "          },\n"
+                                    + "          \"retryRef\": \"const\",\n"
+                                    + "          \"actionDataFilter\": {\n"
+                                    + "            \"toStateData\": \"${ .result }\"\n"
+                                    + "          }\n"
+                                    + "        }\n"
+                                    + "      ],\n"
+                                    + "      \"end\": true\n"
+                                    + "    }\n"
+                                    + "  ]\n"
+                                    + "}")
+                    .validate();
 
     Assertions.assertNotNull(validationErrors);
     Assertions.assertEquals(2, validationErrors.size());
     Assertions.assertEquals("Retry name should not be empty", validationErrors.get(0).getMessage());
     Assertions.assertEquals(
-        "Operation State action 'null' retryRef does not reference an existing workflow retry definition",
-        validationErrors.get(1).getMessage());
+            "Operation State action 'null' retryRef does not reference an existing workflow retry definition",
+            validationErrors.get(1).getMessage());
+  }
+
+  /**
+   * @see <a href="https://github.com/serverlessworkflow/sdk-java/issues/232">WorkflowValidator
+   *     validate Wrokflow.tojson(workflow) failed</a>
+   */
+  @Test
+  void testErrorsArrayParsing() {
+    final Workflow workflow =
+        new Workflow()
+            .withId("test-workflow")
+            .withName("test-workflow")
+            .withVersion("1.0")
+            .withStart(new Start().withStateName("testingErrors"))
+            .withErrors(new Errors(Arrays.asList(new ErrorDefinition())))
+            .withStates(
+                Arrays.asList(
+                    new InjectState()
+                        .withName("testingErrors")
+                        .withData(new ObjectMapper().createObjectNode().put("name", "Skywalker"))
+                        .withEnd(new End())));
+    Assertions.assertTrue(
+        new WorkflowValidatorImpl().setSource(Workflow.toJson(workflow)).isValid());
   }
 }

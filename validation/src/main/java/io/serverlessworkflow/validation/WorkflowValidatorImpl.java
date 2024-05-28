@@ -44,8 +44,8 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
 
   private static final Logger logger = LoggerFactory.getLogger(WorkflowValidatorImpl.class);
   private boolean schemaValidationEnabled = true;
-  private List<ValidationError> validationErrors = new ArrayList<>();
-  private JsonNode workflowSchema = WorkflowSchemaLoader.getWorkflowSchema();
+  private final List<ValidationError> validationErrors = new ArrayList<>();
+  private final JsonNode workflowSchema = WorkflowSchemaLoader.getWorkflowSchema();
   private String source;
   private Workflow workflow;
 
@@ -398,7 +398,8 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
       Set.of(
           "$.start: string found, object expected",
           "$.functions: array found, object expected",
-          "$.retries: array found, object expected");
+          "$.retries: array found, object expected",
+          "$.errors: array found, object expected");
 
   private void addValidationError(String message, String type) {
     if (skipMessages.contains(message)) {
