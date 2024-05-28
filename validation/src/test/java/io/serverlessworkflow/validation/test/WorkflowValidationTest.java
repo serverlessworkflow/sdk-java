@@ -29,6 +29,7 @@ import io.serverlessworkflow.api.functions.FunctionRef;
 import io.serverlessworkflow.api.interfaces.WorkflowValidator;
 import io.serverlessworkflow.api.retry.RetryDefinition;
 import io.serverlessworkflow.api.start.Start;
+import io.serverlessworkflow.api.states.ForEachState;
 import io.serverlessworkflow.api.states.OperationState;
 import io.serverlessworkflow.api.states.SleepState;
 import io.serverlessworkflow.api.validation.ValidationError;
@@ -173,7 +174,7 @@ public class WorkflowValidationTest {
     Assertions.assertEquals(1, validationErrors.size());
 
     Assertions.assertEquals(
-        "Operation State action functionRef does not reference an existing workflow function definition",
+        "State action 'null' functionRef does not reference an existing workflow function definition",
         validationErrors.get(0).getMessage());
   }
 
@@ -332,5 +333,38 @@ public class WorkflowValidationTest {
                                     .withEventRef(new EventRef().withTriggerEventRef("event"))))
                         .withEnd(new End())));
     Assertions.assertTrue(new WorkflowValidatorImpl().setWorkflow(workflow).validate().isEmpty());
+  }
+
+  /**
+   * @see <a href="https://github.com/serverlessworkflow/sdk-java/issues/212">Validation missing out
+   *     on refname in foreach>actions</a>
+   */
+  @Test
+  void testActionDefForEach() {
+    Workflow workflow =
+        new Workflow()
+            .withId("test-workflow")
+            .withVersion("1.0")
+            .withStart(new Start().withStateName("TestingForEach"))
+            .withFunctions(new Functions(Arrays.asList(new FunctionDefinition("Test"))))
+            .withStates(
+                Arrays.asList(
+                    new ForEachState()
+                        .withName("TestingForEach")
+                        .withInputCollection("${ .archives }")
+                        .withIterationParam("archive")
+                        .withOutputCollection("${ .output}")
+                        .withActions(
+                            Arrays.asList(
+                                new Action()
+                                    .withName("callFn")
+                                    .withFunctionRef(new FunctionRef("DoesNotExist"))))
+                        .withEnd(new End())));
+    final List<ValidationError> validationErrors =
+        new WorkflowValidatorImpl().setWorkflow(workflow).validate();
+    Assertions.assertEquals(1, validationErrors.size());
+    Assertions.assertEquals(
+        "State action 'callFn' functionRef does not reference an existing workflow function definition",
+        validationErrors.get(0).getMessage());
   }
 }

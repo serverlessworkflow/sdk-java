@@ -144,40 +144,7 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
 
                 if (s instanceof OperationState) {
                   OperationState operationState = (OperationState) s;
-
-                  List<Action> actions = operationState.getActions();
-                  for (Action action : actions) {
-                    if (action.getFunctionRef() != null) {
-                      if (action.getFunctionRef().getRefName().isEmpty()) {
-                        addValidationError(
-                            "Operation State action functionRef should not be null or empty",
-                            ValidationError.WORKFLOW_VALIDATION);
-                      }
-
-                      if (!haveFunctionDefinition(
-                          action.getFunctionRef().getRefName(), functions)) {
-                        addValidationError(
-                            "Operation State action functionRef does not reference an existing workflow function definition",
-                            ValidationError.WORKFLOW_VALIDATION);
-                      }
-                    }
-
-                    if (action.getEventRef() != null) {
-
-                      if (!haveEventsDefinition(
-                          action.getEventRef().getTriggerEventRef(), events)) {
-                        addValidationError(
-                            "Operation State action trigger event def does not reference an existing workflow event definition",
-                            ValidationError.WORKFLOW_VALIDATION);
-                      }
-
-                      if (!haveEventsDefinition(action.getEventRef().getResultEventRef(), events)) {
-                        addValidationError(
-                            "Operation State action results event def does not reference an existing workflow event definition",
-                            ValidationError.WORKFLOW_VALIDATION);
-                      }
-                    }
-                  }
+                  checkActionsDefinition(operationState.getActions(), functions, events);
                 }
 
                 if (s instanceof EventState) {
@@ -281,6 +248,7 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
 
                 if (s instanceof ForEachState) {
                   ForEachState forEachState = (ForEachState) s;
+                  checkActionsDefinition(forEachState.getActions(), functions, events);
                   if (forEachState.getInputCollection() == null
                       || forEachState.getInputCollection().isEmpty()) {
                     addValidationError(
@@ -332,6 +300,50 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
     validationErrors.clear();
     schemaValidationEnabled = true;
     return this;
+  }
+
+  private void checkActionsDefinition(
+      List<Action> actions, List<FunctionDefinition> functions, List<EventDefinition> events) {
+    if (actions == null) {
+      return;
+    }
+    for (Action action : actions) {
+      if (action.getFunctionRef() != null) {
+        if (action.getFunctionRef().getRefName().isEmpty()) {
+          addValidationError(
+              String.format(
+                  "State action '%s' functionRef should not be null or empty", action.getName()),
+              ValidationError.WORKFLOW_VALIDATION);
+        }
+
+        if (!haveFunctionDefinition(action.getFunctionRef().getRefName(), functions)) {
+          addValidationError(
+              String.format(
+                  "State action '%s' functionRef does not reference an existing workflow function definition",
+                  action.getName()),
+              ValidationError.WORKFLOW_VALIDATION);
+        }
+      }
+
+      if (action.getEventRef() != null) {
+
+        if (!haveEventsDefinition(action.getEventRef().getTriggerEventRef(), events)) {
+          addValidationError(
+              String.format(
+                  "State action '%s' trigger event def does not reference an existing workflow event definition",
+                  action.getName()),
+              ValidationError.WORKFLOW_VALIDATION);
+        }
+
+        if (!haveEventsDefinition(action.getEventRef().getResultEventRef(), events)) {
+          addValidationError(
+              String.format(
+                  "State action '%s' results event def does not reference an existing workflow event definition",
+                  action.getName()),
+              ValidationError.WORKFLOW_VALIDATION);
+        }
+      }
+    }
   }
 
   private boolean haveFunctionDefinition(String functionName, List<FunctionDefinition> functions) {
