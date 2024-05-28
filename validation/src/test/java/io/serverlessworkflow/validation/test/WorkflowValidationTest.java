@@ -380,61 +380,61 @@ public class WorkflowValidationTest {
   public void testValidateRetry() {
     WorkflowValidator workflowValidator = new WorkflowValidatorImpl();
     List<ValidationError> validationErrors =
-            workflowValidator
-                    .setSource(
-                            "{\n"
-                                    + "  \"id\": \"workflow_1\",\n"
-                                    + "  \"name\": \"workflow_1\",\n"
-                                    + "  \"description\": \"workflow_1\",\n"
-                                    + "  \"version\": \"1.0\",\n"
-                                    + "  \"specVersion\": \"0.8\",\n"
-                                    + "  \"start\": \"Task1\",\n"
-                                    + "  \"functions\": [\n"
-                                    + "    {\n"
-                                    + "      \"name\": \"increment\",\n"
-                                    + "      \"type\": \"custom\",\n"
-                                    + "      \"operation\": \"worker\"\n"
-                                    + "    }\n"
-                                    + "  ],\n"
-                                    + "  \"retries\": [\n"
-                                    + "    {\n"
-                                    + "      \"maxAttempts\": 3\n"
-                                    + "    },\n"
-                                    + "    {\n"
-                                    + "      \"name\": \"testRetry\" \n"
-                                    + "    }\n"
-                                    + "  ],\n"
-                                    + "  \"states\": [\n"
-                                    + "    {\n"
-                                    + "      \"name\": \"Task1\",\n"
-                                    + "      \"type\": \"operation\",\n"
-                                    + "      \"actionMode\": \"sequential\",\n"
-                                    + "      \"actions\": [\n"
-                                    + "        {\n"
-                                    + "          \"functionRef\": {\n"
-                                    + "            \"refName\": \"increment\",\n"
-                                    + "            \"arguments\": {\n"
-                                    + "              \"input\": \"some text\"\n"
-                                    + "            }\n"
-                                    + "          },\n"
-                                    + "          \"retryRef\": \"const\",\n"
-                                    + "          \"actionDataFilter\": {\n"
-                                    + "            \"toStateData\": \"${ .result }\"\n"
-                                    + "          }\n"
-                                    + "        }\n"
-                                    + "      ],\n"
-                                    + "      \"end\": true\n"
-                                    + "    }\n"
-                                    + "  ]\n"
-                                    + "}")
-                    .validate();
+        workflowValidator
+            .setSource(
+                "{\n"
+                    + "  \"id\": \"workflow_1\",\n"
+                    + "  \"name\": \"workflow_1\",\n"
+                    + "  \"description\": \"workflow_1\",\n"
+                    + "  \"version\": \"1.0\",\n"
+                    + "  \"specVersion\": \"0.8\",\n"
+                    + "  \"start\": \"Task1\",\n"
+                    + "  \"functions\": [\n"
+                    + "    {\n"
+                    + "      \"name\": \"increment\",\n"
+                    + "      \"type\": \"custom\",\n"
+                    + "      \"operation\": \"worker\"\n"
+                    + "    }\n"
+                    + "  ],\n"
+                    + "  \"retries\": [\n"
+                    + "    {\n"
+                    + "      \"maxAttempts\": 3\n"
+                    + "    },\n"
+                    + "    {\n"
+                    + "      \"name\": \"testRetry\" \n"
+                    + "    }\n"
+                    + "  ],\n"
+                    + "  \"states\": [\n"
+                    + "    {\n"
+                    + "      \"name\": \"Task1\",\n"
+                    + "      \"type\": \"operation\",\n"
+                    + "      \"actionMode\": \"sequential\",\n"
+                    + "      \"actions\": [\n"
+                    + "        {\n"
+                    + "          \"functionRef\": {\n"
+                    + "            \"refName\": \"increment\",\n"
+                    + "            \"arguments\": {\n"
+                    + "              \"input\": \"some text\"\n"
+                    + "            }\n"
+                    + "          },\n"
+                    + "          \"retryRef\": \"const\",\n"
+                    + "          \"actionDataFilter\": {\n"
+                    + "            \"toStateData\": \"${ .result }\"\n"
+                    + "          }\n"
+                    + "        }\n"
+                    + "      ],\n"
+                    + "      \"end\": true\n"
+                    + "    }\n"
+                    + "  ]\n"
+                    + "}")
+            .validate();
 
     Assertions.assertNotNull(validationErrors);
     Assertions.assertEquals(2, validationErrors.size());
     Assertions.assertEquals("Retry name should not be empty", validationErrors.get(0).getMessage());
     Assertions.assertEquals(
-            "Operation State action 'null' retryRef does not reference an existing workflow retry definition",
-            validationErrors.get(1).getMessage());
+        "Operation State action 'null' retryRef does not reference an existing workflow retry definition",
+        validationErrors.get(1).getMessage());
   }
 
   /**
@@ -458,5 +458,67 @@ public class WorkflowValidationTest {
                         .withEnd(new End())));
     Assertions.assertTrue(
         new WorkflowValidatorImpl().setSource(Workflow.toJson(workflow)).isValid());
+  }
+
+  /**
+   * @see <a href="https://github.com/serverlessworkflow/sdk-java/issues/357">Error parsing Oauth
+   *     properties in cncf spec using java sdk</a>
+   */
+  @Test
+  void testOAuthPropertiesDefinition() {
+    final Workflow workflow =
+        Workflow.fromSource(
+            "{\n"
+                + "  \"version\": \"1.0.0\",\n"
+                + "  \"id\": \"greeting-workflow\", \n"
+                + "  \"specVersion\": \"0.8\",\n"
+                + "  \"name\": \"greeting-workflow\",\n"
+                + "  \"description\": \"Greet Someone\",\n"
+                + "  \"start\": \"greet\",\n"
+                + "  \"auth\": [\n"
+                + "    {\n"
+                + "      \"name\": \"serviceCloud\",\n"
+                + "      \"scheme\": \"oauth2\",\n"
+                + "      \"properties\": {\n"
+                + "        \"scopes\": [\"$$$$XXXMMMMM\"],\n"
+                + "        \"audiences\": [\"%%%XXXXXXX\"],\n"
+                + "        \"clientId\": \"whatever\",\n"
+                + "        \"grantType\": \"password\"\n"
+                + "      }\n"
+                + "    }\n"
+                + "  ],\n"
+                + "  \"functions\": [\n"
+                + "    {\n"
+                + "      \"name\": \"greeting-function\",\n"
+                + "      \"type\": \"rest\",\n"
+                + "      \"operation\": \"file://myapis/greetingapis.json#greeting\"\n"
+                + "    }\n"
+                + "  ],\n"
+                + "  \"states\": [\n"
+                + "    {\n"
+                + "      \"name\": \"greet\",\n"
+                + "      \"type\": \"operation\",\n"
+                + "      \"actions\": [\n"
+                + "        {\n"
+                + "          \"name\": \"greet-action\",\n"
+                + "          \"functionRef\": {\n"
+                + "            \"refName\": \"greeting-function\",\n"
+                + "            \"arguments\": {\n"
+                + "              \"name\": \"${ .person.name }\"\n"
+                + "            }\n"
+                + "          },\n"
+                + "          \"actionDataFilter\": {\n"
+                + "            \"results\": \"${ {greeting: .greeting} }\"\n"
+                + "          }\n"
+                + "        }\n"
+                + "      ],\n"
+                + "      \"end\": true\n"
+                + "    }\n"
+                + "  ]\n"
+                + "}\n");
+    final List<ValidationError> validationErrors =
+        new WorkflowValidatorImpl().setWorkflow(workflow).validate();
+
+    Assertions.assertTrue(validationErrors.isEmpty());
   }
 }
