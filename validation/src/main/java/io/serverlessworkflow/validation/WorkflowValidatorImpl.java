@@ -399,7 +399,8 @@ public class WorkflowValidatorImpl implements WorkflowValidator {
           "$.start: string found, object expected",
           "$.functions: array found, object expected",
           "$.retries: array found, object expected",
-          "$.errors: array found, object expected");
+          "$.errors: array found, object expected",
+          "$.auth: array found, object expected");
 
   private void addValidationError(String message, String type) {
     if (skipMessages.contains(message)) {
