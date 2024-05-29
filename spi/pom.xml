@@ -1,12 +1,10 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
         <groupId>io.serverlessworkflow</groupId>
         <artifactId>serverlessworkflow-parent</artifactId>
-        <version>5.0.0-SNAPSHOT</version>
+        <version>5.0.0.Final</version>
     </parent>
 
     <artifactId>serverlessworkflow-spi</artifactId>
@@ -68,13 +66,13 @@
                     <checkstyleRules>
                         <module name="Checker">
                             <module name="RegexpHeader">
-                                <property name="header" value="${checkstyle.header.template}"/>
-                                <property name="fileExtensions" value="${checkstyle.header.extensions}"/>
+                                <property name="header" value="${checkstyle.header.template}" />
+                                <property name="fileExtensions" value="${checkstyle.header.extensions}" />
                             </module>
                             <module name="TreeWalker">
                                 <module name="RegexpSinglelineJava">
-                                    <property name="format" value="@author"/>
-                                    <property name="message" value="No @author tag allowed"/>
+                                    <property name="format" value="@author" />
+                                    <property name="message" value="No @author tag allowed" />
                                 </module>
                             </module>
                         </module>
