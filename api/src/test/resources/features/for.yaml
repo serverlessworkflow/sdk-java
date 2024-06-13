@@ -1,0 +1,12 @@
+document:
+  dsl: 1.0.0-alpha1
+  namespace: default
+  name: for
+do:
+  forEachColor:
+    for:
+      each: color
+      in: '.colors'
+    do:
+      set:
+        processed: '${ { colors: (.processed.colors + [ $color ]), indexes: (.processed.indexes + [ $index ])} }'

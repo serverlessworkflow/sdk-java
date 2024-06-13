@@ -18,10 +18,6 @@
             <artifactId>slf4j-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>jcl-over-slf4j</artifactId>
-        </dependency>
-        <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-core</artifactId>
         </dependency>
@@ -37,6 +33,7 @@
             <groupId>jakarta.validation</groupId>
             <artifactId>jakarta.validation-api</artifactId>
         </dependency>
+ 
         <!-- test -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -77,13 +74,18 @@
                 <groupId>org.jsonschema2pojo</groupId>
                 <artifactId>jsonschema2pojo-maven-plugin</artifactId>
                 <configuration>
-                    <sourceDirectory>${basedir}/src/main/resources/schema</sourceDirectory>
+                   <sourceDirectory>${basedir}/src/main/resources/schema</sourceDirectory>
+                   <!--The comment below is left intentionally in case jsonschema2pojo one day accepts https urls. That day we can remove the file from schema dir and use directly the real schema-->
+                   <!-- <sourcePaths>
+                      <sourcePath>https://raw.githubusercontent.com/serverlessworkflow/specification/main/schema/workflow.yaml</sourcePath>
+                    </sourcePaths> -->
+                    <sourceType>yamlschema</sourceType>
                     <targetPackage>io.serverlessworkflow.api.types</targetPackage>
                     <outputDirectory>${project.build.directory}/generated-sources/src/main/java</outputDirectory>
                     <includeJsr303Annotations>true</includeJsr303Annotations>
                     <generateBuilders>true</generateBuilders>
-                    <initializeCollections>false</initializeCollections>
-                    <includeAdditionalProperties>false</includeAdditionalProperties>
+                    <initializeCollections>true</initializeCollections>
+                    <includeAdditionalProperties>true</includeAdditionalProperties>
                     <includeToString>false</includeToString>
                     <includeHashcodeAndEquals>false</includeHashcodeAndEquals>
                     <includeConstructors>true</includeConstructors>
@@ -92,7 +94,15 @@
                     <targetVersion>${java.version}</targetVersion>
                     <usePrimitives>true</usePrimitives>
                     <useJakartaValidation>true</useJakartaValidation>
+                    <customRuleFactory>io.serverlessworkflow.generator.UnreferencedFactory</customRuleFactory>
                 </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>io.serverlessworkflow</groupId>
+                        <artifactId>custom-generator</artifactId>
+                        <version>${project.version}</version>
+                    </dependency>
+                </dependencies>
                 <executions>
                     <execution>
                         <goals>

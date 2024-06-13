@@ -50,22 +50,17 @@
 
     <!-- Plugin versions, please keep in alphabetical order -->
     <version.buildnumber.plugin>3.2.0</version.buildnumber.plugin>
-    <version.checkstyle.plugin>3.4.0</version.checkstyle.plugin>
+    <version.checkstyle.plugin>3.3.1</version.checkstyle.plugin>
     <version.compiler.plugin>3.13.0</version.compiler.plugin>
     <version.deploy.plugin>3.1.2</version.deploy.plugin>
-    <version.enforcer.plugin>3.5.0</version.enforcer.plugin>
+    <version.enforcer.plugin>3.0.0-M2</version.enforcer.plugin>
     <version.failsafe.plugin>3.2.5</version.failsafe.plugin>
     <version.fmt-maven-plugin>2.23</version.fmt-maven-plugin>
     <version.gpg.plugin>3.2.4</version.gpg.plugin>
     <version.jar.plugin>3.4.1</version.jar.plugin>
     <version.jdk>${java.version}</version.jdk>
-<<<<<<< Upstream, based on main
-    <version.jsonschema2pojo-maven-plugin>1.1.2</version.jsonschema2pojo-maven-plugin>
-    <version.javadoc.plugin>3.7.0</version.javadoc.plugin>
-=======
     <version.jsonschema2pojo-maven-plugin>1.2.1</version.jsonschema2pojo-maven-plugin>
-    <version.javadoc.plugin>3.6.3</version.javadoc.plugin>
->>>>>>> 008f450 [Fix_#359] Migration to 0.10 DSL
+    <version.javadoc.plugin>3.7.0</version.javadoc.plugin>
     <version.release.plugin>3.0.1</version.release.plugin>
     <version.source.plugin>3.3.1</version.source.plugin>
     <version.surefire.plugin>3.2.5</version.surefire.plugin>
