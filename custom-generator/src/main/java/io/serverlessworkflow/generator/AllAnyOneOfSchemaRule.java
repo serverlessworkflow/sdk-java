@@ -11,7 +11,10 @@ import com.sun.codemodel.JType;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLDecoder;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Optional;
+import java.util.Set;
 import org.jsonschema2pojo.Jsonschema2Pojo;
 import org.jsonschema2pojo.Schema;
 import org.jsonschema2pojo.exception.GenerationException;
@@ -99,18 +102,40 @@ public class AllAnyOneOfSchemaRule extends SchemaRule {
       Schema parentSchema) {
     if (schemaNode.has("oneOf")) {
       int i = 0;
+      Set<JType> oneOfClasses = new HashSet<>();
       for (JsonNode oneOf : (ArrayNode) schemaNode.get("oneOf")) {
-          apply(
-              nodeName,
-              oneOf,
-              parent,
-              generatableType.getPackage(),
-              ruleFactory
-                  .getSchemaStore()
-                  .create(
-                      URI.create(parentSchema.getId().toString() + "/oneOf/" + i++),
-                      ruleFactory.getGenerationConfig().getRefFragmentPathDelimiters()));
+        oneOfClasses.add(
+            apply(
+                nodeName,
+                oneOf,
+                parent,
+                generatableType.getPackage(),
+                ruleFactory
+                    .getSchemaStore()
+                    .create(
+                        URI.create(parentSchema.getId().toString() + "/oneOf/" + i++),
+                        ruleFactory.getGenerationConfig().getRefFragmentPathDelimiters())));
       }
+
+      Set<JClass> commonAncestors = null;
+      for (JType oneOfClass : oneOfClasses) {
+        Set<JClass> ancestors = new LinkedHashSet<>();
+        while (oneOfClass instanceof JClass) {
+          JClass parentClass = ((JClass) oneOfClass)._extends();
+          if (parentClass instanceof JClass && !parentClass.name().equals("Object")) {
+            ancestors.add(parentClass);
+          }
+          oneOfClass = parentClass;
+        }
+        if (commonAncestors == null) {
+          commonAncestors = ancestors;
+        } else {
+          commonAncestors.retainAll(ancestors);
+        }
+      }
+      return commonAncestors.isEmpty()
+          ? Optional.empty()
+          : Optional.of(commonAncestors.iterator().next());
     }
     return Optional.empty();
   }
