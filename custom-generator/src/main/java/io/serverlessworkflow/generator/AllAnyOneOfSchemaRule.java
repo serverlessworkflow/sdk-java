@@ -2,30 +2,33 @@ package io.serverlessworkflow.generator;
 
 import static org.apache.commons.lang3.StringUtils.*;
 
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.sun.codemodel.JClass;
 import com.sun.codemodel.JClassContainer;
 import com.sun.codemodel.JDefinedClass;
+import com.sun.codemodel.JFieldVar;
+import com.sun.codemodel.JMethod;
+import com.sun.codemodel.JMod;
 import com.sun.codemodel.JType;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLDecoder;
+import java.util.Collection;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.Optional;
-import java.util.Set;
 import org.jsonschema2pojo.Jsonschema2Pojo;
 import org.jsonschema2pojo.Schema;
 import org.jsonschema2pojo.exception.GenerationException;
 import org.jsonschema2pojo.rules.RuleFactory;
 import org.jsonschema2pojo.rules.SchemaRule;
 
-public class AllAnyOneOfSchemaRule extends SchemaRule {
+class AllAnyOneOfSchemaRule extends SchemaRule {
 
   private RuleFactory ruleFactory;
 
-  protected AllAnyOneOfSchemaRule(RuleFactory ruleFactory) {
+  AllAnyOneOfSchemaRule(RuleFactory ruleFactory) {
     super(ruleFactory);
     this.ruleFactory = ruleFactory;
   }
@@ -39,12 +42,14 @@ public class AllAnyOneOfSchemaRule extends SchemaRule {
       Schema schema) {
 
     Optional<JType> refType = refType(nodeName, schemaNode, parent, generatableType, schema);
-    Optional<JType> oneOfType = oneOfType(nodeName, schemaNode, parent, generatableType, schema);
+    Collection<JType> unionTypes = new HashSet<>();
 
-    Optional<JType> justOne = justOne(refType, oneOfType);
+    unionType("oneOf", nodeName, schemaNode, parent, generatableType, schema, unionTypes);
+    unionType("anyOf", nodeName, schemaNode, parent, generatableType, schema, unionTypes);
+    unionType("allOf", nodeName, schemaNode, parent, generatableType, schema, unionTypes);
 
-    if (!schemaNode.has("properties") && justOne.isPresent()) {
-      return justOne.get();
+    if (!schemaNode.has("properties") && unionTypes.isEmpty() && refType.isPresent()) {
+      return refType.get();
     }
 
     JType javaType =
@@ -56,55 +61,48 @@ public class AllAnyOneOfSchemaRule extends SchemaRule {
 
     if (javaType instanceof JDefinedClass) {
       JDefinedClass definedClass = (JDefinedClass) javaType;
-      if (justOne.filter(JClass.class::isInstance).isPresent()) {
-        definedClass._extends((JClass) justOne.get());
-      } else {
-        wrapIt(definedClass, refType, oneOfType);
-      }
+      refType.ifPresent(
+          type -> {
+            if (type instanceof JClass) {
+              definedClass._extends((JClass) type);
+            } else {
+              wrapIt(definedClass, type);
+            }
+          });
+      unionTypes.forEach(unionType -> wrapIt(definedClass, unionType));
     }
     schema.setJavaTypeIfEmpty(javaType);
 
     return javaType;
   }
 
-  @SafeVarargs
-  private void wrapIt(JDefinedClass definedClass, Optional<JType>... optionals) {
-    for (Optional<JType> optional : optionals) {
-      optional.ifPresent(c -> wrapIt(definedClass, c));
-    }
+  private void wrapIt(JDefinedClass definedClass, JType unionType) {
+    JFieldVar instanceField =
+        definedClass.field(
+            JMod.PRIVATE,
+            unionType,
+            ruleFactory.getNameHelper().getPropertyName(unionType.name(), null));
+    instanceField.annotate(JsonUnwrapped.class);
+    JMethod method =
+        definedClass.method(
+            JMod.PUBLIC,
+            unionType,
+            ruleFactory.getNameHelper().getGetterName(unionType.name(), unionType, null));
+    method.body()._return(instanceField);
   }
 
-  private void wrapIt(JDefinedClass definedClass, JType type) {
-    // TODO include all paremeters of given type into the defined class
-  }
-
-  @SafeVarargs
-  private Optional<JType> justOne(Optional<JType>... optionals) {
-
-    Optional<JType> result = Optional.empty();
-    for (Optional<JType> optional : optionals) {
-      if (optional.isPresent()) {
-        if (result.isPresent()) {
-          return Optional.empty();
-        } else {
-          result = optional;
-        }
-      }
-    }
-    return result;
-  }
-
-  private Optional<JType> oneOfType(
+  private void unionType(
+      String prefix,
       String nodeName,
       JsonNode schemaNode,
       JsonNode parent,
       JClassContainer generatableType,
-      Schema parentSchema) {
-    if (schemaNode.has("oneOf")) {
+      Schema parentSchema,
+      Collection<JType> types) {
+    if (schemaNode.has(prefix)) {
       int i = 0;
-      Set<JType> oneOfClasses = new HashSet<>();
-      for (JsonNode oneOf : (ArrayNode) schemaNode.get("oneOf")) {
-        oneOfClasses.add(
+      for (JsonNode oneOf : (ArrayNode) schemaNode.get(prefix)) {
+        types.add(
             apply(
                 nodeName,
                 oneOf,
@@ -113,31 +111,10 @@ public class AllAnyOneOfSchemaRule extends SchemaRule {
                 ruleFactory
                     .getSchemaStore()
                     .create(
-                        URI.create(parentSchema.getId().toString() + "/oneOf/" + i++),
+                        URI.create(parentSchema.getId().toString() + '/' + prefix + '/' + i++),
                         ruleFactory.getGenerationConfig().getRefFragmentPathDelimiters())));
       }
-
-      Set<JClass> commonAncestors = null;
-      for (JType oneOfClass : oneOfClasses) {
-        Set<JClass> ancestors = new LinkedHashSet<>();
-        while (oneOfClass instanceof JClass) {
-          JClass parentClass = ((JClass) oneOfClass)._extends();
-          if (parentClass instanceof JClass && !parentClass.name().equals("Object")) {
-            ancestors.add(parentClass);
-          }
-          oneOfClass = parentClass;
-        }
-        if (commonAncestors == null) {
-          commonAncestors = ancestors;
-        } else {
-          commonAncestors.retainAll(ancestors);
-        }
-      }
-      return commonAncestors.isEmpty()
-          ? Optional.empty()
-          : Optional.of(commonAncestors.iterator().next());
     }
-    return Optional.empty();
   }
 
   private Optional<JType> refType(

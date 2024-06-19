@@ -1,21 +1,13 @@
 document:
   dsl: 1.0.0-alpha1
   namespace: default
-  name: non-object-output
+  name: output-filtering
 do:
-  getPetById1:
-    call: http
-    with:
-      method: get
-      endpoint:
-        uri: https://petstore.swagger.io/v2/pet/{petId} #simple interpolation, only possible with top level variables
-    output:
-      from: .id
-  getPetById2:
-    call: http
-    with:
-      method: get
-      endpoint:
-        uri: https://petstore.swagger.io/v2/pet/2
-    output:
-      from: '{ ids: [ $input, .id ] }'
+  - getPet:
+      call: http
+      with:
+        method: get
+        endpoint:
+          uri: https://petstore.swagger.io/v2/pet/{petId} #simple interpolation, only possible with top level variables
+      output:
+        as: .id #filters the output of the http call, using only the id of the returned object

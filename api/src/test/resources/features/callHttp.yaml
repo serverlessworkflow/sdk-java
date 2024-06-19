@@ -1,13 +1,12 @@
 document:
   dsl: 1.0.0-alpha1
   namespace: default
-  name: http-call-with-content-output
+  name: http-call-with-response-output
 do:
-  getFirstAvailablePet:
-    call: http
-    with:
-      method: get
-      endpoint:
-        uri: https://petstore.swagger.io/v2/pet/findByStatus?status={status}
-      output:
-       from: .[0]
+  - getPet:
+      call: http
+      with:
+        method: get
+        endpoint:
+          uri: https://petstore.swagger.io/v2/pet/{petId}
+        output: response

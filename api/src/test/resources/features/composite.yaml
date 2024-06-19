@@ -1,17 +1,16 @@
 document:
-  dsl: 1.0.0-alpha1
-  namespace: default
-  name: composite-sequential
+      dsl: 1.0.0-alpha1
+      namespace: default
+      name: do
 do:
-  setRGB:
-    execute:
-      sequentially:
-        setRed:
-          set:
-            colors: ${ .colors + ["red"] }
-        setGreen:
-          set:
-            colors: ${ .colors + ["green"] }
-        setBlue:
-          set:
-            colors: ${ .colors + ["blue"] }
+  - compositeExample:
+    do:
+      - setRed:
+        set:
+          colors: ${ .colors + ["red"] }
+      - setGreen:
+        set:
+          colors: ${ .colors + ["green"] }
+      - setBlue:
+        set:
+          colors: ${ .colors + ["blue"] }

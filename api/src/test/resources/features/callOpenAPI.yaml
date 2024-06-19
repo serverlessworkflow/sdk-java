@@ -3,13 +3,13 @@ document:
   namespace: default
   name: openapi-call-with-content-output
 do:
-  getPetsByStatus:
-    call: openapi
-    with:
-      document:
-        uri: https://petstore.swagger.io/v2/swagger.json
-      operation: findPetsByStatus
-      parameters:
-        status: ${ .status }
-    output:
-      from: . | length
+  - findPet:
+      call: openapi
+      with:
+        document:
+          uri: "https://petstore.swagger.io/v2/swagger.json"
+        operation: findPetsByStatus
+        parameters:
+          status: ${ .status }
+      output:
+        from: . | length
