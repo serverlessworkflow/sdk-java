@@ -6,11 +6,13 @@ import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.sun.codemodel.JClass;
+import com.sun.codemodel.JClassAlreadyExistsException;
 import com.sun.codemodel.JClassContainer;
 import com.sun.codemodel.JDefinedClass;
 import com.sun.codemodel.JFieldVar;
 import com.sun.codemodel.JMethod;
 import com.sun.codemodel.JMod;
+import com.sun.codemodel.JPackage;
 import com.sun.codemodel.JType;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
@@ -48,32 +50,60 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
     unionType("anyOf", nodeName, schemaNode, parent, generatableType, schema, unionTypes);
     unionType("allOf", nodeName, schemaNode, parent, generatableType, schema, unionTypes);
 
-    if (!schemaNode.has("properties") && unionTypes.isEmpty() && refType.isPresent()) {
-      return refType.get();
+    JType javaType;
+    if (schemaNode.has("enum")) {
+      javaType =
+          ruleFactory.getEnumRule().apply(nodeName, schemaNode, parent, generatableType, schema);
+    } else if (!schemaNode.has("properties") && unionTypes.isEmpty() && refType.isPresent()) {
+      javaType = refType.get();
+
+    } else {
+      javaType =
+          ruleFactory
+              .getTypeRule()
+              .apply(nodeName, schemaNode, parent, generatableType.getPackage(), schema);
+      if (javaType instanceof JDefinedClass) {
+        populateClass((JDefinedClass) javaType, refType, unionTypes);
+      } else if (isCandidateForCreation(unionTypes)) {
+        javaType = createUnionClass(nodeName, generatableType.getPackage(), refType, unionTypes);
+      }
+      schema.setJavaTypeIfEmpty(javaType);
     }
-
-    JType javaType =
-        schemaNode.has("enum")
-            ? ruleFactory.getEnumRule().apply(nodeName, schemaNode, parent, generatableType, schema)
-            : ruleFactory
-                .getTypeRule()
-                .apply(nodeName, schemaNode, parent, generatableType.getPackage(), schema);
-
-    if (javaType instanceof JDefinedClass) {
-      JDefinedClass definedClass = (JDefinedClass) javaType;
-      refType.ifPresent(
-          type -> {
-            if (type instanceof JClass) {
-              definedClass._extends((JClass) type);
-            } else {
-              wrapIt(definedClass, type);
-            }
-          });
-      unionTypes.forEach(unionType -> wrapIt(definedClass, unionType));
-    }
-    schema.setJavaTypeIfEmpty(javaType);
-
     return javaType;
+  }
+
+  private boolean isCandidateForCreation(Collection<JType> unionTypes) {
+    return !unionTypes.isEmpty()
+        && unionTypes.stream()
+            .allMatch(
+                o ->
+                    o instanceof JClass
+                        && !((JClass) o).isPrimitive()
+                        && !o.name().equals("String"));
+  }
+
+  private JDefinedClass populateClass(
+      JDefinedClass definedClass, Optional<JType> refType, Collection<JType> unionTypes) {
+    unionTypes.forEach(unionType -> wrapIt(definedClass, unionType));
+    refType.ifPresent(
+        type -> {
+          if (type instanceof JClass) {
+            definedClass._extends((JClass) type);
+          } else {
+            wrapIt(definedClass, type);
+          }
+        });
+    return definedClass;
+  }
+
+  private JDefinedClass createUnionClass(
+      String nodeName, JPackage container, Optional<JType> refType, Collection<JType> unionTypes) {
+    String className = ruleFactory.getNameHelper().getUniqueClassName(nodeName, null, container);
+    try {
+      return populateClass(container._class(className), refType, unionTypes);
+    } catch (JClassAlreadyExistsException e) {
+      throw new IllegalArgumentException(e);
+    }
   }
 
   private void wrapIt(JDefinedClass definedClass, JType unionType) {
@@ -102,17 +132,17 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
     if (schemaNode.has(prefix)) {
       int i = 0;
       for (JsonNode oneOf : (ArrayNode) schemaNode.get(prefix)) {
+        String ref = parentSchema.getId().toString() + '/' + prefix + '/' + i++;
+        Schema schema =
+            ruleFactory
+                .getSchemaStore()
+                .create(
+                    URI.create(ref),
+                    ruleFactory.getGenerationConfig().getRefFragmentPathDelimiters());
         types.add(
-            apply(
-                nodeName,
-                oneOf,
-                parent,
-                generatableType.getPackage(),
-                ruleFactory
-                    .getSchemaStore()
-                    .create(
-                        URI.create(parentSchema.getId().toString() + '/' + prefix + '/' + i++),
-                        ruleFactory.getGenerationConfig().getRefFragmentPathDelimiters())));
+            schema.isGenerated()
+                ? schema.getJavaType()
+                : apply(nodeName, oneOf, parent, generatableType.getPackage(), schema));
       }
     }
   }

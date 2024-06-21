@@ -15,6 +15,7 @@
  */
 package io.serverlessworkflow.api;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
@@ -39,7 +40,8 @@ class ObjectMapperFactory {
     return mapper
         .configure(SerializationFeature.INDENT_OUTPUT, true)
         .configure(SerializationFeature.WRITE_EMPTY_JSON_ARRAYS, false)
-        .configure(SerializationFeature.WRITE_NULL_MAP_VALUES, false);
+        .configure(SerializationFeature.WRITE_NULL_MAP_VALUES, false)
+        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
   }
 
   private ObjectMapperFactory() {}
