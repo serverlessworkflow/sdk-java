@@ -4,7 +4,7 @@ document:
       name: do
 do:
   - compositeExample:
-    do:
+      do:
       - setRed:
         set:
           colors: ${ .colors + ["red"] }

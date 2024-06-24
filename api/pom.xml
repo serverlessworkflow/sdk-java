@@ -90,6 +90,7 @@
                     <includeHashcodeAndEquals>false</includeHashcodeAndEquals>
                     <includeConstructors>true</includeConstructors>
                     <constructorsRequiredPropertiesOnly>true</constructorsRequiredPropertiesOnly>
+                    <useTitleAsClassname>true</useTitleAsClassname>
                     <serializable>true</serializable>
                     <targetVersion>${java.version}</targetVersion>
                     <usePrimitives>true</usePrimitives>
