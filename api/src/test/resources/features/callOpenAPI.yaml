@@ -8,8 +8,8 @@ do:
       with:
         document:
           uri: "https://petstore.swagger.io/v2/swagger.json"
-        operation: findPetsByStatus
+        operationId: findPetsByStatus
         parameters:
           status: ${ .status }
       output:
-        from: . | length
+        as: . | length

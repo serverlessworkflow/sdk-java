@@ -13,22 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.generator;
+package io.serverlessworkflow.api;
 
-import com.sun.codemodel.JClassContainer;
-import com.sun.codemodel.JDefinedClass;
-import com.sun.codemodel.JType;
-import org.jsonschema2pojo.rules.Rule;
-import org.jsonschema2pojo.rules.RuleFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
+import java.io.IOException;
+import java.lang.reflect.Method;
 
-public class UnreferencedFactory extends RuleFactory {
-  @Override
-  public Rule<JClassContainer, JType> getSchemaRule() {
-    return new AllAnyOneOfSchemaRule(this);
-  }
-
-  @Override
-  public Rule<JDefinedClass, JDefinedClass> getAdditionalPropertiesRule() {
-    return new UnevaluatedPropertiesRule(this);
+public class SerializeHelper {
+  public static void serialize(JsonGenerator jgen, Object item) throws IOException {
+    try {
+      for (Method m : item.getClass().getDeclaredMethods()) {
+        Object value = m.invoke(item);
+        if (value != null) {
+          jgen.writeObject(value);
+          break;
+        }
+      }
+    } catch (ReflectiveOperationException ex) {
+      throw new IOException(ex);
+    }
   }
 }

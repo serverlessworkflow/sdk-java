@@ -6,11 +6,11 @@ do:
   - compositeExample:
       do:
       - setRed:
-        set:
-          colors: ${ .colors + ["red"] }
+          set:
+            colors: ${ .colors + ["red"] }
       - setGreen:
-        set:
-          colors: ${ .colors + ["green"] }
+          set:
+            colors: ${ .colors + ["green"] }
       - setBlue:
-        set:
-          colors: ${ .colors + ["blue"] }
+          set:
+            colors: ${ .colors + ["blue"] }

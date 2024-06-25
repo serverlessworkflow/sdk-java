@@ -1,14 +1,29 @@
+/*
+ * Copyright 2020-Present The Serverless Workflow Specification Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package io.serverlessworkflow.generator;
 
 import static org.apache.commons.lang3.StringUtils.*;
 
-import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.sun.codemodel.JClass;
 import com.sun.codemodel.JClassAlreadyExistsException;
 import com.sun.codemodel.JClassContainer;
 import com.sun.codemodel.JDefinedClass;
+import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JFieldVar;
 import com.sun.codemodel.JMethod;
 import com.sun.codemodel.JMod;
@@ -93,6 +108,10 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
             wrapIt(definedClass, type);
           }
         });
+    if (definedClass.constructors().hasNext()
+        && definedClass.getConstructor(new JType[0]) == null) {
+      definedClass.constructor(JMod.PUBLIC);
+    }
     return definedClass;
   }
 
@@ -112,13 +131,17 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
             JMod.PRIVATE,
             unionType,
             ruleFactory.getNameHelper().getPropertyName(unionType.name(), null));
-    instanceField.annotate(JsonUnwrapped.class);
     JMethod method =
         definedClass.method(
             JMod.PUBLIC,
             unionType,
             ruleFactory.getNameHelper().getGetterName(unionType.name(), unionType, null));
     method.body()._return(instanceField);
+    JMethod constructor = definedClass.constructor(JMod.PUBLIC);
+    constructor
+        .body()
+        .assign(
+            JExpr._this().ref(instanceField), constructor.param(unionType, instanceField.name()));
   }
 
   private void unionType(

@@ -13,22 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.generator;
+package io.serverlessworkflow.api;
 
-import com.sun.codemodel.JClassContainer;
-import com.sun.codemodel.JDefinedClass;
-import com.sun.codemodel.JType;
-import org.jsonschema2pojo.rules.Rule;
-import org.jsonschema2pojo.rules.RuleFactory;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import io.serverlessworkflow.api.types.CallTask;
+import java.io.IOException;
 
-public class UnreferencedFactory extends RuleFactory {
+class CallTaskSerializer extends JsonSerializer<CallTask> {
   @Override
-  public Rule<JClassContainer, JType> getSchemaRule() {
-    return new AllAnyOneOfSchemaRule(this);
-  }
-
-  @Override
-  public Rule<JDefinedClass, JDefinedClass> getAdditionalPropertiesRule() {
-    return new UnevaluatedPropertiesRule(this);
+  public void serialize(CallTask value, JsonGenerator gen, SerializerProvider serializers)
+      throws IOException {
+    SerializeHelper.serialize(gen, value);
   }
 }

@@ -16,7 +16,7 @@ Serverless Workflow Java SDK is **not** a workflow runtime implementation but ca
 
 | Latest Releases | Conformance to spec version |
 | :---: | :---: |
-| [7.0.0.Final](https://github.com/serverlessworkflow/sdk-java/releases/tag/7.0.0.Final) | [v0.10](https://github.com/serverlessworkflow/specification/tree/0.10.x) |
+| [7.0.0.Final](https://github.com/serverlessworkflow/sdk-java/releases/tag/7.0.0.Final) | [v1.0.0](https://github.com/serverlessworkflow/specification/tree/1.0.x) |
 | [5.0.0.Final](https://github.com/serverlessworkflow/sdk-java/releases/tag/5.0.0.Final) | [v0.8](https://github.com/serverlessworkflow/specification/tree/0.8.x) |
 | [4.0.5.Final](https://github.com/serverlessworkflow/sdk-java/releases/tag/4.0.5.Final) | [v0.8](https://github.com/serverlessworkflow/specification/tree/0.8.x) |
 | [3.0.0.Final](https://github.com/serverlessworkflow/sdk-java/releases/tag/3.0.0.Final) | [v0.7](https://github.com/serverlessworkflow/specification/tree/0.7.x) |
