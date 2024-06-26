@@ -25,6 +25,6 @@ class CallTaskSerializer extends JsonSerializer<CallTask> {
   @Override
   public void serialize(CallTask value, JsonGenerator gen, SerializerProvider serializers)
       throws IOException {
-    SerializeHelper.serialize(gen, value);
+    SerializeHelper.serializeOneOf(gen, value);
   }
 }

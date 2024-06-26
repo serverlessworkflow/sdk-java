@@ -18,21 +18,14 @@ package io.serverlessworkflow.api;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
-import io.serverlessworkflow.api.types.CallAsyncAPI;
-import io.serverlessworkflow.api.types.CallGRPC;
-import io.serverlessworkflow.api.types.CallHTTP;
-import io.serverlessworkflow.api.types.CallOpenAPI;
-import io.serverlessworkflow.api.types.CallTask;
+import io.serverlessworkflow.api.types.Task;
+import io.serverlessworkflow.api.types.TaskItem;
 import java.io.IOException;
-import java.util.List;
 
-class CallTaskDeserializer extends JsonDeserializer<CallTask> {
+class TaskItemDeserializer extends JsonDeserializer<TaskItem> {
 
   @Override
-  public CallTask deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-    return DeserializeHelper.deserializeOneOf(
-        p,
-        CallTask.class,
-        List.of(CallHTTP.class, CallAsyncAPI.class, CallOpenAPI.class, CallGRPC.class));
+  public TaskItem deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+    return DeserializeHelper.deserializeItem(p, TaskItem.class, Task.class);
   }
 }

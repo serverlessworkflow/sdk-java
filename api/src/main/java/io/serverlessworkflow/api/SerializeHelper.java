@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 
 public class SerializeHelper {
-  public static void serialize(JsonGenerator jgen, Object item) throws IOException {
+  public static void serializeOneOf(JsonGenerator jgen, Object item) throws IOException {
     try {
       for (Method m : item.getClass().getDeclaredMethods()) {
         Object value = m.invoke(item);

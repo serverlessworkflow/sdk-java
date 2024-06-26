@@ -24,7 +24,7 @@ import java.util.Collection;
 
 public class DeserializeHelper {
 
-  public static <T> T deserialize(
+  public static <T> T deserializeOneOf(
       JsonParser p, Class<T> targetClass, Collection<Class<?>> unionTypes) throws IOException {
     TreeNode node = p.readValueAsTree();
     JsonProcessingException ex = new JsonMappingException("Problem deserializing " + targetClass);
@@ -37,5 +37,18 @@ public class DeserializeHelper {
       }
     }
     throw ex;
+  }
+
+  public static <T> T deserializeItem(JsonParser p, Class<T> targetClass, Class<?> valueClass)
+      throws IOException {
+    TreeNode node = p.readValueAsTree();
+    String fieldName = node.fieldNames().next();
+    try {
+      return targetClass
+          .getConstructor(String.class, valueClass)
+          .newInstance(fieldName, p.getCodec().treeToValue(node.get(fieldName), valueClass));
+    } catch (ReflectiveOperationException e) {
+      throw new IOException(e);
+    }
   }
 }
