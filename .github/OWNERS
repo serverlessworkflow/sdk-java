@@ -1,10 +1,7 @@
 reviewers:
-  - tsurdilo
-  - manick02
   - ricardozanini
-approvers:
-  - tsurdilo
   - manick02
+approvers:
   - ricardozanini
 labels:
   - sig/contributor-experience
