@@ -207,7 +207,7 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
     if (!ref.contains("#")) {
       nameFromRef = Jsonschema2Pojo.getNodeName(ref, ruleFactory.getGenerationConfig());
     } else {
-      String[] nameParts = split(ref, "/\\#");
+      String[] nameParts = ref.split("[/\\#]");
       nameFromRef = nameParts[nameParts.length - 1];
     }
 
