@@ -1,7 +1,0 @@
-events:
-  - name: MakeVetAppointment
-    source: VetServiceSoure
-    kind: produced
-  - name: VetAppointmentInfo
-    source: VetServiceSource
-    kind: consumed
