@@ -18,16 +18,16 @@ package io.serverlessworkflow.api;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
-import io.serverlessworkflow.api.types.Switch;
+import io.serverlessworkflow.api.types.SwitchItem;
 import java.io.IOException;
 
-class SwitchSerializer extends JsonSerializer<Switch> {
+class SwitchItemSerializer extends JsonSerializer<SwitchItem> {
 
   @Override
-  public void serialize(Switch value, JsonGenerator gen, SerializerProvider serializers)
+  public void serialize(SwitchItem value, JsonGenerator gen, SerializerProvider serializers)
       throws IOException {
     gen.writeStartObject();
-    gen.writeObjectField(value.getName(), value.getSwitchProperty());
+    gen.writeObjectField(value.getName(), value.getSwitchCase());
     gen.writeEndObject();
   }
 }

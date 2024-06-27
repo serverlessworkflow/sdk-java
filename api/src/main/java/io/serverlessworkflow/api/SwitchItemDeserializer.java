@@ -18,14 +18,14 @@ package io.serverlessworkflow.api;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
-import io.serverlessworkflow.api.types.Switch;
-import io.serverlessworkflow.api.types.SwitchProperty;
+import io.serverlessworkflow.api.types.SwitchCase;
+import io.serverlessworkflow.api.types.SwitchItem;
 import java.io.IOException;
 
-class SwitchDeserializer extends JsonDeserializer<Switch> {
+class SwitchItemDeserializer extends JsonDeserializer<SwitchItem> {
 
   @Override
-  public Switch deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-    return DeserializeHelper.deserializeItem(p, Switch.class, SwitchProperty.class);
+  public SwitchItem deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+    return DeserializeHelper.deserializeItem(p, SwitchItem.class, SwitchCase.class);
   }
 }
