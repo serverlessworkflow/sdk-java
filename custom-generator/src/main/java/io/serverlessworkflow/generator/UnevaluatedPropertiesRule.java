@@ -17,15 +17,25 @@ package io.serverlessworkflow.generator;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.sun.codemodel.JDefinedClass;
+import com.sun.codemodel.JExpr;
+import com.sun.codemodel.JFieldVar;
+import com.sun.codemodel.JMethod;
+import com.sun.codemodel.JMod;
+import com.sun.codemodel.JType;
 import org.jsonschema2pojo.Schema;
 import org.jsonschema2pojo.rules.AdditionalPropertiesRule;
 import org.jsonschema2pojo.rules.Rule;
+import org.jsonschema2pojo.rules.RuleFactory;
+import org.jsonschema2pojo.util.NameHelper;
 
 public class UnevaluatedPropertiesRule extends AdditionalPropertiesRule
     implements Rule<JDefinedClass, JDefinedClass> {
 
-  public UnevaluatedPropertiesRule(UnreferencedFactory unreferencedFactory) {
-    super(unreferencedFactory);
+  private RuleFactory ruleFactory;
+
+  public UnevaluatedPropertiesRule(RuleFactory ruleFactory) {
+    super(ruleFactory);
+    this.ruleFactory = ruleFactory;
   }
 
   public JDefinedClass apply(
@@ -35,8 +45,54 @@ public class UnevaluatedPropertiesRule extends AdditionalPropertiesRule
         || (node == null && parent.has("properties"))) {
       // no additional properties allowed
       return jclass;
+    } else if (node != null
+        && checkIntValue(parent, "maxProperties", 1)
+        && checkIntValue(parent, "minProperties", 1)) {
+      return addKeyValueFields(jclass, node, parent, nodeName, schema);
     } else {
       return super.apply(nodeName, node, parent, jclass, schema);
     }
+  }
+
+  private JDefinedClass addKeyValueFields(
+      JDefinedClass jclass, JsonNode node, JsonNode parent, String nodeName, Schema schema) {
+    NameHelper nameHelper = ruleFactory.getNameHelper();
+    JType stringClass = jclass.owner()._ref(String.class);
+    JFieldVar nameField = GeneratorUtils.addGetter(jclass, stringClass, nameHelper, "name");
+    JType propertyType;
+    if (node != null && node.size() != 0) {
+      String pathToAdditionalProperties;
+      if (schema.getId().getFragment() == null) {
+        pathToAdditionalProperties = "#/additionalProperties";
+      } else {
+        pathToAdditionalProperties = "#" + schema.getId().getFragment() + "/additionalProperties";
+      }
+      Schema additionalPropertiesSchema =
+          ruleFactory
+              .getSchemaStore()
+              .create(
+                  schema,
+                  pathToAdditionalProperties,
+                  ruleFactory.getGenerationConfig().getRefFragmentPathDelimiters());
+      propertyType =
+          ruleFactory
+              .getSchemaRule()
+              .apply(nodeName + "Property", node, parent, jclass, additionalPropertiesSchema);
+      additionalPropertiesSchema.setJavaTypeIfEmpty(propertyType);
+    } else {
+      propertyType = jclass.owner().ref(Object.class);
+    }
+    JFieldVar valueField =
+        GeneratorUtils.addGetter(jclass, propertyType, nameHelper, propertyType.name());
+    JMethod constructor = jclass.constructor(JMod.PUBLIC);
+    constructor
+        .body()
+        .assign(JExpr._this().ref(nameField), constructor.param(stringClass, nameField.name()))
+        .assign(JExpr._this().ref(valueField), constructor.param(propertyType, valueField.name()));
+    return jclass;
+  }
+
+  private boolean checkIntValue(JsonNode node, String propName, int value) {
+    return node.has(propName) && node.get(propName).asInt() == value;
   }
 }

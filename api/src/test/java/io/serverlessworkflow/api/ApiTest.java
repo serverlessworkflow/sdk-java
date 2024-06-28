@@ -31,9 +31,9 @@ public class ApiTest {
   void testCallHTTPAPI() throws IOException {
     Workflow workflow = readWorkflowFromClasspath("features/callHttp.yaml");
     assertThat(workflow.getDo()).isNotEmpty();
-    assertThat(workflow.getDo().get(0).getAdditionalProperties()).isNotEmpty();
-    assertThat(workflow.getDo().get(0).getAdditionalProperties().values()).isNotEmpty();
-    Task task = workflow.getDo().get(0).getAdditionalProperties().values().iterator().next();
+    assertThat(workflow.getDo().get(0).getName()).isNotNull();
+    assertThat(workflow.getDo().get(0).getTask()).isNotNull();
+    Task task = workflow.getDo().get(0).getTask();
     CallTask callTask = task.getCallTask();
     assertThat(callTask).isNotNull();
     assertThat(task.getDoTask()).isNull();

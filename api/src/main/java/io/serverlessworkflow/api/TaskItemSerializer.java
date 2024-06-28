@@ -18,14 +18,16 @@ package io.serverlessworkflow.api;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
-import io.serverlessworkflow.api.types.Task;
+import io.serverlessworkflow.api.types.TaskItem;
 import java.io.IOException;
 
-class TaskSerializer extends JsonSerializer<Task> {
+class TaskItemSerializer extends JsonSerializer<TaskItem> {
 
   @Override
-  public void serialize(Task value, JsonGenerator gen, SerializerProvider serializers)
+  public void serialize(TaskItem value, JsonGenerator gen, SerializerProvider serializers)
       throws IOException {
-    SerializeHelper.serializeOneOf(gen, value);
+    gen.writeStartObject();
+    gen.writeObjectField(value.getName(), value.getTask());
+    gen.writeEndObject();
   }
 }

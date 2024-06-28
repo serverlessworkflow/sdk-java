@@ -15,8 +15,6 @@
  */
 package io.serverlessworkflow.generator;
 
-import static org.apache.commons.lang3.StringUtils.*;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.sun.codemodel.JClass;
@@ -127,16 +125,8 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
 
   private void wrapIt(JDefinedClass definedClass, JType unionType) {
     JFieldVar instanceField =
-        definedClass.field(
-            JMod.PRIVATE,
-            unionType,
-            ruleFactory.getNameHelper().getPropertyName(unionType.name(), null));
-    JMethod method =
-        definedClass.method(
-            JMod.PUBLIC,
-            unionType,
-            ruleFactory.getNameHelper().getGetterName(unionType.name(), unionType, null));
-    method.body()._return(instanceField);
+        GeneratorUtils.addGetter(
+            definedClass, unionType, ruleFactory.getNameHelper(), unionType.name());
     JMethod constructor = definedClass.constructor(JMod.PUBLIC);
     constructor
         .body()

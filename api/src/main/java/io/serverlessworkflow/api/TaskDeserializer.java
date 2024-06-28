@@ -38,7 +38,7 @@ class TaskDeserializer extends JsonDeserializer<Task> {
 
   @Override
   public Task deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-    return DeserializeHelper.deserialize(
+    return DeserializeHelper.deserializeOneOf(
         p,
         Task.class,
         List.of(

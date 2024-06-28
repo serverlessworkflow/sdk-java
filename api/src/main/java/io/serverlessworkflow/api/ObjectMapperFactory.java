@@ -21,7 +21,9 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator.Feature;
 import io.serverlessworkflow.api.types.CallTask;
+import io.serverlessworkflow.api.types.SwitchItem;
 import io.serverlessworkflow.api.types.Task;
+import io.serverlessworkflow.api.types.TaskItem;
 
 class ObjectMapperFactory {
 
@@ -44,6 +46,11 @@ class ObjectMapperFactory {
     simpleModule.addSerializer(Task.class, new TaskSerializer());
     simpleModule.addDeserializer(CallTask.class, new CallTaskDeserializer());
     simpleModule.addSerializer(CallTask.class, new CallTaskSerializer());
+    simpleModule.addDeserializer(TaskItem.class, new TaskItemDeserializer());
+    simpleModule.addSerializer(TaskItem.class, new TaskItemSerializer());
+    simpleModule.addSerializer(SwitchItem.class, new SwitchItemSerializer());
+    simpleModule.addDeserializer(SwitchItem.class, new SwitchItemDeserializer());
+
     return mapper
         .configure(SerializationFeature.INDENT_OUTPUT, true)
         .configure(SerializationFeature.WRITE_EMPTY_JSON_ARRAYS, false)
