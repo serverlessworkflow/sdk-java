@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator.Feature;
+import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import io.serverlessworkflow.api.types.CallTask;
 import io.serverlessworkflow.api.types.SwitchItem;
 import io.serverlessworkflow.api.types.Task;
@@ -55,7 +56,8 @@ class ObjectMapperFactory {
         .configure(SerializationFeature.INDENT_OUTPUT, true)
         .configure(SerializationFeature.WRITE_EMPTY_JSON_ARRAYS, false)
         .configure(SerializationFeature.WRITE_NULL_MAP_VALUES, false)
-        .registerModule(simpleModule);
+        .registerModule(simpleModule)
+        .registerModule(new Jdk8Module());
   }
 
   private ObjectMapperFactory() {}

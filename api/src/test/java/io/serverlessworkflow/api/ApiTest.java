@@ -23,6 +23,7 @@ import io.serverlessworkflow.api.types.CallTask;
 import io.serverlessworkflow.api.types.Task;
 import io.serverlessworkflow.api.types.Workflow;
 import java.io.IOException;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 public class ApiTest {
@@ -34,12 +35,12 @@ public class ApiTest {
     assertThat(workflow.getDo().get(0).getName()).isNotNull();
     assertThat(workflow.getDo().get(0).getTask()).isNotNull();
     Task task = workflow.getDo().get(0).getTask();
-    CallTask callTask = task.getCallTask();
-    assertThat(callTask).isNotNull();
-    assertThat(task.getDoTask()).isNull();
-    CallHTTP httpCall = callTask.getCallHTTP();
-    assertThat(httpCall).isNotNull();
-    assertThat(callTask.getCallAsyncAPI()).isNull();
-    assertThat(httpCall.getWith().getMethod()).isEqualTo("get");
+    Optional<CallTask> callTask = task.getCallTask();
+    assertThat(callTask).isPresent();
+    assertThat(task.getDoTask()).isEmpty();
+    Optional<CallHTTP> httpCall = callTask.flatMap(CallTask::getCallHTTP);
+    assertThat(httpCall).isPresent();
+    assertThat(callTask.flatMap(CallTask::getCallAsyncAPI)).isEmpty();
+    assertThat(httpCall.get().getWith().getMethod()).isEqualTo("get");
   }
 }

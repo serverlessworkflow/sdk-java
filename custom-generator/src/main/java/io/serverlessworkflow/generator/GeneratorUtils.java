@@ -15,11 +15,13 @@
  */
 package io.serverlessworkflow.generator;
 
+import com.sun.codemodel.JClass;
 import com.sun.codemodel.JDefinedClass;
 import com.sun.codemodel.JFieldVar;
 import com.sun.codemodel.JMethod;
 import com.sun.codemodel.JMod;
 import com.sun.codemodel.JType;
+import java.util.Optional;
 import org.jsonschema2pojo.util.NameHelper;
 
 public class GeneratorUtils {
@@ -31,6 +33,20 @@ public class GeneratorUtils {
     JMethod method =
         definedClass.method(JMod.PUBLIC, type, nameHelper.getGetterName(name, type, null));
     method.body()._return(instanceField);
+    return instanceField;
+  }
+
+  public static JFieldVar addOptionalGetter(
+      JDefinedClass definedClass, JType type, NameHelper nameHelper, String name) {
+    JFieldVar instanceField =
+        definedClass.field(JMod.PRIVATE, type, nameHelper.getPropertyName(name, null));
+    JClass optionalRef = definedClass.owner().ref(Optional.class).narrow(type);
+    JMethod method =
+        definedClass.method(JMod.PUBLIC, optionalRef, nameHelper.getGetterName(name, type, null));
+    method
+        .body()
+        ._return(
+            definedClass.owner().ref(Optional.class).staticInvoke("ofNullable").arg(instanceField));
     return instanceField;
   }
 
