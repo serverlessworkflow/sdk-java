@@ -18,14 +18,13 @@ package io.serverlessworkflow.api;
 import com.fasterxml.jackson.core.JsonGenerator;
 import java.io.IOException;
 import java.lang.reflect.Method;
-import java.util.Optional;
 
 public class SerializeHelper {
   public static void serializeOneOf(JsonGenerator jgen, Object item) throws IOException {
     try {
       for (Method m : item.getClass().getDeclaredMethods()) {
-        Optional<?> value = (Optional<?>) m.invoke(item);
-        if (value.isPresent()) {
+        Object value = m.invoke(item);
+        if (value != null) {
           jgen.writeObject(value);
           break;
         }

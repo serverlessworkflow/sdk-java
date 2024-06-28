@@ -125,7 +125,7 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
 
   private void wrapIt(JDefinedClass definedClass, JType unionType) {
     JFieldVar instanceField =
-        GeneratorUtils.addOptionalGetter(
+        GeneratorUtils.addGetter(
             definedClass, unionType, ruleFactory.getNameHelper(), unionType.name());
     JMethod constructor = definedClass.constructor(JMod.PUBLIC);
     constructor
