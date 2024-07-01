@@ -57,7 +57,7 @@
     <version.failsafe.plugin>3.3.0</version.failsafe.plugin>
     <version.fmt-maven-plugin>2.23</version.fmt-maven-plugin>
     <version.gpg.plugin>3.2.4</version.gpg.plugin>
-    <version.jar.plugin>3.4.1</version.jar.plugin>
+    <version.jar.plugin>3.4.2</version.jar.plugin>
     <version.jdk>${java.version}</version.jdk>
     <version.jsonschema2pojo-maven-plugin>1.2.1</version.jsonschema2pojo-maven-plugin>
     <version.javadoc.plugin>3.7.0</version.javadoc.plugin>
