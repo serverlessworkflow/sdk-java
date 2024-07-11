@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.api;
+package io.serverlessworkflow.serialization;
 
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -27,7 +27,8 @@ public class DeserializeHelper {
   public static <T> T deserializeOneOf(
       JsonParser p, Class<T> targetClass, Collection<Class<?>> unionTypes) throws IOException {
     TreeNode node = p.readValueAsTree();
-    JsonProcessingException ex = new JsonMappingException("Problem deserializing " + targetClass);
+    JsonProcessingException ex =
+        new JsonMappingException(p, "Problem deserializing " + targetClass);
     for (Class<?> unionType : unionTypes) {
       try {
         Object object = p.getCodec().treeToValue(node, unionType);

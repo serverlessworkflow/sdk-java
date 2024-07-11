@@ -13,19 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.api;
+package io.serverlessworkflow.serialization;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import io.serverlessworkflow.api.types.Task;
-import io.serverlessworkflow.api.types.TaskItem;
+import com.fasterxml.jackson.core.JsonGenerator;
 import java.io.IOException;
+import java.lang.reflect.Method;
 
-class TaskItemDeserializer extends JsonDeserializer<TaskItem> {
-
-  @Override
-  public TaskItem deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
-    return DeserializeHelper.deserializeItem(p, TaskItem.class, Task.class);
+public class SerializeHelper {
+  public static void serializeOneOf(JsonGenerator jgen, Object item) throws IOException {
+    try {
+      for (Method m : item.getClass().getDeclaredMethods()) {
+        Object value = m.invoke(item);
+        if (value != null) {
+          jgen.writeObject(value);
+          break;
+        }
+      }
+    } catch (ReflectiveOperationException ex) {
+      throw new IOException(ex);
+    }
   }
 }

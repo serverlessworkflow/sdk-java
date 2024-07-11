@@ -16,6 +16,10 @@
 package io.serverlessworkflow.generator;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.sun.codemodel.JBlock;
+import com.sun.codemodel.JClass;
 import com.sun.codemodel.JDefinedClass;
 import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JFieldVar;
@@ -58,7 +62,9 @@ public class UnevaluatedPropertiesRule extends AdditionalPropertiesRule
       JDefinedClass jclass, JsonNode node, JsonNode parent, String nodeName, Schema schema) {
     NameHelper nameHelper = ruleFactory.getNameHelper();
     JType stringClass = jclass.owner()._ref(String.class);
-    JFieldVar nameField = GeneratorUtils.addGetter(jclass, stringClass, nameHelper, "name");
+    JFieldVar nameField =
+        jclass.field(JMod.PRIVATE, stringClass, nameHelper.getPropertyName("name", null));
+    JMethod nameMethod = GeneratorUtils.buildMethod(jclass, nameField, nameHelper, "name");
     JType propertyType;
     if (node != null && node.size() != 0) {
       String pathToAdditionalProperties;
@@ -83,13 +89,58 @@ public class UnevaluatedPropertiesRule extends AdditionalPropertiesRule
       propertyType = jclass.owner().ref(Object.class);
     }
     JFieldVar valueField =
-        GeneratorUtils.addGetter(jclass, propertyType, nameHelper, propertyType.name());
+        jclass.field(
+            JMod.PRIVATE, propertyType, nameHelper.getPropertyName(propertyType.name(), null));
+    JMethod valueMethod =
+        GeneratorUtils.buildMethod(jclass, valueField, nameHelper, propertyType.name());
+    jclass
+        .annotate(JsonSerialize.class)
+        .param("using", generateSerializer(jclass, nameMethod, valueMethod));
+    jclass
+        .annotate(JsonDeserialize.class)
+        .param("using", generateDeserializer(jclass, propertyType));
     JMethod constructor = jclass.constructor(JMod.PUBLIC);
     constructor
         .body()
         .assign(JExpr._this().ref(nameField), constructor.param(stringClass, nameField.name()))
         .assign(JExpr._this().ref(valueField), constructor.param(propertyType, valueField.name()));
     return jclass;
+  }
+
+  private JDefinedClass generateDeserializer(JDefinedClass relatedClass, JType propertyType) {
+    JDefinedClass definedClass = GeneratorUtils.deserializerClass(relatedClass);
+    GeneratorUtils.fillDeserializer(
+        definedClass,
+        relatedClass,
+        (method, parserParam) ->
+            method
+                .body()
+                ._return(
+                    definedClass
+                        .owner()
+                        .ref(GeneratorUtils.DESERIALIZE_HELPER_NAME)
+                        .staticInvoke("deserializeItem")
+                        .arg(parserParam)
+                        .arg(relatedClass.dotclass())
+                        .arg(((JClass) propertyType).dotclass())));
+    return definedClass;
+  }
+
+  private JDefinedClass generateSerializer(
+      JDefinedClass relatedClass, JMethod nameMethod, JMethod valueMethod) {
+    JDefinedClass definedClass = GeneratorUtils.serializerClass(relatedClass);
+    GeneratorUtils.fillSerializer(
+        definedClass,
+        relatedClass,
+        (method, valueParam, genParam) -> {
+          JBlock body = method.body();
+          body.invoke(genParam, "writeStartObject");
+          body.invoke(genParam, "writeObjectField")
+              .arg(valueParam.invoke(nameMethod))
+              .arg(valueParam.invoke(valueMethod));
+          body.invoke(genParam, "writeEndObject");
+        });
+    return definedClass;
   }
 
   private boolean checkIntValue(JsonNode node, String propName, int value) {
