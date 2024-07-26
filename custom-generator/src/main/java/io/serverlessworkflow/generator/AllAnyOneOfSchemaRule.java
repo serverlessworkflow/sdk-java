@@ -16,13 +16,17 @@
 package io.serverlessworkflow.generator;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.sun.codemodel.JBlock;
 import com.sun.codemodel.JClass;
 import com.sun.codemodel.JClassAlreadyExistsException;
 import com.sun.codemodel.JClassContainer;
 import com.sun.codemodel.JDefinedClass;
 import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JFieldVar;
+import com.sun.codemodel.JInvocation;
 import com.sun.codemodel.JMethod;
 import com.sun.codemodel.JMod;
 import com.sun.codemodel.JPackage;
@@ -32,6 +36,7 @@ import java.net.URI;
 import java.net.URLDecoder;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import org.jsonschema2pojo.Jsonschema2Pojo;
 import org.jsonschema2pojo.Schema;
@@ -113,20 +118,66 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
     return definedClass;
   }
 
+  private JDefinedClass generateSerializer(JDefinedClass relatedClass) {
+    JDefinedClass definedClass = GeneratorUtils.serializerClass(relatedClass);
+    GeneratorUtils.fillSerializer(
+        definedClass,
+        relatedClass,
+        (method, valueParam, genParam) ->
+            method
+                .body()
+                .staticInvoke(
+                    definedClass.owner().ref(GeneratorUtils.SERIALIZE_HELPER_NAME),
+                    "serializeOneOf")
+                .arg(genParam)
+                .arg(valueParam));
+    return definedClass;
+  }
+
+  private JDefinedClass generateDeserializer(
+      JDefinedClass relatedClass, Collection<JType> unionTypes) {
+    JDefinedClass definedClass = GeneratorUtils.deserializerClass(relatedClass);
+    GeneratorUtils.fillDeserializer(
+        definedClass,
+        relatedClass,
+        (method, parserParam) -> {
+          JBlock body = method.body();
+          JInvocation list = definedClass.owner().ref(List.class).staticInvoke("of");
+          unionTypes.forEach(c -> list.arg(((JClass) c).dotclass()));
+          body._return(
+              definedClass
+                  .owner()
+                  .ref(GeneratorUtils.DESERIALIZE_HELPER_NAME)
+                  .staticInvoke("deserializeOneOf")
+                  .arg(parserParam)
+                  .arg(relatedClass.dotclass())
+                  .arg(list));
+        });
+    return definedClass;
+  }
+
   private JDefinedClass createUnionClass(
       String nodeName, JPackage container, Optional<JType> refType, Collection<JType> unionTypes) {
-    String className = ruleFactory.getNameHelper().getUniqueClassName(nodeName, null, container);
+    final String className =
+        ruleFactory.getNameHelper().getUniqueClassName(nodeName, null, container);
     try {
-      return populateClass(container._class(className), refType, unionTypes);
+      JDefinedClass definedClass = container._class(className);
+      definedClass.annotate(JsonSerialize.class).param("using", generateSerializer(definedClass));
+      definedClass
+          .annotate(JsonDeserialize.class)
+          .param("using", generateDeserializer(definedClass, unionTypes));
+      return populateClass(definedClass, refType, unionTypes);
     } catch (JClassAlreadyExistsException e) {
       throw new IllegalArgumentException(e);
     }
   }
 
   private void wrapIt(JDefinedClass definedClass, JType unionType) {
+    final String name = unionType.name();
     JFieldVar instanceField =
-        GeneratorUtils.addGetter(
-            definedClass, unionType, ruleFactory.getNameHelper(), unionType.name());
+        definedClass.field(
+            JMod.PRIVATE, unionType, ruleFactory.getNameHelper().getPropertyName(name, null));
+    GeneratorUtils.buildMethod(definedClass, instanceField, ruleFactory.getNameHelper(), name);
     JMethod constructor = definedClass.constructor(JMod.PUBLIC);
     constructor
         .body()
