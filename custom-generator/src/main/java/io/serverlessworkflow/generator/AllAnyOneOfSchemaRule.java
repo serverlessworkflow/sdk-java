@@ -35,7 +35,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLDecoder;
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import org.jsonschema2pojo.Jsonschema2Pojo;
@@ -62,7 +62,7 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
       Schema schema) {
 
     Optional<JType> refType = refType(nodeName, schemaNode, parent, generatableType, schema);
-    Collection<JType> unionTypes = new HashSet<>();
+    Collection<JType> unionTypes = new LinkedHashSet<>();
 
     unionType("oneOf", nodeName, schemaNode, parent, generatableType, schema, unionTypes);
     unionType("anyOf", nodeName, schemaNode, parent, generatableType, schema, unionTypes);
