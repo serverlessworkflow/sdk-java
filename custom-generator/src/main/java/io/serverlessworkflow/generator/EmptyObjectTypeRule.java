@@ -15,25 +15,32 @@
  */
 package io.serverlessworkflow.generator;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.sun.codemodel.JClassContainer;
-import com.sun.codemodel.JDefinedClass;
 import com.sun.codemodel.JType;
-import org.jsonschema2pojo.rules.Rule;
+import org.jsonschema2pojo.Schema;
 import org.jsonschema2pojo.rules.RuleFactory;
+import org.jsonschema2pojo.rules.TypeRule;
 
-public class UnreferencedFactory extends RuleFactory {
-  @Override
-  public Rule<JClassContainer, JType> getSchemaRule() {
-    return new AllAnyOneOfSchemaRule(this);
+public class EmptyObjectTypeRule extends TypeRule {
+
+  protected EmptyObjectTypeRule(RuleFactory ruleFactory) {
+    super(ruleFactory);
   }
 
   @Override
-  public Rule<JClassContainer, JType> getTypeRule() {
-    return new EmptyObjectTypeRule(this);
+  public JType apply(
+      String nodeName,
+      JsonNode node,
+      JsonNode parent,
+      JClassContainer generatableType,
+      Schema currentSchema) {
+    return isEmptyObject(node)
+        ? generatableType.owner().ref(Object.class)
+        : super.apply(nodeName, node, parent, generatableType, currentSchema);
   }
 
-  @Override
-  public Rule<JDefinedClass, JDefinedClass> getAdditionalPropertiesRule() {
-    return new UnevaluatedPropertiesRule(this);
+  private boolean isEmptyObject(JsonNode node) {
+    return node.size() == 1 && node.has("type") && node.get("type").asText().equals("object");
   }
 }
