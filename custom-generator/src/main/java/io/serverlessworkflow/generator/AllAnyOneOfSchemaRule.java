@@ -31,6 +31,7 @@ import com.sun.codemodel.JMethod;
 import com.sun.codemodel.JMod;
 import com.sun.codemodel.JPackage;
 import com.sun.codemodel.JType;
+import com.sun.codemodel.JVar;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLDecoder;
@@ -102,13 +103,27 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
 
   private JDefinedClass populateClass(
       JDefinedClass definedClass, Optional<JType> refType, Collection<JType> unionTypes) {
-    unionTypes.forEach(unionType -> wrapIt(definedClass, unionType));
+    JType clazzClass = definedClass.owner()._ref(Object.class);
+
+    JFieldVar valueField =
+        definedClass.field(
+            JMod.PRIVATE,
+            clazzClass,
+            ruleFactory.getNameHelper().getPropertyName("value", null),
+            null);
+
+    definedClass._implements(
+        definedClass.owner().ref(GeneratorUtils.ONE_OF_VALUE_PROVIDER_INTERFACE_NAME));
+
+    GeneratorUtils.implementInterface(definedClass, valueField);
+
+    unionTypes.forEach(unionType -> wrapIt(definedClass, valueField, unionType));
     refType.ifPresent(
         type -> {
           if (type instanceof JClass) {
             definedClass._extends((JClass) type);
           } else {
-            wrapIt(definedClass, type);
+            wrapIt(definedClass, valueField, type);
           }
         });
     if (definedClass.constructors().hasNext()
@@ -166,23 +181,25 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
       definedClass
           .annotate(JsonDeserialize.class)
           .param("using", generateDeserializer(definedClass, unionTypes));
+
       return populateClass(definedClass, refType, unionTypes);
     } catch (JClassAlreadyExistsException e) {
       throw new IllegalArgumentException(e);
     }
   }
 
-  private void wrapIt(JDefinedClass definedClass, JType unionType) {
+  private void wrapIt(JDefinedClass definedClass, JFieldVar valueField, JType unionType) {
     final String name = unionType.name();
     JFieldVar instanceField =
         definedClass.field(
             JMod.PRIVATE, unionType, ruleFactory.getNameHelper().getPropertyName(name, null));
     GeneratorUtils.buildMethod(definedClass, instanceField, ruleFactory.getNameHelper(), name);
     JMethod constructor = definedClass.constructor(JMod.PUBLIC);
+    JVar instanceParam = constructor.param(unionType, instanceField.name());
     constructor
         .body()
-        .assign(
-            JExpr._this().ref(instanceField), constructor.param(unionType, instanceField.name()));
+        .assign(JExpr._this().ref(valueField), instanceParam)
+        .assign(JExpr._this().ref(instanceField), instanceParam);
   }
 
   private void unionType(
