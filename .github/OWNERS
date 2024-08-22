@@ -1,7 +1,9 @@
 reviewers:
   - ricardozanini
   - manick02
+  - fjtirado
 approvers:
   - ricardozanini
+  - fjtirado
 labels:
   - sig/contributor-experience
