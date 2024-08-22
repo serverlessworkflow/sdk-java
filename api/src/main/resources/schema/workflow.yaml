@@ -202,6 +202,7 @@ $defs:
           call:
             type: string
             const: asyncapi
+            enum: [asyncapi]
           with:
             type: object
             title: AsyncApiArguments
@@ -247,6 +248,7 @@ $defs:
           call:
             type: string
             const: grpc
+            enum: [grpc]
           with:
             type: object
             title: GRPCArguments
@@ -301,7 +303,8 @@ $defs:
         properties:
           call:
             type: string
-            const: http
+            const: http 
+            enum: [http]
           with:
             type: object
             title: HTTPArguments
@@ -350,6 +353,7 @@ $defs:
           call:
             type: string
             const: openapi
+            enum: [openapi]
           with:
             type: object
             title: OpenAPIArguments
