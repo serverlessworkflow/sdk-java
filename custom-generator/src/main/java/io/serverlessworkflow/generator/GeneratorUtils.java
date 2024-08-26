@@ -49,11 +49,13 @@ public class GeneratorUtils {
     void accept(JMethod method, JVar parserParam);
   }
 
-  public static JDefinedClass serializerClass(JDefinedClass relatedClass) {
+  public static JDefinedClass serializerClass(JDefinedClass relatedClass)
+      throws JClassAlreadyExistsException {
     return createClass(relatedClass, JsonSerializer.class, "Serializer");
   }
 
-  public static JDefinedClass deserializerClass(JDefinedClass relatedClass) {
+  public static JDefinedClass deserializerClass(JDefinedClass relatedClass)
+      throws JClassAlreadyExistsException {
     return createClass(relatedClass, JsonDeserializer.class, "Deserializer");
   }
 
@@ -97,15 +99,12 @@ public class GeneratorUtils {
   }
 
   private static JDefinedClass createClass(
-      JDefinedClass relatedClass, Class<?> serializerClass, String suffix) {
-    try {
-      JDefinedClass definedClass =
-          relatedClass._package()._class(JMod.NONE, relatedClass.name() + suffix);
-      definedClass._extends(definedClass.owner().ref(serializerClass).narrow(relatedClass));
-      return definedClass;
-    } catch (JClassAlreadyExistsException ex) {
-      throw new IllegalArgumentException(ex);
-    }
+      JDefinedClass relatedClass, Class<?> serializerClass, String suffix)
+      throws JClassAlreadyExistsException {
+    JDefinedClass definedClass =
+        relatedClass._package()._class(JMod.NONE, relatedClass.name() + suffix);
+    definedClass._extends(definedClass.owner().ref(serializerClass).narrow(relatedClass));
+    return definedClass;
   }
 
   private GeneratorUtils() {}
