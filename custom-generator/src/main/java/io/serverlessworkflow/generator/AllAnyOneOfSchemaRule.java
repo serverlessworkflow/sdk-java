@@ -105,19 +105,41 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
       JDefinedClass definedClass, Optional<JType> refType, Collection<JType> unionTypes) {
     JType clazzClass = definedClass.owner()._ref(Object.class);
 
-    JFieldVar valueField =
-        definedClass.field(
-            JMod.PRIVATE,
-            clazzClass,
-            ruleFactory.getNameHelper().getPropertyName("value", null),
-            null);
+    Optional<JFieldVar> valueField;
+    if (!unionTypes.isEmpty()) {
+      valueField =
+          Optional.of(
+              definedClass.field(
+                  JMod.PRIVATE,
+                  clazzClass,
+                  ruleFactory.getNameHelper().getPropertyName("value", null),
+                  null));
 
-    definedClass._implements(
-        definedClass.owner().ref(GeneratorUtils.ONE_OF_VALUE_PROVIDER_INTERFACE_NAME));
+      definedClass._implements(
+          definedClass.owner().ref(GeneratorUtils.ONE_OF_VALUE_PROVIDER_INTERFACE_NAME));
 
-    GeneratorUtils.implementInterface(definedClass, valueField);
+      GeneratorUtils.implementInterface(definedClass, valueField.orElseThrow());
 
-    unionTypes.forEach(unionType -> wrapIt(definedClass, valueField, unionType));
+      try {
+        JDefinedClass serializer = generateSerializer(definedClass);
+        definedClass.annotate(JsonSerialize.class).param("using", serializer);
+      } catch (JClassAlreadyExistsException ex) {
+        // already serialized aware
+      }
+
+      try {
+        JDefinedClass deserializer = generateDeserializer(definedClass, unionTypes);
+        definedClass.annotate(JsonDeserialize.class).param("using", deserializer);
+      } catch (JClassAlreadyExistsException ex) {
+        // already deserialized aware
+      }
+      for (JType unionType : unionTypes) {
+        wrapIt(definedClass, valueField, unionType);
+      }
+    } else {
+      valueField = Optional.empty();
+    }
+
     refType.ifPresent(
         type -> {
           if (type instanceof JClass) {
@@ -126,6 +148,7 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
             wrapIt(definedClass, valueField, type);
           }
         });
+
     if (definedClass.constructors().hasNext()
         && definedClass.getConstructor(new JType[0]) == null) {
       definedClass.constructor(JMod.PUBLIC);
@@ -133,7 +156,8 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
     return definedClass;
   }
 
-  private JDefinedClass generateSerializer(JDefinedClass relatedClass) {
+  private JDefinedClass generateSerializer(JDefinedClass relatedClass)
+      throws JClassAlreadyExistsException {
     JDefinedClass definedClass = GeneratorUtils.serializerClass(relatedClass);
     GeneratorUtils.fillSerializer(
         definedClass,
@@ -150,7 +174,8 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
   }
 
   private JDefinedClass generateDeserializer(
-      JDefinedClass relatedClass, Collection<JType> unionTypes) {
+      JDefinedClass relatedClass, Collection<JType> unionTypes)
+      throws JClassAlreadyExistsException {
     JDefinedClass definedClass = GeneratorUtils.deserializerClass(relatedClass);
     GeneratorUtils.fillDeserializer(
         definedClass,
@@ -173,22 +198,18 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
 
   private JDefinedClass createUnionClass(
       String nodeName, JPackage container, Optional<JType> refType, Collection<JType> unionTypes) {
-    final String className =
-        ruleFactory.getNameHelper().getUniqueClassName(nodeName, null, container);
     try {
-      JDefinedClass definedClass = container._class(className);
-      definedClass.annotate(JsonSerialize.class).param("using", generateSerializer(definedClass));
-      definedClass
-          .annotate(JsonDeserialize.class)
-          .param("using", generateDeserializer(definedClass, unionTypes));
-
-      return populateClass(definedClass, refType, unionTypes);
+      return populateClass(
+          container._class(
+              ruleFactory.getNameHelper().getUniqueClassName(nodeName, null, container)),
+          refType,
+          unionTypes);
     } catch (JClassAlreadyExistsException e) {
       throw new IllegalArgumentException(e);
     }
   }
 
-  private void wrapIt(JDefinedClass definedClass, JFieldVar valueField, JType unionType) {
+  private void wrapIt(JDefinedClass definedClass, Optional<JFieldVar> valueField, JType unionType) {
     final String name = unionType.name();
     JFieldVar instanceField =
         definedClass.field(
@@ -196,10 +217,9 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
     GeneratorUtils.buildMethod(definedClass, instanceField, ruleFactory.getNameHelper(), name);
     JMethod constructor = definedClass.constructor(JMod.PUBLIC);
     JVar instanceParam = constructor.param(unionType, instanceField.name());
-    constructor
-        .body()
-        .assign(JExpr._this().ref(valueField), instanceParam)
-        .assign(JExpr._this().ref(instanceField), instanceParam);
+    JBlock body = constructor.body();
+    valueField.ifPresent(v -> body.assign(JExpr._this().ref(v), instanceParam));
+    body.assign(JExpr._this().ref(instanceField), instanceParam);
   }
 
   private void unionType(

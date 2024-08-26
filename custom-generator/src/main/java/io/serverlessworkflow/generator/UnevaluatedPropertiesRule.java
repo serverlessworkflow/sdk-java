@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.sun.codemodel.JBlock;
 import com.sun.codemodel.JClass;
+import com.sun.codemodel.JClassAlreadyExistsException;
 import com.sun.codemodel.JDefinedClass;
 import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JFieldVar;
@@ -52,14 +53,19 @@ public class UnevaluatedPropertiesRule extends AdditionalPropertiesRule
     } else if (node != null
         && checkIntValue(parent, "maxProperties", 1)
         && checkIntValue(parent, "minProperties", 1)) {
-      return addKeyValueFields(jclass, node, parent, nodeName, schema);
+      try {
+        return addKeyValueFields(jclass, node, parent, nodeName, schema);
+      } catch (JClassAlreadyExistsException e) {
+        throw new IllegalArgumentException(e);
+      }
     } else {
       return super.apply(nodeName, node, parent, jclass, schema);
     }
   }
 
   private JDefinedClass addKeyValueFields(
-      JDefinedClass jclass, JsonNode node, JsonNode parent, String nodeName, Schema schema) {
+      JDefinedClass jclass, JsonNode node, JsonNode parent, String nodeName, Schema schema)
+      throws JClassAlreadyExistsException {
     NameHelper nameHelper = ruleFactory.getNameHelper();
     JType stringClass = jclass.owner()._ref(String.class);
     JFieldVar nameField =
@@ -107,7 +113,8 @@ public class UnevaluatedPropertiesRule extends AdditionalPropertiesRule
     return jclass;
   }
 
-  private JDefinedClass generateDeserializer(JDefinedClass relatedClass, JType propertyType) {
+  private JDefinedClass generateDeserializer(JDefinedClass relatedClass, JType propertyType)
+      throws JClassAlreadyExistsException {
     JDefinedClass definedClass = GeneratorUtils.deserializerClass(relatedClass);
     GeneratorUtils.fillDeserializer(
         definedClass,
@@ -127,7 +134,8 @@ public class UnevaluatedPropertiesRule extends AdditionalPropertiesRule
   }
 
   private JDefinedClass generateSerializer(
-      JDefinedClass relatedClass, JMethod nameMethod, JMethod valueMethod) {
+      JDefinedClass relatedClass, JMethod nameMethod, JMethod valueMethod)
+      throws JClassAlreadyExistsException {
     JDefinedClass definedClass = GeneratorUtils.serializerClass(relatedClass);
     GeneratorUtils.fillSerializer(
         definedClass,
