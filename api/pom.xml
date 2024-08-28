@@ -101,6 +101,7 @@
                     <usePrimitives>true</usePrimitives>
                     <useJakartaValidation>true</useJakartaValidation>
                     <customRuleFactory>io.serverlessworkflow.generator.UnreferencedFactory</customRuleFactory>
+                    <customAnnotator>io.serverlessworkflow.generator.ConstAnnotator</customAnnotator>
                 </configuration>
                 <dependencies>
                     <dependency>
