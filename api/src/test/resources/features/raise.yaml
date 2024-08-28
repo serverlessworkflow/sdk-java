@@ -2,6 +2,7 @@ document:
       dsl: 1.0.0-alpha1
       namespace: default
       name: raise-custom-error
+      version: 1.0.0
 do:
   - raiseError:
       raise:
@@ -9,3 +10,4 @@ do:
           status: 400
           type: https://serverlessworkflow.io/errors/types/compliance
           title: Compliance Error
+          instance: raiseError
