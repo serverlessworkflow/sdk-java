@@ -3,11 +3,17 @@ document:
   namespace: default
   name: http-call-with-response-output
   version: 1.0.0
-do:
-  - getPet:
+
+use:
+  functions:
+    getPet:
       call: http
       with:
         method: get
         endpoint:
           uri: https://petstore.swagger.io/v2/pet/{petId}
         output: response
+
+do:
+  - getPetFunctionCall:
+      call: getPet

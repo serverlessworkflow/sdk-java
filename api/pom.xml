@@ -33,7 +33,14 @@
             <groupId>jakarta.validation</groupId>
             <artifactId>jakarta.validation-api</artifactId>
         </dependency>
- 
+        <dependency>
+          <groupId>org.hibernate.validator</groupId>
+          <artifactId>hibernate-validator</artifactId>
+        </dependency>
+        <dependency>
+          <groupId>org.glassfish.expressly</groupId>
+          <artifactId>expressly</artifactId>
+        </dependency>
         <!-- test -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -63,11 +70,6 @@
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.assertj</groupId>
-            <artifactId>assertj-core</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -101,6 +103,7 @@
                     <usePrimitives>true</usePrimitives>
                     <useJakartaValidation>true</useJakartaValidation>
                     <customRuleFactory>io.serverlessworkflow.generator.UnreferencedFactory</customRuleFactory>
+                    <customAnnotator>io.serverlessworkflow.generator.ConstAnnotator</customAnnotator>
                 </configuration>
                 <dependencies>
                     <dependency>

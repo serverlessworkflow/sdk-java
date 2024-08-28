@@ -19,6 +19,7 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.TreeNode;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import jakarta.validation.ConstraintViolationException;
 import java.io.IOException;
 import java.util.Collection;
 
@@ -33,7 +34,7 @@ public class DeserializeHelper {
       try {
         Object object = p.getCodec().treeToValue(node, unionType);
         return targetClass.getConstructor(unionType).newInstance(object);
-      } catch (IOException | ReflectiveOperationException io) {
+      } catch (IOException | ReflectiveOperationException | ConstraintViolationException io) {
         ex.addSuppressed(io);
       }
     }
