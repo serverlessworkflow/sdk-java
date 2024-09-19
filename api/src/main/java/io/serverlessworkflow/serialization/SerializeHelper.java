@@ -23,6 +23,9 @@ public class SerializeHelper {
   public static void serializeOneOf(JsonGenerator jgen, Object item) throws IOException {
     try {
       for (Method m : item.getClass().getDeclaredMethods()) {
+        if (m.getParameterCount() > 0) {
+          continue;
+        }
         Object value = m.invoke(item);
         if (value != null) {
           jgen.writeObject(value);
