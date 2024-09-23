@@ -16,21 +16,12 @@
 package io.serverlessworkflow.serialization;
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import io.serverlessworkflow.api.OneOfValueProvider;
 import java.io.IOException;
-import java.lang.reflect.Method;
 
 public class SerializeHelper {
-  public static void serializeOneOf(JsonGenerator jgen, Object item) throws IOException {
-    try {
-      for (Method m : item.getClass().getDeclaredMethods()) {
-        Object value = m.invoke(item);
-        if (value != null) {
-          jgen.writeObject(value);
-          break;
-        }
-      }
-    } catch (ReflectiveOperationException ex) {
-      throw new IOException(ex);
-    }
+  public static void serializeOneOf(JsonGenerator jgen, OneOfValueProvider item)
+      throws IOException {
+    jgen.writeObject(item.get());
   }
 }
