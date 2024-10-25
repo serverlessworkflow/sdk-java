@@ -15,19 +15,24 @@
  */
 package io.serverlessworkflow.impl;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.serverlessworkflow.api.types.CallHTTP;
 import io.serverlessworkflow.api.types.HTTPArguments;
-import java.io.BufferedInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UncheckedIOException;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
+import io.serverlessworkflow.api.types.WithHTTPHeaders;
+import io.serverlessworkflow.api.types.WithHTTPQuery;
+import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.client.ClientBuilder;
+import jakarta.ws.rs.client.Entity;
+import jakarta.ws.rs.client.Invocation.Builder;
+import jakarta.ws.rs.client.WebTarget;
+import jakarta.ws.rs.core.MediaType;
 import java.util.Map;
+import java.util.Map.Entry;
 
 public class HttpExecutor extends AbstractTaskExecutor<CallHTTP> {
+
+  private static final Client client = ClientBuilder.newClient();
 
   public HttpExecutor(CallHTTP task) {
     super(task);
@@ -35,25 +40,37 @@ public class HttpExecutor extends AbstractTaskExecutor<CallHTTP> {
 
   @Override
   protected JsonNode internalExecute(JsonNode node) {
-    try {
-      HTTPArguments httpArgs = task.getWith();
-      // todo think on how to solve this oneOf in an smarter way
-      // URL url = new URL(((Endpoint) httpArgs.getEndpoint()).getUri().toString());
-      URL url = new URL(((Map) httpArgs.getEndpoint()).get("uri").toString());
-      HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-      conn.setRequestMethod(httpArgs.getMethod().toUpperCase());
-      int responseCode = conn.getResponseCode();
-      if (responseCode == HttpURLConnection.HTTP_OK) {
-        try (InputStream in = new BufferedInputStream(conn.getInputStream())) {
-          return JsonUtils.mapper().readValue(in, JsonNode.class);
-        }
-      }
-      throw new IllegalArgumentException("Respose code is " + responseCode);
 
-    } catch (MalformedURLException ex) {
-      throw new IllegalArgumentException(ex);
-    } catch (IOException ex) {
-      throw new UncheckedIOException(ex);
+    HTTPArguments httpArgs = task.getWith();
+    String uri =
+        httpArgs
+            .getEndpoint()
+            .getEndpointConfiguration()
+            .getUri()
+            .getLiteralEndpointURI()
+            .getLiteralUriTemplate();
+    WebTarget target = client.target(uri);
+    WithHTTPQuery query = httpArgs.getQuery();
+    if (query != null) {
+      for (Entry<String, Object> entry : query.getAdditionalProperties().entrySet()) {
+        target = target.queryParam(entry.getKey(), entry.getValue());
+      }
+    }
+    Builder request =
+        target
+            .resolveTemplates(
+                JsonUtils.mapper().convertValue(node, new TypeReference<Map<String, Object>>() {}))
+            .request(MediaType.APPLICATION_JSON);
+    WithHTTPHeaders headers = httpArgs.getHeaders();
+    if (headers != null) {
+      headers.getAdditionalProperties().forEach(request::header);
+    }
+    switch (httpArgs.getMethod().toLowerCase()) {
+      case "get":
+      default:
+        return request.get(JsonNode.class);
+      case "post":
+        return request.post(Entity.json(httpArgs.getBody()), JsonNode.class);
     }
   }
 }

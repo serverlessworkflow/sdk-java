@@ -138,7 +138,7 @@ public class WorkflowDefinition {
       return state;
     }
 
-    public Object outputAsJavaObject() {
+    public Object output() {
       return toJavaValue(output);
     }
 

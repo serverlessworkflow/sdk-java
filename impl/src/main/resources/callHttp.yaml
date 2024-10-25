@@ -9,5 +9,5 @@ do:
       with:
         method: get
         endpoint:
-          uri: https://petstore.swagger.io/v2/pet/10
+          uri: https://petstore.swagger.io/v2/pet/{petId}
         output: response
