@@ -21,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.serverlessworkflow.api.types.CallFunction;
 import io.serverlessworkflow.api.types.CallHTTP;
 import io.serverlessworkflow.api.types.CallTask;
+import io.serverlessworkflow.api.types.HTTPArguments;
 import io.serverlessworkflow.api.types.Task;
 import io.serverlessworkflow.api.types.Workflow;
 import java.io.IOException;
@@ -42,7 +43,16 @@ public class ApiTest {
       CallHTTP httpCall = callTask.getCallHTTP();
       assertThat(httpCall).isNotNull();
       assertThat(callTask.getCallAsyncAPI()).isNull();
-      assertThat(httpCall.getWith().getMethod()).isEqualTo("get");
+      HTTPArguments httpParams = httpCall.getWith();
+      assertThat(httpParams.getMethod()).isEqualTo("get");
+      assertThat(
+              httpParams
+                  .getEndpoint()
+                  .getEndpointConfiguration()
+                  .getUri()
+                  .getLiteralEndpointURI()
+                  .getLiteralUriTemplate())
+          .isEqualTo("https://petstore.swagger.io/v2/pet/{petId}");
     }
   }
 

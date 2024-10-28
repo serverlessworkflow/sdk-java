@@ -1,4 +1,4 @@
-$id: https://serverlessworkflow.io/schemas/1.0.0-alpha1/workflow.yaml
+$id: https://serverlessworkflow.io/schemas/1.0.0-alpha5/workflow.yaml
 $schema: https://json-schema.org/draft/2020-12/schema
 description: Serverless Workflow DSL - Workflow Schema.
 type: object
@@ -42,6 +42,11 @@ properties:
         type: object
         title: WorkflowTags
         description: A key/value mapping of the workflow's tags, if any.
+        additionalProperties: true
+      metadata:
+        type: object
+        title: WorkflowMetadata
+        description: Holds additional information about the workflow.
         additionalProperties: true
     required: [ dsl, namespace, name, version ]
   input:
@@ -96,14 +101,31 @@ properties:
         items:
           type: string
           description: The workflow's secrets.
+      timeouts:
+        type: object
+        title: UseTimeouts
+        description: The workflow's reusable timeouts.
+        additionalProperties:
+          $ref: '#/$defs/timeout'
+      catalogs:
+        type: object
+        title: UseCatalogs
+        description: The workflow's reusable catalogs.
+        additionalProperties:
+          $ref: '#/$defs/catalog'
   do:
     $ref: '#/$defs/taskList'
     title: Do
     description: Defines the task(s) the workflow must perform.
   timeout:
-    $ref: '#/$defs/timeout'
-    title: Timeout
-    description: The workflow's timeout configuration, if any.
+    title: DoTimeout
+    oneOf:
+      - $ref: '#/$defs/timeout'
+        title: TimeoutDefinition
+        description: The workflow's timeout configuration, if any.
+      - type: string
+        title: TimeoutReference
+        description: The name of the workflow's timeout, if any.
   output:
     $ref: '#/$defs/output'
     title: Output
@@ -164,13 +186,23 @@ $defs:
         title: TaskBaseExport
         description: Export task output to context.
       timeout:
-        $ref: '#/$defs/timeout'
-        title: TaskBaseTimeout
-        description: The task's timeout configuration, if any.
+        title: TaskTimeout
+        oneOf:
+          - $ref: '#/$defs/timeout'
+            title: TaskTimeoutDefinition
+            description: The task's timeout configuration, if any.
+          - type: string
+            title: TaskTimeoutReference
+            description: The name of the task's timeout, if any.
       then:
         $ref: '#/$defs/flowDirective'
         title: TaskBaseThen
         description: The flow directive to be performed upon completion of the task.
+      metadata:
+        type: object
+        title: TaskMetadata
+        description: Holds additional information about the task.
+        additionalProperties: true
   task:
     title: Task
     description: A discrete unit of work that contributes to achieving the overall objectives defined by the workflow.
@@ -314,18 +346,12 @@ $defs:
               endpoint:
                 title: WithHTTPEndpoint
                 description: The HTTP endpoint to send the request to.
-                oneOf:
-                  - $ref: '#/$defs/endpoint'
-                  - $ref: '#/$defs/runtimeExpression'
-                  - title: LiteralEndpoint
-                    type: string
-                    format: uri-template
+                $ref: '#/$defs/endpoint'
               headers:
                 type: object
                 title: WithHTTPHeaders
                 description: A name/value mapping of the headers, if any, of the HTTP request to perform.
               body:
-                type: object
                 title: WithHTTPBody
                 description: The body, if any, of the HTTP request to perform.
               query:
@@ -527,9 +553,14 @@ $defs:
         unevaluatedProperties: false
         properties:
           error:
-            $ref: '#/$defs/error'
-            title: RaiseError
-            description: Defines the error to raise.
+            title: RaiseTaskError
+            oneOf:
+              - $ref: '#/$defs/error'
+                title: RaiseErrorDefinition
+                description: Defines the error to raise.
+              - type: string
+                title: RaiseErrorReference
+                description: The name of the error to raise
         required: [ error ]
   runTask:
     type: object
@@ -543,6 +574,13 @@ $defs:
         type: object
         title: RunTaskConfiguration
         description: The configuration of the process to execute.
+        unevaluatedProperties: false
+        properties:
+          await:
+            type: boolean
+            default: true
+            title: AwaitProcessCompletion
+            description: Whether to await the process completion before continuing.
         oneOf:
           - title: RunContainer
             description: Enables the execution of external processes encapsulated within a containerized environment.
@@ -753,9 +791,13 @@ $defs:
             title: CatchExceptWhen
             description: A runtime expression used to determine whether or not to catch the filtered error.
           retry:
-            $ref: '#/$defs/retryPolicy'
-            title: TryTaskCatchRetry
-            description: The retry policy to use, if any, when catching errors.
+            oneOf:
+              - $ref: '#/$defs/retryPolicy'
+                title: RetryPolicyDefinition
+                description: The retry policy to use, if any, when catching errors.
+              - type: string
+                title: RetryPolicyReference
+                description: The name of the retry policy to use, if any, when catching errors.
           do:
             $ref: '#/$defs/taskList'
             title: TryTaskCatchDo
@@ -776,7 +818,8 @@ $defs:
     title: FlowDirective
     description: Represents different transition options for a workflow.
     anyOf:
-      - type: string
+      - title: FlowDirectiveEnum
+        type: string
         enum: [ continue, exit, end ]
         default: continue
       - type: string
@@ -822,7 +865,7 @@ $defs:
           description: The configuration of the basic authentication policy.
           unevaluatedProperties: false
           oneOf:
-            - title: BasicAuthenticationData
+            - title: BasicAuthenticationProperties
               description: Inline configuration of the basic authentication policy.
               properties:
                 username:
@@ -845,7 +888,7 @@ $defs:
           description: The configuration of the bearer authentication policy.
           unevaluatedProperties: false
           oneOf:
-            - title: BearerAuthenticationData
+            - title: BearerAuthenticationProperties
               description: Inline configuration of the bearer authentication policy.
               properties:
                 token:
@@ -856,6 +899,29 @@ $defs:
               title: BearerAuthenticationPolicySecret
               description: Secret based configuration of the bearer authentication policy.
       required: [ bearer ]
+    - title: DigestAuthenticationPolicy
+      description: Use digest authentication.
+      properties:
+        digest:
+          type: object
+          title: DigestAuthenticationPolicyConfiguration
+          description: The configuration of the digest authentication policy.
+          unevaluatedProperties: false
+          oneOf:
+            - title: DigestAuthenticationProperties
+              description: Inline configuration of the digest authentication policy.
+              properties:
+                username:
+                  type: string
+                  description: The username to use.
+                password:
+                  type: string
+                  description: The password to use.
+              required: [ username, password ]
+            - $ref: '#/$defs/secretBasedAuthenticationPolicy'
+              title: DigestAuthenticationPolicySecret
+              description: Secret based configuration of the digest authentication policy.
+      required: [ digest ]
     - title: OAuth2AuthenticationPolicy
       description: Use OAuth2 authentication.
       properties:
@@ -865,65 +931,140 @@ $defs:
           description: The configuration of the OAuth2 authentication policy.
           unevaluatedProperties: false
           oneOf:
-            - title: OAuth2AutenthicationData
-              description: Inline configuration of the OAuth2 authentication policy.
-              properties:
-                authority:
-                  type: string
-                  format: uri-template
-                  title: OAuth2AutenthicationDataAuthority
-                  description: The URI that references the OAuth2 authority to use.
-                grant:
-                  type: string
-                  title: OAuth2AutenthicationDataGrant
-                  description: The grant type to use.
-                client:
-                  type: object
-                  title: OAuth2AutenthicationDataClient
-                  description: The definition of an OAuth2 client.
-                  unevaluatedProperties: false
+            - type: object
+              title: OAuth2ConnectAuthenticationProperties
+              description: The inline configuration of the OAuth2 authentication policy.
+              unevaluatedProperties: false
+              allOf:
+                - $ref: '#/$defs/oauth2AuthenticationProperties'
+                - type: object
                   properties:
-                    id:
-                      type: string
-                      title: ClientId
-                      description: The client id to use.
-                    secret:
-                      type: string
-                      title: ClientSecret
-                      description: The client secret to use, if any.
-                  required: [ id ]
-                scopes:
-                  type: array
-                  title: OAuth2AutenthicationDataScopes
-                  description: The scopes, if any, to request the token for.
-                  items:
-                    type: string
-                audiences:
-                  type: array
-                  title: OAuth2AutenthicationDataAudiences
-                  description: The audiences, if any, to request the token for.
-                  items:
-                    type: string
-                username:
-                  type: string
-                  title: OAuth2AutenthicationDataUsername
-                  description: The username to use. Used only if the grant type is Password.
-                password:
-                  type: string
-                  title: OAuth2AutenthicationDataPassword
-                  description: The password to use. Used only if the grant type is Password.
-                subject:
-                  $ref: '#/$defs/oauth2Token'
-                  title: OAuth2AutenthicationDataSubject
-                  description: The security token that represents the identity of the party on behalf of whom the request is being made.
-                actor:
-                  $ref: '#/$defs/oauth2Token'
-                  title: OAuth2AutenthicationDataActor
-                  description: The security token that represents the identity of the acting party.
+                    endpoints:
+                      type: object
+                      title: OAuth2AuthenticationPropertiesEndpoints
+                      description: The endpoint configurations for OAuth2.
+                      properties:
+                        token:
+                          type: string
+                          format: uri-template
+                          default: /oauth2/token
+                          title: OAuth2TokenEndpoint
+                          description: The relative path to the token endpoint. Defaults to `/oauth2/token`.
+                        revocation:
+                          type: string
+                          format: uri-template
+                          default: /oauth2/revoke
+                          title: OAuth2RevocationEndpoint
+                          description: The relative path to the revocation endpoint. Defaults to `/oauth2/revoke`.
+                        introspection:
+                          type: string
+                          format: uri-template
+                          default: /oauth2/introspect
+                          title: OAuth2IntrospectionEndpoint
+                          description: The relative path to the introspection endpoint. Defaults to `/oauth2/introspect`.
             - $ref: '#/$defs/secretBasedAuthenticationPolicy'
               title: OAuth2AuthenticationPolicySecret
               description: Secret based configuration of the OAuth2 authentication policy.
       required: [ oauth2 ]
+    - title: OpenIdConnectAuthenticationPolicy
+      description: Use OpenIdConnect authentication.
+      properties:
+        oidc:
+          type: object
+          title: OpenIdConnectAuthenticationPolicyConfiguration
+          description: The configuration of the OpenIdConnect authentication policy.
+          unevaluatedProperties: false
+          oneOf:
+            - $ref: '#/$defs/oauth2AuthenticationProperties'
+              title: OpenIdConnectAuthenticationProperties
+              description: The inline configuration of the OpenIdConnect authentication policy.
+              unevaluatedProperties: false
+            - $ref: '#/$defs/secretBasedAuthenticationPolicy'
+              title: OpenIdConnectAuthenticationPolicySecret
+              description: Secret based configuration of the OpenIdConnect authentication policy.
+      required: [ oidc ]
+  oauth2AuthenticationProperties:
+    type: object
+    title: OAuth2AutenthicationData
+    description: Inline configuration of the OAuth2 authentication policy.
+    properties:
+      authority:
+        $ref: '#/$defs/uriTemplate'
+        title: OAuth2AutenthicationDataAuthority
+        description: The URI that references the OAuth2 authority to use.
+      grant:
+        type: string
+        enum: [ authorization_code, client_credentials, password, refresh_token, 'urn:ietf:params:oauth:grant-type:token-exchange']
+        title: OAuth2AutenthicationDataGrant
+        description: The grant type to use.
+      client:
+        type: object
+        title: OAuth2AutenthicationDataClient
+        description: The definition of an OAuth2 client.
+        unevaluatedProperties: false
+        properties:
+          id:
+            type: string
+            title: ClientId
+            description: The client id to use.
+          secret:
+            type: string
+            title: ClientSecret
+            description: The client secret to use, if any.
+          assertion:
+            type: string
+            title: ClientAssertion
+            description: A JWT containing a signed assertion with your application credentials.
+          authentication:
+            type: string
+            enum: [ client_secret_basic, client_secret_post, client_secret_jwt, private_key_jwt, none ]
+            default: client_secret_post
+            title: ClientAuthentication
+            description: The authentication method to use to authenticate the client.
+      request:
+        type: object
+        title: OAuth2TokenRequest
+        description: The configuration of an OAuth2 token request
+        properties:
+          encoding:
+            type: string
+            enum: [ 'application/x-www-form-urlencoded', 'application/json' ]
+            default: 'application/x-www-form-urlencoded'
+            title: Oauth2TokenRequestEncoding
+      issuers:
+        type: array
+        title: OAuth2Issuers
+        description: A list that contains that contains valid issuers that will be used to check against the issuer of generated tokens.
+        items:
+          type: string
+      scopes:
+        type: array
+        title: OAuth2AutenthicationDataScopes
+        description: The scopes, if any, to request the token for.
+        items:
+          type: string
+      audiences:
+        type: array
+        title: OAuth2AutenthicationDataAudiences
+        description: The audiences, if any, to request the token for.
+        items:
+          type: string
+      username:
+        type: string
+        title: OAuth2AutenthicationDataUsername
+        description: The username to use. Used only if the grant type is Password.
+      password:
+        type: string
+        title: OAuth2AutenthicationDataPassword
+        description: The password to use. Used only if the grant type is Password.
+      subject:
+        $ref: '#/$defs/oauth2Token'
+        title: OAuth2AutenthicationDataSubject
+        description: The security token that represents the identity of the party on behalf of whom the request is being made.
+      actor:
+        $ref: '#/$defs/oauth2Token'
+        title: OAuth2AutenthicationDataActor
+        description: The security token that represents the identity of the acting party.
   oauth2Token:
     type: object
     title: OAuth2TokenDefinition
@@ -940,32 +1081,37 @@ $defs:
         description: The type of the security token to use.
     required: [ token, type ]
   duration:
-    type: object
-    title: Duration
-    description: The definition of a duration.
-    minProperties: 1
-    unevaluatedProperties: false
-    properties:
-      days:
-        type: integer
-        title: DurationDays
-        description: Number of days, if any.
-      hours:
-        type: integer
-        title: DurationHours
-        description: Number of days, if any.
-      minutes:
-        type: integer
-        title: DurationMinutes
-        description: Number of minutes, if any.
-      seconds:
-        type: integer
-        title: DurationSeconds
-        description: Number of seconds, if any.
-      milliseconds:
-        type: integer
-        title: DurationMilliseconds
-        description: Number of milliseconds, if any.
+    oneOf:
+      - type: object
+        minProperties: 1
+        unevaluatedProperties: false
+        properties:
+          days:
+            type: integer
+            title: DurationDays
+            description: Number of days, if any.
+          hours:
+            type: integer
+            title: DurationHours
+            description: Number of days, if any.
+          minutes:
+            type: integer
+            title: DurationMinutes
+            description: Number of minutes, if any.
+          seconds:
+            type: integer
+            title: DurationSeconds
+            description: Number of seconds, if any.
+          milliseconds:
+            type: integer
+            title: DurationMilliseconds
+            description: Number of milliseconds, if any.
+        title: DurationInline
+        description: The inline definition of a duration.
+      - type: string
+        pattern: '^P(?!$)(\d+(?:\.\d+)?Y)?(\d+(?:\.\d+)?M)?(\d+(?:\.\d+)?W)?(\d+(?:\.\d+)?D)?(T(?=\d)(\d+(?:\.\d+)?H)?(\d+(?:\.\d+)?M)?(\d+(?:\.\d+)?S)?)?$'
+        title: DurationExpression
+        description: The ISO 8601 expression of a duration.
   error:
     type: object
     title: Error
@@ -977,11 +1123,10 @@ $defs:
         description: A URI reference that identifies the error type.
         oneOf:
           - title: LiteralErrorType
+            $ref: '#/$defs/uriTemplate'
             description: The literal error type.
-            type: string
-            format: uri-template
-          - $ref: '#/$defs/runtimeExpression'
-            title: ExpressionErrorType
+          - title: ExpressionErrorType
+            $ref: '#/$defs/runtimeExpression'
             description: An expression based error type.
       status:
         type: integer
@@ -1006,29 +1151,43 @@ $defs:
         type: string
         title: ErrorDetails
         description: A human-readable explanation specific to this occurrence of the error.
-    required: [ type, status, instance ]
+    required: [ type, status ]
+  uriTemplate:
+    title: UriTemplate
+    anyOf:
+      - title: LiteralUriTemplate
+        type: string
+        format: uri-template
+        pattern: "^[A-Za-z][A-Za-z0-9+\\-.]*://.*"
+      - title: LiteralUri
+        type: string
+        format: uri
+        pattern: "^[A-Za-z][A-Za-z0-9+\\-.]*://.*"
   endpoint:
-    type: object
     title: Endpoint
     description: Represents an endpoint.
-    unevaluatedProperties: false
-    properties:
-      uri:
-        title: EndpointUri
-        description: The endpoint's URI.
-        oneOf:
-          - title: LiteralEndpointURI
-            description: The literal endpoint's URI.
-            type: string
-            format: uri-template
-          - $ref: '#/$defs/runtimeExpression'
-            title: ExpressionEndpointURI
-            description: An expression based endpoint's URI.
-      authentication:
-        $ref: '#/$defs/referenceableAuthenticationPolicy'
-        title: EndpointAuthentication
-        description: The authentication policy to use.
-    required: [ uri ]
+    oneOf:
+      - $ref: '#/$defs/runtimeExpression'
+      - $ref: '#/$defs/uriTemplate'
+      - title: EndpointConfiguration
+        type: object
+        unevaluatedProperties: false
+        properties:
+          uri:
+            title: EndpointUri
+            description: The endpoint's URI.
+            oneOf:
+              - title: LiteralEndpointURI
+                description: The literal endpoint's URI.
+                $ref: '#/$defs/uriTemplate'
+              - title: ExpressionEndpointURI
+                $ref: '#/$defs/runtimeExpression'
+                description: An expression based endpoint's URI.
+          authentication:
+            $ref: '#/$defs/referenceableAuthenticationPolicy'
+            title: EndpointAuthentication
+            description: The authentication policy to use.
+        required: [ uri ]
   eventProperties:
     type: object
     title: EventProperties
@@ -1042,9 +1201,7 @@ $defs:
         title: EventSource
         description: Identifies the context in which an event happened.
         oneOf:
-          - title: LiteralSource
-            type: string
-            format: uri-template
+          - $ref: '#/$defs/uriTemplate'
           - $ref: '#/$defs/runtimeExpression'
       type:
         type: string
@@ -1071,11 +1228,10 @@ $defs:
         description: The schema describing the event format.
         oneOf:
           - title: LiteralDataSchema
+            $ref: '#/$defs/uriTemplate'
             description: The literal event data schema.
-            type: string
-            format: uri-template
-          - $ref: '#/$defs/runtimeExpression'
-            title: ExpressionDataSchema
+          - title: ExpressionDataSchema
+            $ref: '#/$defs/runtimeExpression'
             description: An expression based event data schema.
     additionalProperties: true
   eventConsumptionStrategy:
@@ -1162,28 +1318,20 @@ $defs:
         description: The task(s) to execute after the extended task, if any.
     required: [ extend ]
   externalResource:
+    type: object
     title: ExternalResource
     description: Represents an external resource.
-    oneOf:
-      - type: string
-        format: uri-template
-      - title: ExternalResourceURI
-        type: object
-        unevaluatedProperties: false
-        properties:
-          uri:
-            type: string
-            format: uri-template
-            title: ExternalResourceURIEndpoint
-            description: The endpoint's URI.
-          authentication:
-            $ref: '#/$defs/referenceableAuthenticationPolicy'
-            title: ExternalResourceURIAuthentication
-            description: The authentication policy to use.
-          name:
-            type: string
-            description: The external resource's name, if any.
-        required: [ uri ]
+    unevaluatedProperties: false
+    properties:
+      name:
+        type: string
+        title: ExternalResourceName
+        description: The name of the external resource, if any.
+      endpoint:
+        $ref: '#/$defs/endpoint'
+        title: ExternalResourceEndpoint
+        description: The endpoint of the external resource.
+    required: [ endpoint ]
   input:
     type: object
     title: Input
@@ -1347,6 +1495,17 @@ $defs:
         title: TimeoutAfter
         description: The duration after which to timeout.
     required: [ after ]
+  catalog:
+    type: object
+    title: Catalog
+    description: The definition of a resource catalog
+    unevaluatedProperties: false
+    properties:
+      endpoint:
+        $ref: '#/$defs/endpoint'
+        title: CatalogEndpoint
+        description: The root URL where the catalog is hosted
+    required: [ endpoint ]
   runtimeExpression:
     type: string
     title: RuntimeExpression
