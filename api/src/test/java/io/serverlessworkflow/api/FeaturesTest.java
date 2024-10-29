@@ -45,7 +45,7 @@ public class FeaturesTest {
         "features/try.yaml",
         "features/listen.yaml",
         "features/callFunction.yaml",
-        "features/callCustomFunction.json"
+        "features/callCustomFunction.yaml"
       })
   public void testSpecFeaturesParsing(String workflowLocation) throws IOException {
     Workflow workflow = readWorkflowFromClasspath(workflowLocation);

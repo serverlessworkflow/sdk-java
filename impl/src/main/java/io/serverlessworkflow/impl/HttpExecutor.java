@@ -40,8 +40,8 @@ public class HttpExecutor extends AbstractTaskExecutor<CallHTTP> {
 
   @Override
   protected JsonNode internalExecute(JsonNode node) {
-
     HTTPArguments httpArgs = task.getWith();
+    // missing checks
     String uri =
         httpArgs
             .getEndpoint()
