@@ -31,18 +31,24 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class WorkflowDefinition {
 
-  private WorkflowDefinition(Workflow workflow, Collection<WorkflowExecutionListener> listeners) {
+  private WorkflowDefinition(
+      Workflow workflow,
+      TaskExecutorFactory factory,
+      Collection<WorkflowExecutionListener> listeners) {
     this.workflow = workflow;
+    this.factory = factory;
     this.listeners = listeners;
   }
 
   private final Workflow workflow;
   private final Collection<WorkflowExecutionListener> listeners;
+  private final TaskExecutorFactory factory;
   private final Map<JsonPointer, TaskExecutor<? extends TaskBase>> taskExecutors =
       new ConcurrentHashMap<>();
 
   public static class Builder {
     private final Workflow workflow;
+    private TaskExecutorFactory factory = DefaultTaskExecutorFactory.get();
     private Collection<WorkflowExecutionListener> listeners;
 
     private Builder(Workflow workflow) {
@@ -57,9 +63,15 @@ public class WorkflowDefinition {
       return this;
     }
 
+    public Builder withTaskExecutorFactory(TaskExecutorFactory factory) {
+      this.factory = factory;
+      return this;
+    }
+
     public WorkflowDefinition build() {
       return new WorkflowDefinition(
           workflow,
+          factory,
           listeners == null
               ? Collections.emptySet()
               : Collections.unmodifiableCollection(listeners));
@@ -71,7 +83,7 @@ public class WorkflowDefinition {
   }
 
   public WorkflowInstance execute(Object input) {
-    return new WorkflowInstance(JsonUtils.fromValue(input));
+    return new WorkflowInstance(factory, JsonUtils.fromValue(input));
   }
 
   enum State {
@@ -85,14 +97,16 @@ public class WorkflowDefinition {
     private final JsonNode input;
     private JsonNode output;
     private State state;
+    private TaskExecutorFactory factory;
 
     private JsonPointer currentPos;
 
-    private WorkflowInstance(JsonNode input) {
+    private WorkflowInstance(TaskExecutorFactory factory, JsonNode input) {
       this.input = input;
       this.output = object();
       this.state = State.STARTED;
       this.currentPos = JsonPointer.compile("/");
+      this.factory = factory;
       processDo(workflow.getDo());
     }
 
@@ -105,8 +119,7 @@ public class WorkflowDefinition {
         this.output =
             MergeUtils.merge(
                 taskExecutors
-                    .computeIfAbsent(
-                        currentPos, k -> TaskExecutorFactory.buildExecutor(task.getTask()))
+                    .computeIfAbsent(currentPos, k -> factory.getTaskExecutor(task.getTask()))
                     .apply(input),
                 output);
         listeners.forEach(l -> l.onTaskEnded(currentPos, task.getTask()));

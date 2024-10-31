@@ -7,7 +7,8 @@ do:
   - getPet:
       call: http
       with:
-        method: get
-        endpoint:
-          uri: https://petstore.swagger.io/v2/pet/{petId}
-        output: response
+       headers: 
+         content-type: application/json
+       method: get
+       endpoint:
+         uri: https://petstore.swagger.io/v2/pet/{petId}

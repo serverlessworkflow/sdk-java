@@ -21,6 +21,9 @@ import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator.Feature;
 import io.serverlessworkflow.serialization.BeanDeserializerModifierWithValidation;
+import io.serverlessworkflow.serialization.URIDeserializer;
+import io.serverlessworkflow.serialization.URISerializer;
+import java.net.URI;
 
 class ObjectMapperFactory {
 
@@ -39,7 +42,10 @@ class ObjectMapperFactory {
 
   private static ObjectMapper configure(ObjectMapper mapper) {
     SimpleModule validationModule = new SimpleModule();
+    validationModule.addDeserializer(URI.class, new URIDeserializer());
+    validationModule.addSerializer(URI.class, new URISerializer());
     validationModule.setDeserializerModifier(new BeanDeserializerModifierWithValidation());
+
     return mapper
         .configure(SerializationFeature.INDENT_OUTPUT, true)
         .configure(SerializationFeature.WRITE_EMPTY_JSON_ARRAYS, false)

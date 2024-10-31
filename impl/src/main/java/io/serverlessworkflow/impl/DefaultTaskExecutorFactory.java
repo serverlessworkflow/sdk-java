@@ -15,9 +15,28 @@
  */
 package io.serverlessworkflow.impl;
 
+import io.serverlessworkflow.api.types.CallTask;
 import io.serverlessworkflow.api.types.Task;
 import io.serverlessworkflow.api.types.TaskBase;
 
-public interface TaskExecutorFactory {
-  TaskExecutor<? extends TaskBase> getTaskExecutor(Task task);
+public class DefaultTaskExecutorFactory implements TaskExecutorFactory {
+
+  protected DefaultTaskExecutorFactory() {}
+
+  private static TaskExecutorFactory instance = new DefaultTaskExecutorFactory();
+
+  public static TaskExecutorFactory get() {
+    return instance;
+  }
+
+  public TaskExecutor<? extends TaskBase> getTaskExecutor(Task task) {
+
+    if (task.getCallTask() != null) {
+      CallTask callTask = task.getCallTask();
+      if (callTask.getCallHTTP() != null) {
+        return new HttpExecutor(callTask.getCallHTTP());
+      }
+    }
+    throw new UnsupportedOperationException(task.get().getClass().getName() + " not supported yet");
+  }
 }
