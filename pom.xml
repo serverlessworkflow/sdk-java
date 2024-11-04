@@ -69,7 +69,7 @@
 
     <!-- Dependencies versions, please keep in alphabetical order -->
     <version.ch.qos.logback>1.5.12</version.ch.qos.logback>
-    <version.com.fasterxml.jackson>2.18.0</version.com.fasterxml.jackson>
+    <version.com.fasterxml.jackson>2.18.1</version.com.fasterxml.jackson>
     <version.com.networknt>1.5.3</version.com.networknt>
     <version.jakarta.validation>3.1.0</version.jakarta.validation>
     <version.jsonassert>1.5.2</version.jsonassert>
