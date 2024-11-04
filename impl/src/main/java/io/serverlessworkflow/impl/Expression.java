@@ -16,26 +16,7 @@
 package io.serverlessworkflow.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import io.serverlessworkflow.api.types.TaskBase;
 
-public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskExecutor<T> {
-
-  protected final T task;
-  protected final ExpressionFactory exprFactory;
-
-  protected AbstractTaskExecutor(T task, ExpressionFactory exprFactory) {
-    this.task = task;
-    this.exprFactory = exprFactory;
-  }
-
-  @Override
-  public JsonNode apply(JsonNode node) {
-
-    // do input filtering
-    return internalExecute(node);
-    // do output filtering
-
-  }
-
-  protected abstract JsonNode internalExecute(JsonNode node);
+public interface Expression {
+  JsonNode eval(JsonNode input);
 }
