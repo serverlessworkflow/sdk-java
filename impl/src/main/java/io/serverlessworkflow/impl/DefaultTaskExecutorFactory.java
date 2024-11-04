@@ -18,23 +18,32 @@ package io.serverlessworkflow.impl;
 import io.serverlessworkflow.api.types.CallTask;
 import io.serverlessworkflow.api.types.Task;
 import io.serverlessworkflow.api.types.TaskBase;
+import io.serverlessworkflow.impl.jq.JQExpressionFactory;
 
 public class DefaultTaskExecutorFactory implements TaskExecutorFactory {
 
-  protected DefaultTaskExecutorFactory() {}
+  private final ExpressionFactory exprFactory;
 
-  private static TaskExecutorFactory instance = new DefaultTaskExecutorFactory();
+  private static TaskExecutorFactory instance =
+      new DefaultTaskExecutorFactory(JQExpressionFactory.get());
 
   public static TaskExecutorFactory get() {
     return instance;
   }
 
-  public TaskExecutor<? extends TaskBase> getTaskExecutor(Task task) {
+  public static TaskExecutorFactory get(ExpressionFactory factory) {
+    return new DefaultTaskExecutorFactory(factory);
+  }
 
+  protected DefaultTaskExecutorFactory(ExpressionFactory exprFactory) {
+    this.exprFactory = exprFactory;
+  }
+
+  public TaskExecutor<? extends TaskBase> getTaskExecutor(Task task) {
     if (task.getCallTask() != null) {
       CallTask callTask = task.getCallTask();
       if (callTask.getCallHTTP() != null) {
-        return new HttpExecutor(callTask.getCallHTTP());
+        return new HttpExecutor(callTask.getCallHTTP(), exprFactory);
       }
     }
     throw new UnsupportedOperationException(task.get().getClass().getName() + " not supported yet");

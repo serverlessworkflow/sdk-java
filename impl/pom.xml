@@ -8,6 +8,7 @@
   <artifactId>serverlessworkflow-impl</artifactId>
   <properties>
       <version.org.glassfish.jersey>3.1.9</version.org.glassfish.jersey>
+      <version.net.thisptr>1.0.1</version.net.thisptr>
   </properties>
   <dependencies>
     <dependency>
@@ -24,6 +25,11 @@
       <groupId>org.glassfish.jersey.media</groupId>
       <artifactId>jersey-media-json-jackson</artifactId>
       <version>${version.org.glassfish.jersey}</version>
+    </dependency>
+    <dependency>
+      <groupId>net.thisptr</groupId>
+      <artifactId>jackson-jq</artifactId>
+      <version>${version.net.thisptr}</version>
     </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>

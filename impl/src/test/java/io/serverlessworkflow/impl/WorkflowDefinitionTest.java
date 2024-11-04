@@ -41,11 +41,12 @@ public class WorkflowDefinitionTest {
   }
 
   private static Stream<Arguments> provideParameters() {
+    Map<String, Object> petInput = Map.of("petId", 10);
+    Condition<Object> petCondition =
+        new Condition<>(
+            o -> ((Map<String, Object>) o).containsKey("photoUrls"), "callHttpCondition");
     return Stream.of(
-        Arguments.of(
-            "callHttp.yaml",
-            Map.of("petId", 1),
-            new Condition<>(
-                o -> ((Map<String, Object>) o).containsKey("photoUrls"), "callHttpCondition")));
+        Arguments.of("callHttp.yaml", petInput, petCondition),
+        Arguments.of("call-http-endpoint-interpolation.yaml", petInput, petCondition));
   }
 }

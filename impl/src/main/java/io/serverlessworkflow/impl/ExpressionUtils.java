@@ -15,27 +15,26 @@
  */
 package io.serverlessworkflow.impl;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import io.serverlessworkflow.api.types.TaskBase;
+public class ExpressionUtils {
 
-public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskExecutor<T> {
+  private static final String EXPR_PREFIX = "${";
+  private static final String EXPR_SUFFIX = "}";
 
-  protected final T task;
-  protected final ExpressionFactory exprFactory;
+  private ExpressionUtils() {}
 
-  protected AbstractTaskExecutor(T task, ExpressionFactory exprFactory) {
-    this.task = task;
-    this.exprFactory = exprFactory;
+  public static String trimExpr(String expr) {
+    expr = expr.trim();
+    if (expr.startsWith(EXPR_PREFIX)) {
+      expr = trimExpr(expr, EXPR_PREFIX, EXPR_SUFFIX);
+    }
+    return expr.trim();
   }
 
-  @Override
-  public JsonNode apply(JsonNode node) {
-
-    // do input filtering
-    return internalExecute(node);
-    // do output filtering
-
+  private static String trimExpr(String expr, String prefix, String suffix) {
+    expr = expr.substring(prefix.length());
+    if (expr.endsWith(suffix)) {
+      expr = expr.substring(0, expr.length() - suffix.length());
+    }
+    return expr;
   }
-
-  protected abstract JsonNode internalExecute(JsonNode node);
 }
