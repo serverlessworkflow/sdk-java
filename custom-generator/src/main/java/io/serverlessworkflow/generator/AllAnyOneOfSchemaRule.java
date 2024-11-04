@@ -23,6 +23,7 @@ import com.sun.codemodel.JBlock;
 import com.sun.codemodel.JClass;
 import com.sun.codemodel.JClassAlreadyExistsException;
 import com.sun.codemodel.JClassContainer;
+import com.sun.codemodel.JConditional;
 import com.sun.codemodel.JDefinedClass;
 import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JFieldVar;
@@ -32,13 +33,17 @@ import com.sun.codemodel.JMod;
 import com.sun.codemodel.JPackage;
 import com.sun.codemodel.JType;
 import com.sun.codemodel.JVar;
+import jakarta.validation.ConstraintViolationException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Pattern;
 import org.jsonschema2pojo.Jsonschema2Pojo;
 import org.jsonschema2pojo.Schema;
 import org.jsonschema2pojo.exception.GenerationException;
@@ -54,7 +59,35 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
     this.ruleFactory = ruleFactory;
   }
 
-  private static class JTypeWrapper {
+  private static final String REF = "$ref";
+  private static final String PATTERN = "pattern";
+
+  private enum Format {
+    URI_TEMPLATE("^[A-Za-z][A-Za-z0-9+\\-.]*://.*");
+
+    private final String pattern;
+
+    Format(String pattern) {
+      this.pattern = pattern;
+    }
+
+    public static Format parse(String str) {
+      if (str != null) {
+        switch (str) {
+          case "uri-template":
+            return URI_TEMPLATE;
+        }
+      }
+      return null;
+    }
+
+    String pattern() {
+
+      return pattern;
+    }
+  }
+
+  private static class JTypeWrapper implements Comparable<JTypeWrapper> {
 
     private final JType type;
     private final JsonNode node;
@@ -71,6 +104,27 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
     public JsonNode getNode() {
       return node;
     }
+
+    @Override
+    public int compareTo(JTypeWrapper other) {
+      return typeToNumber() - other.typeToNumber();
+    }
+
+    private int typeToNumber() {
+      if (type.name().equals("Object")) {
+        return 6;
+      } else if (type.name().equals("String")) {
+        return node.has(PATTERN) || node.has(REF) ? 4 : 5;
+      } else if (type.isPrimitive()) {
+        return 3;
+      } else if (type.isReference()) {
+        return 2;
+      } else if (type.isArray()) {
+        return 1;
+      } else {
+        return 0;
+      }
+    }
   }
 
   @Override
@@ -82,11 +136,13 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
       Schema schema) {
 
     Optional<JType> refType = refType(nodeName, schemaNode, parent, generatableType, schema);
-    Collection<JTypeWrapper> unionTypes = new ArrayList<>();
+    List<JTypeWrapper> unionTypes = new ArrayList<>();
 
     unionType("oneOf", nodeName, schemaNode, parent, generatableType, schema, unionTypes);
     unionType("anyOf", nodeName, schemaNode, parent, generatableType, schema, unionTypes);
     unionType("allOf", nodeName, schemaNode, parent, generatableType, schema, unionTypes);
+
+    Collections.sort(unionTypes);
 
     JType javaType;
     if (schemaNode.has("enum")) {
@@ -101,11 +157,11 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
               .getTypeRule()
               .apply(nodeName, schemaNode, parent, generatableType.getPackage(), schema);
       if (javaType instanceof JDefinedClass) {
-        populateClass((JDefinedClass) javaType, refType, unionTypes);
+        populateClass(schema, (JDefinedClass) javaType, refType, unionTypes);
       } else if (!unionTypes.isEmpty()) {
         javaType =
             createUnionClass(
-                nodeName, schemaNode, generatableType.getPackage(), refType, unionTypes);
+                schema, nodeName, schemaNode, generatableType.getPackage(), refType, unionTypes);
       }
       schema.setJavaTypeIfEmpty(javaType);
     }
@@ -113,7 +169,10 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
   }
 
   private JDefinedClass populateClass(
-      JDefinedClass definedClass, Optional<JType> refType, Collection<JTypeWrapper> unionTypes) {
+      Schema parentSchema,
+      JDefinedClass definedClass,
+      Optional<JType> refType,
+      Collection<JTypeWrapper> unionTypes) {
     JType clazzClass = definedClass.owner()._ref(Object.class);
 
     Optional<JFieldVar> valueField;
@@ -144,9 +203,19 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
       } catch (JClassAlreadyExistsException ex) {
         // already deserialized aware
       }
+
+      Collection<JTypeWrapper> stringTypes = new ArrayList<>();
       for (JTypeWrapper unionType : unionTypes) {
-        wrapIt(definedClass, valueField, unionType.getType(), Optional.of(unionType.getNode()));
+        if (isStringType(unionType.getType())) {
+          stringTypes.add(unionType);
+        } else {
+          wrapIt(parentSchema, definedClass, valueField, unionType.getType(), unionType.getNode());
+        }
       }
+      if (!stringTypes.isEmpty()) {
+        wrapStrings(parentSchema, definedClass, valueField, stringTypes);
+      }
+
     } else {
       valueField = Optional.empty();
     }
@@ -156,7 +225,7 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
           if (type instanceof JClass) {
             definedClass._extends((JClass) type);
           } else {
-            wrapIt(definedClass, valueField, type, Optional.empty());
+            wrapIt(parentSchema, definedClass, valueField, type, null);
           }
         });
 
@@ -165,6 +234,10 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
       definedClass.constructor(JMod.PUBLIC);
     }
     return definedClass;
+  }
+
+  private static boolean isStringType(JType type) {
+    return type.name().equals("String");
   }
 
   private JDefinedClass generateSerializer(JDefinedClass relatedClass)
@@ -208,6 +281,7 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
   }
 
   private JDefinedClass createUnionClass(
+      Schema parentSchema,
       String nodeName,
       JsonNode schemaNode,
       JPackage container,
@@ -215,6 +289,7 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
       Collection<JTypeWrapper> unionTypes) {
     try {
       return populateClass(
+          parentSchema,
           container._class(
               ruleFactory.getNameHelper().getUniqueClassName(nodeName, schemaNode, container)),
           refType,
@@ -225,30 +300,109 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
   }
 
   private void wrapIt(
+      Schema parentSchema,
       JDefinedClass definedClass,
       Optional<JFieldVar> valueField,
       JType unionType,
-      Optional<JsonNode> node) {
-    final String name =
-        node.map(n -> n.get("title")).map(JsonNode::asText).orElse(unionType.name());
-    JFieldVar instanceField =
-        definedClass.field(
-            JMod.PRIVATE,
-            unionType,
-            ruleFactory.getNameHelper().getPropertyName(name, node.orElse(null)));
-    GeneratorUtils.buildMethod(definedClass, instanceField, ruleFactory.getNameHelper(), name);
-
-    JMethod constructor = definedClass.getConstructor(new JType[] {unionType});
-    JVar instanceParam;
-    if (constructor == null) {
-      constructor = definedClass.constructor(JMod.PUBLIC);
-      instanceParam = constructor.param(unionType, instanceField.name());
-    } else {
-      instanceParam = constructor.listParams()[0];
-    }
+      JsonNode node) {
+    JFieldVar instanceField = getInstanceField(parentSchema, definedClass, unionType, node);
+    JMethod constructor = definedClass.constructor(JMod.PUBLIC);
+    JVar instanceParam = constructor.param(unionType, instanceField.name());
     JBlock body = constructor.body();
     valueField.ifPresent(v -> body.assign(JExpr._this().ref(v), instanceParam));
     body.assign(JExpr._this().ref(instanceField), instanceParam);
+  }
+
+  private void wrapStrings(
+      Schema parentSchema,
+      JDefinedClass definedClass,
+      Optional<JFieldVar> valueField,
+      Collection<JTypeWrapper> stringTypes) {
+    Iterator<JTypeWrapper> iter = stringTypes.iterator();
+    JTypeWrapper first = iter.next();
+    JMethod constructor = definedClass.constructor(JMod.PUBLIC);
+
+    JBlock body = constructor.body();
+    String pattern = pattern(first.getNode(), parentSchema);
+    if (pattern == null && iter.hasNext()) {
+      pattern = ".*";
+    }
+    JFieldVar instanceField =
+        getInstanceField(parentSchema, definedClass, first.getType(), first.getNode());
+    JVar instanceParam = constructor.param(first.type, instanceField.name());
+    valueField.ifPresent(v -> body.assign(JExpr._this().ref(v), instanceParam));
+    if (pattern != null) {
+      JConditional condition =
+          body._if(getPatternCondition(pattern, body, instanceField, instanceParam, definedClass));
+      condition._then().assign(JExpr._this().ref(instanceField), instanceParam);
+      while (iter.hasNext()) {
+        JTypeWrapper item = iter.next();
+        instanceField =
+            getInstanceField(parentSchema, definedClass, item.getType(), item.getNode());
+        pattern = pattern(item.getNode(), parentSchema);
+        if (pattern == null) {
+          pattern = ".*";
+        }
+        condition =
+            condition._elseif(
+                getPatternCondition(pattern, body, instanceField, instanceParam, definedClass));
+        condition._then().assign(JExpr._this().ref(instanceField), instanceParam);
+      }
+      condition
+          ._else()
+          ._throw(
+              JExpr._new(definedClass.owner()._ref(ConstraintViolationException.class))
+                  .arg(
+                      definedClass
+                          .owner()
+                          .ref(String.class)
+                          .staticInvoke("format")
+                          .arg("%s does not match any pattern")
+                          .arg(instanceParam))
+                  .arg(JExpr._null()));
+    } else {
+      body.assign(JExpr._this().ref(instanceField), instanceParam);
+    }
+  }
+
+  private JFieldVar getInstanceField(
+      Schema parentSchema, JDefinedClass definedClass, JType type, JsonNode node) {
+    JFieldVar instanceField =
+        definedClass.field(
+            JMod.PRIVATE,
+            type,
+            ruleFactory
+                .getNameHelper()
+                .getPropertyName(getTypeName(node, type, parentSchema), node));
+    GeneratorUtils.buildMethod(
+        definedClass, instanceField, ruleFactory.getNameHelper(), instanceField.name());
+    return instanceField;
+  }
+
+  private static String getFromNode(JsonNode node, String fieldName) {
+    if (node != null) {
+      JsonNode item = node.get(fieldName);
+      if (item != null) {
+        return item.asText();
+      }
+    }
+
+    return null;
+  }
+
+  private JInvocation getPatternCondition(
+      String pattern,
+      JBlock body,
+      JFieldVar instanceField,
+      JVar instanceParam,
+      JDefinedClass definedClass) {
+    JFieldVar patternField =
+        definedClass.field(
+            JMod.PRIVATE | JMod.STATIC | JMod.FINAL,
+            Pattern.class,
+            instanceField.name() + "_" + "Pattern",
+            definedClass.owner().ref(Pattern.class).staticInvoke("compile").arg(pattern));
+    return JExpr.invoke(JExpr.invoke(patternField, "matcher").arg(instanceParam), "matches");
   }
 
   private void unionType(
@@ -285,8 +439,8 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
       JsonNode parent,
       JClassContainer generatableType,
       Schema parentSchema) {
-    if (schemaNode.has("$ref")) {
-      String ref = schemaNode.get("$ref").asText();
+    if (schemaNode.has(REF)) {
+      String ref = schemaNode.get(REF).asText();
       Schema schema =
           ruleFactory
               .getSchemaStore()
@@ -306,6 +460,39 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
                   schema));
     }
     return Optional.empty();
+  }
+
+  private JsonNode schemaRef(JsonNode schemaNode, Schema parentSchema) {
+    String ref = getFromNode(schemaNode, REF);
+    return ref != null
+        ? ruleFactory
+            .getSchemaStore()
+            .create(
+                parentSchema, ref, ruleFactory.getGenerationConfig().getRefFragmentPathDelimiters())
+            .getContent()
+        : null;
+  }
+
+  private String getTypeName(JsonNode node, JType type, Schema parentSchema) {
+    final String title = "title";
+    String name = getFromNode(node, title);
+    if (name == null) {
+      name = getFromNode(schemaRef(node, parentSchema), title);
+    }
+    if (name == null) {
+      name = type.name();
+    }
+    return name;
+  }
+
+  private String pattern(JsonNode node, Schema parentSchema) {
+    String pattern = pattern(node);
+    return pattern != null ? pattern : pattern(schemaRef(node, parentSchema));
+  }
+
+  private String pattern(JsonNode node) {
+    Format format = Format.parse(getFromNode(node, "format"));
+    return format != null ? format.pattern() : getFromNode(node, PATTERN);
   }
 
   private String nameFromRef(String ref, String nodeName) {

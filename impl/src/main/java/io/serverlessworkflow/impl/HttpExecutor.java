@@ -21,12 +21,12 @@ import io.serverlessworkflow.api.types.CallHTTP;
 import io.serverlessworkflow.api.types.HTTPArguments;
 import io.serverlessworkflow.api.types.WithHTTPHeaders;
 import io.serverlessworkflow.api.types.WithHTTPQuery;
+import jakarta.ws.rs.HttpMethod;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.client.Invocation.Builder;
 import jakarta.ws.rs.client.WebTarget;
-import jakarta.ws.rs.core.MediaType;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -60,16 +60,16 @@ public class HttpExecutor extends AbstractTaskExecutor<CallHTTP> {
         target
             .resolveTemplates(
                 JsonUtils.mapper().convertValue(node, new TypeReference<Map<String, Object>>() {}))
-            .request(MediaType.APPLICATION_JSON);
+            .request();
     WithHTTPHeaders headers = httpArgs.getHeaders();
     if (headers != null) {
       headers.getAdditionalProperties().forEach(request::header);
     }
-    switch (httpArgs.getMethod().toLowerCase()) {
-      case "get":
+    switch (httpArgs.getMethod().toUpperCase()) {
+      case HttpMethod.GET:
       default:
         return request.get(JsonNode.class);
-      case "post":
+      case HttpMethod.POST:
         return request.post(Entity.json(httpArgs.getBody()), JsonNode.class);
     }
   }

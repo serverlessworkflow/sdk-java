@@ -44,7 +44,7 @@ public class WorkflowDefinitionTest {
     return Stream.of(
         Arguments.of(
             "callHttp.yaml",
-            Map.of("petId", 10),
+            Map.of("petId", 1),
             new Condition<>(
                 o -> ((Map<String, Object>) o).containsKey("photoUrls"), "callHttpCondition")));
   }
