@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl;
+package io.serverlessworkflow.impl.json;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -85,6 +85,10 @@ public class JsonUtils {
     } else {
       return mapper.convertValue(value, JsonNode.class);
     }
+  }
+
+  public static Object toJavaValue(Object object) {
+    return object instanceof JsonNode ? toJavaValue((JsonNode) object) : object;
   }
 
   public static JsonNode fromString(String value) {
@@ -201,7 +205,7 @@ public class JsonUtils {
     return arrayNode;
   }
 
-  static ObjectNode object() {
+  public static ObjectNode object() {
     return mapper.createObjectNode();
   }
 

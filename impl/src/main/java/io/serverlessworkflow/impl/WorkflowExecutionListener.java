@@ -15,12 +15,11 @@
  */
 package io.serverlessworkflow.impl;
 
-import com.fasterxml.jackson.core.JsonPointer;
 import io.serverlessworkflow.api.types.Task;
 
 public interface WorkflowExecutionListener {
 
-  void onTaskStarted(JsonPointer currentPos, Task task);
+  void onTaskStarted(WorkflowPosition currentPos, Task task);
 
-  void onTaskEnded(JsonPointer currentPos, Task task);
+  void onTaskEnded(WorkflowPosition currentPos, Task task);
 }

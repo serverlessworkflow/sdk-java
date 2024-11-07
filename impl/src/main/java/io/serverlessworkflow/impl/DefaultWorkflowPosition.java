@@ -15,27 +15,38 @@
  */
 package io.serverlessworkflow.impl;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import io.serverlessworkflow.api.types.TaskBase;
+public class DefaultWorkflowPosition implements WorkflowPosition {
 
-public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskExecutor<T> {
+  private StringBuilder sb = new StringBuilder("");
 
-  protected final T task;
-  protected final ExpressionFactory exprFactory;
-
-  protected AbstractTaskExecutor(T task, ExpressionFactory exprFactory) {
-    this.task = task;
-    this.exprFactory = exprFactory;
+  @Override
+  public WorkflowPosition addIndex(int index) {
+    sb.append('/').append(index);
+    return this;
   }
 
   @Override
-  public JsonNode apply(JsonNode node) {
-
-    // do input filtering
-    return internalExecute(node);
-    // do output filtering
-
+  public WorkflowPosition addProperty(String prop) {
+    sb.append('/').append(prop);
+    return this;
   }
 
-  protected abstract JsonNode internalExecute(JsonNode node);
+  @Override
+  public String jsonPointer() {
+    return sb.toString();
+  }
+
+  @Override
+  public String toString() {
+    return "DefaultWorkflowPosition [sb=" + sb + "]";
+  }
+
+  @Override
+  public WorkflowPosition back() {
+    int indexOf = sb.lastIndexOf("/");
+    if (indexOf != -1) {
+      sb.substring(0, indexOf);
+    }
+    return this;
+  }
 }

@@ -15,26 +15,13 @@
  */
 package io.serverlessworkflow.impl;
 
-public class ExpressionUtils {
+public interface WorkflowPosition {
 
-  private static final String EXPR_PREFIX = "${";
-  private static final String EXPR_SUFFIX = "}";
+  String jsonPointer();
 
-  private ExpressionUtils() {}
+  WorkflowPosition addProperty(String prop);
 
-  public static String trimExpr(String expr) {
-    expr = expr.trim();
-    if (expr.startsWith(EXPR_PREFIX)) {
-      expr = trimExpr(expr, EXPR_PREFIX, EXPR_SUFFIX);
-    }
-    return expr.trim();
-  }
+  WorkflowPosition addIndex(int index);
 
-  private static String trimExpr(String expr, String prefix, String suffix) {
-    expr = expr.substring(prefix.length());
-    if (expr.endsWith(suffix)) {
-      expr = expr.substring(0, expr.length() - suffix.length());
-    }
-    return expr;
-  }
+  WorkflowPosition back();
 }
