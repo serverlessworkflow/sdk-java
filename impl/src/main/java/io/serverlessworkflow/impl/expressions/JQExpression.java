@@ -13,12 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.jq;
+package io.serverlessworkflow.impl.expressions;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import io.serverlessworkflow.impl.Expression;
-import io.serverlessworkflow.impl.JsonUtils;
+import io.serverlessworkflow.api.types.TaskBase;
+import io.serverlessworkflow.impl.TaskContext;
+import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.json.JsonUtils;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -176,14 +178,15 @@ public class JQExpression implements Expression {
   }
 
   @Override
-  public JsonNode eval(JsonNode context) {
+  public JsonNode eval(
+      WorkflowContext workflow, TaskContext<? extends TaskBase> task, JsonNode node) {
     TypedOutput<JsonNode> output = output(JsonNode.class);
     try {
-      internalExpr.apply(this.scope.get(), context, output);
+      internalExpr.apply(this.scope.get(), node, output);
       return output.getResult();
     } catch (JsonQueryException e) {
       throw new IllegalArgumentException(
-          "Unable to evaluate content " + context + " using expr " + expr, e);
+          "Unable to evaluate content " + node + " using expr " + expr, e);
     }
   }
 

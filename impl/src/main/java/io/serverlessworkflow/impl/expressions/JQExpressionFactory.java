@@ -13,11 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.jq;
+package io.serverlessworkflow.impl.expressions;
 
-import io.serverlessworkflow.impl.Expression;
-import io.serverlessworkflow.impl.ExpressionFactory;
-import io.serverlessworkflow.impl.ExpressionUtils;
 import java.util.function.Supplier;
 import net.thisptr.jackson.jq.BuiltinFunctionLoader;
 import net.thisptr.jackson.jq.Scope;

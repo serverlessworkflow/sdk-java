@@ -15,13 +15,16 @@
  */
 package io.serverlessworkflow.impl;
 
-import static io.serverlessworkflow.impl.JsonUtils.*;
+import static io.serverlessworkflow.impl.json.JsonUtils.*;
 
-import com.fasterxml.jackson.core.JsonPointer;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.serverlessworkflow.api.types.TaskBase;
 import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.api.types.Workflow;
+import io.serverlessworkflow.impl.executors.DefaultTaskExecutorFactory;
+import io.serverlessworkflow.impl.executors.TaskExecutor;
+import io.serverlessworkflow.impl.executors.TaskExecutorFactory;
+import io.serverlessworkflow.impl.json.JsonUtils;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -43,7 +46,7 @@ public class WorkflowDefinition {
   private final Workflow workflow;
   private final Collection<WorkflowExecutionListener> listeners;
   private final TaskExecutorFactory taskFactory;
-  private final Map<JsonPointer, TaskExecutor<? extends TaskBase>> taskExecutors =
+  private final Map<String, TaskExecutor<? extends TaskBase>> taskExecutors =
       new ConcurrentHashMap<>();
 
   public static class Builder {
@@ -94,40 +97,32 @@ public class WorkflowDefinition {
 
   public class WorkflowInstance {
 
-    private final JsonNode input;
     private JsonNode output;
     private State state;
-
-    private JsonPointer currentPos;
+    private WorkflowContext context;
 
     private WorkflowInstance(TaskExecutorFactory factory, JsonNode input) {
-      this.input = input;
-      this.output = object();
+      this.output = input;
       this.state = State.STARTED;
-      this.currentPos = JsonPointer.compile("/");
+      this.context = WorkflowContext.builder(input).build();
       processDo(workflow.getDo());
     }
 
     private void processDo(List<TaskItem> tasks) {
-      currentPos = currentPos.appendProperty("do");
+      context.position().addProperty("do");
       int index = 0;
       for (TaskItem task : tasks) {
-        currentPos = currentPos.appendIndex(index).appendProperty(task.getName());
-        listeners.forEach(l -> l.onTaskStarted(currentPos, task.getTask()));
+        context.position().addIndex(++index).addProperty(task.getName());
+        listeners.forEach(l -> l.onTaskStarted(context.position(), task.getTask()));
         this.output =
-            MergeUtils.merge(
-                taskExecutors
-                    .computeIfAbsent(currentPos, k -> taskFactory.getTaskExecutor(task.getTask()))
-                    .apply(input),
-                output);
-        listeners.forEach(l -> l.onTaskEnded(currentPos, task.getTask()));
-        currentPos = currentPos.head().head();
+            taskExecutors
+                .computeIfAbsent(
+                    context.position().jsonPointer(),
+                    k -> taskFactory.getTaskExecutor(task.getTask()))
+                .apply(context, output);
+        listeners.forEach(l -> l.onTaskEnded(context.position(), task.getTask()));
+        context.position().back().back();
       }
-      currentPos = currentPos.head();
-    }
-
-    public String currentPos() {
-      return currentPos.toString();
     }
 
     public State state() {

@@ -13,9 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl;
+package io.serverlessworkflow.impl.expressions;
 
 public interface ExpressionFactory {
-
+  /**
+   * @throws ExpressionValidationException
+   * @param expression
+   * @return
+   */
   Expression getExpression(String expression);
 }

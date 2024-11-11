@@ -46,7 +46,16 @@ public class WorkflowDefinitionTest {
         new Condition<>(
             o -> ((Map<String, Object>) o).containsKey("photoUrls"), "callHttpCondition");
     return Stream.of(
-        Arguments.of("callHttp.yaml", petInput, petCondition),
-        Arguments.of("call-http-endpoint-interpolation.yaml", petInput, petCondition));
+        Arguments.of("callGetHttp.yaml", petInput, petCondition),
+        Arguments.of("call-http-endpoint-interpolation.yaml", petInput, petCondition),
+        Arguments.of(
+            "call-http-query-parameters.yaml",
+            Map.of("searchQuery", "R2-D2"),
+            new Condition<>(
+                o -> ((Map<String, Object>) o).get("count").equals(1), "R2D2Condition")),
+        Arguments.of(
+            "callPostHttp.yaml",
+            Map.of("name", "Javierito", "status", "available"),
+            new Condition<>(o -> o.equals("Javierito"), "CallHttpPostCondition")));
   }
 }

@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl;
+package io.serverlessworkflow.impl.executors;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import io.serverlessworkflow.api.types.Task;
 import io.serverlessworkflow.api.types.TaskBase;
-import java.util.function.UnaryOperator;
 
-public interface TaskExecutor<T extends TaskBase> extends UnaryOperator<JsonNode> {}
+public interface TaskExecutorFactory {
+  TaskExecutor<? extends TaskBase> getTaskExecutor(Task task);
+}
