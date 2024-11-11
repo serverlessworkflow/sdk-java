@@ -60,7 +60,7 @@ public class GeneratorUtils {
   }
 
   public static JMethod implementInterface(JDefinedClass definedClass, JFieldVar valueField) {
-    JMethod method = definedClass.method(JMod.PUBLIC, Object.class, "get");
+    JMethod method = definedClass.method(JMod.PUBLIC, valueField.type(), "get");
     method.annotate(Override.class);
     method.body()._return(valueField);
     return method;

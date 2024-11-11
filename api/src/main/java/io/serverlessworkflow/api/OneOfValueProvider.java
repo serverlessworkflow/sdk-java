@@ -15,6 +15,6 @@
  */
 package io.serverlessworkflow.api;
 
-public interface OneOfValueProvider {
-  Object get();
+public interface OneOfValueProvider<T> {
+  T get();
 }
