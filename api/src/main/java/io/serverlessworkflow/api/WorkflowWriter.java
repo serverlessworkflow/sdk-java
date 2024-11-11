@@ -16,8 +16,10 @@
 package io.serverlessworkflow.api;
 
 import io.serverlessworkflow.api.types.Workflow;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.io.StringWriter;
 import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -42,6 +44,22 @@ public class WorkflowWriter {
       throws IOException {
     try (OutputStream out = Files.newOutputStream(output)) {
       writeWorkflow(out, workflow, format);
+    }
+  }
+
+  public static String workflowAsString(Workflow workflow, WorkflowFormat format)
+      throws IOException {
+    try (Writer writer = new StringWriter()) {
+      writeWorkflow(writer, workflow, format);
+      return writer.toString();
+    }
+  }
+
+  public static byte[] workflowAsBytes(Workflow workflow, WorkflowFormat format)
+      throws IOException {
+    try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+      writeWorkflow(out, workflow, format);
+      return out.toByteArray();
     }
   }
 

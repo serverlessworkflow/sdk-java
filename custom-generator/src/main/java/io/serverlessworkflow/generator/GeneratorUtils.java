@@ -38,6 +38,8 @@ public class GeneratorUtils {
       "io.serverlessworkflow.serialization.DeserializeHelper";
   public static final String ONE_OF_VALUE_PROVIDER_INTERFACE_NAME =
       "io.serverlessworkflow.api.OneOfValueProvider";
+  public static final String SETTER_ANNOTATION_NAME =
+      "io.serverlessworkflow.serialization.OneOfSetter";
 
   @FunctionalInterface
   public interface SerializerFiller {
@@ -66,7 +68,7 @@ public class GeneratorUtils {
     return method;
   }
 
-  public static JMethod buildMethod(
+  public static JMethod getterMethod(
       JDefinedClass definedClass, JFieldVar instanceField, NameHelper nameHelper, String name) {
     JMethod method =
         definedClass.method(

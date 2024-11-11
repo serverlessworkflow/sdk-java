@@ -21,24 +21,57 @@ import com.fasterxml.jackson.core.TreeNode;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import jakarta.validation.ConstraintViolationException;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Collection;
 
 public class DeserializeHelper {
 
   public static <T> T deserializeOneOf(
-      JsonParser p, Class<T> targetClass, Collection<Class<?>> unionTypes) throws IOException {
+      JsonParser p, Class<T> targetClass, Collection<Class<?>> oneOfTypes) throws IOException {
     TreeNode node = p.readValueAsTree();
-    JsonProcessingException ex =
-        new JsonMappingException(p, "Problem deserializing " + targetClass);
-    for (Class<?> unionType : unionTypes) {
-      try {
-        Object object = p.getCodec().treeToValue(node, unionType);
-        return targetClass.getConstructor(unionType).newInstance(object);
-      } catch (IOException | ReflectiveOperationException | ConstraintViolationException io) {
-        ex.addSuppressed(io);
+    try {
+      T result = targetClass.getDeclaredConstructor().newInstance();
+      Collection<Exception> exceptions = new ArrayList<>();
+      for (Class<?> oneOfType : oneOfTypes) {
+        try {
+          assingIt(p, result, node, targetClass, oneOfType);
+          break;
+        } catch (IOException | ConstraintViolationException | InvocationTargetException ex) {
+          exceptions.add(ex);
+        }
+      }
+      if (exceptions.size() == oneOfTypes.size()) {
+        JsonMappingException ex =
+            new JsonMappingException(
+                p,
+                String.format(
+                    "Error deserializing class %s, all oneOf alternatives %s has failed ",
+                    targetClass, oneOfTypes));
+        exceptions.forEach(ex::addSuppressed);
+        throw ex;
+      }
+      return result;
+    } catch (ReflectiveOperationException ex) {
+      throw new IllegalStateException(ex);
+    }
+  }
+
+  private static <T> void assingIt(
+      JsonParser p, T result, TreeNode node, Class<T> targetClass, Class<?> type)
+      throws JsonProcessingException, ReflectiveOperationException {
+    findSetMethod(targetClass, type).invoke(result, p.getCodec().treeToValue(node, type));
+  }
+
+  private static Method findSetMethod(Class<?> targetClass, Class<?> type) {
+    for (Method method : targetClass.getMethods()) {
+      OneOfSetter oneOfSetter = method.getAnnotation(OneOfSetter.class);
+      if (oneOfSetter != null && type.equals(oneOfSetter.value())) {
+        return method;
       }
     }
-    throw ex;
+    throw new IllegalStateException("Cannot find a setter for type " + type);
   }
 
   public static <T> T deserializeItem(JsonParser p, Class<T> targetClass, Class<?> valueClass)
