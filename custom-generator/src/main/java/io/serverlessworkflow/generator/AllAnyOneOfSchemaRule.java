@@ -136,96 +136,138 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
       Schema schema) {
 
     Optional<JType> refType = refType(nodeName, schemaNode, parent, generatableType, schema);
-    List<JTypeWrapper> unionTypes = new ArrayList<>();
+    List<JTypeWrapper> oneOfTypes = new ArrayList<>();
+    List<JTypeWrapper> allOfTypes = new ArrayList<>();
 
-    unionType("oneOf", nodeName, schemaNode, parent, generatableType, schema, unionTypes);
-    unionType("anyOf", nodeName, schemaNode, parent, generatableType, schema, unionTypes);
-    unionType("allOf", nodeName, schemaNode, parent, generatableType, schema, unionTypes);
+    unionType("oneOf", nodeName, schemaNode, parent, generatableType, schema, oneOfTypes);
+    unionType("anyOf", nodeName, schemaNode, parent, generatableType, schema, oneOfTypes);
+    unionType("allOf", nodeName, schemaNode, parent, generatableType, schema, allOfTypes);
 
-    Collections.sort(unionTypes);
+    Collections.sort(oneOfTypes);
 
     JType javaType;
     if (schemaNode.has("enum")) {
       javaType =
           ruleFactory.getEnumRule().apply(nodeName, schemaNode, parent, generatableType, schema);
-    } else if (!schemaNode.has("properties") && unionTypes.isEmpty() && refType.isPresent()) {
+    } else if (!schemaNode.has("properties")
+        && oneOfTypes.isEmpty()
+        && allOfTypes.isEmpty()
+        && refType.isPresent()) {
       javaType = refType.get();
-
     } else {
-      javaType =
-          ruleFactory
-              .getTypeRule()
-              .apply(nodeName, schemaNode, parent, generatableType.getPackage(), schema);
+      JPackage container = generatableType.getPackage();
+      javaType = ruleFactory.getTypeRule().apply(nodeName, schemaNode, parent, container, schema);
       if (javaType instanceof JDefinedClass) {
-        populateClass(schema, (JDefinedClass) javaType, refType, unionTypes);
-      } else if (!unionTypes.isEmpty()) {
         javaType =
-            createUnionClass(
-                schema, nodeName, schemaNode, generatableType.getPackage(), refType, unionTypes);
+            populateAllOf(
+                schema, populateRef((JDefinedClass) javaType, refType, schema), allOfTypes);
+      }
+      if (!oneOfTypes.isEmpty()) {
+        try {
+          JDefinedClass unionClass;
+          Optional<JType> commonType;
+          if (javaType instanceof JDefinedClass) {
+            JDefinedClass clazz = (JDefinedClass) javaType;
+            if (clazz.methods().isEmpty()) {
+              unionClass = clazz;
+              commonType = Optional.empty();
+            } else {
+              unionClass = container._class(clazz.name() + "Union");
+              commonType = Optional.of(clazz);
+            }
+          } else {
+            unionClass =
+                container._class(
+                    ruleFactory
+                        .getNameHelper()
+                        .getUniqueClassName(nodeName, schemaNode, container));
+            commonType = Optional.empty();
+          }
+          javaType = populateOneOf(schema, unionClass, commonType, oneOfTypes);
+        } catch (JClassAlreadyExistsException ex) {
+          throw new IllegalStateException(ex);
+        }
       }
       schema.setJavaTypeIfEmpty(javaType);
     }
     return javaType;
   }
 
-  private JDefinedClass populateClass(
+  private JDefinedClass populateAllOf(
+      Schema parentSchema, JDefinedClass definedClass, Collection<JTypeWrapper> allOfTypes) {
+    return wrapAll(parentSchema, definedClass, Optional.empty(), allOfTypes, Optional.empty());
+  }
+
+  private JDefinedClass populateOneOf(
       Schema parentSchema,
       JDefinedClass definedClass,
-      Optional<JType> refType,
-      Collection<JTypeWrapper> unionTypes) {
-    JType clazzClass = definedClass.owner()._ref(Object.class);
+      Optional<JType> commonType,
+      Collection<JTypeWrapper> oneOfTypes) {
 
-    Optional<JFieldVar> valueField;
-    if (!unionTypes.isEmpty()) {
-      valueField =
-          Optional.of(
-              definedClass.field(
-                  JMod.PRIVATE,
-                  clazzClass,
-                  ruleFactory.getNameHelper().getPropertyName("value", null),
-                  null));
+    JFieldVar valueField =
+        definedClass.field(
+            JMod.PRIVATE,
+            commonType.orElse(definedClass.owner().ref(Object.class)),
+            ruleFactory.getNameHelper().getPropertyName("value", null),
+            null);
 
-      definedClass._implements(
-          definedClass.owner().ref(GeneratorUtils.ONE_OF_VALUE_PROVIDER_INTERFACE_NAME));
-
-      GeneratorUtils.implementInterface(definedClass, valueField.orElseThrow());
-
-      try {
-        JDefinedClass serializer = generateSerializer(definedClass);
-        definedClass.annotate(JsonSerialize.class).param("using", serializer);
-      } catch (JClassAlreadyExistsException ex) {
-        // already serialized aware
-      }
-
-      try {
-        JDefinedClass deserializer = generateDeserializer(definedClass, unionTypes);
-        definedClass.annotate(JsonDeserialize.class).param("using", deserializer);
-      } catch (JClassAlreadyExistsException ex) {
-        // already deserialized aware
-      }
-
-      Collection<JTypeWrapper> stringTypes = new ArrayList<>();
-      for (JTypeWrapper unionType : unionTypes) {
-        if (isStringType(unionType.getType())) {
-          stringTypes.add(unionType);
-        } else {
-          wrapIt(parentSchema, definedClass, valueField, unionType.getType(), unionType.getNode());
-        }
-      }
-      if (!stringTypes.isEmpty()) {
-        wrapStrings(parentSchema, definedClass, valueField, stringTypes);
-      }
-
-    } else {
-      valueField = Optional.empty();
+    definedClass._implements(
+        definedClass
+            .owner()
+            .ref(GeneratorUtils.ONE_OF_VALUE_PROVIDER_INTERFACE_NAME)
+            .narrow(valueField.type()));
+    GeneratorUtils.implementInterface(definedClass, valueField);
+    try {
+      JDefinedClass serializer = generateSerializer(definedClass);
+      definedClass.annotate(JsonSerialize.class).param("using", serializer);
+    } catch (JClassAlreadyExistsException ex) {
+      // already serialized aware
     }
 
+    try {
+      JDefinedClass deserializer =
+          generateDeserializer(definedClass, oneOfTypes, "deserializeOneOf");
+      definedClass.annotate(JsonDeserialize.class).param("using", deserializer);
+    } catch (JClassAlreadyExistsException ex) {
+      // already deserialized aware
+    }
+
+    return wrapAll(parentSchema, definedClass, commonType, oneOfTypes, Optional.of(valueField));
+  }
+
+  private JDefinedClass wrapAll(
+      Schema parentSchema,
+      JDefinedClass definedClass,
+      Optional<JType> commonType,
+      Collection<JTypeWrapper> types,
+      Optional<JFieldVar> valueField) {
+    Collection<JTypeWrapper> stringTypes = new ArrayList<>();
+    for (JTypeWrapper unionType : types) {
+      if (isStringType(unionType.getType())) {
+        stringTypes.add(unionType);
+      } else {
+        if (unionType.getType() instanceof JDefinedClass) {
+          commonType.ifPresent(
+              c -> ((JDefinedClass) unionType.getType())._extends((JDefinedClass) c));
+        }
+
+        wrapIt(parentSchema, definedClass, valueField, unionType.getType(), unionType.getNode());
+      }
+    }
+    if (!stringTypes.isEmpty()) {
+      wrapStrings(parentSchema, definedClass, valueField, stringTypes);
+    }
+    return definedClass;
+  }
+
+  private JDefinedClass populateRef(
+      JDefinedClass definedClass, Optional<JType> refType, Schema parentSchema) {
     refType.ifPresent(
         type -> {
           if (type instanceof JClass) {
             definedClass._extends((JClass) type);
           } else {
-            wrapIt(parentSchema, definedClass, valueField, type, null);
+            wrapIt(parentSchema, definedClass, Optional.empty(), type, null);
           }
         });
 
@@ -258,7 +300,7 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
   }
 
   private JDefinedClass generateDeserializer(
-      JDefinedClass relatedClass, Collection<JTypeWrapper> unionTypes)
+      JDefinedClass relatedClass, Collection<JTypeWrapper> oneOfTypes, String methodName)
       throws JClassAlreadyExistsException {
     JDefinedClass definedClass = GeneratorUtils.deserializerClass(relatedClass);
     GeneratorUtils.fillDeserializer(
@@ -266,37 +308,23 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
         relatedClass,
         (method, parserParam) -> {
           JBlock body = method.body();
-          JInvocation list = definedClass.owner().ref(List.class).staticInvoke("of");
-          unionTypes.forEach(c -> list.arg(((JClass) c.getType()).dotclass()));
+
           body._return(
               definedClass
                   .owner()
                   .ref(GeneratorUtils.DESERIALIZE_HELPER_NAME)
-                  .staticInvoke("deserializeOneOf")
+                  .staticInvoke(methodName)
                   .arg(parserParam)
                   .arg(relatedClass.dotclass())
-                  .arg(list));
+                  .arg(list(definedClass, oneOfTypes)));
         });
     return definedClass;
   }
 
-  private JDefinedClass createUnionClass(
-      Schema parentSchema,
-      String nodeName,
-      JsonNode schemaNode,
-      JPackage container,
-      Optional<JType> refType,
-      Collection<JTypeWrapper> unionTypes) {
-    try {
-      return populateClass(
-          parentSchema,
-          container._class(
-              ruleFactory.getNameHelper().getUniqueClassName(nodeName, schemaNode, container)),
-          refType,
-          unionTypes);
-    } catch (JClassAlreadyExistsException e) {
-      throw new IllegalArgumentException(e);
-    }
+  private JInvocation list(JDefinedClass definedClass, Collection<JTypeWrapper> list) {
+    JInvocation result = definedClass.owner().ref(List.class).staticInvoke("of");
+    list.forEach(c -> result.arg(((JClass) c.getType()).dotclass()));
+    return result;
   }
 
   private void wrapIt(
@@ -306,11 +334,39 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
       JType unionType,
       JsonNode node) {
     JFieldVar instanceField = getInstanceField(parentSchema, definedClass, unionType, node);
-    JMethod constructor = definedClass.constructor(JMod.PUBLIC);
-    JVar instanceParam = constructor.param(unionType, instanceField.name());
-    JBlock body = constructor.body();
-    valueField.ifPresent(v -> body.assign(JExpr._this().ref(v), instanceParam));
-    body.assign(JExpr._this().ref(instanceField), instanceParam);
+    JMethod method = getSetterMethod(definedClass, instanceField, node);
+    method
+        .body()
+        .assign(
+            JExpr._this().ref(instanceField),
+            setupMethod(definedClass, method, valueField, instanceField));
+  }
+
+  private JVar setupMethod(
+      JDefinedClass definedClass,
+      JMethod method,
+      Optional<JFieldVar> valueField,
+      JFieldVar instanceField) {
+    JVar methodParam = method.param(instanceField.type(), instanceField.name());
+    valueField.ifPresent(
+        v -> {
+          method.body().assign(JExpr._this().ref(v), methodParam);
+          method
+              .annotate(definedClass.owner().ref(GeneratorUtils.SETTER_ANNOTATION_NAME))
+              .param("value", instanceField.type());
+        });
+    return methodParam;
+  }
+
+  private JMethod getSetterMethod(
+      JDefinedClass definedClass, JFieldVar instanceField, JsonNode node) {
+    String setterName = ruleFactory.getNameHelper().getSetterName(instanceField.name(), node);
+    JMethod fluentMethod =
+        definedClass.method(JMod.PUBLIC, definedClass, setterName.replaceFirst("set", "with"));
+    JBlock body = fluentMethod.body();
+    body.assign(instanceField, fluentMethod.param(instanceField.type(), "value"));
+    body._return(JExpr._this());
+    return definedClass.method(JMod.PUBLIC, definedClass.owner().VOID, setterName);
   }
 
   private void wrapStrings(
@@ -320,21 +376,19 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
       Collection<JTypeWrapper> stringTypes) {
     Iterator<JTypeWrapper> iter = stringTypes.iterator();
     JTypeWrapper first = iter.next();
-    JMethod constructor = definedClass.constructor(JMod.PUBLIC);
-
-    JBlock body = constructor.body();
     String pattern = pattern(first.getNode(), parentSchema);
     if (pattern == null && iter.hasNext()) {
       pattern = ".*";
     }
     JFieldVar instanceField =
         getInstanceField(parentSchema, definedClass, first.getType(), first.getNode());
-    JVar instanceParam = constructor.param(first.type, instanceField.name());
-    valueField.ifPresent(v -> body.assign(JExpr._this().ref(v), instanceParam));
+    JMethod setterMethod = getSetterMethod(definedClass, instanceField, first.getNode());
+    JVar methodParam = setupMethod(definedClass, setterMethod, valueField, instanceField);
+    JBlock body = setterMethod.body();
     if (pattern != null) {
       JConditional condition =
-          body._if(getPatternCondition(pattern, body, instanceField, instanceParam, definedClass));
-      condition._then().assign(JExpr._this().ref(instanceField), instanceParam);
+          body._if(getPatternCondition(pattern, body, instanceField, methodParam, definedClass));
+      condition._then().assign(JExpr._this().ref(instanceField), methodParam);
       while (iter.hasNext()) {
         JTypeWrapper item = iter.next();
         instanceField =
@@ -345,8 +399,8 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
         }
         condition =
             condition._elseif(
-                getPatternCondition(pattern, body, instanceField, instanceParam, definedClass));
-        condition._then().assign(JExpr._this().ref(instanceField), instanceParam);
+                getPatternCondition(pattern, body, instanceField, methodParam, definedClass));
+        condition._then().assign(JExpr._this().ref(instanceField), methodParam);
       }
       condition
           ._else()
@@ -358,10 +412,10 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
                           .ref(String.class)
                           .staticInvoke("format")
                           .arg("%s does not match any pattern")
-                          .arg(instanceParam))
+                          .arg(methodParam))
                   .arg(JExpr._null()));
     } else {
-      body.assign(JExpr._this().ref(instanceField), instanceParam);
+      body.assign(JExpr._this().ref(instanceField), methodParam);
     }
   }
 
@@ -374,7 +428,7 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
             ruleFactory
                 .getNameHelper()
                 .getPropertyName(getTypeName(node, type, parentSchema), node));
-    GeneratorUtils.buildMethod(
+    GeneratorUtils.getterMethod(
         definedClass, instanceField, ruleFactory.getNameHelper(), instanceField.name());
     return instanceField;
   }

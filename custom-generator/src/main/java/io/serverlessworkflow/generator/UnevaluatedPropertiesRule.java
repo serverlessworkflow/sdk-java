@@ -70,7 +70,7 @@ public class UnevaluatedPropertiesRule extends AdditionalPropertiesRule
     JType stringClass = jclass.owner()._ref(String.class);
     JFieldVar nameField =
         jclass.field(JMod.PRIVATE, stringClass, nameHelper.getPropertyName("name", null));
-    JMethod nameMethod = GeneratorUtils.buildMethod(jclass, nameField, nameHelper, "name");
+    JMethod nameMethod = GeneratorUtils.getterMethod(jclass, nameField, nameHelper, "name");
     JType propertyType;
     if (node != null && node.size() != 0) {
       String pathToAdditionalProperties;
@@ -98,7 +98,7 @@ public class UnevaluatedPropertiesRule extends AdditionalPropertiesRule
         jclass.field(
             JMod.PRIVATE, propertyType, nameHelper.getPropertyName(propertyType.name(), null));
     JMethod valueMethod =
-        GeneratorUtils.buildMethod(jclass, valueField, nameHelper, propertyType.name());
+        GeneratorUtils.getterMethod(jclass, valueField, nameHelper, propertyType.name());
     jclass
         .annotate(JsonSerialize.class)
         .param("using", generateSerializer(jclass, nameMethod, valueMethod));
