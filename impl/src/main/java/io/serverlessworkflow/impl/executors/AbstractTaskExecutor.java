@@ -15,6 +15,8 @@
  */
 package io.serverlessworkflow.impl.executors;
 
+import static io.serverlessworkflow.impl.WorkflowUtils.*;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import io.serverlessworkflow.api.types.Export;
 import io.serverlessworkflow.api.types.Input;
@@ -22,93 +24,79 @@ import io.serverlessworkflow.api.types.Output;
 import io.serverlessworkflow.api.types.TaskBase;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
-import io.serverlessworkflow.impl.expressions.Expression;
-import io.serverlessworkflow.impl.expressions.ExpressionFactory;
-import io.serverlessworkflow.impl.expressions.ExpressionUtils;
-import io.serverlessworkflow.impl.json.JsonUtils;
-import java.util.Map;
+import io.serverlessworkflow.impl.WorkflowFactories;
+import io.serverlessworkflow.impl.WorkflowFilter;
+import io.serverlessworkflow.impl.jsonschema.SchemaValidator;
 import java.util.Optional;
 
 public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskExecutor<T> {
 
   protected final T task;
-  protected final ExpressionFactory exprFactory;
 
-  private interface TaskFilter<V extends TaskBase> {
-    JsonNode apply(WorkflowContext workflow, TaskContext<V> task, JsonNode node);
-  }
+  private Optional<WorkflowFilter> inputProcessor = Optional.empty();
+  private Optional<WorkflowFilter> outputProcessor = Optional.empty();
+  private Optional<WorkflowFilter> contextProcessor = Optional.empty();
+  private Optional<SchemaValidator> inputSchemaValidator = Optional.empty();
+  private Optional<SchemaValidator> outputSchemaValidator = Optional.empty();
+  private Optional<SchemaValidator> contextSchemaValidator = Optional.empty();
 
-  private final Optional<TaskFilter<T>> inputProcessor;
-  private final Optional<TaskFilter<T>> outputProcessor;
-  private final Optional<TaskFilter<T>> contextProcessor;
-
-  protected AbstractTaskExecutor(T task, ExpressionFactory exprFactory) {
+  protected AbstractTaskExecutor(T task, WorkflowFactories holder) {
     this.task = task;
-    this.exprFactory = exprFactory;
-    this.inputProcessor = Optional.ofNullable(getInputProcessor());
-    this.outputProcessor = Optional.ofNullable(getOutputProcessor());
-    this.contextProcessor = Optional.ofNullable(getContextProcessor());
+    buildInputProcessors(holder);
+    buildOutputProcessors(holder);
+    buildContextProcessors(holder);
   }
 
-  private TaskFilter<T> getInputProcessor() {
+  private void buildInputProcessors(WorkflowFactories holder) {
     if (task.getInput() != null) {
       Input input = task.getInput();
-      // TODO add schema validator
-      if (input.getFrom() != null) {
-        return getTaskFilter(input.getFrom().getString(), input.getFrom().getObject());
-      }
+      this.inputProcessor = buildWorkflowFilter(holder.getExpressionFactory(), input.getFrom());
+      this.inputSchemaValidator =
+          getSchemaValidator(holder.getValidatorFactory(), schemaToNode(holder, input.getSchema()));
     }
-    return null;
   }
 
-  private TaskFilter<T> getOutputProcessor() {
+  private void buildOutputProcessors(WorkflowFactories holder) {
     if (task.getOutput() != null) {
       Output output = task.getOutput();
-      // TODO add schema validator
-      if (output.getAs() != null) {
-        return getTaskFilter(output.getAs().getString(), output.getAs().getObject());
-      }
+      this.outputProcessor = buildWorkflowFilter(holder.getExpressionFactory(), output.getAs());
+      this.outputSchemaValidator =
+          getSchemaValidator(
+              holder.getValidatorFactory(), schemaToNode(holder, output.getSchema()));
     }
-    return null;
   }
 
-  private TaskFilter<T> getContextProcessor() {
+  private void buildContextProcessors(WorkflowFactories holder) {
     if (task.getExport() != null) {
       Export export = task.getExport();
-      // TODO add schema validator
       if (export.getAs() != null) {
-        return getTaskFilter(export.getAs().getString(), export.getAs().getObject());
+        this.contextProcessor = buildWorkflowFilter(holder.getExpressionFactory(), export.getAs());
       }
-    }
-    return null;
-  }
-
-  private TaskFilter<T> getTaskFilter(String str, Object object) {
-    if (str != null) {
-      Expression expression = exprFactory.getExpression(str);
-      return expression::eval;
-    } else {
-      Object exprObj = ExpressionUtils.buildExpressionObject(object, exprFactory);
-      return exprObj instanceof Map
-          ? (w, t, n) ->
-              JsonUtils.fromValue(
-                  ExpressionUtils.evaluateExpressionMap((Map<String, Object>) exprObj, w, t, n))
-          : (w, t, n) -> JsonUtils.fromValue(object);
+      this.contextSchemaValidator =
+          getSchemaValidator(
+              holder.getValidatorFactory(), schemaToNode(holder, export.getSchema()));
     }
   }
 
   @Override
   public JsonNode apply(WorkflowContext workflowContext, JsonNode rawInput) {
     TaskContext<T> taskContext = new TaskContext<>(rawInput, task);
+    inputSchemaValidator.ifPresent(s -> s.validate(taskContext.rawInput()));
     inputProcessor.ifPresent(
-        p -> taskContext.input(p.apply(workflowContext, taskContext, taskContext.rawInput())));
+        p ->
+            taskContext.input(
+                p.apply(workflowContext, Optional.of(taskContext), taskContext.rawInput())));
     taskContext.rawOutput(internalExecute(workflowContext, taskContext, taskContext.input()));
     outputProcessor.ifPresent(
-        p -> taskContext.output(p.apply(workflowContext, taskContext, taskContext.rawOutput())));
+        p ->
+            taskContext.output(
+                p.apply(workflowContext, Optional.of(taskContext), taskContext.rawOutput())));
+    outputSchemaValidator.ifPresent(s -> s.validate(taskContext.output()));
     contextProcessor.ifPresent(
         p ->
             workflowContext.context(
-                p.apply(workflowContext, taskContext, workflowContext.context())));
+                p.apply(workflowContext, Optional.of(taskContext), workflowContext.context())));
+    contextSchemaValidator.ifPresent(s -> s.validate(workflowContext.context()));
     return taskContext.output();
   }
 

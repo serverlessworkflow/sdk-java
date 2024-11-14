@@ -13,12 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.executors;
+package io.serverlessworkflow.resources;
 
-import io.serverlessworkflow.api.types.Task;
-import io.serverlessworkflow.api.types.TaskBase;
-import io.serverlessworkflow.impl.WorkflowFactories;
+import java.nio.file.Path;
 
-public interface TaskExecutorFactory {
-  TaskExecutor<? extends TaskBase> getTaskExecutor(Task task, WorkflowFactories factories);
+public interface ResourceLoaderFactory {
+  ResourceLoader getResourceLoader(Path path);
 }

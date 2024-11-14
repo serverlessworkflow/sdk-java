@@ -13,12 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.executors;
+package io.serverlessworkflow.resources;
 
-import io.serverlessworkflow.api.types.Task;
-import io.serverlessworkflow.api.types.TaskBase;
-import io.serverlessworkflow.impl.WorkflowFactories;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
+import java.net.URL;
 
-public interface TaskExecutorFactory {
-  TaskExecutor<? extends TaskBase> getTaskExecutor(Task task, WorkflowFactories factories);
+public class HttpResource implements StaticResource {
+
+  private URL url;
+
+  public HttpResource(URL url) {
+    this.url = url;
+  }
+
+  @Override
+  public InputStream open() {
+    try {
+      return url.openStream();
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
+  }
+
+  public String name() {
+    return url.getFile();
+  }
 }

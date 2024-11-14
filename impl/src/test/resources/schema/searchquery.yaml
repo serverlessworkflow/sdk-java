@@ -1,0 +1,6 @@
+type: object
+required:
+  - searchQuery
+properties:
+  searchQuery:
+    type: string

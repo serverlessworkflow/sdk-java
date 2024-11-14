@@ -13,12 +13,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.executors;
+package io.serverlessworkflow.resources;
 
-import io.serverlessworkflow.api.types.Task;
-import io.serverlessworkflow.api.types.TaskBase;
-import io.serverlessworkflow.impl.WorkflowFactories;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
-public interface TaskExecutorFactory {
-  TaskExecutor<? extends TaskBase> getTaskExecutor(Task task, WorkflowFactories factories);
+class FileResource implements StaticResource {
+
+  private Path path;
+
+  public FileResource(Path path) {
+    this.path = path;
+  }
+
+  @Override
+  public InputStream open() {
+    try {
+      return Files.newInputStream(path);
+    } catch (IOException io) {
+      throw new UncheckedIOException(io);
+    }
+  }
+
+  @Override
+  public String name() {
+    return path.getFileName().toString();
+  }
 }

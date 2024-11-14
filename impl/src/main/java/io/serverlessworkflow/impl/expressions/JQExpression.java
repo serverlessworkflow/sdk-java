@@ -17,7 +17,6 @@ package io.serverlessworkflow.impl.expressions;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import io.serverlessworkflow.api.types.TaskBase;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.json.JsonUtils;
@@ -178,8 +177,7 @@ public class JQExpression implements Expression {
   }
 
   @Override
-  public JsonNode eval(
-      WorkflowContext workflow, TaskContext<? extends TaskBase> task, JsonNode node) {
+  public JsonNode eval(WorkflowContext workflow, Optional<TaskContext<?>> task, JsonNode node) {
     TypedOutput<JsonNode> output = output(JsonNode.class);
     try {
       internalExpr.apply(this.scope.get(), node, output);

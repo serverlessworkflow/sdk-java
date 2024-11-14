@@ -17,6 +17,7 @@ package io.serverlessworkflow.impl;
  */
 import static io.serverlessworkflow.api.WorkflowReader.readWorkflowFromClasspath;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowableOfType;
 
 import java.io.IOException;
 import java.util.Map;
@@ -25,6 +26,7 @@ import org.assertj.core.api.Condition;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 public class WorkflowDefinitionTest {
 
@@ -40,6 +42,25 @@ public class WorkflowDefinitionTest {
         .is(condition);
   }
 
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "call-http-query-parameters.yaml",
+        "call-http-query-parameters-external-schema.yaml"
+      })
+  void testWrongSchema(String fileName) {
+    IllegalArgumentException exception =
+        catchThrowableOfType(
+            IllegalArgumentException.class,
+            () ->
+                WorkflowDefinition.builder(readWorkflowFromClasspath(fileName))
+                    .build()
+                    .execute(Map.of()));
+    assertThat(exception)
+        .isNotNull()
+        .hasMessageContaining("There are JsonSchema validation errors");
+  }
+
   private static Stream<Arguments> provideParameters() {
     Map<String, Object> petInput = Map.of("petId", 10);
     Condition<Object> petCondition =
@@ -53,6 +74,11 @@ public class WorkflowDefinitionTest {
             Map.of("searchQuery", "R2-D2"),
             new Condition<>(
                 o -> ((Map<String, Object>) o).get("count").equals(1), "R2D2Condition")),
+        Arguments.of(
+            "call-http-query-parameters-external-schema.yaml",
+            Map.of("searchQuery", "Luke Skywalker"),
+            new Condition<>(
+                o -> ((Map<String, Object>) o).get("count").equals(1), "TheRealJediCondition")),
         Arguments.of(
             "callPostHttp.yaml",
             Map.of("name", "Javierito", "status", "available"),
