@@ -188,7 +188,7 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
           throw new IllegalStateException(ex);
         }
       }
-      schema.setJavaTypeIfEmpty(javaType);
+      schema.setJavaType(javaType);
     }
     return javaType;
   }
