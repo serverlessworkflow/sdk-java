@@ -15,44 +15,79 @@
  */
 package io.serverlessworkflow.impl;
 
+import static io.serverlessworkflow.impl.WorkflowUtils.*;
 import static io.serverlessworkflow.impl.json.JsonUtils.*;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import io.serverlessworkflow.api.types.Input;
+import io.serverlessworkflow.api.types.Output;
 import io.serverlessworkflow.api.types.TaskBase;
 import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.executors.DefaultTaskExecutorFactory;
 import io.serverlessworkflow.impl.executors.TaskExecutor;
 import io.serverlessworkflow.impl.executors.TaskExecutorFactory;
+import io.serverlessworkflow.impl.expressions.ExpressionFactory;
+import io.serverlessworkflow.impl.expressions.JQExpressionFactory;
 import io.serverlessworkflow.impl.json.JsonUtils;
+import io.serverlessworkflow.impl.jsonschema.DefaultSchemaValidatorFactory;
+import io.serverlessworkflow.impl.jsonschema.SchemaValidator;
+import io.serverlessworkflow.impl.jsonschema.SchemaValidatorFactory;
+import io.serverlessworkflow.resources.DefaultResourceLoaderFactory;
+import io.serverlessworkflow.resources.ResourceLoaderFactory;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class WorkflowDefinition {
 
   private WorkflowDefinition(
       Workflow workflow,
-      TaskExecutorFactory taskFactory,
-      Collection<WorkflowExecutionListener> listeners) {
+      Collection<WorkflowExecutionListener> listeners,
+      WorkflowFactories factories) {
     this.workflow = workflow;
-    this.taskFactory = taskFactory;
     this.listeners = listeners;
+    this.factories = factories;
+    if (workflow.getInput() != null) {
+      Input input = workflow.getInput();
+      this.inputSchemaValidator =
+          getSchemaValidator(
+              factories.getValidatorFactory(), schemaToNode(factories, input.getSchema()));
+      this.inputFilter = buildWorkflowFilter(factories.getExpressionFactory(), input.getFrom());
+    }
+    if (workflow.getOutput() != null) {
+      Output output = workflow.getOutput();
+      this.outputSchemaValidator =
+          getSchemaValidator(
+              factories.getValidatorFactory(), schemaToNode(factories, output.getSchema()));
+      this.outputFilter = buildWorkflowFilter(factories.getExpressionFactory(), output.getAs());
+    }
   }
 
   private final Workflow workflow;
   private final Collection<WorkflowExecutionListener> listeners;
-  private final TaskExecutorFactory taskFactory;
+  private final WorkflowFactories factories;
+  private Optional<SchemaValidator> inputSchemaValidator = Optional.empty();
+  private Optional<SchemaValidator> outputSchemaValidator = Optional.empty();
+  private Optional<WorkflowFilter> inputFilter = Optional.empty();
+  private Optional<WorkflowFilter> outputFilter = Optional.empty();
+
   private final Map<String, TaskExecutor<? extends TaskBase>> taskExecutors =
       new ConcurrentHashMap<>();
 
   public static class Builder {
     private final Workflow workflow;
     private TaskExecutorFactory taskFactory = DefaultTaskExecutorFactory.get();
+    private ExpressionFactory exprFactory = JQExpressionFactory.get();
     private Collection<WorkflowExecutionListener> listeners;
+    private ResourceLoaderFactory resourceLoaderFactory = DefaultResourceLoaderFactory.get();
+    private SchemaValidatorFactory schemaValidatorFactory = DefaultSchemaValidatorFactory.get();
+    private Path path;
 
     private Builder(Workflow workflow) {
       this.workflow = workflow;
@@ -71,13 +106,39 @@ public class WorkflowDefinition {
       return this;
     }
 
+    public Builder withExpressionFactory(ExpressionFactory factory) {
+      this.exprFactory = factory;
+      return this;
+    }
+
+    public Builder withPath(Path path) {
+      this.path = path;
+      return this;
+    }
+
+    public Builder withResourceLoaderFactory(ResourceLoaderFactory resourceLoader) {
+      this.resourceLoaderFactory = resourceLoader;
+      return this;
+    }
+
+    public Builder withSchemaValidatorFactory(SchemaValidatorFactory factory) {
+      this.schemaValidatorFactory = factory;
+      return this;
+    }
+
     public WorkflowDefinition build() {
-      return new WorkflowDefinition(
-          workflow,
-          taskFactory,
-          listeners == null
-              ? Collections.emptySet()
-              : Collections.unmodifiableCollection(listeners));
+      WorkflowDefinition def =
+          new WorkflowDefinition(
+              workflow,
+              listeners == null
+                  ? Collections.emptySet()
+                  : Collections.unmodifiableCollection(listeners),
+              new WorkflowFactories(
+                  taskFactory,
+                  resourceLoaderFactory.getResourceLoader(path),
+                  exprFactory,
+                  schemaValidatorFactory));
+      return def;
     }
   }
 
@@ -86,7 +147,7 @@ public class WorkflowDefinition {
   }
 
   public WorkflowInstance execute(Object input) {
-    return new WorkflowInstance(taskFactory, JsonUtils.fromValue(input));
+    return new WorkflowInstance(JsonUtils.fromValue(input));
   }
 
   enum State {
@@ -101,11 +162,15 @@ public class WorkflowDefinition {
     private State state;
     private WorkflowContext context;
 
-    private WorkflowInstance(TaskExecutorFactory factory, JsonNode input) {
+    private WorkflowInstance(JsonNode input) {
       this.output = input;
-      this.state = State.STARTED;
+      inputSchemaValidator.ifPresent(v -> v.validate(input));
       this.context = WorkflowContext.builder(input).build();
+      inputFilter.ifPresent(f -> output = f.apply(context, Optional.empty(), output));
+      this.state = State.STARTED;
       processDo(workflow.getDo());
+      outputFilter.ifPresent(f -> output = f.apply(context, Optional.empty(), output));
+      outputSchemaValidator.ifPresent(v -> v.validate(output));
     }
 
     private void processDo(List<TaskItem> tasks) {
@@ -118,7 +183,7 @@ public class WorkflowDefinition {
             taskExecutors
                 .computeIfAbsent(
                     context.position().jsonPointer(),
-                    k -> taskFactory.getTaskExecutor(task.getTask()))
+                    k -> factories.getTaskFactory().getTaskExecutor(task.getTask(), factories))
                 .apply(context, output);
         listeners.forEach(l -> l.onTaskEnded(context.position(), task.getTask()));
         context.position().back().back();

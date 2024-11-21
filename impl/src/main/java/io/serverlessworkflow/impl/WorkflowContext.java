@@ -19,7 +19,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import io.serverlessworkflow.impl.json.JsonUtils;
 
 public class WorkflowContext {
-
   private final WorkflowPosition position;
   private JsonNode context;
   private final JsonNode input;

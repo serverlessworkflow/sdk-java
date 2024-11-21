@@ -26,6 +26,10 @@
       <artifactId>jersey-media-json-jackson</artifactId>
       <version>${version.org.glassfish.jersey}</version>
     </dependency>
+   <dependency>
+     <groupId>com.networknt</groupId>
+     <artifactId>json-schema-validator</artifactId>
+   </dependency>
     <dependency>
       <groupId>net.thisptr</groupId>
       <artifactId>jackson-jq</artifactId>

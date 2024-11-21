@@ -13,12 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.executors;
+package io.serverlessworkflow.resources;
 
-import io.serverlessworkflow.api.types.Task;
-import io.serverlessworkflow.api.types.TaskBase;
-import io.serverlessworkflow.impl.WorkflowFactories;
+import io.serverlessworkflow.api.types.ExternalResource;
+import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.expressions.ExpressionFactory;
 
-public interface TaskExecutorFactory {
-  TaskExecutor<? extends TaskBase> getTaskExecutor(Task task, WorkflowFactories factories);
+public interface ResourceLoader {
+
+  StaticResource loadStatic(ExternalResource resource);
+
+  DynamicResource loadDynamic(
+      WorkflowContext context, ExternalResource resource, ExpressionFactory factory);
 }
