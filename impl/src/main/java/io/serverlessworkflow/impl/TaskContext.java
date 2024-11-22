@@ -16,6 +16,8 @@
 package io.serverlessworkflow.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import io.serverlessworkflow.api.types.FlowDirective;
+import io.serverlessworkflow.api.types.FlowDirectiveEnum;
 import io.serverlessworkflow.api.types.TaskBase;
 
 public class TaskContext<T extends TaskBase> {
@@ -26,11 +28,15 @@ public class TaskContext<T extends TaskBase> {
   private JsonNode input;
   private JsonNode output;
   private JsonNode rawOutput;
+  private FlowDirective flowDirective;
 
   public TaskContext(JsonNode rawInput, T task) {
     this.rawInput = rawInput;
     this.input = rawInput;
+    this.rawOutput = rawInput;
+    this.output = rawInput;
     this.task = task;
+    this.flowDirective = task.getThen();
   }
 
   public void input(JsonNode input) {
@@ -54,6 +60,10 @@ public class TaskContext<T extends TaskBase> {
     this.output = output;
   }
 
+  public JsonNode rawOutput() {
+    return rawOutput;
+  }
+
   public void output(JsonNode output) {
     this.output = output;
   }
@@ -62,7 +72,13 @@ public class TaskContext<T extends TaskBase> {
     return output;
   }
 
-  public JsonNode rawOutput() {
-    return rawOutput;
+  public void flowDirective(FlowDirective flowDirective) {
+    this.flowDirective = flowDirective;
+  }
+
+  public FlowDirective flowDirective() {
+    return flowDirective == null
+        ? new FlowDirective().withFlowDirectiveEnum(FlowDirectiveEnum.CONTINUE)
+        : flowDirective;
   }
 }

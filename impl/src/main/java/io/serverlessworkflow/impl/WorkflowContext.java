@@ -20,24 +20,31 @@ import io.serverlessworkflow.impl.json.JsonUtils;
 
 public class WorkflowContext {
   private final WorkflowPosition position;
-  private JsonNode context;
+  private final WorkflowDefinition definition;
   private final JsonNode input;
+  private JsonNode current;
+  private JsonNode context;
 
-  private WorkflowContext(WorkflowPosition position, JsonNode input) {
+  private WorkflowContext(
+      WorkflowPosition position, WorkflowDefinition definition, JsonNode input) {
     this.position = position;
+    this.definition = definition;
     this.input = input;
+    this.current = input.deepCopy();
     this.context = JsonUtils.mapper().createObjectNode();
   }
 
-  public static Builder builder(JsonNode input) {
-    return new Builder(input);
+  public static Builder builder(WorkflowDefinition definition, JsonNode input) {
+    return new Builder(definition, input);
   }
 
   public static class Builder {
     private WorkflowPosition position = new DefaultWorkflowPosition();
+    private WorkflowDefinition definition;
     private JsonNode input;
 
-    private Builder(JsonNode input) {
+    private Builder(WorkflowDefinition definition, JsonNode input) {
+      this.definition = definition;
       this.input = input;
     }
 
@@ -47,7 +54,7 @@ public class WorkflowContext {
     }
 
     public WorkflowContext build() {
-      return new WorkflowContext(position, input);
+      return new WorkflowContext(position, definition, input);
     }
   }
 
@@ -65,5 +72,17 @@ public class WorkflowContext {
 
   public JsonNode rawInput() {
     return input;
+  }
+
+  public void current(JsonNode output) {
+    this.current = output;
+  }
+
+  public JsonNode current() {
+    return current;
+  }
+
+  public WorkflowDefinition definition() {
+    return definition;
   }
 }

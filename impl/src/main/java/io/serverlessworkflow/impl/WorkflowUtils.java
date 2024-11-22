@@ -19,21 +19,27 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.serverlessworkflow.api.WorkflowFormat;
 import io.serverlessworkflow.api.types.ExportAs;
+import io.serverlessworkflow.api.types.FlowDirective;
 import io.serverlessworkflow.api.types.InputFrom;
 import io.serverlessworkflow.api.types.OutputAs;
 import io.serverlessworkflow.api.types.SchemaExternal;
 import io.serverlessworkflow.api.types.SchemaInline;
 import io.serverlessworkflow.api.types.SchemaUnion;
+import io.serverlessworkflow.api.types.TaskBase;
+import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.impl.expressions.Expression;
 import io.serverlessworkflow.impl.expressions.ExpressionFactory;
 import io.serverlessworkflow.impl.expressions.ExpressionUtils;
 import io.serverlessworkflow.impl.json.JsonUtils;
 import io.serverlessworkflow.impl.jsonschema.SchemaValidator;
 import io.serverlessworkflow.impl.jsonschema.SchemaValidatorFactory;
+import io.serverlessworkflow.resources.ResourceLoader;
 import io.serverlessworkflow.resources.StaticResource;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.Optional;
 
@@ -46,14 +52,14 @@ public class WorkflowUtils {
     return node.map(n -> validatorFactory.getValidator(n));
   }
 
-  public static Optional<JsonNode> schemaToNode(WorkflowFactories factories, SchemaUnion schema) {
+  public static Optional<JsonNode> schemaToNode(ResourceLoader resourceLoader, SchemaUnion schema) {
     if (schema != null) {
       if (schema.getSchemaInline() != null) {
         SchemaInline inline = schema.getSchemaInline();
         return Optional.of(JsonUtils.mapper().convertValue(inline.getDocument(), JsonNode.class));
       } else if (schema.getSchemaExternal() != null) {
         SchemaExternal external = schema.getSchemaExternal();
-        StaticResource resource = factories.getResourceLoader().loadStatic(external.getResource());
+        StaticResource resource = resourceLoader.loadStatic(external.getResource());
         ObjectMapper mapper = WorkflowFormat.fromFileName(resource.name()).mapper();
         try (InputStream in = resource.open()) {
           return Optional.of(mapper.readTree(in));
@@ -89,9 +95,8 @@ public class WorkflowUtils {
   private static WorkflowFilter buildWorkflowFilter(
       ExpressionFactory exprFactory, String str, Object object) {
     if (str != null) {
-      Expression expression = exprFactory.getExpression(str);
-      return expression::eval;
-    } else {
+      return buildWorkflowFilter(exprFactory, str);
+    } else if (object != null) {
       Object exprObj = ExpressionUtils.buildExpressionObject(object, exprFactory);
       return exprObj instanceof Map
           ? (w, t, n) ->
@@ -99,5 +104,80 @@ public class WorkflowUtils {
                   ExpressionUtils.evaluateExpressionMap((Map<String, Object>) exprObj, w, t, n))
           : (w, t, n) -> JsonUtils.fromValue(object);
     }
+    throw new IllegalStateException("Both object and str are null");
+  }
+
+  private static TaskItem findTaskByName(ListIterator<TaskItem> iter, String taskName) {
+    int currentIndex = iter.nextIndex();
+    while (iter.hasPrevious()) {
+      TaskItem item = iter.previous();
+      if (item.getName().equals(taskName)) {
+        return item;
+      }
+    }
+    while (iter.nextIndex() < currentIndex) {
+      iter.next();
+    }
+    while (iter.hasNext()) {
+      TaskItem item = iter.next();
+      if (item.getName().equals(taskName)) {
+        return item;
+      }
+    }
+    throw new IllegalArgumentException("Cannot find task with name " + taskName);
+  }
+
+  public static void processTaskList(List<TaskItem> tasks, WorkflowContext context) {
+    context.position().addProperty("do");
+    if (!tasks.isEmpty()) {
+      ListIterator<TaskItem> iter = tasks.listIterator();
+      TaskItem nextTask = iter.next();
+      while (nextTask != null) {
+        TaskItem task = nextTask;
+        context.position().addIndex(iter.nextIndex()).addProperty(task.getName());
+        context
+            .definition()
+            .listeners()
+            .forEach(l -> l.onTaskStarted(context.position(), task.getTask()));
+        TaskContext<? extends TaskBase> taskContext =
+            context
+                .definition()
+                .taskExecutors()
+                .computeIfAbsent(
+                    context.position().jsonPointer(),
+                    k ->
+                        context
+                            .definition()
+                            .taskFactory()
+                            .getTaskExecutor(task.getTask(), context.definition()))
+                .apply(context, context.current());
+        context.current(taskContext.output());
+        FlowDirective flowDirective = taskContext.flowDirective();
+        if (flowDirective.getFlowDirectiveEnum() != null) {
+          switch (flowDirective.getFlowDirectiveEnum()) {
+            case CONTINUE:
+              nextTask = iter.hasNext() ? iter.next() : null;
+              break;
+            case END:
+            case EXIT:
+              nextTask = null;
+              break;
+          }
+        } else {
+          nextTask = WorkflowUtils.findTaskByName(iter, flowDirective.getString());
+        }
+        context
+            .definition()
+            .listeners()
+            .forEach(l -> l.onTaskEnded(context.position(), task.getTask()));
+        context.position().back();
+      }
+    }
+    context.position().back();
+  }
+
+  public static WorkflowFilter buildWorkflowFilter(ExpressionFactory exprFactory, String str) {
+    Expression expression = exprFactory.getExpression(str);
+    return expression::eval;
   }
 }
