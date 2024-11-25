@@ -1,0 +1,17 @@
+document:
+  dsl: '1.0.0-alpha5'
+  namespace: test
+  name: for-collect-example
+  version: '0.1.0'
+do:
+  - sumAll:
+      for:
+        each: number
+        in: .input
+        at: index
+      input: 
+        from: '{input: .input, output: []}'
+      do:
+        - sumIndex:
+            output:
+              as: .output+=[$number+$index+1]

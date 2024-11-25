@@ -18,24 +18,26 @@ package io.serverlessworkflow.impl;
 import static io.serverlessworkflow.impl.json.JsonUtils.toJavaValue;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import java.util.Optional;
 
 public class WorkflowInstance {
   private WorkflowState state;
   private WorkflowContext context;
+  private TaskContext<?> taskContext;
 
   WorkflowInstance(WorkflowDefinition definition, JsonNode input) {
     definition.inputSchemaValidator().ifPresent(v -> v.validate(input));
-    context = WorkflowContext.builder(definition, input).build();
+    context = new WorkflowContext(definition, input);
+    taskContext = new TaskContext<>(input, definition.positionFactory().buildPosition());
     definition
         .inputFilter()
-        .ifPresent(f -> context.current(f.apply(context, Optional.empty(), context.current())));
+        .ifPresent(f -> taskContext.input(f.apply(context, taskContext, input)));
     state = WorkflowState.STARTED;
-    WorkflowUtils.processTaskList(definition.workflow().getDo(), context);
+    taskContext.rawOutput(
+        WorkflowUtils.processTaskList(definition.workflow().getDo(), context, taskContext));
     definition
         .outputFilter()
-        .ifPresent(f -> context.current(f.apply(context, Optional.empty(), context.current())));
-    definition.outputSchemaValidator().ifPresent(v -> v.validate(context.current()));
+        .ifPresent(f -> taskContext.output(f.apply(context, taskContext, taskContext.rawOutput())));
+    definition.outputSchemaValidator().ifPresent(v -> v.validate(taskContext.output()));
   }
 
   public WorkflowState state() {
@@ -43,10 +45,10 @@ public class WorkflowInstance {
   }
 
   public Object output() {
-    return toJavaValue(context.current());
+    return toJavaValue(taskContext.output());
   }
 
   public Object outputAsJsonNode() {
-    return context.current();
+    return taskContext.output();
   }
 }

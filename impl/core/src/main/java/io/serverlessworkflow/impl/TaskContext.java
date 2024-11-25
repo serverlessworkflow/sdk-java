@@ -19,28 +19,48 @@ import com.fasterxml.jackson.databind.JsonNode;
 import io.serverlessworkflow.api.types.FlowDirective;
 import io.serverlessworkflow.api.types.FlowDirectiveEnum;
 import io.serverlessworkflow.api.types.TaskBase;
+import java.util.HashMap;
+import java.util.Map;
 
-public class TaskContext<T extends TaskBase> {
+public class TaskContext<T extends TaskBase> implements ContextAware {
 
   private final JsonNode rawInput;
   private final T task;
+  private final WorkflowPosition position;
 
   private JsonNode input;
   private JsonNode output;
   private JsonNode rawOutput;
   private FlowDirective flowDirective;
+  private Map<String, Object> contextVariables;
 
-  public TaskContext(JsonNode rawInput, T task) {
-    this.rawInput = rawInput;
+  public TaskContext(JsonNode input, WorkflowPosition position) {
+    this.rawInput = input;
+    this.position = position;
+    this.task = null;
+    this.contextVariables = new HashMap<>();
+    init();
+  }
+
+  public TaskContext(JsonNode input, TaskContext<?> taskContext, T task) {
+    this.rawInput = input;
+    this.position = taskContext.position.copy();
+    this.task = task;
+    this.flowDirective = task.getThen();
+    this.contextVariables = new HashMap<>(taskContext.variables());
+    init();
+  }
+
+  private void init() {
     this.input = rawInput;
     this.rawOutput = rawInput;
     this.output = rawInput;
-    this.task = task;
-    this.flowDirective = task.getThen();
   }
 
   public void input(JsonNode input) {
     this.input = input;
+    this.rawOutput = input;
+    this.output = input;
   }
 
   public JsonNode input() {
@@ -80,5 +100,13 @@ public class TaskContext<T extends TaskBase> {
     return flowDirective == null
         ? new FlowDirective().withFlowDirectiveEnum(FlowDirectiveEnum.CONTINUE)
         : flowDirective;
+  }
+
+  public Map<String, Object> variables() {
+    return contextVariables;
+  }
+
+  public WorkflowPosition position() {
+    return position;
   }
 }

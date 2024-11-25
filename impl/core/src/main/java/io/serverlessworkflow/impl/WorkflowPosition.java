@@ -24,4 +24,6 @@ public interface WorkflowPosition {
   WorkflowPosition addIndex(int index);
 
   WorkflowPosition back();
+
+  WorkflowPosition copy();
 }

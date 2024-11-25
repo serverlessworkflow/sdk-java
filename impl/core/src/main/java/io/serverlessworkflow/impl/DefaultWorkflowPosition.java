@@ -17,7 +17,19 @@ package io.serverlessworkflow.impl;
 
 public class DefaultWorkflowPosition implements WorkflowPosition {
 
-  private StringBuilder sb = new StringBuilder("");
+  private StringBuilder sb;
+
+  DefaultWorkflowPosition() {
+    this.sb = new StringBuilder("");
+  }
+
+  private DefaultWorkflowPosition(WorkflowPosition position) {
+    this.sb = new StringBuilder(position.toString());
+  }
+
+  public DefaultWorkflowPosition copy() {
+    return new DefaultWorkflowPosition(this);
+  }
 
   @Override
   public WorkflowPosition addIndex(int index) {

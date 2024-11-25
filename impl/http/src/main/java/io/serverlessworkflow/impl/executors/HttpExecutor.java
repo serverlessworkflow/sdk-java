@@ -38,7 +38,6 @@ import jakarta.ws.rs.client.Invocation.Builder;
 import jakarta.ws.rs.client.WebTarget;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Optional;
 
 public class HttpExecutor implements CallableTask<CallHTTP> {
 
@@ -82,8 +81,7 @@ public class HttpExecutor implements CallableTask<CallHTTP> {
             (request, workflow, context, node) ->
                 request.post(
                     Entity.json(
-                        ExpressionUtils.evaluateExpressionObject(
-                            body, workflow, Optional.of(context), node)),
+                        ExpressionUtils.evaluateExpressionObject(body, workflow, context, node)),
                     JsonNode.class);
         break;
       case HttpMethod.GET:
@@ -97,12 +95,11 @@ public class HttpExecutor implements CallableTask<CallHTTP> {
       WorkflowContext workflow, TaskContext<CallHTTP> taskContext, JsonNode input) {
     WebTarget target = targetSupplier.apply(workflow, taskContext, input);
     for (Entry<String, Object> entry :
-        ExpressionUtils.evaluateExpressionMap(queryMap, workflow, Optional.of(taskContext), input)
-            .entrySet()) {
+        ExpressionUtils.evaluateExpressionMap(queryMap, workflow, taskContext, input).entrySet()) {
       target = target.queryParam(entry.getKey(), entry.getValue());
     }
     Builder request = target.request();
-    ExpressionUtils.evaluateExpressionMap(headersMap, workflow, Optional.of(taskContext), input)
+    ExpressionUtils.evaluateExpressionMap(headersMap, workflow, taskContext, input)
         .forEach(request::header);
     return requestFunction.apply(request, workflow, taskContext, input);
   }
@@ -153,7 +150,7 @@ public class HttpExecutor implements CallableTask<CallHTTP> {
 
     @Override
     public WebTarget apply(WorkflowContext workflow, TaskContext<?> task, JsonNode node) {
-      return client.target(expr.eval(workflow, Optional.of(task), node).asText());
+      return client.target(expr.eval(workflow, task, node).asText());
     }
   }
 }

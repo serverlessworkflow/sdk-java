@@ -28,7 +28,6 @@ import io.serverlessworkflow.impl.json.JsonUtils;
 import io.serverlessworkflow.impl.jsonschema.SchemaValidator;
 import io.serverlessworkflow.impl.jsonschema.SchemaValidatorFactory;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
-
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Map;
@@ -47,6 +46,7 @@ public class WorkflowDefinition implements AutoCloseable {
   private final ExpressionFactory exprFactory;
   private final ResourceLoader resourceLoader;
   private final SchemaValidatorFactory schemaValidatorFactory;
+  private final WorkflowPositionFactory positionFactory;
   private final Map<String, TaskExecutor<? extends TaskBase>> taskExecutors =
       new ConcurrentHashMap<>();
 
@@ -56,12 +56,14 @@ public class WorkflowDefinition implements AutoCloseable {
       TaskExecutorFactory taskFactory,
       ResourceLoader resourceLoader,
       ExpressionFactory exprFactory,
-      SchemaValidatorFactory schemaValidatorFactory) {
+      SchemaValidatorFactory schemaValidatorFactory,
+      WorkflowPositionFactory positionFactory) {
     this.workflow = workflow;
     this.listeners = listeners;
     this.taskFactory = taskFactory;
     this.exprFactory = exprFactory;
     this.schemaValidatorFactory = schemaValidatorFactory;
+    this.positionFactory = positionFactory;
     this.resourceLoader = resourceLoader;
     if (workflow.getInput() != null) {
       Input input = workflow.getInput();
@@ -90,7 +92,8 @@ public class WorkflowDefinition implements AutoCloseable {
         application.taskFactory(),
         application.resourceLoaderFactory().getResourceLoader(path),
         application.expressionFactory(),
-        application.validatorFactory());
+        application.validatorFactory(),
+        application.positionFactory());
   }
 
   public WorkflowInstance execute(Object input) {
@@ -140,6 +143,10 @@ public class WorkflowDefinition implements AutoCloseable {
   public ResourceLoader resourceLoader() {
 
     return resourceLoader;
+  }
+
+  public WorkflowPositionFactory positionFactory() {
+    return positionFactory;
   }
 
   @Override

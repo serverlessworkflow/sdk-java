@@ -15,25 +15,33 @@
  */
 package io.serverlessworkflow.impl.executors;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import io.serverlessworkflow.api.types.SetTask;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowDefinition;
+import io.serverlessworkflow.impl.expressions.ExpressionUtils;
 import io.serverlessworkflow.impl.json.JsonUtils;
 import io.serverlessworkflow.impl.json.MergeUtils;
+import java.util.Map;
 
 public class SetExecutor extends AbstractTaskExecutor<SetTask> {
 
-  private JsonNode toBeSet;
+  private Map<String, Object> toBeSet;
 
   protected SetExecutor(SetTask task, WorkflowDefinition definition) {
     super(task, definition);
-    this.toBeSet = JsonUtils.fromValue(task.getSet().getAdditionalProperties());
+    this.toBeSet =
+        ExpressionUtils.buildExpressionMap(
+            task.getSet().getAdditionalProperties(), definition.expressionFactory());
   }
 
   @Override
   protected void internalExecute(WorkflowContext workflow, TaskContext<SetTask> taskContext) {
-    taskContext.rawOutput(MergeUtils.merge(toBeSet, taskContext.input()));
+    taskContext.rawOutput(
+        MergeUtils.merge(
+            JsonUtils.fromValue(
+                ExpressionUtils.evaluateExpressionMap(
+                    toBeSet, workflow, taskContext, taskContext.input())),
+            taskContext.input()));
   }
 }
