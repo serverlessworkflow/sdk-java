@@ -15,7 +15,11 @@
  */
 package io.serverlessworkflow.impl.executors;
 
+import io.serverlessworkflow.api.types.CallAsyncAPI;
+import io.serverlessworkflow.api.types.CallFunction;
+import io.serverlessworkflow.api.types.CallGRPC;
 import io.serverlessworkflow.api.types.CallHTTP;
+import io.serverlessworkflow.api.types.CallOpenAPI;
 import io.serverlessworkflow.api.types.CallTask;
 import io.serverlessworkflow.api.types.Task;
 import io.serverlessworkflow.api.types.TaskBase;
@@ -42,6 +46,18 @@ public class DefaultTaskExecutorFactory implements TaskExecutorFactory {
       if (callTask.getCallHTTP() != null) {
         return new CallTaskExecutor<>(
             callTask.getCallHTTP(), definition, findCallTask(CallHTTP.class));
+      } else if (callTask.getCallAsyncAPI() != null) {
+        return new CallTaskExecutor<>(
+            callTask.getCallAsyncAPI(), definition, findCallTask(CallAsyncAPI.class));
+      } else if (callTask.getCallGRPC() != null) {
+        return new CallTaskExecutor<>(
+            callTask.getCallGRPC(), definition, findCallTask(CallGRPC.class));
+      } else if (callTask.getCallOpenAPI() != null) {
+        return new CallTaskExecutor<>(
+            callTask.getCallOpenAPI(), definition, findCallTask(CallOpenAPI.class));
+      } else if (callTask.getCallFunction() != null) {
+        return new CallTaskExecutor<>(
+            callTask.getCallFunction(), definition, findCallTask(CallFunction.class));
       }
     } else if (task.getSwitchTask() != null) {
       return new SwitchExecutor(task.getSwitchTask(), definition);
