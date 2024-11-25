@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.stream.Stream;
 import org.assertj.core.api.Condition;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -30,15 +31,18 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 public class WorkflowDefinitionTest {
 
+  private static WorkflowApplication appl;
+
+  @BeforeAll
+  static void init() {
+    appl = WorkflowApplication.builder().build();
+  }
+
   @ParameterizedTest
   @MethodSource("provideParameters")
   void testWorkflowExecution(String fileName, Object input, Condition<Object> condition)
       throws IOException {
-    assertThat(
-            WorkflowDefinition.builder(readWorkflowFromClasspath(fileName))
-                .build()
-                .execute(input)
-                .output())
+    assertThat(appl.workflowDefinition(readWorkflowFromClasspath(fileName)).execute(input).output())
         .is(condition);
   }
 
@@ -52,10 +56,7 @@ public class WorkflowDefinitionTest {
     IllegalArgumentException exception =
         catchThrowableOfType(
             IllegalArgumentException.class,
-            () ->
-                WorkflowDefinition.builder(readWorkflowFromClasspath(fileName))
-                    .build()
-                    .execute(Map.of()));
+            () -> appl.workflowDefinition(readWorkflowFromClasspath(fileName)).execute(Map.of()));
     assertThat(exception)
         .isNotNull()
         .hasMessageContaining("There are JsonSchema validation errors");
@@ -82,6 +83,39 @@ public class WorkflowDefinitionTest {
         Arguments.of(
             "callPostHttp.yaml",
             Map.of("name", "Javierito", "status", "available"),
-            new Condition<>(o -> o.equals("Javierito"), "CallHttpPostCondition")));
+            new Condition<>(o -> o.equals("Javierito"), "CallHttpPostCondition")),
+        Arguments.of(
+            "switch-then-string.yaml",
+            Map.of("orderType", "electronic"),
+            new Condition(
+                o ->
+                    o.equals(
+                        Map.of("orderType", "electronic", "validate", true, "status", "fulfilled")),
+                "switch-electronic")),
+        Arguments.of(
+            "switch-then-string.yaml",
+            Map.of("orderType", "physical"),
+            new Condition(
+                o ->
+                    o.equals(
+                        Map.of(
+                            "orderType",
+                            "physical",
+                            "inventory",
+                            "clear",
+                            "items",
+                            1,
+                            "address",
+                            "Elmer St")),
+                "switch-physical")),
+        Arguments.of(
+            "switch-then-string.yaml",
+            Map.of("orderType", "unknown"),
+            new Condition(
+                o ->
+                    o.equals(
+                        Map.of(
+                            "orderType", "unknown", "log", "warn", "message", "something's wrong")),
+                "switch-unknown")));
   }
 }

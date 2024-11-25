@@ -17,8 +17,8 @@ package io.serverlessworkflow.impl.executors;
 
 import io.serverlessworkflow.api.types.Task;
 import io.serverlessworkflow.api.types.TaskBase;
-import io.serverlessworkflow.impl.WorkflowFactories;
+import io.serverlessworkflow.impl.WorkflowDefinition;
 
 public interface TaskExecutorFactory {
-  TaskExecutor<? extends TaskBase> getTaskExecutor(Task task, WorkflowFactories factories);
+  TaskExecutor<? extends TaskBase> getTaskExecutor(Task task, WorkflowDefinition definition);
 }

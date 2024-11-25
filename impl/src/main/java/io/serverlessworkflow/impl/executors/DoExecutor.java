@@ -15,11 +15,20 @@
  */
 package io.serverlessworkflow.impl.executors;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import io.serverlessworkflow.api.types.TaskBase;
+import io.serverlessworkflow.api.types.DoTask;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
-import java.util.function.BiFunction;
+import io.serverlessworkflow.impl.WorkflowDefinition;
+import io.serverlessworkflow.impl.WorkflowUtils;
 
-public interface TaskExecutor<T extends TaskBase>
-    extends BiFunction<WorkflowContext, JsonNode, TaskContext<T>> {}
+public class DoExecutor extends AbstractTaskExecutor<DoTask> {
+
+  protected DoExecutor(DoTask task, WorkflowDefinition definition) {
+    super(task, definition);
+  }
+
+  @Override
+  protected void internalExecute(WorkflowContext workflow, TaskContext<DoTask> taskContext) {
+    WorkflowUtils.processTaskList(task.getDo(), workflow);
+  }
+}

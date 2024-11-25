@@ -16,190 +16,133 @@
 package io.serverlessworkflow.impl;
 
 import static io.serverlessworkflow.impl.WorkflowUtils.*;
-import static io.serverlessworkflow.impl.json.JsonUtils.*;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import io.serverlessworkflow.api.types.Input;
 import io.serverlessworkflow.api.types.Output;
 import io.serverlessworkflow.api.types.TaskBase;
-import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.api.types.Workflow;
-import io.serverlessworkflow.impl.executors.DefaultTaskExecutorFactory;
 import io.serverlessworkflow.impl.executors.TaskExecutor;
 import io.serverlessworkflow.impl.executors.TaskExecutorFactory;
 import io.serverlessworkflow.impl.expressions.ExpressionFactory;
-import io.serverlessworkflow.impl.expressions.JQExpressionFactory;
 import io.serverlessworkflow.impl.json.JsonUtils;
-import io.serverlessworkflow.impl.jsonschema.DefaultSchemaValidatorFactory;
 import io.serverlessworkflow.impl.jsonschema.SchemaValidator;
 import io.serverlessworkflow.impl.jsonschema.SchemaValidatorFactory;
-import io.serverlessworkflow.resources.DefaultResourceLoaderFactory;
-import io.serverlessworkflow.resources.ResourceLoaderFactory;
+import io.serverlessworkflow.resources.ResourceLoader;
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class WorkflowDefinition {
+public class WorkflowDefinition implements AutoCloseable {
+
+  private final Workflow workflow;
+  private final Collection<WorkflowExecutionListener> listeners;
+  private Optional<SchemaValidator> inputSchemaValidator = Optional.empty();
+  private Optional<SchemaValidator> outputSchemaValidator = Optional.empty();
+  private Optional<WorkflowFilter> inputFilter = Optional.empty();
+  private Optional<WorkflowFilter> outputFilter = Optional.empty();
+  private final TaskExecutorFactory taskFactory;
+  private final ExpressionFactory exprFactory;
+  private final ResourceLoader resourceLoader;
+  private final SchemaValidatorFactory schemaValidatorFactory;
+  private final Map<String, TaskExecutor<? extends TaskBase>> taskExecutors =
+      new ConcurrentHashMap<>();
 
   private WorkflowDefinition(
       Workflow workflow,
       Collection<WorkflowExecutionListener> listeners,
-      WorkflowFactories factories) {
+      TaskExecutorFactory taskFactory,
+      ResourceLoader resourceLoader,
+      ExpressionFactory exprFactory,
+      SchemaValidatorFactory schemaValidatorFactory) {
     this.workflow = workflow;
     this.listeners = listeners;
-    this.factories = factories;
+    this.taskFactory = taskFactory;
+    this.exprFactory = exprFactory;
+    this.schemaValidatorFactory = schemaValidatorFactory;
+    this.resourceLoader = resourceLoader;
     if (workflow.getInput() != null) {
       Input input = workflow.getInput();
       this.inputSchemaValidator =
           getSchemaValidator(
-              factories.getValidatorFactory(), schemaToNode(factories, input.getSchema()));
-      this.inputFilter = buildWorkflowFilter(factories.getExpressionFactory(), input.getFrom());
+              schemaValidatorFactory, schemaToNode(resourceLoader, input.getSchema()));
+      this.inputFilter = buildWorkflowFilter(exprFactory, input.getFrom());
     }
     if (workflow.getOutput() != null) {
       Output output = workflow.getOutput();
       this.outputSchemaValidator =
           getSchemaValidator(
-              factories.getValidatorFactory(), schemaToNode(factories, output.getSchema()));
-      this.outputFilter = buildWorkflowFilter(factories.getExpressionFactory(), output.getAs());
+              schemaValidatorFactory, schemaToNode(resourceLoader, output.getSchema()));
+      this.outputFilter = buildWorkflowFilter(exprFactory, output.getAs());
     }
   }
 
-  private final Workflow workflow;
-  private final Collection<WorkflowExecutionListener> listeners;
-  private final WorkflowFactories factories;
-  private Optional<SchemaValidator> inputSchemaValidator = Optional.empty();
-  private Optional<SchemaValidator> outputSchemaValidator = Optional.empty();
-  private Optional<WorkflowFilter> inputFilter = Optional.empty();
-  private Optional<WorkflowFilter> outputFilter = Optional.empty();
-
-  private final Map<String, TaskExecutor<? extends TaskBase>> taskExecutors =
-      new ConcurrentHashMap<>();
-
-  public static class Builder {
-    private final Workflow workflow;
-    private TaskExecutorFactory taskFactory = DefaultTaskExecutorFactory.get();
-    private ExpressionFactory exprFactory = JQExpressionFactory.get();
-    private Collection<WorkflowExecutionListener> listeners;
-    private ResourceLoaderFactory resourceLoaderFactory = DefaultResourceLoaderFactory.get();
-    private SchemaValidatorFactory schemaValidatorFactory = DefaultSchemaValidatorFactory.get();
-    private Path path;
-
-    private Builder(Workflow workflow) {
-      this.workflow = workflow;
-    }
-
-    public Builder withListener(WorkflowExecutionListener listener) {
-      if (listeners == null) {
-        listeners = new HashSet<>();
-      }
-      listeners.add(listener);
-      return this;
-    }
-
-    public Builder withTaskExecutorFactory(TaskExecutorFactory factory) {
-      this.taskFactory = factory;
-      return this;
-    }
-
-    public Builder withExpressionFactory(ExpressionFactory factory) {
-      this.exprFactory = factory;
-      return this;
-    }
-
-    public Builder withPath(Path path) {
-      this.path = path;
-      return this;
-    }
-
-    public Builder withResourceLoaderFactory(ResourceLoaderFactory resourceLoader) {
-      this.resourceLoaderFactory = resourceLoader;
-      return this;
-    }
-
-    public Builder withSchemaValidatorFactory(SchemaValidatorFactory factory) {
-      this.schemaValidatorFactory = factory;
-      return this;
-    }
-
-    public WorkflowDefinition build() {
-      WorkflowDefinition def =
-          new WorkflowDefinition(
-              workflow,
-              listeners == null
-                  ? Collections.emptySet()
-                  : Collections.unmodifiableCollection(listeners),
-              new WorkflowFactories(
-                  taskFactory,
-                  resourceLoaderFactory.getResourceLoader(path),
-                  exprFactory,
-                  schemaValidatorFactory));
-      return def;
-    }
+  static WorkflowDefinition of(WorkflowApplication application, Workflow workflow) {
+    return of(application, workflow, null);
   }
 
-  public static Builder builder(Workflow workflow) {
-    return new Builder(workflow);
+  static WorkflowDefinition of(WorkflowApplication application, Workflow workflow, Path path) {
+    return new WorkflowDefinition(
+        workflow,
+        application.listeners(),
+        application.taskFactory(),
+        application.resourceLoaderFactory().getResourceLoader(path),
+        application.expressionFactory(),
+        application.validatorFactory());
   }
 
   public WorkflowInstance execute(Object input) {
-    return new WorkflowInstance(JsonUtils.fromValue(input));
+    return new WorkflowInstance(this, JsonUtils.fromValue(input));
   }
 
-  enum State {
-    STARTED,
-    WAITING,
-    FINISHED
-  };
+  public Optional<SchemaValidator> inputSchemaValidator() {
+    return inputSchemaValidator;
+  }
 
-  public class WorkflowInstance {
+  public Optional<WorkflowFilter> inputFilter() {
+    return inputFilter;
+  }
 
-    private JsonNode output;
-    private State state;
-    private WorkflowContext context;
+  public Workflow workflow() {
+    return workflow;
+  }
 
-    private WorkflowInstance(JsonNode input) {
-      this.output = input;
-      inputSchemaValidator.ifPresent(v -> v.validate(input));
-      this.context = WorkflowContext.builder(input).build();
-      inputFilter.ifPresent(f -> output = f.apply(context, Optional.empty(), output));
-      this.state = State.STARTED;
-      processDo(workflow.getDo());
-      outputFilter.ifPresent(f -> output = f.apply(context, Optional.empty(), output));
-      outputSchemaValidator.ifPresent(v -> v.validate(output));
-    }
+  public Collection<WorkflowExecutionListener> listeners() {
+    return listeners;
+  }
 
-    private void processDo(List<TaskItem> tasks) {
-      context.position().addProperty("do");
-      int index = 0;
-      for (TaskItem task : tasks) {
-        context.position().addIndex(++index).addProperty(task.getName());
-        listeners.forEach(l -> l.onTaskStarted(context.position(), task.getTask()));
-        this.output =
-            taskExecutors
-                .computeIfAbsent(
-                    context.position().jsonPointer(),
-                    k -> factories.getTaskFactory().getTaskExecutor(task.getTask(), factories))
-                .apply(context, output);
-        listeners.forEach(l -> l.onTaskEnded(context.position(), task.getTask()));
-        context.position().back().back();
-      }
-    }
+  public Map<String, TaskExecutor<? extends TaskBase>> taskExecutors() {
+    return taskExecutors;
+  }
 
-    public State state() {
-      return state;
-    }
+  public TaskExecutorFactory taskFactory() {
+    return taskFactory;
+  }
 
-    public Object output() {
-      return toJavaValue(output);
-    }
+  public Optional<WorkflowFilter> outputFilter() {
+    return outputFilter;
+  }
 
-    public Object outputAsJsonNode() {
-      return output;
-    }
+  public Optional<SchemaValidator> outputSchemaValidator() {
+    return outputSchemaValidator;
+  }
+
+  public ExpressionFactory expressionFactory() {
+    return exprFactory;
+  }
+
+  public SchemaValidatorFactory validatorFactory() {
+    return schemaValidatorFactory;
+  }
+
+  public ResourceLoader resourceLoader() {
+
+    return resourceLoader;
+  }
+
+  @Override
+  public void close() {
+    // TODO close resourcers hold for uncompleted process instances, if any
   }
 }

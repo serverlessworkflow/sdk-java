@@ -24,7 +24,7 @@ import io.serverlessworkflow.api.types.HTTPArguments;
 import io.serverlessworkflow.api.types.UriTemplate;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
-import io.serverlessworkflow.impl.WorkflowFactories;
+import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.expressions.Expression;
 import io.serverlessworkflow.impl.expressions.ExpressionFactory;
 import io.serverlessworkflow.impl.expressions.ExpressionUtils;
@@ -58,25 +58,25 @@ public class HttpExecutor extends AbstractTaskExecutor<CallHTTP> {
     JsonNode apply(Builder request, WorkflowContext workflow, TaskContext<?> task, JsonNode node);
   }
 
-  public HttpExecutor(CallHTTP task, WorkflowFactories holder) {
-    super(task, holder);
+  public HttpExecutor(CallHTTP task, WorkflowDefinition definition) {
+    super(task, definition);
     HTTPArguments httpArgs = task.getWith();
-    this.targetSupplier = getTargetSupplier(httpArgs.getEndpoint(), holder.getExpressionFactory());
+    this.targetSupplier = getTargetSupplier(httpArgs.getEndpoint(), definition.expressionFactory());
     this.headersMap =
         httpArgs.getHeaders() != null
             ? ExpressionUtils.buildExpressionMap(
-                httpArgs.getHeaders().getAdditionalProperties(), holder.getExpressionFactory())
+                httpArgs.getHeaders().getAdditionalProperties(), definition.expressionFactory())
             : Map.of();
     this.queryMap =
         httpArgs.getQuery() != null
             ? ExpressionUtils.buildExpressionMap(
-                httpArgs.getQuery().getAdditionalProperties(), holder.getExpressionFactory())
+                httpArgs.getQuery().getAdditionalProperties(), definition.expressionFactory())
             : Map.of();
     switch (httpArgs.getMethod().toUpperCase()) {
       case HttpMethod.POST:
         Object body =
             ExpressionUtils.buildExpressionObject(
-                httpArgs.getBody(), holder.getExpressionFactory());
+                httpArgs.getBody(), definition.expressionFactory());
         this.requestFunction =
             (request, workflow, context, node) ->
                 request.post(
@@ -92,8 +92,8 @@ public class HttpExecutor extends AbstractTaskExecutor<CallHTTP> {
   }
 
   @Override
-  protected JsonNode internalExecute(
-      WorkflowContext workflow, TaskContext<CallHTTP> taskContext, JsonNode input) {
+  protected void internalExecute(WorkflowContext workflow, TaskContext<CallHTTP> taskContext) {
+    JsonNode input = taskContext.input();
     WebTarget target = targetSupplier.apply(workflow, taskContext, input);
     for (Entry<String, Object> entry :
         ExpressionUtils.evaluateExpressionMap(queryMap, workflow, Optional.of(taskContext), input)
@@ -103,7 +103,7 @@ public class HttpExecutor extends AbstractTaskExecutor<CallHTTP> {
     Builder request = target.request();
     ExpressionUtils.evaluateExpressionMap(headersMap, workflow, Optional.of(taskContext), input)
         .forEach(request::header);
-    return requestFunction.apply(request, workflow, taskContext, input);
+    taskContext.rawOutput(requestFunction.apply(request, workflow, taskContext, input));
   }
 
   private static TargetSupplier getTargetSupplier(
