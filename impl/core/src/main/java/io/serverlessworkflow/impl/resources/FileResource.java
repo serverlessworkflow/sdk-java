@@ -13,14 +13,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.resources;
+package io.serverlessworkflow.impl.resources;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import io.serverlessworkflow.impl.TaskContext;
-import io.serverlessworkflow.impl.WorkflowContext;
+import java.io.IOException;
 import java.io.InputStream;
-import java.util.Optional;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
-public interface DynamicResource {
-  InputStream open(WorkflowContext workflow, Optional<TaskContext<?>> task, JsonNode input);
+class FileResource implements StaticResource {
+
+  private Path path;
+
+  public FileResource(Path path) {
+    this.path = path;
+  }
+
+  @Override
+  public InputStream open() {
+    try {
+      return Files.newInputStream(path);
+    } catch (IOException io) {
+      throw new UncheckedIOException(io);
+    }
+  }
+
+  @Override
+  public String name() {
+    return path.getFileName().toString();
+  }
 }

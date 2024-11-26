@@ -27,7 +27,8 @@ import io.serverlessworkflow.impl.expressions.ExpressionFactory;
 import io.serverlessworkflow.impl.json.JsonUtils;
 import io.serverlessworkflow.impl.jsonschema.SchemaValidator;
 import io.serverlessworkflow.impl.jsonschema.SchemaValidatorFactory;
-import io.serverlessworkflow.resources.ResourceLoader;
+import io.serverlessworkflow.impl.resources.ResourceLoader;
+
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Map;

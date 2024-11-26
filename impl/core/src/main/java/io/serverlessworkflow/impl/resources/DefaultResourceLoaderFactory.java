@@ -13,12 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.resources;
+package io.serverlessworkflow.impl.resources;
 
-import java.io.InputStream;
+import java.nio.file.Path;
 
-public interface StaticResource {
-  InputStream open();
+public class DefaultResourceLoaderFactory implements ResourceLoaderFactory {
 
-  String name();
+  public static final ResourceLoaderFactory get() {
+    return factory;
+  }
+
+  private static final ResourceLoaderFactory factory = new DefaultResourceLoaderFactory();
+
+  private DefaultResourceLoaderFactory() {}
+
+  @Override
+  public ResourceLoader getResourceLoader(Path path) {
+    return new DefaultResourceLoader(path);
+  }
 }

@@ -1,6 +1,6 @@
 document:
   dsl: 1.0.0-alpha2
-  namespace: examples
+  namespace: test
   name: http-query-params
   version: 1.0.0-alpha2
 input:
