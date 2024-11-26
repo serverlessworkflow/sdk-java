@@ -19,6 +19,7 @@ import static io.serverlessworkflow.api.WorkflowReader.readWorkflowFromClasspath
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Stream;
 import org.assertj.core.api.Condition;
@@ -45,10 +46,6 @@ public class WorkflowDefinitionTest {
   }
 
   private static Stream<Arguments> provideParameters() {
-    Map<String, Object> petInput = Map.of("petId", 10);
-    Condition<Object> petCondition =
-        new Condition<>(
-            o -> ((Map<String, Object>) o).containsKey("photoUrls"), "callHttpCondition");
     return Stream.of(
         Arguments.of(
             "switch-then-string.yaml",
@@ -82,6 +79,18 @@ public class WorkflowDefinitionTest {
                     o.equals(
                         Map.of(
                             "orderType", "unknown", "log", "warn", "message", "something's wrong")),
-                "switch-unknown")));
+                "switch-unknown")),
+        Arguments.of(
+            "for-sum.yaml",
+            Map.of("input", Arrays.asList(1, 2, 3)),
+            new Condition(o -> o.equals(6), "for-sum")),
+        Arguments.of(
+            "for-collect.yaml",
+            Map.of("input", Arrays.asList(1, 2, 3)),
+            new Condition(
+                o ->
+                    o.equals(
+                        Map.of("input", Arrays.asList(1, 2, 3), "output", Arrays.asList(2, 4, 6))),
+                "for-collect")));
   }
 }

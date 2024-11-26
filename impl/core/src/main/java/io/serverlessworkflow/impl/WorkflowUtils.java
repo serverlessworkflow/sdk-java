@@ -35,7 +35,6 @@ import io.serverlessworkflow.impl.jsonschema.SchemaValidator;
 import io.serverlessworkflow.impl.jsonschema.SchemaValidatorFactory;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
 import io.serverlessworkflow.impl.resources.StaticResource;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
@@ -128,32 +127,33 @@ public class WorkflowUtils {
     throw new IllegalArgumentException("Cannot find task with name " + taskName);
   }
 
-  public static void processTaskList(List<TaskItem> tasks, WorkflowContext context) {
-    context.position().addProperty("do");
+  public static JsonNode processTaskList(
+      List<TaskItem> tasks, WorkflowContext context, TaskContext<?> parentTask) {
+    parentTask.position().addProperty("do");
+    TaskContext<? extends TaskBase> currentContext = parentTask;
     if (!tasks.isEmpty()) {
       ListIterator<TaskItem> iter = tasks.listIterator();
       TaskItem nextTask = iter.next();
       while (nextTask != null) {
         TaskItem task = nextTask;
-        context.position().addIndex(iter.nextIndex()).addProperty(task.getName());
+        parentTask.position().addIndex(iter.nextIndex()).addProperty(task.getName());
         context
             .definition()
             .listeners()
-            .forEach(l -> l.onTaskStarted(context.position(), task.getTask()));
-        TaskContext<? extends TaskBase> taskContext =
+            .forEach(l -> l.onTaskStarted(parentTask.position(), task.getTask()));
+        currentContext =
             context
                 .definition()
                 .taskExecutors()
                 .computeIfAbsent(
-                    context.position().jsonPointer(),
+                    parentTask.position().jsonPointer(),
                     k ->
                         context
                             .definition()
                             .taskFactory()
                             .getTaskExecutor(task.getTask(), context.definition()))
-                .apply(context, context.current());
-        context.current(taskContext.output());
-        FlowDirective flowDirective = taskContext.flowDirective();
+                .apply(context, parentTask, currentContext.output());
+        FlowDirective flowDirective = currentContext.flowDirective();
         if (flowDirective.getFlowDirectiveEnum() != null) {
           switch (flowDirective.getFlowDirectiveEnum()) {
             case CONTINUE:
@@ -170,15 +170,21 @@ public class WorkflowUtils {
         context
             .definition()
             .listeners()
-            .forEach(l -> l.onTaskEnded(context.position(), task.getTask()));
-        context.position().back();
+            .forEach(l -> l.onTaskEnded(parentTask.position(), task.getTask()));
+        parentTask.position().back();
       }
     }
-    context.position().back();
+    parentTask.position().back();
+    return currentContext.output();
   }
 
   public static WorkflowFilter buildWorkflowFilter(ExpressionFactory exprFactory, String str) {
+    assert str != null;
     Expression expression = exprFactory.getExpression(str);
     return expression::eval;
+  }
+
+  public static Optional<WorkflowFilter> optionalFilter(ExpressionFactory exprFactory, String str) {
+    return str != null ? Optional.of(buildWorkflowFilter(exprFactory, str)) : Optional.empty();
   }
 }

@@ -83,23 +83,20 @@ public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskEx
   }
 
   @Override
-  public TaskContext<T> apply(WorkflowContext workflowContext, JsonNode rawInput) {
-    TaskContext<T> taskContext = new TaskContext<>(rawInput, task);
+  public TaskContext<T> apply(
+      WorkflowContext workflowContext, TaskContext<?> parentContext, JsonNode input) {
+    TaskContext<T> taskContext = new TaskContext<>(input, parentContext, task);
     inputSchemaValidator.ifPresent(s -> s.validate(taskContext.rawInput()));
     inputProcessor.ifPresent(
-        p ->
-            taskContext.input(
-                p.apply(workflowContext, Optional.of(taskContext), taskContext.rawInput())));
+        p -> taskContext.input(p.apply(workflowContext, taskContext, taskContext.rawInput())));
     internalExecute(workflowContext, taskContext);
     outputProcessor.ifPresent(
-        p ->
-            taskContext.output(
-                p.apply(workflowContext, Optional.of(taskContext), taskContext.rawOutput())));
+        p -> taskContext.output(p.apply(workflowContext, taskContext, taskContext.rawOutput())));
     outputSchemaValidator.ifPresent(s -> s.validate(taskContext.output()));
     contextProcessor.ifPresent(
         p ->
             workflowContext.context(
-                p.apply(workflowContext, Optional.of(taskContext), workflowContext.context())));
+                p.apply(workflowContext, taskContext, workflowContext.context())));
     contextSchemaValidator.ifPresent(s -> s.validate(workflowContext.context()));
     return taskContext;
   }

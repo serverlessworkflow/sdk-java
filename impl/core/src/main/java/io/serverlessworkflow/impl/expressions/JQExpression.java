@@ -17,6 +17,7 @@ package io.serverlessworkflow.impl.expressions;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import io.serverlessworkflow.impl.ContextAware;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.json.JsonUtils;
@@ -177,15 +178,25 @@ public class JQExpression implements Expression {
   }
 
   @Override
-  public JsonNode eval(WorkflowContext workflow, Optional<TaskContext<?>> task, JsonNode node) {
+  public JsonNode eval(WorkflowContext workflow, TaskContext<?> task, JsonNode node) {
     TypedOutput<JsonNode> output = output(JsonNode.class);
     try {
-      internalExpr.apply(this.scope.get(), node, output);
+      internalExpr.apply(createScope(workflow, task), node, output);
       return output.getResult();
     } catch (JsonQueryException e) {
       throw new IllegalArgumentException(
           "Unable to evaluate content " + node + " using expr " + expr, e);
     }
+  }
+
+  private Scope createScope(WorkflowContext workflow, TaskContext<?> task) {
+    return createScope(scope.get(), task);
+  }
+
+  private Scope createScope(Scope parentScope, ContextAware context) {
+    Scope childScope = Scope.newChildScope(parentScope);
+    context.variables().forEach((k, v) -> childScope.setValue(k, JsonUtils.fromValue(v)));
+    return childScope;
   }
 
   private void checkFunctionCall(net.thisptr.jackson.jq.Expression toCheck)

@@ -13,12 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.expressions;
+package io.serverlessworkflow.impl;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import io.serverlessworkflow.impl.TaskContext;
-import io.serverlessworkflow.impl.WorkflowContext;
-
-public interface Expression {
-  JsonNode eval(WorkflowContext workflowContext, TaskContext<?> context, JsonNode node);
+public interface WorkflowPositionFactory {
+  WorkflowPosition buildPosition();
 }

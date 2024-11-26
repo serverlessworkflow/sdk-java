@@ -25,7 +25,6 @@ import io.serverlessworkflow.impl.jsonschema.DefaultSchemaValidatorFactory;
 import io.serverlessworkflow.impl.jsonschema.SchemaValidatorFactory;
 import io.serverlessworkflow.impl.resources.DefaultResourceLoaderFactory;
 import io.serverlessworkflow.impl.resources.ResourceLoaderFactory;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
@@ -40,17 +39,20 @@ public class WorkflowApplication implements AutoCloseable {
   private final SchemaValidatorFactory schemaValidatorFactory;
   private final Collection<WorkflowExecutionListener> listeners;
   private final Map<WorkflowId, WorkflowDefinition> definitions;
+  private final WorkflowPositionFactory positionFactory;
 
   public WorkflowApplication(
       TaskExecutorFactory taskFactory,
       ExpressionFactory exprFactory,
       ResourceLoaderFactory resourceLoaderFactory,
       SchemaValidatorFactory schemaValidatorFactory,
+      WorkflowPositionFactory positionFactory,
       Collection<WorkflowExecutionListener> listeners) {
     this.taskFactory = taskFactory;
     this.exprFactory = exprFactory;
     this.resourceLoaderFactory = resourceLoaderFactory;
     this.schemaValidatorFactory = schemaValidatorFactory;
+    this.positionFactory = positionFactory;
     this.listeners = listeners;
     this.definitions = new ConcurrentHashMap<>();
   }
@@ -85,6 +87,7 @@ public class WorkflowApplication implements AutoCloseable {
     private Collection<WorkflowExecutionListener> listeners;
     private ResourceLoaderFactory resourceLoaderFactory = DefaultResourceLoaderFactory.get();
     private SchemaValidatorFactory schemaValidatorFactory = DefaultSchemaValidatorFactory.get();
+    private WorkflowPositionFactory positionFactory = DefaultWorkflowPositionFactory.get();
 
     private Builder() {}
 
@@ -111,6 +114,11 @@ public class WorkflowApplication implements AutoCloseable {
       return this;
     }
 
+    public Builder withPositionFactory(WorkflowPositionFactory positionFactory) {
+      this.positionFactory = positionFactory;
+      return this;
+    }
+
     public Builder withSchemaValidatorFactory(SchemaValidatorFactory factory) {
       this.schemaValidatorFactory = factory;
       return this;
@@ -122,6 +130,7 @@ public class WorkflowApplication implements AutoCloseable {
           exprFactory,
           resourceLoaderFactory,
           schemaValidatorFactory,
+          positionFactory,
           listeners == null
               ? Collections.emptySet()
               : Collections.unmodifiableCollection(listeners));
@@ -145,5 +154,9 @@ public class WorkflowApplication implements AutoCloseable {
       definition.close();
     }
     definitions.clear();
+  }
+
+  public WorkflowPositionFactory positionFactory() {
+    return positionFactory;
   }
 }

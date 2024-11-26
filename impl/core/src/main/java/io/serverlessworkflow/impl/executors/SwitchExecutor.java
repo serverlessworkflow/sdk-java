@@ -26,7 +26,6 @@ import io.serverlessworkflow.impl.WorkflowFilter;
 import io.serverlessworkflow.impl.WorkflowUtils;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class SwitchExecutor extends AbstractTaskExecutor<SwitchTask> {
@@ -52,10 +51,7 @@ public class SwitchExecutor extends AbstractTaskExecutor<SwitchTask> {
   @Override
   protected void internalExecute(WorkflowContext workflow, TaskContext<SwitchTask> taskContext) {
     for (Entry<SwitchCase, WorkflowFilter> entry : workflowFilters.entrySet()) {
-      if (entry
-          .getValue()
-          .apply(workflow, Optional.of(taskContext), taskContext.input())
-          .asBoolean()) {
+      if (entry.getValue().apply(workflow, taskContext, taskContext.input()).asBoolean()) {
         taskContext.flowDirective(entry.getKey().getThen());
         return;
       }
