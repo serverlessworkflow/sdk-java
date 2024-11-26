@@ -23,8 +23,9 @@ import io.serverlessworkflow.impl.expressions.ExpressionFactory;
 import io.serverlessworkflow.impl.expressions.JQExpressionFactory;
 import io.serverlessworkflow.impl.jsonschema.DefaultSchemaValidatorFactory;
 import io.serverlessworkflow.impl.jsonschema.SchemaValidatorFactory;
-import io.serverlessworkflow.resources.DefaultResourceLoaderFactory;
-import io.serverlessworkflow.resources.ResourceLoaderFactory;
+import io.serverlessworkflow.impl.resources.DefaultResourceLoaderFactory;
+import io.serverlessworkflow.impl.resources.ResourceLoaderFactory;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;

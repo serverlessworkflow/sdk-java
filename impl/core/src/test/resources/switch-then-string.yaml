@@ -1,6 +1,6 @@
 document:
   dsl: 1.0.0-alpha5
-  namespace: examples
+  namespace: test
   name:  switch
   version: 0.1.0
 do:

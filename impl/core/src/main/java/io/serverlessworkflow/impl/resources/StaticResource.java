@@ -13,16 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.resources;
+package io.serverlessworkflow.impl.resources;
 
-import io.serverlessworkflow.api.types.ExternalResource;
-import io.serverlessworkflow.impl.WorkflowContext;
-import io.serverlessworkflow.impl.expressions.ExpressionFactory;
+import java.io.InputStream;
 
-public interface ResourceLoader {
+public interface StaticResource {
+  InputStream open();
 
-  StaticResource loadStatic(ExternalResource resource);
-
-  DynamicResource loadDynamic(
-      WorkflowContext context, ExternalResource resource, ExpressionFactory factory);
+  String name();
 }

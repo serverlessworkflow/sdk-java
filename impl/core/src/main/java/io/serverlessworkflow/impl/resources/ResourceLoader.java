@@ -13,31 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.resources;
+package io.serverlessworkflow.impl.resources;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UncheckedIOException;
-import java.net.URL;
+import io.serverlessworkflow.api.types.ExternalResource;
+import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.expressions.ExpressionFactory;
 
-public class HttpResource implements StaticResource {
+public interface ResourceLoader {
 
-  private URL url;
+  StaticResource loadStatic(ExternalResource resource);
 
-  public HttpResource(URL url) {
-    this.url = url;
-  }
-
-  @Override
-  public InputStream open() {
-    try {
-      return url.openStream();
-    } catch (IOException e) {
-      throw new UncheckedIOException(e);
-    }
-  }
-
-  public String name() {
-    return url.getFile();
-  }
+  DynamicResource loadDynamic(
+      WorkflowContext context, ExternalResource resource, ExpressionFactory factory);
 }

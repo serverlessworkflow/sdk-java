@@ -33,8 +33,9 @@ import io.serverlessworkflow.impl.expressions.ExpressionUtils;
 import io.serverlessworkflow.impl.json.JsonUtils;
 import io.serverlessworkflow.impl.jsonschema.SchemaValidator;
 import io.serverlessworkflow.impl.jsonschema.SchemaValidatorFactory;
-import io.serverlessworkflow.resources.ResourceLoader;
-import io.serverlessworkflow.resources.StaticResource;
+import io.serverlessworkflow.impl.resources.ResourceLoader;
+import io.serverlessworkflow.impl.resources.StaticResource;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
