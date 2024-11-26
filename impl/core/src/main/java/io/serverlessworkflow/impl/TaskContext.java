@@ -22,7 +22,7 @@ import io.serverlessworkflow.api.types.TaskBase;
 import java.util.HashMap;
 import java.util.Map;
 
-public class TaskContext<T extends TaskBase> implements ContextAware {
+public class TaskContext<T extends TaskBase> {
 
   private final JsonNode rawInput;
   private final T task;
