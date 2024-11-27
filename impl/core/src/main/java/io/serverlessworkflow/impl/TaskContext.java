@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import io.serverlessworkflow.api.types.FlowDirective;
 import io.serverlessworkflow.api.types.FlowDirectiveEnum;
 import io.serverlessworkflow.api.types.TaskBase;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,6 +28,7 @@ public class TaskContext<T extends TaskBase> {
   private final JsonNode rawInput;
   private final T task;
   private final WorkflowPosition position;
+  private final Instant startedAt = Instant.now();
 
   private JsonNode input;
   private JsonNode output;
@@ -108,5 +110,9 @@ public class TaskContext<T extends TaskBase> {
 
   public WorkflowPosition position() {
     return position;
+  }
+
+  public Instant startedAt() {
+    return startedAt;
   }
 }

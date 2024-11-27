@@ -15,20 +15,20 @@
  */
 package io.serverlessworkflow.impl;
 
-public class DefaultWorkflowPosition implements WorkflowPosition {
+public class StringBufferWorkflowPosition implements WorkflowPosition {
 
   private StringBuilder sb;
 
-  DefaultWorkflowPosition() {
-    this.sb = new StringBuilder("");
+  StringBufferWorkflowPosition() {
+    this("");
   }
 
-  private DefaultWorkflowPosition(WorkflowPosition position) {
-    this.sb = new StringBuilder(position.toString());
+  private StringBufferWorkflowPosition(String str) {
+    this.sb = new StringBuilder(str);
   }
 
-  public DefaultWorkflowPosition copy() {
-    return new DefaultWorkflowPosition(this);
+  public StringBufferWorkflowPosition copy() {
+    return new StringBufferWorkflowPosition(this.jsonPointer());
   }
 
   @Override
@@ -50,7 +50,7 @@ public class DefaultWorkflowPosition implements WorkflowPosition {
 
   @Override
   public String toString() {
-    return "DefaultWorkflowPosition [sb=" + sb + "]";
+    return "StringBufferWorkflowPosition [sb=" + sb + "]";
   }
 
   @Override
@@ -60,5 +60,11 @@ public class DefaultWorkflowPosition implements WorkflowPosition {
       sb.substring(0, indexOf);
     }
     return this;
+  }
+
+  @Override
+  public Object last() {
+    int indexOf = sb.lastIndexOf("/");
+    return indexOf != -1 ? jsonPointer().substring(indexOf + 1) : "";
   }
 }

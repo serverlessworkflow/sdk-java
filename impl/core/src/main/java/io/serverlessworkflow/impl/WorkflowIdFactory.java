@@ -15,18 +15,7 @@
  */
 package io.serverlessworkflow.impl;
 
-class DefaultWorkflowPositionFactory implements WorkflowPositionFactory {
+import java.util.function.Supplier;
 
-  private static WorkflowPositionFactory instance = new DefaultWorkflowPositionFactory();
-
-  public static WorkflowPositionFactory get() {
-    return instance;
-  }
-
-  private DefaultWorkflowPositionFactory() {}
-
-  @Override
-  public WorkflowPosition buildPosition() {
-    return new DefaultWorkflowPosition();
-  }
-}
+@FunctionalInterface
+public interface WorkflowIdFactory extends Supplier<String> {}

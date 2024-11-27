@@ -15,17 +15,8 @@
  */
 package io.serverlessworkflow.impl;
 
-public interface WorkflowPosition {
+import io.serverlessworkflow.impl.expressions.RuntimeDescriptor;
+import java.util.function.Supplier;
 
-  String jsonPointer();
-
-  WorkflowPosition addProperty(String prop);
-
-  WorkflowPosition addIndex(int index);
-
-  WorkflowPosition back();
-
-  WorkflowPosition copy();
-
-  Object last();
-}
+@FunctionalInterface
+public interface RuntimeDescriptorFactory extends Supplier<RuntimeDescriptor> {}
