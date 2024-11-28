@@ -15,6 +15,6 @@
  */
 package io.serverlessworkflow.impl;
 
-public interface WorkflowPositionFactory {
-  WorkflowPosition buildPosition();
-}
+import java.util.function.Supplier;
+
+public interface WorkflowPositionFactory extends Supplier<WorkflowPosition> {}

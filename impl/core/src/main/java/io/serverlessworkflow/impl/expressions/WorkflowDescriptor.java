@@ -13,32 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl;
+package io.serverlessworkflow.impl.expressions;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import io.serverlessworkflow.api.types.TaskBase;
+import io.serverlessworkflow.api.types.Workflow;
+import io.serverlessworkflow.impl.WorkflowContext;
 
-public class WorkflowContext {
-  private final WorkflowDefinition definition;
-  private final WorkflowInstance instance;
+public record WorkflowDescriptor<T extends TaskBase>(
+    String id, Workflow definition, JsonNode input, DateTimeDescriptor startedAt) {
 
-  WorkflowContext(WorkflowDefinition definition, WorkflowInstance instance) {
-    this.definition = definition;
-    this.instance = instance;
-  }
-
-  public WorkflowInstance instance() {
-    return instance;
-  }
-
-  public JsonNode context() {
-    return instance.context();
-  }
-
-  public void context(JsonNode context) {
-    this.instance.context(context);
-  }
-
-  public WorkflowDefinition definition() {
-    return definition;
+  public static <T extends TaskBase> WorkflowDescriptor<T> of(WorkflowContext context) {
+    return new WorkflowDescriptor<T>(
+        context.instance().id(),
+        context.definition().workflow(),
+        context.instance().input(),
+        DateTimeDescriptor.from(context.instance().startedAt()));
   }
 }

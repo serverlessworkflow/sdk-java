@@ -37,47 +37,34 @@ import java.util.concurrent.ConcurrentHashMap;
 public class WorkflowDefinition implements AutoCloseable {
 
   private final Workflow workflow;
-  private final Collection<WorkflowExecutionListener> listeners;
   private Optional<SchemaValidator> inputSchemaValidator = Optional.empty();
   private Optional<SchemaValidator> outputSchemaValidator = Optional.empty();
   private Optional<WorkflowFilter> inputFilter = Optional.empty();
   private Optional<WorkflowFilter> outputFilter = Optional.empty();
-  private final TaskExecutorFactory taskFactory;
-  private final ExpressionFactory exprFactory;
-  private final ResourceLoader resourceLoader;
-  private final SchemaValidatorFactory schemaValidatorFactory;
-  private final WorkflowPositionFactory positionFactory;
   private final Map<String, TaskExecutor<? extends TaskBase>> taskExecutors =
       new ConcurrentHashMap<>();
+  private final ResourceLoader resourceLoader;
+  private final WorkflowApplication application;
 
   private WorkflowDefinition(
-      Workflow workflow,
-      Collection<WorkflowExecutionListener> listeners,
-      TaskExecutorFactory taskFactory,
-      ResourceLoader resourceLoader,
-      ExpressionFactory exprFactory,
-      SchemaValidatorFactory schemaValidatorFactory,
-      WorkflowPositionFactory positionFactory) {
+      WorkflowApplication application, Workflow workflow, ResourceLoader resourceLoader) {
+
     this.workflow = workflow;
-    this.listeners = listeners;
-    this.taskFactory = taskFactory;
-    this.exprFactory = exprFactory;
-    this.schemaValidatorFactory = schemaValidatorFactory;
-    this.positionFactory = positionFactory;
+    this.application = application;
     this.resourceLoader = resourceLoader;
     if (workflow.getInput() != null) {
       Input input = workflow.getInput();
       this.inputSchemaValidator =
           getSchemaValidator(
-              schemaValidatorFactory, schemaToNode(resourceLoader, input.getSchema()));
-      this.inputFilter = buildWorkflowFilter(exprFactory, input.getFrom());
+              application.validatorFactory(), schemaToNode(resourceLoader, input.getSchema()));
+      this.inputFilter = buildWorkflowFilter(application.expressionFactory(), input.getFrom());
     }
     if (workflow.getOutput() != null) {
       Output output = workflow.getOutput();
       this.outputSchemaValidator =
           getSchemaValidator(
-              schemaValidatorFactory, schemaToNode(resourceLoader, output.getSchema()));
-      this.outputFilter = buildWorkflowFilter(exprFactory, output.getAs());
+              application.validatorFactory(), schemaToNode(resourceLoader, output.getSchema()));
+      this.outputFilter = buildWorkflowFilter(application.expressionFactory(), output.getAs());
     }
   }
 
@@ -87,13 +74,7 @@ public class WorkflowDefinition implements AutoCloseable {
 
   static WorkflowDefinition of(WorkflowApplication application, Workflow workflow, Path path) {
     return new WorkflowDefinition(
-        workflow,
-        application.listeners(),
-        application.taskFactory(),
-        application.resourceLoaderFactory().getResourceLoader(path),
-        application.expressionFactory(),
-        application.validatorFactory(),
-        application.positionFactory());
+        application, workflow, application.resourceLoaderFactory().getResourceLoader(path));
   }
 
   public WorkflowInstance execute(Object input) {
@@ -113,7 +94,7 @@ public class WorkflowDefinition implements AutoCloseable {
   }
 
   public Collection<WorkflowExecutionListener> listeners() {
-    return listeners;
+    return application.listeners();
   }
 
   public Map<String, TaskExecutor<? extends TaskBase>> taskExecutors() {
@@ -121,11 +102,15 @@ public class WorkflowDefinition implements AutoCloseable {
   }
 
   public TaskExecutorFactory taskFactory() {
-    return taskFactory;
+    return application.taskFactory();
   }
 
   public Optional<WorkflowFilter> outputFilter() {
     return outputFilter;
+  }
+
+  public WorkflowIdFactory idFactory() {
+    return application.idFactory();
   }
 
   public Optional<SchemaValidator> outputSchemaValidator() {
@@ -133,11 +118,11 @@ public class WorkflowDefinition implements AutoCloseable {
   }
 
   public ExpressionFactory expressionFactory() {
-    return exprFactory;
+    return application.expressionFactory();
   }
 
   public SchemaValidatorFactory validatorFactory() {
-    return schemaValidatorFactory;
+    return application.validatorFactory();
   }
 
   public ResourceLoader resourceLoader() {
@@ -146,7 +131,11 @@ public class WorkflowDefinition implements AutoCloseable {
   }
 
   public WorkflowPositionFactory positionFactory() {
-    return positionFactory;
+    return application.positionFactory();
+  }
+
+  public RuntimeDescriptorFactory runtimeDescriptorFactory() {
+    return application.runtimeDescriptorFactory();
   }
 
   @Override

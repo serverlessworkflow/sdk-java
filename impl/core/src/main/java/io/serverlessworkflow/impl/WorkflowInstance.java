@@ -18,26 +18,52 @@ package io.serverlessworkflow.impl;
 import static io.serverlessworkflow.impl.json.JsonUtils.toJavaValue;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.NullNode;
+import java.time.Instant;
 
 public class WorkflowInstance {
   private WorkflowState state;
-  private WorkflowContext context;
   private TaskContext<?> taskContext;
+  private final String id;
+  private final JsonNode input;
+  private final Instant startedAt;
+  private JsonNode context = NullNode.getInstance();
 
   WorkflowInstance(WorkflowDefinition definition, JsonNode input) {
+    this.id = definition.idFactory().get();
+    this.input = input;
     definition.inputSchemaValidator().ifPresent(v -> v.validate(input));
-    context = new WorkflowContext(definition, input);
-    taskContext = new TaskContext<>(input, definition.positionFactory().buildPosition());
+    this.startedAt = Instant.now();
+    WorkflowContext workflowContext = new WorkflowContext(definition, this);
+    taskContext = new TaskContext<>(input, definition.positionFactory().get());
     definition
         .inputFilter()
-        .ifPresent(f -> taskContext.input(f.apply(context, taskContext, input)));
+        .ifPresent(f -> taskContext.input(f.apply(workflowContext, taskContext, input)));
     state = WorkflowState.STARTED;
     taskContext.rawOutput(
-        WorkflowUtils.processTaskList(definition.workflow().getDo(), context, taskContext));
+        WorkflowUtils.processTaskList(definition.workflow().getDo(), workflowContext, taskContext));
     definition
         .outputFilter()
-        .ifPresent(f -> taskContext.output(f.apply(context, taskContext, taskContext.rawOutput())));
+        .ifPresent(
+            f ->
+                taskContext.output(f.apply(workflowContext, taskContext, taskContext.rawOutput())));
     definition.outputSchemaValidator().ifPresent(v -> v.validate(taskContext.output()));
+  }
+
+  public String id() {
+    return id;
+  }
+
+  public Instant startedAt() {
+    return startedAt;
+  }
+
+  public JsonNode input() {
+    return input;
+  }
+
+  public JsonNode context() {
+    return context;
   }
 
   public WorkflowState state() {
@@ -50,5 +76,9 @@ public class WorkflowInstance {
 
   public Object outputAsJsonNode() {
     return taskContext.output();
+  }
+
+  void context(JsonNode context) {
+    this.context = context;
   }
 }

@@ -31,26 +31,28 @@ public class JQExpression implements Expression {
 
   private final Supplier<Scope> scope;
   private final String expr;
-
-  private net.thisptr.jackson.jq.Expression internalExpr;
+  private final net.thisptr.jackson.jq.Expression internalExpr;
 
   public JQExpression(Supplier<Scope> scope, String expr, Version version)
       throws JsonQueryException {
     this.expr = expr;
     this.scope = scope;
-    this.internalExpr = compile(version);
+    this.internalExpr = ExpressionParser.compile(expr, version);
   }
 
-  private net.thisptr.jackson.jq.Expression compile(Version version) throws JsonQueryException {
-    return ExpressionParser.compile(expr, version);
+  @Override
+  public JsonNode eval(WorkflowContext workflow, TaskContext<?> task, JsonNode node) {
+    JsonNodeOutput output = new JsonNodeOutput();
+    try {
+      internalExpr.apply(createScope(workflow, task), node, output);
+      return output.getResult();
+    } catch (JsonQueryException e) {
+      throw new IllegalArgumentException(
+          "Unable to evaluate content " + node + " using expr " + expr, e);
+    }
   }
 
-  private interface TypedOutput<T> extends Output {
-    T getResult();
-  }
-
-  private static class JsonNodeOutput implements TypedOutput<JsonNode> {
-
+  private static class JsonNodeOutput implements Output {
     private JsonNode result;
     private boolean arrayCreated;
 
@@ -68,26 +70,21 @@ public class JQExpression implements Expression {
       }
     }
 
-    @Override
     public JsonNode getResult() {
       return result;
     }
   }
 
-  @Override
-  public JsonNode eval(WorkflowContext workflow, TaskContext<?> task, JsonNode node) {
-    TypedOutput<JsonNode> output = new JsonNodeOutput();
-    try {
-      internalExpr.apply(createScope(workflow, task), node, output);
-      return output.getResult();
-    } catch (JsonQueryException e) {
-      throw new IllegalArgumentException(
-          "Unable to evaluate content " + node + " using expr " + expr, e);
-    }
-  }
-
   private Scope createScope(WorkflowContext workflow, TaskContext<?> task) {
     Scope childScope = Scope.newChildScope(scope.get());
+    childScope.setValue("input", task.input());
+    childScope.setValue("output", task.output());
+    childScope.setValue("context", workflow.context());
+    childScope.setValue(
+        "runtime",
+        () -> JsonUtils.fromValue(workflow.definition().runtimeDescriptorFactory().get()));
+    childScope.setValue("workflow", () -> JsonUtils.fromValue(WorkflowDescriptor.of(workflow)));
+    childScope.setValue("task", () -> JsonUtils.fromValue(TaskDescriptor.of(task)));
     task.variables().forEach((k, v) -> childScope.setValue(k, JsonUtils.fromValue(v)));
     return childScope;
   }

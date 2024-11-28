@@ -19,10 +19,11 @@ import static io.serverlessworkflow.api.WorkflowReader.readWorkflowFromClasspath
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
-import org.assertj.core.api.Condition;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -31,36 +32,38 @@ import org.junit.jupiter.params.provider.MethodSource;
 public class WorkflowDefinitionTest {
 
   private static WorkflowApplication appl;
+  private static Instant before;
 
   @BeforeAll
   static void init() {
     appl = WorkflowApplication.builder().build();
+    before = Instant.now();
   }
 
   @ParameterizedTest
   @MethodSource("provideParameters")
-  void testWorkflowExecution(String fileName, Object input, Condition<Object> condition)
+  void testWorkflowExecution(String fileName, Object input, Consumer<Object> assertions)
       throws IOException {
-    assertThat(appl.workflowDefinition(readWorkflowFromClasspath(fileName)).execute(input).output())
-        .is(condition);
+    assertions.accept(
+        appl.workflowDefinition(readWorkflowFromClasspath(fileName)).execute(input).output());
   }
 
   private static Stream<Arguments> provideParameters() {
     return Stream.of(
-        Arguments.of(
+        args(
             "switch-then-string.yaml",
             Map.of("orderType", "electronic"),
-            new Condition(
-                o ->
-                    o.equals(
-                        Map.of("orderType", "electronic", "validate", true, "status", "fulfilled")),
-                "switch-electronic")),
-        Arguments.of(
+            o ->
+                assertThat(o)
+                    .isEqualTo(
+                        Map.of(
+                            "orderType", "electronic", "validate", true, "status", "fulfilled"))),
+        args(
             "switch-then-string.yaml",
             Map.of("orderType", "physical"),
-            new Condition(
-                o ->
-                    o.equals(
+            o ->
+                assertThat(o)
+                    .isEqualTo(
                         Map.of(
                             "orderType",
                             "physical",
@@ -69,28 +72,48 @@ public class WorkflowDefinitionTest {
                             "items",
                             1,
                             "address",
-                            "Elmer St")),
-                "switch-physical")),
-        Arguments.of(
+                            "Elmer St"))),
+        args(
             "switch-then-string.yaml",
             Map.of("orderType", "unknown"),
-            new Condition(
-                o ->
-                    o.equals(
+            o ->
+                assertThat(o)
+                    .isEqualTo(
                         Map.of(
-                            "orderType", "unknown", "log", "warn", "message", "something's wrong")),
-                "switch-unknown")),
-        Arguments.of(
+                            "orderType",
+                            "unknown",
+                            "log",
+                            "warn",
+                            "message",
+                            "something's wrong"))),
+        args(
             "for-sum.yaml",
             Map.of("input", Arrays.asList(1, 2, 3)),
-            new Condition(o -> o.equals(6), "for-sum")),
-        Arguments.of(
+            o -> assertThat(o).isEqualTo(6)),
+        args(
             "for-collect.yaml",
             Map.of("input", Arrays.asList(1, 2, 3)),
-            new Condition(
-                o ->
-                    o.equals(
-                        Map.of("input", Arrays.asList(1, 2, 3), "output", Arrays.asList(2, 4, 6))),
-                "for-collect")));
+            o ->
+                assertThat(o)
+                    .isEqualTo(
+                        Map.of("input", Arrays.asList(1, 2, 3), "output", Arrays.asList(2, 4, 6)))),
+        args(
+            "simple-expression.yaml",
+            Map.of("input", Arrays.asList(1, 2, 3)),
+            WorkflowDefinitionTest::checkSpecialKeywords));
+  }
+
+  private static Arguments args(
+      String fileName, Map<String, Object> input, Consumer<Object> object) {
+    return Arguments.of(fileName, input, object);
+  }
+
+  private static void checkSpecialKeywords(Object obj) {
+    Map<String, Object> result = (Map<String, Object>) obj;
+    assertThat(Instant.ofEpochMilli((long) result.get("startedAt")))
+        .isAfterOrEqualTo(before)
+        .isBeforeOrEqualTo(Instant.now());
+    assertThat(result.get("id").toString()).hasSize(26);
+    assertThat(result.get("version").toString()).contains("alpha");
   }
 }
