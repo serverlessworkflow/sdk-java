@@ -8,7 +8,7 @@ do:
       call: openapi
       with:
         document:
-          endpoint: https://petstore.swagger.io/v2/swagger.json
+          endpoint: pets.json
         operationId: findPetsByStatus
         parameters:
           status: available

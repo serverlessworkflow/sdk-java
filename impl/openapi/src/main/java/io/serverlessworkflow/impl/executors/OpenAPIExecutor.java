@@ -15,26 +15,118 @@
  */
 package io.serverlessworkflow.impl.executors;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.serverlessworkflow.api.types.CallOpenAPI;
+import io.serverlessworkflow.api.types.Endpoint;
+import io.serverlessworkflow.api.types.EndpointUri;
+import io.serverlessworkflow.api.types.OpenAPIArguments;
 import io.serverlessworkflow.api.types.TaskBase;
+import io.serverlessworkflow.api.types.UriTemplate;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowDefinition;
+import io.serverlessworkflow.impl.WorkflowUtils;
+import io.serverlessworkflow.impl.expressions.Expression;
+import io.serverlessworkflow.impl.expressions.ExpressionFactory;
+import io.serverlessworkflow.impl.json.JsonUtils;
+import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.client.ClientBuilder;
+import jakarta.ws.rs.client.WebTarget;
+
+import java.util.Map;
+import java.util.Optional;
 
 public class OpenAPIExecutor implements CallableTask<CallOpenAPI> {
+    private static final Client client = ClientBuilder.newClient();
+    private TargetSupplier targetSupplier;
 
-  @Override
-  public void init(CallOpenAPI task, WorkflowDefinition definition) {}
+    @FunctionalInterface
+    private interface TargetSupplier {
+        WebTarget apply(WorkflowContext workflow, TaskContext<?> task, JsonNode node);
+    }
 
-  @Override
-  public JsonNode apply(
-      WorkflowContext workflowContext, TaskContext<CallOpenAPI> taskContext, JsonNode input) {
-    return input;
-  }
+    @Override
+    public void init(CallOpenAPI task, WorkflowDefinition definition) {
+        OpenAPIArguments args = task.getWith();
+        this.targetSupplier = getTargetSupplier(args.getDocument().getEndpoint(), definition.expressionFactory(), args.getOperationId());
+    }
 
-  @Override
-  public boolean accept(Class<? extends TaskBase> clazz) {
-    return clazz.isAssignableFrom(CallOpenAPI.class);
-  }
+    @Override
+    public JsonNode apply(
+            WorkflowContext workflowContext, TaskContext<CallOpenAPI> taskContext, JsonNode input) {
+
+        WebTarget target = this.targetSupplier.apply(workflowContext, taskContext, input);
+
+
+        return input;
+    }
+
+    @Override
+    public boolean accept(Class<? extends TaskBase> clazz) {
+        return clazz.isAssignableFrom(CallOpenAPI.class);
+    }
+
+    private static TargetSupplier getURISupplier(UriTemplate template, String operationId) {
+        if (template.getLiteralUri() != null) {
+
+            Optional<JsonNode> jsonNode = WorkflowUtils.classpathResourceToNode(template.getLiteralUri().toString());
+
+            if (jsonNode.isEmpty()) {
+                throw new IllegalArgumentException("Invalid OpenAPI specification " + template.getLiteralUri().toString());
+            }
+
+            String host = OpenAPIReader.getHost(jsonNode.get());
+
+            JsonNode operation = OpenAPIReader.readOperation(jsonNode.get(), operationId);
+
+            if (operation == null) {
+                throw new IllegalArgumentException("Invalid OpenAPI specification. There is no operation ID " + operationId);
+            }
+
+
+
+            return (w, t, n) -> client.target(host);
+        } else if (template.getLiteralUriTemplate() != null) {
+            return (w, t, n) ->
+                    client
+                            .target(template.getLiteralUriTemplate())
+                            .resolveTemplates(
+                                    JsonUtils.mapper().convertValue(n, new TypeReference<Map<String, Object>>() {
+                                    }));
+        }
+        throw new IllegalArgumentException("Invalid uritemplate definition " + template);
+    }
+
+    private static class ExpressionURISupplier implements TargetSupplier {
+        private Expression expr;
+
+        public ExpressionURISupplier(Expression expr) {
+            this.expr = expr;
+        }
+
+        @Override
+        public WebTarget apply(WorkflowContext workflow, TaskContext<?> task, JsonNode node) {
+            return client.target(expr.eval(workflow, Optional.of(task), node).asText());
+        }
+    }
+
+    private static TargetSupplier getTargetSupplier(
+            Endpoint endpoint, ExpressionFactory expressionFactory, String operationId) {
+        if (endpoint.getEndpointConfiguration() != null) {
+            EndpointUri uri = endpoint.getEndpointConfiguration().getUri();
+            if (uri.getLiteralEndpointURI() != null) {
+                return getURISupplier(uri.getLiteralEndpointURI(), operationId);
+            } else if (uri.getExpressionEndpointURI() != null) {
+                return new ExpressionURISupplier(
+                        expressionFactory.getExpression(uri.getExpressionEndpointURI()));
+            }
+        } else if (endpoint.getRuntimeExpression() != null) {
+            return new ExpressionURISupplier(
+                    expressionFactory.getExpression(endpoint.getRuntimeExpression()));
+        } else if (endpoint.getUriTemplate() != null) {
+            return getURISupplier(endpoint.getUriTemplate(), operationId);
+        }
+        throw new IllegalArgumentException("Invalid endpoint definition " + endpoint);
+    }
 }

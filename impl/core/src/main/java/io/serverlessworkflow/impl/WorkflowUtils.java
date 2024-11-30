@@ -33,6 +33,7 @@ import io.serverlessworkflow.impl.expressions.ExpressionUtils;
 import io.serverlessworkflow.impl.json.JsonUtils;
 import io.serverlessworkflow.impl.jsonschema.SchemaValidator;
 import io.serverlessworkflow.impl.jsonschema.SchemaValidatorFactory;
+import io.serverlessworkflow.impl.resources.ClasspathResource;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
 import io.serverlessworkflow.impl.resources.StaticResource;
 
@@ -67,6 +68,19 @@ public class WorkflowUtils {
         } catch (IOException io) {
           throw new UncheckedIOException(io);
         }
+      }
+    }
+    return Optional.empty();
+  }
+
+  public static Optional<JsonNode> classpathResourceToNode(String resource) {
+    if (resource != null && !resource.isEmpty()) {
+      ClasspathResource classpathResource = new ClasspathResource(resource);
+      ObjectMapper mapper = WorkflowFormat.fromFileName(resource).mapper();
+      try (InputStream in = classpathResource.open()) {
+        return Optional.of(mapper.readTree(in));
+      } catch (IOException io) {
+        throw new UncheckedIOException(io);
       }
     }
     return Optional.empty();
