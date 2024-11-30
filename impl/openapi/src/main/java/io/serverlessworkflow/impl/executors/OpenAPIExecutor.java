@@ -49,7 +49,7 @@ public class OpenAPIExecutor implements CallableTask<CallOpenAPI> {
     @Override
     public void init(CallOpenAPI task, WorkflowDefinition definition) {
         OpenAPIArguments args = task.getWith();
-        this.targetSupplier = getTargetSupplier(args.getDocument().getEndpoint(), definition.expressionFactory(), args.getOperationId());
+        this.targetSupplier = getTargetSupplier(args, definition.expressionFactory());
     }
 
     @Override
@@ -84,8 +84,6 @@ public class OpenAPIExecutor implements CallableTask<CallOpenAPI> {
                 throw new IllegalArgumentException("Invalid OpenAPI specification. There is no operation ID " + operationId);
             }
 
-
-
             return (w, t, n) -> client.target(host);
         } else if (template.getLiteralUriTemplate() != null) {
             return (w, t, n) ->
@@ -112,7 +110,11 @@ public class OpenAPIExecutor implements CallableTask<CallOpenAPI> {
     }
 
     private static TargetSupplier getTargetSupplier(
-            Endpoint endpoint, ExpressionFactory expressionFactory, String operationId) {
+            OpenAPIArguments args, ExpressionFactory expressionFactory) {
+
+        Endpoint endpoint = args.getDocument().getEndpoint();
+        String operationId = args.getOperationId();
+
         if (endpoint.getEndpointConfiguration() != null) {
             EndpointUri uri = endpoint.getEndpointConfiguration().getUri();
             if (uri.getLiteralEndpointURI() != null) {

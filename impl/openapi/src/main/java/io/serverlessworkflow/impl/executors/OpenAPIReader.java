@@ -4,8 +4,15 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 
 public class OpenAPIReader {
+
+    private static final String HTTPS = "https";
+    private static final String HTTP = "http";
+    private static final String DEFAULT_SCHEME = HTTPS;
+    private static final Set<String> ALLOWED_SCHEMES = Set.of(HTTPS, HTTP);
 
     public static String getHost(JsonNode jsonNode) {
         JsonNode host = jsonNode.get("host");
@@ -19,23 +26,21 @@ public class OpenAPIReader {
     private static String getScheme(JsonNode jsonNode) {
         ArrayNode array = jsonNode.withArrayProperty("schemes");
         if (array != null && !array.isEmpty()) {
-            // TODO: should get the first scheme?
-            return array.get(0).asText();
+            String firstScheme = array.get(0).asText();
+            return ALLOWED_SCHEMES.contains(firstScheme) ? firstScheme : DEFAULT_SCHEME;
         }
-        // TODO: should the http be the default scheme?
-        return "http";
+        return DEFAULT_SCHEME;
     }
 
-    public static JsonNode readOperation(JsonNode jsonNode, String operationId) {
+    public static Optional<JsonNode> readOperation(JsonNode jsonNode, String operationId) {
         JsonNode paths = jsonNode.get("paths");
         for (Map.Entry<String, JsonNode> entry : paths.properties()) {
             for (Map.Entry<String, JsonNode> httpMethod : entry.getValue().properties()) {
                 if (httpMethod.getValue().get("operationId").asText().equals(operationId)) {
-                    return httpMethod.getValue();
+                    return Optional.ofNullable(httpMethod.getValue());
                 }
             }
         }
-
-        return null;
+        return Optional.empty();
     }
 }
