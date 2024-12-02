@@ -1,0 +1,18 @@
+document:
+  dsl: '1.0.0-alpha5'
+  namespace: test
+  name: fork-no-compete
+  version: '0.1.0'
+do:
+  - callSomeone:
+      fork:
+        compete: true
+        branches:
+          - callNurse:
+              set:
+                patientId: John
+                room: 1
+          - callDoctor:
+              set:
+                patientId: Smith
+                room: 2

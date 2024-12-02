@@ -15,11 +15,8 @@
  */
 package io.serverlessworkflow.impl;
 
-import io.serverlessworkflow.api.types.TaskBase;
+import java.util.concurrent.ExecutorService;
+import java.util.function.Supplier;
 
-public interface WorkflowExecutionListener {
-
-  void onTaskStarted(WorkflowPosition currentPos, TaskBase task);
-
-  void onTaskEnded(WorkflowPosition currentPos, TaskBase task);
-}
+@FunctionalInterface
+public interface ExecutorServiceFactory extends Supplier<ExecutorService> {}

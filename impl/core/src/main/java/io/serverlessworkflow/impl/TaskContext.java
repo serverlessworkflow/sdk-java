@@ -28,35 +28,64 @@ public class TaskContext<T extends TaskBase> {
   private final JsonNode rawInput;
   private final T task;
   private final WorkflowPosition position;
-  private final Instant startedAt = Instant.now();
+  private final Instant startedAt;
 
   private JsonNode input;
   private JsonNode output;
   private JsonNode rawOutput;
   private FlowDirective flowDirective;
   private Map<String, Object> contextVariables;
+  private Instant completedAt;
 
   public TaskContext(JsonNode input, WorkflowPosition position) {
-    this.rawInput = input;
-    this.position = position;
-    this.task = null;
-    this.contextVariables = new HashMap<>();
-    init();
+    this(input, null, position, Instant.now(), input, input, input, null, new HashMap<>());
+  }
+
+  public TaskContext<T> copy() {
+    return new TaskContext<T>(
+        rawInput,
+        task,
+        position.copy(),
+        startedAt,
+        input,
+        output,
+        rawOutput,
+        flowDirective,
+        new HashMap<>(contextVariables));
   }
 
   public TaskContext(JsonNode input, TaskContext<?> taskContext, T task) {
-    this.rawInput = input;
-    this.position = taskContext.position.copy();
-    this.task = task;
-    this.flowDirective = task.getThen();
-    this.contextVariables = new HashMap<>(taskContext.variables());
-    init();
+    this(
+        input,
+        task,
+        taskContext.position,
+        Instant.now(),
+        input,
+        input,
+        input,
+        task.getThen(),
+        new HashMap<>(taskContext.variables()));
   }
 
-  private void init() {
-    this.input = rawInput;
-    this.rawOutput = rawInput;
-    this.output = rawInput;
+  private TaskContext(
+      JsonNode rawInput,
+      T task,
+      WorkflowPosition position,
+      Instant startedAt,
+      JsonNode input,
+      JsonNode output,
+      JsonNode rawOutput,
+      FlowDirective flowDirective,
+      Map<String, Object> contextVariables) {
+    this.rawInput = rawInput;
+    this.task = task;
+    this.position = position;
+    this.startedAt = startedAt;
+    this.input = input;
+    this.output = output;
+    this.rawOutput = rawOutput;
+    this.flowDirective = flowDirective;
+    this.contextVariables = contextVariables;
   }
 
   public void input(JsonNode input) {
@@ -114,5 +143,13 @@ public class TaskContext<T extends TaskBase> {
 
   public Instant startedAt() {
     return startedAt;
+  }
+
+  public void completedAt(Instant instant) {
+    this.completedAt = instant;
+  }
+
+  public Instant completedAt() {
+    return completedAt;
   }
 }

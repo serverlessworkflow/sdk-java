@@ -153,23 +153,8 @@ public class WorkflowUtils {
       TaskItem nextTask = iter.next();
       while (nextTask != null) {
         TaskItem task = nextTask;
-        parentTask.position().addIndex(iter.previousIndex()).addProperty(task.getName());
-        context
-            .definition()
-            .listeners()
-            .forEach(l -> l.onTaskStarted(parentTask.position(), task.getTask()));
-        currentContext =
-            context
-                .definition()
-                .taskExecutors()
-                .computeIfAbsent(
-                    parentTask.position().jsonPointer(),
-                    k ->
-                        context
-                            .definition()
-                            .taskFactory()
-                            .getTaskExecutor(task.getTask(), context.definition()))
-                .apply(context, parentTask, currentContext.output());
+        parentTask.position().addIndex(iter.previousIndex());
+        currentContext = executeTask(context, parentTask, task, currentContext.output());
         FlowDirective flowDirective = currentContext.flowDirective();
         if (flowDirective.getFlowDirectiveEnum() != null) {
           switch (flowDirective.getFlowDirectiveEnum()) {
@@ -177,6 +162,7 @@ public class WorkflowUtils {
               nextTask = iter.hasNext() ? iter.next() : null;
               break;
             case END:
+              context.instance().state(WorkflowState.COMPLETED);
             case EXIT:
               nextTask = null;
               break;
@@ -184,15 +170,30 @@ public class WorkflowUtils {
         } else {
           nextTask = WorkflowUtils.findTaskByName(iter, flowDirective.getString());
         }
-        context
-            .definition()
-            .listeners()
-            .forEach(l -> l.onTaskEnded(parentTask.position(), task.getTask()));
         parentTask.position().back();
       }
     }
     parentTask.position().back();
     parentTask.rawOutput(currentContext.output());
+  }
+
+  public static TaskContext<?> executeTask(
+      WorkflowContext context, TaskContext<?> parentTask, TaskItem task, JsonNode input) {
+    parentTask.position().addProperty(task.getName());
+    TaskContext<?> result =
+        context
+            .definition()
+            .taskExecutors()
+            .computeIfAbsent(
+                parentTask.position().jsonPointer(),
+                k ->
+                    context
+                        .definition()
+                        .taskFactory()
+                        .getTaskExecutor(task.getTask(), context.definition()))
+            .apply(context, parentTask, input);
+    parentTask.position().back();
+    return result;
   }
 
   public static WorkflowFilter buildWorkflowFilter(ExpressionFactory exprFactory, String str) {

@@ -26,7 +26,9 @@ import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowFilter;
+import io.serverlessworkflow.impl.WorkflowState;
 import io.serverlessworkflow.impl.jsonschema.SchemaValidator;
+import java.time.Instant;
 import java.util.Optional;
 
 public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskExecutor<T> {
@@ -86,6 +88,14 @@ public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskEx
   public TaskContext<T> apply(
       WorkflowContext workflowContext, TaskContext<?> parentContext, JsonNode input) {
     TaskContext<T> taskContext = new TaskContext<>(input, parentContext, task);
+    if (workflowContext.instance().state() == WorkflowState.COMPLETED) {
+      return taskContext;
+    }
+    workflowContext
+        .definition()
+        .listeners()
+        .forEach(l -> l.onTaskStarted(parentContext.position(), task));
+
     inputSchemaValidator.ifPresent(s -> s.validate(taskContext.rawInput()));
     inputProcessor.ifPresent(
         p -> taskContext.input(p.apply(workflowContext, taskContext, taskContext.rawInput())));
@@ -98,6 +108,11 @@ public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskEx
             workflowContext.context(
                 p.apply(workflowContext, taskContext, workflowContext.context())));
     contextSchemaValidator.ifPresent(s -> s.validate(workflowContext.context()));
+    taskContext.completedAt(Instant.now());
+    workflowContext
+        .definition()
+        .listeners()
+        .forEach(l -> l.onTaskEnded(parentContext.position(), task));
     return taskContext;
   }
 
