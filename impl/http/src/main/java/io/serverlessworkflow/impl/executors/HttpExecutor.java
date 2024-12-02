@@ -26,11 +26,14 @@ import io.serverlessworkflow.api.types.UriTemplate;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowDefinition;
+import io.serverlessworkflow.impl.WorkflowError;
+import io.serverlessworkflow.impl.WorkflowException;
 import io.serverlessworkflow.impl.expressions.Expression;
 import io.serverlessworkflow.impl.expressions.ExpressionFactory;
 import io.serverlessworkflow.impl.expressions.ExpressionUtils;
 import io.serverlessworkflow.impl.json.JsonUtils;
 import jakarta.ws.rs.HttpMethod;
+import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.client.Entity;
@@ -101,7 +104,13 @@ public class HttpExecutor implements CallableTask<CallHTTP> {
     Builder request = target.request();
     ExpressionUtils.evaluateExpressionMap(headersMap, workflow, taskContext, input)
         .forEach(request::header);
-    return requestFunction.apply(request, workflow, taskContext, input);
+    try {
+      return requestFunction.apply(request, workflow, taskContext, input);
+    } catch (WebApplicationException exception) {
+      throw new WorkflowException(
+          WorkflowError.communication(exception.getResponse().getStatus(), taskContext, exception)
+              .build());
+    }
   }
 
   @Override

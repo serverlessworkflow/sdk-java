@@ -67,6 +67,10 @@ public class DefaultTaskExecutorFactory implements TaskExecutorFactory {
       return new SetExecutor(task.getSetTask(), definition);
     } else if (task.getForTask() != null) {
       return new ForExecutor(task.getForTask(), definition);
+    } else if (task.getRaiseTask() != null) {
+      return new RaiseExecutor(task.getRaiseTask(), definition);
+    } else if (task.getTryTask() != null) {
+      return new TryExecutor(task.getTryTask(), definition);
     }
     throw new UnsupportedOperationException(task.get().getClass().getName() + " not supported yet");
   }

@@ -92,6 +92,23 @@ public class WorkflowUtils {
         : Optional.empty();
   }
 
+  public static StringFilter buildStringFilter(
+      ExpressionFactory exprFactory, String expression, String literal) {
+    return expression != null ? from(buildWorkflowFilter(exprFactory, expression)) : from(literal);
+  }
+
+  public static StringFilter buildStringFilter(ExpressionFactory exprFactory, String str) {
+    return ExpressionUtils.isExpr(str) ? from(buildWorkflowFilter(exprFactory, str)) : from(str);
+  }
+
+  public static StringFilter from(WorkflowFilter filter) {
+    return (w, t) -> filter.apply(w, t, t.input()).asText();
+  }
+
+  private static StringFilter from(String literal) {
+    return (w, t) -> literal;
+  }
+
   private static WorkflowFilter buildWorkflowFilter(
       ExpressionFactory exprFactory, String str, Object object) {
     if (str != null) {
@@ -127,7 +144,7 @@ public class WorkflowUtils {
     throw new IllegalArgumentException("Cannot find task with name " + taskName);
   }
 
-  public static JsonNode processTaskList(
+  public static void processTaskList(
       List<TaskItem> tasks, WorkflowContext context, TaskContext<?> parentTask) {
     parentTask.position().addProperty("do");
     TaskContext<? extends TaskBase> currentContext = parentTask;
@@ -136,7 +153,7 @@ public class WorkflowUtils {
       TaskItem nextTask = iter.next();
       while (nextTask != null) {
         TaskItem task = nextTask;
-        parentTask.position().addIndex(iter.nextIndex()).addProperty(task.getName());
+        parentTask.position().addIndex(iter.previousIndex()).addProperty(task.getName());
         context
             .definition()
             .listeners()
@@ -175,7 +192,7 @@ public class WorkflowUtils {
       }
     }
     parentTask.position().back();
-    return currentContext.output();
+    parentTask.rawOutput(currentContext.output());
   }
 
   public static WorkflowFilter buildWorkflowFilter(ExpressionFactory exprFactory, String str) {
