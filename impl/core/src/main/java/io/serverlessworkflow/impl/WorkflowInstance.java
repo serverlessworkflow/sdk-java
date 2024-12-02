@@ -40,8 +40,7 @@ public class WorkflowInstance {
         .inputFilter()
         .ifPresent(f -> taskContext.input(f.apply(workflowContext, taskContext, input)));
     state = WorkflowState.STARTED;
-    taskContext.rawOutput(
-        WorkflowUtils.processTaskList(definition.workflow().getDo(), workflowContext, taskContext));
+    WorkflowUtils.processTaskList(definition.workflow().getDo(), workflowContext, taskContext);
     definition
         .outputFilter()
         .ifPresent(

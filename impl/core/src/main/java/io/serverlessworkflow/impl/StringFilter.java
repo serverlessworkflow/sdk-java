@@ -15,7 +15,7 @@
  */
 package io.serverlessworkflow.impl;
 
-import java.util.function.Supplier;
+import java.util.function.BiFunction;
 
 @FunctionalInterface
-public interface WorkflowPositionFactory extends Supplier<WorkflowPosition> {}
+public interface StringFilter extends BiFunction<WorkflowContext, TaskContext<?>, String> {}

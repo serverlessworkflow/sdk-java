@@ -29,6 +29,6 @@ public class DoExecutor extends AbstractTaskExecutor<DoTask> {
 
   @Override
   protected void internalExecute(WorkflowContext workflow, TaskContext<DoTask> taskContext) {
-    taskContext.rawOutput(WorkflowUtils.processTaskList(task.getDo(), workflow, taskContext));
+    WorkflowUtils.processTaskList(task.getDo(), workflow, taskContext);
   }
 }

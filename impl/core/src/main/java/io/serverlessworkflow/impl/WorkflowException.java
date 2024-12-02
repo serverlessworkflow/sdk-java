@@ -15,7 +15,22 @@
  */
 package io.serverlessworkflow.impl;
 
-import java.util.function.Supplier;
+public class WorkflowException extends RuntimeException {
 
-@FunctionalInterface
-public interface WorkflowPositionFactory extends Supplier<WorkflowPosition> {}
+  private static final long serialVersionUID = 1L;
+
+  private final WorkflowError worflowError;
+
+  public WorkflowException(WorkflowError error) {
+    this(error, null);
+  }
+
+  public WorkflowException(WorkflowError error, Throwable cause) {
+    super(error.toString(), cause);
+    this.worflowError = error;
+  }
+
+  public WorkflowError getWorflowError() {
+    return worflowError;
+  }
+}

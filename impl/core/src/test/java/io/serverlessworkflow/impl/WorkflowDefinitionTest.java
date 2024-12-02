@@ -17,6 +17,7 @@ package io.serverlessworkflow.impl;
 
 import static io.serverlessworkflow.api.WorkflowReader.readWorkflowFromClasspath;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowableOfType;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -42,10 +43,9 @@ public class WorkflowDefinitionTest {
 
   @ParameterizedTest
   @MethodSource("provideParameters")
-  void testWorkflowExecution(String fileName, Object input, Consumer<Object> assertions)
+  void testWorkflowExecution(String fileName, Consumer<WorkflowDefinition> assertions)
       throws IOException {
-    assertions.accept(
-        appl.workflowDefinition(readWorkflowFromClasspath(fileName)).execute(input).output());
+    assertions.accept(appl.workflowDefinition(readWorkflowFromClasspath(fileName)));
   }
 
   private static Stream<Arguments> provideParameters() {
@@ -54,7 +54,7 @@ public class WorkflowDefinitionTest {
             "switch-then-string.yaml",
             Map.of("orderType", "electronic"),
             o ->
-                assertThat(o)
+                assertThat(o.output())
                     .isEqualTo(
                         Map.of(
                             "orderType", "electronic", "validate", true, "status", "fulfilled"))),
@@ -62,7 +62,7 @@ public class WorkflowDefinitionTest {
             "switch-then-string.yaml",
             Map.of("orderType", "physical"),
             o ->
-                assertThat(o)
+                assertThat(o.output())
                     .isEqualTo(
                         Map.of(
                             "orderType",
@@ -77,7 +77,7 @@ public class WorkflowDefinitionTest {
             "switch-then-string.yaml",
             Map.of("orderType", "unknown"),
             o ->
-                assertThat(o)
+                assertThat(o.output())
                     .isEqualTo(
                         Map.of(
                             "orderType",
@@ -89,27 +89,53 @@ public class WorkflowDefinitionTest {
         args(
             "for-sum.yaml",
             Map.of("input", Arrays.asList(1, 2, 3)),
-            o -> assertThat(o).isEqualTo(6)),
+            o -> assertThat(o.output()).isEqualTo(6)),
         args(
             "for-collect.yaml",
             Map.of("input", Arrays.asList(1, 2, 3)),
             o ->
-                assertThat(o)
+                assertThat(o.output())
                     .isEqualTo(
                         Map.of("input", Arrays.asList(1, 2, 3), "output", Arrays.asList(2, 4, 6)))),
         args(
             "simple-expression.yaml",
             Map.of("input", Arrays.asList(1, 2, 3)),
-            WorkflowDefinitionTest::checkSpecialKeywords));
+            WorkflowDefinitionTest::checkSpecialKeywords),
+        args(
+            "raise-inline copy.yaml",
+            WorkflowDefinitionTest::checkWorkflowException,
+            WorkflowException.class),
+        args(
+            "raise-reusable.yaml",
+            WorkflowDefinitionTest::checkWorkflowException,
+            WorkflowException.class));
   }
 
   private static Arguments args(
-      String fileName, Map<String, Object> input, Consumer<Object> object) {
-    return Arguments.of(fileName, input, object);
+      String fileName, Map<String, Object> input, Consumer<WorkflowInstance> instance) {
+    return Arguments.of(
+        fileName, (Consumer<WorkflowDefinition>) d -> instance.accept(d.execute(input)));
   }
 
-  private static void checkSpecialKeywords(Object obj) {
-    Map<String, Object> result = (Map<String, Object>) obj;
+  private static <T extends Throwable> Arguments args(
+      String fileName, Consumer<T> consumer, Class<T> clazz) {
+    return Arguments.of(
+        fileName,
+        (Consumer<WorkflowDefinition>)
+            d -> consumer.accept(catchThrowableOfType(clazz, () -> d.execute(Map.of()))));
+  }
+
+  private static void checkWorkflowException(WorkflowException ex) {
+    assertThat(ex.getWorflowError().type())
+        .isEqualTo("https://serverlessworkflow.io/errors/not-implemented");
+    assertThat(ex.getWorflowError().status()).isEqualTo(500);
+    assertThat(ex.getWorflowError().title()).isEqualTo("Not Implemented");
+    assertThat(ex.getWorflowError().details()).contains("raise-not-implemented");
+    assertThat(ex.getWorflowError().instance()).isEqualTo("do/0/notImplemented");
+  }
+
+  private static void checkSpecialKeywords(WorkflowInstance obj) {
+    Map<String, Object> result = (Map<String, Object>) obj.output();
     assertThat(Instant.ofEpochMilli((long) result.get("startedAt")))
         .isAfterOrEqualTo(before)
         .isBeforeOrEqualTo(Instant.now());
