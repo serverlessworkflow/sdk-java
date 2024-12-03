@@ -13,21 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.executors;
+package io.serverlessworkflow.impl;
 
-import io.serverlessworkflow.api.types.DoTask;
-import io.serverlessworkflow.impl.TaskContext;
-import io.serverlessworkflow.impl.WorkflowContext;
-import io.serverlessworkflow.impl.WorkflowDefinition;
-
-public class DoExecutor extends AbstractTaskExecutor<DoTask> {
-
-  protected DoExecutor(DoTask task, WorkflowDefinition definition) {
-    super(task, definition);
-  }
-
-  @Override
-  protected void internalExecute(WorkflowContext workflow, TaskContext<DoTask> taskContext) {
-    TaskExecutorHelper.processTaskList(task.getDo(), workflow, taskContext);
-  }
+public enum WorkflowStatus {
+  PENDING,
+  RUNNING,
+  WAITING,
+  COMPLETED,
+  FAULTED,
+  CANCELLED
 }

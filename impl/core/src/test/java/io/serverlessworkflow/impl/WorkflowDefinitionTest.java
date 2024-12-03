@@ -33,10 +33,13 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class WorkflowDefinitionTest {
 
   private static WorkflowApplication appl;
+  private static Logger logger = LoggerFactory.getLogger(WorkflowDefinitionTest.class);
   private static Instant before;
 
   @BeforeAll
@@ -138,6 +141,7 @@ public class WorkflowDefinitionTest {
 
   private static void checkNotCompeteOuput(WorkflowInstance instance) {
     JsonNode out = instance.outputAsJsonNode();
+    logger.debug("Output is {}", out);
     assertThat(out).isInstanceOf(ArrayNode.class);
     assertThat(out).hasSize(2);
     ArrayNode array = (ArrayNode) out;

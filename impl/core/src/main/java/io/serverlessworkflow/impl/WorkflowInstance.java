@@ -19,11 +19,12 @@ import static io.serverlessworkflow.impl.json.JsonUtils.toJavaValue;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.NullNode;
+import io.serverlessworkflow.impl.executors.TaskExecutorHelper;
 import java.time.Instant;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class WorkflowInstance {
-  private final AtomicReference<WorkflowState> state;
+  private final AtomicReference<WorkflowStatus> status;
   private final TaskContext<?> taskContext;
   private final String id;
   private final JsonNode input;
@@ -40,15 +41,16 @@ public class WorkflowInstance {
     definition
         .inputFilter()
         .ifPresent(f -> taskContext.input(f.apply(workflowContext, taskContext, input)));
-    state = new AtomicReference<>(WorkflowState.STARTED);
+    status = new AtomicReference<>(WorkflowStatus.RUNNING);
     context = new AtomicReference<>(NullNode.getInstance());
-    WorkflowUtils.processTaskList(definition.workflow().getDo(), workflowContext, taskContext);
+    TaskExecutorHelper.processTaskList(definition.workflow().getDo(), workflowContext, taskContext);
     definition
         .outputFilter()
         .ifPresent(
             f ->
                 taskContext.output(f.apply(workflowContext, taskContext, taskContext.rawOutput())));
     definition.outputSchemaValidator().ifPresent(v -> v.validate(taskContext.output()));
+    status.compareAndSet(WorkflowStatus.RUNNING, WorkflowStatus.COMPLETED);
   }
 
   public String id() {
@@ -67,12 +69,12 @@ public class WorkflowInstance {
     return context.get();
   }
 
-  public WorkflowState state() {
-    return state.get();
+  public WorkflowStatus status() {
+    return status.get();
   }
 
-  public void state(WorkflowState state) {
-    this.state.set(state);
+  public void status(WorkflowStatus state) {
+    this.status.set(state);
   }
 
   public Object output() {

@@ -52,7 +52,7 @@ public class ForExecutor extends AbstractTaskExecutor<ForTask> {
       JsonNode item = iter.next();
       taskContext.variables().put(task.getFor().getEach(), item);
       taskContext.variables().put(task.getFor().getAt(), i++);
-      WorkflowUtils.processTaskList(task.getDo(), workflow, taskContext);
+      TaskExecutorHelper.processTaskList(task.getDo(), workflow, taskContext);
     }
   }
 }

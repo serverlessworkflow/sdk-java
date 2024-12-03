@@ -21,33 +21,22 @@ import com.networknt.schema.JsonSchemaFactory;
 import com.networknt.schema.SpecVersion.VersionFlag;
 import com.networknt.schema.ValidationMessage;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class DefaultSchemaValidator implements SchemaValidator {
 
-  private final JsonNode jsonNode;
-  private final AtomicReference<JsonSchema> schemaObject = new AtomicReference<>();
+  private final JsonSchema schemaObject;
 
   public DefaultSchemaValidator(JsonNode jsonNode) {
-    this.jsonNode = jsonNode;
+    this.schemaObject = JsonSchemaFactory.getInstance(VersionFlag.V7).getSchema(jsonNode);
   }
 
   @Override
   public void validate(JsonNode node) {
-    Set<ValidationMessage> report = getSchema().validate(node);
+    Set<ValidationMessage> report = schemaObject.validate(node);
     if (!report.isEmpty()) {
       StringBuilder sb = new StringBuilder("There are JsonSchema validation errors:");
       report.forEach(m -> sb.append(System.lineSeparator()).append(m.getMessage()));
       throw new IllegalArgumentException(sb.toString());
     }
-  }
-
-  private JsonSchema getSchema() {
-    JsonSchema result = schemaObject.get();
-    if (result == null) {
-      result = JsonSchemaFactory.getInstance(VersionFlag.V7).getSchema(jsonNode);
-      schemaObject.set(result);
-    }
-    return result;
   }
 }

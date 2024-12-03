@@ -15,8 +15,7 @@
  */
 package io.serverlessworkflow.impl;
 
-public enum WorkflowState {
-  STARTED,
-  WAITING,
-  COMPLETED
-}
+import java.util.function.BiFunction;
+
+@FunctionalInterface
+public interface LongFilter extends BiFunction<WorkflowContext, TaskContext<?>, Long> {}

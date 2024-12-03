@@ -41,19 +41,6 @@ public class TaskContext<T extends TaskBase> {
     this(input, null, position, Instant.now(), input, input, input, null, new HashMap<>());
   }
 
-  public TaskContext<T> copy() {
-    return new TaskContext<T>(
-        rawInput,
-        task,
-        position.copy(),
-        startedAt,
-        input,
-        output,
-        rawOutput,
-        flowDirective,
-        new HashMap<>(contextVariables));
-  }
-
   public TaskContext(JsonNode input, TaskContext<?> taskContext, T task) {
     this(
         input,
@@ -86,6 +73,19 @@ public class TaskContext<T extends TaskBase> {
     this.rawOutput = rawOutput;
     this.flowDirective = flowDirective;
     this.contextVariables = contextVariables;
+  }
+
+  public TaskContext<T> copy() {
+    return new TaskContext<T>(
+        rawInput,
+        task,
+        position.copy(),
+        startedAt,
+        input,
+        output,
+        rawOutput,
+        flowDirective,
+        new HashMap<>(contextVariables));
   }
 
   public void input(JsonNode input) {

@@ -9,7 +9,7 @@ do:
         compete: true
         branches:
           - callNurse:
-              set:
+             set:
                 patientId: John
                 room: 1
           - callDoctor:
