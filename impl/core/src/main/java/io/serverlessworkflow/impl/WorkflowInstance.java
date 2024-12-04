@@ -19,15 +19,17 @@ import static io.serverlessworkflow.impl.json.JsonUtils.toJavaValue;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.NullNode;
+import io.serverlessworkflow.impl.executors.TaskExecutorHelper;
 import java.time.Instant;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class WorkflowInstance {
-  private WorkflowState state;
-  private TaskContext<?> taskContext;
+  private final AtomicReference<WorkflowStatus> status;
+  private final TaskContext<?> taskContext;
   private final String id;
   private final JsonNode input;
   private final Instant startedAt;
-  private JsonNode context = NullNode.getInstance();
+  private final AtomicReference<JsonNode> context;
 
   WorkflowInstance(WorkflowDefinition definition, JsonNode input) {
     this.id = definition.idFactory().get();
@@ -39,14 +41,16 @@ public class WorkflowInstance {
     definition
         .inputFilter()
         .ifPresent(f -> taskContext.input(f.apply(workflowContext, taskContext, input)));
-    state = WorkflowState.STARTED;
-    WorkflowUtils.processTaskList(definition.workflow().getDo(), workflowContext, taskContext);
+    status = new AtomicReference<>(WorkflowStatus.RUNNING);
+    context = new AtomicReference<>(NullNode.getInstance());
+    TaskExecutorHelper.processTaskList(definition.workflow().getDo(), workflowContext, taskContext);
     definition
         .outputFilter()
         .ifPresent(
             f ->
                 taskContext.output(f.apply(workflowContext, taskContext, taskContext.rawOutput())));
     definition.outputSchemaValidator().ifPresent(v -> v.validate(taskContext.output()));
+    status.compareAndSet(WorkflowStatus.RUNNING, WorkflowStatus.COMPLETED);
   }
 
   public String id() {
@@ -62,22 +66,26 @@ public class WorkflowInstance {
   }
 
   public JsonNode context() {
-    return context;
+    return context.get();
   }
 
-  public WorkflowState state() {
-    return state;
+  public WorkflowStatus status() {
+    return status.get();
+  }
+
+  public void status(WorkflowStatus state) {
+    this.status.set(state);
   }
 
   public Object output() {
     return toJavaValue(taskContext.output());
   }
 
-  public Object outputAsJsonNode() {
+  public JsonNode outputAsJsonNode() {
     return taskContext.output();
   }
 
   void context(JsonNode context) {
-    this.context = context;
+    this.context.set(context);
   }
 }

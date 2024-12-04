@@ -33,6 +33,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
 
 public class WorkflowDefinition implements AutoCloseable {
 
@@ -48,22 +49,19 @@ public class WorkflowDefinition implements AutoCloseable {
 
   private WorkflowDefinition(
       WorkflowApplication application, Workflow workflow, ResourceLoader resourceLoader) {
-
     this.workflow = workflow;
     this.application = application;
     this.resourceLoader = resourceLoader;
     if (workflow.getInput() != null) {
       Input input = workflow.getInput();
       this.inputSchemaValidator =
-          getSchemaValidator(
-              application.validatorFactory(), schemaToNode(resourceLoader, input.getSchema()));
+          getSchemaValidator(application.validatorFactory(), resourceLoader, input.getSchema());
       this.inputFilter = buildWorkflowFilter(application.expressionFactory(), input.getFrom());
     }
     if (workflow.getOutput() != null) {
       Output output = workflow.getOutput();
       this.outputSchemaValidator =
-          getSchemaValidator(
-              application.validatorFactory(), schemaToNode(resourceLoader, output.getSchema()));
+          getSchemaValidator(application.validatorFactory(), resourceLoader, output.getSchema());
       this.outputFilter = buildWorkflowFilter(application.expressionFactory(), output.getAs());
     }
   }
@@ -132,6 +130,10 @@ public class WorkflowDefinition implements AutoCloseable {
 
   public WorkflowPositionFactory positionFactory() {
     return application.positionFactory();
+  }
+
+  public ExecutorService executorService() {
+    return application.executorService();
   }
 
   public RuntimeDescriptorFactory runtimeDescriptorFactory() {

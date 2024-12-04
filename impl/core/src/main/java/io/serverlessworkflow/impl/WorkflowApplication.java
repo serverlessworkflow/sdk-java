@@ -32,6 +32,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class WorkflowApplication implements AutoCloseable {
 
@@ -43,7 +45,10 @@ public class WorkflowApplication implements AutoCloseable {
   private final Collection<WorkflowExecutionListener> listeners;
   private final Map<WorkflowId, WorkflowDefinition> definitions;
   private final WorkflowPositionFactory positionFactory;
+  private final ExecutorServiceFactory executorFactory;
   private final RuntimeDescriptorFactory runtimeDescriptorFactory;
+
+  private ExecutorService executorService;
 
   public WorkflowApplication(
       TaskExecutorFactory taskFactory,
@@ -53,6 +58,7 @@ public class WorkflowApplication implements AutoCloseable {
       WorkflowPositionFactory positionFactory,
       WorkflowIdFactory idFactory,
       RuntimeDescriptorFactory runtimeDescriptorFactory,
+      ExecutorServiceFactory executorFactory,
       Collection<WorkflowExecutionListener> listeners) {
     this.taskFactory = taskFactory;
     this.exprFactory = exprFactory;
@@ -61,6 +67,7 @@ public class WorkflowApplication implements AutoCloseable {
     this.positionFactory = positionFactory;
     this.idFactory = idFactory;
     this.runtimeDescriptorFactory = runtimeDescriptorFactory;
+    this.executorFactory = executorFactory;
     this.listeners = listeners;
     this.definitions = new ConcurrentHashMap<>();
   }
@@ -101,6 +108,7 @@ public class WorkflowApplication implements AutoCloseable {
     private SchemaValidatorFactory schemaValidatorFactory = DefaultSchemaValidatorFactory.get();
     private WorkflowPositionFactory positionFactory = () -> new QueueWorkflowPosition();
     private WorkflowIdFactory idFactory = () -> UlidCreator.getMonotonicUlid().toString();
+    private ExecutorServiceFactory executorFactory = () -> Executors.newCachedThreadPool();
     private RuntimeDescriptorFactory descriptorFactory =
         () -> new RuntimeDescriptor("reference impl", "1.0.0_alpha", Collections.emptyMap());
 
@@ -126,6 +134,11 @@ public class WorkflowApplication implements AutoCloseable {
 
     public Builder withResourceLoaderFactory(ResourceLoaderFactory resourceLoader) {
       this.resourceLoaderFactory = resourceLoader;
+      return this;
+    }
+
+    public Builder withExecutorFactory(ExecutorServiceFactory executorFactory) {
+      this.executorFactory = executorFactory;
       return this;
     }
 
@@ -158,6 +171,7 @@ public class WorkflowApplication implements AutoCloseable {
           positionFactory,
           idFactory,
           descriptorFactory,
+          executorFactory,
           listeners == null
               ? Collections.emptySet()
               : Collections.unmodifiableCollection(listeners));
@@ -189,5 +203,14 @@ public class WorkflowApplication implements AutoCloseable {
 
   public RuntimeDescriptorFactory runtimeDescriptorFactory() {
     return runtimeDescriptorFactory;
+  }
+
+  public ExecutorService executorService() {
+    synchronized (executorFactory) {
+      if (executorService == null) {
+        executorService = executorFactory.get();
+      }
+    }
+    return executorService;
   }
 }

@@ -15,11 +15,11 @@
  */
 package io.serverlessworkflow.impl;
 
-import io.serverlessworkflow.api.types.TaskBase;
-
-public interface WorkflowExecutionListener {
-
-  void onTaskStarted(WorkflowPosition currentPos, TaskBase task);
-
-  void onTaskEnded(WorkflowPosition currentPos, TaskBase task);
+public enum WorkflowStatus {
+  PENDING,
+  RUNNING,
+  WAITING,
+  COMPLETED,
+  FAULTED,
+  CANCELLED
 }

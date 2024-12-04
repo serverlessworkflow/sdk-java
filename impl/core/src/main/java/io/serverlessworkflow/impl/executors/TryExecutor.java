@@ -48,7 +48,7 @@ public class TryExecutor extends AbstractTaskExecutor<TryTask> {
   @Override
   protected void internalExecute(WorkflowContext workflow, TaskContext<TryTask> taskContext) {
     try {
-      WorkflowUtils.processTaskList(task.getTry(), workflow, taskContext);
+      TaskExecutorHelper.processTaskList(task.getTry(), workflow, taskContext);
     } catch (WorkflowException exception) {
       if (errorFilter.map(f -> f.test(exception.getWorflowError())).orElse(true)
           && whenFilter
@@ -58,7 +58,7 @@ public class TryExecutor extends AbstractTaskExecutor<TryTask> {
               .map(w -> !w.apply(workflow, taskContext, taskContext.input()).asBoolean())
               .orElse(true)) {
         if (task.getCatch().getDo() != null) {
-          WorkflowUtils.processTaskList(task.getCatch().getDo(), workflow, taskContext);
+          TaskExecutorHelper.processTaskList(task.getCatch().getDo(), workflow, taskContext);
         }
       } else {
         throw exception;

@@ -1,0 +1,28 @@
+document:
+  dsl: '1.0.0-alpha5'
+  namespace: test
+  name: fork-example
+  version: '0.1.0'
+do:
+  - callSomeone:
+      fork:
+        compete: false
+        branches:
+          - callNurse:
+              do:
+                - waitForNurse:
+                    wait:
+                     milliseconds: 500
+                - nurseArrived:
+                   set:
+                     patientId: John
+                     room: 1
+          - callDoctor:
+              do:
+                - waitForDoctor:
+                   wait:
+                     milliseconds: 499
+                - doctorArrived:
+                   set:
+                     patientId: Smith
+                     room: 2

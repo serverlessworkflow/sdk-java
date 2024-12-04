@@ -54,7 +54,7 @@ public class QueueWorkflowPosition implements WorkflowPosition {
 
   @Override
   public String toString() {
-    return "ListWorkflowPosition [list=" + queue + "]";
+    return "QueueWorkflowPosition [queue=" + queue + "]";
   }
 
   @Override
@@ -65,6 +65,6 @@ public class QueueWorkflowPosition implements WorkflowPosition {
 
   @Override
   public Object last() {
-    return queue.pollLast();
+    return queue.getLast();
   }
 }

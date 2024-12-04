@@ -19,7 +19,6 @@ import io.serverlessworkflow.api.types.DoTask;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowDefinition;
-import io.serverlessworkflow.impl.WorkflowUtils;
 
 public class DoExecutor extends AbstractTaskExecutor<DoTask> {
 
@@ -29,6 +28,6 @@ public class DoExecutor extends AbstractTaskExecutor<DoTask> {
 
   @Override
   protected void internalExecute(WorkflowContext workflow, TaskContext<DoTask> taskContext) {
-    WorkflowUtils.processTaskList(task.getDo(), workflow, taskContext);
+    TaskExecutorHelper.processTaskList(task.getDo(), workflow, taskContext);
   }
 }

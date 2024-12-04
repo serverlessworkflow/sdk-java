@@ -27,6 +27,7 @@ import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowFilter;
 import io.serverlessworkflow.impl.jsonschema.SchemaValidator;
+import java.time.Instant;
 import java.util.Optional;
 
 public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskExecutor<T> {
@@ -53,8 +54,7 @@ public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskEx
       this.inputProcessor = buildWorkflowFilter(definition.expressionFactory(), input.getFrom());
       this.inputSchemaValidator =
           getSchemaValidator(
-              definition.validatorFactory(),
-              schemaToNode(definition.resourceLoader(), input.getSchema()));
+              definition.validatorFactory(), definition.resourceLoader(), input.getSchema());
     }
   }
 
@@ -64,8 +64,7 @@ public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskEx
       this.outputProcessor = buildWorkflowFilter(definition.expressionFactory(), output.getAs());
       this.outputSchemaValidator =
           getSchemaValidator(
-              definition.validatorFactory(),
-              schemaToNode(definition.resourceLoader(), output.getSchema()));
+              definition.validatorFactory(), definition.resourceLoader(), output.getSchema());
     }
   }
 
@@ -77,8 +76,7 @@ public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskEx
       }
       this.contextSchemaValidator =
           getSchemaValidator(
-              definition.validatorFactory(),
-              schemaToNode(definition.resourceLoader(), export.getSchema()));
+              definition.validatorFactory(), definition.resourceLoader(), export.getSchema());
     }
   }
 
@@ -86,18 +84,31 @@ public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskEx
   public TaskContext<T> apply(
       WorkflowContext workflowContext, TaskContext<?> parentContext, JsonNode input) {
     TaskContext<T> taskContext = new TaskContext<>(input, parentContext, task);
-    inputSchemaValidator.ifPresent(s -> s.validate(taskContext.rawInput()));
-    inputProcessor.ifPresent(
-        p -> taskContext.input(p.apply(workflowContext, taskContext, taskContext.rawInput())));
-    internalExecute(workflowContext, taskContext);
-    outputProcessor.ifPresent(
-        p -> taskContext.output(p.apply(workflowContext, taskContext, taskContext.rawOutput())));
-    outputSchemaValidator.ifPresent(s -> s.validate(taskContext.output()));
-    contextProcessor.ifPresent(
-        p ->
-            workflowContext.context(
-                p.apply(workflowContext, taskContext, workflowContext.context())));
-    contextSchemaValidator.ifPresent(s -> s.validate(workflowContext.context()));
+    if (TaskExecutorHelper.isActive(workflowContext)) {
+
+      workflowContext
+          .definition()
+          .listeners()
+          .forEach(l -> l.onTaskStarted(parentContext.position(), task));
+
+      inputSchemaValidator.ifPresent(s -> s.validate(taskContext.rawInput()));
+      inputProcessor.ifPresent(
+          p -> taskContext.input(p.apply(workflowContext, taskContext, taskContext.rawInput())));
+      internalExecute(workflowContext, taskContext);
+      outputProcessor.ifPresent(
+          p -> taskContext.output(p.apply(workflowContext, taskContext, taskContext.rawOutput())));
+      outputSchemaValidator.ifPresent(s -> s.validate(taskContext.output()));
+      contextProcessor.ifPresent(
+          p ->
+              workflowContext.context(
+                  p.apply(workflowContext, taskContext, workflowContext.context())));
+      contextSchemaValidator.ifPresent(s -> s.validate(workflowContext.context()));
+      taskContext.completedAt(Instant.now());
+      workflowContext
+          .definition()
+          .listeners()
+          .forEach(l -> l.onTaskEnded(parentContext.position(), task));
+    }
     return taskContext;
   }
 

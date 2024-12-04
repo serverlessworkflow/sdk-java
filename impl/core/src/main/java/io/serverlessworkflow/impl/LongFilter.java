@@ -15,11 +15,7 @@
  */
 package io.serverlessworkflow.impl;
 
-import io.serverlessworkflow.api.types.TaskBase;
+import java.util.function.BiFunction;
 
-public interface WorkflowExecutionListener {
-
-  void onTaskStarted(WorkflowPosition currentPos, TaskBase task);
-
-  void onTaskEnded(WorkflowPosition currentPos, TaskBase task);
-}
+@FunctionalInterface
+public interface LongFilter extends BiFunction<WorkflowContext, TaskContext<?>, Long> {}

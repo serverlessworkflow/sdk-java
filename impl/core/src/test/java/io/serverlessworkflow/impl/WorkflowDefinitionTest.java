@@ -19,6 +19,10 @@ import static io.serverlessworkflow.api.WorkflowReader.readWorkflowFromClasspath
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowableOfType;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import io.serverlessworkflow.impl.json.JsonUtils;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Arrays;
@@ -29,10 +33,13 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class WorkflowDefinitionTest {
 
   private static WorkflowApplication appl;
+  private static Logger logger = LoggerFactory.getLogger(WorkflowDefinitionTest.class);
   private static Instant before;
 
   @BeforeAll
@@ -108,7 +115,14 @@ public class WorkflowDefinitionTest {
         args(
             "raise-reusable.yaml",
             WorkflowDefinitionTest::checkWorkflowException,
-            WorkflowException.class));
+            WorkflowException.class),
+        args(
+            "fork.yaml",
+            Map.of(),
+            o ->
+                assertThat(((ObjectNode) o.outputAsJsonNode()).get("patientId").asText())
+                    .isIn("John", "Smith")),
+        args("fork-no-compete.yaml", Map.of(), WorkflowDefinitionTest::checkNotCompeteOuput));
   }
 
   private static Arguments args(
@@ -123,6 +137,25 @@ public class WorkflowDefinitionTest {
         fileName,
         (Consumer<WorkflowDefinition>)
             d -> consumer.accept(catchThrowableOfType(clazz, () -> d.execute(Map.of()))));
+  }
+
+  private static void checkNotCompeteOuput(WorkflowInstance instance) {
+    JsonNode out = instance.outputAsJsonNode();
+    logger.debug("Output is {}", out);
+    assertThat(out).isInstanceOf(ArrayNode.class);
+    assertThat(out).hasSize(2);
+    ArrayNode array = (ArrayNode) out;
+    assertThat(array)
+        .containsExactlyInAnyOrder(
+            createObjectNode("callNurse", "patientId", "John", "room", 1),
+            createObjectNode("callDoctor", "patientId", "Smith", "room", 2));
+  }
+
+  private static JsonNode createObjectNode(
+      String parent, String key1, String value1, String key2, int value2) {
+    return JsonUtils.mapper()
+        .createObjectNode()
+        .set(parent, JsonUtils.mapper().createObjectNode().put(key1, value1).put(key2, value2));
   }
 
   private static void checkWorkflowException(WorkflowException ex) {
