@@ -1,0 +1,11 @@
+document:
+  dsl: '1.0.0-alpha5'
+  namespace: test
+  name: simple-expression
+  version: '0.1.0'
+do: 
+  - useExpression:
+      set:
+        startedAt: ${$task.startedAt.epoch.milliseconds}
+        id : ${$workflow.id}
+        version: ${$runtime.version}

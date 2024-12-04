@@ -15,11 +15,11 @@
  */
 package io.serverlessworkflow.impl;
 
-import io.serverlessworkflow.api.types.Task;
+import io.serverlessworkflow.api.types.TaskBase;
 
 public interface WorkflowExecutionListener {
 
-  void onTaskStarted(WorkflowPosition currentPos, Task task);
+  void onTaskStarted(WorkflowPosition currentPos, TaskBase task);
 
-  void onTaskEnded(WorkflowPosition currentPos, Task task);
+  void onTaskEnded(WorkflowPosition currentPos, TaskBase task);
 }

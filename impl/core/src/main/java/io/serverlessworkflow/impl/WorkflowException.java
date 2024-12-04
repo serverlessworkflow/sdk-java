@@ -15,17 +15,22 @@
  */
 package io.serverlessworkflow.impl;
 
-public interface WorkflowPosition {
+public class WorkflowException extends RuntimeException {
 
-  String jsonPointer();
+  private static final long serialVersionUID = 1L;
 
-  WorkflowPosition addProperty(String prop);
+  private final WorkflowError worflowError;
 
-  WorkflowPosition addIndex(int index);
+  public WorkflowException(WorkflowError error) {
+    this(error, null);
+  }
 
-  WorkflowPosition back();
+  public WorkflowException(WorkflowError error, Throwable cause) {
+    super(error.toString(), cause);
+    this.worflowError = error;
+  }
 
-  WorkflowPosition copy();
-
-  Object last();
+  public WorkflowError getWorflowError() {
+    return worflowError;
+  }
 }

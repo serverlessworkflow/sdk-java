@@ -15,17 +15,8 @@
  */
 package io.serverlessworkflow.impl;
 
-public interface WorkflowPosition {
+import java.util.concurrent.ExecutorService;
+import java.util.function.Supplier;
 
-  String jsonPointer();
-
-  WorkflowPosition addProperty(String prop);
-
-  WorkflowPosition addIndex(int index);
-
-  WorkflowPosition back();
-
-  WorkflowPosition copy();
-
-  Object last();
-}
+@FunctionalInterface
+public interface ExecutorServiceFactory extends Supplier<ExecutorService> {}

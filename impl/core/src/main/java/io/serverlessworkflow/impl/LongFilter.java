@@ -15,17 +15,7 @@
  */
 package io.serverlessworkflow.impl;
 
-public interface WorkflowPosition {
+import java.util.function.BiFunction;
 
-  String jsonPointer();
-
-  WorkflowPosition addProperty(String prop);
-
-  WorkflowPosition addIndex(int index);
-
-  WorkflowPosition back();
-
-  WorkflowPosition copy();
-
-  Object last();
-}
+@FunctionalInterface
+public interface LongFilter extends BiFunction<WorkflowContext, TaskContext<?>, Long> {}

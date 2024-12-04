@@ -19,7 +19,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import io.serverlessworkflow.api.types.TaskBase;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
-import java.util.function.BiFunction;
 
-public interface TaskExecutor<T extends TaskBase>
-    extends BiFunction<WorkflowContext, JsonNode, TaskContext<T>> {}
+@FunctionalInterface
+public interface TaskExecutor<T extends TaskBase> {
+  TaskContext<T> apply(
+      WorkflowContext workflowContext, TaskContext<?> parentContext, JsonNode input);
+}

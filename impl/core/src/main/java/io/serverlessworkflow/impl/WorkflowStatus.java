@@ -15,17 +15,11 @@
  */
 package io.serverlessworkflow.impl;
 
-public interface WorkflowPosition {
-
-  String jsonPointer();
-
-  WorkflowPosition addProperty(String prop);
-
-  WorkflowPosition addIndex(int index);
-
-  WorkflowPosition back();
-
-  WorkflowPosition copy();
-
-  Object last();
+public enum WorkflowStatus {
+  PENDING,
+  RUNNING,
+  WAITING,
+  COMPLETED,
+  FAULTED,
+  CANCELLED
 }

@@ -13,19 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl;
 
-public interface WorkflowPosition {
+package io.serverlessworkflow.impl.expressions;
 
-  String jsonPointer();
+import java.util.Map;
 
-  WorkflowPosition addProperty(String prop);
-
-  WorkflowPosition addIndex(int index);
-
-  WorkflowPosition back();
-
-  WorkflowPosition copy();
-
-  Object last();
-}
+public record RuntimeDescriptor(String name, String version, Map<String, Object> metadata) {}

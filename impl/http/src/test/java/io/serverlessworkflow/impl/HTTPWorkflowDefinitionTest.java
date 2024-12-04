@@ -69,6 +69,11 @@ public class HTTPWorkflowDefinitionTest {
             o -> ((Map<String, Object>) o).containsKey("photoUrls"), "callHttpCondition");
     return Stream.of(
         Arguments.of("callGetHttp.yaml", petInput, petCondition),
+        Arguments.of(
+            "callGetHttp.yaml",
+            Map.of("petId", "-1"),
+            new Condition<>(
+                o -> ((Map<String, Object>) o).containsKey("petId"), "notFoundCondition")),
         Arguments.of("call-http-endpoint-interpolation.yaml", petInput, petCondition),
         Arguments.of(
             "call-http-query-parameters.yaml",

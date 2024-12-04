@@ -36,9 +36,16 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.BinaryOperator;
 import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Collector;
 
 public class JsonUtils {
 
@@ -46,6 +53,38 @@ public class JsonUtils {
 
   public static ObjectMapper mapper() {
     return mapper;
+  }
+
+  public static Collector<JsonNode, ArrayNode, ArrayNode> arrayNodeCollector() {
+    return new Collector<JsonNode, ArrayNode, ArrayNode>() {
+      @Override
+      public BiConsumer<ArrayNode, JsonNode> accumulator() {
+        return (arrayNode, item) -> arrayNode.add(item);
+      }
+
+      @Override
+      public Set<Characteristics> characteristics() {
+        return Collections.unmodifiableSet(EnumSet.of(Collector.Characteristics.IDENTITY_FINISH));
+      }
+
+      @Override
+      public BinaryOperator<ArrayNode> combiner() {
+        return (r1, r2) -> {
+          r1.addAll(r2);
+          return r1;
+        };
+      }
+
+      @Override
+      public Function<ArrayNode, ArrayNode> finisher() {
+        return arrayNode -> arrayNode;
+      }
+
+      @Override
+      public Supplier<ArrayNode> supplier() {
+        return () -> mapper.createArrayNode();
+      }
+    };
   }
 
   /*

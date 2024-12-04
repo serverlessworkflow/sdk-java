@@ -15,8 +15,7 @@
  */
 package io.serverlessworkflow.impl;
 
-public enum WorkflowState {
-  STARTED,
-  WAITING,
-  COMPLETED
-}
+import java.util.function.Supplier;
+
+@FunctionalInterface
+public interface WorkflowIdFactory extends Supplier<String> {}

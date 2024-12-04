@@ -16,70 +16,26 @@
 package io.serverlessworkflow.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import io.serverlessworkflow.impl.json.JsonUtils;
 
 public class WorkflowContext {
-  private final WorkflowPosition position;
   private final WorkflowDefinition definition;
-  private final JsonNode input;
-  private JsonNode current;
-  private JsonNode context;
+  private final WorkflowInstance instance;
 
-  private WorkflowContext(
-      WorkflowPosition position, WorkflowDefinition definition, JsonNode input) {
-    this.position = position;
+  WorkflowContext(WorkflowDefinition definition, WorkflowInstance instance) {
     this.definition = definition;
-    this.input = input;
-    this.current = input.deepCopy();
-    this.context = JsonUtils.mapper().createObjectNode();
+    this.instance = instance;
   }
 
-  public static Builder builder(WorkflowDefinition definition, JsonNode input) {
-    return new Builder(definition, input);
-  }
-
-  public static class Builder {
-    private WorkflowPosition position = new DefaultWorkflowPosition();
-    private WorkflowDefinition definition;
-    private JsonNode input;
-
-    private Builder(WorkflowDefinition definition, JsonNode input) {
-      this.definition = definition;
-      this.input = input;
-    }
-
-    public Builder position(WorkflowPosition position) {
-      this.position = position;
-      return this;
-    }
-
-    public WorkflowContext build() {
-      return new WorkflowContext(position, definition, input);
-    }
-  }
-
-  public WorkflowPosition position() {
-    return position;
+  public WorkflowInstance instance() {
+    return instance;
   }
 
   public JsonNode context() {
-    return context;
+    return instance.context();
   }
 
   public void context(JsonNode context) {
-    this.context = context;
-  }
-
-  public JsonNode rawInput() {
-    return input;
-  }
-
-  public void current(JsonNode output) {
-    this.current = output;
-  }
-
-  public JsonNode current() {
-    return current;
+    this.instance.context(context);
   }
 
   public WorkflowDefinition definition() {

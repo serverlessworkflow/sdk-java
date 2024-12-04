@@ -18,35 +18,74 @@ package io.serverlessworkflow.impl;
 import static io.serverlessworkflow.impl.json.JsonUtils.toJavaValue;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import java.util.Optional;
+import com.fasterxml.jackson.databind.node.NullNode;
+import io.serverlessworkflow.impl.executors.TaskExecutorHelper;
+import java.time.Instant;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class WorkflowInstance {
-  private WorkflowState state;
-  private WorkflowContext context;
+  private final AtomicReference<WorkflowStatus> status;
+  private final TaskContext<?> taskContext;
+  private final String id;
+  private final JsonNode input;
+  private final Instant startedAt;
+  private final AtomicReference<JsonNode> context;
 
   WorkflowInstance(WorkflowDefinition definition, JsonNode input) {
+    this.id = definition.idFactory().get();
+    this.input = input;
     definition.inputSchemaValidator().ifPresent(v -> v.validate(input));
-    context = WorkflowContext.builder(definition, input).build();
+    this.startedAt = Instant.now();
+    WorkflowContext workflowContext = new WorkflowContext(definition, this);
+    taskContext = new TaskContext<>(input, definition.positionFactory().get());
     definition
         .inputFilter()
-        .ifPresent(f -> context.current(f.apply(context, Optional.empty(), context.current())));
-    state = WorkflowState.STARTED;
-    WorkflowUtils.processTaskList(definition.workflow().getDo(), context);
+        .ifPresent(f -> taskContext.input(f.apply(workflowContext, taskContext, input)));
+    status = new AtomicReference<>(WorkflowStatus.RUNNING);
+    context = new AtomicReference<>(NullNode.getInstance());
+    TaskExecutorHelper.processTaskList(definition.workflow().getDo(), workflowContext, taskContext);
     definition
         .outputFilter()
-        .ifPresent(f -> context.current(f.apply(context, Optional.empty(), context.current())));
-    definition.outputSchemaValidator().ifPresent(v -> v.validate(context.current()));
+        .ifPresent(
+            f ->
+                taskContext.output(f.apply(workflowContext, taskContext, taskContext.rawOutput())));
+    definition.outputSchemaValidator().ifPresent(v -> v.validate(taskContext.output()));
+    status.compareAndSet(WorkflowStatus.RUNNING, WorkflowStatus.COMPLETED);
   }
 
-  public WorkflowState state() {
-    return state;
+  public String id() {
+    return id;
+  }
+
+  public Instant startedAt() {
+    return startedAt;
+  }
+
+  public JsonNode input() {
+    return input;
+  }
+
+  public JsonNode context() {
+    return context.get();
+  }
+
+  public WorkflowStatus status() {
+    return status.get();
+  }
+
+  public void status(WorkflowStatus state) {
+    this.status.set(state);
   }
 
   public Object output() {
-    return toJavaValue(context.current());
+    return toJavaValue(taskContext.output());
   }
 
-  public Object outputAsJsonNode() {
-    return context.current();
+  public JsonNode outputAsJsonNode() {
+    return taskContext.output();
+  }
+
+  void context(JsonNode context) {
+    this.context.set(context);
   }
 }

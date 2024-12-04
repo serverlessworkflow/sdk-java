@@ -16,9 +16,24 @@
 package io.serverlessworkflow.impl.expressions;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import io.serverlessworkflow.api.types.TaskBase;
 import io.serverlessworkflow.impl.TaskContext;
-import io.serverlessworkflow.impl.WorkflowContext;
 
-public interface Expression {
-  JsonNode eval(WorkflowContext workflowContext, TaskContext<?> context, JsonNode node);
+public record TaskDescriptor<T extends TaskBase>(
+    String name,
+    String reference,
+    T definition,
+    JsonNode rawInput,
+    JsonNode rawOutput,
+    DateTimeDescriptor startedAt) {
+
+  public static <T extends TaskBase> TaskDescriptor<T> of(TaskContext<T> context) {
+    return new TaskDescriptor<T>(
+        context.position().last().toString(),
+        context.position().jsonPointer(),
+        context.task(),
+        context.rawInput(),
+        context.rawOutput(),
+        DateTimeDescriptor.from(context.startedAt()));
+  }
 }
