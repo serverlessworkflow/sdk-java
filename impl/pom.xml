@@ -38,5 +38,6 @@
     <module>http</module>
     <module>core</module>
     <module>bom</module>
+    <module>openapi</module>
   </modules>
 </project>
