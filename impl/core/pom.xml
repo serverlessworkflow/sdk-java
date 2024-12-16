@@ -7,7 +7,7 @@
   </parent>
   <artifactId>serverlessworkflow-impl-core</artifactId>
   <properties>
-      <version.net.thisptr>1.1.0</version.net.thisptr>
+      <version.net.thisptr>1.2.0</version.net.thisptr>
       <version.com.github.f4b6a3>5.2.3</version.com.github.f4b6a3>
   </properties>
   <dependencies>
