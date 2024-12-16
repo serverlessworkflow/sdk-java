@@ -64,9 +64,17 @@ public class HTTPWorkflowDefinitionTest {
 
   private static Stream<Arguments> provideParameters() {
     Map<String, Object> petInput = Map.of("petId", 10);
+    Map<String, Object> starTrekInput = Map.of("uid", "MOMA0000092393");
     Condition<Object> petCondition =
         new Condition<>(
             o -> ((Map<String, Object>) o).containsKey("photoUrls"), "callHttpCondition");
+    Condition<Object> starTrekCondition =
+        new Condition<>(
+            o ->
+                ((Map<String, Object>) ((Map<String, Object>) o).get("movie"))
+                    .get("title")
+                    .equals("Star Trek"),
+            "StartTrek");
     return Stream.of(
         Arguments.of("callGetHttp.yaml", petInput, petCondition),
         Arguments.of(
@@ -75,16 +83,9 @@ public class HTTPWorkflowDefinitionTest {
             new Condition<>(
                 o -> ((Map<String, Object>) o).containsKey("petId"), "notFoundCondition")),
         Arguments.of("call-http-endpoint-interpolation.yaml", petInput, petCondition),
+        Arguments.of("call-http-query-parameters.yaml", starTrekInput, starTrekCondition),
         Arguments.of(
-            "call-http-query-parameters.yaml",
-            Map.of("searchQuery", "R2-D2"),
-            new Condition<>(
-                o -> ((Map<String, Object>) o).get("count").equals(1), "R2D2Condition")),
-        Arguments.of(
-            "call-http-query-parameters-external-schema.yaml",
-            Map.of("searchQuery", "Luke Skywalker"),
-            new Condition<>(
-                o -> ((Map<String, Object>) o).get("count").equals(1), "TheRealJediCondition")),
+            "call-http-query-parameters-external-schema.yaml", starTrekInput, starTrekCondition),
         Arguments.of(
             "callPostHttp.yaml",
             Map.of("name", "Javierito", "status", "available"),
