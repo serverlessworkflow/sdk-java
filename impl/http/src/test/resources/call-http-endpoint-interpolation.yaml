@@ -4,10 +4,17 @@ document:
   name: call-http-shorthand-endpoint
   version: '0.1.0'
 do:
-  - getPet:
-      call: http
-      with:
-        headers:
-          content-type: application/json
-        method: get
-        endpoint: ${ "https://petstore.swagger.io/v2/pet/\(.petId)" }
+  - tryGetPet:
+      try:
+      - getPet:
+          call: http
+          with:
+            headers:
+              content-type: application/json
+            method: get
+            endpoint: ${ "https://petstore.swagger.io/v2/pet/\(.petId)" }
+      catch:
+        errors:
+          with:
+            type: https://serverlessworkflow.io/spec/1.0.0/errors/communication
+            status: 404

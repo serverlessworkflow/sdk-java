@@ -62,12 +62,16 @@ public class HTTPWorkflowDefinitionTest {
         .hasMessageContaining("There are JsonSchema validation errors");
   }
 
+  private static boolean httpCondition(Object obj) {
+    Map<String, Object> map = (Map<String, Object>) obj;
+    return map.containsKey("photoUrls") || map.containsKey("petId");
+  }
+
   private static Stream<Arguments> provideParameters() {
     Map<String, Object> petInput = Map.of("petId", 10);
     Map<String, Object> starTrekInput = Map.of("uid", "MOMA0000092393");
     Condition<Object> petCondition =
-        new Condition<>(
-            o -> ((Map<String, Object>) o).containsKey("photoUrls"), "callHttpCondition");
+        new Condition<>(HTTPWorkflowDefinitionTest::httpCondition, "callHttpCondition");
     Condition<Object> starTrekCondition =
         new Condition<>(
             o ->
