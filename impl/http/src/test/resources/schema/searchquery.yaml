@@ -1,6 +1,6 @@
 type: object
 required:
-  - searchQuery
+  - uid
 properties:
-  searchQuery:
+  uid:
     type: string

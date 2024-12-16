@@ -8,11 +8,11 @@ input:
     resource:
       endpoint: schema/searchquery.yaml
 do:
-  - searchStarWarsCharacters:
+  - searchStarTrekMovies:
       call: http
       with:
         method: get
-        endpoint: https://swapi.dev/api/people/
+        endpoint: https://stapi.co/api/v1/rest/movie
         query:
-          search: ${.searchQuery}
+          uid: ${.uid}
       
