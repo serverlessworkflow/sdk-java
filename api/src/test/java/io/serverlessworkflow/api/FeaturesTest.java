@@ -17,6 +17,7 @@ package io.serverlessworkflow.api;
 
 import static io.serverlessworkflow.api.WorkflowReader.readWorkflow;
 import static io.serverlessworkflow.api.WorkflowReader.readWorkflowFromClasspath;
+import static io.serverlessworkflow.api.WorkflowReader.validation;
 import static io.serverlessworkflow.api.WorkflowWriter.workflowAsBytes;
 import static io.serverlessworkflow.api.WorkflowWriter.workflowAsString;
 import static io.serverlessworkflow.api.WorkflowWriter.writeWorkflow;
@@ -53,13 +54,13 @@ public class FeaturesTest {
         "features/set.yaml",
         "features/switch.yaml",
         "features/try.yaml",
-        "features/listen.yaml",
+        "features/listen-to-any.yaml",
         "features/callFunction.yaml",
         "features/callCustomFunction.yaml",
         "features/call-http-query-parameters.yaml"
       })
   public void testSpecFeaturesParsing(String workflowLocation) throws IOException {
-    Workflow workflow = readWorkflowFromClasspath(workflowLocation);
+    Workflow workflow = readWorkflowFromClasspath(validation(), workflowLocation);
     assertWorkflow(workflow);
     assertWorkflowEquals(workflow, writeAndReadInMemory(workflow));
   }
