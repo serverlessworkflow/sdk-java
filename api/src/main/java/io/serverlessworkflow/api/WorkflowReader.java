@@ -16,57 +16,97 @@
 package io.serverlessworkflow.api;
 
 import io.serverlessworkflow.api.types.Workflow;
-import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
-import java.io.StringReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class WorkflowReader {
 
   public static Workflow readWorkflow(InputStream input, WorkflowFormat format) throws IOException {
-    return format.mapper().readValue(input, Workflow.class);
+    return defaultReader().read(input, format);
   }
 
   public static Workflow readWorkflow(Reader input, WorkflowFormat format) throws IOException {
-    return format.mapper().readValue(input, Workflow.class);
+    return defaultReader().read(input, format);
+  }
+
+  public static Workflow readWorkflow(byte[] input, WorkflowFormat format) throws IOException {
+    return defaultReader().read(input, format);
+  }
+
+  public static Workflow readWorkflow(Path path) throws IOException {
+    return readWorkflow(defaultReader(), path, WorkflowFormat.fromPath(path));
   }
 
   public static Workflow readWorkflow(Path path, WorkflowFormat format) throws IOException {
-    return format.mapper().readValue(Files.readAllBytes(path), Workflow.class);
+    return readWorkflow(defaultReader(), path, format);
   }
 
-  public static Workflow readWorkflow(byte[] content, WorkflowFormat format) throws IOException {
-    try (InputStream input = new ByteArrayInputStream(content)) {
-      return readWorkflow(input, format);
-    }
-  }
-
-  public static Workflow readWorkflowFromString(String content, WorkflowFormat format)
+  public static Workflow readWorkflowFromString(String input, WorkflowFormat format)
       throws IOException {
-    try (Reader reader = new StringReader(content)) {
-      return readWorkflow(reader, format);
-    }
+    return defaultReader().read(input, format);
   }
 
   public static Workflow readWorkflowFromClasspath(String classpath) throws IOException {
+    return readWorkflowFromClasspath(defaultReader(), classpath);
+  }
+
+  public static Workflow readWorkflowFromClasspath(
+      String classpath, ClassLoader cl, WorkflowFormat format) throws IOException {
+    return readWorkflowFromClasspath(defaultReader(), classpath);
+  }
+
+  public static Workflow readWorkflow(WorkflowReaderOperations reader, Path path)
+      throws IOException {
+    return readWorkflow(reader, path, WorkflowFormat.fromPath(path));
+  }
+
+  public static Workflow readWorkflow(
+      WorkflowReaderOperations reader, Path path, WorkflowFormat format) throws IOException {
+    return reader.read(Files.readAllBytes(path), format);
+  }
+
+  public static Workflow readWorkflowFromClasspath(
+      WorkflowReaderOperations reader, String classpath) throws IOException {
     return readWorkflowFromClasspath(
+        reader,
         classpath,
         Thread.currentThread().getContextClassLoader(),
         WorkflowFormat.fromFileName(classpath));
   }
 
   public static Workflow readWorkflowFromClasspath(
-      String classpath, ClassLoader cl, WorkflowFormat format) throws IOException {
+      WorkflowReaderOperations reader, String classpath, ClassLoader cl, WorkflowFormat format)
+      throws IOException {
     try (InputStream in = cl.getResourceAsStream(classpath)) {
       if (in == null) {
         throw new FileNotFoundException(classpath);
       }
-      return readWorkflow(in, format);
+      return reader.read(in, format);
     }
+  }
+
+  public static WorkflowReaderOperations noValidation() {
+    return NoValidationHolder.instance;
+  }
+
+  public static WorkflowReaderOperations validation() {
+    return ValidationHolder.instance;
+  }
+
+  private static class NoValidationHolder {
+    private static final WorkflowReaderOperations instance = new DirectReader();
+  }
+
+  private static class ValidationHolder {
+    private static final WorkflowReaderOperations instance = new ValidationReader();
+  }
+
+  private static WorkflowReaderOperations defaultReader() {
+    return NoValidationHolder.instance;
   }
 
   private WorkflowReader() {}
