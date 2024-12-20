@@ -21,7 +21,6 @@ import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.expressions.ExpressionUtils;
 import io.serverlessworkflow.impl.json.JsonUtils;
-import io.serverlessworkflow.impl.json.MergeUtils;
 import java.util.Map;
 
 public class SetExecutor extends AbstractTaskExecutor<SetTask> {
@@ -38,10 +37,8 @@ public class SetExecutor extends AbstractTaskExecutor<SetTask> {
   @Override
   protected void internalExecute(WorkflowContext workflow, TaskContext<SetTask> taskContext) {
     taskContext.rawOutput(
-        MergeUtils.merge(
-            JsonUtils.fromValue(
-                ExpressionUtils.evaluateExpressionMap(
-                    toBeSet, workflow, taskContext, taskContext.input())),
-            taskContext.input()));
+        JsonUtils.fromValue(
+            ExpressionUtils.evaluateExpressionMap(
+                toBeSet, workflow, taskContext, taskContext.input())));
   }
 }

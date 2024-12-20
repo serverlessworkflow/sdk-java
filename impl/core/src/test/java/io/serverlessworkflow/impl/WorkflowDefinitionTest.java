@@ -16,6 +16,7 @@
 package io.serverlessworkflow.impl;
 
 import static io.serverlessworkflow.api.WorkflowReader.readWorkflowFromClasspath;
+import static io.serverlessworkflow.api.WorkflowReader.validation;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowableOfType;
 
@@ -52,7 +53,7 @@ public class WorkflowDefinitionTest {
   @MethodSource("provideParameters")
   void testWorkflowExecution(String fileName, Consumer<WorkflowDefinition> assertions)
       throws IOException {
-    assertions.accept(appl.workflowDefinition(readWorkflowFromClasspath(fileName)));
+    assertions.accept(appl.workflowDefinition(readWorkflowFromClasspath(validation(), fileName)));
   }
 
   private static Stream<Arguments> provideParameters() {
@@ -60,39 +61,19 @@ public class WorkflowDefinitionTest {
         args(
             "switch-then-string.yaml",
             Map.of("orderType", "electronic"),
-            o ->
-                assertThat(o.output())
-                    .isEqualTo(
-                        Map.of(
-                            "orderType", "electronic", "validate", true, "status", "fulfilled"))),
+            o -> assertThat(o.output()).isEqualTo(Map.of("validate", true, "status", "fulfilled"))),
         args(
             "switch-then-string.yaml",
             Map.of("orderType", "physical"),
             o ->
                 assertThat(o.output())
-                    .isEqualTo(
-                        Map.of(
-                            "orderType",
-                            "physical",
-                            "inventory",
-                            "clear",
-                            "items",
-                            1,
-                            "address",
-                            "Elmer St"))),
+                    .isEqualTo(Map.of("inventory", "clear", "items", 1, "address", "Elmer St"))),
         args(
             "switch-then-string.yaml",
             Map.of("orderType", "unknown"),
             o ->
                 assertThat(o.output())
-                    .isEqualTo(
-                        Map.of(
-                            "orderType",
-                            "unknown",
-                            "log",
-                            "warn",
-                            "message",
-                            "something's wrong"))),
+                    .isEqualTo(Map.of("log", "warn", "message", "something's wrong"))),
         args(
             "for-sum.yaml",
             Map.of("input", Arrays.asList(1, 2, 3)),
@@ -100,10 +81,7 @@ public class WorkflowDefinitionTest {
         args(
             "for-collect.yaml",
             Map.of("input", Arrays.asList(1, 2, 3)),
-            o ->
-                assertThat(o.output())
-                    .isEqualTo(
-                        Map.of("input", Arrays.asList(1, 2, 3), "output", Arrays.asList(2, 4, 6)))),
+            o -> assertThat(o.output()).isEqualTo(Map.of("output", Arrays.asList(2, 4, 6)))),
         args(
             "simple-expression.yaml",
             Map.of("input", Arrays.asList(1, 2, 3)),

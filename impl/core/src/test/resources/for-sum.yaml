@@ -4,16 +4,13 @@ document:
   name: for-sum-example
   version: '0.1.0'
 do:
-  - initCounter:
-      set:  
-       counter: 0
   - sumAll:
       for:
         each: number
         in: .input
       do:
         - accumulate:
-            output:
-              as: .counter+=$number
-      output: 
-       as: .counter
+            set:
+              counter: ${.counter+$number}
+      output:
+        as: .counter

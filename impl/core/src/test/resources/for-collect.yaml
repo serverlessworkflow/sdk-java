@@ -13,5 +13,5 @@ do:
         from: '{input: .input, output: []}'
       do:
         - sumIndex:
-            output:
-              as: .output+=[$number+$index+1]
+            set: 
+              output: ${.output+[$number+$index+1]}
