@@ -124,7 +124,6 @@ public class WorkflowDefinition implements AutoCloseable {
   }
 
   public ResourceLoader resourceLoader() {
-
     return resourceLoader;
   }
 

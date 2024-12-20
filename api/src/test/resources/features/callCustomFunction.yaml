@@ -1,27 +1,25 @@
 document:
-  dsl: 1.0.0-alpha5
-  namespace: test
-  name: call-example
-  version: 0.1.0
-schedule:
-  cron: 0 8 * * *
+  dsl: '1.0.0-alpha5'
+  namespace: samples
+  name: call-custom-function-inline
+  version: '0.1.0'
+use:
+  functions:
+    getPetById:
+      input:
+        schema:
+          document:
+            type: object
+            properties:
+              petId:
+                type: string
+            required: [ petId ]
+      call: http
+      with:
+        method: get
+        endpoint: https://petstore.swagger.io/v2/pet/{petId}
 do:
-- getData:
-    call: http
-    with:
-      method: get
-      endpoint: https://api.agify.io?name=meelad
-  output:
-    as: ".data.reading"
-- filterData:
-    for:
-      in: ".data.reading"
-      each: reading
-    do:
-    - log:
-        call: https://raw.githubusercontent.com/serverlessworkflow/catalog/main/functions/log/1.0.0/function.yaml
-        with:
-          level: information
-          format: "{TIMESTAMP} [{LEVEL}] ({CONTEXT}): {MESSAGE}"
-          message: Hello, world!
-          timestamp: true
+  - getPet:
+      call: getPetById
+      with:
+        petId: 69
