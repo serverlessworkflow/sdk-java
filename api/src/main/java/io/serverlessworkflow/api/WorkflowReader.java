@@ -38,11 +38,11 @@ public class WorkflowReader {
   }
 
   public static Workflow readWorkflow(Path path) throws IOException {
-    return readWorkflow(defaultReader(), path, WorkflowFormat.fromPath(path));
+    return readWorkflow(path, WorkflowFormat.fromPath(path), defaultReader());
   }
 
   public static Workflow readWorkflow(Path path, WorkflowFormat format) throws IOException {
-    return readWorkflow(defaultReader(), path, format);
+    return readWorkflow(path, format, defaultReader());
   }
 
   public static Workflow readWorkflowFromString(String input, WorkflowFormat format)
@@ -51,35 +51,35 @@ public class WorkflowReader {
   }
 
   public static Workflow readWorkflowFromClasspath(String classpath) throws IOException {
-    return readWorkflowFromClasspath(defaultReader(), classpath);
+    return readWorkflowFromClasspath(classpath, defaultReader());
   }
 
   public static Workflow readWorkflowFromClasspath(
       String classpath, ClassLoader cl, WorkflowFormat format) throws IOException {
-    return readWorkflowFromClasspath(defaultReader(), classpath);
+    return readWorkflowFromClasspath(classpath, defaultReader());
   }
 
-  public static Workflow readWorkflow(WorkflowReaderOperations reader, Path path)
+  public static Workflow readWorkflow(Path path, WorkflowReaderOperations reader)
       throws IOException {
-    return readWorkflow(reader, path, WorkflowFormat.fromPath(path));
+    return readWorkflow(path, WorkflowFormat.fromPath(path), reader);
   }
 
   public static Workflow readWorkflow(
-      WorkflowReaderOperations reader, Path path, WorkflowFormat format) throws IOException {
+      Path path, WorkflowFormat format, WorkflowReaderOperations reader) throws IOException {
     return reader.read(Files.readAllBytes(path), format);
   }
 
   public static Workflow readWorkflowFromClasspath(
-      WorkflowReaderOperations reader, String classpath) throws IOException {
+      String classpath, WorkflowReaderOperations reader) throws IOException {
     return readWorkflowFromClasspath(
-        reader,
         classpath,
         Thread.currentThread().getContextClassLoader(),
-        WorkflowFormat.fromFileName(classpath));
+        WorkflowFormat.fromFileName(classpath),
+        reader);
   }
 
   public static Workflow readWorkflowFromClasspath(
-      WorkflowReaderOperations reader, String classpath, ClassLoader cl, WorkflowFormat format)
+      String classpath, ClassLoader cl, WorkflowFormat format, WorkflowReaderOperations reader)
       throws IOException {
     try (InputStream in = cl.getResourceAsStream(classpath)) {
       if (in == null) {

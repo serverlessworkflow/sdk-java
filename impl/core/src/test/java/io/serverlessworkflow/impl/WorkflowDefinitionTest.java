@@ -53,7 +53,7 @@ public class WorkflowDefinitionTest {
   @MethodSource("provideParameters")
   void testWorkflowExecution(String fileName, Consumer<WorkflowDefinition> assertions)
       throws IOException {
-    assertions.accept(appl.workflowDefinition(readWorkflowFromClasspath(validation(), fileName)));
+    assertions.accept(appl.workflowDefinition(readWorkflowFromClasspath(fileName, validation())));
   }
 
   private static Stream<Arguments> provideParameters() {
