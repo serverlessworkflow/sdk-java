@@ -60,7 +60,7 @@ public class FeaturesTest {
         "features/call-http-query-parameters.yaml"
       })
   public void testSpecFeaturesParsing(String workflowLocation) throws IOException {
-    Workflow workflow = readWorkflowFromClasspath(validation(), workflowLocation);
+    Workflow workflow = readWorkflowFromClasspath(workflowLocation, validation());
     assertWorkflow(workflow);
     assertWorkflowEquals(workflow, writeAndReadInMemory(workflow));
   }
