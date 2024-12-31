@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 public class WorkflowContext {
   private final WorkflowDefinition definition;
   private final WorkflowInstance instance;
+  private JsonNode context;
 
   WorkflowContext(WorkflowDefinition definition, WorkflowInstance instance) {
     this.definition = definition;
@@ -31,11 +32,11 @@ public class WorkflowContext {
   }
 
   public JsonNode context() {
-    return instance.context();
+    return context;
   }
 
   public void context(JsonNode context) {
-    this.instance.context(context);
+    this.context = context;
   }
 
   public WorkflowDefinition definition() {

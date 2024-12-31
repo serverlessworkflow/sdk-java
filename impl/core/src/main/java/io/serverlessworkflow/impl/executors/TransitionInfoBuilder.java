@@ -13,12 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.expressions;
+package io.serverlessworkflow.impl.executors;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import io.serverlessworkflow.impl.TaskContext;
-import io.serverlessworkflow.impl.WorkflowContext;
+public record TransitionInfoBuilder(TaskExecutorBuilder<?> next, boolean isEndNode) {
 
-public interface Expression {
-  JsonNode eval(WorkflowContext workflowContext, TaskContext context, JsonNode node);
+  private static final TransitionInfoBuilder END = new TransitionInfoBuilder(null, true);
+  private static final TransitionInfoBuilder EXIT = new TransitionInfoBuilder(null, false);
+
+  static TransitionInfoBuilder of(TaskExecutorBuilder<?> next) {
+    return next == null ? EXIT : new TransitionInfoBuilder(next, false);
+  }
+
+  static TransitionInfoBuilder end() {
+    return END;
+  }
+
+  static TransitionInfoBuilder exit() {
+    return EXIT;
+  }
 }

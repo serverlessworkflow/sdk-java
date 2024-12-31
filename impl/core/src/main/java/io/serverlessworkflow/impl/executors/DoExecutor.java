@@ -15,19 +15,51 @@
  */
 package io.serverlessworkflow.impl.executors;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import io.serverlessworkflow.api.types.DoTask;
+import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.TaskContext;
+import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
-import io.serverlessworkflow.impl.WorkflowDefinition;
+import io.serverlessworkflow.impl.WorkflowPosition;
+import io.serverlessworkflow.impl.resources.ResourceLoader;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
-public class DoExecutor extends AbstractTaskExecutor<DoTask> {
+public class DoExecutor extends RegularTaskExecutor<DoTask> {
 
-  protected DoExecutor(DoTask task, WorkflowDefinition definition) {
-    super(task, definition);
+  private final TaskExecutor<?> taskExecutor;
+
+  public static class DoExecutorBuilder extends RegularTaskExecutorBuilder<DoTask> {
+    private TaskExecutor<?> taskExecutor;
+
+    protected DoExecutorBuilder(
+        WorkflowPosition position,
+        DoTask task,
+        Workflow workflow,
+        WorkflowApplication application,
+        ResourceLoader resourceLoader) {
+      super(position, task, workflow, application, resourceLoader);
+      taskExecutor =
+          TaskExecutorHelper.createExecutorList(
+              position, task.getDo(), workflow, application, resourceLoader);
+    }
+
+    @Override
+    public TaskExecutor<DoTask> buildInstance() {
+      return new DoExecutor(this);
+    }
+  }
+
+  private DoExecutor(DoExecutorBuilder builder) {
+    super(builder);
+    this.taskExecutor = builder.taskExecutor;
   }
 
   @Override
-  protected void internalExecute(WorkflowContext workflow, TaskContext<DoTask> taskContext) {
-    TaskExecutorHelper.processTaskList(task.getDo(), workflow, taskContext);
+  protected CompletableFuture<JsonNode> internalExecute(
+      WorkflowContext workflow, TaskContext taskContext) {
+    return TaskExecutorHelper.processTaskList(
+        taskExecutor, workflow, Optional.of(taskContext), taskContext.input());
   }
 }

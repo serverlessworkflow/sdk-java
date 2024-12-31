@@ -15,28 +15,54 @@
  */
 package io.serverlessworkflow.impl.executors;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import io.serverlessworkflow.api.types.SetTask;
+import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.TaskContext;
+import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
-import io.serverlessworkflow.impl.WorkflowDefinition;
+import io.serverlessworkflow.impl.WorkflowPosition;
 import io.serverlessworkflow.impl.expressions.ExpressionUtils;
 import io.serverlessworkflow.impl.json.JsonUtils;
+import io.serverlessworkflow.impl.resources.ResourceLoader;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
-public class SetExecutor extends AbstractTaskExecutor<SetTask> {
+public class SetExecutor extends RegularTaskExecutor<SetTask> {
 
-  private Map<String, Object> toBeSet;
+  private final Map<String, Object> toBeSet;
 
-  protected SetExecutor(SetTask task, WorkflowDefinition definition) {
-    super(task, definition);
-    this.toBeSet =
-        ExpressionUtils.buildExpressionMap(
-            task.getSet().getAdditionalProperties(), definition.expressionFactory());
+  public static class SetExecutorBuilder extends RegularTaskExecutorBuilder<SetTask> {
+
+    private final Map<String, Object> toBeSet;
+
+    protected SetExecutorBuilder(
+        WorkflowPosition position,
+        SetTask task,
+        Workflow workflow,
+        WorkflowApplication application,
+        ResourceLoader resourceLoader) {
+      super(position, task, workflow, application, resourceLoader);
+      this.toBeSet =
+          ExpressionUtils.buildExpressionMap(
+              task.getSet().getAdditionalProperties(), application.expressionFactory());
+    }
+
+    @Override
+    public TaskExecutor<SetTask> buildInstance() {
+      return new SetExecutor(this);
+    }
+  }
+
+  private SetExecutor(SetExecutorBuilder builder) {
+    super(builder);
+    this.toBeSet = builder.toBeSet;
   }
 
   @Override
-  protected void internalExecute(WorkflowContext workflow, TaskContext<SetTask> taskContext) {
-    taskContext.rawOutput(
+  protected CompletableFuture<JsonNode> internalExecute(
+      WorkflowContext workflow, TaskContext taskContext) {
+    return CompletableFuture.completedFuture(
         JsonUtils.fromValue(
             ExpressionUtils.evaluateExpressionMap(
                 toBeSet, workflow, taskContext, taskContext.input())));

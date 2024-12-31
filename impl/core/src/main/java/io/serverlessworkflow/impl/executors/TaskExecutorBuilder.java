@@ -13,12 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.expressions;
+package io.serverlessworkflow.impl.executors;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import io.serverlessworkflow.impl.TaskContext;
-import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.api.types.TaskBase;
+import java.util.Map;
 
-public interface Expression {
-  JsonNode eval(WorkflowContext workflowContext, TaskContext context, JsonNode node);
+public interface TaskExecutorBuilder<T extends TaskBase> {
+
+  void connect(Map<String, TaskExecutorBuilder<?>> connections);
+
+  TaskExecutor<T> build();
 }

@@ -16,76 +16,64 @@
 package io.serverlessworkflow.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import io.serverlessworkflow.api.types.FlowDirective;
-import io.serverlessworkflow.api.types.FlowDirectiveEnum;
 import io.serverlessworkflow.api.types.TaskBase;
+import io.serverlessworkflow.impl.executors.TransitionInfo;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
-public class TaskContext<T extends TaskBase> {
+public class TaskContext {
 
   private final JsonNode rawInput;
-  private final T task;
+  private final TaskBase task;
   private final WorkflowPosition position;
   private final Instant startedAt;
+  private final String taskName;
+  private final Map<String, Object> contextVariables;
+  private final Optional<TaskContext> parentContext;
 
   private JsonNode input;
   private JsonNode output;
   private JsonNode rawOutput;
-  private FlowDirective flowDirective;
-  private Map<String, Object> contextVariables;
   private Instant completedAt;
+  private TransitionInfo transition;
 
-  public TaskContext(JsonNode input, WorkflowPosition position) {
-    this(input, null, position, Instant.now(), input, input, input, null, new HashMap<>());
-  }
-
-  public TaskContext(JsonNode input, TaskContext<?> taskContext, T task) {
-    this(
-        input,
-        task,
-        taskContext.position,
-        Instant.now(),
-        input,
-        input,
-        input,
-        task.getThen(),
-        new HashMap<>(taskContext.variables()));
+  public TaskContext(
+      JsonNode input,
+      WorkflowPosition position,
+      Optional<TaskContext> parentContext,
+      String taskName,
+      TaskBase task) {
+    this(input, parentContext, taskName, task, position, Instant.now(), input, input, input);
   }
 
   private TaskContext(
       JsonNode rawInput,
-      T task,
+      Optional<TaskContext> parentContext,
+      String taskName,
+      TaskBase task,
       WorkflowPosition position,
       Instant startedAt,
       JsonNode input,
       JsonNode output,
-      JsonNode rawOutput,
-      FlowDirective flowDirective,
-      Map<String, Object> contextVariables) {
+      JsonNode rawOutput) {
     this.rawInput = rawInput;
+    this.parentContext = parentContext;
+    this.taskName = taskName;
     this.task = task;
     this.position = position;
     this.startedAt = startedAt;
     this.input = input;
     this.output = output;
     this.rawOutput = rawOutput;
-    this.flowDirective = flowDirective;
-    this.contextVariables = contextVariables;
+    this.contextVariables =
+        parentContext.map(p -> new HashMap<>(p.contextVariables)).orElseGet(HashMap::new);
   }
 
-  public TaskContext<T> copy() {
-    return new TaskContext<T>(
-        rawInput,
-        task,
-        position.copy(),
-        startedAt,
-        input,
-        output,
-        rawOutput,
-        flowDirective,
-        new HashMap<>(contextVariables));
+  public TaskContext copy() {
+    return new TaskContext(
+        rawInput, parentContext, taskName, task, position, startedAt, input, output, rawOutput);
   }
 
   public void input(JsonNode input) {
@@ -102,54 +90,64 @@ public class TaskContext<T extends TaskBase> {
     return rawInput;
   }
 
-  public T task() {
+  public TaskBase task() {
     return task;
   }
 
-  public void rawOutput(JsonNode output) {
+  public TaskContext rawOutput(JsonNode output) {
     this.rawOutput = output;
     this.output = output;
+    return this;
   }
 
   public JsonNode rawOutput() {
     return rawOutput;
   }
 
-  public void output(JsonNode output) {
+  public TaskContext output(JsonNode output) {
     this.output = output;
+    return this;
   }
 
   public JsonNode output() {
     return output;
   }
 
-  public void flowDirective(FlowDirective flowDirective) {
-    this.flowDirective = flowDirective;
-  }
-
-  public FlowDirective flowDirective() {
-    return flowDirective == null
-        ? new FlowDirective().withFlowDirectiveEnum(FlowDirectiveEnum.CONTINUE)
-        : flowDirective;
+  public WorkflowPosition position() {
+    return position;
   }
 
   public Map<String, Object> variables() {
     return contextVariables;
   }
 
-  public WorkflowPosition position() {
-    return position;
-  }
-
   public Instant startedAt() {
     return startedAt;
   }
 
-  public void completedAt(Instant instant) {
+  public Optional<TaskContext> parent() {
+    return parentContext;
+  }
+
+  public String taskName() {
+    return taskName;
+  }
+
+  public TaskContext completedAt(Instant instant) {
     this.completedAt = instant;
+    return this;
   }
 
   public Instant completedAt() {
     return completedAt;
+  }
+
+  public TransitionInfo transition() {
+    return transition;
+  }
+
+  public TaskContext transition(TransitionInfo transition) {
+    this.transition = transition;
+    return this;
   }
 }

@@ -15,41 +15,99 @@
  */
 package io.serverlessworkflow.impl.executors;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import io.serverlessworkflow.api.types.CatchErrors;
 import io.serverlessworkflow.api.types.ErrorFilter;
+import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.api.types.TryTask;
 import io.serverlessworkflow.api.types.TryTaskCatch;
+import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.TaskContext;
+import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
-import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowError;
 import io.serverlessworkflow.impl.WorkflowException;
 import io.serverlessworkflow.impl.WorkflowFilter;
+import io.serverlessworkflow.impl.WorkflowPosition;
 import io.serverlessworkflow.impl.WorkflowUtils;
+import io.serverlessworkflow.impl.resources.ResourceLoader;
+import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.function.Predicate;
 
-public class TryExecutor extends AbstractTaskExecutor<TryTask> {
+public class TryExecutor extends RegularTaskExecutor<TryTask> {
 
   private final Optional<WorkflowFilter> whenFilter;
   private final Optional<WorkflowFilter> exceptFilter;
   private final Optional<Predicate<WorkflowError>> errorFilter;
+  private final TaskExecutor<?> taskExecutor;
+  private final Optional<TaskExecutor<?>> catchTaskExecutor;
 
-  protected TryExecutor(TryTask task, WorkflowDefinition definition) {
-    super(task, definition);
-    TryTaskCatch catchInfo = task.getCatch();
-    this.errorFilter = buildErrorFilter(catchInfo.getErrors());
-    this.whenFilter =
-        WorkflowUtils.optionalFilter(definition.expressionFactory(), catchInfo.getWhen());
-    this.exceptFilter =
-        WorkflowUtils.optionalFilter(definition.expressionFactory(), catchInfo.getExceptWhen());
+  public static class TryExecutorBuilder extends RegularTaskExecutorBuilder<TryTask> {
+
+    private final Optional<WorkflowFilter> whenFilter;
+    private final Optional<WorkflowFilter> exceptFilter;
+    private final Optional<Predicate<WorkflowError>> errorFilter;
+    private final TaskExecutor<?> taskExecutor;
+    private final Optional<TaskExecutor<?>> catchTaskExecutor;
+
+    protected TryExecutorBuilder(
+        WorkflowPosition position,
+        TryTask task,
+        Workflow workflow,
+        WorkflowApplication application,
+        ResourceLoader resourceLoader) {
+      super(position, task, workflow, application, resourceLoader);
+      TryTaskCatch catchInfo = task.getCatch();
+      this.errorFilter = buildErrorFilter(catchInfo.getErrors());
+      this.whenFilter =
+          WorkflowUtils.optionalFilter(application.expressionFactory(), catchInfo.getWhen());
+      this.exceptFilter =
+          WorkflowUtils.optionalFilter(application.expressionFactory(), catchInfo.getExceptWhen());
+      this.taskExecutor =
+          TaskExecutorHelper.createExecutorList(
+              position, task.getTry(), workflow, application, resourceLoader);
+      List<TaskItem> catchTask = task.getCatch().getDo();
+      this.catchTaskExecutor =
+          catchTask != null && !catchTask.isEmpty()
+              ? Optional.of(
+                  TaskExecutorHelper.createExecutorList(
+                      position, task.getCatch().getDo(), workflow, application, resourceLoader))
+              : Optional.empty();
+    }
+
+    @Override
+    public TaskExecutor<TryTask> buildInstance() {
+      return new TryExecutor(this);
+    }
+  }
+
+  protected TryExecutor(TryExecutorBuilder builder) {
+    super(builder);
+    this.errorFilter = builder.errorFilter;
+    this.whenFilter = builder.whenFilter;
+    this.exceptFilter = builder.exceptFilter;
+    this.taskExecutor = builder.taskExecutor;
+    this.catchTaskExecutor = builder.catchTaskExecutor;
   }
 
   @Override
-  protected void internalExecute(WorkflowContext workflow, TaskContext<TryTask> taskContext) {
-    try {
-      TaskExecutorHelper.processTaskList(task.getTry(), workflow, taskContext);
-    } catch (WorkflowException exception) {
+  protected CompletableFuture<JsonNode> internalExecute(
+      WorkflowContext workflow, TaskContext taskContext) {
+    return TaskExecutorHelper.processTaskList(
+            taskExecutor, workflow, Optional.of(taskContext), taskContext.input())
+        .exceptionallyCompose(e -> handleException(e, workflow, taskContext));
+  }
+
+  private CompletableFuture<JsonNode> handleException(
+      Throwable e, WorkflowContext workflow, TaskContext taskContext) {
+    if (e instanceof CompletionException) {
+      return handleException(e.getCause(), workflow, taskContext);
+    }
+    if (e instanceof WorkflowException) {
+      WorkflowException exception = (WorkflowException) e;
       if (errorFilter.map(f -> f.test(exception.getWorflowError())).orElse(true)
           && whenFilter
               .map(w -> w.apply(workflow, taskContext, taskContext.input()).asBoolean())
@@ -57,11 +115,17 @@ public class TryExecutor extends AbstractTaskExecutor<TryTask> {
           && exceptFilter
               .map(w -> !w.apply(workflow, taskContext, taskContext.input()).asBoolean())
               .orElse(true)) {
-        if (task.getCatch().getDo() != null) {
-          TaskExecutorHelper.processTaskList(task.getCatch().getDo(), workflow, taskContext);
+        if (catchTaskExecutor.isPresent()) {
+          return TaskExecutorHelper.processTaskList(
+              catchTaskExecutor.get(), workflow, Optional.of(taskContext), taskContext.input());
         }
+      }
+      return CompletableFuture.completedFuture(taskContext.rawOutput());
+    } else {
+      if (e instanceof RuntimeException) {
+        throw (RuntimeException) e;
       } else {
-        throw exception;
+        throw new RuntimeException(e);
       }
     }
   }

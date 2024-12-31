@@ -16,95 +16,95 @@
 package io.serverlessworkflow.impl.executors;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import io.serverlessworkflow.api.types.FlowDirectiveEnum;
 import io.serverlessworkflow.api.types.ForkTask;
 import io.serverlessworkflow.api.types.ForkTaskConfiguration;
-import io.serverlessworkflow.api.types.TaskItem;
+import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.TaskContext;
+import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
-import io.serverlessworkflow.impl.WorkflowDefinition;
-import io.serverlessworkflow.impl.WorkflowStatus;
+import io.serverlessworkflow.impl.WorkflowPosition;
+import io.serverlessworkflow.impl.executors.RegularTaskExecutor.RegularTaskExecutorBuilder;
 import io.serverlessworkflow.impl.json.JsonUtils;
-import java.lang.reflect.UndeclaredThrowableException;
-import java.util.ArrayList;
+import io.serverlessworkflow.impl.resources.ResourceLoader;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
+import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-public class ForkExecutor extends AbstractTaskExecutor<ForkTask> {
+public class ForkExecutor extends RegularTaskExecutor<ForkTask> {
 
-  private static final Logger logger = LoggerFactory.getLogger(ForkExecutor.class);
   private final ExecutorService service;
+  private final Map<String, TaskExecutor<?>> taskExecutors;
+  private final boolean compete;
 
-  protected ForkExecutor(ForkTask task, WorkflowDefinition definition) {
-    super(task, definition);
-    service = definition.executorService();
+  public static class ForkExecutorBuilder extends RegularTaskExecutorBuilder<ForkTask> {
+
+    private final Map<String, TaskExecutor<?>> taskExecutors;
+    private final boolean compete;
+
+    protected ForkExecutorBuilder(
+        WorkflowPosition position,
+        ForkTask task,
+        Workflow workflow,
+        WorkflowApplication application,
+        ResourceLoader resourceLoader) {
+      super(position, task, workflow, application, resourceLoader);
+      ForkTaskConfiguration forkConfig = task.getFork();
+      this.taskExecutors =
+          TaskExecutorHelper.createBranchList(
+              position, forkConfig.getBranches(), workflow, application, resourceLoader);
+      this.compete = forkConfig.isCompete();
+    }
+
+    @Override
+    public TaskExecutor<ForkTask> buildInstance() {
+      return new ForkExecutor(this);
+    }
+  }
+
+  protected ForkExecutor(ForkExecutorBuilder builder) {
+    super(builder);
+    service = builder.application.executorService();
+    this.taskExecutors = builder.taskExecutors;
+    this.compete = builder.compete;
   }
 
   @Override
-  protected void internalExecute(WorkflowContext workflow, TaskContext<ForkTask> taskContext) {
-    ForkTaskConfiguration forkConfig = task.getFork();
-
-    if (!forkConfig.getBranches().isEmpty()) {
-      Map<String, Future<TaskContext<?>>> futures = new HashMap<>();
-      int index = 0;
-      for (TaskItem item : forkConfig.getBranches()) {
-        final int i = index++;
-        futures.put(
-            item.getName(),
-            service.submit(() -> executeBranch(workflow, taskContext.copy(), item, i)));
-      }
-      List<Map.Entry<String, TaskContext<?>>> results = new ArrayList<>();
-      for (Map.Entry<String, Future<TaskContext<?>>> entry : futures.entrySet()) {
-        try {
-          results.add(Map.entry(entry.getKey(), entry.getValue().get()));
-        } catch (ExecutionException ex) {
-          Throwable cause = ex.getCause();
-          if (cause instanceof RuntimeException) {
-            throw (RuntimeException) cause;
-          } else {
-            throw new UndeclaredThrowableException(ex);
-          }
-        } catch (InterruptedException ex) {
-          logger.warn("Branch {} was interrupted, no result will be recorded", entry.getKey(), ex);
-        }
-      }
-      if (!results.isEmpty()) {
-        Stream<Map.Entry<String, TaskContext<?>>> sortedStream =
-            results.stream()
-                .sorted(
-                    (arg1, arg2) ->
-                        arg1.getValue().completedAt().compareTo(arg2.getValue().completedAt()));
-        taskContext.rawOutput(
-            forkConfig.isCompete()
-                ? sortedStream.map(e -> e.getValue().output()).findFirst().orElseThrow()
-                : sortedStream
-                    .<JsonNode>map(
-                        e ->
-                            JsonUtils.mapper()
-                                .createObjectNode()
-                                .set(e.getKey(), e.getValue().output()))
-                    .collect(JsonUtils.arrayNodeCollector()));
-      }
+  protected CompletableFuture<JsonNode> internalExecute(
+      WorkflowContext workflow, TaskContext taskContext) {
+    Map<String, CompletableFuture<TaskContext>> futures = new HashMap<>();
+    CompletableFuture<TaskContext> initial = CompletableFuture.completedFuture(taskContext);
+    for (Map.Entry<String, TaskExecutor<?>> entry : taskExecutors.entrySet()) {
+      futures.put(
+          entry.getKey(),
+          initial.thenComposeAsync(
+              t -> entry.getValue().apply(workflow, Optional.of(t), t.input()), service));
     }
+    return CompletableFuture.allOf(
+            futures.values().toArray(new CompletableFuture<?>[futures.size()]))
+        .thenApply(
+            i ->
+                combine(
+                    futures.entrySet().stream()
+                        .collect(Collectors.toMap(Entry::getKey, e -> e.getValue().join()))));
   }
 
-  private TaskContext<?> executeBranch(
-      WorkflowContext workflow, TaskContext<ForkTask> taskContext, TaskItem taskItem, int index) {
-    taskContext.position().addIndex(index);
-    TaskContext<?> result =
-        TaskExecutorHelper.executeTask(workflow, taskContext, taskItem, taskContext.input());
-    if (result.flowDirective() != null
-        && result.flowDirective().getFlowDirectiveEnum() == FlowDirectiveEnum.END) {
-      workflow.instance().status(WorkflowStatus.COMPLETED);
-    }
-    taskContext.position().back();
-    return result;
+  private JsonNode combine(Map<String, TaskContext> futures) {
+
+    Stream<Entry<String, TaskContext>> sortedStream =
+        futures.entrySet().stream()
+            .sorted(
+                (arg1, arg2) ->
+                    arg1.getValue().completedAt().compareTo(arg2.getValue().completedAt()));
+    return compete
+        ? sortedStream.map(e -> e.getValue().output()).findFirst().orElseThrow()
+        : sortedStream
+            .<JsonNode>map(
+                e -> JsonUtils.mapper().createObjectNode().set(e.getKey(), e.getValue().output()))
+            .collect(JsonUtils.arrayNodeCollector());
   }
 }

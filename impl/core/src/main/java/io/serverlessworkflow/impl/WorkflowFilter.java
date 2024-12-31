@@ -19,5 +19,5 @@ import com.fasterxml.jackson.databind.JsonNode;
 
 @FunctionalInterface
 public interface WorkflowFilter {
-  JsonNode apply(WorkflowContext workflow, TaskContext<?> task, JsonNode node);
+  JsonNode apply(WorkflowContext workflow, TaskContext task, JsonNode node);
 }

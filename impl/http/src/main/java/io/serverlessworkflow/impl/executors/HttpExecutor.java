@@ -24,14 +24,15 @@ import io.serverlessworkflow.api.types.HTTPArguments;
 import io.serverlessworkflow.api.types.TaskBase;
 import io.serverlessworkflow.api.types.UriTemplate;
 import io.serverlessworkflow.impl.TaskContext;
+import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
-import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowError;
 import io.serverlessworkflow.impl.WorkflowException;
 import io.serverlessworkflow.impl.expressions.Expression;
 import io.serverlessworkflow.impl.expressions.ExpressionFactory;
 import io.serverlessworkflow.impl.expressions.ExpressionUtils;
 import io.serverlessworkflow.impl.json.JsonUtils;
+import io.serverlessworkflow.impl.resources.ResourceLoader;
 import jakarta.ws.rs.HttpMethod;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.client.Client;
@@ -41,6 +42,7 @@ import jakarta.ws.rs.client.Invocation.Builder;
 import jakarta.ws.rs.client.WebTarget;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.CompletableFuture;
 
 public class HttpExecutor implements CallableTask<CallHTTP> {
 
@@ -53,33 +55,34 @@ public class HttpExecutor implements CallableTask<CallHTTP> {
 
   @FunctionalInterface
   private interface TargetSupplier {
-    WebTarget apply(WorkflowContext workflow, TaskContext<?> task, JsonNode node);
+    WebTarget apply(WorkflowContext workflow, TaskContext task, JsonNode node);
   }
 
   @FunctionalInterface
   private interface RequestSupplier {
-    JsonNode apply(Builder request, WorkflowContext workflow, TaskContext<?> task, JsonNode node);
+    JsonNode apply(Builder request, WorkflowContext workflow, TaskContext task, JsonNode node);
   }
 
   @Override
-  public void init(CallHTTP task, WorkflowDefinition definition) {
+  public void init(CallHTTP task, WorkflowApplication application, ResourceLoader resourceLoader) {
     HTTPArguments httpArgs = task.getWith();
-    this.targetSupplier = getTargetSupplier(httpArgs.getEndpoint(), definition.expressionFactory());
+    this.targetSupplier =
+        getTargetSupplier(httpArgs.getEndpoint(), application.expressionFactory());
     this.headersMap =
         httpArgs.getHeaders() != null
             ? ExpressionUtils.buildExpressionMap(
-                httpArgs.getHeaders().getAdditionalProperties(), definition.expressionFactory())
+                httpArgs.getHeaders().getAdditionalProperties(), application.expressionFactory())
             : Map.of();
     this.queryMap =
         httpArgs.getQuery() != null
             ? ExpressionUtils.buildExpressionMap(
-                httpArgs.getQuery().getAdditionalProperties(), definition.expressionFactory())
+                httpArgs.getQuery().getAdditionalProperties(), application.expressionFactory())
             : Map.of();
     switch (httpArgs.getMethod().toUpperCase()) {
       case HttpMethod.POST:
         Object body =
             ExpressionUtils.buildExpressionObject(
-                httpArgs.getBody(), definition.expressionFactory());
+                httpArgs.getBody(), application.expressionFactory());
         this.requestFunction =
             (request, workflow, context, node) ->
                 request.post(
@@ -94,8 +97,8 @@ public class HttpExecutor implements CallableTask<CallHTTP> {
   }
 
   @Override
-  public JsonNode apply(
-      WorkflowContext workflow, TaskContext<CallHTTP> taskContext, JsonNode input) {
+  public CompletableFuture<JsonNode> apply(
+      WorkflowContext workflow, TaskContext taskContext, JsonNode input) {
     WebTarget target = targetSupplier.apply(workflow, taskContext, input);
     for (Entry<String, Object> entry :
         ExpressionUtils.evaluateExpressionMap(queryMap, workflow, taskContext, input).entrySet()) {
@@ -105,7 +108,8 @@ public class HttpExecutor implements CallableTask<CallHTTP> {
     ExpressionUtils.evaluateExpressionMap(headersMap, workflow, taskContext, input)
         .forEach(request::header);
     try {
-      return requestFunction.apply(request, workflow, taskContext, input);
+      return CompletableFuture.completedFuture(
+          requestFunction.apply(request, workflow, taskContext, input));
     } catch (WebApplicationException exception) {
       throw new WorkflowException(
           WorkflowError.communication(exception.getResponse().getStatus(), taskContext, exception)
@@ -158,7 +162,7 @@ public class HttpExecutor implements CallableTask<CallHTTP> {
     }
 
     @Override
-    public WebTarget apply(WorkflowContext workflow, TaskContext<?> task, JsonNode node) {
+    public WebTarget apply(WorkflowContext workflow, TaskContext task, JsonNode node) {
       return client.target(expr.eval(workflow, task, node).asText());
     }
   }

@@ -26,13 +26,13 @@ public record WorkflowError(
     return new Builder(type, status);
   }
 
-  public static Builder communication(int status, TaskContext<?> context, Exception ex) {
+  public static Builder communication(int status, TaskContext context, Exception ex) {
     return new Builder(COMM_TYPE, status)
         .instance(context.position().jsonPointer())
         .title(ex.getMessage());
   }
 
-  public static Builder runtime(int status, TaskContext<?> context, Exception ex) {
+  public static Builder runtime(int status, TaskContext context, Exception ex) {
     return new Builder(RUNTIME_TYPE, status)
         .instance(context.position().jsonPointer())
         .title(ex.getMessage());

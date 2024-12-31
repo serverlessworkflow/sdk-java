@@ -18,4 +18,4 @@ package io.serverlessworkflow.impl;
 import java.util.function.BiFunction;
 
 @FunctionalInterface
-public interface StringFilter extends BiFunction<WorkflowContext, TaskContext<?>, String> {}
+public interface StringFilter extends BiFunction<WorkflowContext, TaskContext, String> {}

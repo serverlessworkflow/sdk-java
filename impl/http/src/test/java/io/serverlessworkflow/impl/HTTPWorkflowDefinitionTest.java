@@ -42,7 +42,11 @@ public class HTTPWorkflowDefinitionTest {
   @MethodSource("provideParameters")
   void testWorkflowExecution(String fileName, Object input, Condition<Object> condition)
       throws IOException {
-    assertThat(appl.workflowDefinition(readWorkflowFromClasspath(fileName)).execute(input).output())
+    assertThat(
+            appl.workflowDefinition(readWorkflowFromClasspath(fileName))
+                .execute(input)
+                .output()
+                .join())
         .is(condition);
   }
 

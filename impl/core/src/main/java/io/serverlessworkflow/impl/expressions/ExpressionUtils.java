@@ -34,7 +34,7 @@ public class ExpressionUtils {
   }
 
   public static Map<String, Object> evaluateExpressionMap(
-      Map<String, Object> origMap, WorkflowContext workflow, TaskContext<?> task, JsonNode n) {
+      Map<String, Object> origMap, WorkflowContext workflow, TaskContext task, JsonNode n) {
     return new ProxyMap(
         origMap,
         o ->
@@ -50,7 +50,7 @@ public class ExpressionUtils {
   }
 
   public static Object evaluateExpressionObject(
-      Object obj, WorkflowContext workflow, TaskContext<?> task, JsonNode node) {
+      Object obj, WorkflowContext workflow, TaskContext task, JsonNode node) {
     return obj instanceof Map
         ? ExpressionUtils.evaluateExpressionMap((Map<String, Object>) obj, workflow, task, node)
         : obj;

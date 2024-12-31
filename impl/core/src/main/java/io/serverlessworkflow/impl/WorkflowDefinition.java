@@ -19,21 +19,15 @@ import static io.serverlessworkflow.impl.WorkflowUtils.*;
 
 import io.serverlessworkflow.api.types.Input;
 import io.serverlessworkflow.api.types.Output;
-import io.serverlessworkflow.api.types.TaskBase;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.executors.TaskExecutor;
-import io.serverlessworkflow.impl.executors.TaskExecutorFactory;
-import io.serverlessworkflow.impl.expressions.ExpressionFactory;
+import io.serverlessworkflow.impl.executors.TaskExecutorHelper;
 import io.serverlessworkflow.impl.json.JsonUtils;
 import io.serverlessworkflow.impl.jsonschema.SchemaValidator;
-import io.serverlessworkflow.impl.jsonschema.SchemaValidatorFactory;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
 
 public class WorkflowDefinition implements AutoCloseable {
 
@@ -42,16 +36,13 @@ public class WorkflowDefinition implements AutoCloseable {
   private Optional<SchemaValidator> outputSchemaValidator = Optional.empty();
   private Optional<WorkflowFilter> inputFilter = Optional.empty();
   private Optional<WorkflowFilter> outputFilter = Optional.empty();
-  private final Map<String, TaskExecutor<? extends TaskBase>> taskExecutors =
-      new ConcurrentHashMap<>();
-  private final ResourceLoader resourceLoader;
   private final WorkflowApplication application;
+  private final TaskExecutor<?> taskExecutor;
 
   private WorkflowDefinition(
       WorkflowApplication application, Workflow workflow, ResourceLoader resourceLoader) {
     this.workflow = workflow;
     this.application = application;
-    this.resourceLoader = resourceLoader;
     if (workflow.getInput() != null) {
       Input input = workflow.getInput();
       this.inputSchemaValidator =
@@ -64,6 +55,13 @@ public class WorkflowDefinition implements AutoCloseable {
           getSchemaValidator(application.validatorFactory(), resourceLoader, output.getSchema());
       this.outputFilter = buildWorkflowFilter(application.expressionFactory(), output.getAs());
     }
+    this.taskExecutor =
+        TaskExecutorHelper.createExecutorList(
+            application.positionFactory().get(),
+            workflow.getDo(),
+            workflow,
+            application,
+            resourceLoader);
   }
 
   static WorkflowDefinition of(WorkflowApplication application, Workflow workflow) {
@@ -83,6 +81,10 @@ public class WorkflowDefinition implements AutoCloseable {
     return inputSchemaValidator;
   }
 
+  public TaskExecutor<?> startTask() {
+    return taskExecutor;
+  }
+
   public Optional<WorkflowFilter> inputFilter() {
     return inputFilter;
   }
@@ -95,14 +97,6 @@ public class WorkflowDefinition implements AutoCloseable {
     return application.listeners();
   }
 
-  public Map<String, TaskExecutor<? extends TaskBase>> taskExecutors() {
-    return taskExecutors;
-  }
-
-  public TaskExecutorFactory taskFactory() {
-    return application.taskFactory();
-  }
-
   public Optional<WorkflowFilter> outputFilter() {
     return outputFilter;
   }
@@ -113,26 +107,6 @@ public class WorkflowDefinition implements AutoCloseable {
 
   public Optional<SchemaValidator> outputSchemaValidator() {
     return outputSchemaValidator;
-  }
-
-  public ExpressionFactory expressionFactory() {
-    return application.expressionFactory();
-  }
-
-  public SchemaValidatorFactory validatorFactory() {
-    return application.validatorFactory();
-  }
-
-  public ResourceLoader resourceLoader() {
-    return resourceLoader;
-  }
-
-  public WorkflowPositionFactory positionFactory() {
-    return application.positionFactory();
-  }
-
-  public ExecutorService executorService() {
-    return application.executorService();
   }
 
   public RuntimeDescriptorFactory runtimeDescriptorFactory() {
