@@ -15,42 +15,52 @@
  */
 package io.serverlessworkflow.impl;
 
-import static io.serverlessworkflow.impl.json.JsonUtils.toJavaValue;
-
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.NullNode;
 import io.serverlessworkflow.impl.executors.TaskExecutorHelper;
+import io.serverlessworkflow.impl.json.JsonUtils;
 import java.time.Instant;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class WorkflowInstance {
   private final AtomicReference<WorkflowStatus> status;
-  private final TaskContext<?> taskContext;
   private final String id;
   private final JsonNode input;
+
   private final Instant startedAt;
-  private final AtomicReference<JsonNode> context;
+  private CompletableFuture<JsonNode> completableFuture;
+  private final WorkflowContext workflowContext;
 
   WorkflowInstance(WorkflowDefinition definition, JsonNode input) {
     this.id = definition.idFactory().get();
     this.input = input;
     definition.inputSchemaValidator().ifPresent(v -> v.validate(input));
     this.startedAt = Instant.now();
-    WorkflowContext workflowContext = new WorkflowContext(definition, this);
-    taskContext = new TaskContext<>(input, definition.positionFactory().get());
-    definition
-        .inputFilter()
-        .ifPresent(f -> taskContext.input(f.apply(workflowContext, taskContext, input)));
-    status = new AtomicReference<>(WorkflowStatus.RUNNING);
-    context = new AtomicReference<>(NullNode.getInstance());
-    TaskExecutorHelper.processTaskList(definition.workflow().getDo(), workflowContext, taskContext);
-    definition
-        .outputFilter()
-        .ifPresent(
-            f ->
-                taskContext.output(f.apply(workflowContext, taskContext, taskContext.rawOutput())));
-    definition.outputSchemaValidator().ifPresent(v -> v.validate(taskContext.output()));
+    this.workflowContext = new WorkflowContext(definition, this);
+    this.status = new AtomicReference<>(WorkflowStatus.RUNNING);
+    this.completableFuture =
+        TaskExecutorHelper.processTaskList(
+                definition.startTask(),
+                workflowContext,
+                Optional.empty(),
+                definition
+                    .inputFilter()
+                    .map(f -> f.apply(workflowContext, null, input))
+                    .orElse(input))
+            .thenApply(this::whenCompleted);
+  }
+
+  private JsonNode whenCompleted(JsonNode node) {
+    JsonNode model =
+        workflowContext
+            .definition()
+            .outputFilter()
+            .map(f -> f.apply(workflowContext, null, node))
+            .orElse(node);
+    workflowContext.definition().outputSchemaValidator().ifPresent(v -> v.validate(model));
     status.compareAndSet(WorkflowStatus.RUNNING, WorkflowStatus.COMPLETED);
+    return model;
   }
 
   public String id() {
@@ -65,10 +75,6 @@ public class WorkflowInstance {
     return input;
   }
 
-  public JsonNode context() {
-    return context.get();
-  }
-
   public WorkflowStatus status() {
     return status.get();
   }
@@ -77,15 +83,11 @@ public class WorkflowInstance {
     this.status.set(state);
   }
 
-  public Object output() {
-    return toJavaValue(taskContext.output());
+  public CompletableFuture<Object> output() {
+    return outputAsJsonNode().thenApply(JsonUtils::toJavaValue);
   }
 
-  public JsonNode outputAsJsonNode() {
-    return taskContext.output();
-  }
-
-  void context(JsonNode context) {
-    this.context.set(context);
+  public CompletableFuture<JsonNode> outputAsJsonNode() {
+    return completableFuture.thenApply(this::whenCompleted);
   }
 }

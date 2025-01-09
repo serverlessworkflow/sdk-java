@@ -16,50 +16,37 @@
 package io.serverlessworkflow.impl.executors;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import io.serverlessworkflow.api.types.FlowDirective;
-import io.serverlessworkflow.api.types.TaskBase;
 import io.serverlessworkflow.api.types.TaskItem;
+import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.TaskContext;
+import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.WorkflowPosition;
 import io.serverlessworkflow.impl.WorkflowStatus;
+import io.serverlessworkflow.impl.resources.ResourceLoader;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.ListIterator;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Collectors;
 
 public class TaskExecutorHelper {
   private TaskExecutorHelper() {}
 
-  public static void processTaskList(
-      List<TaskItem> tasks, WorkflowContext context, TaskContext<?> parentTask) {
-    parentTask.position().addProperty("do");
-    TaskContext<? extends TaskBase> currentContext = parentTask;
-    if (!tasks.isEmpty()) {
-      ListIterator<TaskItem> iter = tasks.listIterator();
-      TaskItem nextTask = iter.next();
-      while (nextTask != null && isActive(context)) {
-        TaskItem task = nextTask;
-        parentTask.position().addIndex(iter.previousIndex());
-        currentContext = executeTask(context, parentTask, task, currentContext.output());
-        FlowDirective flowDirective = currentContext.flowDirective();
-        if (flowDirective.getFlowDirectiveEnum() != null) {
-          switch (flowDirective.getFlowDirectiveEnum()) {
-            case CONTINUE:
-              nextTask = iter.hasNext() ? iter.next() : null;
-              break;
-            case END:
-              context.instance().status(WorkflowStatus.COMPLETED);
-              break;
-            case EXIT:
-              nextTask = null;
-              break;
-          }
-        } else {
-          nextTask = findTaskByName(iter, flowDirective.getString());
-        }
-        parentTask.position().back();
-      }
-    }
-    parentTask.position().back();
-    parentTask.rawOutput(currentContext.output());
+  public static CompletableFuture<JsonNode> processTaskList(
+      TaskExecutor<?> taskExecutor,
+      WorkflowContext context,
+      Optional<TaskContext> parentTask,
+      JsonNode input) {
+    return taskExecutor
+        .apply(context, parentTask, input)
+        .thenApply(
+            t -> {
+              parentTask.ifPresent(p -> p.rawOutput(t.output()));
+              return t.output();
+            });
   }
 
   public static boolean isActive(WorkflowContext context) {
@@ -70,42 +57,55 @@ public class TaskExecutorHelper {
     return status == WorkflowStatus.RUNNING;
   }
 
-  public static TaskContext<?> executeTask(
-      WorkflowContext context, TaskContext<?> parentTask, TaskItem task, JsonNode input) {
-    parentTask.position().addProperty(task.getName());
-    TaskContext<?> result =
-        context
-            .definition()
-            .taskExecutors()
-            .computeIfAbsent(
-                parentTask.position().jsonPointer(),
-                k ->
-                    context
-                        .definition()
-                        .taskFactory()
-                        .getTaskExecutor(task.getTask(), context.definition()))
-            .apply(context, parentTask, input);
-    parentTask.position().back();
-    return result;
+  public static TaskExecutor<?> createExecutorList(
+      WorkflowPosition position,
+      List<TaskItem> taskItems,
+      Workflow workflow,
+      WorkflowApplication application,
+      ResourceLoader resourceLoader) {
+    Map<String, TaskExecutorBuilder<?>> executors =
+        createExecutorBuilderList(position, taskItems, workflow, application, resourceLoader, "do");
+    executors.values().forEach(t -> t.connect(executors));
+    Iterator<TaskExecutorBuilder<?>> iter = executors.values().iterator();
+    TaskExecutor<?> first = iter.next().build();
+    while (iter.hasNext()) {
+      iter.next().build();
+    }
+    return first;
   }
 
-  private static TaskItem findTaskByName(ListIterator<TaskItem> iter, String taskName) {
-    int currentIndex = iter.nextIndex();
-    while (iter.hasPrevious()) {
-      TaskItem item = iter.previous();
-      if (item.getName().equals(taskName)) {
-        return item;
-      }
+  public static Map<String, TaskExecutor<?>> createBranchList(
+      WorkflowPosition position,
+      List<TaskItem> taskItems,
+      Workflow workflow,
+      WorkflowApplication application,
+      ResourceLoader resourceLoader) {
+    return createExecutorBuilderList(
+            position, taskItems, workflow, application, resourceLoader, "branch")
+        .entrySet()
+        .stream()
+        .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().build()));
+  }
+
+  private static Map<String, TaskExecutorBuilder<?>> createExecutorBuilderList(
+      WorkflowPosition position,
+      List<TaskItem> taskItems,
+      Workflow workflow,
+      WorkflowApplication application,
+      ResourceLoader resourceLoader,
+      String containerName) {
+    TaskExecutorFactory taskFactory = application.taskFactory();
+    Map<String, TaskExecutorBuilder<?>> executors = new LinkedHashMap<>();
+    position.addProperty(containerName);
+    int index = 0;
+    for (TaskItem item : taskItems) {
+      position.addIndex(index++).addProperty(item.getName());
+      TaskExecutorBuilder<?> taskExecutorBuilder =
+          taskFactory.getTaskExecutor(
+              position.copy(), item.getTask(), workflow, application, resourceLoader);
+      executors.put(item.getName(), taskExecutorBuilder);
+      position.back().back();
     }
-    while (iter.nextIndex() < currentIndex) {
-      iter.next();
-    }
-    while (iter.hasNext()) {
-      TaskItem item = iter.next();
-      if (item.getName().equals(taskName)) {
-        return item;
-      }
-    }
-    throw new IllegalArgumentException("Cannot find task with name " + taskName);
+    return executors;
   }
 }

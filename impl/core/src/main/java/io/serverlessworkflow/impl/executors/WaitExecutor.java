@@ -15,44 +15,70 @@
  */
 package io.serverlessworkflow.impl.executors;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import io.serverlessworkflow.api.types.DurationInline;
 import io.serverlessworkflow.api.types.WaitTask;
+import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.TaskContext;
+import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
-import io.serverlessworkflow.impl.WorkflowDefinition;
+import io.serverlessworkflow.impl.WorkflowPosition;
+import io.serverlessworkflow.impl.executors.RegularTaskExecutor.RegularTaskExecutorBuilder;
+import io.serverlessworkflow.impl.resources.ResourceLoader;
 import java.time.Duration;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.concurrent.CompletableFuture;
 
-public class WaitExecutor extends AbstractTaskExecutor<WaitTask> {
+public class WaitExecutor extends RegularTaskExecutor<WaitTask> {
 
-  private static Logger logger = LoggerFactory.getLogger(WaitExecutor.class);
   private final Duration millisToWait;
 
-  protected WaitExecutor(WaitTask task, WorkflowDefinition definition) {
-    super(task, definition);
-    this.millisToWait =
-        task.getWait().getDurationInline() != null
-            ? toLong(task.getWait().getDurationInline())
-            : Duration.parse(task.getWait().getDurationExpression());
+  public static class WaitExecutorBuilder extends RegularTaskExecutorBuilder<WaitTask> {
+    private final Duration millisToWait;
+
+    protected WaitExecutorBuilder(
+        WorkflowPosition position,
+        WaitTask task,
+        Workflow workflow,
+        WorkflowApplication application,
+        ResourceLoader resourceLoader) {
+      super(position, task, workflow, application, resourceLoader);
+      this.millisToWait =
+          task.getWait().getDurationInline() != null
+              ? toLong(task.getWait().getDurationInline())
+              : Duration.parse(task.getWait().getDurationExpression());
+    }
+
+    private Duration toLong(DurationInline durationInline) {
+      Duration duration = Duration.ofMillis(durationInline.getMilliseconds());
+      duration.plus(Duration.ofSeconds(durationInline.getSeconds()));
+      duration.plus(Duration.ofMinutes(durationInline.getMinutes()));
+      duration.plus(Duration.ofHours(durationInline.getHours()));
+      duration.plus(Duration.ofDays(durationInline.getDays()));
+      return duration;
+    }
+
+    @Override
+    public TaskExecutor<WaitTask> buildInstance() {
+      return new WaitExecutor(this);
+    }
   }
 
-  private Duration toLong(DurationInline durationInline) {
-    Duration duration = Duration.ofMillis(durationInline.getMilliseconds());
-    duration.plus(Duration.ofSeconds(durationInline.getSeconds()));
-    duration.plus(Duration.ofMinutes(durationInline.getMinutes()));
-    duration.plus(Duration.ofHours(durationInline.getHours()));
-    duration.plus(Duration.ofDays(durationInline.getDays()));
-    return duration;
+  protected WaitExecutor(WaitExecutorBuilder builder) {
+    super(builder);
+    this.millisToWait = builder.millisToWait;
   }
 
   @Override
-  protected void internalExecute(WorkflowContext workflow, TaskContext<WaitTask> taskContext) {
-    try {
-      Thread.sleep(millisToWait.toMillis());
-    } catch (InterruptedException e) {
-      logger.warn("Waiting thread was interrupted", e);
-      Thread.currentThread().interrupt();
-    }
+  protected CompletableFuture<JsonNode> internalExecute(
+      WorkflowContext workflow, TaskContext taskContext) {
+    return CompletableFuture.supplyAsync(
+        () -> {
+          try {
+            Thread.sleep(millisToWait.toMillis());
+          } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+          }
+          return taskContext.input();
+        });
   }
 }

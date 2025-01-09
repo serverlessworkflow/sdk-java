@@ -19,17 +19,17 @@ import com.fasterxml.jackson.databind.JsonNode;
 import io.serverlessworkflow.api.types.TaskBase;
 import io.serverlessworkflow.impl.TaskContext;
 
-public record TaskDescriptor<T extends TaskBase>(
+public record TaskDescriptor(
     String name,
     String reference,
-    T definition,
+    TaskBase definition,
     JsonNode rawInput,
     JsonNode rawOutput,
     DateTimeDescriptor startedAt) {
 
-  public static <T extends TaskBase> TaskDescriptor<T> of(TaskContext<T> context) {
-    return new TaskDescriptor<T>(
-        context.position().last().toString(),
+  public static TaskDescriptor of(TaskContext context) {
+    return new TaskDescriptor(
+        context.taskName(),
         context.position().jsonPointer(),
         context.task(),
         context.rawInput(),

@@ -18,13 +18,16 @@ package io.serverlessworkflow.impl.executors;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.serverlessworkflow.api.types.TaskBase;
 import io.serverlessworkflow.impl.TaskContext;
+import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
-import io.serverlessworkflow.impl.WorkflowDefinition;
+import io.serverlessworkflow.impl.resources.ResourceLoader;
+import java.util.concurrent.CompletableFuture;
 
 public interface CallableTask<T extends TaskBase> {
-  void init(T task, WorkflowDefinition definition);
+  void init(T task, WorkflowApplication application, ResourceLoader loader);
 
-  JsonNode apply(WorkflowContext workflowContext, TaskContext<T> taskContext, JsonNode input);
+  CompletableFuture<JsonNode> apply(
+      WorkflowContext workflowContext, TaskContext taskContext, JsonNode input);
 
   boolean accept(Class<? extends TaskBase> clazz);
 }

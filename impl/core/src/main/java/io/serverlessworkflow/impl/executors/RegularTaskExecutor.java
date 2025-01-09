@@ -22,44 +22,46 @@ import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowPosition;
-import io.serverlessworkflow.impl.executors.RegularTaskExecutor.RegularTaskExecutorBuilder;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
-public class CallTaskExecutor<T extends TaskBase> extends RegularTaskExecutor<T> {
+public abstract class RegularTaskExecutor<T extends TaskBase> extends AbstractTaskExecutor<T> {
 
-  private final CallableTask<T> callable;
+  protected final TransitionInfo transition;
 
-  public static class CallTaskExecutorBuilder<T extends TaskBase>
-      extends RegularTaskExecutorBuilder<T> {
-    private CallableTask<T> callable;
+  protected RegularTaskExecutor(RegularTaskExecutorBuilder<T> builder) {
+    super(builder);
+    this.transition = TransitionInfo.build(builder.transition);
+  }
 
-    protected CallTaskExecutorBuilder(
+  public abstract static class RegularTaskExecutorBuilder<T extends TaskBase>
+      extends AbstractTaskExecutorBuilder<T> {
+
+    private TransitionInfoBuilder transition;
+
+    protected RegularTaskExecutorBuilder(
         WorkflowPosition position,
         T task,
         Workflow workflow,
         WorkflowApplication application,
-        ResourceLoader resourceLoader,
-        CallableTask<T> callable) {
+        ResourceLoader resourceLoader) {
       super(position, task, workflow, application, resourceLoader);
-      this.callable = callable;
-      callable.init(task, application, resourceLoader);
     }
 
-    @Override
-    public TaskExecutor<T> buildInstance() {
-      return new CallTaskExecutor(this);
+    public void connect(Map<String, TaskExecutorBuilder<?>> connections) {
+      this.transition = next(task.getThen(), connections);
     }
   }
 
-  protected CallTaskExecutor(CallTaskExecutorBuilder<T> builder) {
-    super(builder);
-    this.callable = builder.callable;
-  }
-
-  @Override
-  protected CompletableFuture<JsonNode> internalExecute(
+  protected CompletableFuture<TaskContext> execute(
       WorkflowContext workflow, TaskContext taskContext) {
-    return callable.apply(workflow, taskContext, taskContext.input());
+    CompletableFuture<TaskContext> future =
+        internalExecute(workflow, taskContext)
+            .thenApply(node -> taskContext.rawOutput(node).transition(transition));
+    return future;
   }
+
+  protected abstract CompletableFuture<JsonNode> internalExecute(
+      WorkflowContext workflow, TaskContext task);
 }

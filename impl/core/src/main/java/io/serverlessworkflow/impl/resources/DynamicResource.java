@@ -22,5 +22,5 @@ import java.io.InputStream;
 import java.util.Optional;
 
 public interface DynamicResource {
-  InputStream open(WorkflowContext workflow, Optional<TaskContext<?>> task, JsonNode input);
+  InputStream open(WorkflowContext workflow, Optional<TaskContext> task, JsonNode input);
 }

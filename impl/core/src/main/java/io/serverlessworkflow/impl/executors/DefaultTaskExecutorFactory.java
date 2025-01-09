@@ -23,7 +23,19 @@ import io.serverlessworkflow.api.types.CallOpenAPI;
 import io.serverlessworkflow.api.types.CallTask;
 import io.serverlessworkflow.api.types.Task;
 import io.serverlessworkflow.api.types.TaskBase;
-import io.serverlessworkflow.impl.WorkflowDefinition;
+import io.serverlessworkflow.api.types.Workflow;
+import io.serverlessworkflow.impl.WorkflowApplication;
+import io.serverlessworkflow.impl.WorkflowPosition;
+import io.serverlessworkflow.impl.executors.CallTaskExecutor.CallTaskExecutorBuilder;
+import io.serverlessworkflow.impl.executors.DoExecutor.DoExecutorBuilder;
+import io.serverlessworkflow.impl.executors.ForExecutor.ForExecutorBuilder;
+import io.serverlessworkflow.impl.executors.ForkExecutor.ForkExecutorBuilder;
+import io.serverlessworkflow.impl.executors.RaiseExecutor.RaiseExecutorBuilder;
+import io.serverlessworkflow.impl.executors.SetExecutor.SetExecutorBuilder;
+import io.serverlessworkflow.impl.executors.SwitchExecutor.SwitchExecutorBuilder;
+import io.serverlessworkflow.impl.executors.TryExecutor.TryExecutorBuilder;
+import io.serverlessworkflow.impl.executors.WaitExecutor.WaitExecutorBuilder;
+import io.serverlessworkflow.impl.resources.ResourceLoader;
 import java.util.ServiceLoader;
 import java.util.ServiceLoader.Provider;
 
@@ -39,42 +51,80 @@ public class DefaultTaskExecutorFactory implements TaskExecutorFactory {
 
   private ServiceLoader<CallableTask> callTasks = ServiceLoader.load(CallableTask.class);
 
-  public TaskExecutor<? extends TaskBase> getTaskExecutor(
-      Task task, WorkflowDefinition definition) {
+  @Override
+  public TaskExecutorBuilder<? extends TaskBase> getTaskExecutor(
+      WorkflowPosition position,
+      Task task,
+      Workflow workflow,
+      WorkflowApplication application,
+      ResourceLoader resourceLoader) {
     if (task.getCallTask() != null) {
       CallTask callTask = task.getCallTask();
       if (callTask.getCallHTTP() != null) {
-        return new CallTaskExecutor<>(
-            callTask.getCallHTTP(), definition, findCallTask(CallHTTP.class));
+        return new CallTaskExecutorBuilder<>(
+            position,
+            callTask.getCallHTTP(),
+            workflow,
+            application,
+            resourceLoader,
+            findCallTask(CallHTTP.class));
       } else if (callTask.getCallAsyncAPI() != null) {
-        return new CallTaskExecutor<>(
-            callTask.getCallAsyncAPI(), definition, findCallTask(CallAsyncAPI.class));
+        return new CallTaskExecutorBuilder<>(
+            position,
+            callTask.getCallAsyncAPI(),
+            workflow,
+            application,
+            resourceLoader,
+            findCallTask(CallAsyncAPI.class));
       } else if (callTask.getCallGRPC() != null) {
-        return new CallTaskExecutor<>(
-            callTask.getCallGRPC(), definition, findCallTask(CallGRPC.class));
+        return new CallTaskExecutorBuilder<>(
+            position,
+            callTask.getCallGRPC(),
+            workflow,
+            application,
+            resourceLoader,
+            findCallTask(CallGRPC.class));
       } else if (callTask.getCallOpenAPI() != null) {
-        return new CallTaskExecutor<>(
-            callTask.getCallOpenAPI(), definition, findCallTask(CallOpenAPI.class));
+        return new CallTaskExecutorBuilder<>(
+            position,
+            callTask.getCallOpenAPI(),
+            workflow,
+            application,
+            resourceLoader,
+            findCallTask(CallOpenAPI.class));
       } else if (callTask.getCallFunction() != null) {
-        return new CallTaskExecutor<>(
-            callTask.getCallFunction(), definition, findCallTask(CallFunction.class));
+        return new CallTaskExecutorBuilder<>(
+            position,
+            callTask.getCallFunction(),
+            workflow,
+            application,
+            resourceLoader,
+            findCallTask(CallFunction.class));
       }
     } else if (task.getSwitchTask() != null) {
-      return new SwitchExecutor(task.getSwitchTask(), definition);
+      return new SwitchExecutorBuilder(
+          position, task.getSwitchTask(), workflow, application, resourceLoader);
     } else if (task.getDoTask() != null) {
-      return new DoExecutor(task.getDoTask(), definition);
+      return new DoExecutorBuilder(
+          position, task.getDoTask(), workflow, application, resourceLoader);
     } else if (task.getSetTask() != null) {
-      return new SetExecutor(task.getSetTask(), definition);
+      return new SetExecutorBuilder(
+          position, task.getSetTask(), workflow, application, resourceLoader);
     } else if (task.getForTask() != null) {
-      return new ForExecutor(task.getForTask(), definition);
+      return new ForExecutorBuilder(
+          position, task.getForTask(), workflow, application, resourceLoader);
     } else if (task.getRaiseTask() != null) {
-      return new RaiseExecutor(task.getRaiseTask(), definition);
+      return new RaiseExecutorBuilder(
+          position, task.getRaiseTask(), workflow, application, resourceLoader);
     } else if (task.getTryTask() != null) {
-      return new TryExecutor(task.getTryTask(), definition);
+      return new TryExecutorBuilder(
+          position, task.getTryTask(), workflow, application, resourceLoader);
     } else if (task.getForkTask() != null) {
-      return new ForkExecutor(task.getForkTask(), definition);
+      return new ForkExecutorBuilder(
+          position, task.getForkTask(), workflow, application, resourceLoader);
     } else if (task.getWaitTask() != null) {
-      return new WaitExecutor(task.getWaitTask(), definition);
+      return new WaitExecutorBuilder(
+          position, task.getWaitTask(), workflow, application, resourceLoader);
     }
     throw new UnsupportedOperationException(task.get().getClass().getName() + " not supported yet");
   }

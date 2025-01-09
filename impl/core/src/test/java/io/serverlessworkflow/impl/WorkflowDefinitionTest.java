@@ -28,19 +28,17 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.concurrent.CompletionException;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class WorkflowDefinitionTest {
 
   private static WorkflowApplication appl;
-  private static Logger logger = LoggerFactory.getLogger(WorkflowDefinitionTest.class);
   private static Instant before;
 
   @BeforeAll
@@ -61,27 +59,29 @@ public class WorkflowDefinitionTest {
         args(
             "switch-then-string.yaml",
             Map.of("orderType", "electronic"),
-            o -> assertThat(o.output()).isEqualTo(Map.of("validate", true, "status", "fulfilled"))),
+            o ->
+                assertThat(o.output().join())
+                    .isEqualTo(Map.of("validate", true, "status", "fulfilled"))),
         args(
             "switch-then-string.yaml",
             Map.of("orderType", "physical"),
             o ->
-                assertThat(o.output())
+                assertThat(o.output().join())
                     .isEqualTo(Map.of("inventory", "clear", "items", 1, "address", "Elmer St"))),
         args(
             "switch-then-string.yaml",
             Map.of("orderType", "unknown"),
             o ->
-                assertThat(o.output())
+                assertThat(o.output().join())
                     .isEqualTo(Map.of("log", "warn", "message", "something's wrong"))),
         args(
             "for-sum.yaml",
             Map.of("input", Arrays.asList(1, 2, 3)),
-            o -> assertThat(o.output()).isEqualTo(6)),
+            o -> assertThat(o.output().join()).isEqualTo(6)),
         args(
             "for-collect.yaml",
             Map.of("input", Arrays.asList(1, 2, 3)),
-            o -> assertThat(o.output()).isEqualTo(Map.of("output", Arrays.asList(2, 4, 6)))),
+            o -> assertThat(o.output().join()).isEqualTo(Map.of("output", Arrays.asList(2, 4, 6)))),
         args(
             "simple-expression.yaml",
             Map.of("input", Arrays.asList(1, 2, 3)),
@@ -98,7 +98,7 @@ public class WorkflowDefinitionTest {
             "fork.yaml",
             Map.of(),
             o ->
-                assertThat(((ObjectNode) o.outputAsJsonNode()).get("patientId").asText())
+                assertThat(((ObjectNode) o.outputAsJsonNode().join()).get("patientId").asText())
                     .isIn("John", "Smith")),
         args("fork-no-compete.yaml", Map.of(), WorkflowDefinitionTest::checkNotCompeteOuput));
   }
@@ -114,12 +114,23 @@ public class WorkflowDefinitionTest {
     return Arguments.of(
         fileName,
         (Consumer<WorkflowDefinition>)
-            d -> consumer.accept(catchThrowableOfType(clazz, () -> d.execute(Map.of()))));
+            d ->
+                checkWorkflowException(
+                    catchThrowableOfType(
+                        CompletionException.class,
+                        () -> d.execute(Map.of()).outputAsJsonNode().join()),
+                    consumer,
+                    clazz));
+  }
+
+  private static <T extends Throwable> void checkWorkflowException(
+      CompletionException ex, Consumer<T> consumer, Class<T> clazz) {
+    assertThat(ex.getCause()).isInstanceOf(clazz);
+    consumer.accept(clazz.cast(ex.getCause()));
   }
 
   private static void checkNotCompeteOuput(WorkflowInstance instance) {
-    JsonNode out = instance.outputAsJsonNode();
-    logger.debug("Output is {}", out);
+    JsonNode out = instance.outputAsJsonNode().join();
     assertThat(out).isInstanceOf(ArrayNode.class);
     assertThat(out).hasSize(2);
     ArrayNode array = (ArrayNode) out;
@@ -146,7 +157,7 @@ public class WorkflowDefinitionTest {
   }
 
   private static void checkSpecialKeywords(WorkflowInstance obj) {
-    Map<String, Object> result = (Map<String, Object>) obj.output();
+    Map<String, Object> result = (Map<String, Object>) obj.output().join();
     assertThat(Instant.ofEpochMilli((long) result.get("startedAt")))
         .isAfterOrEqualTo(before)
         .isBeforeOrEqualTo(Instant.now());

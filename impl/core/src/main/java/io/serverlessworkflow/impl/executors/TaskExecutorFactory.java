@@ -17,8 +17,16 @@ package io.serverlessworkflow.impl.executors;
 
 import io.serverlessworkflow.api.types.Task;
 import io.serverlessworkflow.api.types.TaskBase;
-import io.serverlessworkflow.impl.WorkflowDefinition;
+import io.serverlessworkflow.api.types.Workflow;
+import io.serverlessworkflow.impl.WorkflowApplication;
+import io.serverlessworkflow.impl.WorkflowPosition;
+import io.serverlessworkflow.impl.resources.ResourceLoader;
 
 public interface TaskExecutorFactory {
-  TaskExecutor<? extends TaskBase> getTaskExecutor(Task task, WorkflowDefinition definition);
+  TaskExecutorBuilder<? extends TaskBase> getTaskExecutor(
+      WorkflowPosition position,
+      Task task,
+      Workflow workflow,
+      WorkflowApplication application,
+      ResourceLoader resourceLoader);
 }

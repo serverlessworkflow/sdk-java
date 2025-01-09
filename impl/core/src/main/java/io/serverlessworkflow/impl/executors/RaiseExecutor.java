@@ -15,90 +15,116 @@
  */
 package io.serverlessworkflow.impl.executors;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import io.serverlessworkflow.api.types.Error;
 import io.serverlessworkflow.api.types.ErrorInstance;
 import io.serverlessworkflow.api.types.ErrorType;
 import io.serverlessworkflow.api.types.RaiseTask;
 import io.serverlessworkflow.api.types.RaiseTaskError;
+import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.StringFilter;
 import io.serverlessworkflow.impl.TaskContext;
+import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
-import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowError;
 import io.serverlessworkflow.impl.WorkflowException;
+import io.serverlessworkflow.impl.WorkflowPosition;
 import io.serverlessworkflow.impl.WorkflowUtils;
+import io.serverlessworkflow.impl.executors.RegularTaskExecutor.RegularTaskExecutorBuilder;
 import io.serverlessworkflow.impl.expressions.ExpressionFactory;
+import io.serverlessworkflow.impl.resources.ResourceLoader;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.BiFunction;
 
-public class RaiseExecutor extends AbstractTaskExecutor<RaiseTask> {
+public class RaiseExecutor extends RegularTaskExecutor<RaiseTask> {
 
-  private final BiFunction<WorkflowContext, TaskContext<RaiseTask>, WorkflowError> errorBuilder;
+  private final BiFunction<WorkflowContext, TaskContext, WorkflowError> errorBuilder;
 
-  private final StringFilter typeFilter;
-  private final Optional<StringFilter> instanceFilter;
-  private final StringFilter titleFilter;
-  private final StringFilter detailFilter;
+  public static class RaiseExecutorBuilder extends RegularTaskExecutorBuilder<RaiseTask> {
 
-  protected RaiseExecutor(RaiseTask task, WorkflowDefinition definition) {
-    super(task, definition);
-    RaiseTaskError raiseError = task.getRaise().getError();
-    Error error =
-        raiseError.getRaiseErrorDefinition() != null
-            ? raiseError.getRaiseErrorDefinition()
-            : findError(definition, raiseError.getRaiseErrorReference());
-    this.typeFilter = getTypeFunction(definition.expressionFactory(), error.getType());
-    this.instanceFilter = getInstanceFunction(definition.expressionFactory(), error.getInstance());
-    this.titleFilter =
-        WorkflowUtils.buildStringFilter(definition.expressionFactory(), error.getTitle());
-    this.detailFilter =
-        WorkflowUtils.buildStringFilter(definition.expressionFactory(), error.getDetail());
-    this.errorBuilder = (w, t) -> buildError(error, w, t);
-  }
+    private final BiFunction<WorkflowContext, TaskContext, WorkflowError> errorBuilder;
+    private final StringFilter typeFilter;
+    private final Optional<StringFilter> instanceFilter;
+    private final StringFilter titleFilter;
+    private final StringFilter detailFilter;
 
-  private static Error findError(WorkflowDefinition definition, String raiseErrorReference) {
-    Map<String, Error> errorsMap =
-        definition.workflow().getUse().getErrors().getAdditionalProperties();
-    Error error = errorsMap.get(raiseErrorReference);
-    if (error == null) {
-      throw new IllegalArgumentException("Error " + error + "is not defined in " + errorsMap);
+    protected RaiseExecutorBuilder(
+        WorkflowPosition position,
+        RaiseTask task,
+        Workflow workflow,
+        WorkflowApplication application,
+        ResourceLoader resourceLoader) {
+      super(position, task, workflow, application, resourceLoader);
+      RaiseTaskError raiseError = task.getRaise().getError();
+      Error error =
+          raiseError.getRaiseErrorDefinition() != null
+              ? raiseError.getRaiseErrorDefinition()
+              : findError(raiseError.getRaiseErrorReference());
+      this.typeFilter = getTypeFunction(application.expressionFactory(), error.getType());
+      this.instanceFilter =
+          getInstanceFunction(application.expressionFactory(), error.getInstance());
+      this.titleFilter =
+          WorkflowUtils.buildStringFilter(application.expressionFactory(), error.getTitle());
+      this.detailFilter =
+          WorkflowUtils.buildStringFilter(application.expressionFactory(), error.getDetail());
+      this.errorBuilder = (w, t) -> buildError(error, w, t);
     }
-    return error;
+
+    private WorkflowError buildError(
+        Error error, WorkflowContext context, TaskContext taskContext) {
+      return WorkflowError.error(typeFilter.apply(context, taskContext), error.getStatus())
+          .instance(
+              instanceFilter
+                  .map(f -> f.apply(context, taskContext))
+                  .orElseGet(() -> taskContext.position().jsonPointer()))
+          .title(titleFilter.apply(context, taskContext))
+          .details(detailFilter.apply(context, taskContext))
+          .build();
+    }
+
+    private Optional<StringFilter> getInstanceFunction(
+        ExpressionFactory expressionFactory, ErrorInstance errorInstance) {
+      return errorInstance != null
+          ? Optional.of(
+              WorkflowUtils.buildStringFilter(
+                  expressionFactory,
+                  errorInstance.getExpressionErrorInstance(),
+                  errorInstance.getLiteralErrorInstance()))
+          : Optional.empty();
+    }
+
+    private StringFilter getTypeFunction(ExpressionFactory expressionFactory, ErrorType type) {
+      return WorkflowUtils.buildStringFilter(
+          expressionFactory,
+          type.getExpressionErrorType(),
+          type.getLiteralErrorType().get().toString());
+    }
+
+    private Error findError(String raiseErrorReference) {
+      Map<String, Error> errorsMap = workflow.getUse().getErrors().getAdditionalProperties();
+      Error error = errorsMap.get(raiseErrorReference);
+      if (error == null) {
+        throw new IllegalArgumentException("Error " + error + "is not defined in " + errorsMap);
+      }
+      return error;
+    }
+
+    @Override
+    public TaskExecutor<RaiseTask> buildInstance() {
+      return new RaiseExecutor(this);
+    }
   }
 
-  private WorkflowError buildError(
-      Error error, WorkflowContext context, TaskContext<RaiseTask> taskContext) {
-    return WorkflowError.error(typeFilter.apply(context, taskContext), error.getStatus())
-        .instance(
-            instanceFilter
-                .map(f -> f.apply(context, taskContext))
-                .orElseGet(() -> taskContext.position().jsonPointer()))
-        .title(titleFilter.apply(context, taskContext))
-        .details(detailFilter.apply(context, taskContext))
-        .build();
-  }
-
-  private Optional<StringFilter> getInstanceFunction(
-      ExpressionFactory expressionFactory, ErrorInstance errorInstance) {
-    return errorInstance != null
-        ? Optional.of(
-            WorkflowUtils.buildStringFilter(
-                expressionFactory,
-                errorInstance.getExpressionErrorInstance(),
-                errorInstance.getLiteralErrorInstance()))
-        : Optional.empty();
-  }
-
-  private StringFilter getTypeFunction(ExpressionFactory expressionFactory, ErrorType type) {
-    return WorkflowUtils.buildStringFilter(
-        expressionFactory,
-        type.getExpressionErrorType(),
-        type.getLiteralErrorType().get().toString());
+  protected RaiseExecutor(RaiseExecutorBuilder builder) {
+    super(builder);
+    this.errorBuilder = builder.errorBuilder;
   }
 
   @Override
-  protected void internalExecute(WorkflowContext workflow, TaskContext<RaiseTask> taskContext) {
+  protected CompletableFuture<JsonNode> internalExecute(
+      WorkflowContext workflow, TaskContext taskContext) {
     throw new WorkflowException(errorBuilder.apply(workflow, taskContext));
   }
 }

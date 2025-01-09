@@ -41,7 +41,7 @@ public class JQExpression implements Expression {
   }
 
   @Override
-  public JsonNode eval(WorkflowContext workflow, TaskContext<?> task, JsonNode node) {
+  public JsonNode eval(WorkflowContext workflow, TaskContext task, JsonNode node) {
     JsonNodeOutput output = new JsonNodeOutput();
     try {
       internalExpr.apply(createScope(workflow, task), node, output);
@@ -75,17 +75,19 @@ public class JQExpression implements Expression {
     }
   }
 
-  private Scope createScope(WorkflowContext workflow, TaskContext<?> task) {
+  private Scope createScope(WorkflowContext workflow, TaskContext task) {
     Scope childScope = Scope.newChildScope(scope.get());
-    childScope.setValue("input", task.input());
-    childScope.setValue("output", task.output());
+    if (task != null) {
+      childScope.setValue("input", task.input());
+      childScope.setValue("output", task.output());
+      childScope.setValue("task", () -> JsonUtils.fromValue(TaskDescriptor.of(task)));
+      task.variables().forEach((k, v) -> childScope.setValue(k, JsonUtils.fromValue(v)));
+    }
     childScope.setValue("context", workflow.context());
     childScope.setValue(
         "runtime",
         () -> JsonUtils.fromValue(workflow.definition().runtimeDescriptorFactory().get()));
     childScope.setValue("workflow", () -> JsonUtils.fromValue(WorkflowDescriptor.of(workflow)));
-    childScope.setValue("task", () -> JsonUtils.fromValue(TaskDescriptor.of(task)));
-    task.variables().forEach((k, v) -> childScope.setValue(k, JsonUtils.fromValue(v)));
     return childScope;
   }
 }
