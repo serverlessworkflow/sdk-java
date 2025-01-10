@@ -73,7 +73,7 @@ public class WorkflowDefinition implements AutoCloseable {
         application, workflow, application.resourceLoaderFactory().getResourceLoader(path));
   }
 
-  public WorkflowInstance execute(Object input) {
+  public WorkflowInstance instance(Object input) {
     return new WorkflowInstance(this, JsonUtils.fromValue(input));
   }
 

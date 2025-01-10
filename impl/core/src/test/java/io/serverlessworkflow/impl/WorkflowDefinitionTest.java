@@ -22,7 +22,6 @@ import static org.assertj.core.api.Assertions.catchThrowableOfType;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.serverlessworkflow.impl.json.JsonUtils;
 import java.io.IOException;
 import java.time.Instant;
@@ -59,29 +58,25 @@ public class WorkflowDefinitionTest {
         args(
             "switch-then-string.yaml",
             Map.of("orderType", "electronic"),
-            o ->
-                assertThat(o.output().join())
-                    .isEqualTo(Map.of("validate", true, "status", "fulfilled"))),
+            o -> assertThat(o).isEqualTo(Map.of("validate", true, "status", "fulfilled"))),
         args(
             "switch-then-string.yaml",
             Map.of("orderType", "physical"),
             o ->
-                assertThat(o.output().join())
+                assertThat(o)
                     .isEqualTo(Map.of("inventory", "clear", "items", 1, "address", "Elmer St"))),
         args(
             "switch-then-string.yaml",
             Map.of("orderType", "unknown"),
-            o ->
-                assertThat(o.output().join())
-                    .isEqualTo(Map.of("log", "warn", "message", "something's wrong"))),
+            o -> assertThat(o).isEqualTo(Map.of("log", "warn", "message", "something's wrong"))),
         args(
             "for-sum.yaml",
             Map.of("input", Arrays.asList(1, 2, 3)),
-            o -> assertThat(o.output().join()).isEqualTo(6)),
+            o -> assertThat(o).isEqualTo(6)),
         args(
             "for-collect.yaml",
             Map.of("input", Arrays.asList(1, 2, 3)),
-            o -> assertThat(o.output().join()).isEqualTo(Map.of("output", Arrays.asList(2, 4, 6)))),
+            o -> assertThat(o).isEqualTo(Map.of("output", Arrays.asList(2, 4, 6)))),
         args(
             "simple-expression.yaml",
             Map.of("input", Arrays.asList(1, 2, 3)),
@@ -97,16 +92,25 @@ public class WorkflowDefinitionTest {
         args(
             "fork.yaml",
             Map.of(),
-            o ->
-                assertThat(((ObjectNode) o.outputAsJsonNode().join()).get("patientId").asText())
-                    .isIn("John", "Smith")),
-        args("fork-no-compete.yaml", Map.of(), WorkflowDefinitionTest::checkNotCompeteOuput));
+            o -> assertThat(((Map<String, Object>) o).get("patientId")).isIn("John", "Smith")),
+        argsJson("fork-no-compete.yaml", Map.of(), WorkflowDefinitionTest::checkNotCompeteOuput));
   }
 
   private static Arguments args(
-      String fileName, Map<String, Object> input, Consumer<WorkflowInstance> instance) {
+      String fileName, Map<String, Object> input, Consumer<Object> instance) {
     return Arguments.of(
-        fileName, (Consumer<WorkflowDefinition>) d -> instance.accept(d.execute(input)));
+        fileName,
+        (Consumer<WorkflowDefinition>)
+            d ->
+                instance.accept(
+                    d.instance(input).start().thenApply(JsonUtils::toJavaValue).join()));
+  }
+
+  private static Arguments argsJson(
+      String fileName, Map<String, Object> input, Consumer<JsonNode> instance) {
+    return Arguments.of(
+        fileName,
+        (Consumer<WorkflowDefinition>) d -> instance.accept(d.instance(input).start().join()));
   }
 
   private static <T extends Throwable> Arguments args(
@@ -117,8 +121,7 @@ public class WorkflowDefinitionTest {
             d ->
                 checkWorkflowException(
                     catchThrowableOfType(
-                        CompletionException.class,
-                        () -> d.execute(Map.of()).outputAsJsonNode().join()),
+                        CompletionException.class, () -> d.instance(Map.of()).start().join()),
                     consumer,
                     clazz));
   }
@@ -129,8 +132,7 @@ public class WorkflowDefinitionTest {
     consumer.accept(clazz.cast(ex.getCause()));
   }
 
-  private static void checkNotCompeteOuput(WorkflowInstance instance) {
-    JsonNode out = instance.outputAsJsonNode().join();
+  private static void checkNotCompeteOuput(JsonNode out) {
     assertThat(out).isInstanceOf(ArrayNode.class);
     assertThat(out).hasSize(2);
     ArrayNode array = (ArrayNode) out;
@@ -156,8 +158,8 @@ public class WorkflowDefinitionTest {
     assertThat(ex.getWorflowError().instance()).isEqualTo("do/0/notImplemented");
   }
 
-  private static void checkSpecialKeywords(WorkflowInstance obj) {
-    Map<String, Object> result = (Map<String, Object>) obj.output().join();
+  private static void checkSpecialKeywords(Object obj) {
+    Map<String, Object> result = (Map<String, Object>) obj;
     assertThat(Instant.ofEpochMilli((long) result.get("startedAt")))
         .isAfterOrEqualTo(before)
         .isBeforeOrEqualTo(Instant.now());
