@@ -19,6 +19,7 @@ import static io.serverlessworkflow.api.WorkflowReader.readWorkflowFromClasspath
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowableOfType;
 
+import io.serverlessworkflow.impl.json.JsonUtils;
 import java.io.IOException;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -44,8 +45,9 @@ public class HTTPWorkflowDefinitionTest {
       throws IOException {
     assertThat(
             appl.workflowDefinition(readWorkflowFromClasspath(fileName))
-                .execute(input)
-                .output()
+                .instance(input)
+                .start()
+                .thenApply(JsonUtils::toJavaValue)
                 .join())
         .is(condition);
   }
@@ -60,7 +62,7 @@ public class HTTPWorkflowDefinitionTest {
     IllegalArgumentException exception =
         catchThrowableOfType(
             IllegalArgumentException.class,
-            () -> appl.workflowDefinition(readWorkflowFromClasspath(fileName)).execute(Map.of()));
+            () -> appl.workflowDefinition(readWorkflowFromClasspath(fileName)).instance(Map.of()));
     assertThat(exception)
         .isNotNull()
         .hasMessageContaining("There are JsonSchema validation errors");

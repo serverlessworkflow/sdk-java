@@ -28,17 +28,25 @@ public class WorkflowInstance {
   private final String id;
   private final JsonNode input;
 
-  private final Instant startedAt;
+  private WorkflowContext workflowContext;
+  private WorkflowDefinition definition;
+  private Instant startedAt;
+  private Instant completedAt;
+  private volatile JsonNode output;
   private CompletableFuture<JsonNode> completableFuture;
-  private final WorkflowContext workflowContext;
 
   WorkflowInstance(WorkflowDefinition definition, JsonNode input) {
     this.id = definition.idFactory().get();
     this.input = input;
+    this.definition = definition;
+    this.status = new AtomicReference<>(WorkflowStatus.PENDING);
     definition.inputSchemaValidator().ifPresent(v -> v.validate(input));
+  }
+
+  public CompletableFuture<JsonNode> start() {
     this.startedAt = Instant.now();
     this.workflowContext = new WorkflowContext(definition, this);
-    this.status = new AtomicReference<>(WorkflowStatus.RUNNING);
+    this.status.set(WorkflowStatus.RUNNING);
     this.completableFuture =
         TaskExecutorHelper.processTaskList(
                 definition.startTask(),
@@ -49,18 +57,20 @@ public class WorkflowInstance {
                     .map(f -> f.apply(workflowContext, null, input))
                     .orElse(input))
             .thenApply(this::whenCompleted);
+    return completableFuture;
   }
 
   private JsonNode whenCompleted(JsonNode node) {
-    JsonNode model =
+    output =
         workflowContext
             .definition()
             .outputFilter()
             .map(f -> f.apply(workflowContext, null, node))
             .orElse(node);
-    workflowContext.definition().outputSchemaValidator().ifPresent(v -> v.validate(model));
+    workflowContext.definition().outputSchemaValidator().ifPresent(v -> v.validate(output));
     status.compareAndSet(WorkflowStatus.RUNNING, WorkflowStatus.COMPLETED);
-    return model;
+    completedAt = Instant.now();
+    return output;
   }
 
   public String id() {
@@ -69,6 +79,10 @@ public class WorkflowInstance {
 
   public Instant startedAt() {
     return startedAt;
+  }
+
+  public Instant completedAt() {
+    return completedAt;
   }
 
   public JsonNode input() {
@@ -83,11 +97,11 @@ public class WorkflowInstance {
     this.status.set(state);
   }
 
-  public CompletableFuture<Object> output() {
-    return outputAsJsonNode().thenApply(JsonUtils::toJavaValue);
+  public Object output() {
+    return JsonUtils.toJavaValue(outputAsJsonNode());
   }
 
-  public CompletableFuture<JsonNode> outputAsJsonNode() {
-    return completableFuture.thenApply(this::whenCompleted);
+  public JsonNode outputAsJsonNode() {
+    return output;
   }
 }
