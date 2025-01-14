@@ -13,7 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl;
+package io.serverlessworkflow.impl.events;
 
-@FunctionalInterface
-public interface StringFilter extends ExpressionHolder<String> {}
+import io.cloudevents.CloudEvent;
+import io.serverlessworkflow.impl.TaskContext;
+import io.serverlessworkflow.impl.WorkflowContext;
+
+public interface CloudEventPredicate {
+  boolean test(CloudEvent event, WorkflowContext workflow, TaskContext task);
+}

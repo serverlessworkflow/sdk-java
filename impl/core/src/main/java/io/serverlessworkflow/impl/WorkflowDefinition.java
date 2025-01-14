@@ -101,16 +101,16 @@ public class WorkflowDefinition implements AutoCloseable {
     return outputFilter;
   }
 
-  public WorkflowIdFactory idFactory() {
-    return application.idFactory();
-  }
-
   public Optional<SchemaValidator> outputSchemaValidator() {
     return outputSchemaValidator;
   }
 
   public RuntimeDescriptorFactory runtimeDescriptorFactory() {
     return application.runtimeDescriptorFactory();
+  }
+
+  public WorkflowApplication application() {
+    return application;
   }
 
   @Override

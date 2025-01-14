@@ -18,6 +18,9 @@ package io.serverlessworkflow.impl;
 import com.github.f4b6a3.ulid.UlidCreator;
 import io.serverlessworkflow.api.types.Document;
 import io.serverlessworkflow.api.types.Workflow;
+import io.serverlessworkflow.impl.events.EventConsumer;
+import io.serverlessworkflow.impl.events.EventPublisher;
+import io.serverlessworkflow.impl.events.InMemoryEvents;
 import io.serverlessworkflow.impl.executors.DefaultTaskExecutorFactory;
 import io.serverlessworkflow.impl.executors.TaskExecutorFactory;
 import io.serverlessworkflow.impl.expressions.ExpressionFactory;
@@ -47,29 +50,24 @@ public class WorkflowApplication implements AutoCloseable {
   private final WorkflowPositionFactory positionFactory;
   private final ExecutorServiceFactory executorFactory;
   private final RuntimeDescriptorFactory runtimeDescriptorFactory;
+  private final EventConsumer<?, ?> eventConsumer;
+  private final EventPublisher eventPublisher;
 
   private ExecutorService executorService;
 
-  public WorkflowApplication(
-      TaskExecutorFactory taskFactory,
-      ExpressionFactory exprFactory,
-      ResourceLoaderFactory resourceLoaderFactory,
-      SchemaValidatorFactory schemaValidatorFactory,
-      WorkflowPositionFactory positionFactory,
-      WorkflowIdFactory idFactory,
-      RuntimeDescriptorFactory runtimeDescriptorFactory,
-      ExecutorServiceFactory executorFactory,
-      Collection<WorkflowExecutionListener> listeners) {
-    this.taskFactory = taskFactory;
-    this.exprFactory = exprFactory;
-    this.resourceLoaderFactory = resourceLoaderFactory;
-    this.schemaValidatorFactory = schemaValidatorFactory;
-    this.positionFactory = positionFactory;
-    this.idFactory = idFactory;
-    this.runtimeDescriptorFactory = runtimeDescriptorFactory;
-    this.executorFactory = executorFactory;
-    this.listeners = listeners;
+  private WorkflowApplication(Builder builder) {
+    this.taskFactory = builder.taskFactory;
+    this.exprFactory = builder.exprFactory;
+    this.resourceLoaderFactory = builder.resourceLoaderFactory;
+    this.schemaValidatorFactory = builder.schemaValidatorFactory;
+    this.positionFactory = builder.positionFactory;
+    this.idFactory = builder.idFactory;
+    this.runtimeDescriptorFactory = builder.descriptorFactory;
+    this.executorFactory = builder.executorFactory;
+    this.listeners = builder.listeners != null ? builder.listeners : Collections.emptySet();
     this.definitions = new ConcurrentHashMap<>();
+    this.eventConsumer = builder.eventConsumer;
+    this.eventPublisher = builder.eventPublisher;
   }
 
   public TaskExecutorFactory taskFactory() {
@@ -96,6 +94,10 @@ public class WorkflowApplication implements AutoCloseable {
     return listeners;
   }
 
+  public EventPublisher eventPublisher() {
+    return eventPublisher;
+  }
+
   public WorkflowIdFactory idFactory() {
     return idFactory;
   }
@@ -109,6 +111,8 @@ public class WorkflowApplication implements AutoCloseable {
     private WorkflowPositionFactory positionFactory = () -> new QueueWorkflowPosition();
     private WorkflowIdFactory idFactory = () -> UlidCreator.getMonotonicUlid().toString();
     private ExecutorServiceFactory executorFactory = () -> Executors.newCachedThreadPool();
+    private EventConsumer<?, ?> eventConsumer = InMemoryEvents.get();
+    private EventPublisher eventPublisher = InMemoryEvents.get();
     private RuntimeDescriptorFactory descriptorFactory =
         () -> new RuntimeDescriptor("reference impl", "1.0.0_alpha", Collections.emptyMap());
 
@@ -162,19 +166,18 @@ public class WorkflowApplication implements AutoCloseable {
       return this;
     }
 
+    public Builder withEventConsumer(EventConsumer<?, ?> eventConsumer) {
+      this.eventConsumer = eventConsumer;
+      return this;
+    }
+
+    public Builder withEventPublisher(EventPublisher eventPublisher) {
+      this.eventPublisher = eventPublisher;
+      return this;
+    }
+
     public WorkflowApplication build() {
-      return new WorkflowApplication(
-          taskFactory,
-          exprFactory,
-          resourceLoaderFactory,
-          schemaValidatorFactory,
-          positionFactory,
-          idFactory,
-          descriptorFactory,
-          executorFactory,
-          listeners == null
-              ? Collections.emptySet()
-              : Collections.unmodifiableCollection(listeners));
+      return new WorkflowApplication(this);
     }
   }
 
@@ -203,6 +206,11 @@ public class WorkflowApplication implements AutoCloseable {
 
   public RuntimeDescriptorFactory runtimeDescriptorFactory() {
     return runtimeDescriptorFactory;
+  }
+
+  @SuppressWarnings("rawtypes")
+  public EventConsumer eventConsumer() {
+    return eventConsumer;
   }
 
   public ExecutorService executorService() {

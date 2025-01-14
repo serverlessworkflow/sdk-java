@@ -60,6 +60,7 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
   }
 
   private static final String REF = "$ref";
+  private static final String TITLE = "title";
   private static final String PATTERN = "pattern";
 
   private enum Format {
@@ -154,6 +155,16 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
         && allOfTypes.isEmpty()
         && refType.isPresent()) {
       javaType = refType.get();
+    } else if (!schemaNode.has("properties")
+        && oneOfTypes.isEmpty()
+        && allOfTypes.size() == 1
+        && refType.isEmpty()) {
+      javaType = allOfTypes.get(0).getType();
+    } else if (!schemaNode.has("properties")
+        && oneOfTypes.size() == 1
+        && allOfTypes.isEmpty()
+        && refType.isEmpty()) {
+      javaType = oneOfTypes.get(0).getType();
     } else {
       JPackage container = generatableType.getPackage();
       javaType = ruleFactory.getTypeRule().apply(nodeName, schemaNode, parent, container, schema);
@@ -469,6 +480,9 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
       Collection<JTypeWrapper> types) {
     if (schemaNode.has(prefix)) {
       ArrayNode array = (ArrayNode) schemaNode.get(prefix);
+      if (schemaNode.has(TITLE)) {
+        nodeName = schemaNode.get(TITLE).asText();
+      }
       int i = 0;
       for (JsonNode oneOf : array) {
         if (!ignoreNode(oneOf)) {
@@ -491,6 +505,23 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
   }
 
   private static boolean ignoreNode(JsonNode node) {
+    return allRequired(node) || allRemoveProperties(node);
+  }
+
+  private static boolean allRemoveProperties(JsonNode node) {
+    if (node.size() == 1 && node.has("properties")) {
+      JsonNode propsNode = node.get("properties");
+      for (JsonNode propNode : propsNode) {
+        if (!propNode.isBoolean() || propNode.asBoolean()) {
+          return false;
+        }
+      }
+      return true;
+    }
+    return false;
+  }
+
+  private static boolean allRequired(JsonNode node) {
     return node.size() == 1 && node.has("required");
   }
 
@@ -514,7 +545,7 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
           schema.isGenerated()
               ? schema.getJavaType()
               : apply(
-                  nameFromRef(ref, nodeName),
+                  nameFromRef(ref, nodeName, schemaNode),
                   schema.getContent(),
                   parent,
                   generatableType,
@@ -556,7 +587,10 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
     return format != null ? format.pattern() : getFromNode(node, PATTERN);
   }
 
-  private String nameFromRef(String ref, String nodeName) {
+  private String nameFromRef(String ref, String nodeName, JsonNode schemaNode) {
+    if (schemaNode.has(TITLE)) {
+      return schemaNode.get(TITLE).asText();
+    }
     if ("#".equals(ref)) {
       return nodeName;
     }

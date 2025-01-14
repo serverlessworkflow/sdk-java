@@ -24,6 +24,7 @@ import io.serverlessworkflow.api.types.OutputAs;
 import io.serverlessworkflow.api.types.SchemaExternal;
 import io.serverlessworkflow.api.types.SchemaInline;
 import io.serverlessworkflow.api.types.SchemaUnion;
+import io.serverlessworkflow.api.types.UriTemplate;
 import io.serverlessworkflow.impl.expressions.Expression;
 import io.serverlessworkflow.impl.expressions.ExpressionFactory;
 import io.serverlessworkflow.impl.expressions.ExpressionUtils;
@@ -35,8 +36,10 @@ import io.serverlessworkflow.impl.resources.StaticResource;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.net.URI;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 
 public class WorkflowUtils {
 
@@ -81,6 +84,25 @@ public class WorkflowUtils {
         : Optional.empty();
   }
 
+  public static <T> ExpressionHolder<T> buildExpressionHolder(
+      ExpressionFactory exprFactory,
+      String expression,
+      T literal,
+      Function<JsonNode, T> converter) {
+    return expression != null
+        ? buildExpressionHolder(buildWorkflowFilter(exprFactory, expression), converter)
+        : buildExpressionHolder(literal);
+  }
+
+  private static <T> ExpressionHolder<T> buildExpressionHolder(
+      WorkflowFilter filter, Function<JsonNode, T> converter) {
+    return (w, t) -> converter.apply(filter.apply(w, t, t.input()));
+  }
+
+  private static <T> ExpressionHolder<T> buildExpressionHolder(T literal) {
+    return (w, t) -> literal;
+  }
+
   public static Optional<WorkflowFilter> buildWorkflowFilter(
       ExpressionFactory exprFactory, ExportAs as) {
     return as != null
@@ -109,7 +131,7 @@ public class WorkflowUtils {
     return (w, t) -> literal;
   }
 
-  private static WorkflowFilter buildWorkflowFilter(
+  public static WorkflowFilter buildWorkflowFilter(
       ExpressionFactory exprFactory, String str, Object object) {
     if (str != null) {
       return buildWorkflowFilter(exprFactory, str);
@@ -147,5 +169,10 @@ public class WorkflowUtils {
 
   public static Optional<WorkflowFilter> optionalFilter(ExpressionFactory exprFactory, String str) {
     return str != null ? Optional.of(buildWorkflowFilter(exprFactory, str)) : Optional.empty();
+  }
+
+  public static String toString(UriTemplate template) {
+    URI uri = template.getLiteralUri();
+    return uri != null ? uri.toString() : template.getLiteralUriTemplate();
   }
 }

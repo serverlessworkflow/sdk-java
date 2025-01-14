@@ -13,7 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl;
+package io.serverlessworkflow.impl.events;
 
-@FunctionalInterface
-public interface StringFilter extends ExpressionHolder<String> {}
+import io.cloudevents.CloudEvent;
+import io.serverlessworkflow.api.types.EventFilter;
+import io.serverlessworkflow.impl.TaskContext;
+import io.serverlessworkflow.impl.WorkflowApplication;
+import io.serverlessworkflow.impl.WorkflowContext;
+import java.util.function.Consumer;
+
+public interface EventConsumer<T extends EventRegistration, V extends EventRegistrationBuilder> {
+
+  V build(EventFilter filter, WorkflowApplication workflowApplication);
+
+  T register(V builder, Consumer<CloudEvent> consumer, WorkflowContext context, TaskContext task);
+
+  void unregister(T register);
+}
