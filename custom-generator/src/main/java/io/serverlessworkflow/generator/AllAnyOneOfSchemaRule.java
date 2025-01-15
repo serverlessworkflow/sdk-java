@@ -468,23 +468,30 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
       Schema parentSchema,
       Collection<JTypeWrapper> types) {
     if (schemaNode.has(prefix)) {
+      ArrayNode array = (ArrayNode) schemaNode.get(prefix);
       int i = 0;
-      for (JsonNode oneOf : (ArrayNode) schemaNode.get(prefix)) {
-        String ref = parentSchema.getId().toString() + '/' + prefix + '/' + i++;
-        Schema schema =
-            ruleFactory
-                .getSchemaStore()
-                .create(
-                    URI.create(ref),
-                    ruleFactory.getGenerationConfig().getRefFragmentPathDelimiters());
-        types.add(
-            new JTypeWrapper(
-                schema.isGenerated()
-                    ? schema.getJavaType()
-                    : apply(nodeName, oneOf, parent, generatableType.getPackage(), schema),
-                oneOf));
+      for (JsonNode oneOf : array) {
+        if (!ignoreNode(oneOf)) {
+          String ref = parentSchema.getId().toString() + '/' + prefix + '/' + i++;
+          Schema schema =
+              ruleFactory
+                  .getSchemaStore()
+                  .create(
+                      URI.create(ref),
+                      ruleFactory.getGenerationConfig().getRefFragmentPathDelimiters());
+          types.add(
+              new JTypeWrapper(
+                  schema.isGenerated()
+                      ? schema.getJavaType()
+                      : apply(nodeName, oneOf, parent, generatableType.getPackage(), schema),
+                  oneOf));
+        }
       }
     }
+  }
+
+  private static boolean ignoreNode(JsonNode node) {
+    return node.size() == 1 && node.has("required");
   }
 
   private Optional<JType> refType(
