@@ -19,10 +19,11 @@ import io.cloudevents.CloudEvent;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 /*
- * Straighforward implementation of in memory event broker.
+ * Straightforward implementation of in memory event broker.
  * User might invoke notifyCE to simulate event reception.
  */
 public class InMemoryEvents extends AbstractTypeConsumer implements EventPublisher {
@@ -36,6 +37,8 @@ public class InMemoryEvents extends AbstractTypeConsumer implements EventPublish
   }
 
   private Map<String, Consumer<CloudEvent>> topicMap = new ConcurrentHashMap<>();
+
+  private AtomicReference<Consumer<CloudEvent>> allConsumerRef = new AtomicReference<>();
 
   @Override
   protected void register(String topicName, Consumer<CloudEvent> consumer) {
@@ -51,10 +54,24 @@ public class InMemoryEvents extends AbstractTypeConsumer implements EventPublish
   public CompletableFuture<Void> publish(CloudEvent ce) {
     return CompletableFuture.runAsync(
         () -> {
+          Consumer<CloudEvent> allConsumer = allConsumerRef.get();
+          if (allConsumer != null) {
+            allConsumer.accept(ce);
+          }
           Consumer<CloudEvent> consumer = topicMap.get(ce.getType());
           if (consumer != null) {
             consumer.accept(ce);
           }
         });
+  }
+
+  @Override
+  protected void registerToAll(Consumer<CloudEvent> consumer) {
+    allConsumerRef.set(consumer);
+  }
+
+  @Override
+  protected void unregisterFromAll() {
+    allConsumerRef.set(null);
   }
 }

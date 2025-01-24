@@ -83,13 +83,15 @@ public class JQExpression implements Expression {
       childScope.setValue("task", () -> JsonUtils.fromValue(TaskDescriptor.of(task)));
       task.variables().forEach((k, v) -> childScope.setValue(k, JsonUtils.fromValue(v)));
     }
-    childScope.setValue("context", workflow.context());
-    childScope.setValue(
-        "runtime",
-        () ->
-            JsonUtils.fromValue(
-                workflow.definition().application().runtimeDescriptorFactory().get()));
-    childScope.setValue("workflow", () -> JsonUtils.fromValue(WorkflowDescriptor.of(workflow)));
+    if (workflow != null) {
+      childScope.setValue("context", workflow.context());
+      childScope.setValue(
+          "runtime",
+          () ->
+              JsonUtils.fromValue(
+                  workflow.definition().application().runtimeDescriptorFactory().get()));
+      childScope.setValue("workflow", () -> JsonUtils.fromValue(WorkflowDescriptor.of(workflow)));
+    }
     return childScope;
   }
 }

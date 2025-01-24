@@ -24,6 +24,9 @@ import io.cloudevents.jackson.JsonCloudEventData;
 import io.serverlessworkflow.impl.json.JsonUtils;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -54,6 +57,10 @@ public class CloudEventUtils {
         .getExtensionNames()
         .forEach(n -> result.set(n, JsonUtils.fromValue(event.getExtension(n))));
     return result;
+  }
+
+  public static OffsetDateTime toOffset(Date date) {
+    return date.toInstant().atOffset(ZoneOffset.UTC);
   }
 
   public static CloudEventBuilder addExtension(

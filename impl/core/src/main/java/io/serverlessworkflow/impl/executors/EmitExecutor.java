@@ -20,24 +20,38 @@ import io.cloudevents.CloudEvent;
 import io.cloudevents.core.builder.CloudEventBuilder;
 import io.cloudevents.jackson.JsonCloudEventData;
 import io.serverlessworkflow.api.types.EmitTask;
+import io.serverlessworkflow.api.types.EventData;
+import io.serverlessworkflow.api.types.EventDataschema;
+import io.serverlessworkflow.api.types.EventProperties;
+import io.serverlessworkflow.api.types.EventSource;
+import io.serverlessworkflow.api.types.EventTime;
 import io.serverlessworkflow.api.types.Workflow;
+import io.serverlessworkflow.impl.ExpressionHolder;
+import io.serverlessworkflow.impl.StringFilter;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.WorkflowFilter;
 import io.serverlessworkflow.impl.WorkflowPosition;
+import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.events.CloudEventUtils;
-import io.serverlessworkflow.impl.events.EventPropertiesFilter;
+import io.serverlessworkflow.impl.expressions.ExpressionFactory;
+import io.serverlessworkflow.impl.json.JsonUtils;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
 import java.net.URI;
+import java.time.OffsetDateTime;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 public class EmitExecutor extends RegularTaskExecutor<EmitTask> {
 
-  private final EventPropertiesFilter props;
+  private final EventPropertiesBuilder props;
 
   public static class EmitExecutorBuilder extends RegularTaskExecutorBuilder<EmitTask> {
 
-    private EventPropertiesFilter eventBuilder;
+    private EventPropertiesBuilder eventBuilder;
 
     protected EmitExecutorBuilder(
         WorkflowPosition position,
@@ -47,7 +61,7 @@ public class EmitExecutor extends RegularTaskExecutor<EmitTask> {
         ResourceLoader resourceLoader) {
       super(position, task, workflow, application, resourceLoader);
       this.eventBuilder =
-          EventPropertiesFilter.build(
+          EventPropertiesBuilder.build(
               task.getEmit().getEvent().getWith(), application.expressionFactory());
     }
 
@@ -75,22 +89,27 @@ public class EmitExecutor extends RegularTaskExecutor<EmitTask> {
 
   private CloudEvent buildCloudEvent(WorkflowContext workflow, TaskContext taskContext) {
     io.cloudevents.core.v1.CloudEventBuilder ceBuilder = CloudEventBuilder.v1();
-    props
-        .idFilter()
-        .map(filter -> filter.apply(workflow, taskContext))
-        .ifPresent(value -> ceBuilder.withId(value));
+    ceBuilder.withId(
+        props
+            .idFilter()
+            .map(filter -> filter.apply(workflow, taskContext))
+            .orElse(UUID.randomUUID().toString()));
+    ceBuilder.withSource(
+        props
+            .sourceFilter()
+            .map(filter -> filter.apply(workflow, taskContext))
+            .map(URI::create)
+            .orElse(URI.create("reference-impl")));
+    ceBuilder.withType(
+        props
+            .typeFilter()
+            .map(filter -> filter.apply(workflow, taskContext))
+            .orElseThrow(
+                () -> new IllegalArgumentException("Type is required for emitting events")));
     props
         .timeFilter()
         .map(filter -> filter.apply(workflow, taskContext))
         .ifPresent(value -> ceBuilder.withTime(value));
-    props
-        .sourceFilter()
-        .map(filter -> filter.apply(workflow, taskContext))
-        .ifPresent(value -> ceBuilder.withSource(URI.create(value)));
-    props
-        .typeFilter()
-        .map(filter -> filter.apply(workflow, taskContext))
-        .ifPresent(value -> ceBuilder.withType(value));
     props
         .subjectFilter()
         .map(filter -> filter.apply(workflow, taskContext))
@@ -108,7 +127,7 @@ public class EmitExecutor extends RegularTaskExecutor<EmitTask> {
         .map(filter -> filter.apply(workflow, taskContext, taskContext.input()))
         .ifPresent(value -> ceBuilder.withData(JsonCloudEventData.wrap(value)));
     props
-        .dataFilter()
+        .additionalFilter()
         .map(filter -> filter.apply(workflow, taskContext, taskContext.input()))
         .ifPresent(
             value ->
@@ -117,5 +136,82 @@ public class EmitExecutor extends RegularTaskExecutor<EmitTask> {
                     .forEachRemaining(
                         e -> CloudEventUtils.addExtension(ceBuilder, e.getKey(), e.getValue())));
     return ceBuilder.build();
+  }
+
+  private static record EventPropertiesBuilder(
+      Optional<StringFilter> idFilter,
+      Optional<StringFilter> sourceFilter,
+      Optional<StringFilter> subjectFilter,
+      Optional<StringFilter> contentTypeFilter,
+      Optional<StringFilter> typeFilter,
+      Optional<StringFilter> dataSchemaFilter,
+      Optional<ExpressionHolder<OffsetDateTime>> timeFilter,
+      Optional<WorkflowFilter> dataFilter,
+      Optional<WorkflowFilter> additionalFilter) {
+
+    public static EventPropertiesBuilder build(
+        EventProperties properties, ExpressionFactory exprFactory) {
+      Optional<StringFilter> idFilter = buildFilter(exprFactory, properties.getId());
+      EventSource source = properties.getSource();
+      Optional<StringFilter> sourceFilter =
+          source == null
+              ? Optional.empty()
+              : Optional.of(
+                  WorkflowUtils.buildStringFilter(
+                      exprFactory,
+                      source.getRuntimeExpression(),
+                      WorkflowUtils.toString(source.getUriTemplate())));
+      Optional<StringFilter> subjectFilter = buildFilter(exprFactory, properties.getSubject());
+      Optional<StringFilter> contentTypeFilter =
+          buildFilter(exprFactory, properties.getDatacontenttype());
+      Optional<StringFilter> typeFilter = buildFilter(exprFactory, properties.getType());
+      EventDataschema dataSchema = properties.getDataschema();
+      Optional<StringFilter> dataSchemaFilter =
+          dataSchema == null
+              ? Optional.empty()
+              : Optional.of(
+                  WorkflowUtils.buildStringFilter(
+                      exprFactory,
+                      dataSchema.getExpressionDataSchema(),
+                      WorkflowUtils.toString(dataSchema.getLiteralDataSchema())));
+      EventTime time = properties.getTime();
+      Optional<ExpressionHolder<OffsetDateTime>> timeFilter =
+          time == null
+              ? Optional.empty()
+              : Optional.of(
+                  WorkflowUtils.buildExpressionHolder(
+                      exprFactory,
+                      time.getRuntimeExpression(),
+                      CloudEventUtils.toOffset(time.getLiteralTime()),
+                      JsonUtils::toOffsetDateTime));
+      EventData data = properties.getData();
+      Optional<WorkflowFilter> dataFilter =
+          properties.getData() == null
+              ? Optional.empty()
+              : Optional.of(
+                  WorkflowUtils.buildWorkflowFilter(
+                      exprFactory, data.getRuntimeExpression(), data.getObject()));
+      Map<String, Object> ceAttrs = properties.getAdditionalProperties();
+      Optional<WorkflowFilter> additionalFilter =
+          ceAttrs == null || ceAttrs.isEmpty()
+              ? Optional.empty()
+              : Optional.of(WorkflowUtils.buildWorkflowFilter(exprFactory, null, ceAttrs));
+      return new EventPropertiesBuilder(
+          idFilter,
+          sourceFilter,
+          subjectFilter,
+          contentTypeFilter,
+          typeFilter,
+          dataSchemaFilter,
+          timeFilter,
+          dataFilter,
+          additionalFilter);
+    }
+
+    private static Optional<StringFilter> buildFilter(ExpressionFactory exprFactory, String str) {
+      return str == null
+          ? Optional.empty()
+          : Optional.of(WorkflowUtils.buildStringFilter(exprFactory, str));
+    }
   }
 }

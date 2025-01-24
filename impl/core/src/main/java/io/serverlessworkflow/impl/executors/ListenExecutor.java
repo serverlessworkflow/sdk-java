@@ -73,7 +73,8 @@ public abstract class ListenExecutor extends RegularTaskExecutor<ListenTask> {
         registrations = from(to.getAllEventConsumptionStrategy().getAll());
       } else if (to.getAnyEventConsumptionStrategy() != null) {
         isAnd = false;
-        registrations = from(to.getAnyEventConsumptionStrategy().getAny());
+        List<EventFilter> eventFilters = to.getAnyEventConsumptionStrategy().getAny();
+        registrations = eventFilters.isEmpty() ? registerToAll() : from(eventFilters);
       } else if (to.getOneEventConsumptionStrategy() != null) {
         isAnd = false;
         registrations = List.of(from(to.getOneEventConsumptionStrategy().getOne()));
@@ -97,6 +98,10 @@ public abstract class ListenExecutor extends RegularTaskExecutor<ListenTask> {
       }
     }
 
+    private Collection<EventRegistrationBuilder> registerToAll() {
+      return application.eventConsumer().listenToAll(application);
+    }
+
     private JsonNode defaultCEConverter(CloudEvent ce) {
       return CloudEventUtils.toJsonNode(ce.getData());
     }
@@ -106,7 +111,7 @@ public abstract class ListenExecutor extends RegularTaskExecutor<ListenTask> {
     }
 
     private EventRegistrationBuilder from(EventFilter filter) {
-      return application.eventConsumer().build(filter, application);
+      return application.eventConsumer().listen(filter, application);
     }
 
     @Override
@@ -127,6 +132,7 @@ public abstract class ListenExecutor extends RegularTaskExecutor<ListenTask> {
         WorkflowContext workflow,
         TaskContext taskContext,
         CompletableFuture<JsonNode> future) {
+      arrayNode.add(node);
       future.complete(node);
     }
 
@@ -153,6 +159,7 @@ public abstract class ListenExecutor extends RegularTaskExecutor<ListenTask> {
         WorkflowContext workflow,
         TaskContext taskContext,
         CompletableFuture<JsonNode> future) {
+      arrayNode.add(node);
       if (until.isEmpty()
           || until.filter(u -> u.apply(workflow, taskContext, arrayNode).asBoolean()).isPresent()) {
         future.complete(arrayNode);
@@ -175,7 +182,6 @@ public abstract class ListenExecutor extends RegularTaskExecutor<ListenTask> {
       WorkflowContext workflow,
       TaskContext taskContext,
       CompletableFuture<JsonNode> future) {
-    arrayNode.add(arrayNode);
     loop.ifPresentOrElse(
         t -> {
           SubscriptionIterator forEach = task.getForeach();
@@ -184,7 +190,7 @@ public abstract class ListenExecutor extends RegularTaskExecutor<ListenTask> {
             taskContext.variables().put(item, node);
           }
           String at = forEach.getAt();
-          if (item != null) {
+          if (at != null) {
             taskContext.variables().put(at, arrayNode.size());
           }
           TaskExecutorHelper.processTaskList(t, workflow, Optional.of(taskContext), node)
@@ -209,9 +215,7 @@ public abstract class ListenExecutor extends RegularTaskExecutor<ListenTask> {
                 regBuilder,
                 (Consumer<CloudEvent>)
                     (ce ->
-                        processCe(converter.apply(ce), arrayNode, workflow, taskContext, future)),
-                workflow,
-                taskContext));
+                        processCe(converter.apply(ce), arrayNode, workflow, taskContext, future))));
     return future;
   }
 

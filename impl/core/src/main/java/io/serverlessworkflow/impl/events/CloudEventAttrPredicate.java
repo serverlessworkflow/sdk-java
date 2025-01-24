@@ -15,19 +15,7 @@
  */
 package io.serverlessworkflow.impl.events;
 
-import io.cloudevents.CloudEvent;
-import io.serverlessworkflow.api.types.EventFilter;
-import io.serverlessworkflow.impl.WorkflowApplication;
-import java.util.Collection;
-import java.util.function.Consumer;
-
-public interface EventConsumer<T extends EventRegistration, V extends EventRegistrationBuilder> {
-
-  V listen(EventFilter filter, WorkflowApplication workflowApplication);
-
-  Collection<V> listenToAll(WorkflowApplication workflowApplication);
-
-  T register(V builder, Consumer<CloudEvent> consumer);
-
-  void unregister(T register);
+@FunctionalInterface
+public interface CloudEventAttrPredicate<T> {
+  boolean test(T value);
 }

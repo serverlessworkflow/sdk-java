@@ -17,52 +17,138 @@ package io.serverlessworkflow.impl.events;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import io.cloudevents.CloudEvent;
+import io.serverlessworkflow.api.types.EventData;
+import io.serverlessworkflow.api.types.EventDataschema;
 import io.serverlessworkflow.api.types.EventProperties;
-import io.serverlessworkflow.impl.ExpressionHolder;
-import io.serverlessworkflow.impl.TaskContext;
-import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.api.types.EventSource;
+import io.serverlessworkflow.api.types.EventTime;
+import io.serverlessworkflow.api.types.UriTemplate;
 import io.serverlessworkflow.impl.WorkflowFilter;
+import io.serverlessworkflow.impl.WorkflowUtils;
+import io.serverlessworkflow.impl.expressions.Expression;
 import io.serverlessworkflow.impl.expressions.ExpressionFactory;
 import io.serverlessworkflow.impl.json.JsonUtils;
-import java.util.Optional;
+import java.net.URI;
+import java.time.OffsetDateTime;
+import java.util.Map;
+import java.util.Objects;
 
 public class DefaultCloudEventPredicate implements CloudEventPredicate {
 
-  private final EventPropertiesFilter props;
+  private final CloudEventAttrPredicate<String> idFilter;
+  private final CloudEventAttrPredicate<URI> sourceFilter;
+  private final CloudEventAttrPredicate<String> subjectFilter;
+  private final CloudEventAttrPredicate<String> contentTypeFilter;
+  private final CloudEventAttrPredicate<String> typeFilter;
+  private final CloudEventAttrPredicate<URI> dataSchemaFilter;
+  private final CloudEventAttrPredicate<OffsetDateTime> timeFilter;
+  private final CloudEventAttrPredicate<JsonNode> dataFilter;
+  private final CloudEventAttrPredicate<JsonNode> additionalFilter;
+
+  private static final <T> CloudEventAttrPredicate<T> isTrue() {
+    return x -> true;
+  }
 
   public DefaultCloudEventPredicate(EventProperties properties, ExpressionFactory exprFactory) {
-    this.props = EventPropertiesFilter.build(properties, exprFactory);
+    idFilter = stringFilter(properties.getId());
+    subjectFilter = stringFilter(properties.getSubject());
+    typeFilter = stringFilter(properties.getType());
+    contentTypeFilter = stringFilter(properties.getDatacontenttype());
+    sourceFilter = sourceFilter(properties.getSource(), exprFactory);
+    dataSchemaFilter = dataSchemaFilter(properties.getDataschema(), exprFactory);
+    timeFilter = offsetTimeFilter(properties.getTime(), exprFactory);
+    dataFilter = dataFilter(properties.getData(), exprFactory);
+    additionalFilter = additionalFilter(properties.getAdditionalProperties(), exprFactory);
+  }
+
+  private CloudEventAttrPredicate<JsonNode> additionalFilter(
+      Map<String, Object> additionalProperties, ExpressionFactory exprFactory) {
+    return additionalProperties != null && !additionalProperties.isEmpty()
+        ? from(WorkflowUtils.buildWorkflowFilter(exprFactory, null, additionalProperties))
+        : isTrue();
+  }
+
+  private CloudEventAttrPredicate<JsonNode> from(WorkflowFilter filter) {
+    return d -> filter.apply(null, null, d).asBoolean();
+  }
+
+  private CloudEventAttrPredicate<JsonNode> dataFilter(
+      EventData data, ExpressionFactory exprFactory) {
+    return data != null
+        ? from(
+            WorkflowUtils.buildWorkflowFilter(
+                exprFactory, data.getRuntimeExpression(), data.getObject()))
+        : isTrue();
+  }
+
+  private CloudEventAttrPredicate<OffsetDateTime> offsetTimeFilter(
+      EventTime time, ExpressionFactory exprFactory) {
+    if (time != null) {
+      if (time.getRuntimeExpression() != null) {
+        final Expression expr = exprFactory.getExpression(time.getRuntimeExpression());
+        return s -> evalExpr(expr, toString(s));
+      } else if (time.getLiteralTime() != null) {
+        return s -> Objects.equals(s, CloudEventUtils.toOffset(time.getLiteralTime()));
+      }
+    }
+    return isTrue();
+  }
+
+  private CloudEventAttrPredicate<URI> dataSchemaFilter(
+      EventDataschema dataSchema, ExpressionFactory exprFactory) {
+    if (dataSchema != null) {
+      if (dataSchema.getExpressionDataSchema() != null) {
+        final Expression expr = exprFactory.getExpression(dataSchema.getExpressionDataSchema());
+        return s -> evalExpr(expr, toString(s));
+      } else if (dataSchema.getLiteralDataSchema() != null) {
+        return templateFilter(dataSchema.getLiteralDataSchema());
+      }
+    }
+    return isTrue();
+  }
+
+  private CloudEventAttrPredicate<String> stringFilter(String str) {
+    return str == null ? isTrue() : x -> x.equals(str);
+  }
+
+  private CloudEventAttrPredicate<URI> sourceFilter(
+      EventSource source, ExpressionFactory exprFactory) {
+    if (source != null) {
+      if (source.getRuntimeExpression() != null) {
+        final Expression expr = exprFactory.getExpression(source.getRuntimeExpression());
+        return s -> evalExpr(expr, toString(s));
+      } else if (source.getUriTemplate() != null) {
+        return templateFilter(source.getUriTemplate());
+      }
+    }
+    return isTrue();
+  }
+
+  private CloudEventAttrPredicate<URI> templateFilter(UriTemplate template) {
+    if (template.getLiteralUri() != null) {
+      return u -> Objects.equals(u, template.getLiteralUri());
+    }
+    throw new UnsupportedOperationException("Template not supporte here yet");
+  }
+
+  private <T> String toString(T uri) {
+    return uri != null ? uri.toString() : null;
+  }
+
+  private <T> boolean evalExpr(Expression expr, T value) {
+    return expr.eval(null, null, JsonUtils.fromValue(value)).asBoolean();
   }
 
   @Override
-  public boolean test(CloudEvent event, WorkflowContext workflow, TaskContext task) {
-    return test(props.idFilter(), event.getId(), workflow, task)
-        && test(props.sourceFilter(), event.getSource().toString(), workflow, task)
-        && test(props.subjectFilter(), event.getSubject(), workflow, task)
-        && test(props.contentTypeFilter(), event.getDataContentType(), workflow, task)
-        && test(props.typeFilter(), event.getType(), workflow, task)
-        && test(props.dataSchemaFilter(), event.getDataSchema().toString(), workflow, task)
-        && test(props.timeFilter(), event.getTime(), workflow, task)
-        && test(props.dataFilter(), CloudEventUtils.toJsonNode(event.getData()), workflow, task)
-        && test(
-            props.additionalFilter(),
-            JsonUtils.fromValue(CloudEventUtils.extensions(event)),
-            workflow,
-            task);
-  }
-
-  private <T, V extends ExpressionHolder<T>> boolean test(
-      Optional<V> optFilter, T value, WorkflowContext workflow, TaskContext task) {
-    return optFilter.map(filter -> filter.apply(workflow, task).equals(value)).orElse(true);
-  }
-
-  private boolean test(
-      Optional<WorkflowFilter> optFilter,
-      JsonNode value,
-      WorkflowContext workflow,
-      TaskContext task) {
-    return optFilter
-        .map(filter -> filter.apply(workflow, task, task.input()).equals(value))
-        .orElse(true);
+  public boolean test(CloudEvent event) {
+    return idFilter.test(event.getId())
+        && sourceFilter.test(event.getSource())
+        && subjectFilter.test(event.getSubject())
+        && contentTypeFilter.test(event.getDataContentType())
+        && typeFilter.test(event.getType())
+        && dataSchemaFilter.test(event.getDataSchema())
+        && timeFilter.test(event.getTime())
+        && dataFilter.test(CloudEventUtils.toJsonNode(event.getData()))
+        && additionalFilter.test(JsonUtils.fromValue(CloudEventUtils.extensions(event)));
   }
 }
