@@ -27,6 +27,7 @@ import io.serverlessworkflow.impl.executors.RegularTaskExecutor.RegularTaskExecu
 import io.serverlessworkflow.impl.resources.ResourceLoader;
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 public class WaitExecutor extends RegularTaskExecutor<WaitTask> {
 
@@ -71,14 +72,7 @@ public class WaitExecutor extends RegularTaskExecutor<WaitTask> {
   @Override
   protected CompletableFuture<JsonNode> internalExecute(
       WorkflowContext workflow, TaskContext taskContext) {
-    return CompletableFuture.supplyAsync(
-        () -> {
-          try {
-            Thread.sleep(millisToWait.toMillis());
-          } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-          }
-          return taskContext.input();
-        });
+    return new CompletableFuture<JsonNode>()
+        .completeOnTimeout(taskContext.output(), millisToWait.toMillis(), TimeUnit.MILLISECONDS);
   }
 }

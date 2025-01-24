@@ -9,6 +9,9 @@
   <packaging>pom</packaging>
   <properties>
     <version.org.glassfish.jersey>3.1.10</version.org.glassfish.jersey>
+    <version.io.cloudevents>4.0.1</version.io.cloudevents>
+    <version.net.thisptr>1.2.0</version.net.thisptr>
+    <version.com.github.f4b6a3>5.2.3</version.com.github.f4b6a3>
   </properties>
   <dependencyManagement>
     <dependencies>
@@ -32,7 +35,27 @@
         <artifactId>jersey-media-json-jackson</artifactId>
         <version>${version.org.glassfish.jersey}</version>
       </dependency>
-    </dependencies>  
+      <dependency>
+       <groupId>io.cloudevents</groupId>
+       <artifactId>cloudevents-api</artifactId>
+       <version>${version.io.cloudevents}</version>
+      </dependency>
+      <dependency>
+       <groupId>io.cloudevents</groupId>
+       <artifactId>cloudevents-json-jackson</artifactId>
+       <version>${version.io.cloudevents}</version>
+      </dependency>
+      <dependency>
+        <groupId>net.thisptr</groupId>
+        <artifactId>jackson-jq</artifactId>
+        <version>${version.net.thisptr}</version>
+      </dependency>
+      <dependency>
+        <groupId>com.github.f4b6a3</groupId>
+        <artifactId>ulid-creator</artifactId>
+        <version>${version.com.github.f4b6a3}</version>
+      </dependency>
+    </dependencies>
   </dependencyManagement>
   <modules>
     <module>http</module>

@@ -34,6 +34,9 @@ import com.fasterxml.jackson.databind.node.TextNode;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -85,6 +88,12 @@ public class JsonUtils {
         return () -> mapper.createArrayNode();
       }
     };
+  }
+
+  public static OffsetDateTime toOffsetDateTime(JsonNode node) {
+    return node.isTextual()
+        ? OffsetDateTime.parse(node.asText())
+        : OffsetDateTime.ofInstant(Instant.ofEpochMilli(node.asLong()), ZoneOffset.UTC);
   }
 
   /*

@@ -13,7 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl;
+package io.serverlessworkflow.impl.events;
 
-@FunctionalInterface
-public interface StringFilter extends ExpressionHolder<String> {}
+import io.cloudevents.CloudEvent;
+import java.util.concurrent.CompletableFuture;
+
+public interface EventPublisher {
+  CompletableFuture<Void> publish(CloudEvent event);
+}

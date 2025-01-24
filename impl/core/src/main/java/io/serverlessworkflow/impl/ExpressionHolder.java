@@ -15,5 +15,6 @@
  */
 package io.serverlessworkflow.impl;
 
-@FunctionalInterface
-public interface StringFilter extends ExpressionHolder<String> {}
+import java.util.function.BiFunction;
+
+public interface ExpressionHolder<T> extends BiFunction<WorkflowContext, TaskContext, T> {}

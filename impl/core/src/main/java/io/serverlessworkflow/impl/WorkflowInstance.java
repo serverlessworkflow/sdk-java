@@ -36,7 +36,7 @@ public class WorkflowInstance {
   private CompletableFuture<JsonNode> completableFuture;
 
   WorkflowInstance(WorkflowDefinition definition, JsonNode input) {
-    this.id = definition.idFactory().get();
+    this.id = definition.application().idFactory().get();
     this.input = input;
     this.definition = definition;
     this.status = new AtomicReference<>(WorkflowStatus.PENDING);
