@@ -16,6 +16,7 @@
 package io.serverlessworkflow.impl.events;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.CloudEventData;
@@ -76,6 +77,9 @@ public class CloudEventUtils {
   }
 
   public static JsonNode toJsonNode(CloudEventData data) {
+    if (data == null) {
+      return NullNode.instance;
+    }
     try {
       return data instanceof JsonCloudEventData
           ? ((JsonCloudEventData) data).getNode()

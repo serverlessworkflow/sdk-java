@@ -1,0 +1,12 @@
+document:
+  dsl: '1.0.0-alpha5'
+  namespace: test
+  name: emit-out
+  version: '0.1.0'
+do:
+  - emitEvent:
+      emit:
+        event:
+          with:
+            source: https://hospital.com
+            type: com.fake-hospital.patient.checked-out

@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -55,6 +56,27 @@ public class EventDefinitionTest {
     assertThat(future).isCompleted();
     assertThat(waitingInstance.status()).isEqualTo(WorkflowStatus.COMPLETED);
     assertThat(waitingInstance.outputAsJsonNode()).isEqualTo(expectedResult);
+  }
+
+  @Test
+  void testUntilConsumed() throws IOException {
+    WorkflowDefinition listenDefinition =
+        appl.workflowDefinition(
+            WorkflowReader.readWorkflowFromClasspath("listen-to-any-until-consumed.yaml"));
+    WorkflowDefinition emitDoctorDefinition =
+        appl.workflowDefinition(WorkflowReader.readWorkflowFromClasspath("emit-doctor.yaml"));
+    WorkflowDefinition emitOutDefinition =
+        appl.workflowDefinition(WorkflowReader.readWorkflowFromClasspath("emit-out.yaml"));
+    WorkflowInstance waitingInstance = listenDefinition.instance(Map.of());
+    CompletableFuture<JsonNode> future = waitingInstance.start();
+    assertThat(waitingInstance.status()).isEqualTo(WorkflowStatus.RUNNING);
+    emitDoctorDefinition.instance(Map.of("temperature", 35)).start().join();
+    assertThat(waitingInstance.status()).isEqualTo(WorkflowStatus.RUNNING);
+    emitDoctorDefinition.instance(Map.of("temperature", 39)).start().join();
+    assertThat(waitingInstance.status()).isEqualTo(WorkflowStatus.RUNNING);
+    emitOutDefinition.instance(Map.of()).start().join();
+    assertThat(future).isCompleted();
+    assertThat(waitingInstance.status()).isEqualTo(WorkflowStatus.COMPLETED);
   }
 
   private static Stream<Arguments> eventListenerParameters() {

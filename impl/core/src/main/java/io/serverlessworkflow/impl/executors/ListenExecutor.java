@@ -18,19 +18,26 @@ package io.serverlessworkflow.impl.executors;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import io.cloudevents.CloudEvent;
+import io.serverlessworkflow.api.types.AllEventConsumptionStrategy;
+import io.serverlessworkflow.api.types.AnyEventConsumptionStrategy;
+import io.serverlessworkflow.api.types.EventConsumptionStrategy;
 import io.serverlessworkflow.api.types.EventFilter;
 import io.serverlessworkflow.api.types.ListenTask;
 import io.serverlessworkflow.api.types.ListenTaskConfiguration;
 import io.serverlessworkflow.api.types.ListenTaskConfiguration.ListenAndReadAs;
 import io.serverlessworkflow.api.types.ListenTo;
+import io.serverlessworkflow.api.types.OneEventConsumptionStrategy;
 import io.serverlessworkflow.api.types.SubscriptionIterator;
+import io.serverlessworkflow.api.types.Until;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowFilter;
 import io.serverlessworkflow.impl.WorkflowPosition;
+import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.events.CloudEventUtils;
+import io.serverlessworkflow.impl.events.EventConsumer;
 import io.serverlessworkflow.impl.events.EventRegistration;
 import io.serverlessworkflow.impl.events.EventRegistrationBuilder;
 import io.serverlessworkflow.impl.json.JsonUtils;
@@ -40,24 +47,45 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public abstract class ListenExecutor extends RegularTaskExecutor<ListenTask> {
 
-  protected final Collection<EventRegistrationBuilder> regBuilders;
+  protected final EventRegistrationBuilderCollection regBuilders;
+  protected final EventRegistrationBuilderCollection untilRegBuilders;
   protected final Optional<WorkflowFilter> until;
   protected final Optional<TaskExecutor<?>> loop;
   protected final Function<CloudEvent, JsonNode> converter;
+  protected final EventConsumer eventConsumer;
+  protected final AtomicBoolean untilEvent = new AtomicBoolean(true);
+
+  private static record EventRegistrationBuilderCollection(
+      Collection<EventRegistrationBuilder> registrations, boolean isAnd) {}
 
   public static class ListenExecutorBuilder extends RegularTaskExecutorBuilder<ListenTask> {
 
-    private Collection<EventRegistrationBuilder> registrations;
+    private EventRegistrationBuilderCollection registrations;
     private WorkflowFilter until;
+    private EventRegistrationBuilderCollection untilRegistrations;
     private TaskExecutor<?> loop;
     private Function<CloudEvent, JsonNode> converter = this::defaultCEConverter;
-    private boolean isAnd;
+
+    private EventRegistrationBuilderCollection allEvents(AllEventConsumptionStrategy allStrategy) {
+      return new EventRegistrationBuilderCollection(from(allStrategy.getAll()), true);
+    }
+
+    private EventRegistrationBuilderCollection anyEvents(AnyEventConsumptionStrategy anyStrategy) {
+      List<EventFilter> eventFilters = anyStrategy.getAny();
+      return new EventRegistrationBuilderCollection(
+          eventFilters.isEmpty() ? registerToAll() : from(eventFilters), false);
+    }
+
+    private EventRegistrationBuilderCollection oneEvent(OneEventConsumptionStrategy oneStrategy) {
+      return new EventRegistrationBuilderCollection(List.of(from(oneStrategy.getOne())), false);
+    }
 
     protected ListenExecutorBuilder(
         WorkflowPosition position,
@@ -69,15 +97,29 @@ public abstract class ListenExecutor extends RegularTaskExecutor<ListenTask> {
       ListenTaskConfiguration listen = task.getListen();
       ListenTo to = listen.getTo();
       if (to.getAllEventConsumptionStrategy() != null) {
-        isAnd = true;
-        registrations = from(to.getAllEventConsumptionStrategy().getAll());
+        registrations = allEvents(to.getAllEventConsumptionStrategy());
       } else if (to.getAnyEventConsumptionStrategy() != null) {
-        isAnd = false;
-        List<EventFilter> eventFilters = to.getAnyEventConsumptionStrategy().getAny();
-        registrations = eventFilters.isEmpty() ? registerToAll() : from(eventFilters);
+        AnyEventConsumptionStrategy any = to.getAnyEventConsumptionStrategy();
+        registrations = anyEvents(any);
+        Until untilDesc = any.getUntil();
+        if (untilDesc != null) {
+          if (untilDesc.getAnyEventUntilCondition() != null) {
+            until =
+                WorkflowUtils.buildWorkflowFilter(
+                    application.expressionFactory(), untilDesc.getAnyEventUntilCondition());
+          } else if (untilDesc.getAnyEventUntilConsumed() != null) {
+            EventConsumptionStrategy strategy = untilDesc.getAnyEventUntilConsumed();
+            if (strategy.getAllEventConsumptionStrategy() != null) {
+              untilRegistrations = allEvents(strategy.getAllEventConsumptionStrategy());
+            } else if (strategy.getAnyEventConsumptionStrategy() != null) {
+              untilRegistrations = anyEvents(strategy.getAnyEventConsumptionStrategy());
+            } else if (strategy.getOneEventConsumptionStrategy() != null) {
+              untilRegistrations = oneEvent(strategy.getOneEventConsumptionStrategy());
+            }
+          }
+        }
       } else if (to.getOneEventConsumptionStrategy() != null) {
-        isAnd = false;
-        registrations = List.of(from(to.getOneEventConsumptionStrategy().getOne()));
+        registrations = oneEvent(to.getOneEventConsumptionStrategy());
       }
       SubscriptionIterator forEach = task.getForeach();
       if (forEach != null) {
@@ -116,7 +158,7 @@ public abstract class ListenExecutor extends RegularTaskExecutor<ListenTask> {
 
     @Override
     public TaskExecutor<ListenTask> buildInstance() {
-      return isAnd ? new AndListenExecutor(this) : new OrListenExecutor(this);
+      return registrations.isAnd() ? new AndListenExecutor(this) : new OrListenExecutor(this);
     }
   }
 
@@ -160,8 +202,11 @@ public abstract class ListenExecutor extends RegularTaskExecutor<ListenTask> {
         TaskContext taskContext,
         CompletableFuture<JsonNode> future) {
       arrayNode.add(node);
-      if (until.isEmpty()
-          || until.filter(u -> u.apply(workflow, taskContext, arrayNode).asBoolean()).isPresent()) {
+      if ((until.isEmpty()
+              || until
+                  .filter(u -> u.apply(workflow, taskContext, arrayNode).asBoolean())
+                  .isPresent())
+          && untilEvent.get()) {
         future.complete(arrayNode);
       }
     }
@@ -175,6 +220,65 @@ public abstract class ListenExecutor extends RegularTaskExecutor<ListenTask> {
       WorkflowContext workflow,
       TaskContext taskContext,
       CompletableFuture<JsonNode> future);
+
+  @Override
+  protected CompletableFuture<JsonNode> internalExecute(
+      WorkflowContext workflow, TaskContext taskContext) {
+    ArrayNode output = JsonUtils.mapper().createArrayNode();
+    Collection<EventRegistration> registrations = new ArrayList<>();
+    if (untilRegBuilders != null) {
+      untilEvent.set(false);
+    }
+    CompletableFuture<?> combinedFuture =
+        combine(
+            toCompletables(
+                regBuilders,
+                registrations,
+                (ce, future) ->
+                    processCe(converter.apply(ce), output, workflow, taskContext, future)));
+    CompletableFuture<JsonNode> resultFuture =
+        combinedFuture.thenApply(
+            v -> {
+              registrations.forEach(reg -> eventConsumer.unregister(reg));
+              return output;
+            });
+    if (untilRegBuilders != null) {
+      Collection<EventRegistration> untilRegistrations = new ArrayList<>();
+      CompletableFuture<?>[] futures =
+          toCompletables(
+              untilRegBuilders, untilRegistrations, (ce, future) -> future.complete(null));
+      CompletableFuture<?> untilFuture =
+          untilRegBuilders.isAnd()
+              ? CompletableFuture.allOf(futures)
+              : CompletableFuture.anyOf(futures);
+      untilFuture.thenAccept(
+          v -> {
+            untilEvent.set(true);
+            combinedFuture.complete(null);
+            untilRegistrations.forEach(reg -> eventConsumer.unregister(reg));
+          });
+    }
+    return resultFuture;
+  }
+
+  private <T> CompletableFuture<T>[] toCompletables(
+      EventRegistrationBuilderCollection regCollection,
+      Collection<EventRegistration> registrations,
+      BiConsumer<CloudEvent, CompletableFuture<T>> consumer) {
+    return regCollection.registrations().stream()
+        .map(reg -> toCompletable(reg, registrations, consumer))
+        .toArray(size -> new CompletableFuture[size]);
+  }
+
+  private <T> CompletableFuture<T> toCompletable(
+      EventRegistrationBuilder regBuilder,
+      Collection<EventRegistration> registrations,
+      BiConsumer<CloudEvent, CompletableFuture<T>> ceConsumer) {
+    final CompletableFuture<T> future = new CompletableFuture<>();
+    registrations.add(
+        eventConsumer.register(regBuilder, ce -> ceConsumer.accept((CloudEvent) ce, future)));
+    return future;
+  }
 
   private void processCe(
       JsonNode node,
@@ -199,48 +303,13 @@ public abstract class ListenExecutor extends RegularTaskExecutor<ListenTask> {
         () -> internalProcessCe(node, arrayNode, workflow, taskContext, future));
   }
 
-  protected CompletableFuture<JsonNode> toCompletable(
-      WorkflowContext workflow,
-      TaskContext taskContext,
-      EventRegistrationBuilder regBuilder,
-      Collection<EventRegistration> registrations,
-      ArrayNode arrayNode) {
-    final CompletableFuture<JsonNode> future = new CompletableFuture<>();
-    registrations.add(
-        workflow
-            .definition()
-            .application()
-            .eventConsumer()
-            .register(
-                regBuilder,
-                (Consumer<CloudEvent>)
-                    (ce ->
-                        processCe(converter.apply(ce), arrayNode, workflow, taskContext, future))));
-    return future;
-  }
-
-  @Override
-  protected CompletableFuture<JsonNode> internalExecute(
-      WorkflowContext workflow, TaskContext taskContext) {
-    ArrayNode output = JsonUtils.mapper().createArrayNode();
-    Collection<EventRegistration> registrations = new ArrayList<>();
-    return combine(
-            regBuilders.stream()
-                .map(reg -> toCompletable(workflow, taskContext, reg, registrations, output))
-                .toArray(size -> new CompletableFuture[size]))
-        .thenApply(
-            v -> {
-              registrations.forEach(
-                  reg -> workflow.definition().application().eventConsumer().unregister(reg));
-              return output;
-            });
-  }
-
   protected ListenExecutor(ListenExecutorBuilder builder) {
     super(builder);
+    this.eventConsumer = builder.application.eventConsumer();
     this.regBuilders = builder.registrations;
     this.until = Optional.ofNullable(builder.until);
     this.loop = Optional.ofNullable(builder.loop);
     this.converter = builder.converter;
+    this.untilRegBuilders = builder.untilRegistrations;
   }
 }

@@ -10,5 +10,5 @@ do:
           with:
             source: https://fake-source.com
             type: com.fake-source.user.greeted.v1
-            data: [1,2,3,4]
-              
+            data:
+              greetings: ${ "Hello \(.user.firstName) \(.user.lastName)!" }
