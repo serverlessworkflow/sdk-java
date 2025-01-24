@@ -18,18 +18,21 @@ package io.serverlessworkflow.impl.executors;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import io.cloudevents.CloudEvent;
+import io.serverlessworkflow.api.types.AnyEventConsumptionStrategy;
 import io.serverlessworkflow.api.types.EventFilter;
 import io.serverlessworkflow.api.types.ListenTask;
 import io.serverlessworkflow.api.types.ListenTaskConfiguration;
 import io.serverlessworkflow.api.types.ListenTaskConfiguration.ListenAndReadAs;
 import io.serverlessworkflow.api.types.ListenTo;
 import io.serverlessworkflow.api.types.SubscriptionIterator;
+import io.serverlessworkflow.api.types.Until;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowFilter;
 import io.serverlessworkflow.impl.WorkflowPosition;
+import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.events.CloudEventUtils;
 import io.serverlessworkflow.impl.events.EventRegistration;
 import io.serverlessworkflow.impl.events.EventRegistrationBuilder;
@@ -72,9 +75,18 @@ public abstract class ListenExecutor extends RegularTaskExecutor<ListenTask> {
         isAnd = true;
         registrations = from(to.getAllEventConsumptionStrategy().getAll());
       } else if (to.getAnyEventConsumptionStrategy() != null) {
+        AnyEventConsumptionStrategy any = to.getAnyEventConsumptionStrategy();
         isAnd = false;
-        List<EventFilter> eventFilters = to.getAnyEventConsumptionStrategy().getAny();
+        List<EventFilter> eventFilters = any.getAny();
         registrations = eventFilters.isEmpty() ? registerToAll() : from(eventFilters);
+        Until untilDesc = any.getUntil();
+        if (untilDesc != null) {
+          if (untilDesc.getAnyEventUntilCondition() != null) {
+            until =
+                WorkflowUtils.buildWorkflowFilter(
+                    application.expressionFactory(), untilDesc.getAnyEventUntilCondition());
+          }
+        }
       } else if (to.getOneEventConsumptionStrategy() != null) {
         isAnd = false;
         registrations = List.of(from(to.getOneEventConsumptionStrategy().getOne()));
