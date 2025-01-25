@@ -1,0 +1,14 @@
+document:
+  dsl: '1.0.0-alpha5'
+  namespace: test
+  name: openapi-example
+  version: '0.1.0'
+do:
+  - findPet:
+      call: openapi
+      with:
+        document:
+          endpoint: pets.json
+        operationId: findPetsByStatus
+        parameters:
+          status: available

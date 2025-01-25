@@ -35,8 +35,9 @@
     </dependencies>  
   </dependencyManagement>
   <modules>
-    <module>http</module>
-    <module>core</module>
-    <module>bom</module>
+  	<module>http</module>
+  	<module>core</module>
+  	<module>bom</module>
+    <module>openapi</module>
   </modules>
 </project>
