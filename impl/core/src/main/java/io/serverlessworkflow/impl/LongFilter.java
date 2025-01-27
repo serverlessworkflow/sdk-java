@@ -15,7 +15,5 @@
  */
 package io.serverlessworkflow.impl;
 
-import java.util.function.BiFunction;
-
 @FunctionalInterface
-public interface LongFilter extends BiFunction<WorkflowContext, TaskContext, Long> {}
+public interface LongFilter extends ExpressionHolder<Long> {}
