@@ -80,7 +80,7 @@ public abstract class ListenExecutor extends RegularTaskExecutor<ListenTask> {
     }
 
     private EventRegistrationBuilderCollection oneEvent(OneEventConsumptionStrategy oneStrategy) {
-      return new EventRegistrationBuilderCollection(List.of(from(oneStrategy.getOne())), false);
+      return new EventRegistrationBuilderCollection(List.of(from(oneStrategy.getOne())), true);
     }
 
     protected ListenExecutorBuilder(

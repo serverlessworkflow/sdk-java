@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.serverlessworkflow.api.WorkflowReader;
 import io.serverlessworkflow.impl.json.JsonUtils;
@@ -27,7 +28,6 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -58,15 +58,16 @@ public class EventDefinitionTest {
     assertThat(waitingInstance.outputAsJsonNode()).isEqualTo(expectedResult);
   }
 
-  @Test
-  void testUntilConsumed() throws IOException {
+  @ParameterizedTest
+  @MethodSource("eventsListenerParameters")
+  void testEventsListened(String listen, String emit1, String emit2, JsonNode expectedResult)
+      throws IOException {
     WorkflowDefinition listenDefinition =
-        appl.workflowDefinition(
-            WorkflowReader.readWorkflowFromClasspath("listen-to-any-until-consumed.yaml"));
+        appl.workflowDefinition(WorkflowReader.readWorkflowFromClasspath(listen));
     WorkflowDefinition emitDoctorDefinition =
-        appl.workflowDefinition(WorkflowReader.readWorkflowFromClasspath("emit-doctor.yaml"));
+        appl.workflowDefinition(WorkflowReader.readWorkflowFromClasspath(emit1));
     WorkflowDefinition emitOutDefinition =
-        appl.workflowDefinition(WorkflowReader.readWorkflowFromClasspath("emit-out.yaml"));
+        appl.workflowDefinition(WorkflowReader.readWorkflowFromClasspath(emit2));
     WorkflowInstance waitingInstance = listenDefinition.instance(Map.of());
     CompletableFuture<JsonNode> future = waitingInstance.start();
     assertThat(waitingInstance.status()).isEqualTo(WorkflowStatus.RUNNING);
@@ -77,14 +78,28 @@ public class EventDefinitionTest {
     emitOutDefinition.instance(Map.of()).start().join();
     assertThat(future).isCompleted();
     assertThat(waitingInstance.status()).isEqualTo(WorkflowStatus.COMPLETED);
-    assertThat(waitingInstance.outputAsJsonNode()).isEqualTo(temperature());
+    assertThat(waitingInstance.outputAsJsonNode()).isEqualTo(expectedResult);
   }
 
   private static Stream<Arguments> eventListenerParameters() {
     return Stream.of(
-        Arguments.of("listen-to-any.yaml", "emit.yaml", cruellaDeVil(), Map.of()),
+        Arguments.of("listen-to-any.yaml", "emit.yaml", array(cruellaDeVil()), Map.of()),
         Arguments.of(
             "listen-to-any-filter.yaml", "emit-doctor.yaml", doctor(), Map.of("temperature", 39)));
+  }
+
+  private static Stream<Arguments> eventsListenerParameters() {
+    return Stream.of(
+        Arguments.of(
+            "listen-to-all.yaml",
+            "emit-doctor.yaml",
+            "emit.yaml",
+            array(temperature(), cruellaDeVil())),
+        Arguments.of(
+            "listen-to-any-until-consumed.yaml",
+            "emit-doctor.yaml",
+            "emit-out.yaml",
+            array(temperature())));
   }
 
   private static JsonNode cruellaDeVil() {
@@ -97,21 +112,24 @@ public class EventDefinitionTest {
         mapper
             .createArrayNode()
             .add(mapper.createObjectNode().put("breed", "dalmatian").put("quantity", 101)));
-    return mapper.createArrayNode().add(node);
+    return node;
   }
 
   private static JsonNode doctor() {
-    ObjectMapper mapper = JsonUtils.mapper();
-    ObjectNode node = mapper.createObjectNode();
-    node.put("temperature", 39);
+    ObjectNode node = temperature();
     node.put("isSick", true);
-    return mapper.createArrayNode().add(node);
+    return array(node);
   }
 
-  private static JsonNode temperature() {
-    ObjectMapper mapper = JsonUtils.mapper();
-    ObjectNode node = mapper.createObjectNode();
+  private static ObjectNode temperature() {
+    ObjectNode node = JsonUtils.mapper().createObjectNode();
     node.put("temperature", 39);
-    return mapper.createArrayNode().add(node);
+    return node;
+  }
+
+  private static JsonNode array(JsonNode... jsonNodes) {
+    ArrayNode arrayNode = JsonUtils.mapper().createArrayNode();
+    for (JsonNode node : jsonNodes) arrayNode.add(node);
+    return arrayNode;
   }
 }
