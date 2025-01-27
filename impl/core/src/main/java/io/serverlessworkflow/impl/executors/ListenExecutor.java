@@ -218,7 +218,7 @@ public abstract class ListenExecutor extends RegularTaskExecutor<ListenTask> {
                   .filter(u -> u.apply(workflow, taskContext, arrayNode).asBoolean())
                   .isPresent())
           && untilRegBuilders == null) {
-        future.complete(arrayNode);
+        future.complete(node);
       }
     }
   }
