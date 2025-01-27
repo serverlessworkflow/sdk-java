@@ -47,7 +47,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -55,12 +54,9 @@ import java.util.stream.Collectors;
 public abstract class ListenExecutor extends RegularTaskExecutor<ListenTask> {
 
   protected final EventRegistrationBuilderCollection regBuilders;
-  protected final EventRegistrationBuilderCollection untilRegBuilders;
-  protected final Optional<WorkflowFilter> until;
   protected final Optional<TaskExecutor<?>> loop;
   protected final Function<CloudEvent, JsonNode> converter;
   protected final EventConsumer eventConsumer;
-  protected final AtomicBoolean untilEvent = new AtomicBoolean(true);
 
   private static record EventRegistrationBuilderCollection(
       Collection<EventRegistrationBuilder> registrations, boolean isAnd) {}
@@ -177,22 +173,37 @@ public abstract class ListenExecutor extends RegularTaskExecutor<ListenTask> {
       arrayNode.add(node);
       future.complete(node);
     }
-
-    @Override
-    protected CompletableFuture<?> combine(CompletableFuture<JsonNode>[] completables) {
-      return CompletableFuture.allOf(completables);
-    }
   }
 
   public static class OrListenExecutor extends ListenExecutor {
 
+    private final Optional<WorkflowFilter> until;
+    private final EventRegistrationBuilderCollection untilRegBuilders;
+
     public OrListenExecutor(ListenExecutorBuilder builder) {
       super(builder);
+      this.until = Optional.ofNullable(builder.until);
+      this.untilRegBuilders = builder.untilRegistrations;
     }
 
     @Override
-    protected CompletableFuture<?> combine(CompletableFuture<JsonNode>[] completables) {
-      return CompletableFuture.anyOf(completables);
+    protected <T> CompletableFuture<?> buildFuture(
+        EventRegistrationBuilderCollection regCollection,
+        Collection<EventRegistration> registrations,
+        BiConsumer<CloudEvent, CompletableFuture<T>> consumer) {
+      CompletableFuture<?> combinedFuture =
+          super.buildFuture(regCollection, registrations, consumer);
+      if (untilRegBuilders != null) {
+        Collection<EventRegistration> untilRegistrations = new ArrayList<>();
+        CompletableFuture<?> untilFuture =
+            combine(untilRegBuilders, untilRegistrations, (ce, f) -> f.complete(null));
+        untilFuture.thenAccept(
+            v -> {
+              combinedFuture.complete(null);
+              untilRegistrations.forEach(reg -> eventConsumer.unregister(reg));
+            });
+      }
+      return combinedFuture;
     }
 
     protected void internalProcessCe(
@@ -206,13 +217,11 @@ public abstract class ListenExecutor extends RegularTaskExecutor<ListenTask> {
               || until
                   .filter(u -> u.apply(workflow, taskContext, arrayNode).asBoolean())
                   .isPresent())
-          && untilEvent.get()) {
+          && untilRegBuilders == null) {
         future.complete(arrayNode);
       }
     }
   }
-
-  protected abstract CompletableFuture<?> combine(CompletableFuture<JsonNode>[] completables);
 
   protected abstract void internalProcessCe(
       JsonNode node,
@@ -226,48 +235,37 @@ public abstract class ListenExecutor extends RegularTaskExecutor<ListenTask> {
       WorkflowContext workflow, TaskContext taskContext) {
     ArrayNode output = JsonUtils.mapper().createArrayNode();
     Collection<EventRegistration> registrations = new ArrayList<>();
-    if (untilRegBuilders != null) {
-      untilEvent.set(false);
-    }
-    CompletableFuture<?> combinedFuture =
-        combine(
-            toCompletables(
-                regBuilders,
-                registrations,
-                (ce, future) ->
-                    processCe(converter.apply(ce), output, workflow, taskContext, future)));
-    CompletableFuture<JsonNode> resultFuture =
-        combinedFuture.thenApply(
+    return buildFuture(
+            regBuilders,
+            registrations,
+            (BiConsumer<CloudEvent, CompletableFuture<JsonNode>>)
+                ((ce, future) ->
+                    processCe(converter.apply(ce), output, workflow, taskContext, future)))
+        .thenApply(
             v -> {
               registrations.forEach(reg -> eventConsumer.unregister(reg));
               return output;
             });
-    if (untilRegBuilders != null) {
-      Collection<EventRegistration> untilRegistrations = new ArrayList<>();
-      CompletableFuture<?>[] futures =
-          toCompletables(
-              untilRegBuilders, untilRegistrations, (ce, future) -> future.complete(null));
-      CompletableFuture<?> untilFuture =
-          untilRegBuilders.isAnd()
-              ? CompletableFuture.allOf(futures)
-              : CompletableFuture.anyOf(futures);
-      untilFuture.thenAccept(
-          v -> {
-            untilEvent.set(true);
-            combinedFuture.complete(null);
-            untilRegistrations.forEach(reg -> eventConsumer.unregister(reg));
-          });
-    }
-    return resultFuture;
   }
 
-  private <T> CompletableFuture<T>[] toCompletables(
+  protected <T> CompletableFuture<?> buildFuture(
       EventRegistrationBuilderCollection regCollection,
       Collection<EventRegistration> registrations,
       BiConsumer<CloudEvent, CompletableFuture<T>> consumer) {
-    return regCollection.registrations().stream()
-        .map(reg -> toCompletable(reg, registrations, consumer))
-        .toArray(size -> new CompletableFuture[size]);
+    return combine(regCollection, registrations, consumer);
+  }
+
+  protected final <T> CompletableFuture<?> combine(
+      EventRegistrationBuilderCollection regCollection,
+      Collection<EventRegistration> registrations,
+      BiConsumer<CloudEvent, CompletableFuture<T>> consumer) {
+    CompletableFuture<T>[] futures =
+        regCollection.registrations().stream()
+            .map(reg -> toCompletable(reg, registrations, consumer))
+            .toArray(size -> new CompletableFuture[size]);
+    return regCollection.isAnd()
+        ? CompletableFuture.allOf(futures)
+        : CompletableFuture.anyOf(futures);
   }
 
   private <T> CompletableFuture<T> toCompletable(
@@ -307,9 +305,7 @@ public abstract class ListenExecutor extends RegularTaskExecutor<ListenTask> {
     super(builder);
     this.eventConsumer = builder.application.eventConsumer();
     this.regBuilders = builder.registrations;
-    this.until = Optional.ofNullable(builder.until);
     this.loop = Optional.ofNullable(builder.loop);
     this.converter = builder.converter;
-    this.untilRegBuilders = builder.untilRegistrations;
   }
 }

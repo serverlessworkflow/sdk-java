@@ -77,6 +77,7 @@ public class EventDefinitionTest {
     emitOutDefinition.instance(Map.of()).start().join();
     assertThat(future).isCompleted();
     assertThat(waitingInstance.status()).isEqualTo(WorkflowStatus.COMPLETED);
+    assertThat(waitingInstance.outputAsJsonNode()).isEqualTo(temperature());
   }
 
   private static Stream<Arguments> eventListenerParameters() {
@@ -104,6 +105,13 @@ public class EventDefinitionTest {
     ObjectNode node = mapper.createObjectNode();
     node.put("temperature", 39);
     node.put("isSick", true);
+    return mapper.createArrayNode().add(node);
+  }
+
+  private static JsonNode temperature() {
+    ObjectMapper mapper = JsonUtils.mapper();
+    ObjectNode node = mapper.createObjectNode();
+    node.put("temperature", 39);
     return mapper.createArrayNode().add(node);
   }
 }
