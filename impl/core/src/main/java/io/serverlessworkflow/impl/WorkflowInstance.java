@@ -68,7 +68,7 @@ public class WorkflowInstance {
             .map(f -> f.apply(workflowContext, null, node))
             .orElse(node);
     workflowContext.definition().outputSchemaValidator().ifPresent(v -> v.validate(output));
-    status.compareAndSet(WorkflowStatus.RUNNING, WorkflowStatus.COMPLETED);
+    status.set(WorkflowStatus.COMPLETED);
     completedAt = Instant.now();
     return output;
   }

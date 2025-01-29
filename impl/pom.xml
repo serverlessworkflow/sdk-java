@@ -60,6 +60,5 @@
   <modules>
     <module>http</module>
     <module>core</module>
-    <module>bom</module>
   </modules>
 </project>

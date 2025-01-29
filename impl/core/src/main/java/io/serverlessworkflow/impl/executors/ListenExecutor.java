@@ -35,6 +35,7 @@ import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowFilter;
 import io.serverlessworkflow.impl.WorkflowPosition;
+import io.serverlessworkflow.impl.WorkflowStatus;
 import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.events.CloudEventUtils;
 import io.serverlessworkflow.impl.events.EventConsumer;
@@ -235,6 +236,7 @@ public abstract class ListenExecutor extends RegularTaskExecutor<ListenTask> {
       WorkflowContext workflow, TaskContext taskContext) {
     ArrayNode output = JsonUtils.mapper().createArrayNode();
     Collection<EventRegistration> registrations = new ArrayList<>();
+    workflow.instance().status(WorkflowStatus.WAITING);
     return buildFuture(
             regBuilders,
             registrations,
@@ -243,6 +245,7 @@ public abstract class ListenExecutor extends RegularTaskExecutor<ListenTask> {
                     processCe(converter.apply(ce), output, workflow, taskContext, future)))
         .thenApply(
             v -> {
+              workflow.instance().status(WorkflowStatus.RUNNING);
               registrations.forEach(reg -> eventConsumer.unregister(reg));
               return output;
             });
