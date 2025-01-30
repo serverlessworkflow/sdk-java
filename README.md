@@ -8,7 +8,7 @@ Provides the Java API for the [Serverless Workflow Specification](https://github
 With the SDK you can:
 
 * Read workflow JSON and YAML definitions
-* Write workflow definition in JSON and YAML format. 
+* Write workflow definitions in JSON and YAML formats. 
 * Test your workflow definitions using the reference implementation. 
 
 
@@ -29,6 +29,7 @@ Note that 6.0.0.Final, which will be the one for specification version 0.9, is s
 
 | SDK Version | JDK Version |
 | :---: | :---: |
+| 7.0.0 and after | 17 |
 | 5.0.0 and after | 11 |
 | 4.0.x and before | 8 | 
 
@@ -76,9 +77,9 @@ There are, roughly speaking, two kind of users of this SDK:
 ### Implementing your own runtime 
 
 For those ones interested on implementing their own runtime, this SDK provides an easy way to load an in memory representation of a given workflow definition.
-This memory representation consist of a hierarchy of POJOS directly generated from the Serverless Workflow specification [schema](api/src/main/resources/schema/workflow.yaml), which ensures the internal representation is aligned with the specification schema. The root of the hierarchy is `io.serverlessworkflow.api.types.Workflow` class
+This in-memory representation consists of a hierarchy of POJOS directly generated from the Serverless Workflow specification [schema](api/src/main/resources/schema/workflow.yaml), which ensures the internal representation is aligned with the specification schema. The root of the hierarchy is `io.serverlessworkflow.api.types.Workflow` class
 
-#### Reading workflow definition from JSON/YAML source
+### Reading workflow definition from JSON/YAML source
 
 You can read a Workflow definition from JSON/YAML source:
 
@@ -122,7 +123,7 @@ try (InputStream in = new FileInputStream("simple.yaml")) {
 
 For additional reading helper methods, including the one to read a workflow definition from classpath, check [WorkflowReader](api/src/main/java/io/serverlessworkflow/api/WorkflowReader.java) class. 
 
-#### Writing workflow definition to a a JSON/YAML target
+### Writing workflow definition to a JSON/YAML target
 
 Given a Workflow instance, you can store it using JSON or YAML format. 
 For example, to store a workflow using json format in a file called `simple.json`, you write
@@ -136,5 +137,6 @@ try (OutputStream out = new FileOutputStream("simple.json")) {
 For additional writing helper methods, check [WorkflowWriter](api/src/main/java/io/serverlessworkflow/api/WorkflowWriter.java) class. 
 
 ### Reference implementation
-See Reference implementation [readme](impl/README.md). 
+
+The reference implementation provides a ready-to-use runtime that supports the Serverless Workflow Specification. It includes a workflow execution engine, validation utilities, and illustrative examples to help you quickly test and deploy your workflows. For details on usage, configuration, and supported features, see [readme](impl/README.md). 
 
