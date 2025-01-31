@@ -107,14 +107,18 @@ public class HttpExecutor implements CallableTask<CallHTTP> {
     Builder request = target.request();
     ExpressionUtils.evaluateExpressionMap(headersMap, workflow, taskContext, input)
         .forEach(request::header);
-    try {
-      return CompletableFuture.completedFuture(
-          requestFunction.apply(request, workflow, taskContext, input));
-    } catch (WebApplicationException exception) {
-      throw new WorkflowException(
-          WorkflowError.communication(exception.getResponse().getStatus(), taskContext, exception)
-              .build());
-    }
+    return CompletableFuture.supplyAsync(
+        () -> {
+          try {
+            return requestFunction.apply(request, workflow, taskContext, input);
+          } catch (WebApplicationException exception) {
+            throw new WorkflowException(
+                WorkflowError.communication(
+                        exception.getResponse().getStatus(), taskContext, exception)
+                    .build());
+          }
+        },
+        workflow.definition().application().executorService());
   }
 
   @Override

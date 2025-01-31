@@ -77,15 +77,15 @@ public class WorkflowDefinition implements AutoCloseable {
     return new WorkflowInstance(this, JsonUtils.fromValue(input));
   }
 
-  public Optional<SchemaValidator> inputSchemaValidator() {
+  Optional<SchemaValidator> inputSchemaValidator() {
     return inputSchemaValidator;
   }
 
-  public TaskExecutor<?> startTask() {
+  TaskExecutor<?> startTask() {
     return taskExecutor;
   }
 
-  public Optional<WorkflowFilter> inputFilter() {
+  Optional<WorkflowFilter> inputFilter() {
     return inputFilter;
   }
 
@@ -97,11 +97,11 @@ public class WorkflowDefinition implements AutoCloseable {
     return application.listeners();
   }
 
-  public Optional<WorkflowFilter> outputFilter() {
+  Optional<WorkflowFilter> outputFilter() {
     return outputFilter;
   }
 
-  public Optional<SchemaValidator> outputSchemaValidator() {
+  Optional<SchemaValidator> outputSchemaValidator() {
     return outputSchemaValidator;
   }
 

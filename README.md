@@ -8,11 +8,11 @@ Provides the Java API for the [Serverless Workflow Specification](https://github
 With the SDK you can:
 
 * Read workflow JSON and YAML definitions
-* Write workflow in JSON and YAML format. 
+* Write workflow definitions in JSON and YAML formats. 
+* Test your workflow definitions using the reference implementation. 
 
-Serverless Workflow Java SDK is **not** a workflow runtime implementation but can be used by Java runtime implementations to parse workflow definitions.
 
-### Status
+## Status
 
 | Latest Releases | Conformance to spec version |
 | :---: | :---: |
@@ -25,17 +25,18 @@ Serverless Workflow Java SDK is **not** a workflow runtime implementation but ca
 
 Note that 6.0.0.Final, which will be the one for specification version 0.9, is skipped intentionally in case someone want to work on it. 
 
-### JDK Version
+## JDK Version
 
 | SDK Version | JDK Version |
 | :---: | :---: |
+| 7.0.0 and after | 17 |
 | 5.0.0 and after | 11 |
 | 4.0.x and before | 8 | 
 
-### Getting Started
+## Getting Started
 
 
-#### Building SNAPSHOT locally
+### Building SNAPSHOT locally
 
 To build project and run tests locally:
 
@@ -47,7 +48,7 @@ mvn clean install
 The project uses [Google's code styleguide](https://google.github.io/styleguide/javaguide.html).
 Your changes should be automatically formatted during the build.
 
-#### Maven projects:
+### Maven projects:
 
 Add the following dependencies to your pom.xml `dependencies` section:
 
@@ -59,7 +60,7 @@ Add the following dependencies to your pom.xml `dependencies` section:
 </dependency>
 ```
 
-#### Gradle projects:
+### Gradle projects:
 
  Add the following dependencies to your build.gradle `dependencies` section:
 
@@ -67,11 +68,20 @@ Add the following dependencies to your pom.xml `dependencies` section:
 implementation("io.serverlessworkflow:serverlessworkflow-api:7.0.0-SNAPSHOT")
 ```
 
-### How to Use 
+## How to Use 
 
-#### Creating from JSON/YAML source
+There are, roughly speaking, two kind of users of this SDK:
+ * Those ones interested on implementing their own runtime using Java.
+ * Those ones interested on using the provided runtime reference implementation. 
 
-You can create a Workflow instance from JSON/YAML source:
+### Implementing your own runtime 
+
+For those ones interested on implementing their own runtime, this SDK provides an easy way to load an in memory representation of a given workflow definition.
+This in-memory representation consists of a hierarchy of POJOS directly generated from the Serverless Workflow specification [schema](api/src/main/resources/schema/workflow.yaml), which ensures the internal representation is aligned with the specification schema. The root of the hierarchy is `io.serverlessworkflow.api.types.Workflow` class
+
+### Reading workflow definition from JSON/YAML source
+
+You can read a Workflow definition from JSON/YAML source:
 
 Let's say you have a simple YAML based workflow definition in a file name `simple.yaml` located in your working dir:
 
@@ -93,7 +103,7 @@ do:
 
 ```
 
-To parse it and create a Workflow instance you can do:
+To parse it and get a Workflow instance you can do:
 
 ``` java
 
@@ -102,10 +112,20 @@ try (InputStream in = new FileInputStream("simple.yaml")) {
    // Once you have the Workflow instance you can use its API to inspect it
 }
 ```
+By default, Workflows are not validated against the schema (performance being the priority). If you want to enable validation, you can do that by using: 
 
-#### Writing a workflow
+``` java
+try (InputStream in = new FileInputStream("simple.yaml")) {
+   Workflow workflow = WorkflowReader.validation().readWorkflow (in, WorkflowFormat.YAML);
+   // Once you have the Workflow instance you can use its API to inspect it
+}
+```
 
-Given a workflow definition, you can store it using JSON or YAML format. 
+For additional reading helper methods, including the one to read a workflow definition from classpath, check [WorkflowReader](api/src/main/java/io/serverlessworkflow/api/WorkflowReader.java) class. 
+
+### Writing workflow definition to a JSON/YAML target
+
+Given a Workflow instance, you can store it using JSON or YAML format. 
 For example, to store a workflow using json format in a file called `simple.json`, you write
 
 ``` java
@@ -114,3 +134,9 @@ try (OutputStream out = new FileOutputStream("simple.json")) {
 }
 
 ```
+For additional writing helper methods, check [WorkflowWriter](api/src/main/java/io/serverlessworkflow/api/WorkflowWriter.java) class. 
+
+### Reference implementation
+
+The reference implementation provides a ready-to-use runtime that supports the Serverless Workflow Specification. It includes a workflow execution engine, validation utilities, and illustrative examples to help you quickly test and deploy your workflows. For details on usage, configuration, and supported features, see [readme](impl/README.md). 
+

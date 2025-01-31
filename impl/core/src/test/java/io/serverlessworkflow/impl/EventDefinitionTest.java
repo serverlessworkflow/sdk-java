@@ -51,7 +51,7 @@ public class EventDefinitionTest {
         appl.workflowDefinition(WorkflowReader.readWorkflowFromClasspath(emit));
     WorkflowInstance waitingInstance = listenDefinition.instance(Map.of());
     CompletableFuture<JsonNode> future = waitingInstance.start();
-    assertThat(waitingInstance.status()).isEqualTo(WorkflowStatus.RUNNING);
+    assertThat(waitingInstance.status()).isEqualTo(WorkflowStatus.WAITING);
     emitDefinition.instance(emitInput).start().join();
     assertThat(future).isCompleted();
     assertThat(waitingInstance.status()).isEqualTo(WorkflowStatus.COMPLETED);
@@ -70,11 +70,11 @@ public class EventDefinitionTest {
         appl.workflowDefinition(WorkflowReader.readWorkflowFromClasspath(emit2));
     WorkflowInstance waitingInstance = listenDefinition.instance(Map.of());
     CompletableFuture<JsonNode> future = waitingInstance.start();
-    assertThat(waitingInstance.status()).isEqualTo(WorkflowStatus.RUNNING);
+    assertThat(waitingInstance.status()).isEqualTo(WorkflowStatus.WAITING);
     emitDoctorDefinition.instance(Map.of("temperature", 35)).start().join();
-    assertThat(waitingInstance.status()).isEqualTo(WorkflowStatus.RUNNING);
+    assertThat(waitingInstance.status()).isEqualTo(WorkflowStatus.WAITING);
     emitDoctorDefinition.instance(Map.of("temperature", 39)).start().join();
-    assertThat(waitingInstance.status()).isEqualTo(WorkflowStatus.RUNNING);
+    assertThat(waitingInstance.status()).isEqualTo(WorkflowStatus.WAITING);
     emitOutDefinition.instance(Map.of()).start().join();
     assertThat(future).isCompleted();
     assertThat(waitingInstance.status()).isEqualTo(WorkflowStatus.COMPLETED);

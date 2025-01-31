@@ -16,6 +16,7 @@
 package io.serverlessworkflow.impl.events;
 
 import io.cloudevents.CloudEvent;
+import io.serverlessworkflow.impl.DefaultExecutorServiceFactory;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -62,7 +63,8 @@ public class InMemoryEvents extends AbstractTypeConsumer implements EventPublish
           if (consumer != null) {
             consumer.accept(ce);
           }
-        });
+        },
+        DefaultExecutorServiceFactory.instance().get());
   }
 
   @Override

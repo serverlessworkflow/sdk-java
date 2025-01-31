@@ -53,8 +53,6 @@ public class WorkflowApplication implements AutoCloseable {
   private final EventConsumer<?, ?> eventConsumer;
   private final EventPublisher eventPublisher;
 
-  private ExecutorService executorService;
-
   private WorkflowApplication(Builder builder) {
     this.taskFactory = builder.taskFactory;
     this.exprFactory = builder.exprFactory;
@@ -193,7 +191,7 @@ public class WorkflowApplication implements AutoCloseable {
   }
 
   @Override
-  public void close() throws Exception {
+  public void close() {
     for (WorkflowDefinition definition : definitions.values()) {
       definition.close();
     }
@@ -214,11 +212,6 @@ public class WorkflowApplication implements AutoCloseable {
   }
 
   public ExecutorService executorService() {
-    synchronized (executorFactory) {
-      if (executorService == null) {
-        executorService = executorFactory.get();
-      }
-    }
-    return executorService;
+    return executorFactory.get();
   }
 }
