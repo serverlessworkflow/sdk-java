@@ -72,7 +72,7 @@
     <version.ch.qos.logback>1.5.16</version.ch.qos.logback>
     <version.com.fasterxml.jackson>2.18.2</version.com.fasterxml.jackson>
     <version.com.networknt>1.5.5</version.com.networknt>
-    <version.jakarta.validation>3.1.0</version.jakarta.validation>
+    <version.jakarta.validation>3.1.1</version.jakarta.validation>
     <version.jsonassert>1.5.2</version.jsonassert>
     <version.org.assertj>3.27.3</version.org.assertj>
     <version.org.junit.jupiter>5.11.4</version.org.junit.jupiter>
