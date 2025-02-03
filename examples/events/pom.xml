@@ -3,7 +3,7 @@
   <parent>
     <groupId>io.serverlessworkflow</groupId>
     <artifactId>serverlessworkflow-examples</artifactId>
-    <version>7.0.0-SNAPSHOT</version>
+    <version>7.0.0</version>
   </parent>
   <artifactId>events</artifactId>
   <dependencies>
