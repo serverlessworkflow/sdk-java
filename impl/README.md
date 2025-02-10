@@ -112,7 +112,7 @@ try (WorkflowApplication appl = WorkflowApplication.builder().build()) {
               .join());
     }
 ```
-You can find the complete java code [here](../examples/simpleGet/src/main/java/BlockingExample.java)
+You can find the complete java code [here](../examples/simpleGet/src/main/java/io/serverlessworkflow/impl/BlockingExample.java)
 
 In order to execute the workflow without blocking the calling thread till the HTTP request is completed, you should write
 
@@ -131,7 +131,7 @@ When the HTTP request is done, both examples will print a similar output
 Workflow output is {"id":10,"category":{"id":10,"name":"string"},"name":"doggie","photoUrls":["string"],"tags":[{"id":10,"name":"string"}],"status":"string"}
 ```
 
-You can find the complete java code [here](../examples/simpleGet/src/main/java/NotBlockingExample.java)
+You can find the complete java code [here](../examples/simpleGet/src/main/java/io/serverlessworkflow/impl/NotBlockingExample.java)
 
 ### Detailed version
 
@@ -190,5 +190,5 @@ After that, listen instance will be completed and we will see this log message
 ```java
 [pool-1-thread-1] INFO events.EventExample - Waiting instance completed with result [{"temperature":39}]
 ```
-The source code of the example is [here](../examples/events/src/main/java/EventExample.java)
+The source code of the example is [here](../examples/events/src/main/java/events/EventExample.java)
 
