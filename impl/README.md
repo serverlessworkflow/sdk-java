@@ -59,7 +59,7 @@ You always need to add this dependency to your pom.xml `dependencies` section:
 <dependency>
       <groupId>io.serverlessworkflow</groupId>
       <artifactId>serverlessworkflow-impl-core</artifactId>
-      <version>7.0.0</version>
+      <version>7.0.0.Final</version>
 </dependency>
 ```
 
@@ -69,7 +69,7 @@ And only if your workflow is using HTTP calls, you must add:
 <dependency>
       <groupId>io.serverlessworkflow</groupId>
       <artifactId>serverlessworkflow-impl-http</artifactId>
-      <version>7.0.0</version>
+      <version>7.0.0.Final</version>
 </dependency>
 ```
 
@@ -78,13 +78,13 @@ And only if your workflow is using HTTP calls, you must add:
 You always need to add this dependency to your build.gradle `dependencies` section:
 
 ```text
-implementation("io.serverlessworkflow:serverlessworkflow-impl-core:7.0.0")
+implementation("io.serverlessworkflow:serverlessworkflow-impl-core:7.0.0.Final")
 ```
 
 And only if your workflow is using HTTP calls, you must add:
 
 ```text
-implementation("io.serverlessworkflow:serverlessworkflow-impl-http:7.0.0")
+implementation("io.serverlessworkflow:serverlessworkflow-impl-http:7.0.0.Final")
 ```
 
 ## How to use

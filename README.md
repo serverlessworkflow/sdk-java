@@ -56,7 +56,7 @@ Add the following dependencies to your pom.xml `dependencies` section:
 <dependency>
     <groupId>io.serverlessworkflow</groupId>
     <artifactId>serverlessworkflow-api</artifactId>
-    <version>7.0.0-SNAPSHOT</version>
+    <version>7.0.0.Final</version>
 </dependency>
 ```
 
@@ -65,7 +65,7 @@ Add the following dependencies to your pom.xml `dependencies` section:
  Add the following dependencies to your build.gradle `dependencies` section:
 
 ```text
-implementation("io.serverlessworkflow:serverlessworkflow-api:7.0.0-SNAPSHOT")
+implementation("io.serverlessworkflow:serverlessworkflow-api:7.0.0.Final")
 ```
 
 ## How to Use 
