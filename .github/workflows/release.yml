@@ -1,7 +1,6 @@
 name: sdk-java Release
 
 on:
-  workflow_dispatch:
   pull_request:
     types: [closed]
     paths:
@@ -11,7 +10,7 @@ jobs:
   release:
     runs-on: ubuntu-latest
     name: release
-    if: ${{ github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch' }}
+    if: ${{ github.event.pull_request.merged == true }}
 
     steps:
       - uses: radcortez/project-metadata-action@main
@@ -53,26 +52,6 @@ jobs:
           git checkout ${{github.base_ref}}
           git rebase release
           mvn -B release:perform -Prelease -Darguments="-DperformRelease"
-        env:
-          MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
-          MAVEN_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
-
-      - name: Create Staging Repository
-        run: mvn nexus-staging:deploy
-        env:
-          MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
-          MAVEN_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
-
-      - name: Check Staging Repository
-        run: mvn nexus-staging:rc-list
-        env:
-          MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
-          MAVEN_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
-
-      - name: Close & Release Staging Repository
-        run: |
-          mvn nexus-staging:rc-close
-          mvn nexus-staging:rc-release
         env:
           MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
