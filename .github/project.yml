@@ -1,3 +1,4 @@
+# Retriggering release again
 release:
   current-version: 7.0.0.Final
   next-version: 8.0.0-SNAPSHOT
