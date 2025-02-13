@@ -51,7 +51,27 @@ jobs:
           cat release.properties
           git checkout ${{github.base_ref}}
           git rebase release
-          mvn -B release:perform -Darguments=-DperformRelease -DperformRelease -Prelease
+          mvn -B release:perform -Prelease -Darguments="-DperformRelease"
+        env:
+          MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
+
+      - name: Create Staging Repository
+        run: mvn nexus-staging:deploy
+        env:
+          MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
+
+      - name: Check Staging Repository
+        run: mvn nexus-staging:rc-list
+        env:
+          MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
+
+      - name: Close & Release Staging Repository
+        run: |
+          mvn nexus-staging:rc-close
+          mvn nexus-staging:rc-release
         env:
           MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
           MAVEN_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}

@@ -26,3 +26,7 @@ jobs:
       - name: Verify with Maven
         run: |
           mvn -B -f pom.xml clean install verify
+
+      - name: Verify Examples with Maven
+        run: |
+          mvn -B -f examples/pom.xml clean install verify
