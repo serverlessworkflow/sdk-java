@@ -40,7 +40,6 @@
     <module>api</module>
     <module>custom-generator</module>
     <module>impl</module>
-    <module>examples</module>
   </modules>
 
   <properties>
