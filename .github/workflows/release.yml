@@ -1,6 +1,7 @@
 name: sdk-java Release
 
 on:
+  workflow_dispatch:
   pull_request:
     types: [closed]
     paths:
