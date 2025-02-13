@@ -11,7 +11,7 @@ jobs:
   release:
     runs-on: ubuntu-latest
     name: release
-    if: ${{github.event.pull_request.merged == true}}
+    if: ${{ github.event.pull_request.merged == true || github.event_name == 'workflow_dispatch' }}
 
     steps:
       - uses: radcortez/project-metadata-action@main
