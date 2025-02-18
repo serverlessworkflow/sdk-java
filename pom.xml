@@ -66,7 +66,7 @@
         <version.release.plugin>3.1.1</version.release.plugin>
         <version.source.plugin>3.3.1</version.source.plugin>
         <version.surefire.plugin>3.5.2</version.surefire.plugin>
-        <version.nexus.plugin>1.6.13</version.nexus.plugin>
+        <version.nexus.plugin>1.7.0</version.nexus.plugin>
 
 
         <!-- Dependencies versions, please keep in alphabetical order -->
