@@ -9,20 +9,9 @@ do:
       with:
        method: post
        endpoint:
-         uri: https://petstore.swagger.io/v2/pet
+         uri: https://fakerestapi.azurewebsites.net/api/v1/Authors
        body:
-         name: ${.name}
-         status: ${.status}
+         firstName: ${.name}
+         lastName: ${.surname }
       output:
-         as: .id
-  - getPet:
-     call: http
-     with:
-       method: get
-       endpoint:
-         uri: https://petstore.swagger.io/v2/pet/{petId}
-     input: 
-        from:
-          petId: ${.}
-     output:
-       as: .name
+         as: .firstName
