@@ -98,7 +98,7 @@ public class HTTPWorkflowDefinitionTest {
             "call-http-query-parameters-external-schema.yaml", starTrekInput, starTrekCondition),
         Arguments.of(
             "callPostHttp.yaml",
-            Map.of("name", "Javierito", "status", "available"),
+            Map.of("name", "Javierito", "surname", "Unknown"),
             new Condition<>(o -> o.equals("Javierito"), "CallHttpPostCondition")));
   }
 }
