@@ -79,6 +79,11 @@ public class SwitchExecutor extends AbstractTaskExecutor<SwitchTask> {
     }
   }
 
+  @Override
+  protected TransitionInfo getSkipTransition() {
+    return defaultTask;
+  }
+
   private SwitchExecutor(SwitchExecutorBuilder builder) {
     super(builder);
     this.defaultTask = TransitionInfo.build(builder.defaultTask);

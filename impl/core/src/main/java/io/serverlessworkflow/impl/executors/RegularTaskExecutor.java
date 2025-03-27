@@ -54,6 +54,11 @@ public abstract class RegularTaskExecutor<T extends TaskBase> extends AbstractTa
     }
   }
 
+  @Override
+  protected TransitionInfo getSkipTransition() {
+    return transition;
+  }
+
   protected CompletableFuture<TaskContext> execute(
       WorkflowContext workflow, TaskContext taskContext) {
     CompletableFuture<TaskContext> future =

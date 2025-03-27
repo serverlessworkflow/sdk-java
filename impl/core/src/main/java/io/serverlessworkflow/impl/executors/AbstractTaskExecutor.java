@@ -49,12 +49,14 @@ public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskEx
   private final Optional<SchemaValidator> inputSchemaValidator;
   private final Optional<SchemaValidator> outputSchemaValidator;
   private final Optional<SchemaValidator> contextSchemaValidator;
+  private final Optional<WorkflowFilter> ifFilter;
 
   public abstract static class AbstractTaskExecutorBuilder<T extends TaskBase>
       implements TaskExecutorBuilder<T> {
     private Optional<WorkflowFilter> inputProcessor = Optional.empty();
     private Optional<WorkflowFilter> outputProcessor = Optional.empty();
     private Optional<WorkflowFilter> contextProcessor = Optional.empty();
+    private Optional<WorkflowFilter> ifFilter = Optional.empty();
     private Optional<SchemaValidator> inputSchemaValidator = Optional.empty();
     private Optional<SchemaValidator> outputSchemaValidator = Optional.empty();
     private Optional<SchemaValidator> contextSchemaValidator = Optional.empty();
@@ -100,6 +102,7 @@ public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskEx
         this.contextSchemaValidator =
             getSchemaValidator(application.validatorFactory(), resourceLoader, export.getSchema());
       }
+      this.ifFilter = optionalFilter(application.expressionFactory(), task.getIf());
     }
 
     protected final TransitionInfoBuilder next(
@@ -153,6 +156,7 @@ public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskEx
     this.inputSchemaValidator = builder.inputSchemaValidator;
     this.outputSchemaValidator = builder.outputSchemaValidator;
     this.contextSchemaValidator = builder.contextSchemaValidator;
+    this.ifFilter = builder.ifFilter;
   }
 
   protected final CompletableFuture<TaskContext> executeNext(
@@ -177,39 +181,48 @@ public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskEx
     if (!TaskExecutorHelper.isActive(workflowContext)) {
       return completable;
     }
-    return executeNext(
-        completable
-            .thenApply(
-                t -> {
-                  workflowContext
-                      .definition()
-                      .listeners()
-                      .forEach(l -> l.onTaskStarted(position, task));
-                  inputSchemaValidator.ifPresent(s -> s.validate(t.rawInput()));
-                  inputProcessor.ifPresent(
-                      p -> taskContext.input(p.apply(workflowContext, t, t.rawInput())));
-                  return t;
-                })
-            .thenCompose(t -> execute(workflowContext, t))
-            .thenApply(
-                t -> {
-                  outputProcessor.ifPresent(
-                      p -> t.output(p.apply(workflowContext, t, t.rawOutput())));
-                  outputSchemaValidator.ifPresent(s -> s.validate(t.output()));
-                  contextProcessor.ifPresent(
-                      p ->
-                          workflowContext.context(
-                              p.apply(workflowContext, t, workflowContext.context())));
-                  contextSchemaValidator.ifPresent(s -> s.validate(workflowContext.context()));
-                  t.completedAt(Instant.now());
-                  workflowContext
-                      .definition()
-                      .listeners()
-                      .forEach(l -> l.onTaskEnded(position, task));
-                  return t;
-                }),
-        workflowContext);
+    if (ifFilter
+        .map(f -> f.apply(workflowContext, taskContext, input).asBoolean(true))
+        .orElse(true)) {
+      return executeNext(
+          completable
+              .thenApply(
+                  t -> {
+                    workflowContext
+                        .definition()
+                        .listeners()
+                        .forEach(l -> l.onTaskStarted(position, task));
+                    inputSchemaValidator.ifPresent(s -> s.validate(t.rawInput()));
+                    inputProcessor.ifPresent(
+                        p -> taskContext.input(p.apply(workflowContext, t, t.rawInput())));
+                    return t;
+                  })
+              .thenCompose(t -> execute(workflowContext, t))
+              .thenApply(
+                  t -> {
+                    outputProcessor.ifPresent(
+                        p -> t.output(p.apply(workflowContext, t, t.rawOutput())));
+                    outputSchemaValidator.ifPresent(s -> s.validate(t.output()));
+                    contextProcessor.ifPresent(
+                        p ->
+                            workflowContext.context(
+                                p.apply(workflowContext, t, workflowContext.context())));
+                    contextSchemaValidator.ifPresent(s -> s.validate(workflowContext.context()));
+                    t.completedAt(Instant.now());
+                    workflowContext
+                        .definition()
+                        .listeners()
+                        .forEach(l -> l.onTaskEnded(position, task));
+                    return t;
+                  }),
+          workflowContext);
+    } else {
+      taskContext.transition(getSkipTransition());
+      return executeNext(completable, workflowContext);
+    }
   }
+
+  protected abstract TransitionInfo getSkipTransition();
 
   protected abstract CompletableFuture<TaskContext> execute(
       WorkflowContext workflow, TaskContext taskContext);
