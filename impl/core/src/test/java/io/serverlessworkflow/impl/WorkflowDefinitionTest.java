@@ -82,6 +82,14 @@ public class WorkflowDefinitionTest {
             Map.of("input", Arrays.asList(1, 2, 3)),
             WorkflowDefinitionTest::checkSpecialKeywords),
         args(
+            "conditional-set.yaml",
+            Map.of("enabled", true),
+            WorkflowDefinitionTest::checkEnableCondition),
+        args(
+            "conditional-set.yaml",
+            Map.of("enabled", false),
+            WorkflowDefinitionTest::checkDisableCondition),
+        args(
             "raise-inline copy.yaml",
             WorkflowDefinitionTest::checkWorkflowException,
             WorkflowException.class),
@@ -165,5 +173,15 @@ public class WorkflowDefinitionTest {
         .isBeforeOrEqualTo(Instant.now());
     assertThat(result.get("id").toString()).hasSize(26);
     assertThat(result.get("version").toString()).contains("alpha");
+  }
+
+  private static void checkEnableCondition(Object obj) {
+    Map<String, Object> result = (Map<String, Object>) obj;
+    assertThat(result.get("name")).isEqualTo("javierito");
+  }
+
+  private static void checkDisableCondition(Object obj) {
+    Map<String, Object> result = (Map<String, Object>) obj;
+    assertThat(result.get("enabled")).isEqualTo(false);
   }
 }

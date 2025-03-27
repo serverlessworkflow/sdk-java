@@ -1,0 +1,10 @@
+document:
+  dsl: '1.0.0-alpha5'
+  namespace: test
+  name: conditional-set
+  version: '0.1.0'
+do: 
+  - conditionalExpression:
+      if: .enabled
+      set:
+        name: javierito
