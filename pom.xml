@@ -77,7 +77,7 @@
         <version.jsonassert>1.5.2</version.jsonassert>
         <version.org.assertj>3.27.3</version.org.assertj>
         <version.org.junit.jupiter>5.12.1</version.org.junit.jupiter>
-        <version.org.mockito>5.16.1</version.org.mockito>
+        <version.org.mockito>5.17.0</version.org.mockito>
         <version.org.slf4j>2.0.17</version.org.slf4j>
         <version.org.hibernate.validator>8.0.2.Final</version.org.hibernate.validator>
         <version.org.glassfish.expressly>5.0.0</version.org.glassfish.expressly>
