@@ -6,10 +6,10 @@ name: sdk-java Verify
 on:
   push:
     branches:
-      - main
+      - 5.*
   pull_request:
     branches:
-      - main
+      - 5.*
 jobs:
   build:
     runs-on: ubuntu-latest
