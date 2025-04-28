@@ -24,7 +24,7 @@ import java.util.Map;
 
 public class BaseObjectMapper extends ObjectMapper {
 
-  private WorkflowModule workflowModule;
+  private final WorkflowModule workflowModule;
 
   public BaseObjectMapper(JsonFactory factory, WorkflowPropertySource workflowPropertySource) {
     super(factory);
@@ -33,7 +33,7 @@ public class BaseObjectMapper extends ObjectMapper {
 
     configure(SerializationFeature.INDENT_OUTPUT, true);
     registerModule(workflowModule);
-    configure(SerializationFeature.WRITE_EMPTY_JSON_ARRAYS, false);
+    setSerializationInclusion(JsonInclude.Include.NON_EMPTY);
     configOverride(Map.class)
         .setInclude(
             JsonInclude.Value.construct(
