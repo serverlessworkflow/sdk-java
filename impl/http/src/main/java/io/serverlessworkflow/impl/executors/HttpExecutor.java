@@ -28,6 +28,8 @@ import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowError;
 import io.serverlessworkflow.impl.WorkflowException;
+import io.serverlessworkflow.impl.WorkflowFilter;
+import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.expressions.Expression;
 import io.serverlessworkflow.impl.expressions.ExpressionFactory;
 import io.serverlessworkflow.impl.expressions.ExpressionUtils;
@@ -40,8 +42,10 @@ import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.client.Invocation.Builder;
 import jakarta.ws.rs.client.WebTarget;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public class HttpExecutor implements CallableTask<CallHTTP> {
@@ -49,8 +53,8 @@ public class HttpExecutor implements CallableTask<CallHTTP> {
   private static final Client client = ClientBuilder.newClient();
 
   private TargetSupplier targetSupplier;
-  private Map<String, Object> headersMap;
-  private Map<String, Object> queryMap;
+  private Optional<WorkflowFilter> headersMap;
+  private Optional<WorkflowFilter> queryMap;
   private RequestSupplier requestFunction;
 
   @FunctionalInterface
@@ -70,14 +74,24 @@ public class HttpExecutor implements CallableTask<CallHTTP> {
         getTargetSupplier(httpArgs.getEndpoint(), application.expressionFactory());
     this.headersMap =
         httpArgs.getHeaders() != null
-            ? ExpressionUtils.buildExpressionMap(
-                httpArgs.getHeaders().getAdditionalProperties(), application.expressionFactory())
-            : Map.of();
+            ? Optional.of(
+                WorkflowUtils.buildWorkflowFilter(
+                    application.expressionFactory(),
+                    httpArgs.getHeaders().getRuntimeExpression(),
+                    httpArgs.getHeaders().getHTTPHeaders() != null
+                        ? httpArgs.getHeaders().getHTTPHeaders().getAdditionalProperties()
+                        : null))
+            : Optional.empty();
     this.queryMap =
         httpArgs.getQuery() != null
-            ? ExpressionUtils.buildExpressionMap(
-                httpArgs.getQuery().getAdditionalProperties(), application.expressionFactory())
-            : Map.of();
+            ? Optional.of(
+                WorkflowUtils.buildWorkflowFilter(
+                    application.expressionFactory(),
+                    httpArgs.getQuery().getRuntimeExpression(),
+                    httpArgs.getQuery().getHTTPQuery() != null
+                        ? httpArgs.getQuery().getHTTPQuery().getAdditionalProperties()
+                        : null))
+            : Optional.empty();
     switch (httpArgs.getMethod().toUpperCase()) {
       case HttpMethod.POST:
         Object body =
@@ -100,13 +114,22 @@ public class HttpExecutor implements CallableTask<CallHTTP> {
   public CompletableFuture<JsonNode> apply(
       WorkflowContext workflow, TaskContext taskContext, JsonNode input) {
     WebTarget target = targetSupplier.apply(workflow, taskContext, input);
-    for (Entry<String, Object> entry :
-        ExpressionUtils.evaluateExpressionMap(queryMap, workflow, taskContext, input).entrySet()) {
-      target = target.queryParam(entry.getKey(), entry.getValue());
+    Optional<JsonNode> queryJson = queryMap.map(q -> q.apply(workflow, taskContext, input));
+    if (queryJson.isPresent()) {
+      Iterator<Entry<String, JsonNode>> iter = queryJson.orElseThrow().fields();
+      while (iter.hasNext()) {
+        Entry<String, JsonNode> item = iter.next();
+        target = target.queryParam(item.getKey(), JsonUtils.toJavaValue(item.getValue()));
+      }
     }
+
     Builder request = target.request();
-    ExpressionUtils.evaluateExpressionMap(headersMap, workflow, taskContext, input)
-        .forEach(request::header);
+    headersMap.ifPresent(
+        h ->
+            h.apply(workflow, taskContext, input)
+                .fields()
+                .forEachRemaining(
+                    e -> request.header(e.getKey(), JsonUtils.toJavaValue(e.getValue()))));
     return CompletableFuture.supplyAsync(
         () -> {
           try {
