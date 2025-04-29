@@ -16,25 +16,26 @@
 package io.serverlessworkflow.impl.executors;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import io.serverlessworkflow.api.types.Set;
 import io.serverlessworkflow.api.types.SetTask;
+import io.serverlessworkflow.api.types.SetTaskConfiguration;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.WorkflowFilter;
 import io.serverlessworkflow.impl.WorkflowPosition;
-import io.serverlessworkflow.impl.expressions.ExpressionUtils;
-import io.serverlessworkflow.impl.json.JsonUtils;
+import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 public class SetExecutor extends RegularTaskExecutor<SetTask> {
 
-  private final Map<String, Object> toBeSet;
+  private final WorkflowFilter setFilter;
 
   public static class SetExecutorBuilder extends RegularTaskExecutorBuilder<SetTask> {
 
-    private final Map<String, Object> toBeSet;
+    private final WorkflowFilter setFilter;
 
     protected SetExecutorBuilder(
         WorkflowPosition position,
@@ -43,9 +44,13 @@ public class SetExecutor extends RegularTaskExecutor<SetTask> {
         WorkflowApplication application,
         ResourceLoader resourceLoader) {
       super(position, task, workflow, application, resourceLoader);
-      this.toBeSet =
-          ExpressionUtils.buildExpressionMap(
-              task.getSet().getAdditionalProperties(), application.expressionFactory());
+      Set setInfo = task.getSet();
+      SetTaskConfiguration setConfig = setInfo.getSetTaskConfiguration();
+      this.setFilter =
+          WorkflowUtils.buildWorkflowFilter(
+              application.expressionFactory(),
+              setInfo.getString(),
+              setConfig != null ? setConfig.getAdditionalProperties() : null);
     }
 
     @Override
@@ -56,15 +61,13 @@ public class SetExecutor extends RegularTaskExecutor<SetTask> {
 
   private SetExecutor(SetExecutorBuilder builder) {
     super(builder);
-    this.toBeSet = builder.toBeSet;
+    this.setFilter = builder.setFilter;
   }
 
   @Override
   protected CompletableFuture<JsonNode> internalExecute(
       WorkflowContext workflow, TaskContext taskContext) {
     return CompletableFuture.completedFuture(
-        JsonUtils.fromValue(
-            ExpressionUtils.evaluateExpressionMap(
-                toBeSet, workflow, taskContext, taskContext.input())));
+        setFilter.apply(workflow, taskContext, taskContext.input()));
   }
 }

@@ -52,6 +52,7 @@ import org.jsonschema2pojo.rules.SchemaRule;
 
 class AllAnyOneOfSchemaRule extends SchemaRule {
 
+  private static final String ALL_OF = "allOf";
   private RuleFactory ruleFactory;
 
   AllAnyOneOfSchemaRule(RuleFactory ruleFactory) {
@@ -142,7 +143,7 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
 
     unionType("oneOf", nodeName, schemaNode, parent, generatableType, schema, oneOfTypes);
     unionType("anyOf", nodeName, schemaNode, parent, generatableType, schema, oneOfTypes);
-    unionType("allOf", nodeName, schemaNode, parent, generatableType, schema, allOfTypes);
+    allOfType(nodeName, schemaNode, parent, generatableType, schema, allOfTypes);
 
     Collections.sort(oneOfTypes);
 
@@ -202,6 +203,100 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
       schema.setJavaType(javaType);
     }
     return javaType;
+  }
+
+  private void allOfType(
+      String nodeName,
+      JsonNode schemaNode,
+      JsonNode parent,
+      JClassContainer generatableType,
+      Schema schema,
+      List<JTypeWrapper> allOfTypes) {
+    if (schemaNode.has(ALL_OF)) {
+      ArrayNode array = (ArrayNode) schemaNode.get(ALL_OF);
+      if (array.size() == 2) {
+        JsonNode refNode = null;
+        JsonNode propsNode = null;
+        int refNodePos = 0;
+        int propsNodePos = 0;
+        int pos = 0;
+        for (JsonNode node : array) {
+          if (node.isObject() && node.size() == 1) {
+            if (node.has(REF)) {
+              refNode = node;
+              refNodePos = pos++;
+            } else if (node.has("properties")) {
+              propsNode = node;
+              propsNodePos = pos++;
+            } else {
+              pos++;
+              break;
+            }
+          }
+        }
+        if (refNode != null && propsNode != null) {
+          allOfTypes.add(
+              new JTypeWrapper(
+                  inheritanceNode(
+                      nodeName,
+                      schemaNode,
+                      generatableType,
+                      schema,
+                      refNode,
+                      refNodePos,
+                      propsNode,
+                      propsNodePos),
+                  array));
+          return;
+        }
+      }
+      unionType(ALL_OF, nodeName, schemaNode, parent, generatableType, schema, allOfTypes);
+    }
+  }
+
+  private JType inheritanceNode(
+      String nodeName,
+      JsonNode schemaNode,
+      JClassContainer container,
+      Schema schema,
+      JsonNode refNode,
+      int refNodePos,
+      JsonNode propsNode,
+      int propsNodePos) {
+    try {
+      JDefinedClass javaType =
+          container._class(
+              ruleFactory
+                  .getNameHelper()
+                  .getUniqueClassName(nodeName, schemaNode, container.getPackage()));
+      javaType._extends(
+          (JClass)
+              refType(
+                  refNode.get(REF).asText(),
+                  nodeName,
+                  refNode,
+                  schemaNode,
+                  container,
+                  childSchema(schema, ALL_OF, refNodePos)));
+      ruleFactory
+          .getPropertiesRule()
+          .apply(
+              nodeName,
+              propsNode.get("properties"),
+              propsNode,
+              javaType,
+              childSchema(schema, ALL_OF, propsNodePos));
+      return javaType;
+    } catch (JClassAlreadyExistsException e) {
+      throw new IllegalStateException(e);
+    }
+  }
+
+  private Schema childSchema(Schema parentSchema, String prefix, int pos) {
+    String ref = parentSchema.getId().toString() + '/' + prefix + '/' + pos;
+    return ruleFactory
+        .getSchemaStore()
+        .create(URI.create(ref), ruleFactory.getGenerationConfig().getRefFragmentPathDelimiters());
   }
 
   private JDefinedClass populateAllOf(
@@ -344,8 +439,10 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
       Optional<JFieldVar> valueField,
       JType unionType,
       JsonNode node) {
-    JFieldVar instanceField = getInstanceField(parentSchema, definedClass, unionType, node);
-    JMethod method = getSetterMethod(definedClass, instanceField, node);
+    String typeName = getTypeName(node, unionType, parentSchema);
+    JFieldVar instanceField =
+        getInstanceField(typeName, parentSchema, definedClass, unionType, node);
+    JMethod method = getSetterMethod(typeName, definedClass, instanceField, node);
     method
         .body()
         .assign(
@@ -370,8 +467,8 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
   }
 
   private JMethod getSetterMethod(
-      JDefinedClass definedClass, JFieldVar instanceField, JsonNode node) {
-    String setterName = ruleFactory.getNameHelper().getSetterName(instanceField.name(), node);
+      String fieldName, JDefinedClass definedClass, JFieldVar instanceField, JsonNode node) {
+    String setterName = ruleFactory.getNameHelper().getSetterName(fieldName, node);
     JMethod fluentMethod =
         definedClass.method(JMod.PUBLIC, definedClass, setterName.replaceFirst("set", "with"));
     JBlock body = fluentMethod.body();
@@ -391,9 +488,10 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
     if (pattern == null && iter.hasNext()) {
       pattern = ".*";
     }
+    String typeName = getTypeName(first.getNode(), first.getType(), parentSchema);
     JFieldVar instanceField =
-        getInstanceField(parentSchema, definedClass, first.getType(), first.getNode());
-    JMethod setterMethod = getSetterMethod(definedClass, instanceField, first.getNode());
+        getInstanceField(typeName, parentSchema, definedClass, first.getType(), first.getNode());
+    JMethod setterMethod = getSetterMethod(typeName, definedClass, instanceField, first.getNode());
     JVar methodParam = setupMethod(definedClass, setterMethod, valueField, instanceField);
     JBlock body = setterMethod.body();
     if (pattern != null) {
@@ -403,7 +501,12 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
       while (iter.hasNext()) {
         JTypeWrapper item = iter.next();
         instanceField =
-            getInstanceField(parentSchema, definedClass, item.getType(), item.getNode());
+            getInstanceField(
+                getTypeName(item.getNode(), item.getType(), parentSchema),
+                parentSchema,
+                definedClass,
+                item.getType(),
+                item.getNode());
         pattern = pattern(item.getNode(), parentSchema);
         if (pattern == null) {
           pattern = ".*";
@@ -431,16 +534,16 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
   }
 
   private JFieldVar getInstanceField(
-      Schema parentSchema, JDefinedClass definedClass, JType type, JsonNode node) {
+      String fieldName,
+      Schema parentSchema,
+      JDefinedClass definedClass,
+      JType type,
+      JsonNode node) {
     JFieldVar instanceField =
         definedClass.field(
-            JMod.PRIVATE,
-            type,
-            ruleFactory
-                .getNameHelper()
-                .getPropertyName(getTypeName(node, type, parentSchema), node));
+            JMod.PRIVATE, type, ruleFactory.getNameHelper().getPropertyName(fieldName, node));
     GeneratorUtils.getterMethod(
-        definedClass, instanceField, ruleFactory.getNameHelper(), instanceField.name());
+        definedClass, instanceField, ruleFactory.getNameHelper(), fieldName);
     return instanceField;
   }
 
@@ -486,13 +589,7 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
       int i = 0;
       for (JsonNode oneOf : array) {
         if (!ignoreNode(oneOf)) {
-          String ref = parentSchema.getId().toString() + '/' + prefix + '/' + i++;
-          Schema schema =
-              ruleFactory
-                  .getSchemaStore()
-                  .create(
-                      URI.create(ref),
-                      ruleFactory.getGenerationConfig().getRefFragmentPathDelimiters());
+          Schema schema = childSchema(parentSchema, prefix, i++);
           types.add(
               new JTypeWrapper(
                   schema.isGenerated()
@@ -529,29 +626,39 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
       String nodeName,
       JsonNode schemaNode,
       JsonNode parent,
-      JClassContainer generatableType,
+      JClassContainer container,
       Schema parentSchema) {
-    if (schemaNode.has(REF)) {
-      String ref = schemaNode.get(REF).asText();
-      Schema schema =
-          ruleFactory
-              .getSchemaStore()
-              .create(
-                  parentSchema,
-                  ref,
-                  ruleFactory.getGenerationConfig().getRefFragmentPathDelimiters());
+    return schemaNode.has(REF)
+        ? Optional.of(
+            refType(
+                schemaNode.get(REF).asText(),
+                nodeName,
+                schemaNode,
+                parent,
+                container,
+                parentSchema))
+        : Optional.empty();
+  }
 
-      return Optional.of(
-          schema.isGenerated()
-              ? schema.getJavaType()
-              : apply(
-                  nameFromRef(ref, nodeName, schemaNode),
-                  schema.getContent(),
-                  parent,
-                  generatableType,
-                  schema));
-    }
-    return Optional.empty();
+  private JType refType(
+      String ref,
+      String nodeName,
+      JsonNode schemaNode,
+      JsonNode parent,
+      JClassContainer container,
+      Schema parentSchema) {
+    Schema schema =
+        ruleFactory
+            .getSchemaStore()
+            .create(
+                parentSchema,
+                ref,
+                ruleFactory.getGenerationConfig().getRefFragmentPathDelimiters());
+
+    return schema.isGenerated()
+        ? schema.getJavaType()
+        : apply(
+            nameFromRef(ref, nodeName, schemaNode), schema.getContent(), parent, container, schema);
   }
 
   private JsonNode schemaRef(JsonNode schemaNode, Schema parentSchema) {

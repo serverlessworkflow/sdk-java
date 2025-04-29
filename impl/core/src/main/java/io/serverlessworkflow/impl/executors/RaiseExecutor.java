@@ -30,7 +30,6 @@ import io.serverlessworkflow.impl.WorkflowError;
 import io.serverlessworkflow.impl.WorkflowException;
 import io.serverlessworkflow.impl.WorkflowPosition;
 import io.serverlessworkflow.impl.WorkflowUtils;
-import io.serverlessworkflow.impl.executors.RegularTaskExecutor.RegularTaskExecutorBuilder;
 import io.serverlessworkflow.impl.expressions.ExpressionFactory;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
 import java.util.Map;
@@ -66,9 +65,15 @@ public class RaiseExecutor extends RegularTaskExecutor<RaiseTask> {
       this.instanceFilter =
           getInstanceFunction(application.expressionFactory(), error.getInstance());
       this.titleFilter =
-          WorkflowUtils.buildStringFilter(application.expressionFactory(), error.getTitle());
+          WorkflowUtils.buildStringFilter(
+              application.expressionFactory(),
+              error.getTitle().getExpressionErrorTitle(),
+              error.getTitle().getLiteralErrorTitle());
       this.detailFilter =
-          WorkflowUtils.buildStringFilter(application.expressionFactory(), error.getDetail());
+          WorkflowUtils.buildStringFilter(
+              application.expressionFactory(),
+              error.getDetail().getExpressionErrorDetails(),
+              error.getTitle().getExpressionErrorTitle());
       this.errorBuilder = (w, t) -> buildError(error, w, t);
     }
 
