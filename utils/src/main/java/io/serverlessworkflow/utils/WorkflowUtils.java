@@ -574,7 +574,7 @@ public final class WorkflowUtils {
         if (mainNode instanceof ObjectNode) {
           // Overwrite field
           JsonNode value = updateNode.get(fieldName);
-          ((ObjectNode) mainNode).put(fieldName, value);
+          ((ObjectNode) mainNode).set(fieldName, value);
         }
       }
     }
@@ -591,7 +591,7 @@ public final class WorkflowUtils {
    * @return original, main node with field added
    */
   public static JsonNode addNode(JsonNode mainNode, JsonNode toAddNode, String fieldName) {
-    ((ObjectNode) mainNode).put(fieldName, toAddNode);
+    ((ObjectNode) mainNode).set(fieldName, toAddNode);
     return mainNode;
   }
 
@@ -604,7 +604,7 @@ public final class WorkflowUtils {
    * @return original, main node with array added
    */
   public static JsonNode addArray(JsonNode mainNode, ArrayNode toAddArray, String arrayName) {
-    ((ObjectNode) mainNode).put(arrayName, toAddArray);
+    ((ObjectNode) mainNode).set(arrayName, toAddArray);
     return mainNode;
   }
 
@@ -618,7 +618,7 @@ public final class WorkflowUtils {
    */
   public static JsonNode addFieldValue(JsonNode mainNode, Object toAddValue, String fieldName) {
     ObjectMapper mapper = new ObjectMapper();
-    ((ObjectNode) mainNode).put(fieldName, mapper.valueToTree(toAddValue));
+    ((ObjectNode) mainNode).set(fieldName, mapper.valueToTree(toAddValue));
     return mainNode;
   }
 }
