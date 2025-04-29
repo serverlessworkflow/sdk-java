@@ -75,31 +75,31 @@ b) Add the following dependencies to your pom.xml `dependencies` section:
 <dependency>
     <groupId>io.serverlessworkflow</groupId>
     <artifactId>serverlessworkflow-api</artifactId>
-    <version>5.0.0-SNAPSHOT</version>
+    <version>5.1.0-SNAPSHOT</version>
 </dependency>
 
 <dependency>
     <groupId>io.serverlessworkflow</groupId>
     <artifactId>serverlessworkflow-spi</artifactId>
-    <version>5.0.0-SNAPSHOT</version>
+    <version>5.1.0-SNAPSHOT</version>
 </dependency>
 
 <dependency>
     <groupId>io.serverlessworkflow</groupId>
     <artifactId>serverlessworkflow-validation</artifactId>
-    <version>5.0.0-SNAPSHOT</version>
+    <version>5.1.0-SNAPSHOT</version>
 </dependency>
 
 <dependency>
     <groupId>io.serverlessworkflow</groupId>
     <artifactId>serverlessworkflow-diagram</artifactId>
-    <version>5.0.0-SNAPSHOT</version>
+    <version>5.1.0-SNAPSHOT</version>
 </dependency>
 
 <dependency>
     <groupId>io.serverlessworkflow</groupId>
     <artifactId>serverlessworkflow-util</artifactId>
-    <version>5.0.0-SNAPSHOT</version>
+    <version>5.1.0-SNAPSHOT</version>
 </dependency>
 ```
 
@@ -114,11 +114,11 @@ maven { url "https://oss.sonatype.org/content/repositories/snapshots" }
 b) Add the following dependencies to your build.gradle `dependencies` section:
 
 ```text
-implementation("io.serverlessworkflow:serverlessworkflow-api:5.0.0-SNAPSHOT")
-implementation("io.serverlessworkflow:serverlessworkflow-spi:5.0.0-SNAPSHOT")
-implementation("io.serverlessworkflow:serverlessworkflow-validation:5.0.0-SNAPSHOT")
-implementation("io.serverlessworkflow:serverlessworkflow-diagram:5.0.0-SNAPSHOT")
-implementation("io.serverlessworkflow:serverlessworkflow-util:5.0.0-SNAPSHOT")
+implementation("io.serverlessworkflow:serverlessworkflow-api:5.1.0-SNAPSHOT")
+implementation("io.serverlessworkflow:serverlessworkflow-spi:5.1.0-SNAPSHOT")
+implementation("io.serverlessworkflow:serverlessworkflow-validation:5.1.0-SNAPSHOT")
+implementation("io.serverlessworkflow:serverlessworkflow-diagram:5.1.0-SNAPSHOT")
+implementation("io.serverlessworkflow:serverlessworkflow-util:5.1.0-SNAPSHOT")
 ```
 
 ### How to Use 
