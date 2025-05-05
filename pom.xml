@@ -71,7 +71,7 @@
 
     <!-- Dependency versions -->
     <version.ch.qos.logback>1.5.18</version.ch.qos.logback>
-    <version.com.fasterxml.jackson>2.18.3</version.com.fasterxml.jackson>
+    <version.com.fasterxml.jackson>2.19.0</version.com.fasterxml.jackson>
     <version.com.networknt>1.5.6</version.com.networknt>
     <version.commons.lang>3.14.0</version.commons.lang>
     <version.graphviz>0.17.0</version.graphviz>
