@@ -77,7 +77,7 @@
     <version.graphviz>0.18.1</version.graphviz>
     <version.hamcrest>3.0</version.hamcrest>
     <version.jakarta.validation>3.1.1</version.jakarta.validation>
-    <version.jsonassert>1.5.0</version.jsonassert>
+    <version.jsonassert>1.5.3</version.jsonassert>
     <version.org.assertj>3.27.3</version.org.assertj>
     <version.org.junit.jupiter>5.12.2</version.org.junit.jupiter>
     <version.org.mockito>5.17.0</version.org.mockito>
