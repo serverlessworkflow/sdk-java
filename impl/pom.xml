@@ -11,7 +11,7 @@
     <properties>
         <version.org.glassfish.jersey>3.1.10</version.org.glassfish.jersey>
         <version.io.cloudevents>4.0.1</version.io.cloudevents>
-        <version.net.thisptr>1.2.0</version.net.thisptr>
+        <version.net.thisptr>1.3.0</version.net.thisptr>
         <version.com.github.f4b6a3>5.2.3</version.com.github.f4b6a3>
     </properties>
     <dependencyManagement>
