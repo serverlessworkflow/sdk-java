@@ -79,7 +79,7 @@
         <version.org.mockito>5.17.0</version.org.mockito>
         <version.org.slf4j>2.0.17</version.org.slf4j>
         <version.org.hibernate.validator>8.0.2.Final</version.org.hibernate.validator>
-        <version.org.glassfish.expressly>5.0.0</version.org.glassfish.expressly>
+        <version.org.glassfish.expressly>6.0.0</version.org.glassfish.expressly>
 
         <!-- Checkstyle props -->
         <checkstyle.failOnViolation>true</checkstyle.failOnViolation>
