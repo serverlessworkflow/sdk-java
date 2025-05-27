@@ -45,10 +45,10 @@
   </modules>
 
   <properties>
-    <java.version>1.8</java.version>
+    <java.version>17</java.version>
     <maven.compiler.source>${java.version}</maven.compiler.source>
     <maven.compiler.target>${java.version}</maven.compiler.target>
-    <maven.compiler.release>8</maven.compiler.release>
+    <maven.compiler.release>${java.version}</maven.compiler.release>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <version.maven>3.9.7</version.maven>
 
@@ -78,7 +78,7 @@
     <version.commons.lang>3.17.0</version.commons.lang>
     <version.graphviz>0.18.1</version.graphviz>
     <version.hamcrest>3.0</version.hamcrest>
-    <version.javax.validation>2.0.1.Final</version.javax.validation>
+    <version.jakarta.validation>3.1.1</version.jakarta.validation>
     <version.jsonassert>1.5.3</version.jsonassert>
     <version.org.assertj>3.27.3</version.org.assertj>
     <version.org.junit.jupiter>5.12.2</version.org.junit.jupiter>
@@ -151,9 +151,9 @@
         <version>${version.com.fasterxml.jackson}</version>
       </dependency>
       <dependency>
-        <groupId>javax.validation</groupId>
-        <artifactId>validation-api</artifactId>
-        <version>${version.javax.validation}</version>
+        <groupId>jakarta.validation</groupId>
+        <artifactId>jakarta.validation-api</artifactId>
+        <version>${version.jakarta.validation}</version>
       </dependency>
       <dependency>
         <groupId>org.apache.commons</groupId>
