@@ -70,7 +70,7 @@
 
         <!-- Dependencies versions, please keep in alphabetical order -->
         <version.ch.qos.logback>1.5.18</version.ch.qos.logback>
-        <version.com.fasterxml.jackson>2.18.3</version.com.fasterxml.jackson>
+        <version.com.fasterxml.jackson>2.19.0</version.com.fasterxml.jackson>
         <version.com.networknt>1.5.7</version.com.networknt>
         <version.jakarta.validation>3.1.1</version.jakarta.validation>
         <version.jsonassert>1.5.2</version.jsonassert>
@@ -107,10 +107,17 @@
 
     <dependencyManagement>
         <dependencies>
+            <!--
+                Import Jackson BOM to align all Jackson modules
+                Glassfish also has dependency to Jackson, so to avoid incompatibility we force
+                our required version to it.
+            -->
             <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-api</artifactId>
-                <version>${version.org.slf4j}</version>
+                <groupId>com.fasterxml.jackson</groupId>
+                <artifactId>jackson-bom</artifactId>
+                <version>${version.com.fasterxml.jackson}</version>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
@@ -121,6 +128,22 @@
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-databind</artifactId>
                 <version>${version.com.fasterxml.jackson}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.dataformat</groupId>
+                <artifactId>jackson-dataformat-yaml</artifactId>
+                <version>${version.com.fasterxml.jackson}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.fasterxml.jackson.core</groupId>
+                <artifactId>jackson-annotations</artifactId>
+                <version>${version.com.fasterxml.jackson}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>${version.org.slf4j}</version>
             </dependency>
             <dependency>
                 <groupId>com.networknt</groupId>
@@ -136,12 +159,6 @@
                 <groupId>org.glassfish.expressly</groupId>
                 <artifactId>expressly</artifactId>
                 <version>${version.org.glassfish.expressly}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>com.fasterxml.jackson.dataformat</groupId>
-                <artifactId>jackson-dataformat-yaml</artifactId>
-                <version>${version.com.fasterxml.jackson}</version>
             </dependency>
             <dependency>
                 <groupId>org.jsonschema2pojo</groupId>
