@@ -15,35 +15,40 @@
  */
 package io.serverlessworkflow.api.workflow;
 
+import java.util.Collections;
 import java.util.List;
 
 public class Secrets {
-  private String refValue;
-  private List<String> secretDefs;
+    private String refValue;
+    private List<String> secretDefs;
 
-  public Secrets() {}
+    public Secrets() {
+    }
 
-  public Secrets(String refValue) {
-    this.refValue = refValue;
-  }
+    public Secrets(String refValue) {
+        this.refValue = refValue;
+    }
 
-  public Secrets(List<String> secretDefs) {
-    this.secretDefs = secretDefs;
-  }
+    public Secrets(List<String> secretDefs) {
+        this.secretDefs = secretDefs;
+    }
 
-  public String getRefValue() {
-    return refValue;
-  }
+    public String getRefValue() {
+        return refValue;
+    }
 
-  public void setRefValue(String refValue) {
-    this.refValue = refValue;
-  }
+    public void setRefValue(String refValue) {
+        this.refValue = refValue;
+    }
 
-  public List<String> getSecretDefs() {
-    return secretDefs;
-  }
+    public List<String> getSecretDefs() {
+        if (secretDefs == null) {
+            return Collections.emptyList();
+        }
+        return secretDefs;
+    }
 
-  public void setSecretDefs(List<String> secretDefs) {
-    this.secretDefs = secretDefs;
-  }
+    public void setSecretDefs(List<String> secretDefs) {
+        this.secretDefs = secretDefs;
+    }
 }

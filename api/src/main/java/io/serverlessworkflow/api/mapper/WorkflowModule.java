@@ -42,11 +42,11 @@ import io.serverlessworkflow.api.workflow.*;
 
 public class WorkflowModule extends SimpleModule {
 
-  private static final long serialVersionUID = 510l;
+  private static final long serialVersionUID = 510L;
 
-  private WorkflowPropertySource workflowPropertySource;
-  private ExtensionSerializer extensionSerializer;
-  private ExtensionDeserializer extensionDeserializer;
+  private final WorkflowPropertySource workflowPropertySource;
+  private final ExtensionSerializer extensionSerializer;
+  private final ExtensionDeserializer extensionDeserializer;
 
   public WorkflowModule() {
     this(null);
