@@ -15,187 +15,171 @@
  */
 package io.serverlessworkflow.api.serializers;
 
+import java.io.IOException;
+import java.security.MessageDigest;
+import java.util.List;
+import java.util.UUID;
+
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import io.serverlessworkflow.api.Workflow;
-import io.serverlessworkflow.api.error.ErrorDefinition;
-import io.serverlessworkflow.api.events.EventDefinition;
-import io.serverlessworkflow.api.functions.FunctionDefinition;
 import io.serverlessworkflow.api.interfaces.Extension;
 import io.serverlessworkflow.api.interfaces.State;
-import io.serverlessworkflow.api.retry.RetryDefinition;
-import java.io.IOException;
-import java.security.MessageDigest;
-import java.util.UUID;
 
 public class WorkflowSerializer extends StdSerializer<Workflow> {
 
-  public WorkflowSerializer() {
-    this(Workflow.class);
-  }
+    private static final char[] hexArray = "0123456789ABCDEF".toCharArray();
 
-  protected WorkflowSerializer(Class<Workflow> t) {
-    super(t);
-  }
-
-  private static final char[] hexArray = "0123456789ABCDEF".toCharArray();
-
-  @Override
-  public void serialize(Workflow workflow, JsonGenerator gen, SerializerProvider provider)
-      throws IOException {
-
-    gen.writeStartObject();
-
-    if (workflow.getId() != null && !workflow.getId().isEmpty()) {
-      gen.writeStringField("id", workflow.getId());
-    } else {
-      gen.writeStringField("id", generateUniqueId());
+    public WorkflowSerializer() {
+        this(Workflow.class);
     }
 
-    if (workflow.getKey() != null) {
-      gen.writeStringField("key", workflow.getKey());
-    }
-    gen.writeStringField("name", workflow.getName());
-
-    if (workflow.getDescription() != null && !workflow.getDescription().isEmpty()) {
-      gen.writeStringField("description", workflow.getDescription());
+    protected WorkflowSerializer(Class<Workflow> t) {
+        super(t);
     }
 
-    if (workflow.getVersion() != null && !workflow.getVersion().isEmpty()) {
-      gen.writeStringField("version", workflow.getVersion());
+    protected static String generateUniqueId() {
+        try {
+            MessageDigest salt = MessageDigest.getInstance("SHA-256");
+            salt.update(UUID.randomUUID().toString().getBytes("UTF-8"));
+            return bytesToHex(salt.digest());
+        } catch (Exception e) {
+            return UUID.randomUUID().toString();
+        }
     }
 
-    if (workflow.getAnnotations() != null && !workflow.getAnnotations().isEmpty()) {
-      gen.writeObjectField("annotations", workflow.getAnnotations());
+    protected static String bytesToHex(byte[] bytes) {
+        char[] hexChars = new char[bytes.length * 2];
+        for (int j = 0; j < bytes.length; j++) {
+            int v = bytes[j] & 0xFF;
+            hexChars[j * 2] = hexArray[v >>> 4];
+            hexChars[j * 2 + 1] = hexArray[v & 0x0F];
+        }
+        return new String(hexChars);
     }
 
-    if (workflow.getDataInputSchema() != null) {
-      if (workflow.getDataInputSchema().getSchema() != null
-          && workflow.getDataInputSchema().getSchema().length() > 0
-          && workflow.getDataInputSchema().isFailOnValidationErrors()) {
-        gen.writeStringField("dataInputSchema", workflow.getDataInputSchema().getSchema());
-
-      } else if (workflow.getDataInputSchema().getSchema() != null
-          && workflow.getDataInputSchema().getSchema().length() > 0
-          && !workflow.getDataInputSchema().isFailOnValidationErrors()) {
-        gen.writeObjectField("dataInputSchema", workflow.getDataInputSchema());
-      }
+    // Helper to write either an array of items or a single string reference
+    private <T> void writeListOrRef(
+            JsonGenerator gen,
+            SerializerProvider prov,
+            String fieldName,
+            List<T> items,
+            String refValue) throws IOException {
+        if (items != null && !items.isEmpty()) {
+            gen.writeArrayFieldStart(fieldName);
+            for (T item : items) {
+                prov.defaultSerializeValue(item, gen);
+            }
+            gen.writeEndArray();
+        } else if (refValue != null) {
+            gen.writeStringField(fieldName, refValue);
+        }
     }
 
-    if (workflow.getStart() != null) {
-      gen.writeObjectField("start", workflow.getStart());
+    @Override
+    public void serialize(Workflow workflow, JsonGenerator gen, SerializerProvider provider)
+            throws IOException {
+
+        gen.writeStartObject();
+
+        // --- ID / key / basic fields ---
+        if (workflow.getId() != null && !workflow.getId().isEmpty()) {
+            gen.writeStringField("id", workflow.getId());
+        } else {
+            gen.writeStringField("id", generateUniqueId());
+        }
+        if (workflow.getKey() != null) {
+            gen.writeStringField("key", workflow.getKey());
+        }
+        gen.writeStringField("name", workflow.getName());
+        if (workflow.getDescription() != null && !workflow.getDescription().isEmpty()) {
+            gen.writeStringField("description", workflow.getDescription());
+        }
+        if (workflow.getVersion() != null && !workflow.getVersion().isEmpty()) {
+            gen.writeStringField("version", workflow.getVersion());
+        }
+        if (workflow.getAnnotations() != null && !workflow.getAnnotations().isEmpty()) {
+            gen.writeObjectField("annotations", workflow.getAnnotations());
+        }
+        if (workflow.getDataInputSchema() != null) {
+            if (workflow.getDataInputSchema().getSchema() != null
+                    && !workflow.getDataInputSchema().getSchema().isEmpty()
+                    && workflow.getDataInputSchema().isFailOnValidationErrors()) {
+                gen.writeStringField("dataInputSchema", workflow.getDataInputSchema().getSchema());
+            } else if (workflow.getDataInputSchema().getSchema() != null
+                    && !workflow.getDataInputSchema().getSchema().isEmpty()
+                    && !workflow.getDataInputSchema().isFailOnValidationErrors()) {
+                gen.writeObjectField("dataInputSchema", workflow.getDataInputSchema());
+            }
+        }
+        if (workflow.getStart() != null) {
+            gen.writeObjectField("start", workflow.getStart());
+        }
+        if (workflow.getSpecVersion() != null && !workflow.getSpecVersion().isEmpty()) {
+            gen.writeStringField("specVersion", workflow.getSpecVersion());
+        }
+        if (workflow.getExpressionLang() != null && !workflow.getExpressionLang().isEmpty()) {
+            gen.writeStringField("expressionLang", workflow.getExpressionLang());
+        }
+        if (workflow.isKeepActive()) {
+            gen.writeBooleanField("keepActive", workflow.isKeepActive());
+        }
+        if (workflow.isAutoRetries()) {
+            gen.writeBooleanField("autoRetries", workflow.isAutoRetries());
+        }
+        if (workflow.getMetadata() != null && !workflow.getMetadata().isEmpty()) {
+            gen.writeObjectField("metadata", workflow.getMetadata());
+        }
+
+        // --- Collections or references ---
+        if (workflow.getEvents() != null) {
+            writeListOrRef(gen, provider,
+                    "events",
+                    workflow.getEvents().getEventDefs(),
+                    workflow.getEvents().getRefValue());
+        }
+        if (workflow.getFunctions() != null) {
+            writeListOrRef(gen, provider,
+                    "functions",
+                    workflow.getFunctions().getFunctionDefs(),
+                    workflow.getFunctions().getRefValue());
+        }
+        if (workflow.getRetries() != null) {
+            writeListOrRef(gen, provider,
+                    "retries",
+                    workflow.getRetries().getRetryDefs(),
+                    workflow.getRetries().getRefValue());
+        }
+        if (workflow.getErrors() != null) {
+            writeListOrRef(gen, provider,
+                    "errors",
+                    workflow.getErrors().getErrorDefs(),
+                    workflow.getErrors().getRefValue());
+        }
+        if (workflow.getSecrets() != null) {
+            writeListOrRef(gen, provider,
+                    "secrets",
+                    workflow.getSecrets().getSecretDefs(),
+                    workflow.getSecrets().getRefValue());
+        }
+
+        // --- Always-array fields ---
+        if (workflow.getStates() != null && !workflow.getStates().isEmpty()) {
+            gen.writeArrayFieldStart("states");
+            for (State state : workflow.getStates()) {
+                gen.writeObject(state);
+            }
+            gen.writeEndArray();
+        }
+        if (workflow.getExtensions() != null && !workflow.getExtensions().isEmpty()) {
+            gen.writeArrayFieldStart("extensions");
+            for (Extension ext : workflow.getExtensions()) {
+                gen.writeObject(ext);
+            }
+            gen.writeEndArray();
+        }
+
+        gen.writeEndObject();
     }
-
-    if (workflow.getSpecVersion() != null && !workflow.getSpecVersion().isEmpty()) {
-      gen.writeStringField("specVersion", workflow.getSpecVersion());
-    }
-
-    if (workflow.getExtensions() != null && !workflow.getExpressionLang().isEmpty()) {
-      gen.writeStringField("expressionLang", workflow.getExpressionLang());
-    }
-
-    if (workflow.isKeepActive()) {
-      gen.writeBooleanField("keepActive", workflow.isKeepActive());
-    }
-
-    if (workflow.isAutoRetries()) {
-      gen.writeBooleanField("autoRetries", workflow.isAutoRetries());
-    }
-
-    if (workflow.getMetadata() != null && !workflow.getMetadata().isEmpty()) {
-      gen.writeObjectField("metadata", workflow.getMetadata());
-    }
-
-    if (workflow.getEvents() != null && !workflow.getEvents().getEventDefs().isEmpty()) {
-      gen.writeArrayFieldStart("events");
-      for (EventDefinition eventDefinition : workflow.getEvents().getEventDefs()) {
-        gen.writeObject(eventDefinition);
-      }
-      gen.writeEndArray();
-    }
-
-    if (workflow.getFunctions() != null && !workflow.getFunctions().getFunctionDefs().isEmpty()) {
-      gen.writeArrayFieldStart("functions");
-      for (FunctionDefinition function : workflow.getFunctions().getFunctionDefs()) {
-        gen.writeObject(function);
-      }
-      gen.writeEndArray();
-    }
-
-    if (workflow.getRetries() != null && !workflow.getRetries().getRetryDefs().isEmpty()) {
-      gen.writeArrayFieldStart("retries");
-      for (RetryDefinition retry : workflow.getRetries().getRetryDefs()) {
-        gen.writeObject(retry);
-      }
-      gen.writeEndArray();
-    }
-
-    if (workflow.getErrors() != null && !workflow.getErrors().getErrorDefs().isEmpty()) {
-      gen.writeArrayFieldStart("errors");
-      for (ErrorDefinition error : workflow.getErrors().getErrorDefs()) {
-        gen.writeObject(error);
-      }
-      gen.writeEndArray();
-    }
-
-    if (workflow.getSecrets() != null && !workflow.getSecrets().getSecretDefs().isEmpty()) {
-      gen.writeArrayFieldStart("secrets");
-      for (String secretDef : workflow.getSecrets().getSecretDefs()) {
-        gen.writeString(secretDef);
-      }
-      gen.writeEndArray();
-    }
-
-    if (workflow.getConstants() != null && !workflow.getConstants().getConstantsDef().isEmpty()) {
-      gen.writeObjectField("constants", workflow.getConstants().getConstantsDef());
-    }
-
-    if (workflow.getTimeouts() != null) {
-      gen.writeObjectField("timeouts", workflow.getTimeouts());
-    }
-
-    if (workflow.getAuth() != null && !workflow.getAuth().getAuthDefs().isEmpty()) {
-      gen.writeObjectField("auth", workflow.getAuth().getAuthDefs());
-    }
-
-    if (workflow.getStates() != null && !workflow.getStates().isEmpty()) {
-      gen.writeArrayFieldStart("states");
-      for (State state : workflow.getStates()) {
-        gen.writeObject(state);
-      }
-      gen.writeEndArray();
-    }
-
-    if (workflow.getExtensions() != null && !workflow.getExtensions().isEmpty()) {
-      gen.writeArrayFieldStart("extensions");
-      for (Extension extension : workflow.getExtensions()) {
-        gen.writeObject(extension);
-      }
-      gen.writeEndArray();
-    }
-
-    gen.writeEndObject();
-  }
-
-  protected static String generateUniqueId() {
-    try {
-      MessageDigest salt = MessageDigest.getInstance("SHA-256");
-
-      salt.update(UUID.randomUUID().toString().getBytes("UTF-8"));
-      return bytesToHex(salt.digest());
-    } catch (Exception e) {
-      return UUID.randomUUID().toString();
-    }
-  }
-
-  protected static String bytesToHex(byte[] bytes) {
-    char[] hexChars = new char[bytes.length * 2];
-    for (int j = 0; j < bytes.length; j++) {
-      int v = bytes[j] & 0xFF;
-      hexChars[j * 2] = hexArray[v >>> 4];
-      hexChars[j * 2 + 1] = hexArray[v & 0x0F];
-    }
-    return new String(hexChars);
-  }
 }

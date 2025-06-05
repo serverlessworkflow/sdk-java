@@ -16,42 +16,48 @@
 
 package io.serverlessworkflow.api.workflow;
 
-import io.serverlessworkflow.api.auth.AuthDefinition;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
+import io.serverlessworkflow.api.auth.AuthDefinition;
+
 public class Auth {
-  private String refValue;
-  private List<AuthDefinition> authDefs;
+    private String refValue;
+    private List<AuthDefinition> authDefs;
 
-  public Auth() {}
+    public Auth() {
+    }
 
-  public Auth(AuthDefinition authDef) {
-    this.authDefs = new ArrayList<>();
-    this.authDefs.add(authDef);
-  }
+    public Auth(AuthDefinition authDef) {
+        this.authDefs = new ArrayList<>();
+        this.authDefs.add(authDef);
+    }
 
-  public Auth(List<AuthDefinition> authDefs) {
-    this.authDefs = authDefs;
-  }
+    public Auth(List<AuthDefinition> authDefs) {
+        this.authDefs = authDefs;
+    }
 
-  public Auth(String refValue) {
-    this.refValue = refValue;
-  }
+    public Auth(String refValue) {
+        this.refValue = refValue;
+    }
 
-  public String getRefValue() {
-    return refValue;
-  }
+    public String getRefValue() {
+        return refValue;
+    }
 
-  public void setRefValue(String refValue) {
-    this.refValue = refValue;
-  }
+    public void setRefValue(String refValue) {
+        this.refValue = refValue;
+    }
 
-  public List<AuthDefinition> getAuthDefs() {
-    return authDefs;
-  }
+    public List<AuthDefinition> getAuthDefs() {
+        if (authDefs == null) {
+            return Collections.emptyList();
+        }
+        return authDefs;
+    }
 
-  public void setAuthDefs(List<AuthDefinition> authDefs) {
-    this.authDefs = authDefs;
-  }
+    public void setAuthDefs(List<AuthDefinition> authDefs) {
+        this.authDefs = authDefs;
+    }
 }
