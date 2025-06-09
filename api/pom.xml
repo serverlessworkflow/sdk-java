@@ -34,8 +34,8 @@
             <artifactId>jackson-dataformat-yaml</artifactId>
         </dependency>
         <dependency>
-            <groupId>javax.validation</groupId>
-            <artifactId>validation-api</artifactId>
+            <groupId>jakarta.validation</groupId>
+            <artifactId>jakarta.validation-api</artifactId>
         </dependency>
         <!-- test -->
         <dependency>
@@ -83,12 +83,13 @@
                     <includeJsr303Annotations>true</includeJsr303Annotations>
                     <generateBuilders>true</generateBuilders>
                     <includeAdditionalProperties>false</includeAdditionalProperties>
+                    <useJakartaValidation>true</useJakartaValidation>
                     <includeToString>false</includeToString>
                     <includeHashcodeAndEquals>false</includeHashcodeAndEquals>
                     <includeConstructors>true</includeConstructors>
                     <constructorsRequiredPropertiesOnly>true</constructorsRequiredPropertiesOnly>
                     <serializable>true</serializable>
-                    <targetVersion>1.8</targetVersion>
+                    <targetVersion>${java.version}</targetVersion>
                     <usePrimitives>true</usePrimitives>
                 </configuration>
                 <executions>
