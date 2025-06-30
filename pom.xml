@@ -71,7 +71,7 @@
         <!-- Dependencies versions, please keep in alphabetical order -->
         <version.ch.qos.logback>1.5.18</version.ch.qos.logback>
         <version.com.fasterxml.jackson>2.19.1</version.com.fasterxml.jackson>
-        <version.com.networknt>1.5.7</version.com.networknt>
+        <version.com.networknt>1.5.8</version.com.networknt>
         <version.jakarta.validation>3.1.1</version.jakarta.validation>
         <version.jsonassert>1.5.2</version.jsonassert>
         <version.org.assertj>3.27.3</version.org.assertj>
