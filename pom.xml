@@ -60,7 +60,7 @@
     <version.enforcer.plugin>3.5.0</version.enforcer.plugin>
     <version.failsafe.plugin>3.5.3</version.failsafe.plugin>
     <version.fmt-maven-plugin>2.25</version.fmt-maven-plugin>
-    <version.gpg.plugin>3.2.7</version.gpg.plugin>
+    <version.gpg.plugin>3.2.8</version.gpg.plugin>
     <version.jar.plugin>3.4.2</version.jar.plugin>
     <version.jdk>${java.version}</version.jdk>
     <version.jsonschema2pojo-maven-plugin>1.2.2</version.jsonschema2pojo-maven-plugin>
