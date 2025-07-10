@@ -18,16 +18,22 @@ package io.serverlessworkflow.generator;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.sun.codemodel.JDefinedClass;
 import com.sun.codemodel.JFieldVar;
+import io.serverlessworkflow.annotations.AdditionalProperties;
 import jakarta.validation.constraints.Pattern;
 import org.jsonschema2pojo.AbstractAnnotator;
 import org.jsonschema2pojo.GenerationConfig;
 
-public class ConstAnnotator extends AbstractAnnotator {
+public class CustomAnnotator extends AbstractAnnotator {
 
   private static final String CONST = "const";
 
-  public ConstAnnotator(GenerationConfig generationConfig) {
+  public CustomAnnotator(GenerationConfig generationConfig) {
     super(generationConfig);
+  }
+
+  @Override
+  public void additionalPropertiesField(JFieldVar field, JDefinedClass clazz, String propertyName) {
+    clazz.annotate(AdditionalProperties.class);
   }
 
   @Override
