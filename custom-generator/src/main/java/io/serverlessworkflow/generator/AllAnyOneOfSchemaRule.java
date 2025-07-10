@@ -16,8 +16,6 @@
 package io.serverlessworkflow.generator;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.sun.codemodel.JBlock;
 import com.sun.codemodel.JClass;
@@ -35,8 +33,7 @@ import com.sun.codemodel.JType;
 import com.sun.codemodel.JVar;
 import io.serverlessworkflow.annotations.OneOfSetter;
 import io.serverlessworkflow.annotations.OneOfValueProvider;
-import io.serverlessworkflow.serialization.DeserializeHelper;
-import io.serverlessworkflow.serialization.SerializeHelper;
+import io.serverlessworkflow.annotations.Union;
 import jakarta.validation.ConstraintViolationException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
@@ -324,21 +321,7 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
     definedClass._implements(
         definedClass.owner().ref(OneOfValueProvider.class).narrow(valueField.type()));
     GeneratorUtils.implementInterface(definedClass, valueField);
-    try {
-      JDefinedClass serializer = generateSerializer(definedClass);
-      definedClass.annotate(JsonSerialize.class).param("using", serializer);
-    } catch (JClassAlreadyExistsException ex) {
-      // already serialized aware
-    }
-
-    try {
-      JDefinedClass deserializer =
-          generateDeserializer(definedClass, oneOfTypes, "deserializeOneOf");
-      definedClass.annotate(JsonDeserialize.class).param("using", deserializer);
-    } catch (JClassAlreadyExistsException ex) {
-      // already deserialized aware
-    }
-
+    definedClass.annotate(Union.class);
     return wrapAll(parentSchema, definedClass, commonType, oneOfTypes, Optional.of(valueField));
   }
 
@@ -387,49 +370,6 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
 
   private static boolean isStringType(JType type) {
     return type.name().equals("String");
-  }
-
-  private JDefinedClass generateSerializer(JDefinedClass relatedClass)
-      throws JClassAlreadyExistsException {
-    JDefinedClass definedClass = GeneratorUtils.serializerClass(relatedClass);
-    GeneratorUtils.fillSerializer(
-        definedClass,
-        relatedClass,
-        (method, valueParam, genParam) ->
-            method
-                .body()
-                .staticInvoke(definedClass.owner().ref(SerializeHelper.class), "serializeOneOf")
-                .arg(genParam)
-                .arg(valueParam));
-    return definedClass;
-  }
-
-  private JDefinedClass generateDeserializer(
-      JDefinedClass relatedClass, Collection<JTypeWrapper> oneOfTypes, String methodName)
-      throws JClassAlreadyExistsException {
-    JDefinedClass definedClass = GeneratorUtils.deserializerClass(relatedClass);
-    GeneratorUtils.fillDeserializer(
-        definedClass,
-        relatedClass,
-        (method, parserParam) -> {
-          JBlock body = method.body();
-
-          body._return(
-              definedClass
-                  .owner()
-                  .ref(DeserializeHelper.class)
-                  .staticInvoke(methodName)
-                  .arg(parserParam)
-                  .arg(relatedClass.dotclass())
-                  .arg(list(definedClass, oneOfTypes)));
-        });
-    return definedClass;
-  }
-
-  private JInvocation list(JDefinedClass definedClass, Collection<JTypeWrapper> list) {
-    JInvocation result = definedClass.owner().ref(List.class).staticInvoke("of");
-    list.forEach(c -> result.arg(((JClass) c.getType()).dotclass()));
-    return result;
   }
 
   private void wrapIt(

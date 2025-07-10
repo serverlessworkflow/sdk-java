@@ -16,10 +16,6 @@
 package io.serverlessworkflow.generator;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.sun.codemodel.JBlock;
-import com.sun.codemodel.JClass;
 import com.sun.codemodel.JClassAlreadyExistsException;
 import com.sun.codemodel.JDefinedClass;
 import com.sun.codemodel.JExpr;
@@ -27,7 +23,9 @@ import com.sun.codemodel.JFieldVar;
 import com.sun.codemodel.JMethod;
 import com.sun.codemodel.JMod;
 import com.sun.codemodel.JType;
-import io.serverlessworkflow.serialization.DeserializeHelper;
+import io.serverlessworkflow.annotations.Item;
+import io.serverlessworkflow.annotations.ItemKey;
+import io.serverlessworkflow.annotations.ItemValue;
 import org.jsonschema2pojo.Schema;
 import org.jsonschema2pojo.rules.AdditionalPropertiesRule;
 import org.jsonschema2pojo.rules.Rule;
@@ -100,56 +98,16 @@ public class UnevaluatedPropertiesRule extends AdditionalPropertiesRule
             JMod.PRIVATE, propertyType, nameHelper.getPropertyName(propertyType.name(), null));
     JMethod valueMethod =
         GeneratorUtils.getterMethod(jclass, valueField, nameHelper, propertyType.name());
-    jclass
-        .annotate(JsonSerialize.class)
-        .param("using", generateSerializer(jclass, nameMethod, valueMethod));
-    jclass
-        .annotate(JsonDeserialize.class)
-        .param("using", generateDeserializer(jclass, propertyType));
+
+    jclass.annotate(Item.class);
+    nameMethod.annotate(ItemKey.class);
+    valueMethod.annotate(ItemValue.class);
     JMethod constructor = jclass.constructor(JMod.PUBLIC);
     constructor
         .body()
         .assign(JExpr._this().ref(nameField), constructor.param(stringClass, nameField.name()))
         .assign(JExpr._this().ref(valueField), constructor.param(propertyType, valueField.name()));
     return jclass;
-  }
-
-  private JDefinedClass generateDeserializer(JDefinedClass relatedClass, JType propertyType)
-      throws JClassAlreadyExistsException {
-    JDefinedClass definedClass = GeneratorUtils.deserializerClass(relatedClass);
-    GeneratorUtils.fillDeserializer(
-        definedClass,
-        relatedClass,
-        (method, parserParam) ->
-            method
-                .body()
-                ._return(
-                    definedClass
-                        .owner()
-                        .ref(DeserializeHelper.class)
-                        .staticInvoke("deserializeItem")
-                        .arg(parserParam)
-                        .arg(relatedClass.dotclass())
-                        .arg(((JClass) propertyType).dotclass())));
-    return definedClass;
-  }
-
-  private JDefinedClass generateSerializer(
-      JDefinedClass relatedClass, JMethod nameMethod, JMethod valueMethod)
-      throws JClassAlreadyExistsException {
-    JDefinedClass definedClass = GeneratorUtils.serializerClass(relatedClass);
-    GeneratorUtils.fillSerializer(
-        definedClass,
-        relatedClass,
-        (method, valueParam, genParam) -> {
-          JBlock body = method.body();
-          body.invoke(genParam, "writeStartObject");
-          body.invoke(genParam, "writeObjectField")
-              .arg(valueParam.invoke(nameMethod))
-              .arg(valueParam.invoke(valueMethod));
-          body.invoke(genParam, "writeEndObject");
-        });
-    return definedClass;
   }
 
   private boolean checkIntValue(JsonNode node, String propName, int value) {
