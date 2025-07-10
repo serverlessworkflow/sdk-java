@@ -15,42 +15,14 @@
  */
 package io.serverlessworkflow.generator;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.sun.codemodel.JClassAlreadyExistsException;
 import com.sun.codemodel.JDefinedClass;
 import com.sun.codemodel.JFieldVar;
 import com.sun.codemodel.JMethod;
 import com.sun.codemodel.JMod;
-import com.sun.codemodel.JVar;
-import java.io.IOException;
+import io.serverlessworkflow.annotations.GetterMethod;
 import org.jsonschema2pojo.util.NameHelper;
 
 public class GeneratorUtils {
-
-  @FunctionalInterface
-  public interface SerializerFiller {
-    void accept(JMethod method, JVar valueParam, JVar genParam);
-  }
-
-  @FunctionalInterface
-  public interface DeserializerFiller {
-    void accept(JMethod method, JVar parserParam);
-  }
-
-  public static JDefinedClass serializerClass(JDefinedClass relatedClass)
-      throws JClassAlreadyExistsException {
-    return createClass(relatedClass, JsonSerializer.class, "Serializer");
-  }
-
-  public static JDefinedClass deserializerClass(JDefinedClass relatedClass)
-      throws JClassAlreadyExistsException {
-    return createClass(relatedClass, JsonDeserializer.class, "Deserializer");
-  }
 
   public static JMethod implementInterface(JDefinedClass definedClass, JFieldVar valueField) {
     JMethod method = definedClass.method(JMod.PUBLIC, valueField.type(), "get");
@@ -67,37 +39,8 @@ public class GeneratorUtils {
             instanceField.type(),
             nameHelper.getGetterName(name, instanceField.type(), null));
     method.body()._return(instanceField);
+    method.annotate(GetterMethod.class);
     return method;
-  }
-
-  public static void fillSerializer(
-      JDefinedClass definedClass, JDefinedClass relatedClass, SerializerFiller filler) {
-    JMethod method = definedClass.method(JMod.PUBLIC, void.class, "serialize");
-    method.annotate(Override.class);
-    method._throws(IOException.class);
-    JVar valueParam = method.param(relatedClass, "value");
-    JVar genParam = method.param(JsonGenerator.class, "gen");
-    method.param(SerializerProvider.class, "serializers");
-    filler.accept(method, valueParam, genParam);
-  }
-
-  public static void fillDeserializer(
-      JDefinedClass definedClass, JDefinedClass relatedClass, DeserializerFiller filler) {
-    JMethod method = definedClass.method(JMod.PUBLIC, relatedClass, "deserialize");
-    method.annotate(Override.class);
-    method._throws(IOException.class);
-    JVar parserParam = method.param(JsonParser.class, "parser");
-    method.param(DeserializationContext.class, "dctx");
-    filler.accept(method, parserParam);
-  }
-
-  private static JDefinedClass createClass(
-      JDefinedClass relatedClass, Class<?> serializerClass, String suffix)
-      throws JClassAlreadyExistsException {
-    JDefinedClass definedClass =
-        relatedClass._package()._class(JMod.NONE, relatedClass.name() + suffix);
-    definedClass._extends(definedClass.owner().ref(serializerClass).narrow(relatedClass));
-    return definedClass;
   }
 
   private GeneratorUtils() {}

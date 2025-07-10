@@ -13,6 +13,10 @@
         <artifactId>serverlessworkflow-annotations</artifactId>
         <version>${project.version}</version>
       </dependency>
+      <dependency>
+        <groupId>jakarta.validation</groupId>
+        <artifactId>jakarta.validation-api</artifactId>
+      </dependency>
   </dependencies>
   <build>
     <plugins>
@@ -40,10 +44,10 @@
                 <serializable>true</serializable>
                 <targetVersion>${java.version}</targetVersion>
                 <usePrimitives>true</usePrimitives>
-                <annotationStyle>jackson2</annotationStyle>
+                <annotationStyle>none</annotationStyle>
                 <useJakartaValidation>true</useJakartaValidation>
                 <customRuleFactory>io.serverlessworkflow.generator.UnreferencedFactory</customRuleFactory>
-                <customAnnotator>io.serverlessworkflow.generator.ConstAnnotator</customAnnotator>
+                <customAnnotator>io.serverlessworkflow.generator.CustomAnnotator</customAnnotator>
             </configuration>
             <dependencies>
                 <dependency>

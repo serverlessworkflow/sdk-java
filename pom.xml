@@ -42,6 +42,8 @@
     <module>impl</module>
     <module>serverlessworkflow-types</module>
     <module>serverlessworkflow-annotations</module>
+    <module>jackson-generator</module>
+    <module>serverlessworkflow-serialization</module>
   </modules>
 
     <properties>
