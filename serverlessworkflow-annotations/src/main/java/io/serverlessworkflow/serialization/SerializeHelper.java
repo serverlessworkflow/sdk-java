@@ -15,14 +15,13 @@
  */
 package io.serverlessworkflow.serialization;
 
-import static java.lang.annotation.ElementType.METHOD;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
+import com.fasterxml.jackson.core.JsonGenerator;
+import io.serverlessworkflow.annotations.OneOfValueProvider;
+import java.io.IOException;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
-
-@Retention(RUNTIME)
-@Target(METHOD)
-public @interface OneOfSetter {
-  Class<?> value();
+public class SerializeHelper {
+  public static void serializeOneOf(JsonGenerator jgen, OneOfValueProvider<?> item)
+      throws IOException {
+    jgen.writeObject(item.get());
+  }
 }

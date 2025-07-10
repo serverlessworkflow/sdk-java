@@ -19,6 +19,7 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.TreeNode;
 import com.fasterxml.jackson.databind.JsonMappingException;
+import io.serverlessworkflow.annotations.OneOfSetter;
 import jakarta.validation.ConstraintViolationException;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;

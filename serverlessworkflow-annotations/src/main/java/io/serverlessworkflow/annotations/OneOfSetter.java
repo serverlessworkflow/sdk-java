@@ -13,15 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.serialization;
+package io.serverlessworkflow.annotations;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import io.serverlessworkflow.api.OneOfValueProvider;
-import java.io.IOException;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
-public class SerializeHelper {
-  public static void serializeOneOf(JsonGenerator jgen, OneOfValueProvider item)
-      throws IOException {
-    jgen.writeObject(item.get());
-  }
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
+
+@Retention(RUNTIME)
+@Target(METHOD)
+public @interface OneOfSetter {
+  Class<?> value();
 }

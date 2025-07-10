@@ -12,6 +12,12 @@
             <groupId>org.jsonschema2pojo</groupId>
             <artifactId>jsonschema2pojo-core</artifactId>
         </dependency>
+        <dependency>
+          <groupId>io.serverlessworkflow</groupId>
+          <artifactId>serverlessworkflow-annotations</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+        
     </dependencies>
     <build>
         <plugins>
