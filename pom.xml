@@ -40,6 +40,8 @@
     <module>api</module>
     <module>custom-generator</module>
     <module>impl</module>
+    <module>serverlessworkflow-types</module>
+    <module>serverlessworkflow-annotations</module>
   </modules>
 
     <properties>

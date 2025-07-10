@@ -27,6 +27,7 @@ import com.sun.codemodel.JFieldVar;
 import com.sun.codemodel.JMethod;
 import com.sun.codemodel.JMod;
 import com.sun.codemodel.JType;
+import io.serverlessworkflow.serialization.DeserializeHelper;
 import org.jsonschema2pojo.Schema;
 import org.jsonschema2pojo.rules.AdditionalPropertiesRule;
 import org.jsonschema2pojo.rules.Rule;
@@ -125,7 +126,7 @@ public class UnevaluatedPropertiesRule extends AdditionalPropertiesRule
                 ._return(
                     definedClass
                         .owner()
-                        .ref(GeneratorUtils.DESERIALIZE_HELPER_NAME)
+                        .ref(DeserializeHelper.class)
                         .staticInvoke("deserializeItem")
                         .arg(parserParam)
                         .arg(relatedClass.dotclass())

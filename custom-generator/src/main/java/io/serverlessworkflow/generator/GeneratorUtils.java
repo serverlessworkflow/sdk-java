@@ -32,15 +32,6 @@ import org.jsonschema2pojo.util.NameHelper;
 
 public class GeneratorUtils {
 
-  public static final String SERIALIZE_HELPER_NAME =
-      "io.serverlessworkflow.serialization.SerializeHelper";
-  public static final String DESERIALIZE_HELPER_NAME =
-      "io.serverlessworkflow.serialization.DeserializeHelper";
-  public static final String ONE_OF_VALUE_PROVIDER_INTERFACE_NAME =
-      "io.serverlessworkflow.api.OneOfValueProvider";
-  public static final String SETTER_ANNOTATION_NAME =
-      "io.serverlessworkflow.serialization.OneOfSetter";
-
   @FunctionalInterface
   public interface SerializerFiller {
     void accept(JMethod method, JVar valueParam, JVar genParam);
