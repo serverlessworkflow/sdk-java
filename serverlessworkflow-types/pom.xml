@@ -1,0 +1,70 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>io.serverlessworkflow</groupId>
+    <artifactId>serverlessworkflow-parent</artifactId>
+    <version>8.0.0-SNAPSHOT</version>
+  </parent>
+  <name>Serverless Workflow :: Types</name>
+  <artifactId>serverlessworkflow-types</artifactId>
+  <dependencies>
+     <dependency>
+        <groupId>io.serverlessworkflow</groupId>
+        <artifactId>serverlessworkflow-annotations</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>jakarta.validation</groupId>
+        <artifactId>jakarta.validation-api</artifactId>
+      </dependency>
+  </dependencies>
+  <build>
+    <plugins>
+        <plugin>
+            <groupId>org.jsonschema2pojo</groupId>
+            <artifactId>jsonschema2pojo-maven-plugin</artifactId>
+            <configuration>
+               <sourceDirectory>${basedir}/src/main/resources/schema</sourceDirectory>
+               <!--The comment below is left intentionally in case jsonschema2pojo one day accepts https urls. That day we can remove the file from schema dir and use directly the real schema-->
+               <!-- <sourcePaths>
+                  <sourcePath>https://raw.githubusercontent.com/serverlessworkflow/specification/main/schema/workflow.yaml</sourcePath>
+                </sourcePaths> -->
+                <sourceType>yamlschema</sourceType>
+                <targetPackage>io.serverlessworkflow.api.types</targetPackage>
+                <outputDirectory>${project.build.directory}/generated-sources/src/main/java</outputDirectory>
+                <includeJsr303Annotations>true</includeJsr303Annotations>
+                <generateBuilders>true</generateBuilders>
+                <initializeCollections>true</initializeCollections>
+                <includeAdditionalProperties>true</includeAdditionalProperties>
+                <includeToString>false</includeToString>
+                <includeHashcodeAndEquals>false</includeHashcodeAndEquals>
+                <includeConstructors>true</includeConstructors>
+                <constructorsRequiredPropertiesOnly>true</constructorsRequiredPropertiesOnly>
+                <useTitleAsClassname>true</useTitleAsClassname>
+                <serializable>true</serializable>
+                <targetVersion>${java.version}</targetVersion>
+                <usePrimitives>true</usePrimitives>
+                <annotationStyle>none</annotationStyle>
+                <useJakartaValidation>true</useJakartaValidation>
+                <customRuleFactory>io.serverlessworkflow.generator.UnreferencedFactory</customRuleFactory>
+                <customAnnotator>io.serverlessworkflow.generator.CustomAnnotator</customAnnotator>
+            </configuration>
+            <dependencies>
+                <dependency>
+                    <groupId>io.serverlessworkflow</groupId>
+                    <artifactId>serverless-workflow-custom-generator</artifactId>
+                    <version>${project.version}</version>
+                </dependency>
+            </dependencies>
+            <executions>
+                <execution>
+                    <goals>
+                        <goal>generate</goal>
+                    </goals>
+                    <phase>generate-sources</phase>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+  </build>
+</project>

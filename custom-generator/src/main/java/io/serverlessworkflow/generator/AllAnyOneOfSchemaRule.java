@@ -16,9 +16,8 @@
 package io.serverlessworkflow.generator;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.sun.codemodel.JAnnotationArrayMember;
 import com.sun.codemodel.JBlock;
 import com.sun.codemodel.JClass;
 import com.sun.codemodel.JClassAlreadyExistsException;
@@ -33,6 +32,9 @@ import com.sun.codemodel.JMod;
 import com.sun.codemodel.JPackage;
 import com.sun.codemodel.JType;
 import com.sun.codemodel.JVar;
+import io.serverlessworkflow.annotations.OneOfSetter;
+import io.serverlessworkflow.annotations.OneOfValueProvider;
+import io.serverlessworkflow.annotations.Union;
 import jakarta.validation.ConstraintViolationException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
@@ -316,28 +318,11 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
             commonType.orElse(definedClass.owner().ref(Object.class)),
             ruleFactory.getNameHelper().getPropertyName("value", null),
             null);
-
     definedClass._implements(
-        definedClass
-            .owner()
-            .ref(GeneratorUtils.ONE_OF_VALUE_PROVIDER_INTERFACE_NAME)
-            .narrow(valueField.type()));
+        definedClass.owner().ref(OneOfValueProvider.class).narrow(valueField.type()));
     GeneratorUtils.implementInterface(definedClass, valueField);
-    try {
-      JDefinedClass serializer = generateSerializer(definedClass);
-      definedClass.annotate(JsonSerialize.class).param("using", serializer);
-    } catch (JClassAlreadyExistsException ex) {
-      // already serialized aware
-    }
-
-    try {
-      JDefinedClass deserializer =
-          generateDeserializer(definedClass, oneOfTypes, "deserializeOneOf");
-      definedClass.annotate(JsonDeserialize.class).param("using", deserializer);
-    } catch (JClassAlreadyExistsException ex) {
-      // already deserialized aware
-    }
-
+    JAnnotationArrayMember unionAnnotation = definedClass.annotate(Union.class).paramArray("value");
+    oneOfTypes.forEach(t -> unionAnnotation.param(t.getType()));
     return wrapAll(parentSchema, definedClass, commonType, oneOfTypes, Optional.of(valueField));
   }
 
@@ -388,51 +373,6 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
     return type.name().equals("String");
   }
 
-  private JDefinedClass generateSerializer(JDefinedClass relatedClass)
-      throws JClassAlreadyExistsException {
-    JDefinedClass definedClass = GeneratorUtils.serializerClass(relatedClass);
-    GeneratorUtils.fillSerializer(
-        definedClass,
-        relatedClass,
-        (method, valueParam, genParam) ->
-            method
-                .body()
-                .staticInvoke(
-                    definedClass.owner().ref(GeneratorUtils.SERIALIZE_HELPER_NAME),
-                    "serializeOneOf")
-                .arg(genParam)
-                .arg(valueParam));
-    return definedClass;
-  }
-
-  private JDefinedClass generateDeserializer(
-      JDefinedClass relatedClass, Collection<JTypeWrapper> oneOfTypes, String methodName)
-      throws JClassAlreadyExistsException {
-    JDefinedClass definedClass = GeneratorUtils.deserializerClass(relatedClass);
-    GeneratorUtils.fillDeserializer(
-        definedClass,
-        relatedClass,
-        (method, parserParam) -> {
-          JBlock body = method.body();
-
-          body._return(
-              definedClass
-                  .owner()
-                  .ref(GeneratorUtils.DESERIALIZE_HELPER_NAME)
-                  .staticInvoke(methodName)
-                  .arg(parserParam)
-                  .arg(relatedClass.dotclass())
-                  .arg(list(definedClass, oneOfTypes)));
-        });
-    return definedClass;
-  }
-
-  private JInvocation list(JDefinedClass definedClass, Collection<JTypeWrapper> list) {
-    JInvocation result = definedClass.owner().ref(List.class).staticInvoke("of");
-    list.forEach(c -> result.arg(((JClass) c.getType()).dotclass()));
-    return result;
-  }
-
   private void wrapIt(
       Schema parentSchema,
       JDefinedClass definedClass,
@@ -460,7 +400,7 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
         v -> {
           method.body().assign(JExpr._this().ref(v), methodParam);
           method
-              .annotate(definedClass.owner().ref(GeneratorUtils.SETTER_ANNOTATION_NAME))
+              .annotate(definedClass.owner().ref(OneOfSetter.class))
               .param("value", instanceField.type());
         });
     return methodParam;

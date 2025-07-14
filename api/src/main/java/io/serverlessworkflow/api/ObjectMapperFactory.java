@@ -15,11 +15,13 @@
  */
 package io.serverlessworkflow.api;
 
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator.Feature;
+import io.serverlessworkflow.api.types.JacksonMixInModule;
 import io.serverlessworkflow.serialization.BeanDeserializerModifierWithValidation;
 import io.serverlessworkflow.serialization.URIDeserializer;
 import io.serverlessworkflow.serialization.URISerializer;
@@ -47,10 +49,12 @@ class ObjectMapperFactory {
     validationModule.setDeserializerModifier(new BeanDeserializerModifierWithValidation());
 
     return mapper
+        .setSerializationInclusion(Include.NON_NULL)
         .configure(SerializationFeature.INDENT_OUTPUT, true)
         .configure(SerializationFeature.WRITE_EMPTY_JSON_ARRAYS, false)
         .configure(SerializationFeature.WRITE_NULL_MAP_VALUES, false)
-        .registerModule(validationModule);
+        .registerModule(validationModule)
+        .registerModule(new JacksonMixInModule());
   }
 
   private ObjectMapperFactory() {}
