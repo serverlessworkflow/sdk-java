@@ -23,4 +23,6 @@ import java.lang.annotation.Target;
 
 @Retention(RUNTIME)
 @Target(ElementType.TYPE)
-public @interface Union {}
+public @interface Union {
+  Class<?>[] value();
+}

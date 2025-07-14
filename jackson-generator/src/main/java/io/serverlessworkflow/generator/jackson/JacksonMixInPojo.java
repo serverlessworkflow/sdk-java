@@ -33,6 +33,8 @@ import com.sun.codemodel.JExpression;
 import com.sun.codemodel.JMethod;
 import com.sun.codemodel.JMod;
 import com.sun.codemodel.JPackage;
+import io.github.classgraph.AnnotationClassRef;
+import io.github.classgraph.AnnotationInfo;
 import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ClassInfo;
 import io.github.classgraph.ClassRefTypeSignature;
@@ -41,7 +43,6 @@ import io.github.classgraph.ScanResult;
 import io.github.classgraph.TypeArgument;
 import io.github.classgraph.TypeSignature;
 import io.serverlessworkflow.annotations.AdditionalProperties;
-import io.serverlessworkflow.annotations.GetterMethod;
 import io.serverlessworkflow.annotations.Item;
 import io.serverlessworkflow.annotations.ItemKey;
 import io.serverlessworkflow.annotations.ItemValue;
@@ -52,7 +53,8 @@ import java.io.PrintStream;
 import java.lang.annotation.Annotation;
 import java.nio.file.Files;
 import java.util.Collection;
-import java.util.LinkedHashSet;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.MojoFailureException;
@@ -216,12 +218,12 @@ public class JacksonMixInPojo extends AbstractMojo {
   }
 
   private Collection<JClass> getUnionClasses(ClassInfo unionClassInfo) {
-    Collection<JClass> result = new LinkedHashSet<JClass>();
-    unionClassInfo
-        .getMethodInfo()
-        .filter(f -> f.hasAnnotation(GetterMethod.class))
-        .forEach(m -> result.add(getReturnType(m)));
-    return result;
+    AnnotationInfo info = unionClassInfo.getAnnotationInfoRepeatable(Union.class).get(0);
+    Object[] unionClasses = (Object[]) info.getParameterValues().getValue("value");
+    return Stream.of(unionClasses)
+        .map(AnnotationClassRef.class::cast)
+        .map(ref -> codeModel.ref(ref.getName()))
+        .collect(Collectors.toList());
   }
 
   private JClass getReturnType(MethodInfo info) {

@@ -17,6 +17,7 @@ package io.serverlessworkflow.generator;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.sun.codemodel.JAnnotationArrayMember;
 import com.sun.codemodel.JBlock;
 import com.sun.codemodel.JClass;
 import com.sun.codemodel.JClassAlreadyExistsException;
@@ -317,11 +318,11 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
             commonType.orElse(definedClass.owner().ref(Object.class)),
             ruleFactory.getNameHelper().getPropertyName("value", null),
             null);
-
     definedClass._implements(
         definedClass.owner().ref(OneOfValueProvider.class).narrow(valueField.type()));
     GeneratorUtils.implementInterface(definedClass, valueField);
-    definedClass.annotate(Union.class);
+    JAnnotationArrayMember unionAnnotation = definedClass.annotate(Union.class).paramArray("value");
+    oneOfTypes.forEach(t -> unionAnnotation.param(t.getType()));
     return wrapAll(parentSchema, definedClass, commonType, oneOfTypes, Optional.of(valueField));
   }
 
