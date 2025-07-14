@@ -38,12 +38,11 @@
 
   <modules>
     <module>api</module>
-    <module>custom-generator</module>
     <module>impl</module>
-    <module>serverlessworkflow-types</module>
-    <module>serverlessworkflow-annotations</module>
-    <module>jackson-generator</module>
-    <module>serverlessworkflow-serialization</module>
+    <module>types</module>
+    <module>annotations</module>
+    <module>generators</module>
+    <module>serialization</module>
   </modules>
 
     <properties>

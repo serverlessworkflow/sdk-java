@@ -52,7 +52,7 @@
             <dependencies>
                 <dependency>
                     <groupId>io.serverlessworkflow</groupId>
-                    <artifactId>serverless-workflow-custom-generator</artifactId>
+                    <artifactId>serverless-workflow-types-generator</artifactId>
                     <version>${project.version}</version>
                 </dependency>
             </dependencies>
