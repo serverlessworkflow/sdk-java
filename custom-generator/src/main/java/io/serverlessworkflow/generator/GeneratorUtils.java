@@ -19,7 +19,6 @@ import com.sun.codemodel.JDefinedClass;
 import com.sun.codemodel.JFieldVar;
 import com.sun.codemodel.JMethod;
 import com.sun.codemodel.JMod;
-import io.serverlessworkflow.annotations.GetterMethod;
 import org.jsonschema2pojo.util.NameHelper;
 
 public class GeneratorUtils {
@@ -39,7 +38,6 @@ public class GeneratorUtils {
             instanceField.type(),
             nameHelper.getGetterName(name, instanceField.type(), null));
     method.body()._return(instanceField);
-    method.annotate(GetterMethod.class);
     return method;
   }
 
