@@ -102,7 +102,7 @@
         <!-- a hint for IDE's to add the java sources to the classpath -->
             <groupId>org.codehaus.mojo</groupId>
             <artifactId>build-helper-maven-plugin</artifactId>
-            <version>3.3.0</version>
+            <version>3.6.1</version>
             <executions>
               <execution>
                 <id>add-mixin</id>
