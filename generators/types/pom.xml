@@ -2,11 +2,11 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>io.serverlessworkflow</groupId>
-        <artifactId>serverlessworkflow-parent</artifactId>
+        <artifactId>serverlessworkflow-generators</artifactId>
         <version>8.0.0-SNAPSHOT</version>
     </parent>
-    <artifactId>serverless-workflow-custom-generator</artifactId>
-    <name>Serverless Workflow :: Custom Generator</name>
+    <artifactId>serverless-workflow-types-generator</artifactId>
+    <name>Serverless Workflow :: Generator:: Types</name>
     <dependencies>
         <dependency>
             <groupId>org.jsonschema2pojo</groupId>
