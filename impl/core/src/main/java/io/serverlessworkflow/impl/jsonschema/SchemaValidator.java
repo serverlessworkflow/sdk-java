@@ -15,8 +15,8 @@
  */
 package io.serverlessworkflow.impl.jsonschema;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import io.serverlessworkflow.impl.WorkflowModel;
 
 public interface SchemaValidator {
-  void validate(JsonNode node);
+  void validate(WorkflowModel node);
 }

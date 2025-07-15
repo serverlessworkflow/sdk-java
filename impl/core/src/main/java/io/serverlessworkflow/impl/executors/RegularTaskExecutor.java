@@ -15,12 +15,12 @@
  */
 package io.serverlessworkflow.impl.executors;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import io.serverlessworkflow.api.types.TaskBase;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowPosition;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
 import java.util.Map;
@@ -67,6 +67,6 @@ public abstract class RegularTaskExecutor<T extends TaskBase> extends AbstractTa
     return future;
   }
 
-  protected abstract CompletableFuture<JsonNode> internalExecute(
+  protected abstract CompletableFuture<WorkflowModel> internalExecute(
       WorkflowContext workflow, TaskContext task);
 }

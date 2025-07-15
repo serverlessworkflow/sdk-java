@@ -15,16 +15,15 @@
  */
 package io.serverlessworkflow.impl.executors;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import io.serverlessworkflow.api.types.ForkTask;
 import io.serverlessworkflow.api.types.ForkTaskConfiguration;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowPosition;
 import io.serverlessworkflow.impl.executors.RegularTaskExecutor.RegularTaskExecutorBuilder;
-import io.serverlessworkflow.impl.json.JsonUtils;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
 import java.util.HashMap;
 import java.util.Map;
@@ -39,6 +38,7 @@ public class ForkExecutor extends RegularTaskExecutor<ForkTask> {
 
   private final ExecutorService service;
   private final Map<String, TaskExecutor<?>> taskExecutors;
+
   private final boolean compete;
 
   public static class ForkExecutorBuilder extends RegularTaskExecutorBuilder<ForkTask> {
@@ -74,7 +74,7 @@ public class ForkExecutor extends RegularTaskExecutor<ForkTask> {
   }
 
   @Override
-  protected CompletableFuture<JsonNode> internalExecute(
+  protected CompletableFuture<WorkflowModel> internalExecute(
       WorkflowContext workflow, TaskContext taskContext) {
     Map<String, CompletableFuture<TaskContext>> futures = new HashMap<>();
     CompletableFuture<TaskContext> initial = CompletableFuture.completedFuture(taskContext);
@@ -89,11 +89,12 @@ public class ForkExecutor extends RegularTaskExecutor<ForkTask> {
         .thenApply(
             i ->
                 combine(
+                    workflow,
                     futures.entrySet().stream()
                         .collect(Collectors.toMap(Entry::getKey, e -> e.getValue().join()))));
   }
 
-  private JsonNode combine(Map<String, TaskContext> futures) {
+  private WorkflowModel combine(WorkflowContext context, Map<String, TaskContext> futures) {
 
     Stream<Entry<String, TaskContext>> sortedStream =
         futures.entrySet().stream()
@@ -102,9 +103,11 @@ public class ForkExecutor extends RegularTaskExecutor<ForkTask> {
                     arg1.getValue().completedAt().compareTo(arg2.getValue().completedAt()));
     return compete
         ? sortedStream.map(e -> e.getValue().output()).findFirst().orElseThrow()
-        : sortedStream
-            .<JsonNode>map(
-                e -> JsonUtils.mapper().createObjectNode().set(e.getKey(), e.getValue().output()))
-            .collect(JsonUtils.arrayNodeCollector());
+        : context
+            .definition()
+            .application()
+            .modelFactory()
+            .combine(
+                sortedStream.collect(Collectors.toMap(Entry::getKey, e -> e.getValue().output())));
   }
 }

@@ -15,8 +15,11 @@
  */
 package io.serverlessworkflow.impl.jsonschema;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import io.serverlessworkflow.api.types.SchemaInline;
+import io.serverlessworkflow.impl.resources.StaticResource;
 
 public interface SchemaValidatorFactory {
-  SchemaValidator getValidator(JsonNode node);
+  SchemaValidator getValidator(SchemaInline inline);
+
+  SchemaValidator getValidator(StaticResource resource);
 }

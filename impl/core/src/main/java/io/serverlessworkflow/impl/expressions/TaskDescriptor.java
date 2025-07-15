@@ -15,16 +15,16 @@
  */
 package io.serverlessworkflow.impl.expressions;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import io.serverlessworkflow.api.types.TaskBase;
 import io.serverlessworkflow.impl.TaskContext;
+import io.serverlessworkflow.impl.WorkflowModel;
 
 public record TaskDescriptor(
     String name,
     String reference,
     TaskBase definition,
-    JsonNode rawInput,
-    JsonNode rawOutput,
+    WorkflowModel rawInput,
+    WorkflowModel rawOutput,
     DateTimeDescriptor startedAt) {
 
   public static TaskDescriptor of(TaskContext context) {

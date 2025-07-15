@@ -202,6 +202,10 @@ public class WorkflowApplication implements AutoCloseable {
     return positionFactory;
   }
 
+  public WorkflowModelFactory modelFactory() {
+    return exprFactory.modelFactory();
+  }
+
   public RuntimeDescriptorFactory runtimeDescriptorFactory() {
     return runtimeDescriptorFactory;
   }

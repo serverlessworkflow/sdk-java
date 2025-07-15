@@ -15,29 +15,16 @@
  */
 package io.serverlessworkflow.impl;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.serverlessworkflow.api.WorkflowFormat;
 import io.serverlessworkflow.api.types.ExportAs;
 import io.serverlessworkflow.api.types.InputFrom;
 import io.serverlessworkflow.api.types.OutputAs;
-import io.serverlessworkflow.api.types.SchemaExternal;
-import io.serverlessworkflow.api.types.SchemaInline;
 import io.serverlessworkflow.api.types.SchemaUnion;
 import io.serverlessworkflow.api.types.UriTemplate;
-import io.serverlessworkflow.impl.expressions.Expression;
-import io.serverlessworkflow.impl.expressions.ExpressionFactory;
 import io.serverlessworkflow.impl.expressions.ExpressionUtils;
-import io.serverlessworkflow.impl.json.JsonUtils;
 import io.serverlessworkflow.impl.jsonschema.SchemaValidator;
 import io.serverlessworkflow.impl.jsonschema.SchemaValidatorFactory;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
-import io.serverlessworkflow.impl.resources.StaticResource;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UncheckedIOException;
 import java.net.URI;
-import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -47,55 +34,41 @@ public class WorkflowUtils {
 
   public static Optional<SchemaValidator> getSchemaValidator(
       SchemaValidatorFactory validatorFactory, ResourceLoader resourceLoader, SchemaUnion schema) {
-    return schemaToNode(resourceLoader, schema).map(n -> validatorFactory.getValidator(n));
-  }
-
-  private static Optional<JsonNode> schemaToNode(
-      ResourceLoader resourceLoader, SchemaUnion schema) {
     if (schema != null) {
+
       if (schema.getSchemaInline() != null) {
-        SchemaInline inline = schema.getSchemaInline();
-        return Optional.of(JsonUtils.mapper().convertValue(inline.getDocument(), JsonNode.class));
+        return Optional.of(validatorFactory.getValidator(schema.getSchemaInline()));
       } else if (schema.getSchemaExternal() != null) {
-        SchemaExternal external = schema.getSchemaExternal();
-        StaticResource resource = resourceLoader.loadStatic(external.getResource());
-        ObjectMapper mapper = WorkflowFormat.fromFileName(resource.name()).mapper();
-        try (InputStream in = resource.open()) {
-          return Optional.of(mapper.readTree(in));
-        } catch (IOException io) {
-          throw new UncheckedIOException(io);
-        }
+        return Optional.of(
+            validatorFactory.getValidator(
+                resourceLoader.loadStatic(schema.getSchemaExternal().getResource())));
       }
     }
     return Optional.empty();
   }
 
   public static Optional<WorkflowFilter> buildWorkflowFilter(
-      ExpressionFactory exprFactory, InputFrom from) {
+      WorkflowApplication app, InputFrom from) {
     return from != null
-        ? Optional.of(buildWorkflowFilter(exprFactory, from.getString(), from.getObject()))
+        ? Optional.of(buildWorkflowFilter(app, from.getString(), from.getObject()))
         : Optional.empty();
   }
 
-  public static Optional<WorkflowFilter> buildWorkflowFilter(
-      ExpressionFactory exprFactory, OutputAs as) {
+  public static Optional<WorkflowFilter> buildWorkflowFilter(WorkflowApplication app, OutputAs as) {
     return as != null
-        ? Optional.of(buildWorkflowFilter(exprFactory, as.getString(), as.getObject()))
+        ? Optional.of(buildWorkflowFilter(app, as.getString(), as.getObject()))
         : Optional.empty();
   }
 
   public static <T> ExpressionHolder<T> buildExpressionHolder(
-      ExpressionFactory exprFactory,
-      String expression,
-      T literal,
-      Function<JsonNode, T> converter) {
+      WorkflowApplication app, String expression, T literal, Function<WorkflowModel, T> converter) {
     return expression != null
-        ? buildExpressionHolder(buildWorkflowFilter(exprFactory, expression), converter)
+        ? buildExpressionHolder(buildWorkflowFilter(app, expression), converter)
         : buildExpressionHolder(literal);
   }
 
   private static <T> ExpressionHolder<T> buildExpressionHolder(
-      WorkflowFilter filter, Function<JsonNode, T> converter) {
+      WorkflowFilter filter, Function<WorkflowModel, T> converter) {
     return (w, t) -> converter.apply(filter.apply(w, t, t.input()));
   }
 
@@ -103,28 +76,27 @@ public class WorkflowUtils {
     return (w, t) -> literal;
   }
 
-  public static Optional<WorkflowFilter> buildWorkflowFilter(
-      ExpressionFactory exprFactory, ExportAs as) {
+  public static Optional<WorkflowFilter> buildWorkflowFilter(WorkflowApplication app, ExportAs as) {
     return as != null
-        ? Optional.of(buildWorkflowFilter(exprFactory, as.getString(), as.getObject()))
+        ? Optional.of(buildWorkflowFilter(app, as.getString(), as.getObject()))
         : Optional.empty();
   }
 
   public static StringFilter buildStringFilter(
-      ExpressionFactory exprFactory, String expression, String literal) {
-    return expression != null
-        ? toString(buildWorkflowFilter(exprFactory, expression))
-        : toString(literal);
+      WorkflowApplication app, String expression, String literal) {
+    return expression != null ? toString(buildWorkflowFilter(app, expression)) : toString(literal);
   }
 
-  public static StringFilter buildStringFilter(ExpressionFactory exprFactory, String str) {
-    return ExpressionUtils.isExpr(str)
-        ? toString(buildWorkflowFilter(exprFactory, str))
-        : toString(str);
+  public static StringFilter buildStringFilter(WorkflowApplication app, String str) {
+    return ExpressionUtils.isExpr(str) ? toString(buildWorkflowFilter(app, str)) : toString(str);
   }
 
   private static StringFilter toString(WorkflowFilter filter) {
-    return (w, t) -> filter.apply(w, t, t.input()).asText();
+    return (w, t) ->
+        filter
+            .apply(w, t, t.input())
+            .asText()
+            .orElseThrow(() -> new IllegalArgumentException("Result is not an string"));
   }
 
   private static StringFilter toString(String literal) {
@@ -132,43 +104,16 @@ public class WorkflowUtils {
   }
 
   public static WorkflowFilter buildWorkflowFilter(
-      ExpressionFactory exprFactory, String str, Object object) {
-    if (str != null) {
-      return buildWorkflowFilter(exprFactory, str);
-    } else if (object != null) {
-      Object exprObj = ExpressionUtils.buildExpressionObject(object, exprFactory);
-      return exprObj instanceof Map
-          ? (w, t, n) ->
-              JsonUtils.fromValue(
-                  ExpressionUtils.evaluateExpressionMap((Map<String, Object>) exprObj, w, t, n))
-          : (w, t, n) -> JsonUtils.fromValue(object);
-    }
-    throw new IllegalStateException("Both object and str are null");
+      WorkflowApplication app, String str, Object object) {
+    return app.expressionFactory().buildFilter(str, object);
   }
 
-  public static LongFilter buildLongFilter(
-      ExpressionFactory exprFactory, String expression, Long literal) {
-    return expression != null
-        ? toLong(buildWorkflowFilter(exprFactory, expression))
-        : toLong(literal);
+  public static WorkflowFilter buildWorkflowFilter(WorkflowApplication app, String str) {
+    return app.expressionFactory().buildFilter(str, null);
   }
 
-  private static LongFilter toLong(WorkflowFilter filter) {
-    return (w, t) -> filter.apply(w, t, t.input()).asLong();
-  }
-
-  private static LongFilter toLong(Long literal) {
-    return (w, t) -> literal;
-  }
-
-  public static WorkflowFilter buildWorkflowFilter(ExpressionFactory exprFactory, String str) {
-    assert str != null;
-    Expression expression = exprFactory.getExpression(str);
-    return expression::eval;
-  }
-
-  public static Optional<WorkflowFilter> optionalFilter(ExpressionFactory exprFactory, String str) {
-    return str != null ? Optional.of(buildWorkflowFilter(exprFactory, str)) : Optional.empty();
+  public static Optional<WorkflowFilter> optionalFilter(WorkflowApplication app, String str) {
+    return str != null ? Optional.of(buildWorkflowFilter(app, str)) : Optional.empty();
   }
 
   public static String toString(UriTemplate template) {

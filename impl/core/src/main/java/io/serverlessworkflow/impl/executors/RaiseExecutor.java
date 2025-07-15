@@ -15,7 +15,6 @@
  */
 package io.serverlessworkflow.impl.executors;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import io.serverlessworkflow.api.types.Error;
 import io.serverlessworkflow.api.types.ErrorInstance;
 import io.serverlessworkflow.api.types.ErrorType;
@@ -28,9 +27,9 @@ import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowError;
 import io.serverlessworkflow.impl.WorkflowException;
+import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowPosition;
 import io.serverlessworkflow.impl.WorkflowUtils;
-import io.serverlessworkflow.impl.expressions.ExpressionFactory;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
 import java.util.Map;
 import java.util.Optional;
@@ -61,17 +60,16 @@ public class RaiseExecutor extends RegularTaskExecutor<RaiseTask> {
           raiseError.getRaiseErrorDefinition() != null
               ? raiseError.getRaiseErrorDefinition()
               : findError(raiseError.getRaiseErrorReference());
-      this.typeFilter = getTypeFunction(application.expressionFactory(), error.getType());
-      this.instanceFilter =
-          getInstanceFunction(application.expressionFactory(), error.getInstance());
+      this.typeFilter = getTypeFunction(application, error.getType());
+      this.instanceFilter = getInstanceFunction(application, error.getInstance());
       this.titleFilter =
           WorkflowUtils.buildStringFilter(
-              application.expressionFactory(),
+              application,
               error.getTitle().getExpressionErrorTitle(),
               error.getTitle().getLiteralErrorTitle());
       this.detailFilter =
           WorkflowUtils.buildStringFilter(
-              application.expressionFactory(),
+              application,
               error.getDetail().getExpressionErrorDetails(),
               error.getTitle().getExpressionErrorTitle());
       this.errorBuilder = (w, t) -> buildError(error, w, t);
@@ -90,21 +88,19 @@ public class RaiseExecutor extends RegularTaskExecutor<RaiseTask> {
     }
 
     private Optional<StringFilter> getInstanceFunction(
-        ExpressionFactory expressionFactory, ErrorInstance errorInstance) {
+        WorkflowApplication app, ErrorInstance errorInstance) {
       return errorInstance != null
           ? Optional.of(
               WorkflowUtils.buildStringFilter(
-                  expressionFactory,
+                  app,
                   errorInstance.getExpressionErrorInstance(),
                   errorInstance.getLiteralErrorInstance()))
           : Optional.empty();
     }
 
-    private StringFilter getTypeFunction(ExpressionFactory expressionFactory, ErrorType type) {
+    private StringFilter getTypeFunction(WorkflowApplication app, ErrorType type) {
       return WorkflowUtils.buildStringFilter(
-          expressionFactory,
-          type.getExpressionErrorType(),
-          type.getLiteralErrorType().get().toString());
+          app, type.getExpressionErrorType(), type.getLiteralErrorType().get().toString());
     }
 
     private Error findError(String raiseErrorReference) {
@@ -128,7 +124,7 @@ public class RaiseExecutor extends RegularTaskExecutor<RaiseTask> {
   }
 
   @Override
-  protected CompletableFuture<JsonNode> internalExecute(
+  protected CompletableFuture<WorkflowModel> internalExecute(
       WorkflowContext workflow, TaskContext taskContext) {
     throw new WorkflowException(errorBuilder.apply(workflow, taskContext));
   }

@@ -15,16 +15,15 @@
  */
 package io.serverlessworkflow.impl.executors;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import io.serverlessworkflow.api.types.DurationInline;
 import io.serverlessworkflow.api.types.WaitTask;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowPosition;
 import io.serverlessworkflow.impl.WorkflowStatus;
-import io.serverlessworkflow.impl.executors.RegularTaskExecutor.RegularTaskExecutorBuilder;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
@@ -71,10 +70,10 @@ public class WaitExecutor extends RegularTaskExecutor<WaitTask> {
   }
 
   @Override
-  protected CompletableFuture<JsonNode> internalExecute(
+  protected CompletableFuture<WorkflowModel> internalExecute(
       WorkflowContext workflow, TaskContext taskContext) {
     workflow.instance().status(WorkflowStatus.WAITING);
-    return new CompletableFuture<JsonNode>()
+    return new CompletableFuture<WorkflowModel>()
         .completeOnTimeout(taskContext.output(), millisToWait.toMillis(), TimeUnit.MILLISECONDS)
         .thenApply(
             node -> {

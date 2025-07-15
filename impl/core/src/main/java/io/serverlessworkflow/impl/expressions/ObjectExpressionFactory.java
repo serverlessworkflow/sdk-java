@@ -16,17 +16,22 @@
 package io.serverlessworkflow.impl.expressions;
 
 import io.serverlessworkflow.impl.WorkflowFilter;
-import io.serverlessworkflow.impl.WorkflowModelFactory;
+import java.util.Map;
 
-public interface ExpressionFactory {
-  /**
-   * @throws ExpressionValidationException
-   * @param expression
-   * @return
-   */
-  Expression buildExpression(String expression);
+public abstract class ObjectExpressionFactory implements ExpressionFactory {
 
-  WorkflowFilter buildFilter(String expr, Object value);
-
-  WorkflowModelFactory modelFactory();
+  @Override
+  public WorkflowFilter buildFilter(String str, Object object) {
+    if (str != null) {
+      assert str != null;
+      Expression expression = buildExpression(str);
+      return expression::eval;
+    } else if (object != null) {
+      Object exprObj = ExpressionUtils.buildExpressionObject(object, this);
+      return exprObj instanceof Map map
+          ? (w, t, n) -> modelFactory().from(ExpressionUtils.evaluateExpressionMap(map, w, t, n))
+          : (w, t, n) -> modelFactory().fromAny(object);
+    }
+    throw new IllegalArgumentException("Both object and str are null");
+  }
 }

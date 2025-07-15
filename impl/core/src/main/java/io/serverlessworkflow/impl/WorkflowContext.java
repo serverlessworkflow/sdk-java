@@ -15,12 +15,10 @@
  */
 package io.serverlessworkflow.impl;
 
-import com.fasterxml.jackson.databind.JsonNode;
-
 public class WorkflowContext {
   private final WorkflowDefinition definition;
   private final WorkflowInstance instance;
-  private JsonNode context;
+  private WorkflowModel context;
 
   WorkflowContext(WorkflowDefinition definition, WorkflowInstance instance) {
     this.definition = definition;
@@ -31,11 +29,11 @@ public class WorkflowContext {
     return instance;
   }
 
-  public JsonNode context() {
+  public WorkflowModel context() {
     return context;
   }
 
-  public void context(JsonNode context) {
+  public void context(WorkflowModel context) {
     this.context = context;
   }
 
