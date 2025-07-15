@@ -15,17 +15,20 @@
  */
 package io.serverlessworkflow.impl.expressions;
 
+import io.serverlessworkflow.impl.WorkflowModelFactory;
 import java.util.function.Supplier;
 import net.thisptr.jackson.jq.BuiltinFunctionLoader;
 import net.thisptr.jackson.jq.Scope;
 import net.thisptr.jackson.jq.Versions;
 import net.thisptr.jackson.jq.exception.JsonQueryException;
 
-public class JQExpressionFactory implements ExpressionFactory {
+public class JQExpressionFactory extends ObjectExpressionFactory {
 
   private JQExpressionFactory() {}
 
   private static final JQExpressionFactory instance = new JQExpressionFactory();
+
+  private WorkflowModelFactory modelFactory = new JacksonModelFactory();
 
   public static JQExpressionFactory get() {
     return instance;
@@ -50,11 +53,17 @@ public class JQExpressionFactory implements ExpressionFactory {
   }
 
   @Override
-  public Expression getExpression(String expression) {
+  public Expression buildExpression(String expression) {
     try {
-      return new JQExpression(scopeSupplier, ExpressionUtils.trimExpr(expression), Versions.JQ_1_6);
+      return new JQExpression(
+          scopeSupplier, ExpressionUtils.trimExpr(expression), Versions.JQ_1_6, modelFactory);
     } catch (JsonQueryException e) {
       throw new IllegalArgumentException(e);
     }
+  }
+
+  @Override
+  public WorkflowModelFactory modelFactory() {
+    return modelFactory;
   }
 }

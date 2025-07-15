@@ -55,9 +55,7 @@ public class SwitchExecutor extends AbstractTaskExecutor<SwitchTask> {
         SwitchCase switchCase = item.getSwitchCase();
         if (switchCase.getWhen() != null) {
           workflowFilters.put(
-              switchCase,
-              WorkflowUtils.buildWorkflowFilter(
-                  application.expressionFactory(), switchCase.getWhen()));
+              switchCase, WorkflowUtils.buildWorkflowFilter(application, switchCase.getWhen()));
         } else {
           defaultDirective = switchCase.getThen();
         }
@@ -97,7 +95,11 @@ public class SwitchExecutor extends AbstractTaskExecutor<SwitchTask> {
       WorkflowContext workflow, TaskContext taskContext) {
     CompletableFuture<TaskContext> future = CompletableFuture.completedFuture(taskContext);
     for (Entry<WorkflowFilter, TransitionInfo> entry : workflowFilters.entrySet()) {
-      if (entry.getKey().apply(workflow, taskContext, taskContext.input()).asBoolean()) {
+      if (entry
+          .getKey()
+          .apply(workflow, taskContext, taskContext.input())
+          .asBoolean()
+          .orElse(false)) {
         return future.thenApply(t -> t.transition(entry.getValue()));
       }
     }

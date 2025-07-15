@@ -15,8 +15,6 @@
  */
 package io.serverlessworkflow.impl.executors;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import io.cloudevents.CloudEvent;
 import io.serverlessworkflow.api.types.AllEventConsumptionStrategy;
 import io.serverlessworkflow.api.types.AnyEventConsumptionStrategy;
@@ -34,14 +32,14 @@ import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowFilter;
+import io.serverlessworkflow.impl.WorkflowModel;
+import io.serverlessworkflow.impl.WorkflowModelCollection;
 import io.serverlessworkflow.impl.WorkflowPosition;
 import io.serverlessworkflow.impl.WorkflowStatus;
 import io.serverlessworkflow.impl.WorkflowUtils;
-import io.serverlessworkflow.impl.events.CloudEventUtils;
 import io.serverlessworkflow.impl.events.EventConsumer;
 import io.serverlessworkflow.impl.events.EventRegistration;
 import io.serverlessworkflow.impl.events.EventRegistrationBuilder;
-import io.serverlessworkflow.impl.json.JsonUtils;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -56,7 +54,7 @@ public abstract class ListenExecutor extends RegularTaskExecutor<ListenTask> {
 
   protected final EventRegistrationBuilderCollection regBuilders;
   protected final Optional<TaskExecutor<?>> loop;
-  protected final Function<CloudEvent, JsonNode> converter;
+  protected final Function<CloudEvent, WorkflowModel> converter;
   protected final EventConsumer eventConsumer;
 
   private static record EventRegistrationBuilderCollection(
@@ -68,7 +66,8 @@ public abstract class ListenExecutor extends RegularTaskExecutor<ListenTask> {
     private WorkflowFilter until;
     private EventRegistrationBuilderCollection untilRegistrations;
     private TaskExecutor<?> loop;
-    private Function<CloudEvent, JsonNode> converter = this::defaultCEConverter;
+    private Function<CloudEvent, WorkflowModel> converter =
+        ce -> application.modelFactory().from(ce.getData());
 
     private EventRegistrationBuilderCollection allEvents(AllEventConsumptionStrategy allStrategy) {
       return new EventRegistrationBuilderCollection(from(allStrategy.getAll()), true);
@@ -103,7 +102,7 @@ public abstract class ListenExecutor extends RegularTaskExecutor<ListenTask> {
           if (untilDesc.getAnyEventUntilCondition() != null) {
             until =
                 WorkflowUtils.buildWorkflowFilter(
-                    application.expressionFactory(), untilDesc.getAnyEventUntilCondition());
+                    application, untilDesc.getAnyEventUntilCondition());
           } else if (untilDesc.getAnyEventUntilConsumed() != null) {
             EventConsumptionStrategy strategy = untilDesc.getAnyEventUntilConsumed();
             if (strategy.getAllEventConsumptionStrategy() != null) {
@@ -128,10 +127,10 @@ public abstract class ListenExecutor extends RegularTaskExecutor<ListenTask> {
       if (readAs != null) {
         switch (readAs) {
           case ENVELOPE:
-            converter = CloudEventUtils::toJsonNode;
+            converter = ce -> application.modelFactory().from(ce);
           default:
           case DATA:
-            converter = this::defaultCEConverter;
+            converter = ce -> application.modelFactory().from(ce.getData());
             break;
         }
       }
@@ -139,10 +138,6 @@ public abstract class ListenExecutor extends RegularTaskExecutor<ListenTask> {
 
     private Collection<EventRegistrationBuilder> registerToAll() {
       return application.eventConsumer().listenToAll(application);
-    }
-
-    private JsonNode defaultCEConverter(CloudEvent ce) {
-      return CloudEventUtils.toJsonNode(ce.getData());
     }
 
     private Collection<EventRegistrationBuilder> from(List<EventFilter> filters) {
@@ -166,11 +161,11 @@ public abstract class ListenExecutor extends RegularTaskExecutor<ListenTask> {
     }
 
     protected void internalProcessCe(
-        JsonNode node,
-        ArrayNode arrayNode,
+        WorkflowModel node,
+        WorkflowModelCollection arrayNode,
         WorkflowContext workflow,
         TaskContext taskContext,
-        CompletableFuture<JsonNode> future) {
+        CompletableFuture<WorkflowModel> future) {
       arrayNode.add(node);
       future.complete(node);
     }
@@ -208,16 +203,14 @@ public abstract class ListenExecutor extends RegularTaskExecutor<ListenTask> {
     }
 
     protected void internalProcessCe(
-        JsonNode node,
-        ArrayNode arrayNode,
+        WorkflowModel node,
+        WorkflowModelCollection arrayNode,
         WorkflowContext workflow,
         TaskContext taskContext,
-        CompletableFuture<JsonNode> future) {
+        CompletableFuture<WorkflowModel> future) {
       arrayNode.add(node);
       if ((until.isEmpty()
-              || until
-                  .filter(u -> u.apply(workflow, taskContext, arrayNode).asBoolean())
-                  .isPresent())
+              || until.map(u -> u.apply(workflow, taskContext, arrayNode).asBoolean()).isPresent())
           && untilRegBuilders == null) {
         future.complete(node);
       }
@@ -225,22 +218,23 @@ public abstract class ListenExecutor extends RegularTaskExecutor<ListenTask> {
   }
 
   protected abstract void internalProcessCe(
-      JsonNode node,
-      ArrayNode arrayNode,
+      WorkflowModel node,
+      WorkflowModelCollection arrayNode,
       WorkflowContext workflow,
       TaskContext taskContext,
-      CompletableFuture<JsonNode> future);
+      CompletableFuture<WorkflowModel> future);
 
   @Override
-  protected CompletableFuture<JsonNode> internalExecute(
+  protected CompletableFuture<WorkflowModel> internalExecute(
       WorkflowContext workflow, TaskContext taskContext) {
-    ArrayNode output = JsonUtils.mapper().createArrayNode();
+    WorkflowModelCollection output =
+        workflow.definition().application().modelFactory().createCollection();
     Collection<EventRegistration> registrations = new ArrayList<>();
     workflow.instance().status(WorkflowStatus.WAITING);
     return buildFuture(
             regBuilders,
             registrations,
-            (BiConsumer<CloudEvent, CompletableFuture<JsonNode>>)
+            (BiConsumer<CloudEvent, CompletableFuture<WorkflowModel>>)
                 ((ce, future) ->
                     processCe(converter.apply(ce), output, workflow, taskContext, future)))
         .thenApply(
@@ -282,11 +276,11 @@ public abstract class ListenExecutor extends RegularTaskExecutor<ListenTask> {
   }
 
   private void processCe(
-      JsonNode node,
-      ArrayNode arrayNode,
+      WorkflowModel node,
+      WorkflowModelCollection arrayNode,
       WorkflowContext workflow,
       TaskContext taskContext,
-      CompletableFuture<JsonNode> future) {
+      CompletableFuture<WorkflowModel> future) {
     loop.ifPresentOrElse(
         t -> {
           SubscriptionIterator forEach = task.getForeach();

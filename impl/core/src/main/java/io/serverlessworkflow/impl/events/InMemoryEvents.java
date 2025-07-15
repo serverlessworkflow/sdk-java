@@ -25,7 +25,7 @@ import java.util.function.Consumer;
 
 /*
  * Straightforward implementation of in memory event broker.
- * User might invoke notifyCE to simulate event reception.
+ * User might invoke publish to simulate event reception.
  */
 public class InMemoryEvents extends AbstractTypeConsumer implements EventPublisher {
 

@@ -15,12 +15,12 @@
  */
 package io.serverlessworkflow.impl.executors;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowPosition;
 import io.serverlessworkflow.impl.WorkflowStatus;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
@@ -35,11 +35,11 @@ import java.util.stream.Collectors;
 public class TaskExecutorHelper {
   private TaskExecutorHelper() {}
 
-  public static CompletableFuture<JsonNode> processTaskList(
+  public static CompletableFuture<WorkflowModel> processTaskList(
       TaskExecutor<?> taskExecutor,
       WorkflowContext context,
       Optional<TaskContext> parentTask,
-      JsonNode input) {
+      WorkflowModel input) {
     return taskExecutor
         .apply(context, parentTask, input)
         .thenApply(

@@ -13,7 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl;
+package io.serverlessworkflow.impl.expressions;
 
-@FunctionalInterface
-public interface LongFilter extends ExpressionHolder<Long> {}
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import java.io.IOException;
+
+public class JacksonModelSerializer extends StdSerializer<JacksonModel> {
+
+  private static final long serialVersionUID = 1L;
+
+  protected JacksonModelSerializer() {
+    super(JacksonModel.class);
+  }
+
+  @Override
+  public void serialize(JacksonModel value, JsonGenerator gen, SerializerProvider provider)
+      throws IOException {
+    gen.writeTree(value.node);
+  }
+}

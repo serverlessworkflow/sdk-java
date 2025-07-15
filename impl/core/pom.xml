@@ -8,9 +8,9 @@
     <artifactId>serverlessworkflow-impl-core</artifactId>
     <name>Serverless Workflow :: Impl :: Core</name>
     <dependencies>
-        <dependency>
+     <dependency>
             <groupId>io.serverlessworkflow</groupId>
-            <artifactId>serverlessworkflow-api</artifactId>
+            <artifactId>serverlessworkflow-types</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -58,5 +58,11 @@
             <artifactId>logback-classic</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>io.serverlessworkflow</groupId>
+            <artifactId>serverlessworkflow-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        
     </dependencies>
 </project>

@@ -111,11 +111,14 @@ public class WorkflowDefinitionTest {
         (Consumer<WorkflowDefinition>)
             d ->
                 instance.accept(
-                    d.instance(input).start().thenApply(JsonUtils::toJavaValue).join()));
+                    d.instance(input)
+                        .start()
+                        .thenApply(model -> JsonUtils.toJavaValue(JsonUtils.modelToJson(model)))
+                        .join()));
   }
 
   private static Arguments argsJson(
-      String fileName, Map<String, Object> input, Consumer<JsonNode> instance) {
+      String fileName, Map<String, Object> input, Consumer<WorkflowModel> instance) {
     return Arguments.of(
         fileName,
         (Consumer<WorkflowDefinition>) d -> instance.accept(d.instance(input).start().join()));
@@ -140,7 +143,12 @@ public class WorkflowDefinitionTest {
     consumer.accept(clazz.cast(ex.getCause()));
   }
 
-  private static void checkNotCompeteOuput(JsonNode out) {
+  private static void checkNotCompeteOuput(WorkflowModel model) {
+    JsonNode out =
+        model
+            .as(JsonNode.class)
+            .orElseThrow(
+                () -> new IllegalArgumentException("Model cannot be converted to json node"));
     assertThat(out).isInstanceOf(ArrayNode.class);
     assertThat(out).hasSize(2);
     ArrayNode array = (ArrayNode) out;

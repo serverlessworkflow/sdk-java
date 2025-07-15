@@ -22,7 +22,6 @@ import io.serverlessworkflow.api.types.Output;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.executors.TaskExecutor;
 import io.serverlessworkflow.impl.executors.TaskExecutorHelper;
-import io.serverlessworkflow.impl.json.JsonUtils;
 import io.serverlessworkflow.impl.jsonschema.SchemaValidator;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
 import java.nio.file.Path;
@@ -47,13 +46,13 @@ public class WorkflowDefinition implements AutoCloseable {
       Input input = workflow.getInput();
       this.inputSchemaValidator =
           getSchemaValidator(application.validatorFactory(), resourceLoader, input.getSchema());
-      this.inputFilter = buildWorkflowFilter(application.expressionFactory(), input.getFrom());
+      this.inputFilter = buildWorkflowFilter(application, input.getFrom());
     }
     if (workflow.getOutput() != null) {
       Output output = workflow.getOutput();
       this.outputSchemaValidator =
           getSchemaValidator(application.validatorFactory(), resourceLoader, output.getSchema());
-      this.outputFilter = buildWorkflowFilter(application.expressionFactory(), output.getAs());
+      this.outputFilter = buildWorkflowFilter(application, output.getAs());
     }
     this.taskExecutor =
         TaskExecutorHelper.createExecutorList(
@@ -74,7 +73,7 @@ public class WorkflowDefinition implements AutoCloseable {
   }
 
   public WorkflowInstance instance(Object input) {
-    return new WorkflowInstance(this, JsonUtils.fromValue(input));
+    return new WorkflowInstance(this, application.modelFactory().fromAny(input));
   }
 
   Optional<SchemaValidator> inputSchemaValidator() {

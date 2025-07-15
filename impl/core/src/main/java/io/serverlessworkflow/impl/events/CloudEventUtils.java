@@ -20,7 +20,6 @@ import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.CloudEventData;
-import io.cloudevents.core.builder.CloudEventBuilder;
 import io.cloudevents.jackson.JsonCloudEventData;
 import io.serverlessworkflow.impl.json.JsonUtils;
 import java.io.IOException;
@@ -62,18 +61,6 @@ public class CloudEventUtils {
 
   public static OffsetDateTime toOffset(Date date) {
     return date.toInstant().atOffset(ZoneOffset.UTC);
-  }
-
-  public static CloudEventBuilder addExtension(
-      CloudEventBuilder builder, String name, JsonNode value) {
-    if (value.isTextual()) {
-      builder.withExtension(name, value.asText());
-    } else if (value.isBoolean()) {
-      builder.withExtension(name, value.isBoolean());
-    } else if (value.isNumber()) {
-      builder.withExtension(name, value.numberValue());
-    }
-    return builder;
   }
 
   public static JsonNode toJsonNode(CloudEventData data) {

@@ -15,7 +15,6 @@
  */
 package io.serverlessworkflow.impl.executors;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import io.serverlessworkflow.api.types.ForTask;
 import io.serverlessworkflow.api.types.ForTaskConfiguration;
 import io.serverlessworkflow.api.types.Workflow;
@@ -23,6 +22,7 @@ import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowFilter;
+import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowPosition;
 import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.executors.RegularTaskExecutor.RegularTaskExecutorBuilder;
@@ -50,10 +50,8 @@ public class ForExecutor extends RegularTaskExecutor<ForTask> {
         ResourceLoader resourceLoader) {
       super(position, task, workflow, application, resourceLoader);
       ForTaskConfiguration forConfig = task.getFor();
-      this.collectionExpr =
-          WorkflowUtils.buildWorkflowFilter(application.expressionFactory(), forConfig.getIn());
-      this.whileExpr =
-          WorkflowUtils.optionalFilter(application.expressionFactory(), task.getWhile());
+      this.collectionExpr = WorkflowUtils.buildWorkflowFilter(application, forConfig.getIn());
+      this.whileExpr = WorkflowUtils.optionalFilter(application, task.getWhile());
       this.taskExecutor =
           TaskExecutorHelper.createExecutorList(
               position, task.getDo(), workflow, application, resourceLoader);
@@ -73,18 +71,19 @@ public class ForExecutor extends RegularTaskExecutor<ForTask> {
   }
 
   @Override
-  protected CompletableFuture<JsonNode> internalExecute(
+  protected CompletableFuture<WorkflowModel> internalExecute(
       WorkflowContext workflow, TaskContext taskContext) {
-    Iterator<JsonNode> iter =
-        collectionExpr.apply(workflow, taskContext, taskContext.input()).iterator();
+    Iterator<WorkflowModel> iter =
+        collectionExpr.apply(workflow, taskContext, taskContext.input()).asCollection().iterator();
     int i = 0;
-    CompletableFuture<JsonNode> future = CompletableFuture.completedFuture(taskContext.input());
+    CompletableFuture<WorkflowModel> future =
+        CompletableFuture.completedFuture(taskContext.input());
     while (iter.hasNext()
         && whileExpr
-            .<JsonNode>map(w -> w.apply(workflow, taskContext, taskContext.rawOutput()))
-            .map(n -> n.asBoolean(true))
+            .map(w -> w.apply(workflow, taskContext, taskContext.rawOutput()))
+            .map(n -> n.asBoolean().orElse(true))
             .orElse(true)) {
-      JsonNode item = iter.next();
+      WorkflowModel item = iter.next();
       taskContext.variables().put(task.getFor().getEach(), item);
       taskContext.variables().put(task.getFor().getAt(), i++);
       future =

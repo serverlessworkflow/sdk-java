@@ -15,7 +15,36 @@
  */
 package io.serverlessworkflow.impl;
 
-@FunctionalInterface
-public interface WorkflowFilter {
-  WorkflowModel apply(WorkflowContext workflow, TaskContext task, WorkflowModel node);
+import io.cloudevents.CloudEventData;
+import java.time.OffsetDateTime;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.BiConsumer;
+
+public interface WorkflowModel {
+
+  void forEach(BiConsumer<String, WorkflowModel> consumer);
+
+  Optional<Boolean> asBoolean();
+
+  Collection<WorkflowModel> asCollection();
+
+  Optional<String> asText();
+
+  Optional<OffsetDateTime> asDate();
+
+  Optional<Number> asNumber();
+
+  Optional<CloudEventData> asCloudEventData();
+
+  Optional<Map<String, Object>> asMap();
+
+  Object asJavaObject();
+
+  Object asIs();
+
+  Class<?> objectClass();
+
+  <T> Optional<T> as(Class<T> clazz);
 }

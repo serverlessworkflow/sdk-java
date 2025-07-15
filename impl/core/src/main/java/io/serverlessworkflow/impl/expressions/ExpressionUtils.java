@@ -15,10 +15,9 @@
  */
 package io.serverlessworkflow.impl.expressions;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
-import io.serverlessworkflow.impl.json.JsonUtils;
+import io.serverlessworkflow.impl.WorkflowModel;
 import java.util.Map;
 
 public class ExpressionUtils {
@@ -30,30 +29,17 @@ public class ExpressionUtils {
 
   public static Map<String, Object> buildExpressionMap(
       Map<String, Object> origMap, ExpressionFactory factory) {
-    return new ProxyMap(origMap, o -> isExpr(o) ? factory.getExpression(o.toString()) : o);
+    return new ProxyMap(origMap, o -> isExpr(o) ? factory.buildExpression(o.toString()) : o);
   }
 
   public static Map<String, Object> evaluateExpressionMap(
-      Map<String, Object> origMap, WorkflowContext workflow, TaskContext task, JsonNode n) {
+      Map<String, Object> origMap, WorkflowContext workflow, TaskContext task, WorkflowModel n) {
     return new ProxyMap(
-        origMap,
-        o ->
-            o instanceof Expression
-                ? JsonUtils.toJavaValue(((Expression) o).eval(workflow, task, n))
-                : o);
+        origMap, o -> o instanceof Expression ? ((Expression) o).eval(workflow, task, n) : o);
   }
 
   public static Object buildExpressionObject(Object obj, ExpressionFactory factory) {
-    return obj instanceof Map
-        ? ExpressionUtils.buildExpressionMap((Map<String, Object>) obj, factory)
-        : obj;
-  }
-
-  public static Object evaluateExpressionObject(
-      Object obj, WorkflowContext workflow, TaskContext task, JsonNode node) {
-    return obj instanceof Map
-        ? ExpressionUtils.evaluateExpressionMap((Map<String, Object>) obj, workflow, task, node)
-        : obj;
+    return obj instanceof Map map ? ExpressionUtils.buildExpressionMap(map, factory) : obj;
   }
 
   public static boolean isExpr(Object expr) {

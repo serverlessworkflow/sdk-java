@@ -17,7 +17,6 @@ package io.serverlessworkflow.impl.executors;
 
 import static io.serverlessworkflow.impl.WorkflowUtils.*;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import io.serverlessworkflow.api.types.Export;
 import io.serverlessworkflow.api.types.FlowDirective;
 import io.serverlessworkflow.api.types.Input;
@@ -28,6 +27,7 @@ import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowFilter;
+import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowPosition;
 import io.serverlessworkflow.impl.WorkflowStatus;
 import io.serverlessworkflow.impl.jsonschema.SchemaValidator;
@@ -83,26 +83,25 @@ public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskEx
       this.resourceLoader = resourceLoader;
       if (task.getInput() != null) {
         Input input = task.getInput();
-        this.inputProcessor = buildWorkflowFilter(application.expressionFactory(), input.getFrom());
+        this.inputProcessor = buildWorkflowFilter(application, input.getFrom());
         this.inputSchemaValidator =
             getSchemaValidator(application.validatorFactory(), resourceLoader, input.getSchema());
       }
       if (task.getOutput() != null) {
         Output output = task.getOutput();
-        this.outputProcessor = buildWorkflowFilter(application.expressionFactory(), output.getAs());
+        this.outputProcessor = buildWorkflowFilter(application, output.getAs());
         this.outputSchemaValidator =
             getSchemaValidator(application.validatorFactory(), resourceLoader, output.getSchema());
       }
       if (task.getExport() != null) {
         Export export = task.getExport();
         if (export.getAs() != null) {
-          this.contextProcessor =
-              buildWorkflowFilter(application.expressionFactory(), export.getAs());
+          this.contextProcessor = buildWorkflowFilter(application, export.getAs());
         }
         this.contextSchemaValidator =
             getSchemaValidator(application.validatorFactory(), resourceLoader, export.getSchema());
       }
-      this.ifFilter = optionalFilter(application.expressionFactory(), task.getIf());
+      this.ifFilter = optionalFilter(application, task.getIf());
     }
 
     protected final TransitionInfoBuilder next(
@@ -175,14 +174,14 @@ public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskEx
 
   @Override
   public CompletableFuture<TaskContext> apply(
-      WorkflowContext workflowContext, Optional<TaskContext> parentContext, JsonNode input) {
+      WorkflowContext workflowContext, Optional<TaskContext> parentContext, WorkflowModel input) {
     TaskContext taskContext = new TaskContext(input, position, parentContext, taskName, task);
     CompletableFuture<TaskContext> completable = CompletableFuture.completedFuture(taskContext);
     if (!TaskExecutorHelper.isActive(workflowContext)) {
       return completable;
     }
     if (ifFilter
-        .map(f -> f.apply(workflowContext, taskContext, input).asBoolean(true))
+        .flatMap(f -> f.apply(workflowContext, taskContext, input).asBoolean())
         .orElse(true)) {
       return executeNext(
           completable
