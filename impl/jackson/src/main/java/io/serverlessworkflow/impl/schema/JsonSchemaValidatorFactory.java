@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.jsonschema;
+package io.serverlessworkflow.impl.schema;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.serverlessworkflow.api.WorkflowFormat;
@@ -24,26 +24,18 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 
-public class DefaultSchemaValidatorFactory implements SchemaValidatorFactory {
-
-  private DefaultSchemaValidatorFactory() {}
-
-  private static final DefaultSchemaValidatorFactory instance = new DefaultSchemaValidatorFactory();
-
-  public static DefaultSchemaValidatorFactory get() {
-    return instance;
-  }
+public class JsonSchemaValidatorFactory implements SchemaValidatorFactory {
 
   @Override
   public SchemaValidator getValidator(SchemaInline inline) {
-    return new DefaultSchemaValidator(JsonUtils.fromValue(inline.getDocument()));
+    return new JsonSchemaValidator(JsonUtils.fromValue(inline.getDocument()));
   }
 
   @Override
   public SchemaValidator getValidator(StaticResource resource) {
     ObjectMapper mapper = WorkflowFormat.fromFileName(resource.name()).mapper();
     try (InputStream in = resource.open()) {
-      return new DefaultSchemaValidator(mapper.readTree(in));
+      return new JsonSchemaValidator(mapper.readTree(in));
     } catch (IOException io) {
       throw new UncheckedIOException(io);
     }

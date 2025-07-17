@@ -27,7 +27,7 @@ import io.cloudevents.CloudEventData;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowModelCollection;
 import io.serverlessworkflow.impl.WorkflowModelFactory;
-import io.serverlessworkflow.impl.events.CloudEventUtils;
+import io.serverlessworkflow.impl.events.JacksonCloudEventUtils;
 import io.serverlessworkflow.impl.json.JsonUtils;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
@@ -91,12 +91,12 @@ public class JacksonModelFactory implements WorkflowModelFactory {
 
   @Override
   public WorkflowModel from(CloudEvent ce) {
-    return new JacksonModel(CloudEventUtils.toJsonNode(ce));
+    return new JacksonModel(JacksonCloudEventUtils.toJsonNode(ce));
   }
 
   @Override
   public WorkflowModel from(CloudEventData ce) {
-    return new JacksonModel(CloudEventUtils.toJsonNode(ce));
+    return new JacksonModel(JacksonCloudEventUtils.toJsonNode(ce));
   }
 
   @Override

@@ -15,12 +15,12 @@
  */
 package io.serverlessworkflow.impl.resources;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.WorkflowModel;
 import java.io.InputStream;
 import java.util.Optional;
 
 public interface DynamicResource {
-  InputStream open(WorkflowContext workflow, Optional<TaskContext> task, JsonNode input);
+  InputStream open(WorkflowContext workflow, Optional<TaskContext> task, WorkflowModel input);
 }

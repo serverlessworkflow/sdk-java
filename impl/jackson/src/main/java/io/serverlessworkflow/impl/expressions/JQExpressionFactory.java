@@ -24,15 +24,7 @@ import net.thisptr.jackson.jq.exception.JsonQueryException;
 
 public class JQExpressionFactory extends ObjectExpressionFactory {
 
-  private JQExpressionFactory() {}
-
-  private static final JQExpressionFactory instance = new JQExpressionFactory();
-
   private WorkflowModelFactory modelFactory = new JacksonModelFactory();
-
-  public static JQExpressionFactory get() {
-    return instance;
-  }
 
   private static Supplier<Scope> scopeSupplier = new DefaultScopeSupplier();
 
