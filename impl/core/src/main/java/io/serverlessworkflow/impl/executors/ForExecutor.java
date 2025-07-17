@@ -16,7 +16,6 @@
 package io.serverlessworkflow.impl.executors;
 
 import io.serverlessworkflow.api.types.ForTask;
-import io.serverlessworkflow.api.types.ForTaskConfiguration;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
@@ -25,7 +24,6 @@ import io.serverlessworkflow.impl.WorkflowFilter;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowPosition;
 import io.serverlessworkflow.impl.WorkflowUtils;
-import io.serverlessworkflow.impl.executors.RegularTaskExecutor.RegularTaskExecutorBuilder;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
 import java.util.Iterator;
 import java.util.Optional;
@@ -49,12 +47,19 @@ public class ForExecutor extends RegularTaskExecutor<ForTask> {
         WorkflowApplication application,
         ResourceLoader resourceLoader) {
       super(position, task, workflow, application, resourceLoader);
-      ForTaskConfiguration forConfig = task.getFor();
-      this.collectionExpr = WorkflowUtils.buildWorkflowFilter(application, forConfig.getIn());
-      this.whileExpr = WorkflowUtils.optionalFilter(application, task.getWhile());
+      this.collectionExpr = buildCollectionFilter();
+      this.whileExpr = buildWhileFilter();
       this.taskExecutor =
           TaskExecutorHelper.createExecutorList(
               position, task.getDo(), workflow, application, resourceLoader);
+    }
+
+    protected Optional<WorkflowFilter> buildWhileFilter() {
+      return WorkflowUtils.optionalFilter(application, task.getWhile());
+    }
+
+    protected WorkflowFilter buildCollectionFilter() {
+      return WorkflowUtils.buildWorkflowFilter(application, task.getFor().getIn());
     }
 
     @Override

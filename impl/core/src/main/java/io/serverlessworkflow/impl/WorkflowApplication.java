@@ -125,7 +125,7 @@ public class WorkflowApplication implements AutoCloseable {
           };
     }
 
-    private TaskExecutorFactory taskFactory = DefaultTaskExecutorFactory.get();
+    private TaskExecutorFactory taskFactory;
     private ExpressionFactory exprFactory;
     private Collection<WorkflowExecutionListener> listeners;
     private ResourceLoaderFactory resourceLoaderFactory = DefaultResourceLoaderFactory.get();
@@ -210,6 +210,12 @@ public class WorkflowApplication implements AutoCloseable {
             ServiceLoader.load(SchemaValidatorFactory.class)
                 .findFirst()
                 .orElseGet(() -> EmptySchemaValidatorHolder.instance);
+      }
+      if (taskFactory == null) {
+        taskFactory =
+            ServiceLoader.load(TaskExecutorFactory.class)
+                .findFirst()
+                .orElseGet(() -> DefaultTaskExecutorFactory.get());
       }
       return new WorkflowApplication(this);
     }
