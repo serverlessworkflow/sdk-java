@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.ShortNode;
 import com.fasterxml.jackson.databind.node.TextNode;
+import io.serverlessworkflow.impl.WorkflowModel;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -130,9 +131,22 @@ public class JsonUtils {
       return mapToArray((Collection<?>) value);
     } else if (value instanceof Map) {
       return mapToNode((Map<String, Object>) value);
+    } else if (value instanceof WorkflowModel model) {
+      return modelToJson(model);
     } else {
       return mapper.convertValue(value, JsonNode.class);
     }
+  }
+
+  public static JsonNode modelToJson(WorkflowModel model) {
+    return model == null
+        ? NullNode.instance
+        : model
+            .as(JsonNode.class)
+            .orElseThrow(
+                () ->
+                    new IllegalArgumentException(
+                        "Unable to convert model " + model + " to JsonNode"));
   }
 
   public static Object toJavaValue(Object object) {
@@ -255,6 +269,10 @@ public class JsonUtils {
 
   public static ObjectNode object() {
     return mapper.createObjectNode();
+  }
+
+  public static ArrayNode array() {
+    return mapper.createArrayNode();
   }
 
   private JsonUtils() {}

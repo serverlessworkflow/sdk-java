@@ -15,9 +15,7 @@
  */
 package io.serverlessworkflow.impl;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import io.serverlessworkflow.impl.executors.TaskExecutorHelper;
-import io.serverlessworkflow.impl.json.JsonUtils;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -26,16 +24,16 @@ import java.util.concurrent.atomic.AtomicReference;
 public class WorkflowInstance {
   private final AtomicReference<WorkflowStatus> status;
   private final String id;
-  private final JsonNode input;
+  private final WorkflowModel input;
 
   private WorkflowContext workflowContext;
   private WorkflowDefinition definition;
   private Instant startedAt;
   private Instant completedAt;
-  private volatile JsonNode output;
-  private CompletableFuture<JsonNode> completableFuture;
+  private volatile WorkflowModel output;
+  private CompletableFuture<WorkflowModel> completableFuture;
 
-  WorkflowInstance(WorkflowDefinition definition, JsonNode input) {
+  WorkflowInstance(WorkflowDefinition definition, WorkflowModel input) {
     this.id = definition.application().idFactory().get();
     this.input = input;
     this.definition = definition;
@@ -43,7 +41,7 @@ public class WorkflowInstance {
     definition.inputSchemaValidator().ifPresent(v -> v.validate(input));
   }
 
-  public CompletableFuture<JsonNode> start() {
+  public CompletableFuture<WorkflowModel> start() {
     this.startedAt = Instant.now();
     this.workflowContext = new WorkflowContext(definition, this);
     this.status.set(WorkflowStatus.RUNNING);
@@ -60,7 +58,7 @@ public class WorkflowInstance {
     return completableFuture;
   }
 
-  private JsonNode whenCompleted(JsonNode node) {
+  private WorkflowModel whenCompleted(WorkflowModel node) {
     output =
         workflowContext
             .definition()
@@ -85,7 +83,7 @@ public class WorkflowInstance {
     return completedAt;
   }
 
-  public JsonNode input() {
+  public WorkflowModel input() {
     return input;
   }
 
@@ -97,11 +95,16 @@ public class WorkflowInstance {
     this.status.set(state);
   }
 
-  public Object output() {
-    return JsonUtils.toJavaValue(outputAsJsonNode());
+  public WorkflowModel output() {
+    return output;
   }
 
-  public JsonNode outputAsJsonNode() {
-    return output;
+  public <T> T outputAs(Class<T> clazz) {
+    return output
+        .as(clazz)
+        .orElseThrow(
+            () ->
+                new IllegalArgumentException(
+                    "Output " + output + " cannot be converted to class " + clazz));
   }
 }

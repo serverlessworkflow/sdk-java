@@ -8,30 +8,22 @@
     <artifactId>serverlessworkflow-impl-core</artifactId>
     <name>Serverless Workflow :: Impl :: Core</name>
     <dependencies>
-        <dependency>
-            <groupId>io.serverlessworkflow</groupId>
-            <artifactId>serverlessworkflow-api</artifactId>
-            <version>${project.version}</version>
+         <dependency>
+           <groupId>io.serverlessworkflow</groupId>
+           <artifactId>serverlessworkflow-types</artifactId>
+           <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>io.cloudevents</groupId>
-            <artifactId>cloudevents-api</artifactId>
+            <artifactId>cloudevents-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.cloudevents</groupId>
-            <artifactId>cloudevents-json-jackson</artifactId>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
         </dependency>
         <dependency>
             <groupId>com.github.f4b6a3</groupId>
             <artifactId>ulid-creator</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.networknt</groupId>
-            <artifactId>json-schema-validator</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>net.thisptr</groupId>
-            <artifactId>jackson-jq</artifactId>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>

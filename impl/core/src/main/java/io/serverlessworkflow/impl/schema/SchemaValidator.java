@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.jsonschema;
+package io.serverlessworkflow.impl.schema;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import io.serverlessworkflow.impl.WorkflowModel;
 
 public interface SchemaValidator {
-  void validate(JsonNode node);
+  void validate(WorkflowModel node);
 }

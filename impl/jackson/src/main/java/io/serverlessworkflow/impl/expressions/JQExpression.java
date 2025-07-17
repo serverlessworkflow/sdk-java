@@ -15,10 +15,14 @@
  */
 package io.serverlessworkflow.impl.expressions;
 
+import static io.serverlessworkflow.impl.json.JsonUtils.modelToJson;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.WorkflowModel;
+import io.serverlessworkflow.impl.WorkflowModelFactory;
 import io.serverlessworkflow.impl.json.JsonUtils;
 import java.util.function.Supplier;
 import net.thisptr.jackson.jq.Output;
@@ -32,20 +36,24 @@ public class JQExpression implements Expression {
   private final Supplier<Scope> scope;
   private final String expr;
   private final net.thisptr.jackson.jq.Expression internalExpr;
+  private final WorkflowModelFactory modelFactory;
 
-  public JQExpression(Supplier<Scope> scope, String expr, Version version)
+  public JQExpression(
+      Supplier<Scope> scope, String expr, Version version, WorkflowModelFactory modelFactory)
       throws JsonQueryException {
     this.expr = expr;
     this.scope = scope;
     this.internalExpr = ExpressionParser.compile(expr, version);
+    this.modelFactory = modelFactory;
   }
 
   @Override
-  public JsonNode eval(WorkflowContext workflow, TaskContext task, JsonNode node) {
+  public WorkflowModel eval(WorkflowContext workflow, TaskContext task, WorkflowModel model) {
     JsonNodeOutput output = new JsonNodeOutput();
+    JsonNode node = modelToJson(model);
     try {
       internalExpr.apply(createScope(workflow, task), node, output);
-      return output.getResult();
+      return modelFactory.fromAny(output.getResult());
     } catch (JsonQueryException e) {
       throw new IllegalArgumentException(
           "Unable to evaluate content " + node + " using expr " + expr, e);
@@ -78,13 +86,13 @@ public class JQExpression implements Expression {
   private Scope createScope(WorkflowContext workflow, TaskContext task) {
     Scope childScope = Scope.newChildScope(scope.get());
     if (task != null) {
-      childScope.setValue("input", task.input());
-      childScope.setValue("output", task.output());
+      childScope.setValue("input", modelToJson(task.input()));
+      childScope.setValue("output", modelToJson(task.output()));
       childScope.setValue("task", () -> JsonUtils.fromValue(TaskDescriptor.of(task)));
       task.variables().forEach((k, v) -> childScope.setValue(k, JsonUtils.fromValue(v)));
     }
     if (workflow != null) {
-      childScope.setValue("context", workflow.context());
+      childScope.setValue("context", modelToJson(workflow.context()));
       childScope.setValue(
           "runtime",
           () ->

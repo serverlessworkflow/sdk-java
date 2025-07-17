@@ -15,11 +15,18 @@
  */
 package io.serverlessworkflow.impl.expressions;
 
+import io.serverlessworkflow.impl.WorkflowFilter;
+import io.serverlessworkflow.impl.WorkflowModelFactory;
+
 public interface ExpressionFactory {
   /**
    * @throws ExpressionValidationException
    * @param expression
    * @return
    */
-  Expression getExpression(String expression);
+  Expression buildExpression(String expression);
+
+  WorkflowFilter buildFilter(String expr, Object value);
+
+  WorkflowModelFactory modelFactory();
 }

@@ -15,13 +15,13 @@
  */
 package io.serverlessworkflow.impl.expressions;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import io.serverlessworkflow.api.types.TaskBase;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.WorkflowModel;
 
 public record WorkflowDescriptor<T extends TaskBase>(
-    String id, Workflow definition, JsonNode input, DateTimeDescriptor startedAt) {
+    String id, Workflow definition, WorkflowModel input, DateTimeDescriptor startedAt) {
 
   public static <T extends TaskBase> WorkflowDescriptor<T> of(WorkflowContext context) {
     return new WorkflowDescriptor<T>(

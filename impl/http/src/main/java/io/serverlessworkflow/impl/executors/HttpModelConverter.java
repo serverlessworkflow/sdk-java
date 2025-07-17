@@ -13,7 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl;
+package io.serverlessworkflow.impl.executors;
 
-@FunctionalInterface
-public interface LongFilter extends ExpressionHolder<Long> {}
+import io.serverlessworkflow.impl.WorkflowModel;
+import io.serverlessworkflow.impl.WorkflowModelFactory;
+import jakarta.ws.rs.client.Entity;
+
+public interface HttpModelConverter {
+
+  default WorkflowModel toModel(WorkflowModelFactory factory, Object entity) {
+    return factory.fromAny(entity);
+  }
+
+  default Entity toEntity(WorkflowModel model) {
+    return Entity.json(model.asIs());
+  }
+}

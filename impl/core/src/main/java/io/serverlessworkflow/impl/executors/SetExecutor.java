@@ -15,7 +15,6 @@
  */
 package io.serverlessworkflow.impl.executors;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import io.serverlessworkflow.api.types.Set;
 import io.serverlessworkflow.api.types.SetTask;
 import io.serverlessworkflow.api.types.SetTaskConfiguration;
@@ -24,6 +23,7 @@ import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowFilter;
+import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowPosition;
 import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
@@ -48,7 +48,7 @@ public class SetExecutor extends RegularTaskExecutor<SetTask> {
       SetTaskConfiguration setConfig = setInfo.getSetTaskConfiguration();
       this.setFilter =
           WorkflowUtils.buildWorkflowFilter(
-              application.expressionFactory(),
+              application,
               setInfo.getString(),
               setConfig != null ? setConfig.getAdditionalProperties() : null);
     }
@@ -65,7 +65,7 @@ public class SetExecutor extends RegularTaskExecutor<SetTask> {
   }
 
   @Override
-  protected CompletableFuture<JsonNode> internalExecute(
+  protected CompletableFuture<WorkflowModel> internalExecute(
       WorkflowContext workflow, TaskContext taskContext) {
     return CompletableFuture.completedFuture(
         setFilter.apply(workflow, taskContext, taskContext.input()));

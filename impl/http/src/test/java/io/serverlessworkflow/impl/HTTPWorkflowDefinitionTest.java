@@ -19,7 +19,6 @@ import static io.serverlessworkflow.api.WorkflowReader.readWorkflowFromClasspath
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowableOfType;
 
-import io.serverlessworkflow.impl.json.JsonUtils;
 import java.io.IOException;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -47,7 +46,6 @@ public class HTTPWorkflowDefinitionTest {
             appl.workflowDefinition(readWorkflowFromClasspath(fileName))
                 .instance(input)
                 .start()
-                .thenApply(JsonUtils::toJavaValue)
                 .join())
         .is(condition);
   }
@@ -68,20 +66,20 @@ public class HTTPWorkflowDefinitionTest {
         .hasMessageContaining("There are JsonSchema validation errors");
   }
 
-  private static boolean httpCondition(Object obj) {
-    Map<String, Object> map = (Map<String, Object>) obj;
+  private static boolean httpCondition(WorkflowModel obj) {
+    Map<String, Object> map = obj.asMap().orElseThrow();
     return map.containsKey("photoUrls") || map.containsKey("petId");
   }
 
   private static Stream<Arguments> provideParameters() {
     Map<String, Object> petInput = Map.of("petId", 10);
     Map<String, Object> starTrekInput = Map.of("uid", "MOMA0000092393");
-    Condition<Object> petCondition =
+    Condition<WorkflowModel> petCondition =
         new Condition<>(HTTPWorkflowDefinitionTest::httpCondition, "callHttpCondition");
-    Condition<Object> starTrekCondition =
+    Condition<WorkflowModel> starTrekCondition =
         new Condition<>(
             o ->
-                ((Map<String, Object>) ((Map<String, Object>) o).get("movie"))
+                ((Map<String, Object>) o.asMap().orElseThrow().get("movie"))
                     .get("title")
                     .equals("Star Trek"),
             "StartTrek");
@@ -90,8 +88,8 @@ public class HTTPWorkflowDefinitionTest {
         Arguments.of(
             "callGetHttp.yaml",
             Map.of("petId", "-1"),
-            new Condition<>(
-                o -> ((Map<String, Object>) o).containsKey("petId"), "notFoundCondition")),
+            new Condition<WorkflowModel>(
+                o -> o.asMap().orElseThrow().containsKey("petId"), "notFoundCondition")),
         Arguments.of("call-http-endpoint-interpolation.yaml", petInput, petCondition),
         Arguments.of("call-http-query-parameters.yaml", starTrekInput, starTrekCondition),
         Arguments.of(
@@ -99,6 +97,7 @@ public class HTTPWorkflowDefinitionTest {
         Arguments.of(
             "callPostHttp.yaml",
             Map.of("name", "Javierito", "surname", "Unknown"),
-            new Condition<>(o -> o.equals("Javierito"), "CallHttpPostCondition")));
+            new Condition<WorkflowModel>(
+                o -> o.asText().orElseThrow().equals("Javierito"), "CallHttpPostCondition")));
   }
 }

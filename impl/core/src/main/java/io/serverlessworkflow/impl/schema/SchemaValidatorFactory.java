@@ -13,22 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.jsonschema;
+package io.serverlessworkflow.impl.schema;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import io.serverlessworkflow.api.types.SchemaInline;
+import io.serverlessworkflow.impl.resources.StaticResource;
 
-public class DefaultSchemaValidatorFactory implements SchemaValidatorFactory {
+public interface SchemaValidatorFactory {
+  SchemaValidator getValidator(SchemaInline inline);
 
-  private DefaultSchemaValidatorFactory() {}
-
-  private static final DefaultSchemaValidatorFactory instance = new DefaultSchemaValidatorFactory();
-
-  public static DefaultSchemaValidatorFactory get() {
-    return instance;
-  }
-
-  @Override
-  public SchemaValidator getValidator(JsonNode node) {
-    return new DefaultSchemaValidator(node);
-  }
+  SchemaValidator getValidator(StaticResource resource);
 }

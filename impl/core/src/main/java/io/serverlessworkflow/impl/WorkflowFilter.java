@@ -15,9 +15,7 @@
  */
 package io.serverlessworkflow.impl;
 
-import com.fasterxml.jackson.databind.JsonNode;
-
 @FunctionalInterface
 public interface WorkflowFilter {
-  JsonNode apply(WorkflowContext workflow, TaskContext task, JsonNode node);
+  WorkflowModel apply(WorkflowContext workflow, TaskContext task, WorkflowModel node);
 }

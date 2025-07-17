@@ -13,10 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.jsonschema;
+package io.serverlessworkflow.impl.expressions;
 
-import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import java.io.IOException;
 
-public interface SchemaValidatorFactory {
-  SchemaValidator getValidator(JsonNode node);
+public class JacksonModelSerializer extends StdSerializer<JacksonModel> {
+
+  private static final long serialVersionUID = 1L;
+
+  protected JacksonModelSerializer() {
+    super(JacksonModel.class);
+  }
+
+  @Override
+  public void serialize(JacksonModel value, JsonGenerator gen, SerializerProvider provider)
+      throws IOException {
+    gen.writeTree(value.node);
+  }
 }

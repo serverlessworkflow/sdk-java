@@ -15,7 +15,6 @@
  */
 package io.serverlessworkflow.impl;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import io.serverlessworkflow.api.types.TaskBase;
 import io.serverlessworkflow.impl.executors.TransitionInfo;
 import java.time.Instant;
@@ -25,7 +24,7 @@ import java.util.Optional;
 
 public class TaskContext {
 
-  private final JsonNode rawInput;
+  private final WorkflowModel rawInput;
   private final TaskBase task;
   private final WorkflowPosition position;
   private final Instant startedAt;
@@ -33,14 +32,14 @@ public class TaskContext {
   private final Map<String, Object> contextVariables;
   private final Optional<TaskContext> parentContext;
 
-  private JsonNode input;
-  private JsonNode output;
-  private JsonNode rawOutput;
+  private WorkflowModel input;
+  private WorkflowModel output;
+  private WorkflowModel rawOutput;
   private Instant completedAt;
   private TransitionInfo transition;
 
   public TaskContext(
-      JsonNode input,
+      WorkflowModel input,
       WorkflowPosition position,
       Optional<TaskContext> parentContext,
       String taskName,
@@ -49,15 +48,15 @@ public class TaskContext {
   }
 
   private TaskContext(
-      JsonNode rawInput,
+      WorkflowModel rawInput,
       Optional<TaskContext> parentContext,
       String taskName,
       TaskBase task,
       WorkflowPosition position,
       Instant startedAt,
-      JsonNode input,
-      JsonNode output,
-      JsonNode rawOutput) {
+      WorkflowModel input,
+      WorkflowModel output,
+      WorkflowModel rawOutput) {
     this.rawInput = rawInput;
     this.parentContext = parentContext;
     this.taskName = taskName;
@@ -76,17 +75,17 @@ public class TaskContext {
         rawInput, parentContext, taskName, task, position, startedAt, input, output, rawOutput);
   }
 
-  public void input(JsonNode input) {
+  public void input(WorkflowModel input) {
     this.input = input;
     this.rawOutput = input;
     this.output = input;
   }
 
-  public JsonNode input() {
+  public WorkflowModel input() {
     return input;
   }
 
-  public JsonNode rawInput() {
+  public WorkflowModel rawInput() {
     return rawInput;
   }
 
@@ -94,22 +93,22 @@ public class TaskContext {
     return task;
   }
 
-  public TaskContext rawOutput(JsonNode output) {
+  public TaskContext rawOutput(WorkflowModel output) {
     this.rawOutput = output;
     this.output = output;
     return this;
   }
 
-  public JsonNode rawOutput() {
+  public WorkflowModel rawOutput() {
     return rawOutput;
   }
 
-  public TaskContext output(JsonNode output) {
+  public TaskContext output(WorkflowModel output) {
     this.output = output;
     return this;
   }
 
-  public JsonNode output() {
+  public WorkflowModel output() {
     return output;
   }
 

@@ -17,6 +17,7 @@ package io.serverlessworkflow.impl;
 
 import com.github.f4b6a3.ulid.UlidCreator;
 import io.serverlessworkflow.api.types.Document;
+import io.serverlessworkflow.api.types.SchemaInline;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.events.EventConsumer;
 import io.serverlessworkflow.impl.events.EventPublisher;
@@ -24,16 +25,17 @@ import io.serverlessworkflow.impl.events.InMemoryEvents;
 import io.serverlessworkflow.impl.executors.DefaultTaskExecutorFactory;
 import io.serverlessworkflow.impl.executors.TaskExecutorFactory;
 import io.serverlessworkflow.impl.expressions.ExpressionFactory;
-import io.serverlessworkflow.impl.expressions.JQExpressionFactory;
 import io.serverlessworkflow.impl.expressions.RuntimeDescriptor;
-import io.serverlessworkflow.impl.jsonschema.DefaultSchemaValidatorFactory;
-import io.serverlessworkflow.impl.jsonschema.SchemaValidatorFactory;
 import io.serverlessworkflow.impl.resources.DefaultResourceLoaderFactory;
 import io.serverlessworkflow.impl.resources.ResourceLoaderFactory;
+import io.serverlessworkflow.impl.resources.StaticResource;
+import io.serverlessworkflow.impl.schema.SchemaValidator;
+import io.serverlessworkflow.impl.schema.SchemaValidatorFactory;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.ServiceLoader;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -101,11 +103,31 @@ public class WorkflowApplication implements AutoCloseable {
   }
 
   public static class Builder {
+    private static final SchemaValidatorFactory EMPTY_SCHEMA_VALIDATOR =
+        new SchemaValidatorFactory() {
+
+          private final SchemaValidator NoValidation =
+              new SchemaValidator() {
+                @Override
+                public void validate(WorkflowModel node) {}
+              };
+
+          @Override
+          public SchemaValidator getValidator(StaticResource resource) {
+
+            return NoValidation;
+          }
+
+          @Override
+          public SchemaValidator getValidator(SchemaInline inline) {
+            return NoValidation;
+          }
+        };
     private TaskExecutorFactory taskFactory = DefaultTaskExecutorFactory.get();
-    private ExpressionFactory exprFactory = JQExpressionFactory.get();
+    private ExpressionFactory exprFactory;
     private Collection<WorkflowExecutionListener> listeners;
     private ResourceLoaderFactory resourceLoaderFactory = DefaultResourceLoaderFactory.get();
-    private SchemaValidatorFactory schemaValidatorFactory = DefaultSchemaValidatorFactory.get();
+    private SchemaValidatorFactory schemaValidatorFactory;
     private WorkflowPositionFactory positionFactory = () -> new QueueWorkflowPosition();
     private WorkflowIdFactory idFactory = () -> UlidCreator.getMonotonicUlid().toString();
     private ExecutorServiceFactory executorFactory = () -> Executors.newCachedThreadPool();
@@ -175,6 +197,18 @@ public class WorkflowApplication implements AutoCloseable {
     }
 
     public WorkflowApplication build() {
+      if (exprFactory == null) {
+        exprFactory =
+            ServiceLoader.load(ExpressionFactory.class)
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("Expression factory is required"));
+      }
+      if (schemaValidatorFactory == null) {
+        schemaValidatorFactory =
+            ServiceLoader.load(SchemaValidatorFactory.class)
+                .findFirst()
+                .orElse(EMPTY_SCHEMA_VALIDATOR);
+      }
       return new WorkflowApplication(this);
     }
   }
@@ -200,6 +234,10 @@ public class WorkflowApplication implements AutoCloseable {
 
   public WorkflowPositionFactory positionFactory() {
     return positionFactory;
+  }
+
+  public WorkflowModelFactory modelFactory() {
+    return exprFactory.modelFactory();
   }
 
   public RuntimeDescriptorFactory runtimeDescriptorFactory() {

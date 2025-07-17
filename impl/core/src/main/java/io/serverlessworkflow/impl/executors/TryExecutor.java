@@ -15,7 +15,6 @@
  */
 package io.serverlessworkflow.impl.executors;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import io.serverlessworkflow.api.types.CatchErrors;
 import io.serverlessworkflow.api.types.ErrorFilter;
 import io.serverlessworkflow.api.types.TaskItem;
@@ -28,6 +27,7 @@ import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowError;
 import io.serverlessworkflow.impl.WorkflowException;
 import io.serverlessworkflow.impl.WorkflowFilter;
+import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowPosition;
 import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
@@ -62,10 +62,8 @@ public class TryExecutor extends RegularTaskExecutor<TryTask> {
       super(position, task, workflow, application, resourceLoader);
       TryTaskCatch catchInfo = task.getCatch();
       this.errorFilter = buildErrorFilter(catchInfo.getErrors());
-      this.whenFilter =
-          WorkflowUtils.optionalFilter(application.expressionFactory(), catchInfo.getWhen());
-      this.exceptFilter =
-          WorkflowUtils.optionalFilter(application.expressionFactory(), catchInfo.getExceptWhen());
+      this.whenFilter = WorkflowUtils.optionalFilter(application, catchInfo.getWhen());
+      this.exceptFilter = WorkflowUtils.optionalFilter(application, catchInfo.getExceptWhen());
       this.taskExecutor =
           TaskExecutorHelper.createExecutorList(
               position, task.getTry(), workflow, application, resourceLoader);
@@ -94,14 +92,14 @@ public class TryExecutor extends RegularTaskExecutor<TryTask> {
   }
 
   @Override
-  protected CompletableFuture<JsonNode> internalExecute(
+  protected CompletableFuture<WorkflowModel> internalExecute(
       WorkflowContext workflow, TaskContext taskContext) {
     return TaskExecutorHelper.processTaskList(
             taskExecutor, workflow, Optional.of(taskContext), taskContext.input())
         .exceptionallyCompose(e -> handleException(e, workflow, taskContext));
   }
 
-  private CompletableFuture<JsonNode> handleException(
+  private CompletableFuture<WorkflowModel> handleException(
       Throwable e, WorkflowContext workflow, TaskContext taskContext) {
     if (e instanceof CompletionException) {
       return handleException(e.getCause(), workflow, taskContext);
@@ -110,10 +108,14 @@ public class TryExecutor extends RegularTaskExecutor<TryTask> {
       WorkflowException exception = (WorkflowException) e;
       if (errorFilter.map(f -> f.test(exception.getWorflowError())).orElse(true)
           && whenFilter
-              .map(w -> w.apply(workflow, taskContext, taskContext.input()).asBoolean())
+              .flatMap(w -> w.apply(workflow, taskContext, taskContext.input()).asBoolean())
               .orElse(true)
           && exceptFilter
-              .map(w -> !w.apply(workflow, taskContext, taskContext.input()).asBoolean())
+              .map(
+                  w ->
+                      !w.apply(workflow, taskContext, taskContext.input())
+                          .asBoolean()
+                          .orElse(false))
               .orElse(true)) {
         if (catchTaskExecutor.isPresent()) {
           return TaskExecutorHelper.processTaskList(

@@ -43,6 +43,7 @@
     <module>annotations</module>
     <module>generators</module>
     <module>serialization</module>
+    <module>examples</module>
   </modules>
 
     <properties>
@@ -142,11 +143,15 @@
                 <artifactId>jackson-annotations</artifactId>
                 <version>${version.com.fasterxml.jackson}</version>
             </dependency>
-
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>slf4j-api</artifactId>
                 <version>${version.org.slf4j}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.serverlessworkflow</groupId>
+                <artifactId>serverlessworkflow-api</artifactId>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.networknt</groupId>

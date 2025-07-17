@@ -15,14 +15,13 @@
  */
 package io.serverlessworkflow.impl.executors;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import io.serverlessworkflow.api.types.TaskBase;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowPosition;
-import io.serverlessworkflow.impl.executors.RegularTaskExecutor.RegularTaskExecutorBuilder;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
 import java.util.concurrent.CompletableFuture;
 
@@ -48,7 +47,7 @@ public class CallTaskExecutor<T extends TaskBase> extends RegularTaskExecutor<T>
 
     @Override
     public TaskExecutor<T> buildInstance() {
-      return new CallTaskExecutor(this);
+      return new CallTaskExecutor<>(this);
     }
   }
 
@@ -58,7 +57,7 @@ public class CallTaskExecutor<T extends TaskBase> extends RegularTaskExecutor<T>
   }
 
   @Override
-  protected CompletableFuture<JsonNode> internalExecute(
+  protected CompletableFuture<WorkflowModel> internalExecute(
       WorkflowContext workflow, TaskContext taskContext) {
     return callable.apply(workflow, taskContext, taskContext.input());
   }

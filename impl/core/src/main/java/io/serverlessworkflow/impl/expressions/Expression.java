@@ -15,10 +15,10 @@
  */
 package io.serverlessworkflow.impl.expressions;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.WorkflowModel;
 
 public interface Expression {
-  JsonNode eval(WorkflowContext workflowContext, TaskContext context, JsonNode node);
+  WorkflowModel eval(WorkflowContext workflowContext, TaskContext context, WorkflowModel model);
 }

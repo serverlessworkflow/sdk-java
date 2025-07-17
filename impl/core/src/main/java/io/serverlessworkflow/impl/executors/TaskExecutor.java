@@ -15,15 +15,15 @@
  */
 package io.serverlessworkflow.impl.executors;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import io.serverlessworkflow.api.types.TaskBase;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.WorkflowModel;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 @FunctionalInterface
 public interface TaskExecutor<T extends TaskBase> {
   CompletableFuture<TaskContext> apply(
-      WorkflowContext workflowContext, Optional<TaskContext> parentContext, JsonNode input);
+      WorkflowContext workflowContext, Optional<TaskContext> parentContext, WorkflowModel input);
 }
