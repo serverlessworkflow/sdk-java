@@ -26,6 +26,7 @@ import io.serverlessworkflow.impl.WorkflowPosition;
 import io.serverlessworkflow.impl.executors.RegularTaskExecutor.RegularTaskExecutorBuilder;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -108,6 +109,11 @@ public class ForkExecutor extends RegularTaskExecutor<ForkTask> {
             .application()
             .modelFactory()
             .combine(
-                sortedStream.collect(Collectors.toMap(Entry::getKey, e -> e.getValue().output())));
+                sortedStream.collect(
+                    Collectors.toMap(
+                        Entry::getKey,
+                        e -> e.getValue().output(),
+                        (x, y) -> y,
+                        LinkedHashMap::new)));
   }
 }

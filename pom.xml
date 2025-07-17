@@ -44,6 +44,7 @@
     <module>generators</module>
     <module>serialization</module>
     <module>examples</module>
+    <module>experimental</module>
   </modules>
 
     <properties>
