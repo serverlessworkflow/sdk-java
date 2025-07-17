@@ -103,26 +103,28 @@ public class WorkflowApplication implements AutoCloseable {
   }
 
   public static class Builder {
-    private static final SchemaValidatorFactory EMPTY_SCHEMA_VALIDATOR =
-        new SchemaValidatorFactory() {
 
-          private final SchemaValidator NoValidation =
-              new SchemaValidator() {
-                @Override
-                public void validate(WorkflowModel node) {}
-              };
+    private static final class EmptySchemaValidatorHolder {
+      private static final SchemaValidatorFactory instance =
+          new SchemaValidatorFactory() {
+            private final SchemaValidator NoValidation =
+                new SchemaValidator() {
+                  @Override
+                  public void validate(WorkflowModel node) {}
+                };
 
-          @Override
-          public SchemaValidator getValidator(StaticResource resource) {
+            @Override
+            public SchemaValidator getValidator(StaticResource resource) {
+              return NoValidation;
+            }
 
-            return NoValidation;
-          }
+            @Override
+            public SchemaValidator getValidator(SchemaInline inline) {
+              return NoValidation;
+            }
+          };
+    }
 
-          @Override
-          public SchemaValidator getValidator(SchemaInline inline) {
-            return NoValidation;
-          }
-        };
     private TaskExecutorFactory taskFactory = DefaultTaskExecutorFactory.get();
     private ExpressionFactory exprFactory;
     private Collection<WorkflowExecutionListener> listeners;
@@ -207,7 +209,7 @@ public class WorkflowApplication implements AutoCloseable {
         schemaValidatorFactory =
             ServiceLoader.load(SchemaValidatorFactory.class)
                 .findFirst()
-                .orElse(EMPTY_SCHEMA_VALIDATOR);
+                .orElseGet(() -> EmptySchemaValidatorHolder.instance);
       }
       return new WorkflowApplication(this);
     }
