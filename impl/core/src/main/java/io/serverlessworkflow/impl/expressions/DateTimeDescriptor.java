@@ -15,7 +15,6 @@
  */
 package io.serverlessworkflow.impl.expressions;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.Instant;
 
 public class DateTimeDescriptor {
@@ -30,13 +29,11 @@ public class DateTimeDescriptor {
     this.instant = instant;
   }
 
-  @JsonProperty("iso8601")
-  public String iso8601() {
+  public String getIso8601() {
     return instant.toString();
   }
 
-  @JsonProperty("epoch")
-  public Epoch epoch() {
+  public Epoch getEpoch() {
     return Epoch.of(instant);
   }
 

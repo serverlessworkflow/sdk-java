@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.jsonschema;
+package io.serverlessworkflow.impl.schema;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.networknt.schema.JsonSchema;
@@ -23,11 +23,11 @@ import com.networknt.schema.ValidationMessage;
 import io.serverlessworkflow.impl.WorkflowModel;
 import java.util.Set;
 
-public class DefaultSchemaValidator implements SchemaValidator {
+public class JsonSchemaValidator implements SchemaValidator {
 
   private final JsonSchema schemaObject;
 
-  public DefaultSchemaValidator(JsonNode jsonNode) {
+  public JsonSchemaValidator(JsonNode jsonNode) {
     this.schemaObject = JsonSchemaFactory.getInstance(VersionFlag.V7).getSchema(jsonNode);
   }
 

@@ -27,6 +27,11 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
+                <groupId>io.serverlessworkflow</groupId>
+                <artifactId>serverlessworkflow-impl-jackson</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.glassfish.jersey.core</groupId>
                 <artifactId>jersey-client</artifactId>
                 <version>${version.org.glassfish.jersey}</version>
@@ -38,7 +43,7 @@
             </dependency>
             <dependency>
                 <groupId>io.cloudevents</groupId>
-                <artifactId>cloudevents-api</artifactId>
+                <artifactId>cloudevents-core</artifactId>
                 <version>${version.io.cloudevents}</version>
             </dependency>
             <dependency>
@@ -61,5 +66,6 @@
     <modules>
         <module>http</module>
         <module>core</module>
+        <module>jackson</module>
     </modules>
 </project>

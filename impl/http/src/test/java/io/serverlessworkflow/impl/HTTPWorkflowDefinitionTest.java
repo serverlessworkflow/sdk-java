@@ -19,7 +19,6 @@ import static io.serverlessworkflow.api.WorkflowReader.readWorkflowFromClasspath
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowableOfType;
 
-import io.serverlessworkflow.impl.json.JsonUtils;
 import java.io.IOException;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -47,7 +46,6 @@ public class HTTPWorkflowDefinitionTest {
             appl.workflowDefinition(readWorkflowFromClasspath(fileName))
                 .instance(input)
                 .start()
-                .thenApply(JsonUtils::toJavaValue)
                 .join())
         .is(condition);
   }

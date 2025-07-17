@@ -15,15 +15,7 @@
  */
 package io.serverlessworkflow.impl.events;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.NullNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.cloudevents.CloudEvent;
-import io.cloudevents.CloudEventData;
-import io.cloudevents.jackson.JsonCloudEventData;
-import io.serverlessworkflow.impl.json.JsonUtils;
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Date;
@@ -32,48 +24,10 @@ import java.util.Map;
 
 public class CloudEventUtils {
 
-  public static JsonNode toJsonNode(CloudEvent event) {
-    ObjectNode result = JsonUtils.mapper().createObjectNode();
-    if (event.getData() != null) {
-      result.set("data", toJsonNode(event.getData()));
-    }
-    if (event.getSubject() != null) {
-      result.put("subject", event.getSubject());
-    }
-    if (event.getDataContentType() != null) {
-      result.put("datacontenttype", event.getDataContentType());
-    }
-    result.put("id", event.getId());
-    result.put("source", event.getSource().toString());
-    result.put("type", event.getType());
-    result.put("specversion", event.getSpecVersion().toString());
-    if (event.getDataSchema() != null) {
-      result.put("dataschema", event.getDataSchema().toString());
-    }
-    if (event.getTime() != null) {
-      result.put("time", event.getTime().toString());
-    }
-    event
-        .getExtensionNames()
-        .forEach(n -> result.set(n, JsonUtils.fromValue(event.getExtension(n))));
-    return result;
-  }
+  private CloudEventUtils() {}
 
   public static OffsetDateTime toOffset(Date date) {
     return date.toInstant().atOffset(ZoneOffset.UTC);
-  }
-
-  public static JsonNode toJsonNode(CloudEventData data) {
-    if (data == null) {
-      return NullNode.instance;
-    }
-    try {
-      return data instanceof JsonCloudEventData
-          ? ((JsonCloudEventData) data).getNode()
-          : JsonUtils.mapper().readTree(data.toBytes());
-    } catch (IOException io) {
-      throw new UncheckedIOException(io);
-    }
   }
 
   public static Map<String, Object> extensions(CloudEvent event) {
@@ -83,6 +37,4 @@ public class CloudEventUtils {
     }
     return result;
   }
-
-  private CloudEventUtils() {}
 }
