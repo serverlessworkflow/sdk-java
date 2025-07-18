@@ -15,6 +15,7 @@
  */
 package io.serverlessworkflow.fluent.standard;
 
+import io.serverlessworkflow.api.types.CallTask;
 import io.serverlessworkflow.api.types.DoTask;
 import io.serverlessworkflow.api.types.Task;
 import io.serverlessworkflow.api.types.TaskItem;
@@ -133,6 +134,19 @@ public class DoTaskBuilder extends TaskBaseBuilder<DoTaskBuilder> {
 
   public DoTaskBuilder tryTask(Consumer<TryTaskBuilder> itemsConfigurer) {
     return this.tryTask(UUID.randomUUID().toString(), itemsConfigurer);
+  }
+
+  public DoTaskBuilder callHTTP(String name, Consumer<CallHTTPTaskBuilder> itemsConfigurer) {
+    final CallHTTPTaskBuilder callHTTPBuilder = new CallHTTPTaskBuilder();
+    itemsConfigurer.accept(callHTTPBuilder);
+    this.list.add(
+        new TaskItem(
+            name, new Task().withCallTask(new CallTask().withCallHTTP(callHTTPBuilder.build()))));
+    return this;
+  }
+
+  public DoTaskBuilder callHTTP(Consumer<CallHTTPTaskBuilder> itemsConfigurer) {
+    return this.callHTTP(UUID.randomUUID().toString(), itemsConfigurer);
   }
 
   public DoTask build() {

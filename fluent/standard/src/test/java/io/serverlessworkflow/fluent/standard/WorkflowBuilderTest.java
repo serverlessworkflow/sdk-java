@@ -22,10 +22,14 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.serverlessworkflow.api.types.AuthenticationPolicyUnion;
+import io.serverlessworkflow.api.types.CallHTTP;
 import io.serverlessworkflow.api.types.CatchErrors;
 import io.serverlessworkflow.api.types.Document;
 import io.serverlessworkflow.api.types.ErrorFilter;
 import io.serverlessworkflow.api.types.EventFilter;
+import io.serverlessworkflow.api.types.HTTPArguments;
+import io.serverlessworkflow.api.types.HTTPHeaders;
+import io.serverlessworkflow.api.types.HTTPQuery;
 import io.serverlessworkflow.api.types.ListenTask;
 import io.serverlessworkflow.api.types.OneEventConsumptionStrategy;
 import io.serverlessworkflow.api.types.RetryLimitAttempt;
@@ -392,5 +396,123 @@ public class WorkflowBuilderTest {
     assertNotNull(wf.getInput(), "Input must be set");
     assertInstanceOf(Map.class, wf.getInput().getFrom().getObject(), "From object must be a Map");
     assertNotNull(wf.getInput().getSchema().getSchemaInline(), "Inline schema must be set");
+  }
+
+  @Test
+  void testDoTaskCallHTTPBasic() {
+    Workflow wf =
+        WorkflowBuilder.workflow("flowCallBasic")
+            .doTasks(
+                d ->
+                    d.callHTTP(
+                        "basicCall",
+                        c ->
+                            c.method("POST")
+                                .endpoint(URI.create("http://example.com/api"))
+                                .body(Map.of("foo", "bar"))))
+            .build();
+    List<TaskItem> items = wf.getDo();
+    assertEquals(1, items.size(), "Should have one HTTP call task");
+    TaskItem ti = items.get(0);
+    assertEquals("basicCall", ti.getName());
+    CallHTTP call = ti.getTask().getCallTask().getCallHTTP();
+    assertNotNull(call, "CallHTTP should be present");
+    assertEquals("POST", call.getWith().getMethod());
+    assertEquals(
+        URI.create("http://example.com/api"),
+        call.getWith().getEndpoint().getUriTemplate().getLiteralUri());
+    assertInstanceOf(Map.class, call.getWith().getBody(), "Body should be the Map provided");
+  }
+
+  @Test
+  void testDoTaskCallHTTPHeadersConsumerAndMap() {
+    Workflow wf =
+        WorkflowBuilder.workflow("flowCallHeaders")
+            .doTasks(
+                d ->
+                    d.callHTTP(
+                        "hdrCall",
+                        c ->
+                            c.method("GET")
+                                .endpoint("${uriExpr}")
+                                .headers(h -> h.header("A", "1").header("B", "2"))))
+            .build();
+    CallHTTP call = wf.getDo().get(0).getTask().getCallTask().getCallHTTP();
+    HTTPHeaders hh = call.getWith().getHeaders().getHTTPHeaders();
+    assertEquals("1", hh.getAdditionalProperties().get("A"));
+    assertEquals("2", hh.getAdditionalProperties().get("B"));
+
+    Workflow wf2 =
+        WorkflowBuilder.workflow()
+            .doTasks(
+                d ->
+                    d.callHTTP(
+                        c ->
+                            c.method("GET").endpoint("expr").headers(Map.of("X", "10", "Y", "20"))))
+            .build();
+    CallHTTP call2 = wf2.getDo().get(0).getTask().getCallTask().getCallHTTP();
+    HTTPHeaders hh2 = call2.getWith().getHeaders().getHTTPHeaders();
+    assertEquals("10", hh2.getAdditionalProperties().get("X"));
+    assertEquals("20", hh2.getAdditionalProperties().get("Y"));
+  }
+
+  @Test
+  void testDoTaskCallHTTPQueryConsumerAndMap() {
+    Workflow wf =
+        WorkflowBuilder.workflow("flowCallQuery")
+            .doTasks(
+                d ->
+                    d.callHTTP(
+                        "qryCall",
+                        c ->
+                            c.method("GET")
+                                .endpoint("exprUri")
+                                .query(q -> q.query("k1", "v1").query("k2", "v2"))))
+            .build();
+    HTTPQuery hq =
+        wf.getDo().get(0).getTask().getCallTask().getCallHTTP().getWith().getQuery().getHTTPQuery();
+    assertEquals("v1", hq.getAdditionalProperties().get("k1"));
+    assertEquals("v2", hq.getAdditionalProperties().get("k2"));
+
+    Workflow wf2 =
+        WorkflowBuilder.workflow()
+            .doTasks(
+                d ->
+                    d.callHTTP(
+                        c -> c.method("GET").endpoint("uri").query(Map.of("q1", "x", "q2", "y"))))
+            .build();
+    HTTPQuery hq2 =
+        wf2.getDo()
+            .get(0)
+            .getTask()
+            .getCallTask()
+            .getCallHTTP()
+            .getWith()
+            .getQuery()
+            .getHTTPQuery();
+    assertEquals("x", hq2.getAdditionalProperties().get("q1"));
+    assertEquals("y", hq2.getAdditionalProperties().get("q2"));
+  }
+
+  @Test
+  void testDoTaskCallHTTPRedirectAndOutput() {
+    Workflow wf =
+        WorkflowBuilder.workflow("flowCallOpts")
+            .doTasks(
+                d ->
+                    d.callHTTP(
+                        "optCall",
+                        c ->
+                            c.method("DELETE")
+                                .endpoint("expr")
+                                .redirect(true)
+                                .output(HTTPArguments.HTTPOutput.RESPONSE)))
+            .build();
+    CallHTTP call = wf.getDo().get(0).getTask().getCallTask().getCallHTTP();
+    assertTrue(call.getWith().isRedirect(), "Redirect should be true");
+    assertEquals(
+        HTTPArguments.HTTPOutput.RESPONSE,
+        call.getWith().getOutput(),
+        "Output should be overridden");
   }
 }
