@@ -76,6 +76,20 @@ public class WorkflowBuilder {
     return this;
   }
 
+  public WorkflowBuilder input(Consumer<InputBuilder> inputBuilderConsumer) {
+    final InputBuilder inputBuilder = new InputBuilder();
+    inputBuilderConsumer.accept(inputBuilder);
+    this.workflow.setInput(inputBuilder.build());
+    return this;
+  }
+
+  public WorkflowBuilder output(Consumer<OutputBuilder> outputBuilderConsumer) {
+    final OutputBuilder outputBuilder = new OutputBuilder();
+    outputBuilderConsumer.accept(outputBuilder);
+    this.workflow.setOutput(outputBuilder.build());
+    return this;
+  }
+
   public Workflow build() {
     return this.workflow;
   }

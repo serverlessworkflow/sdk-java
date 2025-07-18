@@ -86,8 +86,7 @@ public class WorkflowBuilderTest {
     assertNotNull(use, "Use must not be null");
     UseAuthentications auths = use.getAuthentications();
     assertNotNull(auths, "Authentications map must not be null");
-    AuthenticationPolicyUnion union =
-        (AuthenticationPolicyUnion) auths.getAdditionalProperties().get("basicAuth");
+    AuthenticationPolicyUnion union = auths.getAdditionalProperties().get("basicAuth");
     assertNotNull(union, "basicAuth policy should be present");
     assertNotNull(union.getBasicAuthenticationPolicy(), "BasicAuthenticationPolicy should be set");
   }
@@ -214,18 +213,12 @@ public class WorkflowBuilderTest {
                                         .data(
                                             Map.of(
                                                 "client",
-                                                    Map.of(
-                                                        "firstName",
-                                                        "Cruella",
-                                                        "lastName",
-                                                        "de Vil"),
+                                                Map.of(
+                                                    "firstName", "Cruella", "lastName", "de Vil"),
                                                 "items",
-                                                    List.of(
-                                                        Map.of(
-                                                            "breed",
-                                                            "dalmatian",
-                                                            "quantity",
-                                                            101)))))))
+                                                List.of(
+                                                    Map.of(
+                                                        "breed", "dalmatian", "quantity", 101)))))))
             .build();
 
     List<TaskItem> items = wf.getDo();
@@ -336,5 +329,68 @@ public class WorkflowBuilderTest {
     assertEquals("ServerError", filter.getType());
     assertEquals(500, filter.getStatus());
     assertEquals("http://errors/5xx", filter.getInstance());
+  }
+
+  @Test
+  void testWorkflowInputExternalSchema() {
+    String uri = "http://example.com/schema";
+    Workflow wf =
+        WorkflowBuilder.workflow("wfInput").input(i -> i.from("$.data").schema(uri)).build();
+
+    assertNotNull(wf.getInput(), "Input must be set");
+    assertEquals("$.data", wf.getInput().getFrom().getString());
+    assertNotNull(wf.getInput().getSchema().getSchemaExternal(), "External schema must be set");
+    String resolved =
+        wf.getInput()
+            .getSchema()
+            .getSchemaExternal()
+            .getResource()
+            .getEndpoint()
+            .getUriTemplate()
+            .getLiteralUri()
+            .toString();
+    assertEquals(uri, resolved, "Schema URI should match");
+  }
+
+  @Test
+  void testWorkflowOutputExternalSchemaAndAs() {
+    String uri = "http://example.org/output-schema";
+    Workflow wf =
+        WorkflowBuilder.workflow("wfOutput").output(o -> o.as("$.result").schema(uri)).build();
+
+    assertNotNull(wf.getOutput(), "Output must be set");
+    assertEquals("$.result", wf.getOutput().getAs().getString());
+    assertNotNull(wf.getOutput().getSchema().getSchemaExternal(), "External schema must be set");
+    String resolved =
+        wf.getOutput()
+            .getSchema()
+            .getSchemaExternal()
+            .getResource()
+            .getEndpoint()
+            .getUriTemplate()
+            .getLiteralUri()
+            .toString();
+    assertEquals(uri, resolved, "Schema URI should match");
+  }
+
+  @Test
+  void testWorkflowOutputInlineSchemaAndAsObject() {
+    Map<String, Object> inline = Map.of("foo", "bar");
+    Workflow wf =
+        WorkflowBuilder.workflow().output(o -> o.as(Map.of("ok", true)).schema(inline)).build();
+
+    assertNotNull(wf.getOutput(), "Output must be set");
+    assertInstanceOf(Map.class, wf.getOutput().getAs().getObject(), "As object must be a Map");
+    assertNotNull(wf.getOutput().getSchema().getSchemaInline(), "Inline schema must be set");
+  }
+
+  @Test
+  void testWorkflowInputInlineSchemaAndFromObject() {
+    Map<String, Object> inline = Map.of("nested", List.of(1, 2, 3));
+    Workflow wf = WorkflowBuilder.workflow().input(i -> i.from(inline).schema(inline)).build();
+
+    assertNotNull(wf.getInput(), "Input must be set");
+    assertInstanceOf(Map.class, wf.getInput().getFrom().getObject(), "From object must be a Map");
+    assertNotNull(wf.getInput().getSchema().getSchemaInline(), "Inline schema must be set");
   }
 }
