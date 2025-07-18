@@ -59,6 +59,8 @@ public interface WorkflowModelFactory {
       return from(value);
     } else if (obj instanceof Map) {
       return from((Map<String, Object>) obj);
+    } else if (obj instanceof WorkflowModel model) {
+      return model;
     } else {
       throw new IllegalArgumentException(
           "Unsopported conversion for object " + obj + " of type" + obj.getClass());

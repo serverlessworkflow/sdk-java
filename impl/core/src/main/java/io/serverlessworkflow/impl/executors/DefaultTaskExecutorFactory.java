@@ -15,11 +15,6 @@
  */
 package io.serverlessworkflow.impl.executors;
 
-import io.serverlessworkflow.api.types.CallAsyncAPI;
-import io.serverlessworkflow.api.types.CallFunction;
-import io.serverlessworkflow.api.types.CallGRPC;
-import io.serverlessworkflow.api.types.CallHTTP;
-import io.serverlessworkflow.api.types.CallOpenAPI;
 import io.serverlessworkflow.api.types.CallTask;
 import io.serverlessworkflow.api.types.Task;
 import io.serverlessworkflow.api.types.TaskBase;
@@ -62,46 +57,15 @@ public class DefaultTaskExecutorFactory implements TaskExecutorFactory {
       ResourceLoader resourceLoader) {
     if (task.getCallTask() != null) {
       CallTask callTask = task.getCallTask();
-      if (callTask.getCallHTTP() != null) {
-        return new CallTaskExecutorBuilder<>(
+      TaskBase taskBase = (TaskBase) callTask.get();
+      if (taskBase != null) {
+        return new CallTaskExecutorBuilder(
             position,
-            callTask.getCallHTTP(),
+            taskBase,
             workflow,
             application,
             resourceLoader,
-            findCallTask(CallHTTP.class));
-      } else if (callTask.getCallAsyncAPI() != null) {
-        return new CallTaskExecutorBuilder<>(
-            position,
-            callTask.getCallAsyncAPI(),
-            workflow,
-            application,
-            resourceLoader,
-            findCallTask(CallAsyncAPI.class));
-      } else if (callTask.getCallGRPC() != null) {
-        return new CallTaskExecutorBuilder<>(
-            position,
-            callTask.getCallGRPC(),
-            workflow,
-            application,
-            resourceLoader,
-            findCallTask(CallGRPC.class));
-      } else if (callTask.getCallOpenAPI() != null) {
-        return new CallTaskExecutorBuilder<>(
-            position,
-            callTask.getCallOpenAPI(),
-            workflow,
-            application,
-            resourceLoader,
-            findCallTask(CallOpenAPI.class));
-      } else if (callTask.getCallFunction() != null) {
-        return new CallTaskExecutorBuilder<>(
-            position,
-            callTask.getCallFunction(),
-            workflow,
-            application,
-            resourceLoader,
-            findCallTask(CallFunction.class));
+            findCallTask(taskBase.getClass()));
       }
     } else if (task.getSwitchTask() != null) {
       return new SwitchExecutorBuilder(

@@ -30,6 +30,7 @@ import io.serverlessworkflow.impl.resources.ResourceLoader;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -53,13 +54,17 @@ public class SwitchExecutor extends AbstractTaskExecutor<SwitchTask> {
       super(position, task, workflow, application, resourceLoader);
       for (SwitchItem item : task.getSwitch()) {
         SwitchCase switchCase = item.getSwitchCase();
-        if (switchCase.getWhen() != null) {
-          workflowFilters.put(
-              switchCase, WorkflowUtils.buildWorkflowFilter(application, switchCase.getWhen()));
-        } else {
-          defaultDirective = switchCase.getThen();
-        }
+        buildFilter(switchCase)
+            .ifPresentOrElse(
+                f -> workflowFilters.put(switchCase, f),
+                () -> defaultDirective = switchCase.getThen());
       }
+    }
+
+    protected Optional<WorkflowFilter> buildFilter(SwitchCase switchCase) {
+      return switchCase.getWhen() != null
+          ? Optional.of(WorkflowUtils.buildWorkflowFilter(application, switchCase.getWhen()))
+          : Optional.empty();
     }
 
     @Override
