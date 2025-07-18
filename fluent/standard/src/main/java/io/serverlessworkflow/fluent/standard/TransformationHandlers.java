@@ -15,19 +15,15 @@
  */
 package io.serverlessworkflow.fluent.standard;
 
-public class DoTaskBuilder extends BaseDoTaskBuilder<DoTaskBuilder> {
+import io.serverlessworkflow.api.types.Export;
+import io.serverlessworkflow.api.types.Input;
+import io.serverlessworkflow.api.types.Output;
 
-  DoTaskBuilder() {
-    super();
-  }
+public interface TransformationHandlers {
 
-  @Override
-  protected DoTaskBuilder self() {
-    return this;
-  }
+  void setOutput(final Output output);
 
-  @Override
-  protected DoTaskBuilder newDo() {
-    return new DoTaskBuilder();
-  }
+  void setExport(final Export export);
+
+  void setInput(final Input input);
 }
