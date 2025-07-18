@@ -27,6 +27,10 @@ public class SwitchCaseFunction extends SwitchCase {
     return this;
   }
 
+  public <T> void setPredicate(Predicate<T> predicate) {
+    this.predicate = predicate;
+  }
+
   public Predicate<?> predicate() {
     return predicate;
   }

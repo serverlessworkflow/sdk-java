@@ -21,24 +21,42 @@ import io.serverlessworkflow.api.types.ExportAs;
 import io.serverlessworkflow.api.types.ExternalResource;
 import io.serverlessworkflow.api.types.FlowDirective;
 import io.serverlessworkflow.api.types.FlowDirectiveEnum;
+import io.serverlessworkflow.api.types.Input;
+import io.serverlessworkflow.api.types.Output;
 import io.serverlessworkflow.api.types.SchemaExternal;
 import io.serverlessworkflow.api.types.SchemaInline;
 import io.serverlessworkflow.api.types.SchemaUnion;
 import io.serverlessworkflow.api.types.TaskBase;
 import java.util.function.Consumer;
 
-public abstract class TaskBaseBuilder<T extends TaskBaseBuilder<T>> {
-  protected abstract T self();
-
+public abstract class TaskBaseBuilder<T extends TaskBaseBuilder<T>>
+    implements TransformationHandlers {
   private TaskBase task;
 
   protected TaskBaseBuilder() {}
+
+  protected abstract T self();
 
   protected void setTask(TaskBase task) {
     this.task = task;
   }
 
-  public T _if(String id) {
+  @Override
+  public void setInput(Input input) {
+    this.task.setInput(input);
+  }
+
+  @Override
+  public void setExport(Export export) {
+    this.task.setExport(export);
+  }
+
+  @Override
+  public void setOutput(Output output) {
+    this.task.setOutput(output);
+  }
+
+  public T ifClause(String id) {
     this.task.setIf(id);
     return self();
   }

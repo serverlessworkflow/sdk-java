@@ -19,44 +19,47 @@ import io.serverlessworkflow.api.types.ForTask;
 import io.serverlessworkflow.api.types.ForTaskConfiguration;
 import java.util.function.Consumer;
 
-public class ForTaskBuilder extends TaskBaseBuilder<ForTaskBuilder> {
+public class ForTaskBuilder<T extends BaseDoTaskBuilder<T>>
+    extends TaskBaseBuilder<ForTaskBuilder<T>> {
 
   private final ForTask forTask;
   private final ForTaskConfiguration forTaskConfiguration;
+  private final T doTaskBuilderFactory;
 
-  ForTaskBuilder() {
+  ForTaskBuilder(T doTaskBuilderFactory) {
     super();
     forTask = new ForTask();
     forTaskConfiguration = new ForTaskConfiguration();
+    this.doTaskBuilderFactory = doTaskBuilderFactory;
     super.setTask(forTask);
   }
 
-  protected ForTaskBuilder self() {
+  protected ForTaskBuilder<T> self() {
     return this;
   }
 
-  public ForTaskBuilder each(String each) {
+  public ForTaskBuilder<T> each(String each) {
     forTaskConfiguration.setEach(each);
     return this;
   }
 
-  public ForTaskBuilder in(String in) {
+  public ForTaskBuilder<T> in(String in) {
     this.forTaskConfiguration.setIn(in);
     return this;
   }
 
-  public ForTaskBuilder at(String at) {
+  public ForTaskBuilder<T> at(String at) {
     this.forTaskConfiguration.setAt(at);
     return this;
   }
 
-  public ForTaskBuilder whileCondition(final String expression) {
+  public ForTaskBuilder<T> whileCondition(final String expression) {
     this.forTask.setWhile(expression);
     return this;
   }
 
-  public ForTaskBuilder doTasks(Consumer<DoTaskBuilder> doBuilderConsumer) {
-    final DoTaskBuilder doTaskBuilder = new DoTaskBuilder();
+  public ForTaskBuilder<T> doTasks(Consumer<T> doBuilderConsumer) {
+    final T doTaskBuilder = this.doTaskBuilderFactory.newDo();
     doBuilderConsumer.accept(doTaskBuilder);
     this.forTask.setDo(doTaskBuilder.build().getDo());
     return this;

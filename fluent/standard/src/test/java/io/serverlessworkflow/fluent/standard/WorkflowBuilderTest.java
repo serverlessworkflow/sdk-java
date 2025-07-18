@@ -128,7 +128,7 @@ public class WorkflowBuilderTest {
                 d ->
                     d.set("init", s -> s.expr("$.init = true"))
                         .forEach("items", f -> f.each("item").in("$.list"))
-                        .switchTask(
+                        .switchCase(
                             "choice",
                             sw -> {
                               // no-op configuration

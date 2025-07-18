@@ -13,21 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.fluent.standard;
+package io.serverlessworkflow.fluent.java;
 
-public class DoTaskBuilder extends BaseDoTaskBuilder<DoTaskBuilder> {
-
-  DoTaskBuilder() {
-    super();
-  }
-
-  @Override
-  protected DoTaskBuilder self() {
-    return this;
-  }
-
-  @Override
-  protected DoTaskBuilder newDo() {
-    return new DoTaskBuilder();
-  }
+@FunctionalInterface
+public interface JavaSwitchCase {
+  void configure(SwitchTaskJavaBuilder consumer);
 }

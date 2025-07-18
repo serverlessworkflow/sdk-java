@@ -13,70 +13,72 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.fluent.standard;
+package io.serverlessworkflow.fluent.java;
 
 import io.serverlessworkflow.api.types.FlowDirective;
 import io.serverlessworkflow.api.types.FlowDirectiveEnum;
 import io.serverlessworkflow.api.types.SwitchCase;
+import io.serverlessworkflow.api.types.SwitchCaseFunction;
 import io.serverlessworkflow.api.types.SwitchItem;
 import io.serverlessworkflow.api.types.SwitchTask;
+import io.serverlessworkflow.fluent.standard.TaskBaseBuilder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
-public class SwitchTaskBuilder extends TaskBaseBuilder<SwitchTaskBuilder> {
+public class SwitchTaskJavaBuilder extends TaskBaseBuilder<SwitchTaskJavaBuilder>
+    implements JavaTransformationHandlers<SwitchTaskJavaBuilder> {
 
   private final SwitchTask switchTask;
   private final List<SwitchItem> switchItems;
 
-  SwitchTaskBuilder() {
-    super();
+  SwitchTaskJavaBuilder() {
     this.switchTask = new SwitchTask();
     this.switchItems = new ArrayList<>();
-    this.setTask(switchTask);
+    super.setTask(switchTask);
   }
 
   @Override
-  protected SwitchTaskBuilder self() {
+  protected SwitchTaskJavaBuilder self() {
     return this;
   }
 
-  public SwitchTaskBuilder items(Consumer<SwitchCaseBuilder> switchCaseConsumer) {
-    return this.items(UUID.randomUUID().toString(), switchCaseConsumer);
+  public SwitchTaskJavaBuilder items(Consumer<SwitchCaseJavaBuilder> consumer) {
+    return this.items(UUID.randomUUID().toString(), consumer);
   }
 
-  public SwitchTaskBuilder items(
-      final String name, Consumer<SwitchCaseBuilder> switchCaseConsumer) {
-    final SwitchCaseBuilder switchCaseBuilder = new SwitchCaseBuilder();
-    switchCaseConsumer.accept(switchCaseBuilder);
-    this.switchItems.add(new SwitchItem(name, switchCaseBuilder.build()));
+  public SwitchTaskJavaBuilder items(String name, Consumer<SwitchCaseJavaBuilder> consumer) {
+    final SwitchCaseJavaBuilder switchCase = new SwitchCaseJavaBuilder();
+    consumer.accept(switchCase);
+    this.switchItems.add(new SwitchItem(name, switchCase.build()));
     return this;
   }
 
   public SwitchTask build() {
     this.switchTask.setSwitch(this.switchItems);
-    return this.switchTask;
+    return switchTask;
   }
 
-  public static final class SwitchCaseBuilder {
-    private final SwitchCase switchCase;
+  public static final class SwitchCaseJavaBuilder {
+    private final SwitchCaseFunction switchCase;
 
-    SwitchCaseBuilder() {
-      this.switchCase = new SwitchCase();
+    SwitchCaseJavaBuilder() {
+      this.switchCase = new SwitchCaseFunction();
     }
 
-    public SwitchCaseBuilder when(String when) {
-      this.switchCase.setWhen(when);
+    public <T> SwitchCaseJavaBuilder when(Predicate<T> when) {
+      this.switchCase.setPredicate(when);
       return this;
     }
 
-    public SwitchCaseBuilder then(FlowDirective then) {
+    public SwitchCaseJavaBuilder then(FlowDirective then) {
       this.switchCase.setThen(then);
       return this;
     }
 
-    public SwitchCaseBuilder then(FlowDirectiveEnum then) {
+    public SwitchCaseJavaBuilder then(FlowDirectiveEnum then) {
       this.switchCase.setThen(new FlowDirective().withFlowDirectiveEnum(then));
       return this;
     }
