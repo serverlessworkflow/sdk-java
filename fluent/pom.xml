@@ -25,11 +25,22 @@
                 <artifactId>serverlessworkflow-types</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>io.serverlessworkflow</groupId>
+                <artifactId>serverlessworkflow-experimental-types</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.serverlessworkflow</groupId>
+                <artifactId>serverlessworkflow-fluent-standard</artifactId>
+                <version>${project.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
     <modules>
         <module>standard</module>
+        <module>java</module>
     </modules>
 
 </project>

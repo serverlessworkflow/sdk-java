@@ -15,19 +15,7 @@
  */
 package io.serverlessworkflow.fluent.standard;
 
-public class DoTaskBuilder extends BaseDoTaskBuilder<DoTaskBuilder> {
-
-  DoTaskBuilder() {
-    super();
-  }
-
-  @Override
-  protected DoTaskBuilder self() {
-    return this;
-  }
-
-  @Override
-  protected DoTaskBuilder newDo() {
-    return new DoTaskBuilder();
-  }
+@FunctionalInterface
+public interface ForEach<D extends BaseDoTaskBuilder<D>> {
+  void configure(ForTaskBuilder<D> builder);
 }
