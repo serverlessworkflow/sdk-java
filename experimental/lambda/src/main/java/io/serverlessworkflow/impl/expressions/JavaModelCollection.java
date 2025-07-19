@@ -22,7 +22,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Optional;
 
-public class JavaModelCollection implements Collection<WorkflowModel>, WorkflowModelCollection {
+class JavaModelCollection implements Collection<WorkflowModel>, WorkflowModelCollection {
 
   private final Collection object;
 
@@ -31,7 +31,7 @@ public class JavaModelCollection implements Collection<WorkflowModel>, WorkflowM
   }
 
   JavaModelCollection(Collection<?> object) {
-    this.object = object;
+    this.object = (Collection) JavaModel.asJavaObject(object);
   }
 
   @Override
@@ -86,12 +86,12 @@ public class JavaModelCollection implements Collection<WorkflowModel>, WorkflowM
 
   @Override
   public boolean add(WorkflowModel e) {
-    return object.add(e.asIs());
+    return object.add(e.asJavaObject());
   }
 
   @Override
   public boolean remove(Object o) {
-    return object.remove(((WorkflowModel) o).asIs());
+    return object.remove(((WorkflowModel) o).asJavaObject());
   }
 
   @Override
