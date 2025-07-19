@@ -23,7 +23,7 @@ import io.serverlessworkflow.impl.WorkflowModelFactory;
 import java.time.OffsetDateTime;
 import java.util.Map;
 
-public class JavaModelFactory implements WorkflowModelFactory {
+class JavaModelFactory implements WorkflowModelFactory {
 
   @Override
   public WorkflowModel combine(Map<String, WorkflowModel> workflowVariables) {

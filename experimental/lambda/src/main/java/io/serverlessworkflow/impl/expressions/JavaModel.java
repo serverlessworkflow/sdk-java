@@ -21,10 +21,12 @@ import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
 
-public class JavaModel implements WorkflowModel {
+class JavaModel implements WorkflowModel {
 
   private Object object;
 
@@ -33,7 +35,7 @@ public class JavaModel implements WorkflowModel {
   static final JavaModel NullModel = new JavaModel(null);
 
   JavaModel(Object object) {
-    this.object = object;
+    this.object = asJavaObject(object);
   }
 
   @Override
@@ -87,6 +89,20 @@ public class JavaModel implements WorkflowModel {
   @Override
   public Object asJavaObject() {
     return object;
+  }
+
+  static Object asJavaObject(Object object) {
+    if (object instanceof WorkflowModel model) {
+      return model.asJavaObject();
+    } else if (object instanceof Map map) {
+      return ((Map<String, Object>) map)
+          .entrySet().stream()
+              .collect(Collectors.toMap(Entry::getKey, e -> asJavaObject(e.getValue())));
+    } else if (object instanceof Collection col) {
+      return col.stream().map(JavaModel::asJavaObject).collect(Collectors.toList());
+    } else {
+      return object;
+    }
   }
 
   @Override
