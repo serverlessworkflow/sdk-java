@@ -15,19 +15,14 @@
  */
 package io.serverlessworkflow.fluent.standard;
 
-public class DoTaskBuilder extends BaseDoTaskBuilder<DoTaskBuilder> {
+public class DoTaskBuilder extends BaseDoTaskBuilder<DoTaskBuilder, TaskItemListBuilder> {
 
   DoTaskBuilder() {
-    super();
+    super(new TaskItemListBuilder());
   }
 
   @Override
   protected DoTaskBuilder self() {
     return this;
-  }
-
-  @Override
-  protected DoTaskBuilder newDo() {
-    return new DoTaskBuilder();
   }
 }

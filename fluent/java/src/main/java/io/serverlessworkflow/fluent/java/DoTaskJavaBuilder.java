@@ -15,17 +15,14 @@
  */
 package io.serverlessworkflow.fluent.java;
 
-import io.serverlessworkflow.api.types.Task;
-import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.fluent.standard.BaseDoTaskBuilder;
-import java.util.UUID;
 import java.util.function.Consumer;
 
-public class DoTaskJavaBuilder extends BaseDoTaskBuilder<DoTaskJavaBuilder>
+public class DoTaskJavaBuilder extends BaseDoTaskBuilder<DoTaskJavaBuilder, TaskItemListJavaBuilder>
     implements JavaTransformationHandlers<DoTaskJavaBuilder> {
 
   DoTaskJavaBuilder() {
-    super();
+    super(new TaskItemListJavaBuilder());
   }
 
   @Override
@@ -33,41 +30,33 @@ public class DoTaskJavaBuilder extends BaseDoTaskBuilder<DoTaskJavaBuilder>
     return this;
   }
 
-  @Override
-  protected DoTaskJavaBuilder newDo() {
-    return new DoTaskJavaBuilder();
-  }
-
   public DoTaskJavaBuilder callFn(String name, Consumer<CallTaskJavaBuilder> consumer) {
-    final CallTaskJavaBuilder callTaskJavaBuilder = new CallTaskJavaBuilder();
-    consumer.accept(callTaskJavaBuilder);
-    this.addTaskItem(new TaskItem(name, new Task().withCallTask(callTaskJavaBuilder.build())));
+    this.innerListBuilder().callFn(name, consumer);
     return this;
   }
 
   public DoTaskJavaBuilder callFn(Consumer<CallTaskJavaBuilder> consumer) {
-    return this.callFn(UUID.randomUUID().toString(), consumer);
+    this.innerListBuilder().callFn(consumer);
+    return this;
   }
 
   public DoTaskJavaBuilder forEachFn(String name, Consumer<ForTaskJavaBuilder> consumer) {
-    final ForTaskJavaBuilder forTaskJavaBuilder = new ForTaskJavaBuilder();
-    consumer.accept(forTaskJavaBuilder);
-    this.addTaskItem(new TaskItem(name, new Task().withForTask(forTaskJavaBuilder.build())));
+    this.innerListBuilder().forEachFn(name, consumer);
     return this;
   }
 
   public DoTaskJavaBuilder forEachFn(Consumer<ForTaskJavaBuilder> consumer) {
-    return this.forEachFn(UUID.randomUUID().toString(), consumer);
+    this.innerListBuilder().forEachFn(consumer);
+    return this;
   }
 
   public DoTaskJavaBuilder switchCaseFn(String name, Consumer<SwitchTaskJavaBuilder> consumer) {
-    final SwitchTaskJavaBuilder switchTaskJavaBuilder = new SwitchTaskJavaBuilder();
-    consumer.accept(switchTaskJavaBuilder);
-    this.addTaskItem(new TaskItem(name, new Task().withSwitchTask(switchTaskJavaBuilder.build())));
+    this.innerListBuilder().switchCaseFn(name, consumer);
     return this;
   }
 
   public DoTaskJavaBuilder switchCaseFn(Consumer<SwitchTaskJavaBuilder> consumer) {
-    return this.switchCaseFn(UUID.randomUUID().toString(), consumer);
+    this.innerListBuilder().switchCaseFn(consumer);
+    return this;
   }
 }

@@ -81,10 +81,10 @@ public class ForTaskJavaBuilder extends TaskBaseBuilder<ForTaskJavaBuilder>
     return this.doTasks(UUID.randomUUID().toString(), function);
   }
 
-  public ForTaskJavaBuilder doTasks(Consumer<DoTaskJavaBuilder> consumer) {
-    final DoTaskJavaBuilder builder = new DoTaskJavaBuilder();
+  public ForTaskJavaBuilder doTasks(Consumer<TaskItemListJavaBuilder> consumer) {
+    final TaskItemListJavaBuilder builder = new TaskItemListJavaBuilder();
     consumer.accept(builder);
-    this.items.addAll(builder.build().getDo());
+    this.items.addAll(builder.build());
     return this;
   }
 

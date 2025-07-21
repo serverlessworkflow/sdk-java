@@ -34,7 +34,7 @@ import io.serverlessworkflow.api.types.TryTask;
 import io.serverlessworkflow.api.types.TryTaskCatch;
 import java.util.function.Consumer;
 
-public class TryTaskBuilder<T extends BaseDoTaskBuilder<T>>
+public class TryTaskBuilder<T extends BaseTaskItemListBuilder<T>>
     extends TaskBaseBuilder<TryTaskBuilder<T>> {
 
   private final TryTask tryTask;
@@ -51,9 +51,9 @@ public class TryTaskBuilder<T extends BaseDoTaskBuilder<T>>
   }
 
   public TryTaskBuilder<T> tryHandler(Consumer<T> consumer) {
-    final T doTaskBuilder = this.doTaskBuilderFactory.newDo();
-    consumer.accept(doTaskBuilder);
-    this.tryTask.setTry(doTaskBuilder.build().getDo());
+    final T taskItemListBuilder = this.doTaskBuilderFactory.newItemListBuilder();
+    consumer.accept(taskItemListBuilder);
+    this.tryTask.setTry(taskItemListBuilder.build());
     return this;
   }
 

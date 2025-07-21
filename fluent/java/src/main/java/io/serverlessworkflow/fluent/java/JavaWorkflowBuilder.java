@@ -18,7 +18,8 @@ package io.serverlessworkflow.fluent.java;
 import io.serverlessworkflow.fluent.standard.BaseWorkflowBuilder;
 import java.util.UUID;
 
-public class JavaWorkflowBuilder extends BaseWorkflowBuilder<JavaWorkflowBuilder, DoTaskJavaBuilder>
+public class JavaWorkflowBuilder
+    extends BaseWorkflowBuilder<JavaWorkflowBuilder, DoTaskJavaBuilder, TaskItemListJavaBuilder>
     implements JavaTransformationHandlers<JavaWorkflowBuilder> {
 
   private JavaWorkflowBuilder(final String name, final String namespace, final String version) {

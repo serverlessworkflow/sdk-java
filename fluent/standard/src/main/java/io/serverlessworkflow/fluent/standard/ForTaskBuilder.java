@@ -19,18 +19,18 @@ import io.serverlessworkflow.api.types.ForTask;
 import io.serverlessworkflow.api.types.ForTaskConfiguration;
 import java.util.function.Consumer;
 
-public class ForTaskBuilder<T extends BaseDoTaskBuilder<T>>
+public class ForTaskBuilder<T extends BaseTaskItemListBuilder<T>>
     extends TaskBaseBuilder<ForTaskBuilder<T>> {
 
   private final ForTask forTask;
   private final ForTaskConfiguration forTaskConfiguration;
-  private final T doTaskBuilderFactory;
+  private final T taskItemListBuilder;
 
-  ForTaskBuilder(T doTaskBuilderFactory) {
+  ForTaskBuilder(T taskItemListBuilder) {
     super();
     forTask = new ForTask();
     forTaskConfiguration = new ForTaskConfiguration();
-    this.doTaskBuilderFactory = doTaskBuilderFactory;
+    this.taskItemListBuilder = taskItemListBuilder;
     super.setTask(forTask);
   }
 
@@ -59,9 +59,9 @@ public class ForTaskBuilder<T extends BaseDoTaskBuilder<T>>
   }
 
   public ForTaskBuilder<T> doTasks(Consumer<T> doBuilderConsumer) {
-    final T doTaskBuilder = this.doTaskBuilderFactory.newDo();
-    doBuilderConsumer.accept(doTaskBuilder);
-    this.forTask.setDo(doTaskBuilder.build().getDo());
+    final T taskItemListBuilder = this.taskItemListBuilder.newItemListBuilder();
+    doBuilderConsumer.accept(taskItemListBuilder);
+    this.forTask.setDo(taskItemListBuilder.build());
     return this;
   }
 

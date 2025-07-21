@@ -13,9 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.fluent.java;
+package io.serverlessworkflow.fluent.standard;
 
-@FunctionalInterface
-public interface JavaForEach {
-  void configure(ForTaskJavaBuilder builder);
+public class TaskItemListBuilder extends BaseTaskItemListBuilder<TaskItemListBuilder> {
+
+  TaskItemListBuilder() {
+    super();
+  }
+
+  @Override
+  protected TaskItemListBuilder self() {
+    return this;
+  }
+
+  @Override
+  protected TaskItemListBuilder newItemListBuilder() {
+    return new TaskItemListBuilder();
+  }
 }

@@ -23,7 +23,9 @@ import io.serverlessworkflow.api.types.Workflow;
 import java.util.function.Consumer;
 
 public abstract class BaseWorkflowBuilder<
-        W extends BaseWorkflowBuilder<W, DB>, DB extends BaseDoTaskBuilder<DB>>
+        SELF extends BaseWorkflowBuilder<SELF, DO, LIST>,
+        DO extends BaseDoTaskBuilder<DO, LIST>,
+        LIST extends BaseTaskItemListBuilder<LIST>>
     implements TransformationHandlers {
 
   public static final String DSL = "1.0.0";
@@ -43,9 +45,9 @@ public abstract class BaseWorkflowBuilder<
     this.workflow.setDocument(this.document);
   }
 
-  protected abstract DB newDo();
+  protected abstract DO newDo();
 
-  protected abstract W self();
+  protected abstract SELF self();
 
   @Override
   public void setOutput(Output output) {
@@ -55,6 +57,8 @@ public abstract class BaseWorkflowBuilder<
   @Override
   public void setExport(Export export) {
     // TODO: build another interface with only Output and Input
+    throw new UnsupportedOperationException(
+        "export() is not supported on the workflow root; only tasks may export");
   }
 
   @Override
@@ -62,34 +66,34 @@ public abstract class BaseWorkflowBuilder<
     this.workflow.setInput(input);
   }
 
-  public W document(Consumer<DocumentBuilder> documentBuilderConsumer) {
+  public SELF document(Consumer<DocumentBuilder> documentBuilderConsumer) {
     final DocumentBuilder documentBuilder = new DocumentBuilder(this.document);
     documentBuilderConsumer.accept(documentBuilder);
     return self();
   }
 
-  public W use(Consumer<UseBuilder> useBuilderConsumer) {
+  public SELF use(Consumer<UseBuilder> useBuilderConsumer) {
     final UseBuilder builder = new UseBuilder();
     useBuilderConsumer.accept(builder);
     this.workflow.setUse(builder.build());
     return self();
   }
 
-  public W doTasks(Consumer<DB> doTaskConsumer) {
-    final DB doTaskBuilder = newDo();
+  public SELF doTasks(Consumer<DO> doTaskConsumer) {
+    final DO doTaskBuilder = newDo();
     doTaskConsumer.accept(doTaskBuilder);
     this.workflow.setDo(doTaskBuilder.build().getDo());
     return self();
   }
 
-  public W input(Consumer<InputBuilder> inputBuilderConsumer) {
+  public SELF input(Consumer<InputBuilder> inputBuilderConsumer) {
     final InputBuilder inputBuilder = new InputBuilder();
     inputBuilderConsumer.accept(inputBuilder);
     this.workflow.setInput(inputBuilder.build());
     return self();
   }
 
-  public W output(Consumer<OutputBuilder> outputBuilderConsumer) {
+  public SELF output(Consumer<OutputBuilder> outputBuilderConsumer) {
     final OutputBuilder outputBuilder = new OutputBuilder();
     outputBuilderConsumer.accept(outputBuilder);
     this.workflow.setOutput(outputBuilder.build());

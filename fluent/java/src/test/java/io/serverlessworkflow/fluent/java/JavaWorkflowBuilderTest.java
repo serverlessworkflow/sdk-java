@@ -138,19 +138,17 @@ class JavaWorkflowBuilderTest {
                                           return List.of("x", "y");
                                         })
                                     .doTasks(
-                                        inner ->
-                                            inner
-                                                .set("calc", s -> s.expr("$.y = $.x + 1"))
-                                                .exportAsFn(
-                                                    item -> {
-                                                      exportCalled.set(true);
-                                                      return Map.of("computed", 42);
-                                                    })
-                                                .outputAs(
-                                                    item -> {
-                                                      outputCalled.set(true);
-                                                      return Map.of("out", true);
-                                                    }))))
+                                        inner -> inner.set("calc", s -> s.expr("$.y = $.x + 1")))
+                                    .exportAsFn(
+                                        item -> {
+                                          exportCalled.set(true);
+                                          return Map.of("computed", 42);
+                                        })
+                                    .outputAs(
+                                        item -> {
+                                          outputCalled.set(true);
+                                          return Map.of("out", true);
+                                        })))
             .build();
 
     // Top-level 'do' structure
