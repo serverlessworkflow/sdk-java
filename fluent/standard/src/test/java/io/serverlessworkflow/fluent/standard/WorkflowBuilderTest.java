@@ -99,7 +99,7 @@ public class WorkflowBuilderTest {
   void testDoTaskSetAndForEach() {
     Workflow wf =
         WorkflowBuilder.workflow("flowDo")
-            .doTasks(
+            .tasks(
                 d ->
                     d.set("initCtx", "$.foo = 'bar'")
                         .forEach("item", f -> f.each("item").at("$.list")))
@@ -124,11 +124,11 @@ public class WorkflowBuilderTest {
   void testDoTaskMultipleTypes() {
     Workflow wf =
         WorkflowBuilder.workflow("flowMixed")
-            .doTasks(
+            .tasks(
                 d ->
                     d.set("init", s -> s.expr("$.init = true"))
                         .forEach("items", f -> f.each("item").in("$.list"))
-                        .switchTask(
+                        .switchC(
                             "choice",
                             sw -> {
                               // no-op configuration
@@ -154,7 +154,7 @@ public class WorkflowBuilderTest {
     assertEquals("init", setItem.getName());
     assertNotNull(setItem.getTask().getSetTask(), "SetTask should be present");
 
-    // forEach task
+    // forE task
     TaskItem forItem = items.get(1);
     assertEquals("items", forItem.getName());
     assertNotNull(forItem.getTask().getForTask(), "ForTask should be present");
@@ -179,7 +179,7 @@ public class WorkflowBuilderTest {
   void testDoTaskListenOne() {
     Workflow wf =
         WorkflowBuilder.workflow("flowListen")
-            .doTasks(
+            .tasks(
                 d ->
                     d.listen(
                         "waitCheck",
@@ -205,7 +205,7 @@ public class WorkflowBuilderTest {
   void testDoTaskEmitEvent() {
     Workflow wf =
         WorkflowBuilder.workflow("flowEmit")
-            .doTasks(
+            .tasks(
                 d ->
                     d.emit(
                         "emitEvent",
@@ -256,9 +256,9 @@ public class WorkflowBuilderTest {
   void testDoTaskTryCatchWithRetry() {
     Workflow wf =
         WorkflowBuilder.workflow("flowTry")
-            .doTasks(
+            .tasks(
                 d ->
-                    d.tryTask(
+                    d.tryC(
                         "tryBlock",
                         t ->
                             t.tryHandler(tb -> tb.set("init", s -> s.expr("$.start = true")))
@@ -304,9 +304,9 @@ public class WorkflowBuilderTest {
   void testDoTaskTryCatchErrorsFiltering() {
     Workflow wf =
         WorkflowBuilder.workflow("flowCatch")
-            .doTasks(
+            .tasks(
                 d ->
-                    d.tryTask(
+                    d.tryC(
                         "tryBlock",
                         t ->
                             t.tryHandler(tb -> tb.set("foo", s -> s.expr("$.foo = 'bar'")))
@@ -402,7 +402,7 @@ public class WorkflowBuilderTest {
   void testDoTaskCallHTTPBasic() {
     Workflow wf =
         WorkflowBuilder.workflow("flowCallBasic")
-            .doTasks(
+            .tasks(
                 d ->
                     d.callHTTP(
                         "basicCall",
@@ -428,7 +428,7 @@ public class WorkflowBuilderTest {
   void testDoTaskCallHTTPHeadersConsumerAndMap() {
     Workflow wf =
         WorkflowBuilder.workflow("flowCallHeaders")
-            .doTasks(
+            .tasks(
                 d ->
                     d.callHTTP(
                         "hdrCall",
@@ -444,7 +444,7 @@ public class WorkflowBuilderTest {
 
     Workflow wf2 =
         WorkflowBuilder.workflow()
-            .doTasks(
+            .tasks(
                 d ->
                     d.callHTTP(
                         c ->
@@ -460,7 +460,7 @@ public class WorkflowBuilderTest {
   void testDoTaskCallHTTPQueryConsumerAndMap() {
     Workflow wf =
         WorkflowBuilder.workflow("flowCallQuery")
-            .doTasks(
+            .tasks(
                 d ->
                     d.callHTTP(
                         "qryCall",
@@ -476,7 +476,7 @@ public class WorkflowBuilderTest {
 
     Workflow wf2 =
         WorkflowBuilder.workflow()
-            .doTasks(
+            .tasks(
                 d ->
                     d.callHTTP(
                         c -> c.method("GET").endpoint("uri").query(Map.of("q1", "x", "q2", "y"))))
@@ -498,7 +498,7 @@ public class WorkflowBuilderTest {
   void testDoTaskCallHTTPRedirectAndOutput() {
     Workflow wf =
         WorkflowBuilder.workflow("flowCallOpts")
-            .doTasks(
+            .tasks(
                 d ->
                     d.callHTTP(
                         "optCall",
