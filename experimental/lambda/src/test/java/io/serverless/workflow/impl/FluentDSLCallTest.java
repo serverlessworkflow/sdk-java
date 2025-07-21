@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.serverlessworkflow.api.types.FlowDirectiveEnum;
 import io.serverlessworkflow.api.types.Workflow;
-import io.serverlessworkflow.fluent.java.JavaWorkflowBuilder;
+import io.serverlessworkflow.fluent.func.FuncWorkflowBuilder;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import java.util.Collection;
@@ -33,7 +33,7 @@ public class FluentDSLCallTest {
   void testJavaFunction() throws InterruptedException, ExecutionException {
     try (WorkflowApplication app = WorkflowApplication.builder().build()) {
       final Workflow workflow =
-          JavaWorkflowBuilder.workflow("testJavaCall")
+          FuncWorkflowBuilder.workflow("testJavaCall")
               .tasks(tasks -> tasks.callFn(f -> f.fn(JavaFunctions::getName)))
               .build();
       assertThat(
@@ -51,7 +51,7 @@ public class FluentDSLCallTest {
   void testForLoop() throws InterruptedException, ExecutionException {
     try (WorkflowApplication app = WorkflowApplication.builder().build()) {
       Workflow workflow =
-          JavaWorkflowBuilder.workflow()
+          FuncWorkflowBuilder.workflow()
               .tasks(
                   t ->
                       t.forFn(
@@ -76,7 +76,7 @@ public class FluentDSLCallTest {
   void testSwitch() throws InterruptedException, ExecutionException {
     try (WorkflowApplication app = WorkflowApplication.builder().build()) {
       Workflow workflow =
-          JavaWorkflowBuilder.workflow()
+          FuncWorkflowBuilder.workflow()
               .tasks(
                   tasks ->
                       tasks
