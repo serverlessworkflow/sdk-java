@@ -32,15 +32,15 @@
             </dependency>
             <dependency>
                 <groupId>io.serverlessworkflow</groupId>
-                <artifactId>serverlessworkflow-fluent-standard</artifactId>
+                <artifactId>serverlessworkflow-fluent-spec</artifactId>
                 <version>${project.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
 
     <modules>
-        <module>standard</module>
-        <module>java</module>
+        <module>spec</module>
+        <module>func</module>
     </modules>
 
 </project>
