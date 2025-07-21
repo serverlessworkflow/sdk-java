@@ -53,12 +53,12 @@ public class ForTaskBuilder<T extends BaseTaskItemListBuilder<T>>
     return this;
   }
 
-  public ForTaskBuilder<T> whileCondition(final String expression) {
+  public ForTaskBuilder<T> whileC(final String expression) {
     this.forTask.setWhile(expression);
     return this;
   }
 
-  public ForTaskBuilder<T> doTasks(Consumer<T> doBuilderConsumer) {
+  public ForTaskBuilder<T> tasks(Consumer<T> doBuilderConsumer) {
     final T taskItemListBuilder = this.taskItemListBuilder.newItemListBuilder();
     doBuilderConsumer.accept(taskItemListBuilder);
     this.forTask.setDo(taskItemListBuilder.build());

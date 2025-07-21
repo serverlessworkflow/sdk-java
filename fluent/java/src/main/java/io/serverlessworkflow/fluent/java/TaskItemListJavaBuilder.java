@@ -37,30 +37,29 @@ public class TaskItemListJavaBuilder extends BaseTaskItemListBuilder<TaskItemLis
     return new TaskItemListJavaBuilder();
   }
 
-  public TaskItemListJavaBuilder callFn(String name, Consumer<CallTaskJavaBuilder> consumer) {
+  public TaskItemListJavaBuilder callJava(String name, Consumer<CallTaskJavaBuilder> consumer) {
     this.requireNameAndConfig(name, consumer);
     final CallTaskJavaBuilder callTaskJavaBuilder = new CallTaskJavaBuilder();
     consumer.accept(callTaskJavaBuilder);
     return addTaskItem(new TaskItem(name, new Task().withCallTask(callTaskJavaBuilder.build())));
   }
 
-  public TaskItemListJavaBuilder callFn(Consumer<CallTaskJavaBuilder> consumer) {
-    return this.callFn(UUID.randomUUID().toString(), consumer);
+  public TaskItemListJavaBuilder callJava(Consumer<CallTaskJavaBuilder> consumer) {
+    return this.callJava(UUID.randomUUID().toString(), consumer);
   }
 
-  public TaskItemListJavaBuilder forEachFn(String name, Consumer<ForTaskJavaBuilder> consumer) {
+  public TaskItemListJavaBuilder forFn(String name, Consumer<ForTaskJavaBuilder> consumer) {
     this.requireNameAndConfig(name, consumer);
     final ForTaskJavaBuilder forTaskJavaBuilder = new ForTaskJavaBuilder();
     consumer.accept(forTaskJavaBuilder);
     return this.addTaskItem(new TaskItem(name, new Task().withForTask(forTaskJavaBuilder.build())));
   }
 
-  public TaskItemListJavaBuilder forEachFn(Consumer<ForTaskJavaBuilder> consumer) {
-    return this.forEachFn(UUID.randomUUID().toString(), consumer);
+  public TaskItemListJavaBuilder forFn(Consumer<ForTaskJavaBuilder> consumer) {
+    return this.forFn(UUID.randomUUID().toString(), consumer);
   }
 
-  public TaskItemListJavaBuilder switchCaseFn(
-      String name, Consumer<SwitchTaskJavaBuilder> consumer) {
+  public TaskItemListJavaBuilder switchFn(String name, Consumer<SwitchTaskJavaBuilder> consumer) {
     this.requireNameAndConfig(name, consumer);
     final SwitchTaskJavaBuilder switchTaskJavaBuilder = new SwitchTaskJavaBuilder();
     consumer.accept(switchTaskJavaBuilder);
@@ -68,7 +67,7 @@ public class TaskItemListJavaBuilder extends BaseTaskItemListBuilder<TaskItemLis
         new TaskItem(name, new Task().withSwitchTask(switchTaskJavaBuilder.build())));
   }
 
-  public TaskItemListJavaBuilder switchCaseFn(Consumer<SwitchTaskJavaBuilder> consumer) {
-    return this.switchCaseFn(UUID.randomUUID().toString(), consumer);
+  public TaskItemListJavaBuilder switchFn(Consumer<SwitchTaskJavaBuilder> consumer) {
+    return this.switchFn(UUID.randomUUID().toString(), consumer);
   }
 }

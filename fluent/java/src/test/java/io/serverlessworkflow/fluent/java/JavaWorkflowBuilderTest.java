@@ -43,11 +43,11 @@ class JavaWorkflowBuilderTest {
   }
 
   @Test
-  @DisplayName("Spec style forEach still works inside Java workflow")
+  @DisplayName("Spec style forE still works inside Java workflow")
   void testSpecForEachInJavaWorkflow() {
     Workflow wf =
         JavaWorkflowBuilder.workflow("specLoopFlow")
-            .doTasks(
+            .tasks(
                 d ->
                     d.forEach(f -> f.each("pet").in("$.pets"))
                         .set("markDone", s -> s.expr("$.done = true")))
@@ -66,17 +66,17 @@ class JavaWorkflowBuilderTest {
   }
 
   @Test
-  @DisplayName("Java style forEach with collection + whileCondition builds ForTaskFunction")
+  @DisplayName("Java style forE with collection + whileC builds ForTaskFunction")
   void testJavaForEach() {
     Workflow wf =
         JavaWorkflowBuilder.workflow("javaLoopFlow")
-            .doTasks(
+            .tasks(
                 d ->
-                    d.forEachFn(
+                    d.forFn(
                         j ->
                             j.collection(ctx -> List.of("a", "b", "c"))
-                                .whileCondition((String val, Object ctx) -> !val.equals("c"))
-                                .doTasks(
+                                .whileC((String val, Object ctx) -> !val.equals("c"))
+                                .tasks(
                                     inner -> inner.set("loopFlag", s -> s.expr("$.flag = true")))))
             .build();
 
@@ -101,10 +101,10 @@ class JavaWorkflowBuilderTest {
   void testMixedLoops() {
     Workflow wf =
         JavaWorkflowBuilder.workflow("mixed")
-            .doTasks(
+            .tasks(
                 d ->
                     d.forEach(f -> f.each("item").in("$.array")) // spec
-                        .forEachFn(j -> j.collection(ctx -> List.of(1, 2, 3))) // java
+                        .forFn(j -> j.collection(ctx -> List.of(1, 2, 3))) // java
                 )
             .build();
 
@@ -127,18 +127,17 @@ class JavaWorkflowBuilderTest {
 
     Workflow wf =
         JavaWorkflowBuilder.workflow("fnIO")
-            .doTasks(
+            .tasks(
                 d ->
                     d.set("init", s -> s.expr("$.x = 1"))
-                        .forEachFn(
+                        .forFn(
                             j ->
                                 j.collection(
                                         ctx -> {
                                           inputCalled.set(true);
                                           return List.of("x", "y");
                                         })
-                                    .doTasks(
-                                        inner -> inner.set("calc", s -> s.expr("$.y = $.x + 1")))
+                                    .tasks(inner -> inner.set("calc", s -> s.expr("$.y = $.x + 1")))
                                     .exportAsFn(
                                         item -> {
                                           exportCalled.set(true);
@@ -191,7 +190,7 @@ class JavaWorkflowBuilderTest {
   void testCallJavaTask() {
     Workflow wf =
         JavaWorkflowBuilder.workflow("callJavaFlow")
-            .doTasks(
+            .tasks(
                 d ->
                     d.callFn(
                         "invokeHandler",
@@ -217,10 +216,10 @@ class JavaWorkflowBuilderTest {
   void testSwitchCaseJava() {
     Workflow wf =
         JavaWorkflowBuilder.workflow("switchJava")
-            .doTasks(
+            .tasks(
                 d ->
                     d.set("prepare", s -> s.expr("$.ready = true"))
-                        .switchCase(
+                        .switchC(
                             sw -> {
                               // configure Java switch builder (cases / predicates)
                             }))
@@ -237,20 +236,20 @@ class JavaWorkflowBuilderTest {
   }
 
   @Test
-  @DisplayName("Combined: spec set + java forEach + callJava inside nested do")
+  @DisplayName("Combined: spec set + java forE + callJava inside nested do")
   void testCompositeScenario() {
     Workflow wf =
         JavaWorkflowBuilder.workflow("composite")
-            .doTasks(
+            .tasks(
                 d ->
                     d.set("init", s -> s.expr("$.val = 0"))
-                        .forEachFn(
+                        .forFn(
                             j ->
                                 j.collection(ctx -> List.of("a", "b"))
-                                    .doTasks(
+                                    .tasks(
                                         inner ->
                                             inner
-                                                .callFn(
+                                                .callJava(
                                                     cj -> {
                                                       // customizing Java call
                                                     })

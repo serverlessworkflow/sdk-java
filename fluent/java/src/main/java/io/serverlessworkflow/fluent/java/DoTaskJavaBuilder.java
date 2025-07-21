@@ -31,32 +31,32 @@ public class DoTaskJavaBuilder extends BaseDoTaskBuilder<DoTaskJavaBuilder, Task
   }
 
   public DoTaskJavaBuilder callFn(String name, Consumer<CallTaskJavaBuilder> consumer) {
-    this.innerListBuilder().callFn(name, consumer);
+    this.innerListBuilder().callJava(name, consumer);
     return this;
   }
 
   public DoTaskJavaBuilder callFn(Consumer<CallTaskJavaBuilder> consumer) {
-    this.innerListBuilder().callFn(consumer);
+    this.innerListBuilder().callJava(consumer);
     return this;
   }
 
-  public DoTaskJavaBuilder forEachFn(String name, Consumer<ForTaskJavaBuilder> consumer) {
-    this.innerListBuilder().forEachFn(name, consumer);
+  public DoTaskJavaBuilder forFn(String name, Consumer<ForTaskJavaBuilder> consumer) {
+    this.innerListBuilder().forFn(name, consumer);
     return this;
   }
 
-  public DoTaskJavaBuilder forEachFn(Consumer<ForTaskJavaBuilder> consumer) {
-    this.innerListBuilder().forEachFn(consumer);
+  public DoTaskJavaBuilder forFn(Consumer<ForTaskJavaBuilder> consumer) {
+    this.innerListBuilder().forFn(consumer);
     return this;
   }
 
-  public DoTaskJavaBuilder switchCaseFn(String name, Consumer<SwitchTaskJavaBuilder> consumer) {
-    this.innerListBuilder().switchCaseFn(name, consumer);
+  public DoTaskJavaBuilder switchFn(String name, Consumer<SwitchTaskJavaBuilder> consumer) {
+    this.innerListBuilder().switchFn(name, consumer);
     return this;
   }
 
-  public DoTaskJavaBuilder switchCaseFn(Consumer<SwitchTaskJavaBuilder> consumer) {
-    this.innerListBuilder().switchCaseFn(consumer);
+  public DoTaskJavaBuilder switchFn(Consumer<SwitchTaskJavaBuilder> consumer) {
+    this.innerListBuilder().switchFn(consumer);
     return this;
   }
 }

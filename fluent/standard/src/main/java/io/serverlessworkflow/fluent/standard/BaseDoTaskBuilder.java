@@ -66,13 +66,13 @@ public abstract class BaseDoTaskBuilder<
     return self();
   }
 
-  public TASK switchCase(String name, Consumer<SwitchTaskBuilder> itemsConfigurer) {
-    taskItemListBuilder.switchCase(name, itemsConfigurer);
+  public TASK switchC(String name, Consumer<SwitchTaskBuilder> itemsConfigurer) {
+    taskItemListBuilder.switchC(name, itemsConfigurer);
     return self();
   }
 
-  public TASK switchCase(Consumer<SwitchTaskBuilder> itemsConfigurer) {
-    taskItemListBuilder.switchCase(itemsConfigurer);
+  public TASK switchC(Consumer<SwitchTaskBuilder> itemsConfigurer) {
+    taskItemListBuilder.switchC(itemsConfigurer);
     return self();
   }
 
@@ -116,13 +116,13 @@ public abstract class BaseDoTaskBuilder<
     return self();
   }
 
-  public TASK tryTask(String name, Consumer<TryTaskBuilder<LIST>> itemsConfigurer) {
-    taskItemListBuilder.tryTask(name, itemsConfigurer);
+  public TASK tryC(String name, Consumer<TryTaskBuilder<LIST>> itemsConfigurer) {
+    taskItemListBuilder.tryC(name, itemsConfigurer);
     return self();
   }
 
-  public TASK tryTask(Consumer<TryTaskBuilder<LIST>> itemsConfigurer) {
-    taskItemListBuilder.tryTask(itemsConfigurer);
+  public TASK tryC(Consumer<TryTaskBuilder<LIST>> itemsConfigurer) {
+    taskItemListBuilder.tryC(itemsConfigurer);
     return self();
   }
 

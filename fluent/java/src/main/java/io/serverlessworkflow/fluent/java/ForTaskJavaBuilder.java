@@ -50,12 +50,12 @@ public class ForTaskJavaBuilder extends TaskBaseBuilder<ForTaskJavaBuilder>
     return this;
   }
 
-  public <T, V> ForTaskJavaBuilder whileCondition(LoopPredicate<T, V> predicate) {
+  public <T, V> ForTaskJavaBuilder whileC(LoopPredicate<T, V> predicate) {
     this.forTaskFunction.withWhile(predicate);
     return this;
   }
 
-  public <T, V> ForTaskJavaBuilder whileCondition(LoopPredicateIndex<T, V> predicate) {
+  public <T, V> ForTaskJavaBuilder whileC(LoopPredicateIndex<T, V> predicate) {
     this.forTaskFunction.withWhile(predicate);
     return this;
   }
@@ -65,7 +65,7 @@ public class ForTaskJavaBuilder extends TaskBaseBuilder<ForTaskJavaBuilder>
     return this;
   }
 
-  public <T, V, R> ForTaskJavaBuilder doTasks(String name, LoopFunction<T, V, R> function) {
+  public <T, V, R> ForTaskJavaBuilder tasks(String name, LoopFunction<T, V, R> function) {
     this.items.add(
         new TaskItem(
             name,
@@ -77,11 +77,11 @@ public class ForTaskJavaBuilder extends TaskBaseBuilder<ForTaskJavaBuilder>
     return this;
   }
 
-  public <T, V, R> ForTaskJavaBuilder doTasks(LoopFunction<T, V, R> function) {
-    return this.doTasks(UUID.randomUUID().toString(), function);
+  public <T, V, R> ForTaskJavaBuilder tasks(LoopFunction<T, V, R> function) {
+    return this.tasks(UUID.randomUUID().toString(), function);
   }
 
-  public ForTaskJavaBuilder doTasks(Consumer<TaskItemListJavaBuilder> consumer) {
+  public ForTaskJavaBuilder tasks(Consumer<TaskItemListJavaBuilder> consumer) {
     final TaskItemListJavaBuilder builder = new TaskItemListJavaBuilder();
     consumer.accept(builder);
     this.items.addAll(builder.build());

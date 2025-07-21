@@ -79,7 +79,7 @@ public abstract class BaseWorkflowBuilder<
     return self();
   }
 
-  public SELF doTasks(Consumer<DO> doTaskConsumer) {
+  public SELF tasks(Consumer<DO> doTaskConsumer) {
     final DO doTaskBuilder = newDo();
     doTaskConsumer.accept(doTaskBuilder);
     this.workflow.setDo(doTaskBuilder.build().getDo());

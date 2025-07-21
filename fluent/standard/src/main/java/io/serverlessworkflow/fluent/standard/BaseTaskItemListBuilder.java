@@ -88,15 +88,15 @@ public abstract class BaseTaskItemListBuilder<SELF extends BaseTaskItemListBuild
     return this.forEach(UUID.randomUUID().toString(), itemsConfigurer);
   }
 
-  public SELF switchCase(String name, Consumer<SwitchTaskBuilder> itemsConfigurer) {
+  public SELF switchC(String name, Consumer<SwitchTaskBuilder> itemsConfigurer) {
     requireNameAndConfig(name, itemsConfigurer);
     final SwitchTaskBuilder switchBuilder = new SwitchTaskBuilder();
     itemsConfigurer.accept(switchBuilder);
     return addTaskItem(new TaskItem(name, new Task().withSwitchTask(switchBuilder.build())));
   }
 
-  public SELF switchCase(Consumer<SwitchTaskBuilder> itemsConfigurer) {
-    return this.switchCase(UUID.randomUUID().toString(), itemsConfigurer);
+  public SELF switchC(Consumer<SwitchTaskBuilder> itemsConfigurer) {
+    return this.switchC(UUID.randomUUID().toString(), itemsConfigurer);
   }
 
   public SELF raise(String name, Consumer<RaiseTaskBuilder> itemsConfigurer) {
@@ -143,15 +143,15 @@ public abstract class BaseTaskItemListBuilder<SELF extends BaseTaskItemListBuild
     return this.emit(UUID.randomUUID().toString(), itemsConfigurer);
   }
 
-  public SELF tryTask(String name, Consumer<TryTaskBuilder<SELF>> itemsConfigurer) {
+  public SELF tryC(String name, Consumer<TryTaskBuilder<SELF>> itemsConfigurer) {
     requireNameAndConfig(name, itemsConfigurer);
     final TryTaskBuilder<SELF> tryBuilder = new TryTaskBuilder<>(this.newItemListBuilder());
     itemsConfigurer.accept(tryBuilder);
     return addTaskItem(new TaskItem(name, new Task().withTryTask(tryBuilder.build())));
   }
 
-  public SELF tryTask(Consumer<TryTaskBuilder<SELF>> itemsConfigurer) {
-    return this.tryTask(UUID.randomUUID().toString(), itemsConfigurer);
+  public SELF tryC(Consumer<TryTaskBuilder<SELF>> itemsConfigurer) {
+    return this.tryC(UUID.randomUUID().toString(), itemsConfigurer);
   }
 
   public SELF callHTTP(String name, Consumer<CallHTTPTaskBuilder> itemsConfigurer) {
