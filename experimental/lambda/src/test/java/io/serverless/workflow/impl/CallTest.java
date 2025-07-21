@@ -80,7 +80,7 @@ class CallTest {
                           new Task()
                               .withForTask(
                                   new ForTaskFunction()
-                                      .withWhile(this::isEven)
+                                      .withWhile(CallTest::isEven)
                                       .withCollection(v -> (Collection) v)
                                       .withFor(forConfig)
                                       .withDo(
@@ -91,7 +91,7 @@ class CallTest {
                                                       .withCallTask(
                                                           new CallTaskJava(
                                                               CallJava.loopFunction(
-                                                                  this::sum,
+                                                                  CallTest::sum,
                                                                   forConfig.getEach()))))))))));
 
       assertThat(
@@ -124,7 +124,7 @@ class CallTest {
                                               new SwitchItem(
                                                   "odd",
                                                   new SwitchCaseFunction()
-                                                      .withPredicate(this::isOdd)
+                                                      .withPredicate(CallTest::isOdd)
                                                       .withThen(
                                                           new FlowDirective()
                                                               .withFlowDirectiveEnum(
@@ -132,7 +132,7 @@ class CallTest {
                       new TaskItem(
                           "java",
                           new Task()
-                              .withCallTask(new CallTaskJava(CallJava.function(this::zero))))));
+                              .withCallTask(new CallTaskJava(CallJava.function(CallTest::zero))))));
 
       WorkflowDefinition definition = app.workflowDefinition(workflow);
       assertThat(definition.instance(3).start().get().asNumber().orElseThrow()).isEqualTo(3);
@@ -140,19 +140,19 @@ class CallTest {
     }
   }
 
-  private boolean isEven(Object model, Integer number) {
+  public static boolean isEven(Object model, Integer number) {
     return !isOdd(number);
   }
 
-  private boolean isOdd(Integer number) {
+  public static boolean isOdd(Integer number) {
     return number % 2 != 0;
   }
 
-  private int zero(Integer value) {
+  public static int zero(Integer value) {
     return 0;
   }
 
-  private Integer sum(Object model, Integer item) {
+  public static Integer sum(Object model, Integer item) {
     return model instanceof Collection ? item : (Integer) model + item;
   }
 }

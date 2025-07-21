@@ -13,25 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.api.types;
+package io.serverlessworkflow.fluent.standard;
 
-import java.util.function.Predicate;
+public class TaskItemListBuilder extends BaseTaskItemListBuilder<TaskItemListBuilder> {
 
-public class SwitchCaseFunction extends SwitchCase {
+  TaskItemListBuilder() {
+    super();
+  }
 
-  private static final long serialVersionUID = 1L;
-  private Predicate<?> predicate;
-
-  public <T> SwitchCaseFunction withPredicate(Predicate<T> predicate) {
-    this.predicate = predicate;
+  @Override
+  protected TaskItemListBuilder self() {
     return this;
   }
 
-  public <T> void setPredicate(Predicate<T> predicate) {
-    this.predicate = predicate;
-  }
-
-  public Predicate<?> predicate() {
-    return predicate;
+  @Override
+  protected TaskItemListBuilder newItemListBuilder() {
+    return new TaskItemListBuilder();
   }
 }

@@ -13,25 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.api.types;
+package io.serverlessworkflow.fluent.standard;
 
-import java.util.function.Predicate;
+import io.serverlessworkflow.api.types.Export;
+import io.serverlessworkflow.api.types.Input;
+import io.serverlessworkflow.api.types.Output;
 
-public class SwitchCaseFunction extends SwitchCase {
+public interface TransformationHandlers {
 
-  private static final long serialVersionUID = 1L;
-  private Predicate<?> predicate;
+  void setOutput(final Output output);
 
-  public <T> SwitchCaseFunction withPredicate(Predicate<T> predicate) {
-    this.predicate = predicate;
-    return this;
-  }
+  void setExport(final Export export);
 
-  public <T> void setPredicate(Predicate<T> predicate) {
-    this.predicate = predicate;
-  }
-
-  public Predicate<?> predicate() {
-    return predicate;
-  }
+  void setInput(final Input input);
 }

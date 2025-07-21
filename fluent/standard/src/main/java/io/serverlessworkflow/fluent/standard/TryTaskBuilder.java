@@ -34,27 +34,30 @@ import io.serverlessworkflow.api.types.TryTask;
 import io.serverlessworkflow.api.types.TryTaskCatch;
 import java.util.function.Consumer;
 
-public class TryTaskBuilder extends TaskBaseBuilder<TryTaskBuilder> {
+public class TryTaskBuilder<T extends BaseTaskItemListBuilder<T>>
+    extends TaskBaseBuilder<TryTaskBuilder<T>> {
 
   private final TryTask tryTask;
+  private final T doTaskBuilderFactory;
 
-  TryTaskBuilder() {
+  TryTaskBuilder(T doTaskBuilderFactory) {
     this.tryTask = new TryTask();
+    this.doTaskBuilderFactory = doTaskBuilderFactory;
   }
 
   @Override
-  protected TryTaskBuilder self() {
+  protected TryTaskBuilder<T> self() {
     return this;
   }
 
-  public TryTaskBuilder tryHandler(Consumer<DoTaskBuilder> consumer) {
-    final DoTaskBuilder doTaskBuilder = new DoTaskBuilder();
-    consumer.accept(doTaskBuilder);
-    this.tryTask.setTry(doTaskBuilder.build().getDo());
+  public TryTaskBuilder<T> tryHandler(Consumer<T> consumer) {
+    final T taskItemListBuilder = this.doTaskBuilderFactory.newItemListBuilder();
+    consumer.accept(taskItemListBuilder);
+    this.tryTask.setTry(taskItemListBuilder.build());
     return this;
   }
 
-  public TryTaskBuilder catchHandler(Consumer<TryTaskCatchBuilder> consumer) {
+  public TryTaskBuilder<T> catchHandler(Consumer<TryTaskCatchBuilder> consumer) {
     final TryTaskCatchBuilder catchBuilder = new TryTaskCatchBuilder();
     consumer.accept(catchBuilder);
     this.tryTask.setCatch(catchBuilder.build());
