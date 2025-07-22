@@ -13,24 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl;
+package io.serverlessworkflow.api.types.func;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import io.serverlessworkflow.api.types.CallTask;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import io.serverlessworkflow.impl.expressions.DateTimeDescriptor;
-import io.serverlessworkflow.impl.jackson.JsonUtils;
-import java.time.Instant;
-import org.junit.jupiter.api.Test;
+public class CallTaskJava extends CallTask {
 
-class DateTimeDescriptorTest {
+  private CallJava callJava;
 
-  @Test
-  void serializeDate() {
-    DateTimeDescriptor descriptor = DateTimeDescriptor.from(Instant.now());
+  public CallTaskJava(CallJava callJava) {
+    this.callJava = callJava;
+  }
 
-    JsonNode node = JsonUtils.fromValue(descriptor);
-    assertThat(node.get("iso8601").isTextual()).isTrue();
-    assertThat(node.get("epoch").isObject()).isTrue();
+  public CallJava getCallJava() {
+    return callJava;
+  }
+
+  @Override
+  public Object get() {
+    return callJava != null ? callJava : super.get();
   }
 }

@@ -1,1 +1,1 @@
-io.serverlessworkflow.impl.executors.JavaTaskExecutorFactory
+io.serverlessworkflow.impl.executors.func.JavaTaskExecutorFactory

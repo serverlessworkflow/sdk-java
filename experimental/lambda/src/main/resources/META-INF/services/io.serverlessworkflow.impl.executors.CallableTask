@@ -1,1 +1,1 @@
-io.serverlessworkflow.impl.executors.JavaCallExecutor
+io.serverlessworkflow.impl.executors.func.JavaCallExecutor

@@ -1,1 +1,1 @@
-io.serverlessworkflow.impl.schema.JsonSchemaValidatorFactory
+io.serverlessworkflow.impl.schema.json.JsonSchemaValidatorFactory

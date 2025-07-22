@@ -1,1 +1,1 @@
-io.serverlessworkflow.impl.executors.HttpExecutor
+io.serverlessworkflow.impl.executors.http.HttpExecutor

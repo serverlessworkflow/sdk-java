@@ -28,6 +28,7 @@ import com.sun.codemodel.JDefinedClass;
 import com.sun.codemodel.JInvocation;
 import com.sun.codemodel.JMethod;
 import com.sun.codemodel.JMod;
+import com.sun.codemodel.JPackage;
 import com.sun.codemodel.JType;
 import com.sun.codemodel.JVar;
 import io.serverlessworkflow.serialization.DeserializeHelper;
@@ -48,14 +49,14 @@ public class GeneratorUtils {
     void accept(JMethod method, JVar parserParam);
   }
 
-  public static JDefinedClass serializerClass(JClass relatedClass)
+  public static JDefinedClass serializerClass(JPackage jPackage, JClass relatedClass)
       throws JClassAlreadyExistsException {
-    return createClass(relatedClass, JsonSerializer.class, "Serializer");
+    return createClass(jPackage, relatedClass, JsonSerializer.class, "Serializer");
   }
 
-  public static JDefinedClass deserializerClass(JClass relatedClass)
+  public static JDefinedClass deserializerClass(JPackage jPackage, JClass relatedClass)
       throws JClassAlreadyExistsException {
-    return createClass(relatedClass, JsonDeserializer.class, "Deserializer");
+    return createClass(jPackage, relatedClass, JsonDeserializer.class, "Deserializer");
   }
 
   public static void fillSerializer(
@@ -80,17 +81,16 @@ public class GeneratorUtils {
   }
 
   private static JDefinedClass createClass(
-      JClass relatedClass, Class<?> serializerClass, String suffix)
+      JPackage jPackage, JClass relatedClass, Class<?> serializerClass, String suffix)
       throws JClassAlreadyExistsException {
-    JDefinedClass definedClass =
-        relatedClass._package()._class(JMod.NONE, relatedClass.name() + suffix);
+    JDefinedClass definedClass = jPackage._class(JMod.NONE, relatedClass.name() + suffix);
     definedClass._extends(definedClass.owner().ref(serializerClass).narrow(relatedClass));
     return definedClass;
   }
 
-  public static JDefinedClass generateSerializer(JClass relatedClass)
+  public static JDefinedClass generateSerializer(JPackage jPackage, JClass relatedClass)
       throws JClassAlreadyExistsException {
-    JDefinedClass definedClass = GeneratorUtils.serializerClass(relatedClass);
+    JDefinedClass definedClass = GeneratorUtils.serializerClass(jPackage, relatedClass);
     GeneratorUtils.fillSerializer(
         definedClass,
         relatedClass,
@@ -104,8 +104,9 @@ public class GeneratorUtils {
   }
 
   public static JDefinedClass generateDeserializer(
-      JClass relatedClass, Collection<JClass> oneOfTypes) throws JClassAlreadyExistsException {
-    JDefinedClass definedClass = GeneratorUtils.deserializerClass(relatedClass);
+      JPackage jPackage, JClass relatedClass, Collection<JClass> oneOfTypes)
+      throws JClassAlreadyExistsException {
+    JDefinedClass definedClass = GeneratorUtils.deserializerClass(jPackage, relatedClass);
     GeneratorUtils.fillDeserializer(
         definedClass,
         relatedClass,
@@ -124,9 +125,10 @@ public class GeneratorUtils {
     return definedClass;
   }
 
-  public static JDefinedClass generateDeserializer(JClass relatedClass, JType propertyType)
+  public static JDefinedClass generateDeserializer(
+      JPackage jPackage, JClass relatedClass, JType propertyType)
       throws JClassAlreadyExistsException {
-    JDefinedClass definedClass = GeneratorUtils.deserializerClass(relatedClass);
+    JDefinedClass definedClass = GeneratorUtils.deserializerClass(jPackage, relatedClass);
     GeneratorUtils.fillDeserializer(
         definedClass,
         relatedClass,
@@ -145,9 +147,9 @@ public class GeneratorUtils {
   }
 
   public static JDefinedClass generateSerializer(
-      JClass relatedClass, String keyMethod, String valueMethod)
+      JPackage jPackage, JClass relatedClass, String keyMethod, String valueMethod)
       throws JClassAlreadyExistsException {
-    JDefinedClass definedClass = GeneratorUtils.serializerClass(relatedClass);
+    JDefinedClass definedClass = GeneratorUtils.serializerClass(jPackage, relatedClass);
     GeneratorUtils.fillSerializer(
         definedClass,
         relatedClass,

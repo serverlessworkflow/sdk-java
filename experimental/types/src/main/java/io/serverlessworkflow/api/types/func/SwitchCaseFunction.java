@@ -13,24 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl;
+package io.serverlessworkflow.api.types.func;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import io.serverlessworkflow.api.types.SwitchCase;
+import java.util.function.Predicate;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import io.serverlessworkflow.impl.expressions.DateTimeDescriptor;
-import io.serverlessworkflow.impl.jackson.JsonUtils;
-import java.time.Instant;
-import org.junit.jupiter.api.Test;
+public class SwitchCaseFunction extends SwitchCase {
 
-class DateTimeDescriptorTest {
+  private static final long serialVersionUID = 1L;
+  private Predicate<?> predicate;
 
-  @Test
-  void serializeDate() {
-    DateTimeDescriptor descriptor = DateTimeDescriptor.from(Instant.now());
+  public <T> SwitchCaseFunction withPredicate(Predicate<T> predicate) {
+    this.predicate = predicate;
+    return this;
+  }
 
-    JsonNode node = JsonUtils.fromValue(descriptor);
-    assertThat(node.get("iso8601").isTextual()).isTrue();
-    assertThat(node.get("epoch").isObject()).isTrue();
+  public <T> void setPredicate(Predicate<T> predicate) {
+    this.predicate = predicate;
+  }
+
+  public Predicate<?> predicate() {
+    return predicate;
   }
 }

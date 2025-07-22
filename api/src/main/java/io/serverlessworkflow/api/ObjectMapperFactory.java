@@ -21,7 +21,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator.Feature;
-import io.serverlessworkflow.api.types.JacksonMixInModule;
+import io.serverlessworkflow.api.types.jackson.JacksonMixInModule;
 import io.serverlessworkflow.serialization.BeanDeserializerModifierWithValidation;
 import io.serverlessworkflow.serialization.URIDeserializer;
 import io.serverlessworkflow.serialization.URISerializer;
