@@ -54,11 +54,10 @@ public class JavaForExecutorBuilder extends ForExecutorBuilder {
               return application
                   .modelFactory()
                   .from(
-                      item == null
-                          || whilePred.test(
-                              n.asJavaObject(),
-                              item,
-                              (Integer) safeObject(t.variables().get(indexName))));
+                      whilePred.test(
+                          n.asJavaObject(),
+                          item,
+                          (Integer) safeObject(t.variables().get(indexName))));
             });
       }
     }
