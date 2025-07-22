@@ -96,7 +96,7 @@ class CallTest {
 
       assertThat(
               app.workflowDefinition(workflow)
-                  .instance(List.of(2, 4, 6))
+                  .instance(List.of(2, 4, 6, 7))
                   .start()
                   .get()
                   .asNumber()
