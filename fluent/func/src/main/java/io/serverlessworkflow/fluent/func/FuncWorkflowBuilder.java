@@ -22,7 +22,7 @@ public class FuncWorkflowBuilder
     extends BaseWorkflowBuilder<FuncWorkflowBuilder, FuncDoTaskBuilder, FuncTaskItemListBuilder>
     implements FuncTransformations<FuncWorkflowBuilder> {
 
-  private FuncWorkflowBuilder(final String name, final String namespace, final String version) {
+  FuncWorkflowBuilder(final String name, final String namespace, final String version) {
     super(name, namespace, version);
   }
 

@@ -13,16 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.fluent.spec;
+package io.serverlessworkflow.fluent.func;
 
-public class DoTaskBuilder extends BaseDoTaskBuilder<DoTaskBuilder, TaskItemListBuilder> {
+import java.util.function.Consumer;
 
-  DoTaskBuilder() {
-    super(new TaskItemListBuilder());
-  }
+public interface FuncDoTaskFluent<SELF extends FuncDoTaskFluent<SELF>> {
 
-  @Override
-  public DoTaskBuilder self() {
-    return this;
-  }
+  SELF callFn(String name, Consumer<FuncCallTaskBuilder> cfg);
+
+  SELF callFn(Consumer<FuncCallTaskBuilder> cfg);
+
+  SELF forFn(String name, Consumer<FuncForTaskBuilder> cfg);
+
+  SELF forFn(Consumer<FuncForTaskBuilder> cfg);
+
+  SELF switchFn(String name, Consumer<FuncSwitchTaskBuilder> cfg);
+
+  SELF switchFn(Consumer<FuncSwitchTaskBuilder> cfg);
 }

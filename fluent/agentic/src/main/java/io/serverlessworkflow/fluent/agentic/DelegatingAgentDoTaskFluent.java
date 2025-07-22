@@ -13,16 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.fluent.spec;
+package io.serverlessworkflow.fluent.agentic;
 
-public class DoTaskBuilder extends BaseDoTaskBuilder<DoTaskBuilder, TaskItemListBuilder> {
+public interface DelegatingAgentDoTaskFluent<SELF extends DelegatingAgentDoTaskFluent<SELF>>
+    extends AgentDoTaskFluent<SELF> {
 
-  DoTaskBuilder() {
-    super(new TaskItemListBuilder());
+  /** Return the underlying functional ops delegate. */
+  AgentDoTaskFluent<?> agentInternalDelegate();
+
+  @SuppressWarnings("unchecked")
+  default SELF self() {
+    return (SELF) this;
   }
 
-  @Override
-  public DoTaskBuilder self() {
-    return this;
+  default SELF agent(String name, Object agent) {
+    agentInternalDelegate().agent(name, agent);
+    return (SELF) this;
   }
 }

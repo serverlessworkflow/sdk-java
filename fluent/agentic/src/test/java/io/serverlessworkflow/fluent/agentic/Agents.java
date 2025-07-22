@@ -13,16 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.fluent.spec;
+package io.serverlessworkflow.fluent.agentic;
 
-public class DoTaskBuilder extends BaseDoTaskBuilder<DoTaskBuilder, TaskItemListBuilder> {
+import dev.langchain4j.agentic.Agent;
+import dev.langchain4j.service.UserMessage;
+import dev.langchain4j.service.V;
+import java.util.List;
 
-  DoTaskBuilder() {
-    super(new TaskItemListBuilder());
-  }
+public interface Agents {
 
-  @Override
-  public DoTaskBuilder self() {
-    return this;
+  interface MovieExpert {
+
+    @UserMessage(
+        """
+            You are a great evening planner.
+            Propose a list of 3 movies matching the given mood.
+            The mood is {mood}.
+            Provide a list with the 3 items and nothing else.
+            """)
+    @Agent
+    List<String> findMovie(@V("mood") String mood);
   }
 }
