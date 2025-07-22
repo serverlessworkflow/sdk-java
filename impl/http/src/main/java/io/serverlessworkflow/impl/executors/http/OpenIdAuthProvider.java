@@ -13,23 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.executors;
+package io.serverlessworkflow.impl.executors.http;
 
-import io.serverlessworkflow.api.types.TaskBase;
+import io.serverlessworkflow.api.types.OpenIdConnectAuthenticationPolicy;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
-import io.serverlessworkflow.impl.resources.ResourceLoader;
-import java.util.concurrent.CompletableFuture;
+import jakarta.ws.rs.client.Invocation.Builder;
 
-public interface CallableTask<T extends TaskBase> {
-  default void init(
-      T task, Workflow workflow, WorkflowApplication application, ResourceLoader loader) {}
+public class OpenIdAuthProvider implements AuthProvider {
 
-  CompletableFuture<WorkflowModel> apply(
-      WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel input);
+  public OpenIdAuthProvider(
+      WorkflowApplication app, Workflow workflow, OpenIdConnectAuthenticationPolicy authPolicy) {
+    throw new UnsupportedOperationException("OpenId auth not supported yet");
+  }
 
-  boolean accept(Class<? extends TaskBase> clazz);
+  @Override
+  public Builder build(
+      Builder builder, WorkflowContext workflow, TaskContext task, WorkflowModel model) {
+    // TODO Auto-generated method stub
+    return builder;
+  }
 }

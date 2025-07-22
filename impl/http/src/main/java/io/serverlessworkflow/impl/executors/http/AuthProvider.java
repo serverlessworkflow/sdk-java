@@ -13,23 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.executors;
+package io.serverlessworkflow.impl.executors.http;
 
-import io.serverlessworkflow.api.types.TaskBase;
-import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.TaskContext;
-import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
-import io.serverlessworkflow.impl.resources.ResourceLoader;
-import java.util.concurrent.CompletableFuture;
+import jakarta.ws.rs.client.Invocation;
 
-public interface CallableTask<T extends TaskBase> {
-  default void init(
-      T task, Workflow workflow, WorkflowApplication application, ResourceLoader loader) {}
-
-  CompletableFuture<WorkflowModel> apply(
-      WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel input);
-
-  boolean accept(Class<? extends TaskBase> clazz);
+@FunctionalInterface
+interface AuthProvider {
+  Invocation.Builder build(
+      Invocation.Builder builder, WorkflowContext workflow, TaskContext task, WorkflowModel model);
 }

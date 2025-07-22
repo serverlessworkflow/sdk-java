@@ -42,7 +42,7 @@ public class CallTaskExecutor<T extends TaskBase> extends RegularTaskExecutor<T>
         CallableTask<T> callable) {
       super(position, task, workflow, application, resourceLoader);
       this.callable = callable;
-      callable.init(task, application, resourceLoader);
+      callable.init(task, workflow, application, resourceLoader);
     }
 
     @Override
