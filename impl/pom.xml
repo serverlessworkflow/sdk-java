@@ -33,18 +33,6 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.glassfish.jersey.core</groupId>
-                <artifactId>jersey-client</artifactId>
-                <version>${version.org.glassfish.jersey}</version>
-                <scope>runtime</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.glassfish.jersey.media</groupId>
-                <artifactId>jersey-media-json-jackson</artifactId>
-                <version>${version.org.glassfish.jersey}</version>
-                <scope>runtime</scope>
-            </dependency>
-            <dependency>
                 <groupId>io.cloudevents</groupId>
                 <artifactId>cloudevents-core</artifactId>
                 <version>${version.io.cloudevents}</version>
@@ -68,6 +56,18 @@
               <groupId>jakarta.ws.rs</groupId>
               <artifactId>jakarta.ws.rs-api</artifactId>
               <version>${version.jakarta.ws.rs}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.glassfish.jersey.core</groupId>
+                <artifactId>jersey-client</artifactId>
+                <version>${version.org.glassfish.jersey}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.glassfish.jersey.media</groupId>
+                <artifactId>jersey-media-json-jackson</artifactId>
+                <version>${version.org.glassfish.jersey}</version>
+                <scope>test</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
