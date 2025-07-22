@@ -75,10 +75,10 @@ public class JacksonMixInPojo extends AbstractMojo {
       defaultValue = "${project.build.directory}/generated-sources/jacksonmixinpojo")
   private File outputDirectory;
 
-  @Parameter(property = "jsonschema2pojo.srcPackage")
+  @Parameter(property = "jacksonmixinpojo.srcPackage")
   private String srcPackage;
 
-  @Parameter(property = "jsonschema2pojo.targetPackage")
+  @Parameter(property = "jacksonmixinpojo.targetPackage")
   private String targetPackage;
 
   private static final String MIXIN_METHOD = "setMixInAnnotation";
