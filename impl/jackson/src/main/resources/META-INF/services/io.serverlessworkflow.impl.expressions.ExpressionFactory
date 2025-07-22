@@ -1,1 +1,1 @@
-io.serverlessworkflow.impl.expressions.JQExpressionFactory
+io.serverlessworkflow.impl.expressions.jq.JQExpressionFactory

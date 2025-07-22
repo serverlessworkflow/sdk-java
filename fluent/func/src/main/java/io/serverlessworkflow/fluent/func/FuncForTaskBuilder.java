@@ -15,12 +15,12 @@
  */
 package io.serverlessworkflow.fluent.func;
 
-import io.serverlessworkflow.api.types.CallJava;
-import io.serverlessworkflow.api.types.CallTaskJava;
 import io.serverlessworkflow.api.types.ForTaskConfiguration;
-import io.serverlessworkflow.api.types.ForTaskFunction;
 import io.serverlessworkflow.api.types.Task;
 import io.serverlessworkflow.api.types.TaskItem;
+import io.serverlessworkflow.api.types.func.CallJava;
+import io.serverlessworkflow.api.types.func.CallTaskJava;
+import io.serverlessworkflow.api.types.func.ForTaskFunction;
 import io.serverlessworkflow.fluent.spec.TaskBaseBuilder;
 import io.serverlessworkflow.impl.expressions.LoopFunction;
 import io.serverlessworkflow.impl.expressions.LoopPredicate;

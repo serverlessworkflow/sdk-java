@@ -87,7 +87,8 @@
             <version>${project.version}</version>
             <dependencies/>
             <configuration>
-              <targetPackage>io.serverlessworkflow.api.types</targetPackage>
+              <srcPackage>io.serverlessworkflow.api.types</srcPackage>
+              <targetPackage>io.serverlessworkflow.api.types.jackson</targetPackage>
             </configuration>
             <executions>
                 <execution>
