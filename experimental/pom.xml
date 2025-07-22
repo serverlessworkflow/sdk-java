@@ -40,5 +40,6 @@
   <modules>
   	<module>types</module>
   	<module>lambda</module>
+  	<module>ai</module>
   </modules>
 </project>
