@@ -17,19 +17,19 @@ package io.serverless.workflow.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.serverlessworkflow.api.types.CallJava;
-import io.serverlessworkflow.api.types.CallTaskJava;
 import io.serverlessworkflow.api.types.Document;
 import io.serverlessworkflow.api.types.FlowDirective;
 import io.serverlessworkflow.api.types.FlowDirectiveEnum;
 import io.serverlessworkflow.api.types.ForTaskConfiguration;
-import io.serverlessworkflow.api.types.ForTaskFunction;
-import io.serverlessworkflow.api.types.SwitchCaseFunction;
 import io.serverlessworkflow.api.types.SwitchItem;
 import io.serverlessworkflow.api.types.SwitchTask;
 import io.serverlessworkflow.api.types.Task;
 import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.api.types.Workflow;
+import io.serverlessworkflow.api.types.func.CallJava;
+import io.serverlessworkflow.api.types.func.CallTaskJava;
+import io.serverlessworkflow.api.types.func.ForTaskFunction;
+import io.serverlessworkflow.api.types.func.SwitchCaseFunction;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import java.util.Collection;

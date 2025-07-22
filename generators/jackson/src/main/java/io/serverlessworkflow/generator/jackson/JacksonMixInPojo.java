@@ -75,14 +75,11 @@ public class JacksonMixInPojo extends AbstractMojo {
       defaultValue = "${project.build.directory}/generated-sources/jacksonmixinpojo")
   private File outputDirectory;
 
-  /**
-   * Package name used for generated Java classes (for types where a fully qualified name has not
-   * been supplied in the schema using the 'javaType' property).
-   *
-   * @since 0.1.0
-   */
+  @Parameter(property = "jsonschema2pojo.srcPackage")
+  private String srcPackage;
+
   @Parameter(property = "jsonschema2pojo.targetPackage")
-  private String targetPackage = "";
+  private String targetPackage;
 
   private static final String MIXIN_METHOD = "setMixInAnnotation";
   private static final String ADD_PROPERTIES_METHOD = "getAdditionalProperties";
@@ -104,7 +101,7 @@ public class JacksonMixInPojo extends AbstractMojo {
         new ClassGraph()
             .enableAnnotationInfo()
             .enableMethodInfo()
-            .acceptPackages(targetPackage)
+            .acceptPackages(srcPackage)
             .scan()) {
       codeModel = new JCodeModel();
       rootPackage = codeModel._package(targetPackage);
@@ -183,10 +180,12 @@ public class JacksonMixInPojo extends AbstractMojo {
         .param(
             "using",
             GeneratorUtils.generateSerializer(
-                relClass, keyMethod.getName(), valueMethod.getName()));
+                rootPackage, relClass, keyMethod.getName(), valueMethod.getName()));
     mixClass
         .annotate(JsonDeserialize.class)
-        .param("using", GeneratorUtils.generateDeserializer(relClass, getReturnType(valueMethod)));
+        .param(
+            "using",
+            GeneratorUtils.generateDeserializer(rootPackage, relClass, getReturnType(valueMethod)));
   }
 
   private void buildUnionMixIn(ClassInfo unionClassInfo, JDefinedClass unionMixClass)
@@ -194,12 +193,13 @@ public class JacksonMixInPojo extends AbstractMojo {
     JClass unionClass = codeModel.ref(unionClassInfo.getName());
     unionMixClass
         .annotate(JsonSerialize.class)
-        .param("using", GeneratorUtils.generateSerializer(unionClass));
+        .param("using", GeneratorUtils.generateSerializer(rootPackage, unionClass));
     unionMixClass
         .annotate(JsonDeserialize.class)
         .param(
             "using",
-            GeneratorUtils.generateDeserializer(unionClass, getUnionClasses(unionClassInfo)));
+            GeneratorUtils.generateDeserializer(
+                rootPackage, unionClass, getUnionClasses(unionClassInfo)));
   }
 
   private void buildEnumMixIn(ClassInfo classInfo, JDefinedClass mixClass)

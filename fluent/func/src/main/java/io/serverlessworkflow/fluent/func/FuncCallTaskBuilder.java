@@ -15,8 +15,8 @@
  */
 package io.serverlessworkflow.fluent.func;
 
-import io.serverlessworkflow.api.types.CallJava;
-import io.serverlessworkflow.api.types.CallTaskJava;
+import io.serverlessworkflow.api.types.func.CallJava;
+import io.serverlessworkflow.api.types.func.CallTaskJava;
 import io.serverlessworkflow.fluent.spec.TaskBaseBuilder;
 import java.util.function.Function;
 

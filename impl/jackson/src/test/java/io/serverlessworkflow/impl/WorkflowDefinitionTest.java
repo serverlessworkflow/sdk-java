@@ -22,7 +22,7 @@ import static org.assertj.core.api.Assertions.catchThrowableOfType;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import io.serverlessworkflow.impl.json.JsonUtils;
+import io.serverlessworkflow.impl.jackson.JsonUtils;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Arrays;

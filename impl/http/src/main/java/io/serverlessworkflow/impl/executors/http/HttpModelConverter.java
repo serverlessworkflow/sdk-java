@@ -13,24 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl;
+package io.serverlessworkflow.impl.executors.http;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import io.serverlessworkflow.impl.WorkflowModel;
+import io.serverlessworkflow.impl.WorkflowModelFactory;
+import jakarta.ws.rs.client.Entity;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import io.serverlessworkflow.impl.expressions.DateTimeDescriptor;
-import io.serverlessworkflow.impl.jackson.JsonUtils;
-import java.time.Instant;
-import org.junit.jupiter.api.Test;
+public interface HttpModelConverter {
 
-class DateTimeDescriptorTest {
+  default WorkflowModel toModel(WorkflowModelFactory factory, Object entity) {
+    return factory.fromAny(entity);
+  }
 
-  @Test
-  void serializeDate() {
-    DateTimeDescriptor descriptor = DateTimeDescriptor.from(Instant.now());
-
-    JsonNode node = JsonUtils.fromValue(descriptor);
-    assertThat(node.get("iso8601").isTextual()).isTrue();
-    assertThat(node.get("epoch").isObject()).isTrue();
+  default Entity toEntity(WorkflowModel model) {
+    return Entity.json(model.asIs());
   }
 }

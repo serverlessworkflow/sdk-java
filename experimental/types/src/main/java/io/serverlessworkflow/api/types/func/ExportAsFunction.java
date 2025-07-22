@@ -13,24 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl;
+package io.serverlessworkflow.api.types.func;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import io.serverlessworkflow.api.types.ExportAs;
+import java.util.function.Function;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import io.serverlessworkflow.impl.expressions.DateTimeDescriptor;
-import io.serverlessworkflow.impl.jackson.JsonUtils;
-import java.time.Instant;
-import org.junit.jupiter.api.Test;
+public class ExportAsFunction extends ExportAs {
 
-class DateTimeDescriptorTest {
-
-  @Test
-  void serializeDate() {
-    DateTimeDescriptor descriptor = DateTimeDescriptor.from(Instant.now());
-
-    JsonNode node = JsonUtils.fromValue(descriptor);
-    assertThat(node.get("iso8601").isTextual()).isTrue();
-    assertThat(node.get("epoch").isObject()).isTrue();
+  public <T, V> ExportAs withFunction(Function<T, V> value) {
+    setObject(value);
+    return this;
   }
 }

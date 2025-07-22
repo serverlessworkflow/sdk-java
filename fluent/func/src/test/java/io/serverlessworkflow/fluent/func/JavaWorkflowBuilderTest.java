@@ -17,7 +17,15 @@ package io.serverlessworkflow.fluent.func;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import io.serverlessworkflow.api.types.*;
+import io.serverlessworkflow.api.types.Document;
+import io.serverlessworkflow.api.types.Export;
+import io.serverlessworkflow.api.types.Output;
+import io.serverlessworkflow.api.types.SetTask;
+import io.serverlessworkflow.api.types.Task;
+import io.serverlessworkflow.api.types.TaskBase;
+import io.serverlessworkflow.api.types.TaskItem;
+import io.serverlessworkflow.api.types.Workflow;
+import io.serverlessworkflow.api.types.func.*;
 import io.serverlessworkflow.fluent.spec.BaseWorkflowBuilder;
 // if you reuse anything
 import java.util.List;

@@ -16,11 +16,11 @@
 package io.serverlessworkflow.fluent.func;
 
 import io.serverlessworkflow.api.types.Export;
-import io.serverlessworkflow.api.types.ExportAsFunction;
 import io.serverlessworkflow.api.types.Input;
-import io.serverlessworkflow.api.types.InputFromFunction;
 import io.serverlessworkflow.api.types.Output;
-import io.serverlessworkflow.api.types.OutputAsFunction;
+import io.serverlessworkflow.api.types.func.ExportAsFunction;
+import io.serverlessworkflow.api.types.func.InputFromFunction;
+import io.serverlessworkflow.api.types.func.OutputAsFunction;
 import io.serverlessworkflow.fluent.spec.TransformationHandlers;
 import java.util.function.Function;
 
