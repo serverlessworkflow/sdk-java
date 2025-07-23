@@ -15,8 +15,11 @@
  */
 package io.serverlessworkflow.fluent.agentic;
 
+import io.serverlessworkflow.api.types.Task;
+import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.fluent.func.FuncTaskItemListBuilder;
 import io.serverlessworkflow.fluent.spec.BaseTaskItemListBuilder;
+import java.util.function.Consumer;
 
 public class AgentTaskItemListBuilder extends BaseTaskItemListBuilder<AgentTaskItemListBuilder>
     implements AgentDoTaskFluent<AgentTaskItemListBuilder> {
@@ -47,6 +50,14 @@ public class AgentTaskItemListBuilder extends BaseTaskItemListBuilder<AgentTaskI
     for (int i = 0; i < agents.length; i++) {
       agent(name + "-" + i, agents[i]);
     }
+    return self();
+  }
+
+  @Override
+  public AgentTaskItemListBuilder loop(String name, Consumer<LoopAgentsBuilder> consumer) {
+    final LoopAgentsBuilder builder = new LoopAgentsBuilder();
+    consumer.accept(builder);
+    this.addTaskItem(new TaskItem(name, new Task().withForTask(builder.build())));
     return self();
   }
 

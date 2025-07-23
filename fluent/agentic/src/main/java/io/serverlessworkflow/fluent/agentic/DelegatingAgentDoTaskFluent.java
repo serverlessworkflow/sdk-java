@@ -17,6 +17,7 @@ package io.serverlessworkflow.fluent.agentic;
 
 import io.serverlessworkflow.fluent.func.DelegatingFuncDoTaskFluent;
 import io.serverlessworkflow.fluent.spec.HasDelegate;
+import java.util.function.Consumer;
 
 public interface DelegatingAgentDoTaskFluent<SELF extends DelegatingAgentDoTaskFluent<SELF>>
     extends AgentDoTaskFluent<SELF>, DelegatingFuncDoTaskFluent<SELF>, HasDelegate {
@@ -37,6 +38,12 @@ public interface DelegatingAgentDoTaskFluent<SELF extends DelegatingAgentDoTaskF
   @Override
   default SELF sequence(String name, Object... agents) {
     d().sequence(name, agents);
+    return (SELF) this;
+  }
+
+  @SuppressWarnings("unchecked")
+  default SELF loop(String name, Consumer<LoopAgentsBuilder> consumer) {
+    d().loop(name, consumer);
     return (SELF) this;
   }
 }

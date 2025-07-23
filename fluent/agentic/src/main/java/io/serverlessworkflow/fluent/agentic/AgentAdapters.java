@@ -20,8 +20,10 @@ import static dev.langchain4j.agentic.internal.AgentExecutor.agentsToExecutors;
 import dev.langchain4j.agentic.Cognisphere;
 import dev.langchain4j.agentic.internal.AgentExecutor;
 import dev.langchain4j.agentic.internal.AgentInstance;
+import io.serverlessworkflow.impl.expressions.LoopPredicateIndex;
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 public final class AgentAdapters {
@@ -33,5 +35,9 @@ public final class AgentAdapters {
 
   public static Function<Cognisphere, Object> toFunction(AgentExecutor exec) {
     return exec::invoke;
+  }
+
+  public static LoopPredicateIndex<Object, Object> toWhile(Predicate<Cognisphere> exit) {
+    return (model, item, idx) -> !exit.test((Cognisphere) model);
   }
 }

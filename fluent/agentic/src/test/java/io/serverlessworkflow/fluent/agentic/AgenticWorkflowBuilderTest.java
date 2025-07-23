@@ -15,6 +15,7 @@
  */
 package io.serverlessworkflow.fluent.agentic;
 
+import static io.serverlessworkflow.fluent.agentic.AgentsUtils.newMovieExpert;
 import static io.serverlessworkflow.fluent.agentic.Models.BASE_MODEL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -23,9 +24,14 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.spy;
 
 import dev.langchain4j.agentic.AgentServices;
+import dev.langchain4j.agentic.Cognisphere;
+import io.serverlessworkflow.api.types.Task;
+import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.api.types.func.CallJava;
-import org.junit.jupiter.api.DisplayName;
+import io.serverlessworkflow.api.types.func.ForTaskFunction;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Predicate;
 import org.junit.jupiter.api.Test;
 
 public class AgenticWorkflowBuilderTest {
@@ -69,7 +75,6 @@ public class AgenticWorkflowBuilderTest {
   }
 
   @Test
-  @DisplayName("Mix spec verbs with agent()")
   void mixSpecAndAgent() {
     Workflow wf =
         AgenticWorkflowBuilder.workflow("mixFlow")
@@ -86,11 +91,55 @@ public class AgenticWorkflowBuilderTest {
     assertThat(wf.getDo().get(2).getTask().getSetTask()).isNotNull();
   }
 
-  private Agents.MovieExpert newMovieExpert() {
-    return spy(
-        AgentServices.agentBuilder(Agents.MovieExpert.class)
-            .outputName("movies")
-            .chatModel(BASE_MODEL)
-            .build());
+  @Test
+  void loopOnlyAgents() {
+    Agents.MovieExpert expert = newMovieExpert();
+
+    Workflow wf =
+        AgenticWorkflowBuilder.workflow().tasks(d -> d.loop(l -> l.subAgents(expert))).build();
+
+    assertNotNull(wf);
+    assertThat(wf.getDo()).hasSize(1);
+
+    TaskItem ti = wf.getDo().get(0);
+    Task t = ti.getTask();
+    assertThat(t.getForTask()).isInstanceOf(ForTaskFunction.class);
+
+    ForTaskFunction fn = (ForTaskFunction) t.getForTask();
+    assertNotNull(fn.getDo());
+    assertThat(fn.getDo()).hasSize(1);
+    assertNotNull(fn.getDo().get(0).getTask().getCallTask().get());
+  }
+
+  @Test
+  void loopWithMaxIterationsAndExitCondition() {
+    Agents.MovieExpert expert = newMovieExpert();
+
+    AtomicInteger max = new AtomicInteger(4);
+    Predicate<Cognisphere> exit =
+        cog -> {
+          // stop when we already have at least one movie picked in state
+          var movies = cog.readState("movies", null);
+          return movies != null;
+        };
+
+    Workflow wf =
+        AgenticWorkflowBuilder.workflow("loop-ctrl")
+            .tasks(
+                d ->
+                    d.loop(
+                        "refineMovies",
+                        l ->
+                            l.maxIterations(max.get())
+                                .exitCondition(exit)
+                                .subAgents("picker", expert)))
+            .build();
+
+    TaskItem ti = wf.getDo().get(0);
+    ForTaskFunction fn = (ForTaskFunction) ti.getTask().getForTask();
+
+    assertNotNull(fn.getCollection(), "Synthetic collection should exist for maxIterations");
+    assertNotNull(fn.getWhilePredicate(), "While predicate set from exitCondition");
+    assertThat(fn.getDo()).hasSize(1);
   }
 }

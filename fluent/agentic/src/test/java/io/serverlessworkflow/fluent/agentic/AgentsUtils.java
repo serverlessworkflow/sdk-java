@@ -15,26 +15,20 @@
  */
 package io.serverlessworkflow.fluent.agentic;
 
-import java.util.UUID;
-import java.util.function.Consumer;
+import static io.serverlessworkflow.fluent.agentic.Models.BASE_MODEL;
+import static org.mockito.Mockito.spy;
 
-public interface AgentDoTaskFluent<SELF extends AgentDoTaskFluent<SELF>> {
+import dev.langchain4j.agentic.AgentServices;
 
-  SELF agent(String name, Object agent);
+public final class AgentsUtils {
 
-  default SELF agent(Object agent) {
-    return agent(UUID.randomUUID().toString(), agent);
-  }
+  private AgentsUtils() {}
 
-  SELF sequence(String name, Object... agents);
-
-  default SELF sequence(Object... agents) {
-    return sequence("seq-" + UUID.randomUUID(), agents);
-  }
-
-  SELF loop(String name, Consumer<LoopAgentsBuilder> builder);
-
-  default SELF loop(Consumer<LoopAgentsBuilder> builder) {
-    return loop("loop-" + UUID.randomUUID(), builder);
+  public static Agents.MovieExpert newMovieExpert() {
+    return spy(
+        AgentServices.agentBuilder(Agents.MovieExpert.class)
+            .outputName("movies")
+            .chatModel(BASE_MODEL)
+            .build());
   }
 }

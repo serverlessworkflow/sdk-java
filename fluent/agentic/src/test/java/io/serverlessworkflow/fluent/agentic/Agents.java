@@ -26,11 +26,11 @@ public interface Agents {
 
     @UserMessage(
         """
-            You are a great evening planner.
-            Propose a list of 3 movies matching the given mood.
-            The mood is {mood}.
-            Provide a list with the 3 items and nothing else.
-            """)
+                        You are a great evening planner.
+                        Propose a list of 3 movies matching the given mood.
+                        The mood is {mood}.
+                        Provide a list with the 3 items and nothing else.
+                        """)
     @Agent
     List<String> findMovie(@V("mood") String mood);
   }
