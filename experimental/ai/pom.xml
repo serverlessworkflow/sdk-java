@@ -13,5 +13,7 @@
     <packaging>pom</packaging>
     <modules>
         <module>impl</module>
+        <module>types</module>
+        <module>models</module>
     </modules>
 </project>

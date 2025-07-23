@@ -16,16 +16,6 @@
 
 package io.serverlessworkflow.impl.executors.ai;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.ServiceLoader;
-import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.SystemMessage;
@@ -34,6 +24,7 @@ import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.model.output.FinishReason;
 import dev.langchain4j.model.output.TokenUsage;
+import io.serverlessworkflow.ai.api.types.CallAILangChainChatModel;
 import io.serverlessworkflow.api.types.TaskBase;
 import io.serverlessworkflow.api.types.ai.CallAIChatModel;
 import io.serverlessworkflow.impl.TaskContext;
@@ -44,29 +35,49 @@ import io.serverlessworkflow.impl.WorkflowModelFactory;
 import io.serverlessworkflow.impl.executors.CallableTask;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
 import io.serverlessworkflow.impl.services.ChatModelService;
-
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.ServiceLoader;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class AIChatModelCallExecutor implements CallableTask<CallAIChatModel> {
 
   private static final Pattern VARIABLE_PATTERN = Pattern.compile("\\{\\{\\s*(.+?)\\s*\\}\\}");
 
   @Override
-  public void init(CallAIChatModel task, WorkflowApplication application, ResourceLoader loader) {
-
-  }
+  public void init(CallAIChatModel task, WorkflowApplication application, ResourceLoader loader) {}
 
   @Override
-  public CompletableFuture<WorkflowModel> apply(WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel input) {
+  public CompletableFuture<WorkflowModel> apply(
+      WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel input) {
     WorkflowModelFactory modelFactory = workflowContext.definition().application().modelFactory();
-    if (taskContext.task() instanceof CallAIChatModel callAIChatModel) {
-      return CompletableFuture.completedFuture(modelFactory.fromAny(doCall(callAIChatModel, input.asJavaObject())));
+    if (taskContext.task() instanceof CallAILangChainChatModel callAILangChainChatModel) {
+      return CompletableFuture.completedFuture(
+          modelFactory.fromAny(doCall(callAILangChainChatModel, input.asJavaObject())));
     }
-    throw new IllegalArgumentException("AIChatModelCallExecutor can only process CallAIChatModel tasks, but received: " + taskContext.task().getClass().getName());
+
+    if (taskContext.task() instanceof CallAIChatModel callAIChatModel) {
+      return CompletableFuture.completedFuture(
+          modelFactory.fromAny(doCall(callAIChatModel, input.asJavaObject())));
+    }
+    throw new IllegalArgumentException(
+        "AIChatModelCallExecutor can only process CallAIChatModel tasks, but received: "
+            + taskContext.task().getClass().getName());
   }
 
   @Override
   public boolean accept(Class<? extends TaskBase> clazz) {
     return CallAIChatModel.class.isAssignableFrom(clazz);
+  }
+
+  private Object doCall(CallAILangChainChatModel callAIChatModel, Object javaObject) {
+    ChatModel chatModel = callAIChatModel.getChatModel();
+    Class<?> chatModelRequest = callAIChatModel.getChatModelRequest();
   }
 
   private Object doCall(CallAIChatModel callAIChatModel, Object javaObject) {
@@ -114,7 +125,8 @@ public class AIChatModelCallExecutor implements CallableTask<CallAIChatModel> {
     if (chatModelService != null) {
       return chatModelService.getChatModel(callAIChatModel.getPreferences());
     }
-    throw new IllegalStateException("No LLM models found. Please ensure that you have the required dependencies in your classpath.");
+    throw new IllegalStateException(
+        "No LLM models found. Please ensure that you have the required dependencies in your classpath.");
   }
 
   private ChatModelService getAvailableModel() {
@@ -124,7 +136,8 @@ public class AIChatModelCallExecutor implements CallableTask<CallAIChatModel> {
       return service;
     }
 
-    throw new IllegalStateException("No LLM models found. Please ensure that you have the required dependencies in your classpath.");
+    throw new IllegalStateException(
+        "No LLM models found. Please ensure that you have the required dependencies in your classpath.");
   }
 
   private Map<String, Object> prepareResponse(ChatResponse response, Object javaObject) {

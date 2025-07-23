@@ -16,12 +16,11 @@
 
 package io.serverlessworkflow.api.types.ai;
 
+import io.serverlessworkflow.api.types.TaskBase;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-
-import io.serverlessworkflow.api.types.TaskBase;
 
 public class CallAIChatModel extends TaskBase {
 
@@ -29,7 +28,7 @@ public class CallAIChatModel extends TaskBase {
 
   private ChatModelRequest chatModelRequest;
 
-  private CallAIChatModel() {}
+  protected CallAIChatModel() {}
 
   public static Builder builder() {
     return new Builder();
