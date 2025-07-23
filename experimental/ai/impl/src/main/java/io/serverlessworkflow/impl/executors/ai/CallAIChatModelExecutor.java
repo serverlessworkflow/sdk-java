@@ -16,10 +16,14 @@
 
 package io.serverlessworkflow.impl.executors.ai;
 
+import dev.langchain4j.data.message.AiMessage;
 import dev.langchain4j.data.message.ChatMessage;
 import dev.langchain4j.data.message.SystemMessage;
 import dev.langchain4j.data.message.UserMessage;
 import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.chat.response.ChatResponse;
+import dev.langchain4j.model.output.FinishReason;
+import dev.langchain4j.model.output.TokenUsage;
 import io.serverlessworkflow.api.types.ai.CallAIChatModel;
 import io.serverlessworkflow.impl.services.ChatModelService;
 import java.util.ArrayList;
@@ -104,5 +108,38 @@ public class CallAIChatModelExecutor extends AbstractCallAIChatModelExecutor<Cal
 
   private void validate(CallAIChatModel callAIChatModel, Object javaObject) {
     // TODO
+  }
+
+  protected Map<String, Object> prepareResponse(ChatResponse response, Object javaObject) {
+    String id = response.id();
+    String modelName = response.modelName();
+    TokenUsage tokenUsage = response.tokenUsage();
+    FinishReason finishReason = response.finishReason();
+    AiMessage aiMessage = response.aiMessage();
+
+    Map<String, Object> responseMap = (Map<String, Object>) javaObject;
+    if (response.id() != null) {
+      responseMap.put("id", id);
+    }
+
+    if (modelName != null) {
+      responseMap.put("modelName", modelName);
+    }
+
+    if (tokenUsage != null) {
+      responseMap.put("tokenUsage.inputTokenCount", tokenUsage.inputTokenCount());
+      responseMap.put("tokenUsage.outputTokenCount", tokenUsage.outputTokenCount());
+      responseMap.put("tokenUsage.totalTokenCount", tokenUsage.totalTokenCount());
+    }
+
+    if (finishReason != null) {
+      responseMap.put("finishReason", finishReason.name());
+    }
+
+    if (aiMessage != null) {
+      responseMap.put("text", aiMessage.text());
+    }
+
+    return responseMap;
   }
 }

@@ -18,6 +18,7 @@ package io.serverlessworkflow.impl.executors.ai;
 
 import io.serverlessworkflow.ai.api.types.CallAILangChainChatModel;
 import io.serverlessworkflow.api.types.TaskBase;
+import io.serverlessworkflow.api.types.ai.AbstractCallAIChatModelTask;
 import io.serverlessworkflow.api.types.ai.CallAIChatModel;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
@@ -28,10 +29,11 @@ import io.serverlessworkflow.impl.executors.CallableTask;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
 import java.util.concurrent.CompletableFuture;
 
-public class AIChatModelCallExecutor implements CallableTask<CallAIChatModel> {
+public class AIChatModelCallExecutor implements CallableTask<AbstractCallAIChatModelTask> {
 
   @Override
-  public void init(CallAIChatModel task, WorkflowApplication application, ResourceLoader loader) {}
+  public void init(
+      AbstractCallAIChatModelTask task, WorkflowApplication application, ResourceLoader loader) {}
 
   @Override
   public CompletableFuture<WorkflowModel> apply(
@@ -54,6 +56,6 @@ public class AIChatModelCallExecutor implements CallableTask<CallAIChatModel> {
 
   @Override
   public boolean accept(Class<? extends TaskBase> clazz) {
-    return CallAIChatModel.class.isAssignableFrom(clazz);
+    return AbstractCallAIChatModelTask.class.isAssignableFrom(clazz);
   }
 }

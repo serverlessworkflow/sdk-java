@@ -17,7 +17,6 @@
 package io.serverlessworkflow.impl.executors.ai;
 
 import dev.langchain4j.model.chat.ChatModel;
-import dev.langchain4j.model.chat.response.ChatResponse;
 import dev.langchain4j.service.AiServices;
 import dev.langchain4j.service.V;
 import io.serverlessworkflow.ai.api.types.CallAILangChainChatModel;
@@ -49,8 +48,10 @@ public class CallAILangChainChatModelExecutor
       }
 
       Object response = method.invoke(aiServices, args);
-      if (response instanceof ChatResponse chatResponse) {
-        return prepareResponse(chatResponse, substitutions);
+
+      if (response instanceof String chatResponse) {
+        substitutions.put("text", chatResponse);
+        return substitutions;
       } else {
         throw new IllegalArgumentException(
             "Method " + method.getName() + " did not return a ChatResponse");
@@ -65,7 +66,7 @@ public class CallAILangChainChatModelExecutor
 
   private Method getMethod(Class<?> chatModelRequest, String methodName) {
     for (Method method : chatModelRequest.getMethods()) {
-      if (method.getName().equals("methodName")) {
+      if (method.getName().equals(methodName)) {
         return method;
       }
     }
@@ -76,20 +77,16 @@ public class CallAILangChainChatModelExecutor
   private List<String> resolvedParameters(Method method, Map<String, Object> substitutions) {
     List<String> resolvedParameters = new ArrayList<>();
     for (Parameter parameter : method.getParameters()) {
-      String paramName = resolveParameter(parameter);
-      if (substitutions.containsKey(paramName)) {
-        resolvedParameters.add(paramName);
-      } else {
-        throw new IllegalArgumentException("Missing substitution for parameter: " + paramName);
+      if (parameter.getAnnotation(V.class) != null) {
+        V v = parameter.getAnnotation(V.class);
+        String paramName = v.value();
+        if (substitutions.containsKey(paramName)) {
+          resolvedParameters.add(paramName);
+        } else {
+          throw new IllegalArgumentException("Missing substitution for parameter: " + paramName);
+        }
       }
     }
     return resolvedParameters;
-  }
-
-  private String resolveParameter(Parameter parameter) {
-    if (parameter.getAnnotation(V.class) != null) {
-      return parameter.getName();
-    }
-    return parameter.getName();
   }
 }
