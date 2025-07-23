@@ -48,17 +48,11 @@ public class CallAILangChainChatModelExecutor
       }
 
       Object response = method.invoke(aiServices, args);
-
-      if (response instanceof String chatResponse) {
-        substitutions.put("text", chatResponse);
-        return substitutions;
-      } else {
-        throw new IllegalArgumentException(
-            "Method " + method.getName() + " did not return a ChatResponse");
-      }
+      substitutions.put("result", response);
     } catch (Exception e) {
       throw new RuntimeException("Error invoking chat model method", e);
     }
+    return substitutions;
   }
 
   private void validate(

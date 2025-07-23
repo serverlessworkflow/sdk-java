@@ -137,7 +137,7 @@ public class CallAIChatModelExecutor extends AbstractCallAIChatModelExecutor<Cal
     }
 
     if (aiMessage != null) {
-      responseMap.put("text", aiMessage.text());
+      responseMap.put("result", aiMessage.text());
     }
 
     return responseMap;
