@@ -16,22 +16,6 @@
 
 package io.serverlessworkflow.api.types.ai;
 
-import io.serverlessworkflow.api.types.CallTask;
+import io.serverlessworkflow.api.types.TaskBase;
 
-public class CallTaskAIChatModel extends CallTask {
-
-  private AbstractCallAIChatModelTask callAIChatModel;
-
-  public CallTaskAIChatModel(AbstractCallAIChatModelTask callAIChatModel) {
-    this.callAIChatModel = callAIChatModel;
-  }
-
-  public AbstractCallAIChatModelTask getCallAIChatModel() {
-    return callAIChatModel;
-  }
-
-  @Override
-  public Object get() {
-    return callAIChatModel != null ? callAIChatModel : super.get();
-  }
-}
+public abstract class AbstractCallAIChatModelTask extends TaskBase {}

@@ -17,16 +17,20 @@
 package io.serverlessworkflow.ai.api.types;
 
 import dev.langchain4j.model.chat.ChatModel;
-import io.serverlessworkflow.api.types.TaskBase;
+import io.serverlessworkflow.api.types.ai.AbstractCallAIChatModelTask;
 
-public class CallAILangChainChatModel extends TaskBase {
+public class CallAILangChainChatModel extends AbstractCallAIChatModelTask {
 
   private final ChatModel chatModel;
   private final Class<?> chatModelRequest;
 
-  public CallAILangChainChatModel(ChatModel chatModel, Class<?> chatModelRequest) {
+  private final String methodName;
+
+  public CallAILangChainChatModel(
+      ChatModel chatModel, Class<?> chatModelRequest, String methodName) {
     this.chatModel = chatModel;
     this.chatModelRequest = chatModelRequest;
+    this.methodName = methodName;
   }
 
   public ChatModel getChatModel() {
@@ -35,5 +39,9 @@ public class CallAILangChainChatModel extends TaskBase {
 
   public Class<?> getChatModelRequest() {
     return chatModelRequest;
+  }
+
+  public String getMethodName() {
+    return methodName;
   }
 }

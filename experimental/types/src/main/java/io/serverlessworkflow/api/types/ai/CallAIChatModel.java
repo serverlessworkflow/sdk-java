@@ -16,13 +16,12 @@
 
 package io.serverlessworkflow.api.types.ai;
 
-import io.serverlessworkflow.api.types.TaskBase;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-public class CallAIChatModel extends TaskBase {
+public class CallAIChatModel extends AbstractCallAIChatModelTask {
 
   private ChatModelPreferences chatModelPreferences;
 
