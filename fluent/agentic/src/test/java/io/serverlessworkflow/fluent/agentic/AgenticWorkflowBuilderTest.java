@@ -16,6 +16,7 @@
 package io.serverlessworkflow.fluent.agentic;
 
 import static io.serverlessworkflow.fluent.agentic.Models.BASE_MODEL;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -24,6 +25,7 @@ import static org.mockito.Mockito.spy;
 import dev.langchain4j.agentic.AgentServices;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.api.types.func.CallJava;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 public class AgenticWorkflowBuilderTest {
@@ -45,5 +47,50 @@ public class AgenticWorkflowBuilderTest {
     assertNotNull(workflow);
     assertEquals(1, workflow.getDo().size());
     assertInstanceOf(CallJava.class, workflow.getDo().get(0).getTask().getCallTask().get());
+  }
+
+  @Test
+  void sequenceAgents() {
+    Agents.MovieExpert movieExpert = newMovieExpert();
+    Workflow wf =
+        AgenticWorkflowBuilder.workflow("seqFlow")
+            .tasks(d -> d.sequence("lineup", movieExpert, movieExpert))
+            .build();
+
+    assertThat(wf.getDo()).hasSize(2);
+    assertThat(wf.getDo().get(0).getName()).isEqualTo("lineup-0");
+    assertThat(wf.getDo().get(1).getName()).isEqualTo("lineup-1");
+    wf.getDo()
+        .forEach(
+            ti -> {
+              assertThat(ti.getTask().getCallTask()).isNotNull();
+              assertThat(ti.getTask().getCallTask().get()).isNotNull();
+            });
+  }
+
+  @Test
+  @DisplayName("Mix spec verbs with agent()")
+  void mixSpecAndAgent() {
+    Workflow wf =
+        AgenticWorkflowBuilder.workflow("mixFlow")
+            .tasks(
+                d ->
+                    d.set("init", s -> s.expr("$.mood = 'comedy'"))
+                        .agent("pickMovies", newMovieExpert())
+                        .set("done", "$.done = true"))
+            .build();
+
+    assertThat(wf.getDo()).hasSize(3);
+    assertThat(wf.getDo().get(0).getTask().getSetTask()).isNotNull();
+    assertThat(wf.getDo().get(1).getTask().getCallTask().get()).isNotNull();
+    assertThat(wf.getDo().get(2).getTask().getSetTask()).isNotNull();
+  }
+
+  private Agents.MovieExpert newMovieExpert() {
+    return spy(
+        AgentServices.agentBuilder(Agents.MovieExpert.class)
+            .outputName("movies")
+            .chatModel(BASE_MODEL)
+            .build());
   }
 }

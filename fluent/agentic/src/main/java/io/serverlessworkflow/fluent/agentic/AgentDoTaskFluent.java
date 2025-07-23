@@ -15,7 +15,19 @@
  */
 package io.serverlessworkflow.fluent.agentic;
 
+import java.util.UUID;
+
 public interface AgentDoTaskFluent<SELF extends AgentDoTaskFluent<SELF>> {
 
   SELF agent(String name, Object agent);
+
+  default SELF agent(Object agent) {
+    return agent(UUID.randomUUID().toString(), agent);
+  }
+
+  SELF sequence(String name, Object... agents);
+
+  default SELF sequence(Object... agents) {
+    return sequence("seq-" + UUID.randomUUID(), agents);
+  }
 }

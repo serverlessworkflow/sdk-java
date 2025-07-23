@@ -43,6 +43,14 @@ public class AgentTaskItemListBuilder extends BaseTaskItemListBuilder<AgentTaskI
   }
 
   @Override
+  public AgentTaskItemListBuilder sequence(String name, Object... agents) {
+    for (int i = 0; i < agents.length; i++) {
+      agent(name + "-" + i, agents[i]);
+    }
+    return self();
+  }
+
+  @Override
   public AgentTaskItemListBuilder self() {
     return this;
   }

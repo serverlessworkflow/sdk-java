@@ -27,8 +27,16 @@ public interface DelegatingAgentDoTaskFluent<SELF extends DelegatingAgentDoTaskF
   }
 
   @SuppressWarnings("unchecked")
+  @Override
   default SELF agent(String name, Object agent) {
     d().agent(name, agent);
+    return (SELF) this;
+  }
+
+  @SuppressWarnings("unchecked")
+  @Override
+  default SELF sequence(String name, Object... agents) {
+    d().sequence(name, agents);
     return (SELF) this;
   }
 }
