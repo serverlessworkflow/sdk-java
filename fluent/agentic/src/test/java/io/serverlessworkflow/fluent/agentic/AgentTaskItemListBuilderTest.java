@@ -61,12 +61,12 @@ class AgentTaskItemListBuilderTest {
     assertThat(items.get(1).getName()).isEqualTo("seq-1");
     assertThat(items.get(2).getName()).isEqualTo("seq-2");
 
-    // All must be call tasks
+    // All must be call branche
     items.forEach(it -> assertThat(it.getTask().getCallTask().get()).isNotNull());
   }
 
   @Test
-  @DisplayName("loop(name, builder) produces a ForTaskFunction with inner call tasks")
+  @DisplayName("loop(name, builder) produces a ForTaskFunction with inner call branche")
   void testLoop() {
     AgentTaskItemListBuilder b = new AgentTaskItemListBuilder();
     Agents.MovieExpert scorer = AgentsUtils.newMovieExpert();

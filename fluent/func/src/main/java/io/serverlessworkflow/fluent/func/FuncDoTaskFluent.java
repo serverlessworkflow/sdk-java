@@ -30,4 +30,8 @@ public interface FuncDoTaskFluent<SELF extends FuncDoTaskFluent<SELF>> {
   SELF switchFn(String name, Consumer<FuncSwitchTaskBuilder> cfg);
 
   SELF switchFn(Consumer<FuncSwitchTaskBuilder> cfg);
+
+  SELF forkFn(String name, Consumer<FuncForkTaskBuilder> cfg);
+
+  SELF forkFn(Consumer<FuncForkTaskBuilder> cfg);
 }

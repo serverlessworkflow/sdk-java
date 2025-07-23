@@ -15,10 +15,12 @@
  */
 package io.serverlessworkflow.fluent.agentic;
 
+import dev.langchain4j.agentic.internal.AgentExecutor;
 import io.serverlessworkflow.api.types.Task;
 import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.fluent.func.FuncTaskItemListBuilder;
 import io.serverlessworkflow.fluent.spec.BaseTaskItemListBuilder;
+import java.util.List;
 import java.util.function.Consumer;
 
 public class AgentTaskItemListBuilder extends BaseTaskItemListBuilder<AgentTaskItemListBuilder>
@@ -42,7 +44,7 @@ public class AgentTaskItemListBuilder extends BaseTaskItemListBuilder<AgentTaskI
         .forEach(
             exec ->
                 this.funcDelegate.callFn(name, fn -> fn.function(AgentAdapters.toFunction(exec))));
-    return this;
+    return self();
   }
 
   @Override
@@ -58,6 +60,20 @@ public class AgentTaskItemListBuilder extends BaseTaskItemListBuilder<AgentTaskI
     final LoopAgentsBuilder builder = new LoopAgentsBuilder();
     consumer.accept(builder);
     this.addTaskItem(new TaskItem(name, new Task().withForTask(builder.build())));
+    return self();
+  }
+
+  @Override
+  public AgentTaskItemListBuilder parallel(String name, Object... agents) {
+    this.funcDelegate.forkFn(
+        name,
+        fork -> {
+          List<AgentExecutor> execs = AgentAdapters.toExecutors(agents);
+          for (int i = 0; i < execs.size(); i++) {
+            AgentExecutor ex = execs.get(i);
+            fork.branch("branch-" + i + "-" + name, AgentAdapters.toFunction(ex));
+          }
+        });
     return self();
   }
 

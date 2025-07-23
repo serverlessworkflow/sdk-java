@@ -71,4 +71,16 @@ public interface DelegatingFuncDoTaskFluent<SELF extends DelegatingFuncDoTaskFlu
     d().switchFn(cfg);
     return self();
   }
+
+  @Override
+  default SELF forkFn(String name, Consumer<FuncForkTaskBuilder> cfg) {
+    d().forkFn(name, cfg);
+    return self();
+  }
+
+  @Override
+  default SELF forkFn(Consumer<FuncForkTaskBuilder> cfg) {
+    d().forkFn(cfg);
+    return self();
+  }
 }

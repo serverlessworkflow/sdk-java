@@ -37,4 +37,10 @@ public interface AgentDoTaskFluent<SELF extends AgentDoTaskFluent<SELF>> {
   default SELF loop(Consumer<LoopAgentsBuilder> builder) {
     return loop("loop-" + UUID.randomUUID(), builder);
   }
+
+  SELF parallel(String name, Object... agents);
+
+  default SELF parallel(Object... agents) {
+    return parallel("par-" + UUID.randomUUID(), agents);
+  }
 }

@@ -165,7 +165,7 @@ class JavaWorkflowBuilderTest {
     ForTaskFunction fn = (ForTaskFunction) forTaskFnHolder.getForTask();
     assertNotNull(fn);
 
-    // Inspect nested tasks inside the function loop
+    // Inspect nested branche inside the function loop
     List<TaskItem> nested = fn.getDo();
     assertEquals(1, nested.size());
     TaskBase nestedTask = nested.get(0).getTask().getSetTask();
@@ -219,7 +219,7 @@ class JavaWorkflowBuilderTest {
   }
 
   @Test
-  @DisplayName("switchCaseFn (Java variant) coexists with spec tasks")
+  @DisplayName("switchCaseFn (Java variant) coexists with spec branche")
   void testSwitchCaseJava() {
     Workflow wf =
         FuncWorkflowBuilder.workflow("switchJava")

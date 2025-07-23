@@ -82,4 +82,18 @@ public class FuncTaskItemListBuilder extends BaseTaskItemListBuilder<FuncTaskIte
   public FuncTaskItemListBuilder switchFn(Consumer<FuncSwitchTaskBuilder> consumer) {
     return this.switchFn(UUID.randomUUID().toString(), consumer);
   }
+
+  @Override
+  public FuncTaskItemListBuilder forkFn(Consumer<FuncForkTaskBuilder> cfg) {
+    return this.forkFn(UUID.randomUUID().toString(), cfg);
+  }
+
+  @Override
+  public FuncTaskItemListBuilder forkFn(String name, Consumer<FuncForkTaskBuilder> cfg) {
+    this.requireNameAndConfig(name, cfg);
+    final FuncForkTaskBuilder forkTaskJavaBuilder = new FuncForkTaskBuilder();
+    cfg.accept(forkTaskJavaBuilder);
+    return this.addTaskItem(
+        new TaskItem(name, new Task().withForkTask(forkTaskJavaBuilder.build())));
+  }
 }

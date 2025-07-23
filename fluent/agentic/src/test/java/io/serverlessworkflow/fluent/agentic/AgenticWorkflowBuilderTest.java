@@ -25,6 +25,7 @@ import static org.mockito.Mockito.spy;
 
 import dev.langchain4j.agentic.AgentServices;
 import dev.langchain4j.agentic.Cognisphere;
+import io.serverlessworkflow.api.types.ForkTask;
 import io.serverlessworkflow.api.types.Task;
 import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.api.types.Workflow;
@@ -32,6 +33,7 @@ import io.serverlessworkflow.api.types.func.CallJava;
 import io.serverlessworkflow.api.types.func.ForTaskFunction;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 public class AgenticWorkflowBuilderTest {
@@ -141,5 +143,33 @@ public class AgenticWorkflowBuilderTest {
     assertNotNull(fn.getCollection(), "Synthetic collection should exist for maxIterations");
     assertNotNull(fn.getWhilePredicate(), "While predicate set from exitCondition");
     assertThat(fn.getDo()).hasSize(1);
+  }
+
+  @Test
+  @DisplayName("parallel() creates one ForkTask with N callFn branches")
+  void parallelAgents() {
+    Agents.MovieExpert a1 = AgentsUtils.newMovieExpert();
+    Agents.MovieExpert a2 = AgentsUtils.newMovieExpert();
+    Agents.MovieExpert a3 = AgentsUtils.newMovieExpert();
+
+    Workflow wf =
+        AgenticWorkflowBuilder.workflow("parallelFlow")
+            .tasks(d -> d.parallel("p", a1, a2, a3))
+            .build();
+
+    assertThat(wf.getDo()).hasSize(1);
+    TaskItem top = wf.getDo().get(0);
+    Task task = top.getTask();
+    assertThat(task.getForkTask()).isInstanceOf(ForkTask.class);
+
+    ForkTask fork = task.getForkTask();
+    assertThat(fork.getFork().getBranches()).hasSize(3);
+
+    fork.getFork()
+        .getBranches()
+        .forEach(
+            branch -> {
+              assertThat(branch.getTask().getCallTask().get()).isInstanceOf(CallJava.class);
+            });
   }
 }

@@ -42,8 +42,16 @@ public interface DelegatingAgentDoTaskFluent<SELF extends DelegatingAgentDoTaskF
   }
 
   @SuppressWarnings("unchecked")
+  @Override
   default SELF loop(String name, Consumer<LoopAgentsBuilder> consumer) {
     d().loop(name, consumer);
+    return (SELF) this;
+  }
+
+  @SuppressWarnings("unchecked")
+  @Override
+  default SELF parallel(String name, Object... agents) {
+    d().parallel(name, agents);
     return (SELF) this;
   }
 }
