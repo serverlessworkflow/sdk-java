@@ -15,19 +15,20 @@
  */
 package io.serverlessworkflow.fluent.agentic;
 
-public interface DelegatingAgentDoTaskFluent<SELF extends DelegatingAgentDoTaskFluent<SELF>>
-    extends AgentDoTaskFluent<SELF> {
+import io.serverlessworkflow.fluent.func.DelegatingFuncDoTaskFluent;
+import io.serverlessworkflow.fluent.spec.HasDelegate;
 
-  /** Return the underlying functional ops delegate. */
-  AgentDoTaskFluent<?> agentInternalDelegate();
+public interface DelegatingAgentDoTaskFluent<SELF extends DelegatingAgentDoTaskFluent<SELF>>
+    extends AgentDoTaskFluent<SELF>, DelegatingFuncDoTaskFluent<SELF>, HasDelegate {
 
   @SuppressWarnings("unchecked")
-  default SELF self() {
-    return (SELF) this;
+  private AgentDoTaskFluent<SELF> d() {
+    return (AgentDoTaskFluent<SELF>) this.delegate();
   }
 
+  @SuppressWarnings("unchecked")
   default SELF agent(String name, Object agent) {
-    agentInternalDelegate().agent(name, agent);
+    d().agent(name, agent);
     return (SELF) this;
   }
 }

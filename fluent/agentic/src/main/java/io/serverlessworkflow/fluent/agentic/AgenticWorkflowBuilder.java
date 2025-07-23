@@ -15,64 +15,37 @@
  */
 package io.serverlessworkflow.fluent.agentic;
 
-import io.serverlessworkflow.api.types.Workflow;
-import io.serverlessworkflow.fluent.func.FuncWorkflowBuilder;
-import io.serverlessworkflow.fluent.spec.DocumentBuilder;
-import io.serverlessworkflow.fluent.spec.InputBuilder;
-import io.serverlessworkflow.fluent.spec.OutputBuilder;
-import io.serverlessworkflow.fluent.spec.UseBuilder;
-import java.util.function.Consumer;
+import static java.lang.constant.ConstantDescs.DEFAULT_NAME;
 
-public final class AgenticWorkflowBuilder {
+import io.serverlessworkflow.fluent.spec.BaseWorkflowBuilder;
 
-  private final FuncWorkflowBuilder delegate;
+public final class AgenticWorkflowBuilder
+    extends BaseWorkflowBuilder<
+        AgenticWorkflowBuilder, AgentDoTaskBuilder, AgentTaskItemListBuilder> {
 
-  AgenticWorkflowBuilder(final FuncWorkflowBuilder delegate) {
-    this.delegate = delegate;
+  AgenticWorkflowBuilder(final String name, final String namespace, final String version) {
+    super(name, namespace, version);
   }
 
   public static AgenticWorkflowBuilder workflow() {
-    return new AgenticWorkflowBuilder(FuncWorkflowBuilder.workflow());
+    return new AgenticWorkflowBuilder(DEFAULT_NAME, DEFAULT_NAMESPACE, DEFAULT_VERSION);
   }
 
   public static AgenticWorkflowBuilder workflow(String name) {
-    return new AgenticWorkflowBuilder(FuncWorkflowBuilder.workflow(name));
+    return new AgenticWorkflowBuilder(name, DEFAULT_NAMESPACE, DEFAULT_VERSION);
   }
 
   public static AgenticWorkflowBuilder workflow(String name, String ns) {
-    return new AgenticWorkflowBuilder(FuncWorkflowBuilder.workflow(name, ns));
+    return new AgenticWorkflowBuilder(name, ns, DEFAULT_VERSION);
   }
 
-  public AgenticWorkflowBuilder document(Consumer<DocumentBuilder> c) {
-    delegate.document(c);
+  @Override
+  protected AgentDoTaskBuilder newDo() {
+    return new AgentDoTaskBuilder();
+  }
+
+  @Override
+  protected AgenticWorkflowBuilder self() {
     return this;
-  }
-
-  public AgenticWorkflowBuilder input(Consumer<InputBuilder> c) {
-    delegate.input(c);
-    return this;
-  }
-
-  public AgenticWorkflowBuilder output(Consumer<OutputBuilder> c) {
-    delegate.output(c);
-    return this;
-  }
-
-  public AgenticWorkflowBuilder use(Consumer<UseBuilder> c) {
-    delegate.use(c);
-    return this;
-  }
-
-  public AgenticWorkflowBuilder tasks(Consumer<AgentDoTaskBuilder> c) {
-    delegate.tasks(
-        funcDo -> {
-          AgentDoTaskBuilder agentDoTaskBuilder = AgentDoTaskBuilder.wrap(funcDo);
-          c.accept(agentDoTaskBuilder);
-        });
-    return this;
-  }
-
-  public Workflow build() {
-    return delegate.build();
   }
 }

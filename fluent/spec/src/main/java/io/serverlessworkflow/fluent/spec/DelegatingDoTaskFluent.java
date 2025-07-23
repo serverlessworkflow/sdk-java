@@ -25,136 +25,139 @@ import java.util.function.Consumer;
  */
 public interface DelegatingDoTaskFluent<
         SELF extends DelegatingDoTaskFluent<SELF, LIST>, LIST extends BaseTaskItemListBuilder<LIST>>
-    extends DoTaskFluent<SELF, LIST> {
+    extends DoTaskFluent<SELF, LIST>, HasDelegate {
 
-  /** The underlying DoTaskFluent to forward to. */
-  DoTaskFluent<?, LIST> internalDelegate();
-
-  /** Convenience cast; implementors just return (SELF) this in practice. */
   @SuppressWarnings("unchecked")
   default SELF self() {
     return (SELF) this;
+  }
+
+  LIST list();
+
+  @SuppressWarnings("unchecked")
+  private DoTaskFluent<SELF, LIST> d() {
+    return (DoTaskFluent<SELF, LIST>) this.delegate();
   }
 
   /* ---------- Forwarders ---------- */
 
   @Override
   default SELF set(String name, Consumer<SetTaskBuilder> cfg) {
-    internalDelegate().set(name, cfg);
+    d().set(name, cfg);
     return self();
   }
 
   @Override
   default SELF set(Consumer<SetTaskBuilder> cfg) {
-    internalDelegate().set(cfg);
+    d().set(cfg);
     return self();
   }
 
   @Override
   default SELF set(String name, String expr) {
-    internalDelegate().set(name, expr);
+    d().set(name, expr);
     return self();
   }
 
   @Override
   default SELF set(String expr) {
-    internalDelegate().set(expr);
+    d().set(expr);
     return self();
   }
 
   @Override
   default SELF forEach(String name, Consumer<ForTaskBuilder<LIST>> cfg) {
-    internalDelegate().forEach(name, cfg);
+    d().forEach(name, cfg);
     return self();
   }
 
   @Override
   default SELF forEach(Consumer<ForTaskBuilder<LIST>> cfg) {
-    internalDelegate().forEach(cfg);
+    d().forEach(cfg);
     return self();
   }
 
   @Override
   default SELF switchCase(String name, Consumer<SwitchTaskBuilder> cfg) {
-    internalDelegate().switchCase(name, cfg);
+    d().switchCase(name, cfg);
     return self();
   }
 
   @Override
   default SELF switchCase(Consumer<SwitchTaskBuilder> cfg) {
-    internalDelegate().switchCase(cfg);
+    d().switchCase(cfg);
     return self();
   }
 
   @Override
   default SELF raise(String name, Consumer<RaiseTaskBuilder> cfg) {
-    internalDelegate().raise(name, cfg);
+    d().raise(name, cfg);
     return self();
   }
 
   @Override
   default SELF raise(Consumer<RaiseTaskBuilder> cfg) {
-    internalDelegate().raise(cfg);
+    d().raise(cfg);
     return self();
   }
 
   @Override
   default SELF fork(String name, Consumer<ForkTaskBuilder> cfg) {
-    internalDelegate().fork(name, cfg);
+    d().fork(name, cfg);
     return self();
   }
 
   @Override
   default SELF fork(Consumer<ForkTaskBuilder> cfg) {
-    internalDelegate().fork(cfg);
+    d().fork(cfg);
     return self();
   }
 
   @Override
   default SELF listen(String name, Consumer<ListenTaskBuilder> cfg) {
-    internalDelegate().listen(name, cfg);
+    d().listen(name, cfg);
     return self();
   }
 
   @Override
   default SELF listen(Consumer<ListenTaskBuilder> cfg) {
-    internalDelegate().listen(cfg);
+    d().listen(cfg);
     return self();
   }
 
   @Override
   default SELF emit(String name, Consumer<EmitTaskBuilder> cfg) {
-    internalDelegate().emit(name, cfg);
+    d().emit(name, cfg);
     return self();
   }
 
   @Override
   default SELF emit(Consumer<EmitTaskBuilder> cfg) {
-    internalDelegate().emit(cfg);
+    d().emit(cfg);
     return self();
   }
 
   @Override
   default SELF tryCatch(String name, Consumer<TryTaskBuilder<LIST>> cfg) {
-    internalDelegate().tryCatch(name, cfg);
+    d().tryCatch(name, cfg);
     return self();
   }
 
   @Override
   default SELF tryCatch(Consumer<TryTaskBuilder<LIST>> cfg) {
-    internalDelegate().tryCatch(cfg);
+    d().tryCatch(cfg);
     return self();
   }
 
   @Override
   default SELF callHTTP(String name, Consumer<CallHTTPTaskBuilder> cfg) {
-    internalDelegate().callHTTP(name, cfg);
+    d().callHTTP(name, cfg);
     return self();
   }
 
   @Override
   default SELF callHTTP(Consumer<CallHTTPTaskBuilder> cfg) {
-    internalDelegate().callHTTP(cfg);
+    d().callHTTP(cfg);
     return self();
   }
 }

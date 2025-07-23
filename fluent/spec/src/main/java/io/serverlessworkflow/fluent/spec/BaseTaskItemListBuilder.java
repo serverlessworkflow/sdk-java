@@ -44,17 +44,17 @@ public abstract class BaseTaskItemListBuilder<SELF extends BaseTaskItemListBuild
     this.list = new ArrayList<>();
   }
 
-  protected BaseTaskItemListBuilder(List<TaskItem> list) {
+  public BaseTaskItemListBuilder(final List<TaskItem> list) {
     this.list = list;
-  }
-
-  public final List<TaskItem> getInternalList() {
-    return this.list;
   }
 
   protected abstract SELF self();
 
   protected abstract SELF newItemListBuilder();
+
+  protected final List<TaskItem> mutableList() {
+    return this.list;
+  }
 
   protected final SELF addTaskItem(TaskItem taskItem) {
     Objects.requireNonNull(taskItem, "taskItem must not be null");
@@ -62,7 +62,7 @@ public abstract class BaseTaskItemListBuilder<SELF extends BaseTaskItemListBuild
     return self();
   }
 
-  protected void requireNameAndConfig(String name, Consumer<?> cfg) {
+  protected final void requireNameAndConfig(String name, Consumer<?> cfg) {
     Objects.requireNonNull(name, "Task name must not be null");
     Objects.requireNonNull(cfg, "Configurer must not be null");
   }

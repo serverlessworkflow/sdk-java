@@ -21,21 +21,12 @@ public class FuncDoTaskBuilder extends BaseDoTaskBuilder<FuncDoTaskBuilder, Func
     implements FuncTransformations<FuncDoTaskBuilder>,
         DelegatingFuncDoTaskFluent<FuncDoTaskBuilder> {
 
-  protected FuncDoTaskBuilder(FuncTaskItemListBuilder listBuilder) {
-    super(listBuilder);
-  }
-
-  FuncDoTaskBuilder() {
+  public FuncDoTaskBuilder() {
     super(new FuncTaskItemListBuilder());
   }
 
   @Override
   public FuncDoTaskBuilder self() {
     return this;
-  }
-
-  @Override
-  public FuncDoTaskFluent<FuncTaskItemListBuilder> funcInternalDelegate() {
-    return internalDelegate();
   }
 }

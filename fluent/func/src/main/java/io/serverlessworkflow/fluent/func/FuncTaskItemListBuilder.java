@@ -25,11 +25,11 @@ import java.util.function.Consumer;
 public class FuncTaskItemListBuilder extends BaseTaskItemListBuilder<FuncTaskItemListBuilder>
     implements FuncDoTaskFluent<FuncTaskItemListBuilder> {
 
-  protected FuncTaskItemListBuilder() {
+  public FuncTaskItemListBuilder() {
     super();
   }
 
-  protected FuncTaskItemListBuilder(final List<TaskItem> list) {
+  public FuncTaskItemListBuilder(final List<TaskItem> list) {
     super(list);
   }
 

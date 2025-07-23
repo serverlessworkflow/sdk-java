@@ -13,20 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.fluent.agentic;
+package io.serverlessworkflow.fluent.spec;
 
-import io.serverlessworkflow.fluent.spec.BaseDoTaskBuilder;
+public interface HasDelegate {
 
-public class AgentDoTaskBuilder
-    extends BaseDoTaskBuilder<AgentDoTaskBuilder, AgentTaskItemListBuilder>
-    implements DelegatingAgentDoTaskFluent<AgentDoTaskBuilder> {
-
-  AgentDoTaskBuilder() {
-    super(new AgentTaskItemListBuilder());
-  }
-
-  @Override
-  public AgentDoTaskBuilder self() {
-    return this;
-  }
+  Object delegate();
 }

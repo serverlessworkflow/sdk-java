@@ -31,7 +31,11 @@ public abstract class BaseDoTaskBuilder<
 
   @SuppressWarnings("unchecked")
   @Override
-  public LIST internalDelegate() {
+  public LIST delegate() {
+    return (LIST) itemsListBuilder;
+  }
+
+  public LIST list() {
     return (LIST) itemsListBuilder;
   }
 

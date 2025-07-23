@@ -15,6 +15,7 @@
  */
 package io.serverlessworkflow.fluent.func;
 
+import io.serverlessworkflow.fluent.spec.HasDelegate;
 import java.util.function.Consumer;
 
 /**
@@ -23,49 +24,51 @@ import java.util.function.Consumer;
  * @param <SELF> concrete builder type
  */
 public interface DelegatingFuncDoTaskFluent<SELF extends DelegatingFuncDoTaskFluent<SELF>>
-    extends FuncDoTaskFluent<SELF> {
-
-  /** Return the underlying functional ops delegate. */
-  FuncDoTaskFluent<?> funcInternalDelegate();
+    extends FuncDoTaskFluent<SELF>, HasDelegate {
 
   @SuppressWarnings("unchecked")
   default SELF self() {
     return (SELF) this;
   }
 
+  @SuppressWarnings("unchecked")
+  private FuncDoTaskFluent<SELF> d() {
+    return (FuncDoTaskFluent<SELF>) this.delegate();
+  }
+
   @Override
   default SELF callFn(String name, Consumer<FuncCallTaskBuilder> cfg) {
-    funcInternalDelegate().callFn(name, cfg);
+    d().callFn(name, cfg);
     return self();
   }
 
   @Override
   default SELF callFn(Consumer<FuncCallTaskBuilder> cfg) {
-    funcInternalDelegate().callFn(cfg);
+    d().callFn(cfg);
     return self();
   }
 
   @Override
   default SELF forFn(String name, Consumer<FuncForTaskBuilder> cfg) {
-    funcInternalDelegate().forFn(name, cfg);
+    d().forFn(name, cfg);
     return self();
   }
 
   @Override
   default SELF forFn(Consumer<FuncForTaskBuilder> cfg) {
-    funcInternalDelegate().forFn(cfg);
+    d().forFn(cfg);
     return self();
   }
 
   @Override
   default SELF switchFn(String name, Consumer<FuncSwitchTaskBuilder> cfg) {
-    funcInternalDelegate().switchFn(name, cfg);
+    d().switchFn(name, cfg);
     return self();
   }
 
   @Override
   default SELF switchFn(Consumer<FuncSwitchTaskBuilder> cfg) {
-    funcInternalDelegate().switchFn(cfg);
+    d().switchFn(cfg);
     return self();
   }
 }

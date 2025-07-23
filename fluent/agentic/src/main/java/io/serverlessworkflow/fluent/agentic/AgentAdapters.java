@@ -31,7 +31,7 @@ public final class AgentAdapters {
     return agentsToExecutors(Stream.of(agents).map(AgentInstance.class::cast).toList());
   }
 
-  public static Function<Cognisphere, Object> toFn(AgentExecutor exec) {
+  public static Function<Cognisphere, Object> toFunction(AgentExecutor exec) {
     return exec::invoke;
   }
 }

@@ -16,6 +16,7 @@
 package io.serverlessworkflow.fluent.agentic;
 
 import static io.serverlessworkflow.fluent.agentic.Models.BASE_MODEL;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.spy;
@@ -42,6 +43,7 @@ public class AgenticWorkflowBuilderTest {
             .build();
 
     assertNotNull(workflow);
+    assertEquals(1, workflow.getDo().size());
     assertInstanceOf(CallJava.class, workflow.getDo().get(0).getTask().getCallTask().get());
   }
 }
