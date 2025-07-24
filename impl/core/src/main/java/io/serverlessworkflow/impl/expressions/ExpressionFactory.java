@@ -15,8 +15,10 @@
  */
 package io.serverlessworkflow.impl.expressions;
 
+import io.serverlessworkflow.api.types.TaskBase;
 import io.serverlessworkflow.impl.WorkflowFilter;
 import io.serverlessworkflow.impl.WorkflowModelFactory;
+import java.util.Optional;
 
 public interface ExpressionFactory {
   /**
@@ -29,4 +31,8 @@ public interface ExpressionFactory {
   WorkflowFilter buildFilter(String expr, Object value);
 
   WorkflowModelFactory modelFactory();
+
+  default Optional<WorkflowFilter> buildIfFilter(TaskBase task) {
+    return task.getIf() != null ? Optional.of(buildFilter(task.getIf(), null)) : Optional.empty();
+  }
 }

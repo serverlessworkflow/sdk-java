@@ -25,6 +25,7 @@ import io.serverlessworkflow.api.types.SwitchItem;
 import io.serverlessworkflow.api.types.SwitchTask;
 import io.serverlessworkflow.api.types.Task;
 import io.serverlessworkflow.api.types.TaskItem;
+import io.serverlessworkflow.api.types.TaskMetadata;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.api.types.func.CallJava;
 import io.serverlessworkflow.api.types.func.CallTaskJava;
@@ -32,9 +33,11 @@ import io.serverlessworkflow.api.types.func.ForTaskFunction;
 import io.serverlessworkflow.api.types.func.SwitchCaseFunction;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowDefinition;
+import io.serverlessworkflow.impl.expressions.func.JavaExpressionFactory;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Predicate;
 import org.junit.jupiter.api.Test;
 
 class CallTest {
@@ -138,6 +141,34 @@ class CallTest {
       assertThat(definition.instance(3).start().get().asNumber().orElseThrow()).isEqualTo(3);
       assertThat(definition.instance(4).start().get().asNumber().orElseThrow()).isEqualTo(0);
     }
+  }
+
+  @Test
+  void testIf() throws InterruptedException, ExecutionException {
+    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
+      Workflow workflow =
+          new Workflow()
+              .withDocument(
+                  new Document().withNamespace("test").withName("testIf").withVersion("1.0"))
+              .withDo(
+                  List.of(
+                      new TaskItem(
+                          "java",
+                          new Task()
+                              .withCallTask(
+                                  new CallTaskJava(
+                                      withPredicate(
+                                          CallJava.function(CallTest::zero), CallTest::isOdd))))));
+      WorkflowDefinition definition = app.workflowDefinition(workflow);
+      assertThat(definition.instance(3).start().get().asNumber().orElseThrow()).isEqualTo(0);
+      assertThat(definition.instance(4).start().get().asNumber().orElseThrow()).isEqualTo(4);
+    }
+  }
+
+  private <T> CallJava withPredicate(CallJava call, Predicate<T> pred) {
+    return (CallJava)
+        call.withMetadata(
+            new TaskMetadata().withAdditionalProperty(JavaExpressionFactory.IF_PREDICATE, pred));
   }
 
   public static boolean isEven(Object model, Integer number) {
