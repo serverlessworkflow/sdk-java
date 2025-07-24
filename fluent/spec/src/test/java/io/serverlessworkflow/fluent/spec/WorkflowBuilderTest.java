@@ -128,7 +128,7 @@ public class WorkflowBuilderTest {
                 d ->
                     d.set("init", s -> s.expr("$.init = true"))
                         .forEach("items", f -> f.each("item").in("$.list"))
-                        .switchC(
+                        .switchCase(
                             "choice",
                             sw -> {
                               // no-op configuration
@@ -258,7 +258,7 @@ public class WorkflowBuilderTest {
         WorkflowBuilder.workflow("flowTry")
             .tasks(
                 d ->
-                    d.tryC(
+                    d.tryCatch(
                         "tryBlock",
                         t ->
                             t.tryHandler(tb -> tb.set("init", s -> s.expr("$.start = true")))
@@ -306,7 +306,7 @@ public class WorkflowBuilderTest {
         WorkflowBuilder.workflow("flowCatch")
             .tasks(
                 d ->
-                    d.tryC(
+                    d.tryCatch(
                         "tryBlock",
                         t ->
                             t.tryHandler(tb -> tb.set("foo", s -> s.expr("$.foo = 'bar'")))

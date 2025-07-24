@@ -27,7 +27,6 @@ import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.api.types.func.*;
 import io.serverlessworkflow.fluent.spec.BaseWorkflowBuilder;
-// if you reuse anything
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -166,7 +165,7 @@ class JavaWorkflowBuilderTest {
     ForTaskFunction fn = (ForTaskFunction) forTaskFnHolder.getForTask();
     assertNotNull(fn);
 
-    // Inspect nested tasks inside the function loop
+    // Inspect nested branche inside the function loop
     List<TaskItem> nested = fn.getDo();
     assertEquals(1, nested.size());
     TaskBase nestedTask = nested.get(0).getTask().getSetTask();
@@ -194,7 +193,7 @@ class JavaWorkflowBuilderTest {
   }
 
   @Test
-  @DisplayName("callJava task added and retains name + CallTask union")
+  @DisplayName("callFn task added and retains name + CallTask union")
   void testCallJavaTask() {
     Workflow wf =
         FuncWorkflowBuilder.workflow("callJavaFlow")
@@ -214,20 +213,20 @@ class JavaWorkflowBuilderTest {
 
     assertEquals("invokeHandler", ti.getName());
     Task task = ti.getTask();
-    assertNotNull(task.getCallTask(), "CallTask should be present for callJava");
+    assertNotNull(task.getCallTask(), "CallTask should be present for callFn");
     // Additional assertions if FuncCallTaskBuilder populates fields
     // e.g., assertEquals("com.acme.Handler", task.getCallTask().getCallJava().getClassName());
   }
 
   @Test
-  @DisplayName("switchCaseFn (Java variant) coexists with spec tasks")
+  @DisplayName("switchCaseFn (Java variant) coexists with spec branche")
   void testSwitchCaseJava() {
     Workflow wf =
         FuncWorkflowBuilder.workflow("switchJava")
             .tasks(
                 d ->
                     d.set("prepare", s -> s.expr("$.ready = true"))
-                        .switchC(
+                        .switchCase(
                             sw -> {
                               // configure Java switch builder (cases / predicates)
                             }))
@@ -244,7 +243,7 @@ class JavaWorkflowBuilderTest {
   }
 
   @Test
-  @DisplayName("Combined: spec set + java forE + callJava inside nested do")
+  @DisplayName("Combined: spec set + java forE + callFn inside nested do")
   void testCompositeScenario() {
     Workflow wf =
         FuncWorkflowBuilder.workflow("composite")
@@ -257,7 +256,7 @@ class JavaWorkflowBuilderTest {
                                     .tasks(
                                         inner ->
                                             inner
-                                                .callJava(
+                                                .callFn(
                                                     cj -> {
                                                       // customizing Java call
                                                     })

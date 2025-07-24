@@ -16,47 +16,17 @@
 package io.serverlessworkflow.fluent.func;
 
 import io.serverlessworkflow.fluent.spec.BaseDoTaskBuilder;
-import java.util.function.Consumer;
 
 public class FuncDoTaskBuilder extends BaseDoTaskBuilder<FuncDoTaskBuilder, FuncTaskItemListBuilder>
-    implements FuncTransformations<FuncDoTaskBuilder> {
+    implements FuncTransformations<FuncDoTaskBuilder>,
+        DelegatingFuncDoTaskFluent<FuncDoTaskBuilder> {
 
-  FuncDoTaskBuilder() {
+  public FuncDoTaskBuilder() {
     super(new FuncTaskItemListBuilder());
   }
 
   @Override
-  protected FuncDoTaskBuilder self() {
-    return this;
-  }
-
-  public FuncDoTaskBuilder callFn(String name, Consumer<FuncCallTaskBuilder> consumer) {
-    this.innerListBuilder().callJava(name, consumer);
-    return this;
-  }
-
-  public FuncDoTaskBuilder callFn(Consumer<FuncCallTaskBuilder> consumer) {
-    this.innerListBuilder().callJava(consumer);
-    return this;
-  }
-
-  public FuncDoTaskBuilder forFn(String name, Consumer<FuncForTaskBuilder> consumer) {
-    this.innerListBuilder().forFn(name, consumer);
-    return this;
-  }
-
-  public FuncDoTaskBuilder forFn(Consumer<FuncForTaskBuilder> consumer) {
-    this.innerListBuilder().forFn(consumer);
-    return this;
-  }
-
-  public FuncDoTaskBuilder switchFn(String name, Consumer<FuncSwitchTaskBuilder> consumer) {
-    this.innerListBuilder().switchFn(name, consumer);
-    return this;
-  }
-
-  public FuncDoTaskBuilder switchFn(Consumer<FuncSwitchTaskBuilder> consumer) {
-    this.innerListBuilder().switchFn(consumer);
+  public FuncDoTaskBuilder self() {
     return this;
   }
 }

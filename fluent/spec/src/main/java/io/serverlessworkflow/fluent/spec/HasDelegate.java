@@ -15,14 +15,7 @@
  */
 package io.serverlessworkflow.fluent.spec;
 
-public class DoTaskBuilder extends BaseDoTaskBuilder<DoTaskBuilder, TaskItemListBuilder> {
+public interface HasDelegate {
 
-  DoTaskBuilder() {
-    super(new TaskItemListBuilder());
-  }
-
-  @Override
-  public DoTaskBuilder self() {
-    return this;
-  }
+  Object delegate();
 }

@@ -35,12 +35,18 @@
                 <artifactId>serverlessworkflow-fluent-spec</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>io.serverlessworkflow</groupId>
+                <artifactId>serverlessworkflow-fluent-func</artifactId>
+                <version>${project.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
     <modules>
         <module>spec</module>
         <module>func</module>
+        <module>agentic</module>
     </modules>
 
 </project>

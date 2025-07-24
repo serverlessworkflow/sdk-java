@@ -13,16 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.fluent.spec;
+package io.serverlessworkflow.fluent.agentic;
 
-public class DoTaskBuilder extends BaseDoTaskBuilder<DoTaskBuilder, TaskItemListBuilder> {
+import static io.serverlessworkflow.fluent.agentic.Models.BASE_MODEL;
+import static org.mockito.Mockito.spy;
 
-  DoTaskBuilder() {
-    super(new TaskItemListBuilder());
-  }
+import dev.langchain4j.agentic.AgentServices;
 
-  @Override
-  public DoTaskBuilder self() {
-    return this;
+public final class AgentsUtils {
+
+  private AgentsUtils() {}
+
+  public static Agents.MovieExpert newMovieExpert() {
+    return spy(
+        AgentServices.agentBuilder(Agents.MovieExpert.class)
+            .outputName("movies")
+            .chatModel(BASE_MODEL)
+            .build());
   }
 }

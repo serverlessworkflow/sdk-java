@@ -13,16 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.fluent.spec;
+package io.serverlessworkflow.fluent.agentic;
 
-public class DoTaskBuilder extends BaseDoTaskBuilder<DoTaskBuilder, TaskItemListBuilder> {
+import dev.langchain4j.model.chat.ChatModel;
+import dev.langchain4j.model.ollama.OllamaChatModel;
+import java.time.Duration;
 
-  DoTaskBuilder() {
-    super(new TaskItemListBuilder());
-  }
-
-  @Override
-  public DoTaskBuilder self() {
-    return this;
-  }
+public class Models {
+  static final ChatModel BASE_MODEL =
+      OllamaChatModel.builder()
+          .baseUrl("http://127.0.0.1:1143")
+          .modelName("qwen2.5:7b")
+          .timeout(Duration.ofMinutes(10))
+          .temperature(0.0)
+          .logRequests(true)
+          .logResponses(true)
+          .build();
 }
