@@ -35,7 +35,8 @@ import java.util.function.Consumer;
  *
  * @param <SELF> the concrete builder type
  */
-public abstract class BaseTaskItemListBuilder<SELF extends BaseTaskItemListBuilder<SELF>> {
+public abstract class BaseTaskItemListBuilder<SELF extends BaseTaskItemListBuilder<SELF>>
+    implements DoTaskFluent<SELF, SELF> {
 
   private final List<TaskItem> list;
 
@@ -43,21 +44,30 @@ public abstract class BaseTaskItemListBuilder<SELF extends BaseTaskItemListBuild
     this.list = new ArrayList<>();
   }
 
+  public BaseTaskItemListBuilder(final List<TaskItem> list) {
+    this.list = list;
+  }
+
   protected abstract SELF self();
 
   protected abstract SELF newItemListBuilder();
 
-  protected SELF addTaskItem(TaskItem taskItem) {
+  protected final List<TaskItem> mutableList() {
+    return this.list;
+  }
+
+  protected final SELF addTaskItem(TaskItem taskItem) {
     Objects.requireNonNull(taskItem, "taskItem must not be null");
     list.add(taskItem);
     return self();
   }
 
-  protected void requireNameAndConfig(String name, Consumer<?> cfg) {
+  protected final void requireNameAndConfig(String name, Consumer<?> cfg) {
     Objects.requireNonNull(name, "Task name must not be null");
     Objects.requireNonNull(cfg, "Configurer must not be null");
   }
 
+  @Override
   public SELF set(String name, Consumer<SetTaskBuilder> itemsConfigurer) {
     requireNameAndConfig(name, itemsConfigurer);
     final SetTaskBuilder setBuilder = new SetTaskBuilder();
@@ -65,18 +75,22 @@ public abstract class BaseTaskItemListBuilder<SELF extends BaseTaskItemListBuild
     return addTaskItem(new TaskItem(name, new Task().withSetTask(setBuilder.build())));
   }
 
+  @Override
   public SELF set(Consumer<SetTaskBuilder> itemsConfigurer) {
     return this.set(UUID.randomUUID().toString(), itemsConfigurer);
   }
 
+  @Override
   public SELF set(String name, final String expr) {
     return this.set(name, s -> s.expr(expr));
   }
 
+  @Override
   public SELF set(final String expr) {
     return this.set(UUID.randomUUID().toString(), s -> s.expr(expr));
   }
 
+  @Override
   public SELF forEach(String name, Consumer<ForTaskBuilder<SELF>> itemsConfigurer) {
     requireNameAndConfig(name, itemsConfigurer);
     final ForTaskBuilder<SELF> forBuilder = new ForTaskBuilder<>(newItemListBuilder());
@@ -84,21 +98,25 @@ public abstract class BaseTaskItemListBuilder<SELF extends BaseTaskItemListBuild
     return addTaskItem(new TaskItem(name, new Task().withForTask(forBuilder.build())));
   }
 
+  @Override
   public SELF forEach(Consumer<ForTaskBuilder<SELF>> itemsConfigurer) {
     return this.forEach(UUID.randomUUID().toString(), itemsConfigurer);
   }
 
-  public SELF switchC(String name, Consumer<SwitchTaskBuilder> itemsConfigurer) {
+  @Override
+  public SELF switchCase(String name, Consumer<SwitchTaskBuilder> itemsConfigurer) {
     requireNameAndConfig(name, itemsConfigurer);
     final SwitchTaskBuilder switchBuilder = new SwitchTaskBuilder();
     itemsConfigurer.accept(switchBuilder);
     return addTaskItem(new TaskItem(name, new Task().withSwitchTask(switchBuilder.build())));
   }
 
-  public SELF switchC(Consumer<SwitchTaskBuilder> itemsConfigurer) {
-    return this.switchC(UUID.randomUUID().toString(), itemsConfigurer);
+  @Override
+  public SELF switchCase(Consumer<SwitchTaskBuilder> itemsConfigurer) {
+    return this.switchCase(UUID.randomUUID().toString(), itemsConfigurer);
   }
 
+  @Override
   public SELF raise(String name, Consumer<RaiseTaskBuilder> itemsConfigurer) {
     requireNameAndConfig(name, itemsConfigurer);
     final RaiseTaskBuilder raiseBuilder = new RaiseTaskBuilder();
@@ -106,10 +124,12 @@ public abstract class BaseTaskItemListBuilder<SELF extends BaseTaskItemListBuild
     return addTaskItem(new TaskItem(name, new Task().withRaiseTask(raiseBuilder.build())));
   }
 
+  @Override
   public SELF raise(Consumer<RaiseTaskBuilder> itemsConfigurer) {
     return this.raise(UUID.randomUUID().toString(), itemsConfigurer);
   }
 
+  @Override
   public SELF fork(String name, Consumer<ForkTaskBuilder> itemsConfigurer) {
     requireNameAndConfig(name, itemsConfigurer);
     final ForkTaskBuilder forkBuilder = new ForkTaskBuilder();
@@ -117,10 +137,12 @@ public abstract class BaseTaskItemListBuilder<SELF extends BaseTaskItemListBuild
     return addTaskItem(new TaskItem(name, new Task().withForkTask(forkBuilder.build())));
   }
 
+  @Override
   public SELF fork(Consumer<ForkTaskBuilder> itemsConfigurer) {
     return this.fork(UUID.randomUUID().toString(), itemsConfigurer);
   }
 
+  @Override
   public SELF listen(String name, Consumer<ListenTaskBuilder> itemsConfigurer) {
     requireNameAndConfig(name, itemsConfigurer);
     final ListenTaskBuilder listenBuilder = new ListenTaskBuilder();
@@ -128,10 +150,12 @@ public abstract class BaseTaskItemListBuilder<SELF extends BaseTaskItemListBuild
     return addTaskItem(new TaskItem(name, new Task().withListenTask(listenBuilder.build())));
   }
 
+  @Override
   public SELF listen(Consumer<ListenTaskBuilder> itemsConfigurer) {
     return this.listen(UUID.randomUUID().toString(), itemsConfigurer);
   }
 
+  @Override
   public SELF emit(String name, Consumer<EmitTaskBuilder> itemsConfigurer) {
     requireNameAndConfig(name, itemsConfigurer);
     final EmitTaskBuilder emitBuilder = new EmitTaskBuilder();
@@ -139,21 +163,25 @@ public abstract class BaseTaskItemListBuilder<SELF extends BaseTaskItemListBuild
     return addTaskItem(new TaskItem(name, new Task().withEmitTask(emitBuilder.build())));
   }
 
+  @Override
   public SELF emit(Consumer<EmitTaskBuilder> itemsConfigurer) {
     return this.emit(UUID.randomUUID().toString(), itemsConfigurer);
   }
 
-  public SELF tryC(String name, Consumer<TryTaskBuilder<SELF>> itemsConfigurer) {
+  @Override
+  public SELF tryCatch(String name, Consumer<TryTaskBuilder<SELF>> itemsConfigurer) {
     requireNameAndConfig(name, itemsConfigurer);
     final TryTaskBuilder<SELF> tryBuilder = new TryTaskBuilder<>(this.newItemListBuilder());
     itemsConfigurer.accept(tryBuilder);
     return addTaskItem(new TaskItem(name, new Task().withTryTask(tryBuilder.build())));
   }
 
-  public SELF tryC(Consumer<TryTaskBuilder<SELF>> itemsConfigurer) {
-    return this.tryC(UUID.randomUUID().toString(), itemsConfigurer);
+  @Override
+  public SELF tryCatch(Consumer<TryTaskBuilder<SELF>> itemsConfigurer) {
+    return this.tryCatch(UUID.randomUUID().toString(), itemsConfigurer);
   }
 
+  @Override
   public SELF callHTTP(String name, Consumer<CallHTTPTaskBuilder> itemsConfigurer) {
     requireNameAndConfig(name, itemsConfigurer);
     final CallHTTPTaskBuilder callHTTPBuilder = new CallHTTPTaskBuilder();
@@ -163,6 +191,7 @@ public abstract class BaseTaskItemListBuilder<SELF extends BaseTaskItemListBuild
             name, new Task().withCallTask(new CallTask().withCallHTTP(callHTTPBuilder.build()))));
   }
 
+  @Override
   public SELF callHTTP(Consumer<CallHTTPTaskBuilder> itemsConfigurer) {
     return this.callHTTP(UUID.randomUUID().toString(), itemsConfigurer);
   }
