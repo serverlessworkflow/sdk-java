@@ -15,6 +15,8 @@
  */
 package io.serverlessworkflow.impl.expressions.func;
 
+import io.serverlessworkflow.api.types.TaskBase;
+import io.serverlessworkflow.api.types.TaskMetadata;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowFilter;
@@ -22,6 +24,7 @@ import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowModelFactory;
 import io.serverlessworkflow.impl.expressions.Expression;
 import io.serverlessworkflow.impl.expressions.ExpressionFactory;
+import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
@@ -29,6 +32,7 @@ import java.util.function.Predicate;
 
 public class JavaExpressionFactory implements ExpressionFactory {
 
+  public static final String IF_PREDICATE = "if_predicate";
   private final WorkflowModelFactory modelFactory = new JavaModelFactory();
   private final Expression dummyExpression =
       new Expression() {
@@ -49,7 +53,7 @@ public class JavaExpressionFactory implements ExpressionFactory {
     if (value instanceof Function func) {
       return (w, t, n) -> modelFactory.fromAny(func.apply(n.asJavaObject()));
     } else if (value instanceof Predicate pred) {
-      return (w, t, n) -> modelFactory.from(pred.test(n.asJavaObject()));
+      return fromPredicate(pred);
     } else if (value instanceof BiPredicate pred) {
       return (w, t, n) -> modelFactory.from(pred.test(w, t));
     } else if (value instanceof BiFunction func) {
@@ -59,6 +63,20 @@ public class JavaExpressionFactory implements ExpressionFactory {
     } else {
       return (w, t, n) -> modelFactory.fromAny(value);
     }
+  }
+
+  @SuppressWarnings({"rawtypes", "unchecked"})
+  private WorkflowFilter fromPredicate(Predicate pred) {
+    return (w, t, n) -> modelFactory.from(pred.test(n.asJavaObject()));
+  }
+
+  @Override
+  public Optional<WorkflowFilter> buildIfFilter(TaskBase task) {
+    TaskMetadata metadata = task.getMetadata();
+    return metadata != null
+            && metadata.getAdditionalProperties().get(IF_PREDICATE) instanceof Predicate pred
+        ? Optional.of(fromPredicate(pred))
+        : ExpressionFactory.super.buildIfFilter(task);
   }
 
   @Override

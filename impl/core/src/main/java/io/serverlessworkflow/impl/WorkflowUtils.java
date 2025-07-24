@@ -116,6 +116,13 @@ public class WorkflowUtils {
     return str != null ? Optional.of(buildWorkflowFilter(app, str)) : Optional.empty();
   }
 
+  public static Optional<WorkflowFilter> optionalFilter(
+      WorkflowApplication app, Object obj, String str) {
+    return str != null || obj != null
+        ? Optional.of(buildWorkflowFilter(app, str, obj))
+        : Optional.empty();
+  }
+
   public static String toString(UriTemplate template) {
     URI uri = template.getLiteralUri();
     return uri != null ? uri.toString() : template.getLiteralUriTemplate();

@@ -15,7 +15,8 @@
  */
 package io.serverlessworkflow.impl.executors;
 
-import static io.serverlessworkflow.impl.WorkflowUtils.*;
+import static io.serverlessworkflow.impl.WorkflowUtils.buildWorkflowFilter;
+import static io.serverlessworkflow.impl.WorkflowUtils.getSchemaValidator;
 
 import io.serverlessworkflow.api.types.Export;
 import io.serverlessworkflow.api.types.FlowDirective;
@@ -101,7 +102,7 @@ public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskEx
         this.contextSchemaValidator =
             getSchemaValidator(application.validatorFactory(), resourceLoader, export.getSchema());
       }
-      this.ifFilter = optionalFilter(application, task.getIf());
+      this.ifFilter = application.expressionFactory().buildIfFilter(task);
     }
 
     protected final TransitionInfoBuilder next(
