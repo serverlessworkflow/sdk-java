@@ -39,7 +39,6 @@ public class JavaForExecutorBuilder extends ForExecutorBuilder {
       WorkflowApplication application,
       ResourceLoader resourceLoader) {
     super(position, task, workflow, application, resourceLoader);
-    if (task instanceof ForTaskFunction taskFunctions) {}
   }
 
   protected Optional<WorkflowFilter> buildWhileFilter() {
