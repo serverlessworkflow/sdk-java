@@ -35,12 +35,18 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class CallAIChatModelExecutor extends AbstractCallAIChatModelExecutor<CallAIChatModel> {
+public class CallAIChatModelExecutor implements AIChatModelExecutor {
 
   private static final Pattern VARIABLE_PATTERN = Pattern.compile("\\{\\{\\s*(.+?)\\s*\\}\\}");
 
+  private final CallAIChatModel callAIChatModel;
+
+  public CallAIChatModelExecutor(CallAIChatModel callAIChatModel) {
+    this.callAIChatModel = callAIChatModel;
+  }
+
   @Override
-  public Object apply(CallAIChatModel callAIChatModel, Object javaObject) {
+  public Object apply(Object javaObject) {
     validate(callAIChatModel, javaObject);
 
     ChatModel chatModel = createChatModel(callAIChatModel);

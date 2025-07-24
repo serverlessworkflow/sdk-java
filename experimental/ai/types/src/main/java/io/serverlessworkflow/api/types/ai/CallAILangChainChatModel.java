@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-package io.serverlessworkflow.ai.api.types;
+package io.serverlessworkflow.api.types.ai;
 
 import dev.langchain4j.model.chat.ChatModel;
-import io.serverlessworkflow.api.types.ai.AbstractCallAIChatModelTask;
 
 public class CallAILangChainChatModel extends AbstractCallAIChatModelTask {
 

@@ -17,14 +17,9 @@
             <artifactId>serverlessworkflow-experimental-types</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.serverlessworkflow</groupId>
-            <artifactId>serverlessworkflow-impl-core</artifactId>
-        </dependency>
-        <dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j</artifactId>
             <version>1.1.0</version>
-            <optional>true</optional>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>

@@ -19,18 +19,23 @@ package io.serverlessworkflow.impl.executors.ai;
 import dev.langchain4j.model.chat.ChatModel;
 import dev.langchain4j.service.AiServices;
 import dev.langchain4j.service.V;
-import io.serverlessworkflow.ai.api.types.CallAILangChainChatModel;
+import io.serverlessworkflow.api.types.ai.CallAILangChainChatModel;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class CallAILangChainChatModelExecutor
-    extends AbstractCallAIChatModelExecutor<CallAILangChainChatModel> {
+public class CallAILangChainChatModelExecutor implements AIChatModelExecutor {
+
+  private final CallAILangChainChatModel callAIChatModel;
+
+  public CallAILangChainChatModelExecutor(CallAILangChainChatModel callAIChatModel) {
+    this.callAIChatModel = callAIChatModel;
+  }
 
   @Override
-  public Object apply(CallAILangChainChatModel callAIChatModel, Object javaObject) {
+  public Object apply(Object javaObject) {
     ChatModel chatModel = callAIChatModel.getChatModel();
     Class<?> chatModelRequest = callAIChatModel.getChatModelRequest();
     Map<String, Object> substitutions = (Map<String, Object>) javaObject;

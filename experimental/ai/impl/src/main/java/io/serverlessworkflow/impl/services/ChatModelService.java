@@ -20,6 +20,5 @@ import dev.langchain4j.model.chat.ChatModel;
 import io.serverlessworkflow.api.types.ai.CallAIChatModel;
 
 public interface ChatModelService {
-
   ChatModel getChatModel(CallAIChatModel.ChatModelPreferences chatModelPreferences);
 }

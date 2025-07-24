@@ -16,10 +16,10 @@
 
 package io.serverlessworkflow.impl.executors.ai;
 
-import io.serverlessworkflow.ai.api.types.CallAILangChainChatModel;
 import io.serverlessworkflow.api.types.TaskBase;
 import io.serverlessworkflow.api.types.ai.AbstractCallAIChatModelTask;
 import io.serverlessworkflow.api.types.ai.CallAIChatModel;
+import io.serverlessworkflow.api.types.ai.CallAILangChainChatModel;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
@@ -31,27 +31,24 @@ import java.util.concurrent.CompletableFuture;
 
 public class AIChatModelCallExecutor implements CallableTask<AbstractCallAIChatModelTask> {
 
+  private AIChatModelExecutor executor;
+
   @Override
   public void init(
-      AbstractCallAIChatModelTask task, WorkflowApplication application, ResourceLoader loader) {}
+      AbstractCallAIChatModelTask task, WorkflowApplication application, ResourceLoader loader) {
+    if (task instanceof CallAILangChainChatModel model) {
+      executor = new CallAILangChainChatModelExecutor(model);
+    } else if (task instanceof CallAIChatModel model) {
+      executor = new CallAIChatModelExecutor(model);
+    }
+  }
 
   @Override
   public CompletableFuture<WorkflowModel> apply(
       WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel input) {
     WorkflowModelFactory modelFactory = workflowContext.definition().application().modelFactory();
-    if (taskContext.task() instanceof CallAILangChainChatModel callAILangChainChatModel) {
-      return CompletableFuture.completedFuture(
-          modelFactory.fromAny(
-              new CallAILangChainChatModelExecutor()
-                  .apply(callAILangChainChatModel, input.asJavaObject())));
-    } else if (taskContext.task() instanceof CallAIChatModel callAIChatModel) {
-      return CompletableFuture.completedFuture(
-          modelFactory.fromAny(
-              new CallAIChatModelExecutor().apply(callAIChatModel, input.asJavaObject())));
-    }
-    throw new IllegalArgumentException(
-        "AIChatModelCallExecutor can only process CallAIChatModel tasks, but received: "
-            + taskContext.task().getClass().getName());
+    return CompletableFuture.completedFuture(
+        modelFactory.fromAny(executor.apply(input.asJavaObject())));
   }
 
   @Override

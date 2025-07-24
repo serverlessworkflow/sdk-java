@@ -16,7 +16,6 @@
 
 package io.serverlessworkflow.impl.executors.ai;
 
-public abstract class AbstractCallAIChatModelExecutor<T> {
+import java.util.function.UnaryOperator;
 
-  public abstract Object apply(T callAIChatModel, Object javaObject);
-}
+public interface AIChatModelExecutor extends UnaryOperator<Object> {}
