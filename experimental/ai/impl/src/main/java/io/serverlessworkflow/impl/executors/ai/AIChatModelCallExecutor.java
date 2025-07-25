@@ -16,10 +16,8 @@
 
 package io.serverlessworkflow.impl.executors.ai;
 
-import io.serverlessworkflow.ai.api.types.CallAILangChainChatModel;
+import io.serverlessworkflow.ai.api.types.CallAgentAI;
 import io.serverlessworkflow.api.types.TaskBase;
-import io.serverlessworkflow.api.types.ai.AbstractCallAIChatModelTask;
-import io.serverlessworkflow.api.types.ai.CallAIChatModel;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
@@ -29,33 +27,26 @@ import io.serverlessworkflow.impl.executors.CallableTask;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
 import java.util.concurrent.CompletableFuture;
 
-public class AIChatModelCallExecutor implements CallableTask<AbstractCallAIChatModelTask> {
+public class AIChatModelCallExecutor implements CallableTask<CallAgentAI> {
 
   @Override
-  public void init(
-      AbstractCallAIChatModelTask task, WorkflowApplication application, ResourceLoader loader) {}
+  public void init(CallAgentAI task, WorkflowApplication application, ResourceLoader loader) {}
 
   @Override
   public CompletableFuture<WorkflowModel> apply(
       WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel input) {
     WorkflowModelFactory modelFactory = workflowContext.definition().application().modelFactory();
-    if (taskContext.task() instanceof CallAILangChainChatModel callAILangChainChatModel) {
+    if (taskContext.task() instanceof CallAgentAI agenticAI) {
       return CompletableFuture.completedFuture(
-          modelFactory.fromAny(
-              new CallAILangChainChatModelExecutor()
-                  .apply(callAILangChainChatModel, input.asJavaObject())));
-    } else if (taskContext.task() instanceof CallAIChatModel callAIChatModel) {
-      return CompletableFuture.completedFuture(
-          modelFactory.fromAny(
-              new CallAIChatModelExecutor().apply(callAIChatModel, input.asJavaObject())));
+          modelFactory.fromAny(new CallAgentAIExecutor().execute(agenticAI, input.asJavaObject())));
     }
     throw new IllegalArgumentException(
-        "AIChatModelCallExecutor can only process CallAIChatModel tasks, but received: "
+        "AIChatModelCallExecutor can only process CallAgentAI tasks, but received: "
             + taskContext.task().getClass().getName());
   }
 
   @Override
   public boolean accept(Class<? extends TaskBase> clazz) {
-    return AbstractCallAIChatModelTask.class.isAssignableFrom(clazz);
+    return CallAgentAI.class.isAssignableFrom(clazz);
   }
 }

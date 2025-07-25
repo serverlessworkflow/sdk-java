@@ -14,9 +14,24 @@
  * limitations under the License.
  */
 
-package io.serverlessworkflow.impl.executors.ai;
+package io.serverlessworkflow.ai.api.types;
 
-public abstract class AbstractCallAIChatModelExecutor<T> {
+import io.serverlessworkflow.api.types.CallTask;
 
-  public abstract Object apply(T callAIChatModel, Object javaObject);
+public class CallTaskAIChatModel extends CallTask {
+
+  private CallAgentAI callAIChatModel;
+
+  public CallTaskAIChatModel(CallAgentAI callAIChatModel) {
+    this.callAIChatModel = callAIChatModel;
+  }
+
+  public CallAgentAI getCallAIChatModel() {
+    return callAIChatModel;
+  }
+
+  @Override
+  public Object get() {
+    return callAIChatModel != null ? callAIChatModel : super.get();
+  }
 }
