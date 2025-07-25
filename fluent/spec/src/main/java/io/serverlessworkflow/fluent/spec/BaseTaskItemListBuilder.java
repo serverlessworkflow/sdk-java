@@ -15,6 +15,7 @@
  */
 package io.serverlessworkflow.fluent.spec;
 
+import io.serverlessworkflow.ai.api.types.CallTaskAIChatModel;
 import io.serverlessworkflow.api.types.CallTask;
 import io.serverlessworkflow.api.types.Task;
 import io.serverlessworkflow.api.types.TaskBase;
@@ -165,6 +166,19 @@ public abstract class BaseTaskItemListBuilder<SELF extends BaseTaskItemListBuild
 
   public SELF callHTTP(Consumer<CallHTTPTaskBuilder> itemsConfigurer) {
     return this.callHTTP(UUID.randomUUID().toString(), itemsConfigurer);
+  }
+
+  public SELF callAgentAI(String name, Consumer<CallAgentAITaskBuilder> itemsConfigurer) {
+    requireNameAndConfig(name, itemsConfigurer);
+    final CallAgentAITaskBuilder callAgentAIBuilder = new CallAgentAITaskBuilder();
+    itemsConfigurer.accept(callAgentAIBuilder);
+    return addTaskItem(
+        new TaskItem(
+            name, new Task().withCallTask(new CallTaskAIChatModel(callAgentAIBuilder.build()))));
+  }
+
+  public SELF callAgentAI(Consumer<CallAgentAITaskBuilder> itemsConfigurer) {
+    return this.callAgentAI(UUID.randomUUID().toString(), itemsConfigurer);
   }
 
   /**

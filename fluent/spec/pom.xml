@@ -27,6 +27,10 @@
             <artifactId>junit-jupiter-api</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>io.serverlessworkflow</groupId>
+            <artifactId>serverlessworkflow-experimental-ai-types</artifactId>
+        </dependency>
     </dependencies>
 
 </project>

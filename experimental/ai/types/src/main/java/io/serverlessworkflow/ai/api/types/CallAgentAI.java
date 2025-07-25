@@ -24,22 +24,19 @@ import java.util.Objects;
 
 public class CallAgentAI extends TaskBase {
 
-  private final AgentInstance instance;
+  private AgentInstance instance;
 
-  public CallAgentAI(Object instance) {
-    if (!(instance instanceof AgentInstance)) {
-      throw new IllegalArgumentException("Instance must be subtype of AgentInstance");
-    }
-
-    this.instance = (AgentInstance) instance;
+  public static Builder builder() {
+    return new Builder();
   }
 
   public AgentInstance getAgentInstance() {
     return instance;
   }
 
-  public static Builder builder() {
-    return new Builder();
+  public CallAgentAI setAgentInstance(Object object) {
+    this.instance = (AgentInstance) object;
+    return this;
   }
 
   public static class Builder {
@@ -67,6 +64,10 @@ public class CallAgentAI extends TaskBase {
       return this;
     }
 
+    public AgenticInnerBuilder withAgent(Object agent) {
+      return new AgenticInnerBuilder().withAgent(agent);
+    }
+
     public CallAgentAI build() {
       Objects.requireNonNull(agentClass, "agentClass must be provided");
       Objects.requireNonNull(chatModel, "chatModel must be provided");
@@ -76,11 +77,27 @@ public class CallAgentAI extends TaskBase {
         throw new IllegalArgumentException("outputName must not be blank");
       }
 
-      return new CallAgentAI(
+      Object instance =
           AgentServices.agentBuilder(agentClass)
               .chatModel(chatModel)
               .outputName(outputName)
-              .build());
+              .build();
+
+      return new AgenticInnerBuilder().withAgent(instance).build();
+    }
+
+    public static class AgenticInnerBuilder {
+
+      private Object agent;
+
+      public AgenticInnerBuilder withAgent(Object agent) {
+        this.agent = agent;
+        return this;
+      }
+
+      public CallAgentAI build() {
+        return new CallAgentAI().setAgentInstance(agent);
+      }
     }
   }
 }

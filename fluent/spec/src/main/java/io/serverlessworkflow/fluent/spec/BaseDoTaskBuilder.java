@@ -136,6 +136,16 @@ public abstract class BaseDoTaskBuilder<
     return self();
   }
 
+  public TASK callAgentAI(String name, Consumer<CallAgentAITaskBuilder> itemsConfigurer) {
+    taskItemListBuilder.callAgentAI(name, itemsConfigurer);
+    return self();
+  }
+
+  public TASK callAgentAI(Consumer<CallAgentAITaskBuilder> itemsConfigurer) {
+    taskItemListBuilder.callAgentAI(itemsConfigurer);
+    return self();
+  }
+
   public DoTask build() {
     this.doTask.setDo(this.taskItemListBuilder.build());
     return this.doTask;
