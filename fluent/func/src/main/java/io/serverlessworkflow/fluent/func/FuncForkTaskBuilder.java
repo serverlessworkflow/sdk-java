@@ -21,7 +21,10 @@ import io.serverlessworkflow.api.types.Task;
 import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.api.types.func.CallJava;
 import io.serverlessworkflow.api.types.func.CallTaskJava;
+import io.serverlessworkflow.fluent.func.spi.ConditionalTaskBuilder;
+import io.serverlessworkflow.fluent.func.spi.FuncTransformations;
 import io.serverlessworkflow.fluent.spec.TaskBaseBuilder;
+import io.serverlessworkflow.fluent.spec.spi.ForkTaskFluent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -29,7 +32,9 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class FuncForkTaskBuilder extends TaskBaseBuilder<FuncForkTaskBuilder>
-    implements FuncTransformations<FuncForkTaskBuilder> {
+    implements FuncTransformations<FuncForkTaskBuilder>,
+        ConditionalTaskBuilder<FuncForkTaskBuilder>,
+        ForkTaskFluent<FuncForkTaskBuilder, FuncTaskItemListBuilder> {
 
   private final ForkTask forkTask;
   private final List<TaskItem> items;
@@ -55,6 +60,7 @@ public class FuncForkTaskBuilder extends TaskBaseBuilder<FuncForkTaskBuilder>
     return this.branch(UUID.randomUUID().toString(), function);
   }
 
+  @Override
   public FuncForkTaskBuilder branches(Consumer<FuncTaskItemListBuilder> consumer) {
     final FuncTaskItemListBuilder builder = new FuncTaskItemListBuilder();
     consumer.accept(builder);
@@ -62,11 +68,13 @@ public class FuncForkTaskBuilder extends TaskBaseBuilder<FuncForkTaskBuilder>
     return this;
   }
 
+  @Override
   public FuncForkTaskBuilder compete(boolean compete) {
     this.forkTask.getFork().setCompete(compete);
     return this;
   }
 
+  @Override
   public ForkTask build() {
     this.forkTask.getFork().setBranches(this.items);
     return forkTask;

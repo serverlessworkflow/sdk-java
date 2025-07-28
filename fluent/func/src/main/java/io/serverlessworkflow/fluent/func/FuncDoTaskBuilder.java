@@ -15,11 +15,16 @@
  */
 package io.serverlessworkflow.fluent.func;
 
+import io.serverlessworkflow.fluent.func.spi.ConditionalTaskBuilder;
+import io.serverlessworkflow.fluent.func.spi.FuncDoFluent;
+import io.serverlessworkflow.fluent.func.spi.FuncTransformations;
 import io.serverlessworkflow.fluent.spec.BaseDoTaskBuilder;
+import java.util.function.Consumer;
 
 public class FuncDoTaskBuilder extends BaseDoTaskBuilder<FuncDoTaskBuilder, FuncTaskItemListBuilder>
     implements FuncTransformations<FuncDoTaskBuilder>,
-        DelegatingFuncDoTaskFluent<FuncDoTaskBuilder> {
+        ConditionalTaskBuilder<FuncDoTaskBuilder>,
+        FuncDoFluent<FuncDoTaskBuilder> {
 
   public FuncDoTaskBuilder() {
     super(new FuncTaskItemListBuilder());
@@ -27,6 +32,49 @@ public class FuncDoTaskBuilder extends BaseDoTaskBuilder<FuncDoTaskBuilder, Func
 
   @Override
   public FuncDoTaskBuilder self() {
+    return this;
+  }
+
+  @Override
+  public FuncDoTaskBuilder emit(String name, Consumer<FuncEmitTaskBuilder> itemsConfigurer) {
+    this.listBuilder().emit(name, itemsConfigurer);
+    return this;
+  }
+
+  @Override
+  public FuncDoTaskBuilder forEach(String name, Consumer<FuncForTaskBuilder> itemsConfigurer) {
+    this.listBuilder().forEach(name, itemsConfigurer);
+    return this;
+  }
+
+  @Override
+  public FuncDoTaskBuilder set(String name, Consumer<FuncSetTaskBuilder> itemsConfigurer) {
+    this.listBuilder().set(name, itemsConfigurer);
+    return this;
+  }
+
+  @Override
+  public FuncDoTaskBuilder set(String name, String expr) {
+    this.listBuilder().set(name, expr);
+    return this;
+  }
+
+  @Override
+  public FuncDoTaskBuilder switchCase(
+      String name, Consumer<FuncSwitchTaskBuilder> itemsConfigurer) {
+    this.listBuilder().switchCase(name, itemsConfigurer);
+    return this;
+  }
+
+  @Override
+  public FuncDoTaskBuilder callFn(String name, Consumer<FuncCallTaskBuilder> cfg) {
+    this.listBuilder().callFn(name, cfg);
+    return this;
+  }
+
+  @Override
+  public FuncDoTaskBuilder fork(String name, Consumer<FuncForkTaskBuilder> itemsConfigurer) {
+    this.listBuilder().fork(name, itemsConfigurer);
     return this;
   }
 }

@@ -24,7 +24,7 @@ public class EmitTaskBuilder extends TaskBaseBuilder<EmitTaskBuilder> {
 
   private final EmitTask emitTask;
 
-  EmitTaskBuilder() {
+  protected EmitTaskBuilder() {
     this.emitTask = new EmitTask();
     super.setTask(emitTask);
   }

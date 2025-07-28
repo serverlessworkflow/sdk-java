@@ -13,9 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.fluent.spec;
+package io.serverlessworkflow.fluent.spec.spi;
 
-public interface HasDelegate {
+import io.serverlessworkflow.api.types.ForkTask;
+import io.serverlessworkflow.fluent.spec.BaseTaskItemListBuilder;
+import io.serverlessworkflow.fluent.spec.TaskBaseBuilder;
+import java.util.function.Consumer;
 
-  Object delegate();
+public interface ForkTaskFluent<
+    SELF extends TaskBaseBuilder<SELF>, L extends BaseTaskItemListBuilder<L>> {
+
+  SELF compete(final boolean compete);
+
+  SELF branches(Consumer<L> branchesConsumer);
+
+  ForkTask build();
 }

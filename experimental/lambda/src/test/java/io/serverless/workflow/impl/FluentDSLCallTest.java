@@ -54,7 +54,7 @@ public class FluentDSLCallTest {
           FuncWorkflowBuilder.workflow()
               .tasks(
                   t ->
-                      t.forFn(
+                      t.forEach(
                           f ->
                               f.whileC(CallTest::isEven)
                                   .collection(v -> (Collection<?>) v)
@@ -80,9 +80,9 @@ public class FluentDSLCallTest {
               .tasks(
                   tasks ->
                       tasks
-                          .switchFn(
+                          .switchCase(
                               switchOdd ->
-                                  switchOdd.items(
+                                  switchOdd.functions(
                                       item ->
                                           item.when(CallTest::isOdd).then(FlowDirectiveEnum.END)))
                           .callFn(callJava -> callJava.function(CallTest::zero)))

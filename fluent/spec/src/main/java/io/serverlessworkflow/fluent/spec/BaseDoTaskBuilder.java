@@ -19,23 +19,23 @@ import io.serverlessworkflow.api.types.DoTask;
 
 public abstract class BaseDoTaskBuilder<
         SELF extends BaseDoTaskBuilder<SELF, LIST>, LIST extends BaseTaskItemListBuilder<LIST>>
-    extends TaskBaseBuilder<SELF> implements DelegatingDoTaskFluent<SELF, LIST> {
+    extends TaskBaseBuilder<SELF> {
 
   private final DoTask doTask = new DoTask();
   private final BaseTaskItemListBuilder<LIST> itemsListBuilder;
 
   protected BaseDoTaskBuilder(BaseTaskItemListBuilder<LIST> itemsListBuilder) {
     this.itemsListBuilder = itemsListBuilder;
+    setTask(this.doTask);
+  }
+
+  protected BaseDoTaskBuilder(BaseTaskItemListBuilder<LIST> itemsListBuilder, DoTask doTask) {
+    this.itemsListBuilder = itemsListBuilder;
     setTask(doTask);
   }
 
   @SuppressWarnings("unchecked")
-  @Override
-  public LIST delegate() {
-    return (LIST) itemsListBuilder;
-  }
-
-  public LIST list() {
+  protected final LIST listBuilder() {
     return (LIST) itemsListBuilder;
   }
 

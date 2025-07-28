@@ -17,16 +17,18 @@ package io.serverlessworkflow.fluent.spec;
 
 import io.serverlessworkflow.api.types.ForTask;
 import io.serverlessworkflow.api.types.ForTaskConfiguration;
+import io.serverlessworkflow.fluent.spec.spi.ForEachTaskFluent;
 import java.util.function.Consumer;
 
-public class ForTaskBuilder<T extends BaseTaskItemListBuilder<T>>
-    extends TaskBaseBuilder<ForTaskBuilder<T>> {
+public class ForEachTaskBuilder<T extends BaseTaskItemListBuilder<T>>
+    extends TaskBaseBuilder<ForEachTaskBuilder<T>>
+    implements ForEachTaskFluent<ForEachTaskBuilder<T>, T> {
 
   private final ForTask forTask;
   private final ForTaskConfiguration forTaskConfiguration;
   private final T taskItemListBuilder;
 
-  ForTaskBuilder(T taskItemListBuilder) {
+  public ForEachTaskBuilder(T taskItemListBuilder) {
     super();
     forTask = new ForTask();
     forTaskConfiguration = new ForTaskConfiguration();
@@ -34,31 +36,31 @@ public class ForTaskBuilder<T extends BaseTaskItemListBuilder<T>>
     super.setTask(forTask);
   }
 
-  protected ForTaskBuilder<T> self() {
+  protected ForEachTaskBuilder<T> self() {
     return this;
   }
 
-  public ForTaskBuilder<T> each(String each) {
+  public ForEachTaskBuilder<T> each(String each) {
     forTaskConfiguration.setEach(each);
     return this;
   }
 
-  public ForTaskBuilder<T> in(String in) {
+  public ForEachTaskBuilder<T> in(String in) {
     this.forTaskConfiguration.setIn(in);
     return this;
   }
 
-  public ForTaskBuilder<T> at(String at) {
+  public ForEachTaskBuilder<T> at(String at) {
     this.forTaskConfiguration.setAt(at);
     return this;
   }
 
-  public ForTaskBuilder<T> whileC(final String expression) {
+  public ForEachTaskBuilder<T> whileC(final String expression) {
     this.forTask.setWhile(expression);
     return this;
   }
 
-  public ForTaskBuilder<T> tasks(Consumer<T> doBuilderConsumer) {
+  public ForEachTaskBuilder<T> tasks(Consumer<T> doBuilderConsumer) {
     final T taskItemListBuilder = this.taskItemListBuilder.newItemListBuilder();
     doBuilderConsumer.accept(taskItemListBuilder);
     this.forTask.setDo(taskItemListBuilder.build());

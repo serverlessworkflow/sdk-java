@@ -13,25 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.fluent.func;
+package io.serverlessworkflow.fluent.spec.spi;
 
+import io.serverlessworkflow.fluent.spec.TaskBaseBuilder;
+import java.util.UUID;
 import java.util.function.Consumer;
 
-public interface FuncDoTaskFluent<SELF extends FuncDoTaskFluent<SELF>> {
+public interface EmitFluent<SELF extends TaskBaseBuilder<?>, LIST> {
 
-  SELF callFn(String name, Consumer<FuncCallTaskBuilder> cfg);
+  LIST emit(String name, Consumer<SELF> itemsConfigurer);
 
-  SELF callFn(Consumer<FuncCallTaskBuilder> cfg);
-
-  SELF forFn(String name, Consumer<FuncForTaskBuilder> cfg);
-
-  SELF forFn(Consumer<FuncForTaskBuilder> cfg);
-
-  SELF switchFn(String name, Consumer<FuncSwitchTaskBuilder> cfg);
-
-  SELF switchFn(Consumer<FuncSwitchTaskBuilder> cfg);
-
-  SELF forkFn(String name, Consumer<FuncForkTaskBuilder> cfg);
-
-  SELF forkFn(Consumer<FuncForkTaskBuilder> cfg);
+  default LIST emit(Consumer<SELF> itemsConfigurer) {
+    return emit(UUID.randomUUID().toString(), itemsConfigurer);
+  }
 }

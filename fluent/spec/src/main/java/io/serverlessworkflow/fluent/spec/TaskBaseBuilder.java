@@ -27,6 +27,7 @@ import io.serverlessworkflow.api.types.SchemaExternal;
 import io.serverlessworkflow.api.types.SchemaInline;
 import io.serverlessworkflow.api.types.SchemaUnion;
 import io.serverlessworkflow.api.types.TaskBase;
+import io.serverlessworkflow.fluent.spec.spi.TransformationHandlers;
 import java.util.function.Consumer;
 
 public abstract class TaskBaseBuilder<T extends TaskBaseBuilder<T>>
@@ -37,8 +38,12 @@ public abstract class TaskBaseBuilder<T extends TaskBaseBuilder<T>>
 
   protected abstract T self();
 
-  protected void setTask(TaskBase task) {
+  protected final void setTask(TaskBase task) {
     this.task = task;
+  }
+
+  public final TaskBase getTask() {
+    return task;
   }
 
   @Override
@@ -56,8 +61,17 @@ public abstract class TaskBaseBuilder<T extends TaskBaseBuilder<T>>
     this.task.setOutput(output);
   }
 
-  public T ifClause(String id) {
-    this.task.setIf(id);
+  /**
+   * Conditional to execute this task. Parallel to the `if` conditional in the Spec. Replaced by
+   * `when` since `if` is a reserved word.
+   *
+   * @param expression jq expression to evaluate
+   * @see <a
+   *     href="https://github.com/serverlessworkflow/specification/blob/main/dsl-reference.md#task">DSL
+   *     Reference - Task</a>
+   */
+  public T when(String expression) {
+    this.task.setIf(expression);
     return self();
   }
 

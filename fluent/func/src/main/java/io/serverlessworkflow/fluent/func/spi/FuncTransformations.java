@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.fluent.func;
+package io.serverlessworkflow.fluent.func.spi;
 
 import io.serverlessworkflow.api.types.Export;
 import io.serverlessworkflow.api.types.Input;
@@ -21,7 +21,7 @@ import io.serverlessworkflow.api.types.Output;
 import io.serverlessworkflow.api.types.func.ExportAsFunction;
 import io.serverlessworkflow.api.types.func.InputFromFunction;
 import io.serverlessworkflow.api.types.func.OutputAsFunction;
-import io.serverlessworkflow.fluent.spec.TransformationHandlers;
+import io.serverlessworkflow.fluent.spec.spi.TransformationHandlers;
 import java.util.function.Function;
 
 public interface FuncTransformations<SELF extends FuncTransformations<SELF>>

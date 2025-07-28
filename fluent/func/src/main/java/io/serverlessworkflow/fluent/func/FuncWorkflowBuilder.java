@@ -15,6 +15,7 @@
  */
 package io.serverlessworkflow.fluent.func;
 
+import io.serverlessworkflow.fluent.func.spi.FuncTransformations;
 import io.serverlessworkflow.fluent.spec.BaseWorkflowBuilder;
 import java.util.UUID;
 

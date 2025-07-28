@@ -33,7 +33,7 @@ import io.serverlessworkflow.api.types.func.ForTaskFunction;
 import io.serverlessworkflow.api.types.func.SwitchCaseFunction;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowDefinition;
-import io.serverlessworkflow.impl.expressions.func.JavaExpressionFactory;
+import io.serverlessworkflow.impl.expressions.TaskMetadataKeys;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -168,7 +168,7 @@ class CallTest {
   private <T> CallJava withPredicate(CallJava call, Predicate<T> pred) {
     return (CallJava)
         call.withMetadata(
-            new TaskMetadata().withAdditionalProperty(JavaExpressionFactory.IF_PREDICATE, pred));
+            new TaskMetadata().withAdditionalProperty(TaskMetadataKeys.IF_PREDICATE, pred));
   }
 
   public static boolean isEven(Object model, Integer number) {
