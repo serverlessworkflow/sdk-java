@@ -21,6 +21,7 @@ import io.serverlessworkflow.api.types.EndpointUri;
 import io.serverlessworkflow.api.types.HTTPArguments;
 import io.serverlessworkflow.api.types.TaskBase;
 import io.serverlessworkflow.api.types.UriTemplate;
+import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
@@ -50,8 +51,9 @@ public class HttpExecutor implements CallableTask<CallHTTP> {
   private TargetSupplier targetSupplier;
   private Optional<WorkflowFilter> headersMap;
   private Optional<WorkflowFilter> queryMap;
+  private Optional<AuthProvider> authProvider;
   private RequestSupplier requestFunction;
-  private static HttpModelConverter converter = new HttpModelConverter() {};
+  private HttpModelConverter converter = new HttpModelConverter() {};
 
   @FunctionalInterface
   private interface TargetSupplier {
@@ -65,8 +67,17 @@ public class HttpExecutor implements CallableTask<CallHTTP> {
   }
 
   @Override
-  public void init(CallHTTP task, WorkflowApplication application, ResourceLoader resourceLoader) {
+  public void init(
+      CallHTTP task,
+      Workflow workflow,
+      WorkflowApplication application,
+      ResourceLoader resourceLoader) {
     HTTPArguments httpArgs = task.getWith();
+
+    this.authProvider =
+        AuthProviderFactory.getAuth(
+            application, workflow, task.getWith().getEndpoint().getEndpointConfiguration());
+
     this.targetSupplier =
         getTargetSupplier(httpArgs.getEndpoint(), application.expressionFactory());
     this.headersMap =
@@ -94,11 +105,11 @@ public class HttpExecutor implements CallableTask<CallHTTP> {
         WorkflowFilter bodyFilter =
             WorkflowUtils.buildWorkflowFilter(application, null, httpArgs.getBody());
         this.requestFunction =
-            (request, workflow, context, node) ->
+            (request, w, context, node) ->
                 converter.toModel(
                     application.modelFactory(),
                     request.post(
-                        converter.toEntity(bodyFilter.apply(workflow, context, node)),
+                        converter.toEntity(bodyFilter.apply(w, context, node)),
                         node.objectClass()));
         break;
       case HttpMethod.GET:
@@ -136,6 +147,7 @@ public class HttpExecutor implements CallableTask<CallHTTP> {
             q.apply(workflow, taskContext, input)
                 .forEach((k, v) -> supplier.addQuery(k, v.asJavaObject())));
     Builder request = supplier.get().request();
+    authProvider.ifPresent(auth -> auth.build(request, workflow, taskContext, input));
     headersMap.ifPresent(
         h ->
             h.apply(workflow, taskContext, input)
