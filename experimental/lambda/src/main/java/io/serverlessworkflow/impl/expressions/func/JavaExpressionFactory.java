@@ -24,6 +24,7 @@ import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowModelFactory;
 import io.serverlessworkflow.impl.expressions.Expression;
 import io.serverlessworkflow.impl.expressions.ExpressionFactory;
+import io.serverlessworkflow.impl.expressions.TaskMetadataKeys;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
@@ -32,7 +33,6 @@ import java.util.function.Predicate;
 
 public class JavaExpressionFactory implements ExpressionFactory {
 
-  public static final String IF_PREDICATE = "if_predicate";
   private final WorkflowModelFactory modelFactory = new JavaModelFactory();
   private final Expression dummyExpression =
       new Expression() {
@@ -74,7 +74,8 @@ public class JavaExpressionFactory implements ExpressionFactory {
   public Optional<WorkflowFilter> buildIfFilter(TaskBase task) {
     TaskMetadata metadata = task.getMetadata();
     return metadata != null
-            && metadata.getAdditionalProperties().get(IF_PREDICATE) instanceof Predicate pred
+            && metadata.getAdditionalProperties().get(TaskMetadataKeys.IF_PREDICATE)
+                instanceof Predicate pred
         ? Optional.of(fromPredicate(pred))
         : ExpressionFactory.super.buildIfFilter(task);
   }

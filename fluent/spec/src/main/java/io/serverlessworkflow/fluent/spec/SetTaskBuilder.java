@@ -24,7 +24,7 @@ public class SetTaskBuilder extends TaskBaseBuilder<SetTaskBuilder> {
   private final SetTask setTask;
   private final SetTaskConfiguration setTaskConfiguration;
 
-  SetTaskBuilder() {
+  public SetTaskBuilder() {
     this.setTask = new SetTask();
     this.setTaskConfiguration = new SetTaskConfiguration();
     this.setTask(setTask);

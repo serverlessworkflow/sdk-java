@@ -21,7 +21,10 @@ import io.serverlessworkflow.api.types.SwitchCase;
 import io.serverlessworkflow.api.types.SwitchItem;
 import io.serverlessworkflow.api.types.SwitchTask;
 import io.serverlessworkflow.api.types.func.SwitchCaseFunction;
+import io.serverlessworkflow.fluent.func.spi.ConditionalTaskBuilder;
+import io.serverlessworkflow.fluent.func.spi.FuncTransformations;
 import io.serverlessworkflow.fluent.spec.TaskBaseBuilder;
+import io.serverlessworkflow.fluent.spec.spi.SwitchTaskFluent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -29,7 +32,9 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 public class FuncSwitchTaskBuilder extends TaskBaseBuilder<FuncSwitchTaskBuilder>
-    implements FuncTransformations<FuncSwitchTaskBuilder> {
+    implements FuncTransformations<FuncSwitchTaskBuilder>,
+        ConditionalTaskBuilder<FuncSwitchTaskBuilder>,
+        SwitchTaskFluent<FuncSwitchTaskBuilder> {
 
   private final SwitchTask switchTask;
   private final List<SwitchItem> switchItems;
@@ -45,13 +50,22 @@ public class FuncSwitchTaskBuilder extends TaskBaseBuilder<FuncSwitchTaskBuilder
     return this;
   }
 
-  public FuncSwitchTaskBuilder items(Consumer<SwitchCaseJavaBuilder> consumer) {
-    return this.items(UUID.randomUUID().toString(), consumer);
+  public FuncSwitchTaskBuilder functions(Consumer<SwitchCaseFunctionBuilder> consumer) {
+    return this.functions(UUID.randomUUID().toString(), consumer);
   }
 
-  public FuncSwitchTaskBuilder items(String name, Consumer<SwitchCaseJavaBuilder> consumer) {
-    final SwitchCaseJavaBuilder switchCase = new SwitchCaseJavaBuilder();
+  public FuncSwitchTaskBuilder functions(
+      String name, Consumer<SwitchCaseFunctionBuilder> consumer) {
+    final SwitchCaseFunctionBuilder switchCase = new SwitchCaseFunctionBuilder();
     consumer.accept(switchCase);
+    this.switchItems.add(new SwitchItem(name, switchCase.build()));
+    return this;
+  }
+
+  @Override
+  public FuncSwitchTaskBuilder items(String name, Consumer<SwitchCaseBuilder> switchCaseConsumer) {
+    final SwitchCaseBuilder switchCase = new SwitchCaseBuilder();
+    switchCaseConsumer.accept(switchCase);
     this.switchItems.add(new SwitchItem(name, switchCase.build()));
     return this;
   }
@@ -61,24 +75,24 @@ public class FuncSwitchTaskBuilder extends TaskBaseBuilder<FuncSwitchTaskBuilder
     return switchTask;
   }
 
-  public static final class SwitchCaseJavaBuilder {
+  public static final class SwitchCaseFunctionBuilder {
     private final SwitchCaseFunction switchCase;
 
-    SwitchCaseJavaBuilder() {
+    SwitchCaseFunctionBuilder() {
       this.switchCase = new SwitchCaseFunction();
     }
 
-    public <T> SwitchCaseJavaBuilder when(Predicate<T> when) {
+    public <T> SwitchCaseFunctionBuilder when(Predicate<T> when) {
       this.switchCase.setPredicate(when);
       return this;
     }
 
-    public SwitchCaseJavaBuilder then(FlowDirective then) {
+    public SwitchCaseFunctionBuilder then(FlowDirective then) {
       this.switchCase.setThen(then);
       return this;
     }
 
-    public SwitchCaseJavaBuilder then(FlowDirectiveEnum then) {
+    public SwitchCaseFunctionBuilder then(FlowDirectiveEnum then) {
       this.switchCase.setThen(new FlowDirective().withFlowDirectiveEnum(then));
       return this;
     }

@@ -15,14 +15,80 @@
  */
 package io.serverlessworkflow.fluent.spec;
 
-public class DoTaskBuilder extends BaseDoTaskBuilder<DoTaskBuilder, TaskItemListBuilder> {
+import io.serverlessworkflow.fluent.spec.spi.DoFluent;
+import java.util.function.Consumer;
+
+public class DoTaskBuilder extends BaseDoTaskBuilder<DoTaskBuilder, TaskItemListBuilder>
+    implements DoFluent<DoTaskBuilder> {
 
   DoTaskBuilder() {
     super(new TaskItemListBuilder());
   }
 
   @Override
-  public DoTaskBuilder self() {
+  protected DoTaskBuilder self() {
+    return this;
+  }
+
+  @Override
+  public DoTaskBuilder callHTTP(String name, Consumer<CallHTTPTaskBuilder> itemsConfigurer) {
+    this.listBuilder().callHTTP(name, itemsConfigurer);
+    return this;
+  }
+
+  @Override
+  public DoTaskBuilder emit(String name, Consumer<EmitTaskBuilder> itemsConfigurer) {
+    this.listBuilder().emit(name, itemsConfigurer);
+    return this;
+  }
+
+  @Override
+  public DoTaskBuilder forEach(
+      String name, Consumer<ForEachTaskBuilder<TaskItemListBuilder>> itemsConfigurer) {
+    this.listBuilder().forEach(name, itemsConfigurer);
+    return this;
+  }
+
+  @Override
+  public DoTaskBuilder fork(String name, Consumer<ForkTaskBuilder> itemsConfigurer) {
+    this.listBuilder().fork(name, itemsConfigurer);
+    return this;
+  }
+
+  @Override
+  public DoTaskBuilder listen(String name, Consumer<ListenTaskBuilder> itemsConfigurer) {
+    this.listBuilder().listen(name, itemsConfigurer);
+    return this;
+  }
+
+  @Override
+  public DoTaskBuilder raise(String name, Consumer<RaiseTaskBuilder> itemsConfigurer) {
+    this.listBuilder().raise(name, itemsConfigurer);
+    return this;
+  }
+
+  @Override
+  public DoTaskBuilder set(String name, Consumer<SetTaskBuilder> itemsConfigurer) {
+    this.listBuilder().set(name, itemsConfigurer);
+    return this;
+  }
+
+  @Override
+  public DoTaskBuilder set(String name, String expr) {
+    this.listBuilder().set(name, expr);
+    return this;
+  }
+
+  @Override
+  public DoTaskBuilder switchCase(String name, Consumer<SwitchTaskBuilder> itemsConfigurer) {
+    this.listBuilder().switchCase(name, itemsConfigurer);
+    return this;
+  }
+
+  @Override
+  public DoTaskBuilder tryCatch(
+      String name, Consumer<TryTaskBuilder<TaskItemListBuilder>> itemsConfigurer) {
+    this.listBuilder().tryCatch(name, itemsConfigurer);
     return this;
   }
 }

@@ -17,17 +17,14 @@ package io.serverlessworkflow.fluent.spec;
 
 import io.serverlessworkflow.api.types.ForkTask;
 import io.serverlessworkflow.api.types.ForkTaskConfiguration;
+import io.serverlessworkflow.fluent.spec.spi.ForkTaskFluent;
 import java.util.function.Consumer;
 
-public class ForkTaskBuilder extends TaskBaseBuilder<ForkTaskBuilder> {
+public class ForkTaskBuilder extends TaskBaseBuilder<ForkTaskBuilder>
+    implements ForkTaskFluent<ForkTaskBuilder, TaskItemListBuilder> {
 
   private final ForkTask forkTask;
   private final ForkTaskConfiguration forkTaskConfiguration;
-
-  @Override
-  protected ForkTaskBuilder self() {
-    return this;
-  }
 
   ForkTaskBuilder() {
     this.forkTask = new ForkTask();
@@ -35,18 +32,26 @@ public class ForkTaskBuilder extends TaskBaseBuilder<ForkTaskBuilder> {
     super.setTask(this.forkTask);
   }
 
-  public ForkTaskBuilder compete(final Boolean compete) {
+  @Override
+  protected ForkTaskBuilder self() {
+    return this;
+  }
+
+  @Override
+  public ForkTaskBuilder compete(final boolean compete) {
     this.forkTaskConfiguration.setCompete(compete);
     return this;
   }
 
-  public ForkTaskBuilder branches(Consumer<DoTaskBuilder> branchesConsumer) {
-    final DoTaskBuilder doTaskBuilder = new DoTaskBuilder();
+  @Override
+  public ForkTaskBuilder branches(Consumer<TaskItemListBuilder> branchesConsumer) {
+    final TaskItemListBuilder doTaskBuilder = new TaskItemListBuilder();
     branchesConsumer.accept(doTaskBuilder);
-    this.forkTaskConfiguration.setBranches(doTaskBuilder.build().getDo());
+    this.forkTaskConfiguration.setBranches(doTaskBuilder.build());
     return this;
   }
 
+  @Override
   public ForkTask build() {
     return this.forkTask.withFork(this.forkTaskConfiguration);
   }

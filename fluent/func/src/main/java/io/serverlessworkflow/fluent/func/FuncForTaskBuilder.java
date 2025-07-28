@@ -21,7 +21,10 @@ import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.api.types.func.CallJava;
 import io.serverlessworkflow.api.types.func.CallTaskJava;
 import io.serverlessworkflow.api.types.func.ForTaskFunction;
+import io.serverlessworkflow.fluent.func.spi.ConditionalTaskBuilder;
+import io.serverlessworkflow.fluent.func.spi.FuncTransformations;
 import io.serverlessworkflow.fluent.spec.TaskBaseBuilder;
+import io.serverlessworkflow.fluent.spec.spi.ForEachTaskFluent;
 import io.serverlessworkflow.impl.expressions.LoopFunction;
 import io.serverlessworkflow.impl.expressions.LoopPredicate;
 import io.serverlessworkflow.impl.expressions.LoopPredicateIndex;
@@ -33,7 +36,9 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class FuncForTaskBuilder extends TaskBaseBuilder<FuncForTaskBuilder>
-    implements FuncTransformations<FuncForTaskBuilder> {
+    implements FuncTransformations<FuncForTaskBuilder>,
+        ConditionalTaskBuilder<FuncForTaskBuilder>,
+        ForEachTaskFluent<FuncForTaskBuilder, FuncTaskItemListBuilder> {
 
   private final ForTaskFunction forTaskFunction;
   private final List<TaskItem> items;
@@ -79,6 +84,30 @@ public class FuncForTaskBuilder extends TaskBaseBuilder<FuncForTaskBuilder>
 
   public <T, V, R> FuncForTaskBuilder tasks(LoopFunction<T, V, R> function) {
     return this.tasks(UUID.randomUUID().toString(), function);
+  }
+
+  @Override
+  public FuncForTaskBuilder each(String each) {
+    this.forTaskFunction.getFor().withEach(each);
+    return this;
+  }
+
+  @Override
+  public FuncForTaskBuilder in(String in) {
+    this.forTaskFunction.getFor().withIn(in);
+    return this;
+  }
+
+  @Override
+  public FuncForTaskBuilder at(String at) {
+    this.forTaskFunction.getFor().withAt(at);
+    return this;
+  }
+
+  @Override
+  public FuncForTaskBuilder whileC(String expression) {
+    this.forTaskFunction.setWhile(expression);
+    return this;
   }
 
   public FuncForTaskBuilder tasks(Consumer<FuncTaskItemListBuilder> consumer) {

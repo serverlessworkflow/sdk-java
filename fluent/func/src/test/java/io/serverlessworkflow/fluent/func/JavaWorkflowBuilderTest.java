@@ -79,7 +79,7 @@ class JavaWorkflowBuilderTest {
         FuncWorkflowBuilder.workflow("javaLoopFlow")
             .tasks(
                 d ->
-                    d.forFn(
+                    d.forEach(
                         j ->
                             j.collection(ctx -> List.of("a", "b", "c"))
                                 .whileC((String val, Object ctx) -> !val.equals("c"))
@@ -111,7 +111,7 @@ class JavaWorkflowBuilderTest {
             .tasks(
                 d ->
                     d.forEach(f -> f.each("item").in("$.array")) // spec
-                        .forFn(j -> j.collection(ctx -> List.of(1, 2, 3))) // java
+                        .forEach(j -> j.collection(ctx -> List.of(1, 2, 3))) // java
                 )
             .build();
 
@@ -137,7 +137,7 @@ class JavaWorkflowBuilderTest {
             .tasks(
                 d ->
                     d.set("init", s -> s.expr("$.x = 1"))
-                        .forFn(
+                        .forEach(
                             j ->
                                 j.collection(
                                         ctx -> {
@@ -250,7 +250,7 @@ class JavaWorkflowBuilderTest {
             .tasks(
                 d ->
                     d.set("init", s -> s.expr("$.val = 0"))
-                        .forFn(
+                        .forEach(
                             j ->
                                 j.collection(ctx -> List.of("a", "b"))
                                     .tasks(

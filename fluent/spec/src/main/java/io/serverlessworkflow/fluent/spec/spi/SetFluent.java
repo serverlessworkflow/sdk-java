@@ -13,17 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.fluent.spec;
+package io.serverlessworkflow.fluent.spec.spi;
 
-import io.serverlessworkflow.api.types.Export;
-import io.serverlessworkflow.api.types.Input;
-import io.serverlessworkflow.api.types.Output;
+import io.serverlessworkflow.fluent.spec.TaskBaseBuilder;
+import java.util.UUID;
+import java.util.function.Consumer;
 
-public interface TransformationHandlers {
+public interface SetFluent<SELF extends TaskBaseBuilder<?>, LIST> {
 
-  void setOutput(final Output output);
+  LIST set(String name, Consumer<SELF> itemsConfigurer);
 
-  void setExport(final Export export);
+  LIST set(String name, final String expr);
 
-  void setInput(final Input input);
+  default LIST set(final String expr) {
+    return this.set(UUID.randomUUID().toString(), expr);
+  }
+
+  default LIST set(Consumer<SELF> itemsConfigurer) {
+    return this.set(UUID.randomUUID().toString(), itemsConfigurer);
+  }
 }

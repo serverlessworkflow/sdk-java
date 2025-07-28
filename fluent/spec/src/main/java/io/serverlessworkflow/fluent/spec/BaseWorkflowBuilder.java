@@ -20,6 +20,7 @@ import io.serverlessworkflow.api.types.Export;
 import io.serverlessworkflow.api.types.Input;
 import io.serverlessworkflow.api.types.Output;
 import io.serverlessworkflow.api.types.Workflow;
+import io.serverlessworkflow.fluent.spec.spi.TransformationHandlers;
 import java.util.function.Consumer;
 
 public abstract class BaseWorkflowBuilder<

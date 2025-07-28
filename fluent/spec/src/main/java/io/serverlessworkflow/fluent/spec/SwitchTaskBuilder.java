@@ -15,17 +15,15 @@
  */
 package io.serverlessworkflow.fluent.spec;
 
-import io.serverlessworkflow.api.types.FlowDirective;
-import io.serverlessworkflow.api.types.FlowDirectiveEnum;
-import io.serverlessworkflow.api.types.SwitchCase;
 import io.serverlessworkflow.api.types.SwitchItem;
 import io.serverlessworkflow.api.types.SwitchTask;
+import io.serverlessworkflow.fluent.spec.spi.SwitchTaskFluent;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.function.Consumer;
 
-public class SwitchTaskBuilder extends TaskBaseBuilder<SwitchTaskBuilder> {
+public class SwitchTaskBuilder extends TaskBaseBuilder<SwitchTaskBuilder>
+    implements SwitchTaskFluent<SwitchTaskBuilder> {
 
   private final SwitchTask switchTask;
   private final List<SwitchItem> switchItems;
@@ -42,13 +40,11 @@ public class SwitchTaskBuilder extends TaskBaseBuilder<SwitchTaskBuilder> {
     return this;
   }
 
-  public SwitchTaskBuilder items(Consumer<SwitchCaseBuilder> switchCaseConsumer) {
-    return this.items(UUID.randomUUID().toString(), switchCaseConsumer);
-  }
-
+  @Override
   public SwitchTaskBuilder items(
-      final String name, Consumer<SwitchCaseBuilder> switchCaseConsumer) {
-    final SwitchCaseBuilder switchCaseBuilder = new SwitchCaseBuilder();
+      final String name, Consumer<SwitchTaskFluent.SwitchCaseBuilder> switchCaseConsumer) {
+    final SwitchTaskFluent.SwitchCaseBuilder switchCaseBuilder =
+        new SwitchTaskFluent.SwitchCaseBuilder();
     switchCaseConsumer.accept(switchCaseBuilder);
     this.switchItems.add(new SwitchItem(name, switchCaseBuilder.build()));
     return this;
@@ -57,32 +53,5 @@ public class SwitchTaskBuilder extends TaskBaseBuilder<SwitchTaskBuilder> {
   public SwitchTask build() {
     this.switchTask.setSwitch(this.switchItems);
     return this.switchTask;
-  }
-
-  public static final class SwitchCaseBuilder {
-    private final SwitchCase switchCase;
-
-    SwitchCaseBuilder() {
-      this.switchCase = new SwitchCase();
-    }
-
-    public SwitchCaseBuilder when(String when) {
-      this.switchCase.setWhen(when);
-      return this;
-    }
-
-    public SwitchCaseBuilder then(FlowDirective then) {
-      this.switchCase.setThen(then);
-      return this;
-    }
-
-    public SwitchCaseBuilder then(FlowDirectiveEnum then) {
-      this.switchCase.setThen(new FlowDirective().withFlowDirectiveEnum(then));
-      return this;
-    }
-
-    public SwitchCase build() {
-      return this.switchCase;
-    }
   }
 }
