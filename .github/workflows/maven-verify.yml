@@ -10,6 +10,7 @@ on:
   pull_request:
     branches:
       - main
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -25,7 +26,9 @@ jobs:
 
       - name: Verify with Maven
         run: |
-          mvn -B -f pom.xml clean install verify
+          mvn -B -f pom.xml clean install verify \
+            -pl ",!fluent/agentic" \
+            -am
 
       - name: Verify Examples with Maven
         run: |

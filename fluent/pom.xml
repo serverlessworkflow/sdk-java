@@ -46,6 +46,7 @@
     <modules>
         <module>spec</module>
         <module>func</module>
+        <module>agentic</module>
     </modules>
 
 </project>
