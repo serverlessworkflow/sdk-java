@@ -16,7 +16,7 @@
 
 package io.serverlessworkflow.impl.executors.func;
 
-import static io.serverlessworkflow.impl.executors.func.JavaCallExecutor.safeObject;
+import static io.serverlessworkflow.impl.executors.func.JavaFuncUtils.safeObject;
 
 import io.serverlessworkflow.api.types.ForTask;
 import io.serverlessworkflow.api.types.Workflow;
