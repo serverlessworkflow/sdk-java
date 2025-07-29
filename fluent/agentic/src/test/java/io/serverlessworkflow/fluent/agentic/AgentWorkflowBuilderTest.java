@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.spy;
 
 import dev.langchain4j.agentic.AgentServices;
-import dev.langchain4j.agentic.Cognisphere;
+import dev.langchain4j.agentic.cognisphere.Cognisphere;
 import io.serverlessworkflow.api.types.ForkTask;
 import io.serverlessworkflow.api.types.Task;
 import io.serverlessworkflow.api.types.TaskItem;

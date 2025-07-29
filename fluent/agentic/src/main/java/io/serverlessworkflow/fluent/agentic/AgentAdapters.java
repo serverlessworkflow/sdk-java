@@ -15,9 +15,9 @@
  */
 package io.serverlessworkflow.fluent.agentic;
 
-import static dev.langchain4j.agentic.internal.AgentExecutor.agentsToExecutors;
+import static dev.langchain4j.agentic.internal.AgentUtil.agentsToExecutors;
 
-import dev.langchain4j.agentic.Cognisphere;
+import dev.langchain4j.agentic.cognisphere.Cognisphere;
 import dev.langchain4j.agentic.internal.AgentExecutor;
 import dev.langchain4j.agentic.internal.AgentInstance;
 import io.serverlessworkflow.impl.expressions.LoopPredicateIndex;
@@ -27,10 +27,11 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 public final class AgentAdapters {
+
   private AgentAdapters() {}
 
   public static List<AgentExecutor> toExecutors(Object... agents) {
-    return agentsToExecutors(Stream.of(agents).map(AgentInstance.class::cast).toList());
+    return agentsToExecutors(Stream.of(agents).map(AgentInstance.class::cast).toArray());
   }
 
   public static Function<Cognisphere, Object> toFunction(AgentExecutor exec) {

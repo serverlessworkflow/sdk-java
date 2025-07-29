@@ -15,7 +15,7 @@
  */
 package io.serverlessworkflow.fluent.agentic;
 
-import dev.langchain4j.agentic.Cognisphere;
+import dev.langchain4j.agentic.cognisphere.Cognisphere;
 import dev.langchain4j.agentic.internal.AgentExecutor;
 import io.serverlessworkflow.api.types.ForTaskConfiguration;
 import io.serverlessworkflow.api.types.func.ForTaskFunction;
