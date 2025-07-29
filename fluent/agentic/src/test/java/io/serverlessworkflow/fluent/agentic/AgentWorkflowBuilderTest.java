@@ -21,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.spy;
 
 import dev.langchain4j.agentic.AgentServices;
@@ -169,5 +170,54 @@ class AgentWorkflowBuilderTest {
             branch -> {
               assertThat(branch.getTask().getCallTask().get()).isInstanceOf(CallJava.class);
             });
+  }
+
+  @Test
+  @DisplayName("workflow callFn(name,cfg) produces CallJava with no guard")
+  void testWorkflowCallFnBare() {
+    Workflow wf =
+        AgentWorkflowBuilder.workflow()
+            .tasks(d -> d.callFn("myCall", fn -> fn.function(ctx -> "hello")))
+            .build();
+
+    assertThat(wf.getDo()).hasSize(1);
+    TaskItem ti = wf.getDo().get(0);
+
+    assertInstanceOf(CallJava.class, ti.getTask().getCallTask().get());
+  }
+
+  @Test
+  @DisplayName("workflow callFn with Java DSL guard attaches predicate")
+  void testWorkflowCallFnWithPredicate() {
+    Predicate<Cognisphere> guard = cog -> true;
+
+    Workflow wf =
+        AgentWorkflowBuilder.workflow()
+            .tasks(d -> d.callFn("guarded", fn -> fn.function(ctx -> "x").when(guard)))
+            .build();
+
+    TaskItem ti = wf.getDo().get(0);
+    assertInstanceOf(CallJava.class, ti.getTask().getCallTask().get());
+  }
+
+  @Test
+  @DisplayName("workflow loop with maxIterations only generates collection and no predicate")
+  void testWorkflowLoopMaxIterationsOnly() {
+    Agents.MovieExpert expert = AgentsUtils.newMovieExpert();
+
+    Workflow wf =
+        AgentWorkflowBuilder.workflow("maxFlow")
+            .tasks(d -> d.loop("limit", l -> l.maxIterations(2).subAgents("sub", expert)))
+            .build();
+
+    TaskItem ti = wf.getDo().get(0);
+    ForTaskFunction fn = (ForTaskFunction) ti.getTask().getForTask();
+
+    // synthetic collection is created
+    assertThat(fn.getCollection()).isNotNull();
+    // no exitCondition → no whilePredicate set
+    assertNull(fn.getWhilePredicate(), "No while predicate when only maxIterations");
+    // inner subAgents block still generates exactly one call branch
+    assertThat(fn.getDo()).hasSize(1);
   }
 }

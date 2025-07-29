@@ -7,7 +7,7 @@
         <version>8.0.0-SNAPSHOT</version>
     </parent>
     <artifactId>serverlessworkflow-experimental-lambda</artifactId>
-    <name>ServelessWorkflow:: Experimental:: lambda</name>
+    <name>Serverless Workflow :: Experimental :: Lambda</name>
     <dependencies>
         <dependency>
             <groupId>io.serverlessworkflow</groupId>
@@ -20,6 +20,7 @@
         <dependency>
             <groupId>io.serverlessworkflow</groupId>
             <artifactId>serverlessworkflow-fluent-func</artifactId>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>
