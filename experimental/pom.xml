@@ -7,7 +7,7 @@
   </parent>
   <artifactId>serverlessworkflow-experimental</artifactId>
   <packaging>pom</packaging>
-  <name>ServerlessWorkflow:: Experimental</name>
+  <name>Serverless Workflow :: Experimental</name>
   <dependencyManagement>
     <dependencies>
         <dependency>
@@ -40,5 +40,6 @@
   <modules>
   	<module>types</module>
   	<module>lambda</module>
+    <module>lambda-fluent</module>
   </modules>
 </project>
