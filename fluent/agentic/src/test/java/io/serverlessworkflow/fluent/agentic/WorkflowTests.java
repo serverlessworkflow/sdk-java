@@ -37,6 +37,64 @@ import org.junit.jupiter.api.Test;
 class WorkflowTests {
 
   @Test
+  public void testAgent() throws ExecutionException, InterruptedException {
+    final StorySeedAgent storySeedAgent = mock(StorySeedAgent.class);
+
+    when(storySeedAgent.invoke(eq("A Great Story"))).thenReturn("storySeedAgent");
+    when(storySeedAgent.outputName()).thenReturn("premise");
+
+    Workflow workflow =
+        AgentWorkflowBuilder.workflow("storyFlow")
+            .tasks(d -> d.agent("story", storySeedAgent))
+            .build();
+
+    Map<String, String> topic = new HashMap<>();
+    topic.put("title", "A Great Story");
+
+    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
+      String result =
+          app.workflowDefinition(workflow).instance(topic).start().get().asText().orElseThrow();
+
+      assertEquals("storySeedAgent", result);
+    }
+  }
+
+  @Test
+  public void testAgents() throws ExecutionException, InterruptedException {
+    final StorySeedAgent storySeedAgent = mock(StorySeedAgent.class);
+    final PlotAgent plotAgent = mock(PlotAgent.class);
+    final SceneAgent sceneAgent = mock(SceneAgent.class);
+
+    when(storySeedAgent.invoke(eq("A Great Story"))).thenReturn("storySeedAgent");
+    when(storySeedAgent.outputName()).thenReturn("premise");
+
+    when(plotAgent.invoke(eq("storySeedAgent"))).thenReturn("plotAgent");
+    when(plotAgent.outputName()).thenReturn("plot");
+
+    when(sceneAgent.invoke(eq("plotAgent"))).thenReturn("sceneAgent");
+    when(sceneAgent.outputName()).thenReturn("story");
+
+    Workflow workflow =
+        AgentWorkflowBuilder.workflow("storyFlow")
+            .tasks(
+                d ->
+                    d.agent("story", storySeedAgent)
+                        .agent("plot", plotAgent)
+                        .agent("scene", sceneAgent))
+            .build();
+
+    Map<String, String> topic = new HashMap<>();
+    topic.put("title", "A Great Story");
+
+    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
+      String result =
+          app.workflowDefinition(workflow).instance(topic).start().get().asText().orElseThrow();
+
+      assertEquals("sceneAgent", result);
+    }
+  }
+
+  @Test
   public void testSequence() throws ExecutionException, InterruptedException {
     final StorySeedAgent storySeedAgent = mock(StorySeedAgent.class);
     final PlotAgent plotAgent = mock(PlotAgent.class);
@@ -48,7 +106,7 @@ class WorkflowTests {
     when(plotAgent.invoke(eq("storySeedAgent"))).thenReturn("plotAgent");
     when(plotAgent.outputName()).thenReturn("plot");
 
-    when(sceneAgent.invoke(eq("plotAgent"))).thenReturn("plotAgent");
+    when(sceneAgent.invoke(eq("plotAgent"))).thenReturn("sceneAgent");
     when(sceneAgent.outputName()).thenReturn("story");
 
     Workflow workflow =
@@ -63,7 +121,7 @@ class WorkflowTests {
       String result =
           app.workflowDefinition(workflow).instance(topic).start().get().asText().orElseThrow();
 
-      assertEquals("plotAgent", result);
+      assertEquals("sceneAgent", result);
     }
   }
 
