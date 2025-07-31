@@ -18,23 +18,20 @@ package io.serverlessworkflow.fluent.agentic;
 
 import static io.serverlessworkflow.fluent.agentic.Agents.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import dev.langchain4j.agentic.AgentServices;
+import dev.langchain4j.agentic.AgenticServices;
+import dev.langchain4j.agentic.cognisphere.DefaultCognisphere;
 import dev.langchain4j.agentic.workflow.HumanInTheLoop;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -56,10 +53,15 @@ class WorkflowTests {
     topic.put("title", "A Great Story");
 
     try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-      String result =
-          app.workflowDefinition(workflow).instance(topic).start().get().asText().orElseThrow();
+      DefaultCognisphere result =
+          app.workflowDefinition(workflow)
+              .instance(topic)
+              .start()
+              .get()
+              .as(DefaultCognisphere.class)
+              .orElseThrow();
 
-      assertEquals("storySeedAgent", result);
+      assertEquals("storySeedAgent", result.readState("premise"));
     }
   }
 
@@ -91,10 +93,15 @@ class WorkflowTests {
     topic.put("title", "A Great Story");
 
     try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-      String result =
-          app.workflowDefinition(workflow).instance(topic).start().get().asText().orElseThrow();
+      DefaultCognisphere result =
+          app.workflowDefinition(workflow)
+              .instance(topic)
+              .start()
+              .get()
+              .as(DefaultCognisphere.class)
+              .orElseThrow();
 
-      assertEquals("sceneAgent", result);
+      assertEquals("sceneAgent", result.readState("story"));
     }
   }
 
@@ -122,10 +129,15 @@ class WorkflowTests {
     topic.put("title", "A Great Story");
 
     try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-      String result =
-          app.workflowDefinition(workflow).instance(topic).start().get().asText().orElseThrow();
+      DefaultCognisphere result =
+          app.workflowDefinition(workflow)
+              .instance(topic)
+              .start()
+              .get()
+              .as(DefaultCognisphere.class)
+              .orElseThrow();
 
-      assertEquals("sceneAgent", result);
+      assertEquals("sceneAgent", result.readState("story"));
     }
   }
 
@@ -154,25 +166,21 @@ class WorkflowTests {
     topic.put("style", "sci-fi");
 
     try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-      Map<String, Object> result =
-          app.workflowDefinition(workflow).instance(topic).start().get().asMap().orElseThrow();
+      DefaultCognisphere result =
+          app.workflowDefinition(workflow)
+              .instance(topic)
+              .start()
+              .get()
+              .as(DefaultCognisphere.class)
+              .orElseThrow();
 
-      assertEquals(3, result.size());
-      assertTrue(result.containsKey("branch-0-story"));
-      assertTrue(result.containsKey("branch-1-story"));
-      assertTrue(result.containsKey("branch-2-story"));
-
-      Set<String> values =
-          result.values().stream().map(Object::toString).collect(Collectors.toSet());
-
-      assertTrue(values.contains("Fake conflict response"));
-      assertTrue(values.contains("Fake hero response"));
-      assertTrue(values.contains("Fake setting response"));
+      assertEquals("Fake conflict response", result.readState("setting"));
+      assertEquals("Fake hero response", result.readState("hero"));
+      assertEquals("Fake setting response", result.readState("conflict"));
     }
   }
 
   @Test
-  // TODO: callFn must be replace with a .output() method once it's available
   public void testSeqAndThenParallel() throws ExecutionException, InterruptedException {
     final FactAgent factAgent = mock(FactAgent.class);
     final CultureAgent cultureAgent = mock(CultureAgent.class);
@@ -197,15 +205,6 @@ class WorkflowTests {
             .tasks(
                 d ->
                     d.sequence("fact", factAgent)
-                        .callFn(
-                            f ->
-                                f.function(
-                                    (Function<String, Map<String, String>>)
-                                        fact -> {
-                                          Map<String, String> result = new HashMap<>();
-                                          result.put("fact", fact);
-                                          return result;
-                                        }))
                         .parallel("cultureAndTechnology", cultureAgent, technologyAgent))
             .build();
 
@@ -213,20 +212,22 @@ class WorkflowTests {
     topic.put("fact", "alien");
 
     try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-      Map<String, Object> result =
-          app.workflowDefinition(workflow).instance(topic).start().get().asMap().orElseThrow();
+      DefaultCognisphere result =
+          app.workflowDefinition(workflow)
+              .instance(topic)
+              .start()
+              .get()
+              .as(DefaultCognisphere.class)
+              .orElseThrow();
 
-      assertEquals(2, result.size());
-      assertTrue(result.containsKey("branch-0-cultureAndTechnology"));
-      assertTrue(result.containsKey("branch-1-cultureAndTechnology"));
-
-      assertEquals(cultureTraits, result.get("branch-0-cultureAndTechnology"));
-      assertEquals(technologyTraits, result.get("branch-1-cultureAndTechnology"));
+      assertEquals(cultureTraits, result.readState("culture"));
+      assertEquals(technologyTraits, result.readState("technology"));
     }
   }
 
   @Test
-  @Disabled("HumanLoop not implemented yet")
+  @Disabled(
+      "HumanInTheLoop is not a dev.langchain4j.agentic.internal.AgentSpecification, we should treat it differently once it's implemented")
   public void humanInTheLoop() throws ExecutionException, InterruptedException {
     final MeetingInvitationDraft meetingInvitationDraft = mock(MeetingInvitationDraft.class);
     when(meetingInvitationDraft.invoke(
@@ -246,7 +247,7 @@ class WorkflowTests {
     AtomicReference<String> request = new AtomicReference<>();
 
     HumanInTheLoop humanInTheLoop =
-        AgentServices.humanInTheLoopBuilder()
+        AgenticServices.humanInTheLoopBuilder()
             .description(
                 "What level of formality would you like? (please reply with “formal”, “casual”, or “friendly”)")
             .inputName("style")
@@ -273,15 +274,15 @@ class WorkflowTests {
     initialValues.put("agenda", "Discuss project updates");
 
     try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-      String result =
+      DefaultCognisphere result =
           app.workflowDefinition(workflow)
               .instance(initialValues)
               .start()
               .get()
-              .asText()
+              .as(DefaultCognisphere.class)
               .orElseThrow();
 
-      assertEquals("Styled meeting invitation for John Doe", result);
+      assertEquals("Styled meeting invitation for John Doe", result.readState("styled"));
     }
   }
 }

@@ -16,20 +16,15 @@
 package io.serverlessworkflow.impl.expressions.agentic;
 
 import dev.langchain4j.agentic.cognisphere.Cognisphere;
-import dev.langchain4j.agentic.cognisphere.ResultWithCognisphere;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.expressions.func.JavaModel;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Optional;
 
 class AgenticModel extends JavaModel {
 
-  private final Cognisphere cognisphere;
-
-  AgenticModel(Object object, Cognisphere cognisphere) {
-    super(object);
-    this.cognisphere = cognisphere;
+  AgenticModel(Cognisphere cognisphere) {
+    super(cognisphere);
   }
 
   @Override
@@ -39,17 +34,13 @@ class AgenticModel extends JavaModel {
 
   @Override
   public Collection<WorkflowModel> asCollection() {
-    return object instanceof Collection value
-        ? new AgenticModelCollection(value, cognisphere)
-        : Collections.emptyList();
+    throw new UnsupportedOperationException("Not supported yet.");
   }
 
   @Override
   public <T> Optional<T> as(Class<T> clazz) {
     if (Cognisphere.class.isAssignableFrom(clazz)) {
-      return Optional.of(clazz.cast(cognisphere));
-    } else if (ResultWithCognisphere.class.isAssignableFrom(clazz)) {
-      return Optional.of(clazz.cast(new ResultWithCognisphere<>(cognisphere, object)));
+      return Optional.of(clazz.cast(object));
     } else {
       return super.as(clazz);
     }

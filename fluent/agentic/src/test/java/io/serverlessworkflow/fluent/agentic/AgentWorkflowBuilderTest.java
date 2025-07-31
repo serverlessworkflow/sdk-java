@@ -24,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.spy;
 
-import dev.langchain4j.agentic.AgentServices;
+import dev.langchain4j.agentic.AgenticServices;
 import dev.langchain4j.agentic.cognisphere.Cognisphere;
 import io.serverlessworkflow.api.types.ForkTask;
 import io.serverlessworkflow.api.types.Task;
@@ -43,7 +43,7 @@ class AgentWorkflowBuilderTest {
   public void verifyAgentCall() {
     Agents.MovieExpert movieExpert =
         spy(
-            AgentServices.agentBuilder(Agents.MovieExpert.class)
+            AgenticServices.agentBuilder(Agents.MovieExpert.class)
                 .outputName("movies")
                 .chatModel(BASE_MODEL)
                 .build());

@@ -40,6 +40,12 @@ public interface AgentDoFluent<SELF extends AgentDoFluent<SELF>> extends FuncDoF
     return loop("loop-" + UUID.randomUUID(), builder);
   }
 
+  SELF loop(String name, LoopAgentsBuilder builder);
+
+  default SELF loop(LoopAgentsBuilder builder) {
+    return loop("loop-" + UUID.randomUUID(), builder);
+  }
+
   SELF parallel(String name, Object... agents);
 
   default SELF parallel(Object... agents) {

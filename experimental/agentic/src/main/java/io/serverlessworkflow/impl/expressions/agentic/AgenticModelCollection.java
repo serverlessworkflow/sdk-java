@@ -37,7 +37,7 @@ class AgenticModelCollection extends JavaModelCollection {
 
   @Override
   protected WorkflowModel nextItem(Object obj) {
-    return new AgenticModel(obj, cognisphere);
+    return new AgenticModel((Cognisphere) obj);
   }
 
   @Override

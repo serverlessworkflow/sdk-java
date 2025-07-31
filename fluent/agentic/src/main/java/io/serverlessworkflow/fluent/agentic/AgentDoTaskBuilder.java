@@ -58,6 +58,12 @@ public class AgentDoTaskBuilder
   }
 
   @Override
+  public AgentDoTaskBuilder loop(String name, LoopAgentsBuilder builder) {
+    this.listBuilder().loop(name, builder);
+    return self();
+  }
+
+  @Override
   public AgentDoTaskBuilder parallel(String name, Object... agents) {
     this.listBuilder().parallel(name, agents);
     return self();
