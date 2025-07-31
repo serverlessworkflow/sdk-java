@@ -73,6 +73,12 @@ public class AgentTaskItemListBuilder extends BaseTaskItemListBuilder<AgentTaskI
   public AgentTaskItemListBuilder loop(String name, Consumer<LoopAgentsBuilder> consumer) {
     final LoopAgentsBuilder builder = new LoopAgentsBuilder();
     consumer.accept(builder);
+    this.loop(name, builder);
+    return self();
+  }
+
+  @Override
+  public AgentTaskItemListBuilder loop(String name, LoopAgentsBuilder builder) {
     this.addTaskItem(new TaskItem(name, new Task().withForTask(builder.build())));
     return self();
   }

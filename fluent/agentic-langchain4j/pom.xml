@@ -9,8 +9,9 @@
         <version>8.0.0-SNAPSHOT</version>
     </parent>
 
-    <name>Serverless Workflow :: Fluent :: Agentic</name>
-    <artifactId>serverlessworkflow-fluent-agentic</artifactId>
+    <artifactId>serverlessworkflow-fluent-agentic-langchain4j</artifactId>
+    <name>Serverless Workflow :: Fluent :: Agentic LangChain4j</name>
+    <description>Agentic Workflow DSL Implementation for langchain4j-agentic</description>
 
     <dependencies>
         <dependency>
@@ -19,7 +20,7 @@
         </dependency>
         <dependency>
             <groupId>io.serverlessworkflow</groupId>
-            <artifactId>serverlessworkflow-fluent-func</artifactId>
+            <artifactId>serverlessworkflow-fluent-agentic</artifactId>
         </dependency>
         <dependency>
             <groupId>dev.langchain4j</groupId>
@@ -54,27 +55,14 @@
         </dependency>
         <dependency>
             <groupId>io.serverlessworkflow</groupId>
-            <artifactId>serverlessworkflow-experimental-agentic</artifactId>
-            <version>${project.version}</version>
+            <artifactId>serverlessworkflow-fluent-agentic</artifactId>
+            <type>test-jar</type>
             <scope>test</scope>
         </dependency>
     </dependencies>
 
-    <build>
-        <plugins>
-            <plugin>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>${version.jar.plugin}</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <!-- this will package up the test-classes into a separate jar -->
-                            <goal>test-jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
+
+
+
 
 </project>

@@ -31,7 +31,7 @@ public class LoopAgentsBuilder {
   private final FuncTaskItemListBuilder funcDelegate;
   private final ForTaskFunction forTask;
 
-  LoopAgentsBuilder() {
+  public LoopAgentsBuilder() {
     this.forTask = new ForTaskFunction();
     this.forTask.setFor(new ForTaskConfiguration());
     this.funcDelegate = new FuncTaskItemListBuilder();

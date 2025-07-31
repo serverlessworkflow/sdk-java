@@ -16,6 +16,10 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+        <!-- For some reason the dev branch has two different versions -->
+        <version.dev.langchain4j.agentic>1.3.0-beta9-SNAPSHOT</version.dev.langchain4j.agentic>
+        <version.dev.langchain4j>1.3.0-SNAPSHOT</version.dev.langchain4j>
     </properties>
 
     <dependencyManagement>
@@ -40,6 +44,28 @@
                 <artifactId>serverlessworkflow-fluent-func</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>io.serverlessworkflow</groupId>
+                <artifactId>serverlessworkflow-fluent-agentic</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.serverlessworkflow</groupId>
+                <artifactId>serverlessworkflow-fluent-agentic-langchain4j</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.serverlessworkflow</groupId>
+                <artifactId>serverlessworkflow-fluent-agentic</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>dev.langchain4j</groupId>
+                <artifactId>langchain4j-agentic</artifactId>
+                <version>${version.dev.langchain4j.agentic}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -47,6 +73,7 @@
         <module>spec</module>
         <module>func</module>
         <module>agentic</module>
+        <module>agentic-langchain4j</module>
     </modules>
 
 </project>
