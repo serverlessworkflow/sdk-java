@@ -23,6 +23,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import dev.langchain4j.agentic.AgentServices;
+import dev.langchain4j.agentic.workflow.HumanInTheLoop;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import java.util.HashMap;
@@ -30,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
@@ -219,5 +222,54 @@ class WorkflowTests {
       assertEquals(cultureTraits, result.get("branch-0-cultureAndTechnology"));
       assertEquals(technologyTraits, result.get("branch-1-cultureAndTechnology"));
     }
+  }
+
+  @Test
+  public void humanInTheLoop() throws ExecutionException, InterruptedException {
+    final MeetingInvitationDraft meetingInvitationDraft = mock(MeetingInvitationDraft.class);
+    when(meetingInvitationDraft.invoke(eq("Meeting with John Doe"),
+            eq("2023-10-01"), eq("08:00AM"),
+            eq("London"),
+            eq("Discuss project updates")))
+        .thenReturn("Drafted meeting invitation for John Doe");
+    when(meetingInvitationDraft.outputName()).thenReturn("draft");
+
+
+    final MeetingInvitationStyle meetingInvitationStyle = mock(MeetingInvitationStyle.class);
+    when(meetingInvitationStyle.invoke(eq("Drafted meeting invitation for John Doe"), eq("formal")))
+        .thenReturn("Styled meeting invitation for John Doe");
+    when(meetingInvitationStyle.outputName()).thenReturn("styled");
+
+    AtomicReference<String> request = new AtomicReference<>();
+
+    HumanInTheLoop humanInTheLoop = AgentServices.humanInTheLoopBuilder()
+            .description("What level of formality would you like? (please reply with “formal”, “casual”, or “friendly”)")
+            .inputName("style")
+            .outputName("style")
+            .requestWriter(q -> request.set("What level of formality would you like? (please reply with “formal”, “casual”, or “friendly”)"))
+            .responseReader(() -> "formal")
+            .build();
+
+    Workflow workflow =
+        AgentWorkflowBuilder.workflow("meetingInvitationFlow")
+            .tasks(
+                d ->
+                    d.sequence("draft", meetingInvitationDraft, humanInTheLoop, meetingInvitationStyle)
+            ).build();
+    Map<String, String> initialValues = new HashMap<>();
+    initialValues.put("title", "Meeting with John Doe");
+    initialValues.put("date", "2023-10-01");
+    initialValues.put("time", "08:00AM");
+    initialValues.put("location", "London");
+    initialValues.put("agenda", "Discuss project updates");
+
+    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
+      String result =
+              app.workflowDefinition(workflow).instance(initialValues).start().get().asText().orElseThrow();
+
+        assertEquals("Styled meeting invitation for John Doe", result);
+    }
+
+
   }
 }

@@ -140,4 +140,31 @@ public interface Agents {
     @Agent("Generates the opening scene of the story from a plot outline.")
     String invoke(@V("plot") String plot);
   }
-}
+
+  interface MeetingInvitationDraft extends AgentInstance {
+
+    @UserMessage(
+        """
+                  You are a professional meeting invitation writer. Draft a concise and clear meeting invitation email based on the following details:
+                  Subject: {{subject}}
+                  Date: {{date}}
+                  Time: {{time}}
+                  Location: {{location}}
+                  Agenda: {{agenda}}
+                """)
+    @Agent("Drafts a professional meeting invitation email.")
+    String invoke(@V("subject") String subject, @V("date") String date, @V("time") String time, @V("location") String location, @V("agenda") String agenda);
+  }
+
+  interface MeetingInvitationStyle extends AgentInstance {
+
+    @UserMessage(
+        """
+                  You are a professional meeting invitation writer. Rewrite the following meeting invitation email to better fit the {{style}} style:
+                  Original Invitation: {{invitation}}
+                """)
+    @Agent("Edits a meeting invitation email to better fit a given style.")
+    String invoke(@V("invitation") String invitation, @V("style") String style);
+  }
+
+ }
