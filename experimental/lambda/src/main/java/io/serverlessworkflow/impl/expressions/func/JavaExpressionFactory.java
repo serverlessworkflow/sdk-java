@@ -55,7 +55,8 @@ public class JavaExpressionFactory implements ExpressionFactory {
     if (value instanceof Function func) {
       return (w, t, n) -> modelFactory.fromAny(func.apply(n.asJavaObject()));
     } else if (value instanceof TypedFunction func) {
-      return (w, t, n) -> modelFactory.fromAny(func.function().apply(n.as(func.argClass())));
+      return (w, t, n) ->
+          modelFactory.fromAny(func.function().apply(n.as(func.argClass()).orElseThrow()));
     } else if (value instanceof Predicate pred) {
       return fromPredicate(pred);
     } else if (value instanceof TypedPredicate pred) {
@@ -78,7 +79,7 @@ public class JavaExpressionFactory implements ExpressionFactory {
 
   @SuppressWarnings({"rawtypes", "unchecked"})
   private WorkflowFilter fromPredicate(TypedPredicate pred) {
-    return (w, t, n) -> modelFactory.from(pred.pred().test(n.as(pred.argClass())));
+    return (w, t, n) -> modelFactory.from(pred.pred().test(n.as(pred.argClass()).orElseThrow()));
   }
 
   @Override

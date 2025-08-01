@@ -113,7 +113,7 @@ public class JavaModel implements WorkflowModel {
 
   @Override
   public <T> Optional<T> as(Class<T> clazz) {
-    return object != null && object.getClass().isAssignableFrom(clazz)
+    return object != null && clazz.isAssignableFrom(object.getClass())
         ? Optional.of(clazz.cast(object))
         : Optional.empty();
   }
