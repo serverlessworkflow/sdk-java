@@ -15,20 +15,6 @@
  */
 package io.serverlessworkflow.api.types.func;
 
-import io.serverlessworkflow.api.types.ExportAs;
-import java.util.Objects;
 import java.util.function.Function;
 
-public class ExportAsFunction extends ExportAs {
-
-  public <T, V> ExportAs withFunction(Function<T, V> value) {
-    setObject(value);
-    return this;
-  }
-
-  public <T, V> ExportAs withFunction(Function<T, V> value, Class<T> argClass) {
-    Objects.requireNonNull(argClass);
-    setObject(new TypedFunction<>(value, argClass));
-    return this;
-  }
-}
+public record TypedFunction<T, V>(Function<T, V> function, Class<T> argClass) {}

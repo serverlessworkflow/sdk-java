@@ -20,6 +20,7 @@ import io.serverlessworkflow.api.types.SwitchCase;
 import io.serverlessworkflow.api.types.SwitchTask;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.api.types.func.SwitchCaseFunction;
+import io.serverlessworkflow.api.types.func.TypedPredicate;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowFilter;
 import io.serverlessworkflow.impl.WorkflowPosition;
@@ -27,6 +28,7 @@ import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.executors.SwitchExecutor.SwitchExecutorBuilder;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 public class JavaSwitchExecutorBuilder extends SwitchExecutorBuilder {
 
@@ -42,7 +44,14 @@ public class JavaSwitchExecutorBuilder extends SwitchExecutorBuilder {
   @Override
   protected Optional<WorkflowFilter> buildFilter(SwitchCase switchCase) {
     return switchCase instanceof SwitchCaseFunction function
-        ? Optional.of(WorkflowUtils.buildWorkflowFilter(application, null, function.predicate()))
+        ? Optional.of(
+            WorkflowUtils.buildWorkflowFilter(
+                application, null, predObject(function.predicate(), function.predicateClass())))
         : super.buildFilter(switchCase);
+  }
+
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  private Object predObject(Predicate<?> pred, Optional<Class<?>> predClass) {
+    return predClass.isPresent() ? new TypedPredicate(pred, predClass.orElseThrow()) : pred;
   }
 }

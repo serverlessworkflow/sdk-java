@@ -16,22 +16,19 @@
 package io.serverlessworkflow.fluent.func.spi;
 
 import io.serverlessworkflow.api.types.TaskBase;
-import io.serverlessworkflow.api.types.func.TypedPredicate;
-import java.util.Objects;
-import java.util.function.Predicate;
+import io.serverlessworkflow.api.types.TaskMetadata;
+import io.serverlessworkflow.impl.expressions.TaskMetadataKeys;
 
-public interface ConditionalTaskBuilder<SELF> {
+class ConditionalTaskBuilderHelper {
 
-  TaskBase getTask();
+  private ConditionalTaskBuilderHelper() {}
 
-  default SELF when(Predicate<?> predicate) {
-    ConditionalTaskBuilderHelper.setMetadata(getTask(), predicate);
-    return (SELF) this;
-  }
-
-  default <T> SELF when(Predicate<T> predicate, Class<T> argClass) {
-    Objects.requireNonNull(argClass);
-    ConditionalTaskBuilderHelper.setMetadata(getTask(), new TypedPredicate<>(predicate, argClass));
-    return (SELF) this;
+  static void setMetadata(TaskBase task, Object predicate) {
+    TaskMetadata metadata = task.getMetadata();
+    if (metadata == null) {
+      metadata = new TaskMetadata();
+      task.setMetadata(metadata);
+    }
+    metadata.setAdditionalProperty(TaskMetadataKeys.IF_PREDICATE, predicate);
   }
 }

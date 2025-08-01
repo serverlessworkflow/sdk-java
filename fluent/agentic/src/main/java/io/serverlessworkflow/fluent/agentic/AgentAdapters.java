@@ -38,7 +38,7 @@ public final class AgentAdapters {
     return exec::invoke;
   }
 
-  public static LoopPredicateIndex<Object, Object> toWhile(Predicate<Cognisphere> exit) {
-    return (model, item, idx) -> !exit.test((Cognisphere) model);
+  public static LoopPredicateIndex<Cognisphere, Object> toWhile(Predicate<Cognisphere> exit) {
+    return (model, item, idx) -> !exit.test(model);
   }
 }

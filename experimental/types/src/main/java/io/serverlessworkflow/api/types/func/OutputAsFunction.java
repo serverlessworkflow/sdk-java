@@ -16,12 +16,19 @@
 package io.serverlessworkflow.api.types.func;
 
 import io.serverlessworkflow.api.types.OutputAs;
+import java.util.Objects;
 import java.util.function.Function;
 
 public class OutputAsFunction extends OutputAs {
 
   public <T, V> OutputAs withFunction(Function<T, V> value) {
     setObject(value);
+    return this;
+  }
+
+  public <T, V> OutputAs withFunction(Function<T, V> value, Class<T> argClass) {
+    Objects.requireNonNull(argClass);
+    setObject(new TypedFunction<>(value, argClass));
     return this;
   }
 }

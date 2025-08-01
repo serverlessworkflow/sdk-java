@@ -13,25 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.fluent.func.spi;
+package io.serverlessworkflow.api.types.func;
 
-import io.serverlessworkflow.api.types.TaskBase;
-import io.serverlessworkflow.api.types.func.TypedPredicate;
-import java.util.Objects;
 import java.util.function.Predicate;
 
-public interface ConditionalTaskBuilder<SELF> {
-
-  TaskBase getTask();
-
-  default SELF when(Predicate<?> predicate) {
-    ConditionalTaskBuilderHelper.setMetadata(getTask(), predicate);
-    return (SELF) this;
-  }
-
-  default <T> SELF when(Predicate<T> predicate, Class<T> argClass) {
-    Objects.requireNonNull(argClass);
-    ConditionalTaskBuilderHelper.setMetadata(getTask(), new TypedPredicate<>(predicate, argClass));
-    return (SELF) this;
-  }
-}
+public record TypedPredicate<T>(Predicate<T> pred, Class<T> argClass) {}

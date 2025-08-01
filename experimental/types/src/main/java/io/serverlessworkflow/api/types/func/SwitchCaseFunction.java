@@ -16,23 +16,32 @@
 package io.serverlessworkflow.api.types.func;
 
 import io.serverlessworkflow.api.types.SwitchCase;
+import java.util.Optional;
 import java.util.function.Predicate;
 
 public class SwitchCaseFunction extends SwitchCase {
 
   private static final long serialVersionUID = 1L;
   private Predicate<?> predicate;
+  private Optional<Class<?>> predicateClass;
 
   public <T> SwitchCaseFunction withPredicate(Predicate<T> predicate) {
     this.predicate = predicate;
+    this.predicateClass = Optional.empty();
     return this;
   }
 
-  public <T> void setPredicate(Predicate<T> predicate) {
+  public <T> SwitchCaseFunction withPredicate(Predicate<T> predicate, Class<T> predicateClass) {
     this.predicate = predicate;
+    this.predicateClass = Optional.ofNullable(predicateClass);
+    return this;
   }
 
   public Predicate<?> predicate() {
     return predicate;
+  }
+
+  public Optional<Class<?>> predicateClass() {
+    return predicateClass;
   }
 }

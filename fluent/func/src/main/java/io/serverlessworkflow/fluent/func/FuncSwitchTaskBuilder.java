@@ -83,7 +83,12 @@ public class FuncSwitchTaskBuilder extends TaskBaseBuilder<FuncSwitchTaskBuilder
     }
 
     public <T> SwitchCaseFunctionBuilder when(Predicate<T> when) {
-      this.switchCase.setPredicate(when);
+      this.switchCase.withPredicate(when);
+      return this;
+    }
+
+    public <T> SwitchCaseFunctionBuilder when(Predicate<T> when, Class<T> whenClass) {
+      this.switchCase.withPredicate(when, whenClass);
       return this;
     }
 
