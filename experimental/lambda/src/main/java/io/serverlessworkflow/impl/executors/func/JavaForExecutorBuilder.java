@@ -21,6 +21,7 @@ import static io.serverlessworkflow.impl.executors.func.JavaFuncUtils.safeObject
 import io.serverlessworkflow.api.types.ForTask;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.api.types.func.ForTaskFunction;
+import io.serverlessworkflow.api.types.func.TypedFunction;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowFilter;
 import io.serverlessworkflow.impl.WorkflowPosition;
@@ -44,7 +45,7 @@ public class JavaForExecutorBuilder extends ForExecutorBuilder {
   protected Optional<WorkflowFilter> buildWhileFilter() {
     if (task instanceof ForTaskFunction taskFunctions) {
       final LoopPredicateIndex whilePred = taskFunctions.getWhilePredicate();
-      Optional<Class<?>> modelClass = taskFunctions.getModelClass();
+      Optional<Class<?>> whileClass = taskFunctions.getWhileClass();
       String varName = task.getFor().getEach();
       String indexName = task.getFor().getAt();
       if (whilePred != null) {
@@ -55,7 +56,7 @@ public class JavaForExecutorBuilder extends ForExecutorBuilder {
                   .modelFactory()
                   .from(
                       whilePred.test(
-                          JavaFuncUtils.convert(n, modelClass),
+                          JavaFuncUtils.convert(n, whileClass),
                           item,
                           (Integer) safeObject(t.variables().get(indexName))));
             });
@@ -66,7 +67,15 @@ public class JavaForExecutorBuilder extends ForExecutorBuilder {
 
   protected WorkflowFilter buildCollectionFilter() {
     return task instanceof ForTaskFunction taskFunctions
-        ? WorkflowUtils.buildWorkflowFilter(application, null, taskFunctions.getCollection())
+        ? WorkflowUtils.buildWorkflowFilter(
+            application, null, collectionFilterObject(taskFunctions))
         : super.buildCollectionFilter();
+  }
+
+  private Object collectionFilterObject(ForTaskFunction taskFunctions) {
+    return taskFunctions.getForClass().isPresent()
+        ? new TypedFunction(
+            taskFunctions.getCollection(), taskFunctions.getForClass().orElseThrow())
+        : taskFunctions.getCollection();
   }
 }

@@ -26,8 +26,9 @@ public class ForTaskFunction extends ForTask {
 
   private static final long serialVersionUID = 1L;
   private LoopPredicateIndex<?, ?> whilePredicate;
-  private Optional<Class<?>> modelClass;
+  private Optional<Class<?>> whileClass;
   private Optional<Class<?>> itemClass;
+  private Optional<Class<?>> forClass;
   private Function<?, Collection<?>> collection;
 
   public <T, V> ForTaskFunction withWhile(LoopPredicate<T, V> whilePredicate) {
@@ -53,12 +54,12 @@ public class ForTaskFunction extends ForTask {
 
   public <T, V> ForTaskFunction withWhile(
       LoopPredicateIndex<T, V> whilePredicate, Class<T> modelClass) {
-    return withWhile(whilePredicate, Optional.of(modelClass), Optional.empty());
+    return withWhile(whilePredicate, Optional.ofNullable(modelClass), Optional.empty());
   }
 
   public <T, V> ForTaskFunction withWhile(
       LoopPredicateIndex<T, V> whilePredicate, Class<T> modelClass, Class<V> itemClass) {
-    return withWhile(whilePredicate, Optional.of(modelClass), Optional.of(itemClass));
+    return withWhile(whilePredicate, Optional.ofNullable(modelClass), Optional.of(itemClass));
   }
 
   private <T, V> ForTaskFunction withWhile(
@@ -66,13 +67,19 @@ public class ForTaskFunction extends ForTask {
       Optional<Class<?>> modelClass,
       Optional<Class<?>> itemClass) {
     this.whilePredicate = whilePredicate;
-    this.modelClass = modelClass;
+    this.whileClass = modelClass;
     this.itemClass = itemClass;
     return this;
   }
 
   public <T> ForTaskFunction withCollection(Function<T, Collection<?>> collection) {
+    return withCollection(collection, null);
+  }
+
+  public <T> ForTaskFunction withCollection(
+      Function<T, Collection<?>> collection, Class<T> colArgClass) {
     this.collection = collection;
+    this.forClass = Optional.ofNullable(colArgClass);
     return this;
   }
 
@@ -80,8 +87,12 @@ public class ForTaskFunction extends ForTask {
     return whilePredicate;
   }
 
-  public Optional<Class<?>> getModelClass() {
-    return modelClass;
+  public Optional<Class<?>> getWhileClass() {
+    return whileClass;
+  }
+
+  public Optional<Class<?>> getForClass() {
+    return forClass;
   }
 
   public Optional<Class<?>> getItemClass() {

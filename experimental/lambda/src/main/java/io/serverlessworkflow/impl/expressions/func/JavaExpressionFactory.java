@@ -17,6 +17,8 @@ package io.serverlessworkflow.impl.expressions.func;
 
 import io.serverlessworkflow.api.types.TaskBase;
 import io.serverlessworkflow.api.types.TaskMetadata;
+import io.serverlessworkflow.api.types.func.TypedFunction;
+import io.serverlessworkflow.api.types.func.TypedPredicate;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowFilter;
@@ -52,7 +54,11 @@ public class JavaExpressionFactory implements ExpressionFactory {
   public WorkflowFilter buildFilter(String expr, Object value) {
     if (value instanceof Function func) {
       return (w, t, n) -> modelFactory.fromAny(func.apply(n.asJavaObject()));
+    } else if (value instanceof TypedFunction func) {
+      return (w, t, n) -> modelFactory.fromAny(func.function().apply(n.as(func.argClass())));
     } else if (value instanceof Predicate pred) {
+      return fromPredicate(pred);
+    } else if (value instanceof TypedPredicate pred) {
       return fromPredicate(pred);
     } else if (value instanceof BiPredicate pred) {
       return (w, t, n) -> modelFactory.from(pred.test(w, t));
@@ -70,14 +76,23 @@ public class JavaExpressionFactory implements ExpressionFactory {
     return (w, t, n) -> modelFactory.from(pred.test(n.asJavaObject()));
   }
 
+  @SuppressWarnings({"rawtypes", "unchecked"})
+  private WorkflowFilter fromPredicate(TypedPredicate pred) {
+    return (w, t, n) -> modelFactory.from(pred.pred().test(n.as(pred.argClass())));
+  }
+
   @Override
   public Optional<WorkflowFilter> buildIfFilter(TaskBase task) {
     TaskMetadata metadata = task.getMetadata();
-    return metadata != null
-            && metadata.getAdditionalProperties().get(TaskMetadataKeys.IF_PREDICATE)
-                instanceof Predicate pred
-        ? Optional.of(fromPredicate(pred))
-        : ExpressionFactory.super.buildIfFilter(task);
+    if (metadata != null) {
+      Object obj = metadata.getAdditionalProperties().get(TaskMetadataKeys.IF_PREDICATE);
+      if (obj instanceof Predicate pred) {
+        return Optional.of(fromPredicate(pred));
+      } else if (obj instanceof TypedPredicate pred) {
+        return Optional.of(fromPredicate(pred));
+      }
+    }
+    return ExpressionFactory.super.buildIfFilter(task);
   }
 
   @Override

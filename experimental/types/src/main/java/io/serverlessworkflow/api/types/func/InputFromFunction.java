@@ -16,12 +16,19 @@
 package io.serverlessworkflow.api.types.func;
 
 import io.serverlessworkflow.api.types.InputFrom;
+import java.util.Objects;
 import java.util.function.Function;
 
 public class InputFromFunction extends InputFrom {
 
   public <T, V> InputFrom withFunction(Function<T, V> value) {
     setObject(value);
+    return this;
+  }
+
+  public <T, V> InputFrom withFunction(Function<T, V> value, Class<T> argClass) {
+    Objects.requireNonNull(argClass);
+    setObject(new TypedFunction<>(value, argClass));
     return this;
   }
 }

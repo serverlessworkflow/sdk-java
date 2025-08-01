@@ -61,7 +61,7 @@ public class LoopAgentsBuilder {
   }
 
   public LoopAgentsBuilder exitCondition(Predicate<Cognisphere> exitCondition) {
-    this.forTask.withWhile(AgentAdapters.toWhile(exitCondition));
+    this.forTask.withWhile(AgentAdapters.toWhile(exitCondition), Cognisphere.class);
     return this;
   }
 

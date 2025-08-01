@@ -32,13 +32,28 @@ public interface FuncTransformations<SELF extends FuncTransformations<SELF>>
     return (SELF) this;
   }
 
+  default <T, V> SELF exportAsFn(Function<T, V> function, Class<T> argClass) {
+    setExport(new Export().withAs(new ExportAsFunction().withFunction(function, argClass)));
+    return (SELF) this;
+  }
+
   default <T, V> SELF inputFrom(Function<T, V> function) {
     setInput(new Input().withFrom(new InputFromFunction().withFunction(function)));
     return (SELF) this;
   }
 
+  default <T, V> SELF inputFrom(Function<T, V> function, Class<T> argClass) {
+    setInput(new Input().withFrom(new InputFromFunction().withFunction(function, argClass)));
+    return (SELF) this;
+  }
+
   default <T, V> SELF outputAs(Function<T, V> function) {
     setOutput(new Output().withAs(new OutputAsFunction().withFunction(function)));
+    return (SELF) this;
+  }
+
+  default <T, V> SELF outputAs(Function<T, V> function, Class<T> argClass) {
+    setOutput(new Output().withAs(new OutputAsFunction().withFunction(function, argClass)));
     return (SELF) this;
   }
 }
