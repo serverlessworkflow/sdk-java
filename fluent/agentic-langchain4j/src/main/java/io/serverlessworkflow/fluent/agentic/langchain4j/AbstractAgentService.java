@@ -23,7 +23,9 @@ import java.util.function.Function;
 
 public abstract class AbstractAgentService<T, S> implements WorkflowDefinitionBuilder {
 
+  // Workflow OutputAs
   private static final Function<Cognisphere, Object> DEFAULT_OUTPUT_FUNCTION = cognisphere -> null;
+  // Workflow InputFrom
   private static final Consumer<Cognisphere> DEFAULT_INIT_FUNCTION = cognisphere -> {};
 
   protected final AgentWorkflowBuilder workflowBuilder;
@@ -52,8 +54,8 @@ public abstract class AbstractAgentService<T, S> implements WorkflowDefinitionBu
 
   @SuppressWarnings("unchecked")
   public S outputName(String outputName) {
-    // TODO: This can be solved using a combination with our output object
-    this.workflowBuilder.document(d -> d.name(outputName));
+    Function<Cognisphere, Object> outputFunction = cog -> cog.readState(outputName);
+    this.workflowBuilder.outputAs(outputFunction);
     return (S) this;
   }
 

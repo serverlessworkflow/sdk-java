@@ -23,6 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import dev.langchain4j.agentic.cognisphere.Cognisphere;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.api.types.func.CallJava;
+import io.serverlessworkflow.api.types.func.OutputAsFunction;
 import io.serverlessworkflow.fluent.agentic.AgentsUtils;
 import java.util.function.Function;
 import org.junit.jupiter.api.Test;
@@ -70,8 +71,8 @@ class SequentialAgentServiceImplTest {
 
     // then
     assertNotNull(wf.getDocument().getName(), "Workflow name should not be null");
-    assertEquals(
-        outputName, wf.getDocument().getName(), "Workflow name should match the outputName");
+    assertNotNull(wf.getOutput().getAs(), "Workflow outputAs should not be null");
+    assertInstanceOf(OutputAsFunction.class, wf.getOutput().getAs());
   }
 
   @Test
