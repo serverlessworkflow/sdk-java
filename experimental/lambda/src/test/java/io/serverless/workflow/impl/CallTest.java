@@ -55,7 +55,8 @@ class CallTest {
                           "javaCall",
                           new Task()
                               .withCallTask(
-                                  new CallTaskJava(CallJava.function(JavaFunctions::getName))))));
+                                  new CallTaskJava(
+                                      CallJava.function(JavaFunctions::getName, Person.class))))));
 
       assertThat(
               app.workflowDefinition(workflow)
@@ -84,7 +85,7 @@ class CallTest {
                               .withForTask(
                                   new ForTaskFunction()
                                       .withWhile(CallTest::isEven)
-                                      .withCollection(v -> (Collection) v)
+                                      .withCollection(v -> v, Collection.class)
                                       .withFor(forConfig)
                                       .withDo(
                                           List.of(
@@ -127,7 +128,7 @@ class CallTest {
                                               new SwitchItem(
                                                   "odd",
                                                   new SwitchCaseFunction()
-                                                      .withPredicate(CallTest::isOdd)
+                                                      .withPredicate(CallTest::isOdd, Integer.class)
                                                       .withThen(
                                                           new FlowDirective()
                                                               .withFlowDirectiveEnum(
