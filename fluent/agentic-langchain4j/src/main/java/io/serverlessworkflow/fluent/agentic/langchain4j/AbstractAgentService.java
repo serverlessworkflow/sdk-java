@@ -16,8 +16,12 @@
 package io.serverlessworkflow.fluent.agentic.langchain4j;
 
 import dev.langchain4j.agentic.cognisphere.Cognisphere;
+import dev.langchain4j.agentic.internal.AgentInstance;
+import dev.langchain4j.agentic.internal.CognisphereOwner;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.fluent.agentic.AgentWorkflowBuilder;
+import io.serverlessworkflow.impl.WorkflowApplication;
+import java.lang.reflect.Proxy;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -26,8 +30,9 @@ public abstract class AbstractAgentService<T, S> implements WorkflowDefinitionBu
   // Workflow OutputAs
   private static final Function<Cognisphere, Object> DEFAULT_OUTPUT_FUNCTION = cognisphere -> null;
   // Workflow InputFrom
-  private static final Consumer<Cognisphere> DEFAULT_INIT_FUNCTION = cognisphere -> {};
+  private static final Consumer<Cognisphere> DEFAULT_INPUT_FUNCTION = cognisphere -> {};
 
+  protected final WorkflowApplication.Builder workflowExecBuilder;
   protected final AgentWorkflowBuilder workflowBuilder;
   protected final Class<T> agentServiceClass;
 
@@ -39,8 +44,18 @@ public abstract class AbstractAgentService<T, S> implements WorkflowDefinitionBu
     this.workflowBuilder =
         AgentWorkflowBuilder.workflow(name)
             .outputAs(DEFAULT_OUTPUT_FUNCTION)
-            .input(i -> i.from(DEFAULT_INIT_FUNCTION));
+            .input(i -> i.from(DEFAULT_INPUT_FUNCTION));
     this.agentServiceClass = agentServiceClass;
+    this.workflowExecBuilder = WorkflowApplication.builder();
+  }
+
+  @SuppressWarnings("unchecked")
+  public T build() {
+    return (T)
+        Proxy.newProxyInstance(
+            this.agentServiceClass.getClassLoader(),
+            new Class<?>[] {agentServiceClass, AgentInstance.class, CognisphereOwner.class},
+            new WorkflowInvocationHandler(this.workflowBuilder.build(), this.workflowExecBuilder));
   }
 
   @SuppressWarnings("unchecked")
@@ -56,6 +71,8 @@ public abstract class AbstractAgentService<T, S> implements WorkflowDefinitionBu
   public S outputName(String outputName) {
     Function<Cognisphere, Object> outputFunction = cog -> cog.readState(outputName);
     this.workflowBuilder.outputAs(outputFunction);
+    this.workflowBuilder.document(
+        d -> d.metadata(m -> m.metadata(META_KEY_OUTPUTNAME, outputName)));
     return (S) this;
   }
 

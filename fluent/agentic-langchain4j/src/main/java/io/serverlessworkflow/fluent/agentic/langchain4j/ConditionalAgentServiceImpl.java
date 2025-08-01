@@ -35,11 +35,6 @@ public class ConditionalAgentServiceImpl<T>
   }
 
   @Override
-  public T build() {
-    return null;
-  }
-
-  @Override
   public ConditionalAgentService<T> subAgents(Object... agents) {
     this.workflowBuilder.tasks(t -> t.sequence(agents));
     return this;

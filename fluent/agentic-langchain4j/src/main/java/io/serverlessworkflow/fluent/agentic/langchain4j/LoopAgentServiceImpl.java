@@ -48,11 +48,6 @@ public class LoopAgentServiceImpl<T> extends AbstractAgentService<T, LoopAgentSe
   }
 
   @Override
-  public T build() {
-    return null;
-  }
-
-  @Override
   public LoopAgentService<T> subAgents(Object... agents) {
     this.loopAgentsBuilder.subAgents(agents);
     this.workflowBuilder.tasks(t -> t.loop(this.loopAgentsBuilder));

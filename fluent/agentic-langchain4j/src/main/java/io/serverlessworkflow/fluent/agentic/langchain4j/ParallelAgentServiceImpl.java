@@ -23,8 +23,6 @@ import java.util.concurrent.ExecutorService;
 public class ParallelAgentServiceImpl<T> extends AbstractAgentService<T, ParallelAgentService<T>>
     implements ParallelAgentService<T> {
 
-  private ExecutorService executor;
-
   private ParallelAgentServiceImpl(Class<T> agentServiceClass) {
     super(agentServiceClass);
   }
@@ -35,13 +33,8 @@ public class ParallelAgentServiceImpl<T> extends AbstractAgentService<T, Paralle
 
   @Override
   public ParallelAgentService<T> executorService(ExecutorService executorService) {
-    this.executor = executorService;
+    this.workflowExecBuilder.withExecutorFactory(() -> executorService);
     return this;
-  }
-
-  @Override
-  public T build() {
-    return null;
   }
 
   @Override

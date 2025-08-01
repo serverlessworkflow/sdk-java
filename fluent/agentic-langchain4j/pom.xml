@@ -16,7 +16,7 @@
     <dependencies>
         <dependency>
             <groupId>io.serverlessworkflow</groupId>
-            <artifactId>serverlessworkflow-experimental-types</artifactId>
+            <artifactId>serverlessworkflow-experimental-agentic</artifactId>
         </dependency>
         <dependency>
             <groupId>io.serverlessworkflow</groupId>

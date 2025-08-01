@@ -15,11 +15,4 @@
  */
 package io.serverlessworkflow.fluent.agentic.langchain4j;
 
-import io.serverlessworkflow.api.types.Workflow;
-
-public interface WorkflowDefinitionBuilder {
-
-  String META_KEY_OUTPUTNAME = "outputName";
-
-  Workflow getDefinition();
-}
+public class WorkflowExecutor {}

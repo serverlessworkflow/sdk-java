@@ -32,14 +32,6 @@ public class SequentialAgentServiceImpl<T>
   }
 
   @Override
-  public T build() {
-    // TODO: create a proxy of an InvocationHandler wrapping our WorkflowApplication, calling `run`
-    // on `invoke`.
-    // TODO: we pass what we built here to the runner
-    return null;
-  }
-
-  @Override
   public SequentialAgentService<T> subAgents(Object... agents) {
     this.workflowBuilder.tasks(t -> t.sequence(agents));
     return this;
