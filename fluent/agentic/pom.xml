@@ -16,8 +16,6 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-
-        <version.dev.langchain4j>1.2.0-beta8-SNAPSHOT</version.dev.langchain4j>
     </properties>
 
     <dependencies>
@@ -32,7 +30,6 @@
         <dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-agentic</artifactId>
-            <version>${version.dev.langchain4j}</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -62,7 +59,7 @@
         </dependency>
         <dependency>
             <groupId>io.serverlessworkflow</groupId>
-            <artifactId>serverlessworkflow-experimental-lambda</artifactId>
+            <artifactId>serverlessworkflow-experimental-agentic</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>

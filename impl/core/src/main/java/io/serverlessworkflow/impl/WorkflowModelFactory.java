@@ -42,6 +42,11 @@ public interface WorkflowModelFactory {
 
   WorkflowModel fromNull();
 
+  default WorkflowModel fromOther(Object obj) {
+    throw new IllegalArgumentException(
+        "Unsupported conversion for object " + obj + " of type" + obj.getClass());
+  }
+
   default WorkflowModel fromAny(Object obj) {
     if (obj == null) {
       return fromNull();
@@ -62,8 +67,7 @@ public interface WorkflowModelFactory {
     } else if (obj instanceof WorkflowModel model) {
       return model;
     } else {
-      throw new IllegalArgumentException(
-          "Unsopported conversion for object " + obj + " of type" + obj.getClass());
+      return fromOther(obj);
     }
   }
 }

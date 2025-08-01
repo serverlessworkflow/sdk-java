@@ -13,14 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.schema;
+package io.serverlessworkflow.impl;
 
-import io.serverlessworkflow.api.types.SchemaInline;
-import io.serverlessworkflow.impl.ServicePriority;
-import io.serverlessworkflow.impl.resources.StaticResource;
+public interface ServicePriority extends Comparable<ServicePriority> {
 
-public interface SchemaValidatorFactory extends ServicePriority {
-  SchemaValidator getValidator(SchemaInline inline);
+  static final int DEFAULT_PRIORITY = 1000;
 
-  SchemaValidator getValidator(StaticResource resource);
+  default int priority() {
+    return DEFAULT_PRIORITY;
+  }
+
+  @Override
+  default int compareTo(ServicePriority other) {
+    return this.priority() - other.priority();
+  }
 }

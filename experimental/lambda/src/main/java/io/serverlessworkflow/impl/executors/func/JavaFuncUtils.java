@@ -16,11 +16,36 @@
 package io.serverlessworkflow.impl.executors.func;
 
 import io.serverlessworkflow.impl.WorkflowModel;
+import java.util.Optional;
 
 public class JavaFuncUtils {
 
   static Object safeObject(Object obj) {
     return obj instanceof WorkflowModel model ? model.asJavaObject() : obj;
+  }
+
+  static <T> T convertT(WorkflowModel model, Optional<Class<T>> inputClass) {
+    return inputClass
+        .map(
+            c ->
+                model
+                    .as(c)
+                    .orElseThrow(
+                        () ->
+                            new IllegalArgumentException(
+                                "Model " + model + " cannot be converted to type " + c)))
+        .orElseGet(() -> (T) model.asJavaObject());
+  }
+
+  static Object convert(WorkflowModel model, Optional<Class<?>> inputClass) {
+    return inputClass.isPresent()
+        ? model
+            .as(inputClass.orElseThrow())
+            .orElseThrow(
+                () ->
+                    new IllegalArgumentException(
+                        "Model " + model + " cannot be converted to type " + inputClass))
+        : model.asJavaObject();
   }
 
   private JavaFuncUtils() {}

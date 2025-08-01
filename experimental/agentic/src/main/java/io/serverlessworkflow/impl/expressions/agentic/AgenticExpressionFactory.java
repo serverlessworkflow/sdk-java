@@ -13,27 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.expressions;
+package io.serverlessworkflow.impl.expressions.agentic;
 
-import io.serverlessworkflow.api.types.TaskBase;
-import io.serverlessworkflow.impl.ServicePriority;
-import io.serverlessworkflow.impl.WorkflowFilter;
 import io.serverlessworkflow.impl.WorkflowModelFactory;
-import java.util.Optional;
+import io.serverlessworkflow.impl.expressions.func.JavaExpressionFactory;
 
-public interface ExpressionFactory extends ServicePriority {
-  /**
-   * @throws ExpressionValidationException
-   * @param expression
-   * @return
-   */
-  Expression buildExpression(String expression);
+public class AgenticExpressionFactory extends JavaExpressionFactory {
 
-  WorkflowFilter buildFilter(String expr, Object value);
+  private final WorkflowModelFactory modelFactory = new AgenticModelFactory();
 
-  WorkflowModelFactory modelFactory();
+  @Override
+  public WorkflowModelFactory modelFactory() {
+    return modelFactory;
+  }
 
-  default Optional<WorkflowFilter> buildIfFilter(TaskBase task) {
-    return task.getIf() != null ? Optional.of(buildFilter(task.getIf(), null)) : Optional.empty();
+  public int priority() {
+    return DEFAULT_PRIORITY - 1;
   }
 }

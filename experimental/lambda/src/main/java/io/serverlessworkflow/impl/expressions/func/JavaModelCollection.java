@@ -22,15 +22,15 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Optional;
 
-class JavaModelCollection implements Collection<WorkflowModel>, WorkflowModelCollection {
+public class JavaModelCollection implements Collection<WorkflowModel>, WorkflowModelCollection {
 
-  private final Collection object;
+  protected final Collection object;
 
-  JavaModelCollection() {
+  protected JavaModelCollection() {
     this.object = new ArrayList<>();
   }
 
-  JavaModelCollection(Collection<?> object) {
+  protected JavaModelCollection(Collection<?> object) {
     this.object = (Collection) JavaModel.asJavaObject(object);
   }
 
@@ -65,8 +65,12 @@ class JavaModelCollection implements Collection<WorkflowModel>, WorkflowModelCol
     @Override
     public WorkflowModel next() {
       Object obj = wrapped.next();
-      return obj instanceof WorkflowModel value ? value : new JavaModel(obj);
+      return obj instanceof WorkflowModel value ? value : nextItem(obj);
     }
+  }
+
+  protected WorkflowModel nextItem(Object obj) {
+    return new JavaModel(obj);
   }
 
   @Override

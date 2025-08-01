@@ -43,7 +43,8 @@ public class JavaForExecutorBuilder extends ForExecutorBuilder {
 
   protected Optional<WorkflowFilter> buildWhileFilter() {
     if (task instanceof ForTaskFunction taskFunctions) {
-      LoopPredicateIndex whilePred = taskFunctions.getWhilePredicate();
+      final LoopPredicateIndex whilePred = taskFunctions.getWhilePredicate();
+      Optional<Class<?>> modelClass = taskFunctions.getModelClass();
       String varName = task.getFor().getEach();
       String indexName = task.getFor().getAt();
       if (whilePred != null) {
@@ -54,7 +55,7 @@ public class JavaForExecutorBuilder extends ForExecutorBuilder {
                   .modelFactory()
                   .from(
                       whilePred.test(
-                          n.asJavaObject(),
+                          JavaFuncUtils.convert(n, modelClass),
                           item,
                           (Integer) safeObject(t.variables().get(indexName))));
             });

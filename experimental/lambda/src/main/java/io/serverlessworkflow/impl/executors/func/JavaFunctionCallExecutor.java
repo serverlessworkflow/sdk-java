@@ -25,19 +25,27 @@ import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowModelFactory;
 import io.serverlessworkflow.impl.executors.CallableTask;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
-public class JavaFunctionCallExecutor implements CallableTask<CallJava.CallJavaFunction> {
+public class JavaFunctionCallExecutor<T, V>
+    implements CallableTask<CallJava.CallJavaFunction<T, V>> {
 
-  private Function function;
+  private Function<T, V> function;
+  private Optional<Class<T>> inputClass;
+
+  static String fromInt(Integer integer) {
+    return Integer.toString(integer);
+  }
 
   public void init(
-      CallJava.CallJavaFunction task,
+      CallJava.CallJavaFunction<T, V> task,
       Workflow workflow,
       WorkflowApplication application,
       ResourceLoader loader) {
     function = task.function();
+    inputClass = task.inputClass();
   }
 
   @Override
@@ -45,7 +53,7 @@ public class JavaFunctionCallExecutor implements CallableTask<CallJava.CallJavaF
       WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel input) {
     WorkflowModelFactory modelFactory = workflowContext.definition().application().modelFactory();
     return CompletableFuture.completedFuture(
-        modelFactory.fromAny(function.apply(input.asJavaObject())));
+        modelFactory.fromAny(function.apply(JavaFuncUtils.convertT(input, inputClass))));
   }
 
   @Override
