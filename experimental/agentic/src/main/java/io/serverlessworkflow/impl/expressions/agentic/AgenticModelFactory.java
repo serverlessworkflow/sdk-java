@@ -13,8 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.expressions.func;
+package io.serverlessworkflow.impl.expressions.agentic;
 
+import dev.langchain4j.agentic.cognisphere.Cognisphere;
+import dev.langchain4j.agentic.cognisphere.CognisphereRegistry;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.CloudEventData;
 import io.serverlessworkflow.impl.WorkflowModel;
@@ -23,19 +25,21 @@ import io.serverlessworkflow.impl.WorkflowModelFactory;
 import java.time.OffsetDateTime;
 import java.util.Map;
 
-class JavaModelFactory implements WorkflowModelFactory {
-  private final JavaModel TrueModel = new JavaModel(Boolean.TRUE);
-  private final JavaModel FalseModel = new JavaModel(Boolean.FALSE);
-  private final JavaModel NullModel = new JavaModel(null);
+class AgenticModelFactory implements WorkflowModelFactory {
+  private final Cognisphere cognisphere = CognisphereRegistry.createEphemeralCognisphere();
+
+  private final AgenticModel TrueModel = new AgenticModel(Boolean.TRUE, cognisphere);
+  private final AgenticModel FalseModel = new AgenticModel(Boolean.FALSE, cognisphere);
+  private final AgenticModel NullModel = new AgenticModel(null, cognisphere);
 
   @Override
   public WorkflowModel combine(Map<String, WorkflowModel> workflowVariables) {
-    return new JavaModel(workflowVariables);
+    return new AgenticModel(workflowVariables, cognisphere);
   }
 
   @Override
   public WorkflowModelCollection createCollection() {
-    return new JavaModelCollection();
+    return new AgenticModelCollection(cognisphere);
   }
 
   @Override
@@ -45,32 +49,33 @@ class JavaModelFactory implements WorkflowModelFactory {
 
   @Override
   public WorkflowModel from(Number value) {
-    return new JavaModel(value);
+    return new AgenticModel(value, cognisphere);
   }
 
   @Override
   public WorkflowModel from(String value) {
-    return new JavaModel(value);
+    return new AgenticModel(value, cognisphere);
   }
 
   @Override
   public WorkflowModel from(CloudEvent ce) {
-    return new JavaModel(ce);
+    return new AgenticModel(ce, cognisphere);
   }
 
   @Override
   public WorkflowModel from(CloudEventData ce) {
-    return new JavaModel(ce);
+    return new AgenticModel(ce, cognisphere);
   }
 
   @Override
   public WorkflowModel from(OffsetDateTime value) {
-    return new JavaModel(value);
+    return new AgenticModel(value, cognisphere);
   }
 
   @Override
   public WorkflowModel from(Map<String, Object> map) {
-    return new JavaModel(map);
+    cognisphere.writeStates(map);
+    return new AgenticModel(map, cognisphere);
   }
 
   @Override
@@ -79,7 +84,7 @@ class JavaModelFactory implements WorkflowModelFactory {
   }
 
   @Override
-  public WorkflowModel fromAny(Object obj) {
-    return new JavaModel(obj);
+  public WorkflowModel fromOther(Object value) {
+    return new AgenticModel(value, cognisphere);
   }
 }

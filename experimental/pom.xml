@@ -38,8 +38,9 @@
     </dependencies>
   </dependencyManagement>
   <modules>
-  	<module>types</module>
-  	<module>lambda</module>
+    <module>types</module>
+    <module>lambda</module>
+    <module>agentic</module>
     <module>lambda-fluent</module>
   </modules>
 </project>

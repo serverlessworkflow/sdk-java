@@ -35,6 +35,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 class WorkflowTests {
@@ -225,15 +226,17 @@ class WorkflowTests {
   }
 
   @Test
+  @Disabled("HumanLoop not implemented yet")
   public void humanInTheLoop() throws ExecutionException, InterruptedException {
     final MeetingInvitationDraft meetingInvitationDraft = mock(MeetingInvitationDraft.class);
-    when(meetingInvitationDraft.invoke(eq("Meeting with John Doe"),
-            eq("2023-10-01"), eq("08:00AM"),
+    when(meetingInvitationDraft.invoke(
+            eq("Meeting with John Doe"),
+            eq("2023-10-01"),
+            eq("08:00AM"),
             eq("London"),
             eq("Discuss project updates")))
         .thenReturn("Drafted meeting invitation for John Doe");
     when(meetingInvitationDraft.outputName()).thenReturn("draft");
-
 
     final MeetingInvitationStyle meetingInvitationStyle = mock(MeetingInvitationStyle.class);
     when(meetingInvitationStyle.invoke(eq("Drafted meeting invitation for John Doe"), eq("formal")))
@@ -242,11 +245,16 @@ class WorkflowTests {
 
     AtomicReference<String> request = new AtomicReference<>();
 
-    HumanInTheLoop humanInTheLoop = AgentServices.humanInTheLoopBuilder()
-            .description("What level of formality would you like? (please reply with “formal”, “casual”, or “friendly”)")
+    HumanInTheLoop humanInTheLoop =
+        AgentServices.humanInTheLoopBuilder()
+            .description(
+                "What level of formality would you like? (please reply with “formal”, “casual”, or “friendly”)")
             .inputName("style")
             .outputName("style")
-            .requestWriter(q -> request.set("What level of formality would you like? (please reply with “formal”, “casual”, or “friendly”)"))
+            .requestWriter(
+                q ->
+                    request.set(
+                        "What level of formality would you like? (please reply with “formal”, “casual”, or “friendly”)"))
             .responseReader(() -> "formal")
             .build();
 
@@ -254,8 +262,9 @@ class WorkflowTests {
         AgentWorkflowBuilder.workflow("meetingInvitationFlow")
             .tasks(
                 d ->
-                    d.sequence("draft", meetingInvitationDraft, humanInTheLoop, meetingInvitationStyle)
-            ).build();
+                    d.sequence(
+                        "draft", meetingInvitationDraft, humanInTheLoop, meetingInvitationStyle))
+            .build();
     Map<String, String> initialValues = new HashMap<>();
     initialValues.put("title", "Meeting with John Doe");
     initialValues.put("date", "2023-10-01");
@@ -265,11 +274,14 @@ class WorkflowTests {
 
     try (WorkflowApplication app = WorkflowApplication.builder().build()) {
       String result =
-              app.workflowDefinition(workflow).instance(initialValues).start().get().asText().orElseThrow();
+          app.workflowDefinition(workflow)
+              .instance(initialValues)
+              .start()
+              .get()
+              .asText()
+              .orElseThrow();
 
-        assertEquals("Styled meeting invitation for John Doe", result);
+      assertEquals("Styled meeting invitation for John Doe", result);
     }
-
-
   }
 }

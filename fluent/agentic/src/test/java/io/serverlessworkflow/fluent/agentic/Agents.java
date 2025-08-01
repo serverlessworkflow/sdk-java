@@ -153,7 +153,12 @@ public interface Agents {
                   Agenda: {{agenda}}
                 """)
     @Agent("Drafts a professional meeting invitation email.")
-    String invoke(@V("subject") String subject, @V("date") String date, @V("time") String time, @V("location") String location, @V("agenda") String agenda);
+    String invoke(
+        @V("subject") String subject,
+        @V("date") String date,
+        @V("time") String time,
+        @V("location") String location,
+        @V("agenda") String agenda);
   }
 
   interface MeetingInvitationStyle extends AgentInstance {
@@ -166,5 +171,4 @@ public interface Agents {
     @Agent("Edits a meeting invitation email to better fit a given style.")
     String invoke(@V("invitation") String invitation, @V("style") String style);
   }
-
- }
+}

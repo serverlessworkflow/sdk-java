@@ -19,17 +19,28 @@ import io.serverlessworkflow.api.types.ForTask;
 import io.serverlessworkflow.impl.expressions.LoopPredicate;
 import io.serverlessworkflow.impl.expressions.LoopPredicateIndex;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.function.Function;
 
 public class ForTaskFunction extends ForTask {
 
   private static final long serialVersionUID = 1L;
   private LoopPredicateIndex<?, ?> whilePredicate;
+  private Optional<Class<?>> modelClass;
+  private Optional<Class<?>> itemClass;
   private Function<?, Collection<?>> collection;
 
   public <T, V> ForTaskFunction withWhile(LoopPredicate<T, V> whilePredicate) {
-    this.whilePredicate = toPredicateIndex(whilePredicate);
-    return this;
+    return withWhile(toPredicateIndex(whilePredicate));
+  }
+
+  public <T, V> ForTaskFunction withWhile(LoopPredicate<T, V> whilePredicate, Class<T> modelClass) {
+    return withWhile(toPredicateIndex(whilePredicate), modelClass);
+  }
+
+  public <T, V> ForTaskFunction withWhile(
+      LoopPredicate<T, V> whilePredicate, Class<T> modelClass, Class<V> itemClass) {
+    return withWhile(toPredicateIndex(whilePredicate), modelClass, itemClass);
   }
 
   private <T, V> LoopPredicateIndex<T, V> toPredicateIndex(LoopPredicate<T, V> whilePredicate) {
@@ -37,7 +48,26 @@ public class ForTaskFunction extends ForTask {
   }
 
   public <T, V> ForTaskFunction withWhile(LoopPredicateIndex<T, V> whilePredicate) {
+    return withWhile(whilePredicate, Optional.empty(), Optional.empty());
+  }
+
+  public <T, V> ForTaskFunction withWhile(
+      LoopPredicateIndex<T, V> whilePredicate, Class<T> modelClass) {
+    return withWhile(whilePredicate, Optional.of(modelClass), Optional.empty());
+  }
+
+  public <T, V> ForTaskFunction withWhile(
+      LoopPredicateIndex<T, V> whilePredicate, Class<T> modelClass, Class<V> itemClass) {
+    return withWhile(whilePredicate, Optional.of(modelClass), Optional.of(itemClass));
+  }
+
+  private <T, V> ForTaskFunction withWhile(
+      LoopPredicateIndex<T, V> whilePredicate,
+      Optional<Class<?>> modelClass,
+      Optional<Class<?>> itemClass) {
     this.whilePredicate = whilePredicate;
+    this.modelClass = modelClass;
+    this.itemClass = itemClass;
     return this;
   }
 
@@ -48,6 +78,14 @@ public class ForTaskFunction extends ForTask {
 
   public LoopPredicateIndex<?, ?> getWhilePredicate() {
     return whilePredicate;
+  }
+
+  public Optional<Class<?>> getModelClass() {
+    return modelClass;
+  }
+
+  public Optional<Class<?>> getItemClass() {
+    return itemClass;
   }
 
   public Function<?, Collection<?>> getCollection() {

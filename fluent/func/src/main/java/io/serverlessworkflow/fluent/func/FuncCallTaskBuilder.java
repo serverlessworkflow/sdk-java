@@ -39,7 +39,11 @@ public class FuncCallTaskBuilder extends TaskBaseBuilder<FuncCallTaskBuilder>
   }
 
   public <T, V> FuncCallTaskBuilder function(Function<T, V> function) {
-    this.callTaskJava = new CallTaskJava(CallJava.function(function));
+    return function(function, null);
+  }
+
+  public <T, V> FuncCallTaskBuilder function(Function<T, V> function, Class<T> argClass) {
+    this.callTaskJava = new CallTaskJava(CallJava.function(function, argClass));
     super.setTask(this.callTaskJava.getCallJava());
     return this;
   }

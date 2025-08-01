@@ -18,6 +18,7 @@ package io.serverlessworkflow.api.types.func;
 import io.serverlessworkflow.api.types.TaskBase;
 import io.serverlessworkflow.impl.expressions.LoopFunction;
 import io.serverlessworkflow.impl.expressions.LoopFunctionIndex;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -29,8 +30,13 @@ public abstract class CallJava extends TaskBase {
     return new CallJavaConsumer<>(consumer);
   }
 
-  public static <T, V> CallJava function(Function<T, V> function) {
-    return new CallJavaFunction<>(function);
+  public static <T, V> CallJavaFunction<T, V> function(Function<T, V> function) {
+    return new CallJavaFunction<>(function, Optional.empty());
+  }
+
+  public static <T, V> CallJavaFunction<T, V> function(
+      Function<T, V> function, Class<T> inputClass) {
+    return new CallJavaFunction<>(function, Optional.ofNullable(inputClass));
   }
 
   public static <T, I, V> CallJava loopFunction(
@@ -60,13 +66,19 @@ public abstract class CallJava extends TaskBase {
 
     private static final long serialVersionUID = 1L;
     private Function<T, V> function;
+    private Optional<Class<T>> inputClass;
 
-    public CallJavaFunction(Function<T, V> function) {
+    public CallJavaFunction(Function<T, V> function, Optional<Class<T>> inputClass) {
       this.function = function;
+      this.inputClass = inputClass;
     }
 
     public Function<T, V> function() {
       return function;
+    }
+
+    public Optional<Class<T>> inputClass() {
+      return inputClass;
     }
   }
 

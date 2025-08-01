@@ -26,15 +26,11 @@ import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
-class JavaModel implements WorkflowModel {
+public class JavaModel implements WorkflowModel {
 
-  private Object object;
+  protected final Object object;
 
-  static final JavaModel TrueModel = new JavaModel(Boolean.TRUE);
-  static final JavaModel FalseModel = new JavaModel(Boolean.FALSE);
-  static final JavaModel NullModel = new JavaModel(null);
-
-  JavaModel(Object object) {
+  protected JavaModel(Object object) {
     this.object = asJavaObject(object);
   }
 
