@@ -37,12 +37,8 @@ public abstract class AbstractAgentService<T, S> implements WorkflowDefinitionBu
   protected final Class<T> agentServiceClass;
 
   protected AbstractAgentService(Class<T> agentServiceClass) {
-    this("", agentServiceClass);
-  }
-
-  protected AbstractAgentService(String name, Class<T> agentServiceClass) {
     this.workflowBuilder =
-        AgentWorkflowBuilder.workflow(name)
+        AgentWorkflowBuilder.workflow()
             .outputAs(DEFAULT_OUTPUT_FUNCTION)
             .input(i -> i.from(DEFAULT_INPUT_FUNCTION));
     this.agentServiceClass = agentServiceClass;
@@ -60,17 +56,19 @@ public abstract class AbstractAgentService<T, S> implements WorkflowDefinitionBu
 
   @SuppressWarnings("unchecked")
   public S beforeCall(Consumer<Cognisphere> beforeCall) {
-    // TODO: Our runner must know that our input can be a cognisphere object and extract it from the
-    // context, so that we can accept the consumer.
-    // TODO: For now, we can add the consumer to inputFrom
-    this.workflowBuilder.input(i -> i.from(beforeCall));
+    this.workflowBuilder.inputFrom(
+        cog -> {
+          beforeCall.accept(cog);
+          return cog;
+        },
+        Cognisphere.class);
     return (S) this;
   }
 
   @SuppressWarnings("unchecked")
   public S outputName(String outputName) {
     Function<Cognisphere, Object> outputFunction = cog -> cog.readState(outputName);
-    this.workflowBuilder.outputAs(outputFunction);
+    this.workflowBuilder.outputAs(outputFunction, Cognisphere.class);
     this.workflowBuilder.document(
         d -> d.metadata(m -> m.metadata(META_KEY_OUTPUTNAME, outputName)));
     return (S) this;
@@ -78,7 +76,7 @@ public abstract class AbstractAgentService<T, S> implements WorkflowDefinitionBu
 
   @SuppressWarnings("unchecked")
   public S output(Function<Cognisphere, Object> output) {
-    this.workflowBuilder.outputAs(output);
+    this.workflowBuilder.outputAs(output, Cognisphere.class);
     return (S) this;
   }
 
