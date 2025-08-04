@@ -21,7 +21,6 @@ import io.serverlessworkflow.api.types.ErrorType;
 import io.serverlessworkflow.api.types.RaiseTask;
 import io.serverlessworkflow.api.types.RaiseTaskError;
 import io.serverlessworkflow.api.types.Workflow;
-import io.serverlessworkflow.impl.StringFilter;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
@@ -30,6 +29,7 @@ import io.serverlessworkflow.impl.WorkflowException;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowPosition;
 import io.serverlessworkflow.impl.WorkflowUtils;
+import io.serverlessworkflow.impl.WorkflowValueResolver;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
 import java.util.Map;
 import java.util.Optional;
@@ -43,10 +43,10 @@ public class RaiseExecutor extends RegularTaskExecutor<RaiseTask> {
   public static class RaiseExecutorBuilder extends RegularTaskExecutorBuilder<RaiseTask> {
 
     private final BiFunction<WorkflowContext, TaskContext, WorkflowError> errorBuilder;
-    private final StringFilter typeFilter;
-    private final Optional<StringFilter> instanceFilter;
-    private final StringFilter titleFilter;
-    private final StringFilter detailFilter;
+    private final WorkflowValueResolver<String> typeFilter;
+    private final Optional<WorkflowValueResolver<String>> instanceFilter;
+    private final WorkflowValueResolver<String> titleFilter;
+    private final WorkflowValueResolver<String> detailFilter;
 
     protected RaiseExecutorBuilder(
         WorkflowPosition position,
@@ -77,17 +77,18 @@ public class RaiseExecutor extends RegularTaskExecutor<RaiseTask> {
 
     private WorkflowError buildError(
         Error error, WorkflowContext context, TaskContext taskContext) {
-      return WorkflowError.error(typeFilter.apply(context, taskContext), error.getStatus())
+      return WorkflowError.error(
+              typeFilter.apply(context, taskContext, taskContext.input()), error.getStatus())
           .instance(
               instanceFilter
-                  .map(f -> f.apply(context, taskContext))
+                  .map(f -> f.apply(context, taskContext, taskContext.input()))
                   .orElseGet(() -> taskContext.position().jsonPointer()))
-          .title(titleFilter.apply(context, taskContext))
-          .details(detailFilter.apply(context, taskContext))
+          .title(titleFilter.apply(context, taskContext, taskContext.input()))
+          .details(detailFilter.apply(context, taskContext, taskContext.input()))
           .build();
     }
 
-    private Optional<StringFilter> getInstanceFunction(
+    private Optional<WorkflowValueResolver<String>> getInstanceFunction(
         WorkflowApplication app, ErrorInstance errorInstance) {
       return errorInstance != null
           ? Optional.of(
@@ -98,7 +99,7 @@ public class RaiseExecutor extends RegularTaskExecutor<RaiseTask> {
           : Optional.empty();
     }
 
-    private StringFilter getTypeFunction(WorkflowApplication app, ErrorType type) {
+    private WorkflowValueResolver<String> getTypeFunction(WorkflowApplication app, ErrorType type) {
       return WorkflowUtils.buildStringFilter(
           app, type.getExpressionErrorType(), type.getLiteralErrorType().get().toString());
     }

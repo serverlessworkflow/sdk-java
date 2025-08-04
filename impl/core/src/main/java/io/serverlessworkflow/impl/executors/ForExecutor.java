@@ -20,24 +20,27 @@ import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
-import io.serverlessworkflow.impl.WorkflowFilter;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowPosition;
+import io.serverlessworkflow.impl.WorkflowPredicate;
 import io.serverlessworkflow.impl.WorkflowUtils;
+import io.serverlessworkflow.impl.WorkflowValueResolver;
+import io.serverlessworkflow.impl.expressions.ExpressionDescriptor;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public class ForExecutor extends RegularTaskExecutor<ForTask> {
 
-  private final WorkflowFilter collectionExpr;
-  private final Optional<WorkflowFilter> whileExpr;
+  private final WorkflowValueResolver<Collection<?>> collectionExpr;
+  private final Optional<WorkflowPredicate> whileExpr;
   private final TaskExecutor<?> taskExecutor;
 
   public static class ForExecutorBuilder extends RegularTaskExecutorBuilder<ForTask> {
-    private WorkflowFilter collectionExpr;
-    private Optional<WorkflowFilter> whileExpr;
+    private WorkflowValueResolver<Collection<?>> collectionExpr;
+    private Optional<WorkflowPredicate> whileExpr;
     private TaskExecutor<?> taskExecutor;
 
     protected ForExecutorBuilder(
@@ -54,12 +57,14 @@ public class ForExecutor extends RegularTaskExecutor<ForTask> {
               position, task.getDo(), workflow, application, resourceLoader);
     }
 
-    protected Optional<WorkflowFilter> buildWhileFilter() {
-      return WorkflowUtils.optionalFilter(application, task.getWhile());
+    protected Optional<WorkflowPredicate> buildWhileFilter() {
+      return WorkflowUtils.optionalPredicate(application, task.getWhile());
     }
 
-    protected WorkflowFilter buildCollectionFilter() {
-      return WorkflowUtils.buildWorkflowFilter(application, task.getFor().getIn());
+    protected WorkflowValueResolver<Collection<?>> buildCollectionFilter() {
+      return application
+          .expressionFactory()
+          .resolveCollection(ExpressionDescriptor.from(task.getFor().getIn()));
     }
 
     @Override
@@ -78,19 +83,14 @@ public class ForExecutor extends RegularTaskExecutor<ForTask> {
   @Override
   protected CompletableFuture<WorkflowModel> internalExecute(
       WorkflowContext workflow, TaskContext taskContext) {
-    Iterator<WorkflowModel> iter =
-        collectionExpr.apply(workflow, taskContext, taskContext.input()).asCollection().iterator();
+    Iterator<?> iter = collectionExpr.apply(workflow, taskContext, taskContext.input()).iterator();
     int i = 0;
     CompletableFuture<WorkflowModel> future =
         CompletableFuture.completedFuture(taskContext.input());
     while (iter.hasNext()) {
-      WorkflowModel item = iter.next();
-      taskContext.variables().put(task.getFor().getEach(), item);
+      taskContext.variables().put(task.getFor().getEach(), iter.next());
       taskContext.variables().put(task.getFor().getAt(), i++);
-      if (whileExpr
-          .map(w -> w.apply(workflow, taskContext, taskContext.input()))
-          .map(n -> n.asBoolean().orElse(true))
-          .orElse(true)) {
+      if (whileExpr.map(w -> w.test(workflow, taskContext, taskContext.input())).orElse(true)) {
         future =
             future.thenCompose(
                 input ->

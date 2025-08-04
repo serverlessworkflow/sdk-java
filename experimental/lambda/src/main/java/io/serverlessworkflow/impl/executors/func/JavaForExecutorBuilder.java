@@ -23,12 +23,14 @@ import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.api.types.func.ForTaskFunction;
 import io.serverlessworkflow.api.types.func.TypedFunction;
 import io.serverlessworkflow.impl.WorkflowApplication;
-import io.serverlessworkflow.impl.WorkflowFilter;
 import io.serverlessworkflow.impl.WorkflowPosition;
-import io.serverlessworkflow.impl.WorkflowUtils;
+import io.serverlessworkflow.impl.WorkflowPredicate;
+import io.serverlessworkflow.impl.WorkflowValueResolver;
 import io.serverlessworkflow.impl.executors.ForExecutor.ForExecutorBuilder;
+import io.serverlessworkflow.impl.expressions.ExpressionDescriptor;
 import io.serverlessworkflow.impl.expressions.LoopPredicateIndex;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
+import java.util.Collection;
 import java.util.Optional;
 
 public class JavaForExecutorBuilder extends ForExecutorBuilder {
@@ -42,7 +44,8 @@ public class JavaForExecutorBuilder extends ForExecutorBuilder {
     super(position, task, workflow, application, resourceLoader);
   }
 
-  protected Optional<WorkflowFilter> buildWhileFilter() {
+  @Override
+  protected Optional<WorkflowPredicate> buildWhileFilter() {
     if (task instanceof ForTaskFunction taskFunctions) {
       final LoopPredicateIndex whilePred = taskFunctions.getWhilePredicate();
       Optional<Class<?>> whileClass = taskFunctions.getWhileClass();
@@ -52,23 +55,21 @@ public class JavaForExecutorBuilder extends ForExecutorBuilder {
         return Optional.of(
             (w, t, n) -> {
               Object item = safeObject(t.variables().get(varName));
-              return application
-                  .modelFactory()
-                  .from(
-                      whilePred.test(
-                          JavaFuncUtils.convert(n, whileClass),
-                          item,
-                          (Integer) safeObject(t.variables().get(indexName))));
+              return whilePred.test(
+                  JavaFuncUtils.convert(n, whileClass),
+                  item,
+                  (Integer) safeObject(t.variables().get(indexName)));
             });
       }
     }
     return super.buildWhileFilter();
   }
 
-  protected WorkflowFilter buildCollectionFilter() {
+  protected WorkflowValueResolver<Collection<?>> buildCollectionFilter() {
     return task instanceof ForTaskFunction taskFunctions
-        ? WorkflowUtils.buildWorkflowFilter(
-            application, null, collectionFilterObject(taskFunctions))
+        ? application
+            .expressionFactory()
+            .resolveCollection(ExpressionDescriptor.object(collectionFilterObject(taskFunctions)))
         : super.buildCollectionFilter();
   }
 

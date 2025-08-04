@@ -20,13 +20,14 @@ import io.serverlessworkflow.api.types.InputFrom;
 import io.serverlessworkflow.api.types.OutputAs;
 import io.serverlessworkflow.api.types.SchemaUnion;
 import io.serverlessworkflow.api.types.UriTemplate;
+import io.serverlessworkflow.impl.expressions.ExpressionDescriptor;
 import io.serverlessworkflow.impl.expressions.ExpressionUtils;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
 import io.serverlessworkflow.impl.schema.SchemaValidator;
 import io.serverlessworkflow.impl.schema.SchemaValidatorFactory;
 import java.net.URI;
+import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
 
 public class WorkflowUtils {
 
@@ -60,60 +61,70 @@ public class WorkflowUtils {
         : Optional.empty();
   }
 
-  public static <T> ExpressionHolder<T> buildExpressionHolder(
-      WorkflowApplication app, String expression, T literal, Function<WorkflowModel, T> converter) {
-    return expression != null
-        ? buildExpressionHolder(buildWorkflowFilter(app, expression), converter)
-        : buildExpressionHolder(literal);
-  }
-
-  private static <T> ExpressionHolder<T> buildExpressionHolder(
-      WorkflowFilter filter, Function<WorkflowModel, T> converter) {
-    return (w, t) -> converter.apply(filter.apply(w, t, t.input()));
-  }
-
-  private static <T> ExpressionHolder<T> buildExpressionHolder(T literal) {
-    return (w, t) -> literal;
-  }
-
   public static Optional<WorkflowFilter> buildWorkflowFilter(WorkflowApplication app, ExportAs as) {
     return as != null
         ? Optional.of(buildWorkflowFilter(app, as.getString(), as.getObject()))
         : Optional.empty();
   }
 
-  public static StringFilter buildStringFilter(
+  public static WorkflowValueResolver<String> buildStringFilter(
       WorkflowApplication app, String expression, String literal) {
-    return expression != null ? toString(buildWorkflowFilter(app, expression)) : toString(literal);
+    return expression != null ? toExprString(app, expression) : toString(literal);
   }
 
-  public static StringFilter buildStringFilter(WorkflowApplication app, String str) {
-    return ExpressionUtils.isExpr(str) ? toString(buildWorkflowFilter(app, str)) : toString(str);
+  public static WorkflowValueResolver<String> buildStringFilter(
+      WorkflowApplication app, String str) {
+    return ExpressionUtils.isExpr(str) ? toExprString(app, str) : toString(str);
   }
 
-  private static StringFilter toString(WorkflowFilter filter) {
-    return (w, t) ->
-        filter
-            .apply(w, t, t.input())
-            .asText()
-            .orElseThrow(() -> new IllegalArgumentException("Result is not an string"));
+  public static WorkflowValueResolver<String> buildCollectionFilter(
+      WorkflowApplication app, String expression) {
+    return expression != null ? toExprString(app, expression) : toString(expression);
   }
 
-  private static StringFilter toString(String literal) {
-    return (w, t) -> literal;
+  private static WorkflowValueResolver<String> toExprString(
+      WorkflowApplication app, String expression) {
+    return app.expressionFactory().resolveString(ExpressionDescriptor.from(expression));
+  }
+
+  private static WorkflowValueResolver<String> toString(String literal) {
+    return (w, t, m) -> literal;
   }
 
   public static WorkflowFilter buildWorkflowFilter(
       WorkflowApplication app, String str, Object object) {
-    return app.expressionFactory().buildFilter(str, object);
+    return app.expressionFactory().buildFilter(new ExpressionDescriptor(str, object));
+  }
+
+  public static WorkflowValueResolver<String> buildStringResolver(
+      WorkflowApplication app, String str) {
+    return app.expressionFactory().resolveString(ExpressionDescriptor.from(str));
+  }
+
+  public static WorkflowValueResolver<String> buildStringResolver(
+      WorkflowApplication app, String str, Object obj) {
+    return app.expressionFactory().resolveString(new ExpressionDescriptor(str, obj));
+  }
+
+  public static WorkflowValueResolver<Map<String, Object>> buildMapResolver(
+      WorkflowApplication app, String str, Object obj) {
+    return app.expressionFactory().resolveMap(new ExpressionDescriptor(str, obj));
   }
 
   public static WorkflowFilter buildWorkflowFilter(WorkflowApplication app, String str) {
-    return app.expressionFactory().buildFilter(str, null);
+    return app.expressionFactory().buildFilter(ExpressionDescriptor.from(str));
+  }
+
+  public static WorkflowPredicate buildPredicate(WorkflowApplication app, String str) {
+    return app.expressionFactory().buildPredicate(ExpressionDescriptor.from(str));
   }
 
   public static Optional<WorkflowFilter> optionalFilter(WorkflowApplication app, String str) {
     return str != null ? Optional.of(buildWorkflowFilter(app, str)) : Optional.empty();
+  }
+
+  public static Optional<WorkflowPredicate> optionalPredicate(WorkflowApplication app, String str) {
+    return str != null ? Optional.of(buildPredicate(app, str)) : Optional.empty();
   }
 
   public static Optional<WorkflowFilter> optionalFilter(

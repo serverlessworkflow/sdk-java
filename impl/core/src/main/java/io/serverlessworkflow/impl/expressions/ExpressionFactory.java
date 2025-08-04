@@ -15,25 +15,39 @@
  */
 package io.serverlessworkflow.impl.expressions;
 
+import io.cloudevents.CloudEventData;
 import io.serverlessworkflow.api.types.TaskBase;
 import io.serverlessworkflow.impl.ServicePriority;
 import io.serverlessworkflow.impl.WorkflowFilter;
 import io.serverlessworkflow.impl.WorkflowModelFactory;
+import io.serverlessworkflow.impl.WorkflowPredicate;
+import io.serverlessworkflow.impl.WorkflowValueResolver;
+import java.time.OffsetDateTime;
+import java.util.Collection;
+import java.util.Map;
 import java.util.Optional;
 
 public interface ExpressionFactory extends ServicePriority {
-  /**
-   * @throws ExpressionValidationException
-   * @param expression
-   * @return
-   */
-  Expression buildExpression(String expression);
 
-  WorkflowFilter buildFilter(String expr, Object value);
+  WorkflowValueResolver<String> resolveString(ExpressionDescriptor desc);
+
+  WorkflowValueResolver<OffsetDateTime> resolveDate(ExpressionDescriptor desc);
+
+  WorkflowValueResolver<CloudEventData> resolveCE(ExpressionDescriptor desc);
+
+  WorkflowValueResolver<Map<String, Object>> resolveMap(ExpressionDescriptor desc);
+
+  WorkflowValueResolver<Collection<?>> resolveCollection(ExpressionDescriptor desc);
+
+  WorkflowFilter buildFilter(ExpressionDescriptor desc);
+
+  WorkflowPredicate buildPredicate(ExpressionDescriptor desc);
 
   WorkflowModelFactory modelFactory();
 
-  default Optional<WorkflowFilter> buildIfFilter(TaskBase task) {
-    return task.getIf() != null ? Optional.of(buildFilter(task.getIf(), null)) : Optional.empty();
+  default Optional<WorkflowPredicate> buildIfFilter(TaskBase task) {
+    return task.getIf() != null
+        ? Optional.of(buildPredicate(ExpressionDescriptor.from(task.getIf())))
+        : Optional.empty();
   }
 }

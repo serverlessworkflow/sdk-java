@@ -13,12 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.expressions;
+package io.serverlessworkflow.impl;
 
-import io.serverlessworkflow.impl.TaskContext;
-import io.serverlessworkflow.impl.WorkflowContext;
-import io.serverlessworkflow.impl.WorkflowModel;
-
-public interface Expression {
-  WorkflowModel eval(WorkflowContext workflowContext, TaskContext context, WorkflowModel model);
+public interface WorkflowValueResolver<T> {
+  T apply(WorkflowContext workflow, TaskContext task, WorkflowModel model);
 }

@@ -31,10 +31,10 @@ import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
-import io.serverlessworkflow.impl.WorkflowFilter;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowModelCollection;
 import io.serverlessworkflow.impl.WorkflowPosition;
+import io.serverlessworkflow.impl.WorkflowPredicate;
 import io.serverlessworkflow.impl.WorkflowStatus;
 import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.events.EventConsumer;
@@ -63,7 +63,7 @@ public abstract class ListenExecutor extends RegularTaskExecutor<ListenTask> {
   public static class ListenExecutorBuilder extends RegularTaskExecutorBuilder<ListenTask> {
 
     private EventRegistrationBuilderCollection registrations;
-    private WorkflowFilter until;
+    private WorkflowPredicate until;
     private EventRegistrationBuilderCollection untilRegistrations;
     private TaskExecutor<?> loop;
     private Function<CloudEvent, WorkflowModel> converter =
@@ -101,8 +101,7 @@ public abstract class ListenExecutor extends RegularTaskExecutor<ListenTask> {
         if (untilDesc != null) {
           if (untilDesc.getAnyEventUntilCondition() != null) {
             until =
-                WorkflowUtils.buildWorkflowFilter(
-                    application, untilDesc.getAnyEventUntilCondition());
+                WorkflowUtils.buildPredicate(application, untilDesc.getAnyEventUntilCondition());
           } else if (untilDesc.getAnyEventUntilConsumed() != null) {
             EventConsumptionStrategy strategy = untilDesc.getAnyEventUntilConsumed();
             if (strategy.getAllEventConsumptionStrategy() != null) {
@@ -173,7 +172,7 @@ public abstract class ListenExecutor extends RegularTaskExecutor<ListenTask> {
 
   public static class OrListenExecutor extends ListenExecutor {
 
-    private final Optional<WorkflowFilter> until;
+    private final Optional<WorkflowPredicate> until;
     private final EventRegistrationBuilderCollection untilRegBuilders;
 
     public OrListenExecutor(ListenExecutorBuilder builder) {
@@ -209,8 +208,7 @@ public abstract class ListenExecutor extends RegularTaskExecutor<ListenTask> {
         TaskContext taskContext,
         CompletableFuture<WorkflowModel> future) {
       arrayNode.add(node);
-      if ((until.isEmpty()
-              || until.map(u -> u.apply(workflow, taskContext, arrayNode).asBoolean()).isPresent())
+      if ((until.isEmpty() || until.map(u -> u.test(workflow, taskContext, arrayNode)).isPresent())
           && untilRegBuilders == null) {
         future.complete(node);
       }

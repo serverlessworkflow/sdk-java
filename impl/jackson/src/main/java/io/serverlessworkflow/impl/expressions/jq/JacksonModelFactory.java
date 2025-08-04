@@ -110,12 +110,8 @@ public class JacksonModelFactory implements WorkflowModelFactory {
   }
 
   @Override
-  public WorkflowModel fromAny(Object obj) {
-    if (obj instanceof JsonNode node) {
-      return new JacksonModel(node);
-    } else {
-      return WorkflowModelFactory.super.fromAny(obj);
-    }
+  public WorkflowModel fromOther(Object value) {
+    return new JacksonModel(JsonUtils.fromValue(value));
   }
 
   @Override

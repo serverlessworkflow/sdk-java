@@ -22,8 +22,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
-import io.serverlessworkflow.impl.WorkflowModelFactory;
-import io.serverlessworkflow.impl.expressions.Expression;
+import io.serverlessworkflow.impl.expressions.ObjectExpression;
 import io.serverlessworkflow.impl.expressions.TaskDescriptor;
 import io.serverlessworkflow.impl.expressions.WorkflowDescriptor;
 import io.serverlessworkflow.impl.jackson.JsonUtils;
@@ -34,29 +33,26 @@ import net.thisptr.jackson.jq.Version;
 import net.thisptr.jackson.jq.exception.JsonQueryException;
 import net.thisptr.jackson.jq.internal.javacc.ExpressionParser;
 
-public class JQExpression implements Expression {
+public class JQExpression implements ObjectExpression {
 
   private final Supplier<Scope> scope;
   private final String expr;
   private final net.thisptr.jackson.jq.Expression internalExpr;
-  private final WorkflowModelFactory modelFactory;
 
-  public JQExpression(
-      Supplier<Scope> scope, String expr, Version version, WorkflowModelFactory modelFactory)
+  public JQExpression(Supplier<Scope> scope, String expr, Version version)
       throws JsonQueryException {
     this.expr = expr;
     this.scope = scope;
     this.internalExpr = ExpressionParser.compile(expr, version);
-    this.modelFactory = modelFactory;
   }
 
   @Override
-  public WorkflowModel eval(WorkflowContext workflow, TaskContext task, WorkflowModel model) {
+  public Object eval(WorkflowContext workflow, TaskContext task, WorkflowModel model) {
     JsonNodeOutput output = new JsonNodeOutput();
     JsonNode node = modelToJson(model);
     try {
       internalExpr.apply(createScope(workflow, task), node, output);
-      return modelFactory.fromAny(output.getResult());
+      return output.getResult();
     } catch (JsonQueryException e) {
       throw new IllegalArgumentException(
           "Unable to evaluate content " + node + " using expr " + expr, e);

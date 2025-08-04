@@ -24,9 +24,7 @@ import io.cloudevents.CloudEventData;
 import io.cloudevents.jackson.JsonCloudEventData;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.jackson.JsonUtils;
-import java.time.Instant;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -68,14 +66,7 @@ public class JacksonModel implements WorkflowModel {
 
   @Override
   public Optional<OffsetDateTime> asDate() {
-    if (node.isTextual()) {
-      return Optional.of(OffsetDateTime.parse(node.asText()));
-    } else if (node.isNumber()) {
-      return Optional.of(
-          OffsetDateTime.ofInstant(Instant.ofEpochMilli(node.asLong()), ZoneOffset.UTC));
-    } else {
-      return Optional.empty();
-    }
+    return JsonUtils.toDate(node);
   }
 
   @Override

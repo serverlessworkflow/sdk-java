@@ -23,8 +23,8 @@ import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
-import io.serverlessworkflow.impl.WorkflowFilter;
 import io.serverlessworkflow.impl.WorkflowPosition;
+import io.serverlessworkflow.impl.WorkflowPredicate;
 import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
 import java.util.HashMap;
@@ -36,12 +36,12 @@ import java.util.stream.Collectors;
 
 public class SwitchExecutor extends AbstractTaskExecutor<SwitchTask> {
 
-  private final Map<WorkflowFilter, TransitionInfo> workflowFilters;
+  private final Map<WorkflowPredicate, TransitionInfo> workflowFilters;
   private final TransitionInfo defaultTask;
 
   public static class SwitchExecutorBuilder extends AbstractTaskExecutorBuilder<SwitchTask> {
-    private final Map<SwitchCase, WorkflowFilter> workflowFilters = new HashMap<>();
-    private Map<WorkflowFilter, TransitionInfoBuilder> switchFilters = new HashMap<>();
+    private final Map<SwitchCase, WorkflowPredicate> workflowFilters = new HashMap<>();
+    private Map<WorkflowPredicate, TransitionInfoBuilder> switchFilters = new HashMap<>();
     private FlowDirective defaultDirective;
     private TransitionInfoBuilder defaultTask;
 
@@ -61,9 +61,9 @@ public class SwitchExecutor extends AbstractTaskExecutor<SwitchTask> {
       }
     }
 
-    protected Optional<WorkflowFilter> buildFilter(SwitchCase switchCase) {
+    protected Optional<WorkflowPredicate> buildFilter(SwitchCase switchCase) {
       return switchCase.getWhen() != null
-          ? Optional.of(WorkflowUtils.buildWorkflowFilter(application, switchCase.getWhen()))
+          ? Optional.of(WorkflowUtils.buildPredicate(application, switchCase.getWhen()))
           : Optional.empty();
     }
 
@@ -99,12 +99,8 @@ public class SwitchExecutor extends AbstractTaskExecutor<SwitchTask> {
   protected CompletableFuture<TaskContext> execute(
       WorkflowContext workflow, TaskContext taskContext) {
     CompletableFuture<TaskContext> future = CompletableFuture.completedFuture(taskContext);
-    for (Entry<WorkflowFilter, TransitionInfo> entry : workflowFilters.entrySet()) {
-      if (entry
-          .getKey()
-          .apply(workflow, taskContext, taskContext.input())
-          .asBoolean()
-          .orElse(false)) {
+    for (Entry<WorkflowPredicate, TransitionInfo> entry : workflowFilters.entrySet()) {
+      if (entry.getKey().test(workflow, taskContext, taskContext.input())) {
         return future.thenApply(t -> t.transition(entry.getValue()));
       }
     }

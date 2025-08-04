@@ -15,32 +15,12 @@
  */
 package io.serverlessworkflow.impl.expressions;
 
-import io.serverlessworkflow.impl.TaskContext;
-import io.serverlessworkflow.impl.WorkflowContext;
-import io.serverlessworkflow.impl.WorkflowModel;
-import java.util.Map;
-
 public class ExpressionUtils {
 
   private static final String EXPR_PREFIX = "${";
   private static final String EXPR_SUFFIX = "}";
 
   private ExpressionUtils() {}
-
-  public static Map<String, Object> buildExpressionMap(
-      Map<String, Object> origMap, ExpressionFactory factory) {
-    return new ProxyMap(origMap, o -> isExpr(o) ? factory.buildExpression(o.toString()) : o);
-  }
-
-  public static Map<String, Object> evaluateExpressionMap(
-      Map<String, Object> origMap, WorkflowContext workflow, TaskContext task, WorkflowModel n) {
-    return new ProxyMap(
-        origMap, o -> o instanceof Expression ? ((Expression) o).eval(workflow, task, n) : o);
-  }
-
-  public static Object buildExpressionObject(Object obj, ExpressionFactory factory) {
-    return obj instanceof Map map ? ExpressionUtils.buildExpressionMap(map, factory) : obj;
-  }
 
   public static boolean isExpr(Object expr) {
     return expr instanceof String && ((String) expr).startsWith(EXPR_PREFIX);

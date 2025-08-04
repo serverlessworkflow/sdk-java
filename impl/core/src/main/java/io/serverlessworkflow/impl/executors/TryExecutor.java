@@ -26,9 +26,9 @@ import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowError;
 import io.serverlessworkflow.impl.WorkflowException;
-import io.serverlessworkflow.impl.WorkflowFilter;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowPosition;
+import io.serverlessworkflow.impl.WorkflowPredicate;
 import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
 import java.util.List;
@@ -39,16 +39,16 @@ import java.util.function.Predicate;
 
 public class TryExecutor extends RegularTaskExecutor<TryTask> {
 
-  private final Optional<WorkflowFilter> whenFilter;
-  private final Optional<WorkflowFilter> exceptFilter;
+  private final Optional<WorkflowPredicate> whenFilter;
+  private final Optional<WorkflowPredicate> exceptFilter;
   private final Optional<Predicate<WorkflowError>> errorFilter;
   private final TaskExecutor<?> taskExecutor;
   private final Optional<TaskExecutor<?>> catchTaskExecutor;
 
   public static class TryExecutorBuilder extends RegularTaskExecutorBuilder<TryTask> {
 
-    private final Optional<WorkflowFilter> whenFilter;
-    private final Optional<WorkflowFilter> exceptFilter;
+    private final Optional<WorkflowPredicate> whenFilter;
+    private final Optional<WorkflowPredicate> exceptFilter;
     private final Optional<Predicate<WorkflowError>> errorFilter;
     private final TaskExecutor<?> taskExecutor;
     private final Optional<TaskExecutor<?>> catchTaskExecutor;
@@ -62,8 +62,8 @@ public class TryExecutor extends RegularTaskExecutor<TryTask> {
       super(position, task, workflow, application, resourceLoader);
       TryTaskCatch catchInfo = task.getCatch();
       this.errorFilter = buildErrorFilter(catchInfo.getErrors());
-      this.whenFilter = WorkflowUtils.optionalFilter(application, catchInfo.getWhen());
-      this.exceptFilter = WorkflowUtils.optionalFilter(application, catchInfo.getExceptWhen());
+      this.whenFilter = WorkflowUtils.optionalPredicate(application, catchInfo.getWhen());
+      this.exceptFilter = WorkflowUtils.optionalPredicate(application, catchInfo.getExceptWhen());
       this.taskExecutor =
           TaskExecutorHelper.createExecutorList(
               position, task.getTry(), workflow, application, resourceLoader);
@@ -107,15 +107,9 @@ public class TryExecutor extends RegularTaskExecutor<TryTask> {
     if (e instanceof WorkflowException) {
       WorkflowException exception = (WorkflowException) e;
       if (errorFilter.map(f -> f.test(exception.getWorflowError())).orElse(true)
-          && whenFilter
-              .flatMap(w -> w.apply(workflow, taskContext, taskContext.input()).asBoolean())
-              .orElse(true)
+          && whenFilter.map(w -> w.test(workflow, taskContext, taskContext.input())).orElse(true)
           && exceptFilter
-              .map(
-                  w ->
-                      !w.apply(workflow, taskContext, taskContext.input())
-                          .asBoolean()
-                          .orElse(false))
+              .map(w -> !w.test(workflow, taskContext, taskContext.input()))
               .orElse(true)) {
         if (catchTaskExecutor.isPresent()) {
           return TaskExecutorHelper.processTaskList(

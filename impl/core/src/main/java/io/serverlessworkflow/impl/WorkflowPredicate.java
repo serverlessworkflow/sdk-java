@@ -15,6 +15,6 @@
  */
 package io.serverlessworkflow.impl;
 
-import java.util.function.BiFunction;
-
-public interface ExpressionHolder<T> extends BiFunction<WorkflowContext, TaskContext, T> {}
+public interface WorkflowPredicate {
+  boolean test(WorkflowContext workflow, TaskContext task, WorkflowModel model);
+}

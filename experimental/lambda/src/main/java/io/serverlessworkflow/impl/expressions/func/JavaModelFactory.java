@@ -79,7 +79,7 @@ class JavaModelFactory implements WorkflowModelFactory {
   }
 
   @Override
-  public WorkflowModel fromAny(Object obj) {
+  public WorkflowModel fromOther(Object obj) {
     return new JavaModel(obj);
   }
 }
