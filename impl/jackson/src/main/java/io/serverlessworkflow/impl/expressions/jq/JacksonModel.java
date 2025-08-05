@@ -20,8 +20,6 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.BooleanNode;
 import com.fasterxml.jackson.databind.node.NullNode;
-import io.cloudevents.CloudEventData;
-import io.cloudevents.jackson.JsonCloudEventData;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.jackson.JsonUtils;
 import java.time.OffsetDateTime;
@@ -72,11 +70,6 @@ public class JacksonModel implements WorkflowModel {
   @Override
   public Optional<Number> asNumber() {
     return node.isNumber() ? Optional.of(node.asLong()) : Optional.empty();
-  }
-
-  @Override
-  public Optional<CloudEventData> asCloudEventData() {
-    return node.isObject() ? Optional.of(JsonCloudEventData.wrap(node)) : Optional.empty();
   }
 
   @Override

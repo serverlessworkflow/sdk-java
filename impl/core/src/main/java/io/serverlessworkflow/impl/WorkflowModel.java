@@ -15,7 +15,6 @@
  */
 package io.serverlessworkflow.impl;
 
-import io.cloudevents.CloudEventData;
 import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.Map;
@@ -35,8 +34,6 @@ public interface WorkflowModel {
   Optional<OffsetDateTime> asDate();
 
   Optional<Number> asNumber();
-
-  Optional<CloudEventData> asCloudEventData();
 
   Optional<Map<String, Object>> asMap();
 
