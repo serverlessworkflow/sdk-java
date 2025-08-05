@@ -22,7 +22,6 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 public class JavaModel implements WorkflowModel {
@@ -35,17 +34,6 @@ public class JavaModel implements WorkflowModel {
 
   protected void setObject(Object object) {
     this.object = object;
-  }
-
-  @Override
-  public void forEach(BiConsumer<String, WorkflowModel> consumer) {
-    asMap()
-        .ifPresent(
-            m ->
-                m.forEach(
-                    (k, v) ->
-                        consumer.accept(
-                            k, v instanceof WorkflowModel model ? model : new JavaModel(v))));
   }
 
   @Override
@@ -97,11 +85,6 @@ public class JavaModel implements WorkflowModel {
     } else {
       return object;
     }
-  }
-
-  @Override
-  public Object asIs() {
-    return object;
   }
 
   @Override

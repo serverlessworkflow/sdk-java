@@ -146,11 +146,6 @@ public class JacksonModelCollection implements WorkflowModelCollection {
   }
 
   @Override
-  public Object asIs() {
-    return node;
-  }
-
-  @Override
   public Class<?> objectClass() {
     return ArrayNode.class;
   }

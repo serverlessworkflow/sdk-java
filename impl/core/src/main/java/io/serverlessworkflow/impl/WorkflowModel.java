@@ -19,11 +19,8 @@ import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.BiConsumer;
 
 public interface WorkflowModel {
-
-  void forEach(BiConsumer<String, WorkflowModel> consumer);
 
   Optional<Boolean> asBoolean();
 
@@ -38,8 +35,6 @@ public interface WorkflowModel {
   Optional<Map<String, Object>> asMap();
 
   Object asJavaObject();
-
-  Object asIs();
 
   Class<?> objectClass();
 
