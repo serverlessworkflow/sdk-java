@@ -133,11 +133,6 @@ public class JavaModelCollection implements Collection<WorkflowModel>, WorkflowM
   }
 
   @Override
-  public Object asIs() {
-    return object;
-  }
-
-  @Override
   public Class<?> objectClass() {
     return object.getClass();
   }

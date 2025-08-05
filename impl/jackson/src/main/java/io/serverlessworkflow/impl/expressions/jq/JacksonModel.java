@@ -27,7 +27,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.BiConsumer;
 
 @JsonSerialize(using = JacksonModelSerializer.class)
 public class JacksonModel implements WorkflowModel {
@@ -40,11 +39,6 @@ public class JacksonModel implements WorkflowModel {
 
   JacksonModel(JsonNode node) {
     this.node = node;
-  }
-
-  @Override
-  public void forEach(BiConsumer<String, WorkflowModel> consumer) {
-    node.forEachEntry((k, v) -> consumer.accept(k, new JacksonModel(v)));
   }
 
   @Override
@@ -95,11 +89,6 @@ public class JacksonModel implements WorkflowModel {
   @Override
   public Object asJavaObject() {
     return JsonUtils.toJavaValue(node);
-  }
-
-  @Override
-  public Object asIs() {
-    return node;
   }
 
   @Override
