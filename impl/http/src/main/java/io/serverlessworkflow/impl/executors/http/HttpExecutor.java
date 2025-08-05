@@ -15,6 +15,8 @@
  */
 package io.serverlessworkflow.impl.executors.http;
 
+import static io.serverlessworkflow.impl.WorkflowUtils.buildMapResolver;
+
 import io.serverlessworkflow.api.types.CallHTTP;
 import io.serverlessworkflow.api.types.Endpoint;
 import io.serverlessworkflow.api.types.EndpointUri;
@@ -27,11 +29,10 @@ import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowError;
 import io.serverlessworkflow.impl.WorkflowException;
-import io.serverlessworkflow.impl.WorkflowFilter;
 import io.serverlessworkflow.impl.WorkflowModel;
-import io.serverlessworkflow.impl.WorkflowUtils;
+import io.serverlessworkflow.impl.WorkflowValueResolver;
 import io.serverlessworkflow.impl.executors.CallableTask;
-import io.serverlessworkflow.impl.expressions.Expression;
+import io.serverlessworkflow.impl.expressions.ExpressionDescriptor;
 import io.serverlessworkflow.impl.expressions.ExpressionFactory;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
 import jakarta.ws.rs.HttpMethod;
@@ -40,6 +41,7 @@ import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.client.Invocation.Builder;
 import jakarta.ws.rs.client.WebTarget;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Supplier;
@@ -49,8 +51,8 @@ public class HttpExecutor implements CallableTask<CallHTTP> {
   private static final Client client = ClientBuilder.newClient();
 
   private TargetSupplier targetSupplier;
-  private Optional<WorkflowFilter> headersMap;
-  private Optional<WorkflowFilter> queryMap;
+  private Optional<WorkflowValueResolver<Map<String, Object>>> headersMap;
+  private Optional<WorkflowValueResolver<Map<String, Object>>> queryMap;
   private Optional<AuthProvider> authProvider;
   private RequestSupplier requestFunction;
   private HttpModelConverter converter = new HttpModelConverter() {};
@@ -83,7 +85,7 @@ public class HttpExecutor implements CallableTask<CallHTTP> {
     this.headersMap =
         httpArgs.getHeaders() != null
             ? Optional.of(
-                WorkflowUtils.buildWorkflowFilter(
+                buildMapResolver(
                     application,
                     httpArgs.getHeaders().getRuntimeExpression(),
                     httpArgs.getHeaders().getHTTPHeaders() != null
@@ -93,7 +95,7 @@ public class HttpExecutor implements CallableTask<CallHTTP> {
     this.queryMap =
         httpArgs.getQuery() != null
             ? Optional.of(
-                WorkflowUtils.buildWorkflowFilter(
+                buildMapResolver(
                     application,
                     httpArgs.getQuery().getRuntimeExpression(),
                     httpArgs.getQuery().getHTTPQuery() != null
@@ -102,8 +104,8 @@ public class HttpExecutor implements CallableTask<CallHTTP> {
             : Optional.empty();
     switch (httpArgs.getMethod().toUpperCase()) {
       case HttpMethod.POST:
-        WorkflowFilter bodyFilter =
-            WorkflowUtils.buildWorkflowFilter(application, null, httpArgs.getBody());
+        WorkflowValueResolver<Map<String, Object>> bodyFilter =
+            buildMapResolver(application, null, httpArgs.getBody());
         this.requestFunction =
             (request, w, context, node) ->
                 converter.toModel(
@@ -143,15 +145,11 @@ public class HttpExecutor implements CallableTask<CallHTTP> {
     TargetQuerySupplier supplier =
         new TargetQuerySupplier(targetSupplier.apply(workflow, taskContext, input));
     queryMap.ifPresent(
-        q ->
-            q.apply(workflow, taskContext, input)
-                .forEach((k, v) -> supplier.addQuery(k, v.asJavaObject())));
+        q -> q.apply(workflow, taskContext, input).forEach((k, v) -> supplier.addQuery(k, v)));
     Builder request = supplier.get().request();
     authProvider.ifPresent(auth -> auth.build(request, workflow, taskContext, input));
     headersMap.ifPresent(
-        h ->
-            h.apply(workflow, taskContext, input)
-                .forEach((k, v) -> request.header(k, v.asJavaObject())));
+        h -> h.apply(workflow, taskContext, input).forEach((k, v) -> request.header(k, v)));
     return CompletableFuture.supplyAsync(
         () -> {
           try {
@@ -179,11 +177,13 @@ public class HttpExecutor implements CallableTask<CallHTTP> {
         return getURISupplier(uri.getLiteralEndpointURI());
       } else if (uri.getExpressionEndpointURI() != null) {
         return new ExpressionURISupplier(
-            expressionFactory.buildExpression(uri.getExpressionEndpointURI()));
+            expressionFactory.resolveString(
+                ExpressionDescriptor.from(uri.getExpressionEndpointURI())));
       }
     } else if (endpoint.getRuntimeExpression() != null) {
       return new ExpressionURISupplier(
-          expressionFactory.buildExpression(endpoint.getRuntimeExpression()));
+          expressionFactory.resolveString(
+              ExpressionDescriptor.from(endpoint.getRuntimeExpression())));
     } else if (endpoint.getUriTemplate() != null) {
       return getURISupplier(endpoint.getUriTemplate());
     }
@@ -201,20 +201,15 @@ public class HttpExecutor implements CallableTask<CallHTTP> {
   }
 
   private static class ExpressionURISupplier implements TargetSupplier {
-    private Expression expr;
+    private WorkflowValueResolver<String> expr;
 
-    public ExpressionURISupplier(Expression expr) {
+    public ExpressionURISupplier(WorkflowValueResolver<String> expr) {
       this.expr = expr;
     }
 
     @Override
     public WebTarget apply(WorkflowContext workflow, TaskContext task, WorkflowModel node) {
-      return client.target(
-          expr.eval(workflow, task, node)
-              .asText()
-              .orElseThrow(
-                  () ->
-                      new IllegalArgumentException("Target expression requires a string result")));
+      return client.target(expr.apply(workflow, task, node));
     }
   }
 }

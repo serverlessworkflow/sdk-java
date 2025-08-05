@@ -26,11 +26,22 @@ import java.time.OffsetDateTime;
 import java.util.Map;
 
 class AgenticModelFactory implements WorkflowModelFactory {
-  private final Cognisphere cognisphere = CognisphereRegistry.createEphemeralCognisphere();
+
+  private Cognisphere cognisphere = CognisphereRegistry.createEphemeralCognisphere();
 
   private final AgenticModel TrueModel = new AgenticModel(Boolean.TRUE, cognisphere);
   private final AgenticModel FalseModel = new AgenticModel(Boolean.FALSE, cognisphere);
   private final AgenticModel NullModel = new AgenticModel(null, cognisphere);
+
+  public void setCognishere(Cognisphere cognisphere) {
+    this.cognisphere = cognisphere;
+  }
+
+  @Override
+  public WorkflowModel fromAny(WorkflowModel prev, Object obj) {
+    ((AgenticModel) prev).setObject(obj);
+    return prev;
+  }
 
   @Override
   public WorkflowModel combine(Map<String, WorkflowModel> workflowVariables) {

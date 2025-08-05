@@ -44,6 +44,7 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BinaryOperator;
@@ -89,12 +90,6 @@ public class JsonUtils {
         return () -> mapper.createArrayNode();
       }
     };
-  }
-
-  public static OffsetDateTime toOffsetDateTime(JsonNode node) {
-    return node.isTextual()
-        ? OffsetDateTime.parse(node.asText())
-        : OffsetDateTime.ofInstant(Instant.ofEpochMilli(node.asLong()), ZoneOffset.UTC);
   }
 
   /*
@@ -273,6 +268,17 @@ public class JsonUtils {
 
   public static ArrayNode array() {
     return mapper.createArrayNode();
+  }
+
+  public static Optional<OffsetDateTime> toDate(JsonNode node) {
+    if (node.isTextual()) {
+      return Optional.of(OffsetDateTime.parse(node.asText()));
+    } else if (node.isNumber()) {
+      return Optional.of(
+          OffsetDateTime.ofInstant(Instant.ofEpochMilli(node.asLong()), ZoneOffset.UTC));
+    } else {
+      return Optional.empty();
+    }
   }
 
   private JsonUtils() {}

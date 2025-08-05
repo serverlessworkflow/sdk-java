@@ -30,6 +30,7 @@ import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowFilter;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowPosition;
+import io.serverlessworkflow.impl.WorkflowPredicate;
 import io.serverlessworkflow.impl.WorkflowStatus;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
 import io.serverlessworkflow.impl.schema.SchemaValidator;
@@ -50,14 +51,14 @@ public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskEx
   private final Optional<SchemaValidator> inputSchemaValidator;
   private final Optional<SchemaValidator> outputSchemaValidator;
   private final Optional<SchemaValidator> contextSchemaValidator;
-  private final Optional<WorkflowFilter> ifFilter;
+  private final Optional<WorkflowPredicate> ifFilter;
 
   public abstract static class AbstractTaskExecutorBuilder<T extends TaskBase>
       implements TaskExecutorBuilder<T> {
     private Optional<WorkflowFilter> inputProcessor = Optional.empty();
     private Optional<WorkflowFilter> outputProcessor = Optional.empty();
     private Optional<WorkflowFilter> contextProcessor = Optional.empty();
-    private Optional<WorkflowFilter> ifFilter = Optional.empty();
+    private Optional<WorkflowPredicate> ifFilter = Optional.empty();
     private Optional<SchemaValidator> inputSchemaValidator = Optional.empty();
     private Optional<SchemaValidator> outputSchemaValidator = Optional.empty();
     private Optional<SchemaValidator> contextSchemaValidator = Optional.empty();
@@ -181,9 +182,7 @@ public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskEx
     if (!TaskExecutorHelper.isActive(workflowContext)) {
       return completable;
     }
-    if (ifFilter
-        .flatMap(f -> f.apply(workflowContext, taskContext, input).asBoolean())
-        .orElse(true)) {
+    if (ifFilter.map(f -> f.test(workflowContext, taskContext, input)).orElse(true)) {
       return executeNext(
           completable
               .thenApply(

@@ -15,23 +15,58 @@
  */
 package io.serverlessworkflow.impl.expressions;
 
-import io.serverlessworkflow.impl.WorkflowFilter;
+import io.serverlessworkflow.impl.TaskContext;
+import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.WorkflowModel;
+import io.serverlessworkflow.impl.WorkflowPredicate;
 import java.util.Map;
 
-public abstract class ObjectExpressionFactory implements ExpressionFactory {
+public abstract class ObjectExpressionFactory extends AbstractExpressionFactory {
 
-  @Override
-  public WorkflowFilter buildFilter(String str, Object object) {
-    if (str != null) {
-      assert str != null;
-      Expression expression = buildExpression(str);
+  protected abstract ObjectExpression buildExpression(String expression);
+
+  protected ObjectExpression buildExpression(ExpressionDescriptor desc) {
+    if (desc.asString() != null) {
+      ObjectExpression expression = buildExpression(desc.asString());
       return expression::eval;
-    } else if (object != null) {
-      Object exprObj = ExpressionUtils.buildExpressionObject(object, this);
+    } else if (desc.asObject() != null) {
+      Object exprObj = buildExpressionObject(desc.asObject(), this);
       return exprObj instanceof Map map
-          ? (w, t, n) -> modelFactory().from(ExpressionUtils.evaluateExpressionMap(map, w, t, n))
-          : (w, t, n) -> modelFactory().fromAny(object);
+          ? (w, t, n) -> evaluateExpressionMap(map, w, t, n)
+          : (w, t, n) -> desc.asObject();
     }
     throw new IllegalArgumentException("Both object and str are null");
+  }
+
+  @Override
+  public WorkflowPredicate buildPredicate(ExpressionDescriptor desc) {
+    ObjectExpression expr = buildExpression(desc);
+    return (w, t, m) -> toBoolean(expr.eval(w, t, m));
+  }
+
+  protected abstract boolean toBoolean(Object eval);
+
+  protected Object toJavaObject(Object eval) {
+    return eval;
+  }
+
+  private Map<String, Object> buildExpressionMap(
+      Map<String, Object> origMap, ExpressionFactory factory) {
+    return new ProxyMap(
+        origMap, o -> ExpressionUtils.isExpr(o) ? buildExpression(o.toString()) : o);
+  }
+
+  private Object buildExpressionObject(Object obj, ExpressionFactory factory) {
+    return obj instanceof Map map ? buildExpressionMap(map, factory) : obj;
+  }
+
+  private Map<String, Object> evaluateExpressionMap(
+      Map<String, Object> origMap, WorkflowContext workflow, TaskContext task, WorkflowModel n) {
+    return new ProxyMap(
+        origMap,
+        o ->
+            o instanceof ObjectExpression
+                ? toJavaObject(((ObjectExpression) o).eval(workflow, task, n))
+                : o);
   }
 }

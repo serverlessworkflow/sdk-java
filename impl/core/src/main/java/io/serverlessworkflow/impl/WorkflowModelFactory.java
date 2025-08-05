@@ -47,6 +47,10 @@ public interface WorkflowModelFactory {
         "Unsupported conversion for object " + obj + " of type" + obj.getClass());
   }
 
+  default WorkflowModel fromAny(WorkflowModel prev, Object obj) {
+    return fromAny(obj);
+  }
+
   default WorkflowModel fromAny(Object obj) {
     if (obj == null) {
       return fromNull();
@@ -66,6 +70,10 @@ public interface WorkflowModelFactory {
       return from((Map<String, Object>) obj);
     } else if (obj instanceof WorkflowModel model) {
       return model;
+    } else if (obj instanceof CloudEventData ce) {
+      return from(ce);
+    } else if (obj instanceof CloudEvent ce) {
+      return from(ce);
     } else {
       return fromOther(obj);
     }

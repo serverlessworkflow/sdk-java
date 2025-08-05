@@ -15,10 +15,16 @@
  */
 package io.serverlessworkflow.impl.expressions.jq;
 
+import io.cloudevents.CloudEventData;
+import io.cloudevents.jackson.JsonCloudEventData;
 import io.serverlessworkflow.impl.WorkflowModelFactory;
-import io.serverlessworkflow.impl.expressions.Expression;
 import io.serverlessworkflow.impl.expressions.ExpressionUtils;
+import io.serverlessworkflow.impl.expressions.ObjectExpression;
 import io.serverlessworkflow.impl.expressions.ObjectExpressionFactory;
+import io.serverlessworkflow.impl.jackson.JsonUtils;
+import java.time.OffsetDateTime;
+import java.util.Collection;
+import java.util.Map;
 import java.util.function.Supplier;
 import net.thisptr.jackson.jq.BuiltinFunctionLoader;
 import net.thisptr.jackson.jq.Scope;
@@ -48,10 +54,9 @@ public class JQExpressionFactory extends ObjectExpressionFactory {
   }
 
   @Override
-  public Expression buildExpression(String expression) {
+  public ObjectExpression buildExpression(String expression) {
     try {
-      return new JQExpression(
-          scopeSupplier, ExpressionUtils.trimExpr(expression), Versions.JQ_1_6, modelFactory);
+      return new JQExpression(scopeSupplier, ExpressionUtils.trimExpr(expression), Versions.JQ_1_6);
     } catch (JsonQueryException e) {
       throw new IllegalArgumentException(e);
     }
@@ -60,5 +65,42 @@ public class JQExpressionFactory extends ObjectExpressionFactory {
   @Override
   public WorkflowModelFactory modelFactory() {
     return modelFactory;
+  }
+
+  @Override
+  protected boolean toBoolean(Object eval) {
+    return JsonUtils.convertValue(eval, Boolean.class);
+  }
+
+  @Override
+  protected String toString(Object eval) {
+    return JsonUtils.convertValue(eval, String.class);
+  }
+
+  @Override
+  protected CloudEventData toCloudEventData(Object eval) {
+    return JsonCloudEventData.wrap(JsonUtils.fromValue(eval));
+  }
+
+  @Override
+  protected OffsetDateTime toDate(Object eval) {
+    return JsonUtils.toDate(JsonUtils.fromValue(eval))
+        .orElseThrow(
+            () -> new IllegalStateException("Cannot convert " + eval + " to OffseDateTime"));
+  }
+
+  @Override
+  protected Map<String, Object> toMap(Object eval) {
+    return (Map<String, Object>) JsonUtils.toJavaValue(eval);
+  }
+
+  @Override
+  protected Object toJavaObject(Object eval) {
+    return JsonUtils.toJavaValue(eval);
+  }
+
+  @Override
+  protected Collection<?> toCollection(Object obj) {
+    return (Collection<?>) JsonUtils.toJavaValue(obj);
   }
 }

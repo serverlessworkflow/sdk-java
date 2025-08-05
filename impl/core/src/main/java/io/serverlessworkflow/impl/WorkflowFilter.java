@@ -17,5 +17,5 @@ package io.serverlessworkflow.impl;
 
 @FunctionalInterface
 public interface WorkflowFilter {
-  WorkflowModel apply(WorkflowContext workflow, TaskContext task, WorkflowModel node);
+  WorkflowModel apply(WorkflowContext workflow, TaskContext task, WorkflowModel model);
 }

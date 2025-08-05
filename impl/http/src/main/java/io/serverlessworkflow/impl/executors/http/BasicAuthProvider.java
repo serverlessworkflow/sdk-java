@@ -17,12 +17,12 @@ package io.serverlessworkflow.impl.executors.http;
 
 import io.serverlessworkflow.api.types.BasicAuthenticationPolicy;
 import io.serverlessworkflow.api.types.Workflow;
-import io.serverlessworkflow.impl.StringFilter;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowUtils;
+import io.serverlessworkflow.impl.WorkflowValueResolver;
 import jakarta.ws.rs.client.Invocation.Builder;
 import java.util.Base64;
 
@@ -31,8 +31,8 @@ class BasicAuthProvider implements AuthProvider {
   private static final String BASIC_TOKEN = "Basic %s";
   private static final String USER_PASSWORD = "%s:%s";
 
-  private StringFilter userFilter;
-  private StringFilter passwordFilter;
+  private WorkflowValueResolver<String> userFilter;
+  private WorkflowValueResolver<String> passwordFilter;
 
   public BasicAuthProvider(
       WorkflowApplication app, Workflow workflow, BasicAuthenticationPolicy authPolicy) {
@@ -59,8 +59,8 @@ class BasicAuthProvider implements AuthProvider {
                 .encode(
                     String.format(
                             USER_PASSWORD,
-                            userFilter.apply(workflow, task),
-                            passwordFilter.apply(workflow, task))
+                            userFilter.apply(workflow, task, model),
+                            passwordFilter.apply(workflow, task, model))
                         .getBytes())));
     return builder;
   }

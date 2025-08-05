@@ -13,20 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.executors.http;
+package io.serverlessworkflow.impl.expressions;
 
-import io.serverlessworkflow.impl.WorkflowModel;
-import io.serverlessworkflow.impl.WorkflowModelFactory;
-import jakarta.ws.rs.client.Entity;
-import java.util.Map;
-
-public interface HttpModelConverter {
-
-  default WorkflowModel toModel(WorkflowModelFactory factory, Object entity) {
-    return factory.fromAny(entity);
+public record ExpressionDescriptor(String asString, Object asObject) {
+  public static ExpressionDescriptor from(String string) {
+    return new ExpressionDescriptor(string, null);
   }
 
-  default Entity toEntity(Map<String, Object> model) {
-    return Entity.json(model);
+  public static ExpressionDescriptor object(Object obj) {
+    return new ExpressionDescriptor(null, obj);
   }
 }

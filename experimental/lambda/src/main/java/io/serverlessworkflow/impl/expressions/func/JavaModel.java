@@ -15,7 +15,6 @@
  */
 package io.serverlessworkflow.impl.expressions.func;
 
-import io.cloudevents.CloudEventData;
 import io.serverlessworkflow.impl.WorkflowModel;
 import java.time.OffsetDateTime;
 import java.util.Collection;
@@ -28,10 +27,14 @@ import java.util.stream.Collectors;
 
 public class JavaModel implements WorkflowModel {
 
-  protected final Object object;
+  protected Object object;
 
   protected JavaModel(Object object) {
     this.object = asJavaObject(object);
+  }
+
+  protected void setObject(Object object) {
+    this.object = object;
   }
 
   @Override
@@ -70,11 +73,6 @@ public class JavaModel implements WorkflowModel {
   @Override
   public Optional<Number> asNumber() {
     return object instanceof Number value ? Optional.of(value) : Optional.empty();
-  }
-
-  @Override
-  public Optional<CloudEventData> asCloudEventData() {
-    return object instanceof CloudEventData value ? Optional.of(value) : Optional.empty();
   }
 
   @Override

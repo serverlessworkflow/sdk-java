@@ -33,6 +33,11 @@ class AgenticModel extends JavaModel {
   }
 
   @Override
+  public void setObject(Object obj) {
+    super.setObject(obj);
+  }
+
+  @Override
   public Collection<WorkflowModel> asCollection() {
     return object instanceof Collection value
         ? new AgenticModelCollection(value, cognisphere)

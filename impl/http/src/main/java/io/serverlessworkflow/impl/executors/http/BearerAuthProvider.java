@@ -18,19 +18,19 @@ package io.serverlessworkflow.impl.executors.http;
 import io.serverlessworkflow.api.types.BearerAuthenticationPolicy;
 import io.serverlessworkflow.api.types.BearerAuthenticationPolicyConfiguration;
 import io.serverlessworkflow.api.types.Workflow;
-import io.serverlessworkflow.impl.StringFilter;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowUtils;
+import io.serverlessworkflow.impl.WorkflowValueResolver;
 import jakarta.ws.rs.client.Invocation.Builder;
 
 class BearerAuthProvider implements AuthProvider {
 
   private static final String BEARER_TOKEN = "Bearer %s";
 
-  private StringFilter tokenFilter;
+  private WorkflowValueResolver<String> tokenFilter;
 
   public BearerAuthProvider(
       WorkflowApplication app,
@@ -50,7 +50,7 @@ class BearerAuthProvider implements AuthProvider {
       Builder builder, WorkflowContext workflow, TaskContext task, WorkflowModel model) {
     builder.header(
         AuthProviderFactory.AUTH_HEADER_NAME,
-        String.format(BEARER_TOKEN, tokenFilter.apply(workflow, task)));
+        String.format(BEARER_TOKEN, tokenFilter.apply(workflow, task, model)));
     return builder;
   }
 }
