@@ -36,7 +36,7 @@ jobs:
       # 4. Build the external agentic module
       - name: Build langchain4j-agentic
         run: |
-          mvn -B -U -T12C clean package -DskipTests
+          mvn -B -U -T12C -f langchain4j/pom.xml clean package -DskipTests
           mvn -B -f langchain4j/langchain4j-agentic/pom.xml clean install -DskipTests
 
       # 5. Verify the main sdk-java project, excluding the two agentic modules
