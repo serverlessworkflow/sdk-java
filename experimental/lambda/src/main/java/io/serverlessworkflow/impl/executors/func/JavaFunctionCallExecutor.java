@@ -53,7 +53,7 @@ public class JavaFunctionCallExecutor<T, V>
       WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel input) {
     WorkflowModelFactory modelFactory = workflowContext.definition().application().modelFactory();
     return CompletableFuture.completedFuture(
-        modelFactory.fromAny(function.apply(JavaFuncUtils.convertT(input, inputClass))));
+        modelFactory.fromAny(input, function.apply(JavaFuncUtils.convertT(input, inputClass))));
   }
 
   @Override

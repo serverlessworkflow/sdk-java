@@ -54,6 +54,7 @@ public class JavaLoopFunctionIndexCallExecutor
 
     return CompletableFuture.completedFuture(
         modelFactory.fromAny(
+            input,
             function.apply(
                 input.asJavaObject(),
                 safeObject(taskContext.variables().get(varName)),

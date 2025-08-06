@@ -110,6 +110,7 @@ public class HttpExecutor implements CallableTask<CallHTTP> {
             (request, w, context, node) ->
                 converter.toModel(
                     application.modelFactory(),
+                    node,
                     request.post(
                         converter.toEntity(bodyFilter.apply(w, context, node)),
                         node.objectClass()));
@@ -118,7 +119,7 @@ public class HttpExecutor implements CallableTask<CallHTTP> {
       default:
         this.requestFunction =
             (request, w, t, n) ->
-                converter.toModel(application.modelFactory(), request.get(n.objectClass()));
+                converter.toModel(application.modelFactory(), n, request.get(n.objectClass()));
     }
   }
 

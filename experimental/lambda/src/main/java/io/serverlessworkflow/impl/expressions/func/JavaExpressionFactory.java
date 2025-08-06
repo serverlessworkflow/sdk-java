@@ -45,7 +45,7 @@ public class JavaExpressionFactory extends AbstractExpressionFactory {
     } else if (value instanceof TypedFunction func) {
       return (w, t, n) -> func.function().apply(n.as(func.argClass()).orElseThrow());
     } else {
-      return (w, t, n) -> modelFactory.fromAny(value);
+      return (w, t, n) -> value;
     }
   }
 
