@@ -33,6 +33,7 @@ import io.serverlessworkflow.api.types.func.ForTaskFunction;
 import io.serverlessworkflow.api.types.func.SwitchCaseFunction;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowDefinition;
+import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.expressions.TaskMetadataKeys;
 import java.util.Collection;
 import java.util.List;
@@ -166,6 +167,30 @@ class CallTest {
     }
   }
 
+  @Test
+  void testIfWithModel() throws InterruptedException, ExecutionException {
+    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
+      Workflow workflow =
+          new Workflow()
+              .withDocument(
+                  new Document().withNamespace("test").withName("testIf").withVersion("1.0"))
+              .withDo(
+                  List.of(
+                      new TaskItem(
+                          "java",
+                          new Task()
+                              .withCallTask(
+                                  new CallTaskJava(
+                                      withPredicate(
+                                          CallJava.function(
+                                              CallTest::zeroWithModel, WorkflowModel.class),
+                                          CallTest::isOdd))))));
+      WorkflowDefinition definition = app.workflowDefinition(workflow);
+      assertThat(definition.instance(3).start().get().asNumber().orElseThrow()).isEqualTo(0);
+      assertThat(definition.instance(4).start().get().asNumber().orElseThrow()).isEqualTo(4);
+    }
+  }
+
   private <T> CallJava withPredicate(CallJava call, Predicate<T> pred) {
     return (CallJava)
         call.withMetadata(
@@ -181,6 +206,10 @@ class CallTest {
   }
 
   public static int zero(Integer value) {
+    return 0;
+  }
+
+  public static int zeroWithModel(WorkflowModel value) {
     return 0;
   }
 
