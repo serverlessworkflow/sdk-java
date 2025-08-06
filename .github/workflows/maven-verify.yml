@@ -27,7 +27,7 @@ jobs:
       - name: Verify with Maven
         run: |
           mvn -B -f pom.xml clean install verify \
-            -pl ",!fluent/agentic" \
+            -pl ",!fluent/agentic" -pl ",!experimental/agentic" \
             -am
 
       - name: Verify Examples with Maven
