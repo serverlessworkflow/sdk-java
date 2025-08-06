@@ -22,8 +22,8 @@ import java.util.Map;
 
 public interface HttpModelConverter {
 
-  default WorkflowModel toModel(WorkflowModelFactory factory, Object entity) {
-    return factory.fromAny(entity);
+  default WorkflowModel toModel(WorkflowModelFactory factory, WorkflowModel model, Object entity) {
+    return factory.fromAny(model, entity);
   }
 
   default Entity toEntity(Map<String, Object> model) {

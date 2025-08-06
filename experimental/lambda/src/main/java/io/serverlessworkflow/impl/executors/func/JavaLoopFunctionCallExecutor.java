@@ -50,6 +50,7 @@ public class JavaLoopFunctionCallExecutor implements CallableTask<CallJava.CallJ
     WorkflowModelFactory modelFactory = workflowContext.definition().application().modelFactory();
     return CompletableFuture.completedFuture(
         modelFactory.fromAny(
+            input,
             function.apply(
                 input.asJavaObject(), safeObject(taskContext.variables().get(varName)))));
   }
