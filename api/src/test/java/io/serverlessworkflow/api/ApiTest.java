@@ -64,6 +64,23 @@ public class ApiTest {
   }
 
   @Test
+  void testCallHttpOauthAPI() throws IOException {
+    Workflow workflow = readWorkflowFromClasspath("features/authentication-oauth2.yaml");
+    assertThat(workflow.getDo()).isNotEmpty();
+    assertThat(workflow.getDo().get(0).getName()).isNotNull();
+    assertThat(workflow.getDo().get(0).getTask()).isNotNull();
+    Task task = workflow.getDo().get(0).getTask();
+    if (task.get() instanceof CallTask) {
+      CallTask callTask = task.getCallTask();
+      assertThat(callTask).isNotNull();
+      assertThat(task.getDoTask()).isNull();
+      CallHTTP httpCall = callTask.getCallHTTP();
+      assertThat(httpCall).isNotNull();
+      assertThat(httpCall.getWith().getMethod()).isEqualTo("get");
+    }
+  }
+
+  @Test
   void testCallFunctionAPIWithoutArguments() throws IOException {
     Workflow workflow = readWorkflowFromClasspath("features/callFunction.yaml");
     assertThat(workflow.getDo()).isNotEmpty();
