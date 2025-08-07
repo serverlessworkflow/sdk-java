@@ -15,21 +15,17 @@
  */
 package io.serverlessworkflow.impl.expressions.agentic;
 
-import dev.langchain4j.agentic.cognisphere.Cognisphere;
-import dev.langchain4j.agentic.cognisphere.ResultWithCognisphere;
+import dev.langchain4j.agentic.scope.AgenticScope;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.expressions.func.JavaModel;
 import java.util.Collection;
-import java.util.Collections;
+import java.util.Map;
 import java.util.Optional;
 
 class AgenticModel extends JavaModel {
 
-  private final Cognisphere cognisphere;
-
-  AgenticModel(Object object, Cognisphere cognisphere) {
-    super(object);
-    this.cognisphere = cognisphere;
+  AgenticModel(AgenticScope agenticScope) {
+    super(agenticScope);
   }
 
   @Override
@@ -39,17 +35,20 @@ class AgenticModel extends JavaModel {
 
   @Override
   public Collection<WorkflowModel> asCollection() {
-    return object instanceof Collection value
-        ? new AgenticModelCollection(value, cognisphere)
-        : Collections.emptyList();
+    throw new UnsupportedOperationException("Not supported yet.");
+  }
+
+  @Override
+  public Optional<Map<String, Object>> asMap() {
+    return Optional.of(((AgenticScope) object).state());
   }
 
   @Override
   public <T> Optional<T> as(Class<T> clazz) {
-    if (Cognisphere.class.isAssignableFrom(clazz)) {
-      return Optional.of(clazz.cast(cognisphere));
-    } else if (ResultWithCognisphere.class.isAssignableFrom(clazz)) {
-      return Optional.of(clazz.cast(new ResultWithCognisphere<>(cognisphere, object)));
+    if (AgenticScope.class.isAssignableFrom(clazz)) {
+      return Optional.of(clazz.cast(object));
+    } else if (Map.class.isAssignableFrom(clazz)) {
+      return Optional.of(clazz.cast(((AgenticScope) object).state()));
     } else {
       return super.as(clazz);
     }

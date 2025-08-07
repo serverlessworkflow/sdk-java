@@ -15,8 +15,8 @@
  */
 package io.serverlessworkflow.fluent.agentic;
 
-import dev.langchain4j.agentic.cognisphere.Cognisphere;
 import dev.langchain4j.agentic.internal.AgentExecutor;
+import dev.langchain4j.agentic.scope.DefaultAgenticScope;
 import io.serverlessworkflow.api.types.Task;
 import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.fluent.agentic.spi.AgentDoFluent;
@@ -57,7 +57,8 @@ public class AgentTaskItemListBuilder extends BaseTaskItemListBuilder<AgentTaskI
         .forEach(
             exec ->
                 this.delegate.callFn(
-                    name, fn -> fn.function(AgentAdapters.toFunction(exec), Cognisphere.class)));
+                    name,
+                    fn -> fn.function(AgentAdapters.toFunction(exec), DefaultAgenticScope.class)));
     return self();
   }
 
@@ -73,6 +74,12 @@ public class AgentTaskItemListBuilder extends BaseTaskItemListBuilder<AgentTaskI
   public AgentTaskItemListBuilder loop(String name, Consumer<LoopAgentsBuilder> consumer) {
     final LoopAgentsBuilder builder = new LoopAgentsBuilder();
     consumer.accept(builder);
+    this.loop(name, builder);
+    return self();
+  }
+
+  @Override
+  public AgentTaskItemListBuilder loop(String name, LoopAgentsBuilder builder) {
     this.addTaskItem(new TaskItem(name, new Task().withForTask(builder.build())));
     return self();
   }
@@ -86,7 +93,9 @@ public class AgentTaskItemListBuilder extends BaseTaskItemListBuilder<AgentTaskI
           for (int i = 0; i < execs.size(); i++) {
             AgentExecutor ex = execs.get(i);
             fork.branch(
-                "branch-" + i + "-" + name, AgentAdapters.toFunction(ex), Cognisphere.class);
+                "branch-" + i + "-" + name,
+                AgentAdapters.toFunction(ex),
+                DefaultAgenticScope.class);
           }
         });
     return self();

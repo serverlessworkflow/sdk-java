@@ -15,12 +15,13 @@
  */
 package io.serverlessworkflow.fluent.agentic;
 
+import io.serverlessworkflow.fluent.func.spi.FuncTransformations;
 import io.serverlessworkflow.fluent.spec.BaseWorkflowBuilder;
 import java.util.UUID;
 
 public class AgentWorkflowBuilder
-    extends BaseWorkflowBuilder<
-        AgentWorkflowBuilder, AgentDoTaskBuilder, AgentTaskItemListBuilder> {
+    extends BaseWorkflowBuilder<AgentWorkflowBuilder, AgentDoTaskBuilder, AgentTaskItemListBuilder>
+    implements FuncTransformations<AgentWorkflowBuilder> {
 
   AgentWorkflowBuilder(final String name, final String namespace, final String version) {
     super(name, namespace, version);

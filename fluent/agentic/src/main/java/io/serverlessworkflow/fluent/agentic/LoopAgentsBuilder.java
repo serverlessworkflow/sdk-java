@@ -15,8 +15,8 @@
  */
 package io.serverlessworkflow.fluent.agentic;
 
-import dev.langchain4j.agentic.cognisphere.Cognisphere;
 import dev.langchain4j.agentic.internal.AgentExecutor;
+import dev.langchain4j.agentic.scope.AgenticScope;
 import io.serverlessworkflow.api.types.ForTaskConfiguration;
 import io.serverlessworkflow.api.types.func.ForTaskFunction;
 import io.serverlessworkflow.fluent.func.FuncTaskItemListBuilder;
@@ -31,7 +31,7 @@ public class LoopAgentsBuilder {
   private final FuncTaskItemListBuilder funcDelegate;
   private final ForTaskFunction forTask;
 
-  LoopAgentsBuilder() {
+  public LoopAgentsBuilder() {
     this.forTask = new ForTaskFunction();
     this.forTask.setFor(new ForTaskConfiguration());
     this.funcDelegate = new FuncTaskItemListBuilder();
@@ -60,8 +60,8 @@ public class LoopAgentsBuilder {
     return this;
   }
 
-  public LoopAgentsBuilder exitCondition(Predicate<Cognisphere> exitCondition) {
-    this.forTask.withWhile(AgentAdapters.toWhile(exitCondition), Cognisphere.class);
+  public LoopAgentsBuilder exitCondition(Predicate<AgenticScope> exitCondition) {
+    this.forTask.withWhile(AgentAdapters.toWhile(exitCondition), AgenticScope.class);
     return this;
   }
 

@@ -28,7 +28,7 @@ public class JavaModel implements WorkflowModel {
 
   protected Object object;
 
-  protected JavaModel(Object object) {
+  public JavaModel(Object object) {
     this.object = asJavaObject(object);
   }
 

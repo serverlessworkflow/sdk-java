@@ -86,7 +86,11 @@
         <version.org.slf4j>2.0.17</version.org.slf4j>
         <version.org.hibernate.validator>9.0.1.Final</version.org.hibernate.validator>
         <version.org.glassfish.expressly>6.0.0</version.org.glassfish.expressly>
-        <version.dev.langchain4j>1.3.0-beta9-SNAPSHOT</version.dev.langchain4j>
+        <!-- Experimental modules from langchain4j -->
+        <version.dev.langchain4j.beta>1.3.0-beta9</version.dev.langchain4j.beta>
+        <!-- Base langchain4j version -->
+        <version.dev.langchain4j>1.3.0</version.dev.langchain4j>
+
         <!-- Checkstyle props -->
         <checkstyle.failOnViolation>true</checkstyle.failOnViolation>
         <checkstyle.header.template><![CDATA[
@@ -109,6 +113,8 @@
         </checkstyle.header.template>
         <checkstyle.header.extensions>java</checkstyle.header.extensions>
         <checkstyle.logViolationsToConsole>true</checkstyle.logViolationsToConsole>
+
+        <integration-tests.includes>**/*IT.java</integration-tests.includes>
     </properties>
 
     <dependencyManagement>
@@ -226,7 +232,7 @@
             <dependency>
               <groupId>dev.langchain4j</groupId>
               <artifactId>langchain4j-agentic</artifactId>
-              <version>${version.dev.langchain4j}</version>
+              <version>${version.dev.langchain4j.beta}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -442,6 +448,9 @@
                     <version>${version.surefire.plugin}</version>
                     <configuration>
                         <argLine>-Xmx1024m -XX:+IgnoreUnrecognizedVMOptions -XX:MaxPermSize=256m</argLine>
+                        <excludes>
+                            <exclude>${integration-tests.includes}</exclude>
+                        </excludes>
                     </configuration>
                 </plugin>
                 <plugin>
@@ -450,6 +459,9 @@
                     <version>${version.failsafe.plugin}</version>
                     <configuration>
                         <argLine>-Xmx1024m -XX:+IgnoreUnrecognizedVMOptions -XX:MaxPermSize=256m</argLine>
+                        <includes>
+                            <include>${integration-tests.includes}</include>
+                        </includes>
                     </configuration>
                 </plugin>
                 <plugin>
@@ -558,6 +570,29 @@
                                 <phase>package</phase>
                                 <goals>
                                     <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>integration-tests</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-failsafe-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>run-integration-tests</id>
+                                <goals>
+                                    <goal>integration-test</goal>
+                                    <goal>verify</goal>
                                 </goals>
                             </execution>
                         </executions>

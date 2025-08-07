@@ -13,22 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.fluent.agentic;
+package io.serverlessworkflow.fluent.agentic.langchain4j;
 
-import static io.serverlessworkflow.fluent.agentic.Models.BASE_MODEL;
-import static org.mockito.Mockito.spy;
+import io.serverlessworkflow.api.types.Workflow;
 
-import dev.langchain4j.agentic.AgenticServices;
+public interface WorkflowDefinitionBuilder {
 
-public final class AgentsUtils {
+  String META_KEY_OUTPUTNAME = "outputName";
 
-  private AgentsUtils() {}
-
-  public static Agents.MovieExpert newMovieExpert() {
-    return spy(
-        AgenticServices.agentBuilder(Agents.MovieExpert.class)
-            .outputName("movies")
-            .chatModel(BASE_MODEL)
-            .build());
-  }
+  Workflow getDefinition();
 }

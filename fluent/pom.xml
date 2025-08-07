@@ -40,6 +40,33 @@
                 <artifactId>serverlessworkflow-fluent-func</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>io.serverlessworkflow</groupId>
+                <artifactId>serverlessworkflow-fluent-agentic</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.serverlessworkflow</groupId>
+                <artifactId>serverlessworkflow-fluent-agentic-langchain4j</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.serverlessworkflow</groupId>
+                <artifactId>serverlessworkflow-experimental-agentic</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.serverlessworkflow</groupId>
+                <artifactId>serverlessworkflow-experimental-lambda</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.serverlessworkflow</groupId>
+                <artifactId>serverlessworkflow-fluent-agentic</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+                <scope>test</scope>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -47,6 +74,7 @@
         <module>spec</module>
         <module>func</module>
         <module>agentic</module>
+        <module>agentic-langchain4j</module>
     </modules>
 
 </project>

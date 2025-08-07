@@ -21,6 +21,7 @@ import io.serverlessworkflow.api.types.Input;
 import io.serverlessworkflow.api.types.Output;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.fluent.spec.spi.TransformationHandlers;
+import java.util.UUID;
 import java.util.function.Consumer;
 
 public abstract class BaseWorkflowBuilder<
@@ -42,6 +43,9 @@ public abstract class BaseWorkflowBuilder<
     this.document.setNamespace(namespace);
     this.document.setVersion(version);
     this.document.setDsl(DSL);
+    if (this.document.getName() == null || this.document.getName().isEmpty()) {
+      this.document.setName(UUID.randomUUID().toString());
+    }
     this.workflow = new Workflow();
     this.workflow.setDocument(this.document);
   }

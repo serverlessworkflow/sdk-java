@@ -16,7 +16,7 @@
 package io.serverlessworkflow.fluent.agentic;
 
 import dev.langchain4j.agentic.Agent;
-import dev.langchain4j.agentic.internal.AgentInstance;
+import dev.langchain4j.agentic.internal.AgentSpecification;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
 import java.util.List;
@@ -36,7 +36,7 @@ public interface Agents {
     List<String> findMovie(@V("mood") String mood);
   }
 
-  interface SettingAgent extends AgentInstance {
+  interface SettingAgent extends AgentSpecification {
 
     @UserMessage(
         """
@@ -49,7 +49,7 @@ public interface Agents {
     String invoke(@V("style") String style);
   }
 
-  interface HeroAgent extends AgentInstance {
+  interface HeroAgent extends AgentSpecification {
 
     @UserMessage(
         """
@@ -60,7 +60,7 @@ public interface Agents {
     String invoke(@V("style") String style);
   }
 
-  interface ConflictAgent extends AgentInstance {
+  interface ConflictAgent extends AgentSpecification {
 
     @UserMessage(
         """
@@ -72,7 +72,7 @@ public interface Agents {
     String invoke(@V("style") String style);
   }
 
-  interface FactAgent extends AgentInstance {
+  interface FactAgent extends AgentSpecification {
 
     @UserMessage(
         """
@@ -82,7 +82,7 @@ public interface Agents {
     String invoke(@V("fact") String fact);
   }
 
-  interface CultureAgent extends AgentInstance {
+  interface CultureAgent extends AgentSpecification {
 
     @UserMessage(
         """
@@ -94,7 +94,7 @@ public interface Agents {
     List<String> invoke(@V("fact") String fact);
   }
 
-  interface TechnologyAgent extends AgentInstance {
+  interface TechnologyAgent extends AgentSpecification {
 
     @UserMessage(
         """
@@ -106,7 +106,7 @@ public interface Agents {
     List<String> invoke(@V("fact") String fact);
   }
 
-  interface StorySeedAgent extends AgentInstance {
+  interface StorySeedAgent extends AgentSpecification {
 
     @UserMessage(
         """
@@ -117,7 +117,7 @@ public interface Agents {
     String invoke(@V("title") String title);
   }
 
-  interface PlotAgent extends AgentInstance {
+  interface PlotAgent extends AgentSpecification {
 
     @UserMessage(
         """
@@ -129,7 +129,7 @@ public interface Agents {
     String invoke(@V("premise") String premise);
   }
 
-  interface SceneAgent extends AgentInstance {
+  interface SceneAgent extends AgentSpecification {
 
     @UserMessage(
         """
@@ -141,7 +141,7 @@ public interface Agents {
     String invoke(@V("plot") String plot);
   }
 
-  interface MeetingInvitationDraft extends AgentInstance {
+  interface MeetingInvitationDraft extends AgentSpecification {
 
     @UserMessage(
         """
@@ -161,7 +161,7 @@ public interface Agents {
         @V("agenda") String agenda);
   }
 
-  interface MeetingInvitationStyle extends AgentInstance {
+  interface MeetingInvitationStyle extends AgentSpecification {
 
     @UserMessage(
         """
