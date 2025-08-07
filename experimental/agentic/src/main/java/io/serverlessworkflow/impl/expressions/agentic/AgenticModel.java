@@ -39,6 +39,11 @@ class AgenticModel extends JavaModel {
   }
 
   @Override
+  public Optional<Map<String, Object>> asMap() {
+    return Optional.of(((AgenticScope) object).state());
+  }
+
+  @Override
   public <T> Optional<T> as(Class<T> clazz) {
     if (AgenticScope.class.isAssignableFrom(clazz)) {
       return Optional.of(clazz.cast(object));
