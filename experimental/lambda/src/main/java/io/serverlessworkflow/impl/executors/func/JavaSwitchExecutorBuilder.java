@@ -22,7 +22,7 @@ import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.api.types.func.SwitchCaseFunction;
 import io.serverlessworkflow.api.types.func.TypedPredicate;
 import io.serverlessworkflow.impl.WorkflowApplication;
-import io.serverlessworkflow.impl.WorkflowPosition;
+import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.WorkflowPredicate;
 import io.serverlessworkflow.impl.executors.SwitchExecutor.SwitchExecutorBuilder;
 import io.serverlessworkflow.impl.expressions.ExpressionDescriptor;
@@ -33,7 +33,7 @@ import java.util.function.Predicate;
 public class JavaSwitchExecutorBuilder extends SwitchExecutorBuilder {
 
   protected JavaSwitchExecutorBuilder(
-      WorkflowPosition position,
+      WorkflowMutablePosition position,
       SwitchTask task,
       Workflow workflow,
       WorkflowApplication application,

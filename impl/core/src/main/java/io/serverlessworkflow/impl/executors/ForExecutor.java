@@ -21,7 +21,7 @@ import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
-import io.serverlessworkflow.impl.WorkflowPosition;
+import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.WorkflowPredicate;
 import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
@@ -44,7 +44,7 @@ public class ForExecutor extends RegularTaskExecutor<ForTask> {
     private TaskExecutor<?> taskExecutor;
 
     protected ForExecutorBuilder(
-        WorkflowPosition position,
+        WorkflowMutablePosition position,
         ForTask task,
         Workflow workflow,
         WorkflowApplication application,

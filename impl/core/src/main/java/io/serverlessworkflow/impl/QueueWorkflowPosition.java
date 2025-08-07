@@ -19,7 +19,7 @@ import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.stream.Collectors;
 
-public class QueueWorkflowPosition implements WorkflowPosition {
+public class QueueWorkflowPosition implements WorkflowMutablePosition {
 
   private Deque<Object> queue;
 
@@ -36,13 +36,13 @@ public class QueueWorkflowPosition implements WorkflowPosition {
   }
 
   @Override
-  public WorkflowPosition addIndex(int index) {
+  public WorkflowMutablePosition addIndex(int index) {
     queue.add(index);
     return this;
   }
 
   @Override
-  public WorkflowPosition addProperty(String prop) {
+  public WorkflowMutablePosition addProperty(String prop) {
     queue.add(prop);
     return this;
   }
@@ -58,7 +58,7 @@ public class QueueWorkflowPosition implements WorkflowPosition {
   }
 
   @Override
-  public WorkflowPosition back() {
+  public WorkflowMutablePosition back() {
     queue.removeLast();
     return this;
   }

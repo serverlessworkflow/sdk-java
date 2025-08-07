@@ -16,11 +16,13 @@
 package io.serverlessworkflow.impl.events;
 
 import io.cloudevents.CloudEvent;
+import java.net.URI;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.UUID;
 
 public class CloudEventUtils {
 
@@ -30,11 +32,19 @@ public class CloudEventUtils {
     return date.toInstant().atOffset(ZoneOffset.UTC);
   }
 
+  public static String id() {
+    return UUID.randomUUID().toString();
+  }
+
   public static Map<String, Object> extensions(CloudEvent event) {
     Map<String, Object> result = new LinkedHashMap<>();
     for (String name : event.getExtensionNames()) {
       result.put(name, event.getExtension(name));
     }
     return result;
+  }
+
+  public static URI source() {
+    return URI.create("reference-impl");
   }
 }

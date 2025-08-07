@@ -21,7 +21,7 @@ import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
-import io.serverlessworkflow.impl.WorkflowPosition;
+import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -34,7 +34,7 @@ public class DoExecutor extends RegularTaskExecutor<DoTask> {
     private TaskExecutor<?> taskExecutor;
 
     protected DoExecutorBuilder(
-        WorkflowPosition position,
+        WorkflowMutablePosition position,
         DoTask task,
         Workflow workflow,
         WorkflowApplication application,

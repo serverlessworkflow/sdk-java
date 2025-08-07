@@ -27,7 +27,7 @@ import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowError;
 import io.serverlessworkflow.impl.WorkflowException;
 import io.serverlessworkflow.impl.WorkflowModel;
-import io.serverlessworkflow.impl.WorkflowPosition;
+import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.WorkflowPredicate;
 import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
@@ -54,7 +54,7 @@ public class TryExecutor extends RegularTaskExecutor<TryTask> {
     private final Optional<TaskExecutor<?>> catchTaskExecutor;
 
     protected TryExecutorBuilder(
-        WorkflowPosition position,
+        WorkflowMutablePosition position,
         TryTask task,
         Workflow workflow,
         WorkflowApplication application,

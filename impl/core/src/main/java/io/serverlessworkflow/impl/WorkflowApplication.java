@@ -26,6 +26,7 @@ import io.serverlessworkflow.impl.executors.DefaultTaskExecutorFactory;
 import io.serverlessworkflow.impl.executors.TaskExecutorFactory;
 import io.serverlessworkflow.impl.expressions.ExpressionFactory;
 import io.serverlessworkflow.impl.expressions.RuntimeDescriptor;
+import io.serverlessworkflow.impl.lifecycle.WorkflowExecutionListener;
 import io.serverlessworkflow.impl.resources.DefaultResourceLoaderFactory;
 import io.serverlessworkflow.impl.resources.ResourceLoaderFactory;
 import io.serverlessworkflow.impl.resources.StaticResource;
@@ -33,12 +34,13 @@ import io.serverlessworkflow.impl.schema.SchemaValidator;
 import io.serverlessworkflow.impl.schema.SchemaValidatorFactory;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.ServiceLoader;
+import java.util.ServiceLoader.Provider;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 public class WorkflowApplication implements AutoCloseable {
 
@@ -127,7 +129,10 @@ public class WorkflowApplication implements AutoCloseable {
 
     private TaskExecutorFactory taskFactory;
     private ExpressionFactory exprFactory;
-    private Collection<WorkflowExecutionListener> listeners;
+    private Collection<WorkflowExecutionListener> listeners =
+        ServiceLoader.load(WorkflowExecutionListener.class).stream()
+            .map(Provider::get)
+            .collect(Collectors.toList());
     private ResourceLoaderFactory resourceLoaderFactory = DefaultResourceLoaderFactory.get();
     private SchemaValidatorFactory schemaValidatorFactory;
     private WorkflowPositionFactory positionFactory = () -> new QueueWorkflowPosition();
@@ -141,9 +146,6 @@ public class WorkflowApplication implements AutoCloseable {
     private Builder() {}
 
     public Builder withListener(WorkflowExecutionListener listener) {
-      if (listeners == null) {
-        listeners = new HashSet<>();
-      }
       listeners.add(listener);
       return this;
     }

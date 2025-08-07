@@ -22,7 +22,7 @@ import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
-import io.serverlessworkflow.impl.WorkflowPosition;
+import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.executors.RegularTaskExecutor.RegularTaskExecutorBuilder;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
 import java.util.HashMap;
@@ -48,7 +48,7 @@ public class ForkExecutor extends RegularTaskExecutor<ForkTask> {
     private final boolean compete;
 
     protected ForkExecutorBuilder(
-        WorkflowPosition position,
+        WorkflowMutablePosition position,
         ForkTask task,
         Workflow workflow,
         WorkflowApplication application,

@@ -21,7 +21,7 @@ import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
-import io.serverlessworkflow.impl.WorkflowPosition;
+import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -41,7 +41,7 @@ public abstract class RegularTaskExecutor<T extends TaskBase> extends AbstractTa
     private TransitionInfoBuilder transition;
 
     protected RegularTaskExecutorBuilder(
-        WorkflowPosition position,
+        WorkflowMutablePosition position,
         T task,
         Workflow workflow,
         WorkflowApplication application,

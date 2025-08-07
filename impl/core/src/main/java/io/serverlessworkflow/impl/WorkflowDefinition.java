@@ -25,10 +25,9 @@ import io.serverlessworkflow.impl.executors.TaskExecutorHelper;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
 import io.serverlessworkflow.impl.schema.SchemaValidator;
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.Optional;
 
-public class WorkflowDefinition implements AutoCloseable {
+public class WorkflowDefinition implements AutoCloseable, WorkflowDefinitionData {
 
   private final Workflow workflow;
   private Optional<SchemaValidator> inputSchemaValidator = Optional.empty();
@@ -73,7 +72,7 @@ public class WorkflowDefinition implements AutoCloseable {
   }
 
   public WorkflowInstance instance(Object input) {
-    return new WorkflowInstance(this, application.modelFactory().fromAny(input));
+    return new WorkflowMutableInstance(this, application.modelFactory().fromAny(input));
   }
 
   Optional<SchemaValidator> inputSchemaValidator() {
@@ -88,12 +87,9 @@ public class WorkflowDefinition implements AutoCloseable {
     return inputFilter;
   }
 
+  @Override
   public Workflow workflow() {
     return workflow;
-  }
-
-  public Collection<WorkflowExecutionListener> listeners() {
-    return application.listeners();
   }
 
   Optional<WorkflowFilter> outputFilter() {
@@ -104,10 +100,7 @@ public class WorkflowDefinition implements AutoCloseable {
     return outputSchemaValidator;
   }
 
-  public RuntimeDescriptorFactory runtimeDescriptorFactory() {
-    return application.runtimeDescriptorFactory();
-  }
-
+  @Override
   public WorkflowApplication application() {
     return application;
   }

@@ -22,7 +22,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-public class TaskContext {
+public class TaskContext implements TaskContextData {
 
   private final WorkflowModel rawInput;
   private final TaskBase task;
@@ -81,14 +81,17 @@ public class TaskContext {
     this.output = input;
   }
 
+  @Override
   public WorkflowModel input() {
     return input;
   }
 
+  @Override
   public WorkflowModel rawInput() {
     return rawInput;
   }
 
+  @Override
   public TaskBase task() {
     return task;
   }
@@ -99,6 +102,7 @@ public class TaskContext {
     return this;
   }
 
+  @Override
   public WorkflowModel rawOutput() {
     return rawOutput;
   }
@@ -108,26 +112,32 @@ public class TaskContext {
     return this;
   }
 
+  @Override
   public WorkflowModel output() {
     return output;
   }
 
+  @Override
   public WorkflowPosition position() {
     return position;
   }
 
+  @Override
   public Map<String, Object> variables() {
     return contextVariables;
   }
 
+  @Override
   public Instant startedAt() {
     return startedAt;
   }
 
+  @Override
   public Optional<TaskContext> parent() {
     return parentContext;
   }
 
+  @Override
   public String taskName() {
     return taskName;
   }
@@ -137,6 +147,7 @@ public class TaskContext {
     return this;
   }
 
+  @Override
   public Instant completedAt() {
     return completedAt;
   }
@@ -148,5 +159,18 @@ public class TaskContext {
   public TaskContext transition(TransitionInfo transition) {
     this.transition = transition;
     return this;
+  }
+
+  @Override
+  public String toString() {
+    return "TaskContext [position="
+        + position
+        + ", startedAt="
+        + startedAt
+        + ", taskName="
+        + taskName
+        + ", completedAt="
+        + completedAt
+        + "]";
   }
 }

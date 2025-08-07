@@ -23,7 +23,7 @@ import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
-import io.serverlessworkflow.impl.WorkflowPosition;
+import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.WorkflowPredicate;
 import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
@@ -46,7 +46,7 @@ public class SwitchExecutor extends AbstractTaskExecutor<SwitchTask> {
     private TransitionInfoBuilder defaultTask;
 
     public SwitchExecutorBuilder(
-        WorkflowPosition position,
+        WorkflowMutablePosition position,
         SwitchTask task,
         Workflow workflow,
         WorkflowApplication application,

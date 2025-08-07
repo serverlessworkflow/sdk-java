@@ -27,7 +27,7 @@ import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowError;
 import io.serverlessworkflow.impl.WorkflowException;
 import io.serverlessworkflow.impl.WorkflowModel;
-import io.serverlessworkflow.impl.WorkflowPosition;
+import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
@@ -49,7 +49,7 @@ public class RaiseExecutor extends RegularTaskExecutor<RaiseTask> {
     private final WorkflowValueResolver<String> detailFilter;
 
     protected RaiseExecutorBuilder(
-        WorkflowPosition position,
+        WorkflowMutablePosition position,
         RaiseTask task,
         Workflow workflow,
         WorkflowApplication application,
@@ -127,6 +127,7 @@ public class RaiseExecutor extends RegularTaskExecutor<RaiseTask> {
   @Override
   protected CompletableFuture<WorkflowModel> internalExecute(
       WorkflowContext workflow, TaskContext taskContext) {
-    throw new WorkflowException(errorBuilder.apply(workflow, taskContext));
+    return CompletableFuture.failedFuture(
+        new WorkflowException(errorBuilder.apply(workflow, taskContext)));
   }
 }
