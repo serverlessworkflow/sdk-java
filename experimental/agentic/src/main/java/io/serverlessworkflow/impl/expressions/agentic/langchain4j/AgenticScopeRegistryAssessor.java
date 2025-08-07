@@ -15,27 +15,28 @@
  */
 package io.serverlessworkflow.impl.expressions.agentic.langchain4j;
 
-import dev.langchain4j.agentic.cognisphere.CognisphereRegistry;
-import dev.langchain4j.agentic.cognisphere.DefaultCognisphere;
-import dev.langchain4j.agentic.internal.CognisphereOwner;
+import dev.langchain4j.agentic.internal.AgenticScopeOwner;
+import dev.langchain4j.agentic.scope.AgenticScopeRegistry;
+import dev.langchain4j.agentic.scope.DefaultAgenticScope;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class CognisphereRegistryAssessor implements CognisphereOwner {
+public class AgenticScopeRegistryAssessor implements AgenticScopeOwner {
 
-  private final AtomicReference<CognisphereRegistry> cognisphereRegistry = new AtomicReference<>();
+  private final AtomicReference<AgenticScopeRegistry> agenticScopeRegistry =
+      new AtomicReference<>();
   private final String agentId;
-  private DefaultCognisphere cognisphere;
+  private DefaultAgenticScope agenticScope;
   private Object memoryId;
 
-  public CognisphereRegistryAssessor(String agentId) {
+  public AgenticScopeRegistryAssessor(String agentId) {
     Objects.requireNonNull(agentId, "Agent id cannot be null");
     this.agentId = agentId;
   }
 
   // TODO: have access to the workflow definition and assign its name instead
-  public CognisphereRegistryAssessor() {
+  public AgenticScopeRegistryAssessor() {
     this.agentId = UUID.randomUUID().toString();
   }
 
@@ -43,28 +44,28 @@ public class CognisphereRegistryAssessor implements CognisphereOwner {
     this.memoryId = memoryId;
   }
 
-  public DefaultCognisphere getCognisphere() {
-    if (cognisphere != null) {
-      return cognisphere;
+  public DefaultAgenticScope getAgenticScope() {
+    if (agenticScope != null) {
+      return agenticScope;
     }
 
     if (memoryId != null) {
-      this.cognisphere = registry().getOrCreate(memoryId);
+      this.agenticScope = registry().getOrCreate(memoryId);
     } else {
-      this.cognisphere = registry().createEphemeralCognisphere();
+      this.agenticScope = registry().createEphemeralAgenticScope();
     }
-    return this.cognisphere;
+    return this.agenticScope;
   }
 
   @Override
-  public CognisphereOwner withCognisphere(DefaultCognisphere cognisphere) {
-    this.cognisphere = cognisphere;
+  public AgenticScopeOwner withAgenticScope(DefaultAgenticScope agenticScope) {
+    this.agenticScope = agenticScope;
     return this;
   }
 
   @Override
-  public CognisphereRegistry registry() {
-    cognisphereRegistry.compareAndSet(null, new CognisphereRegistry(agentId));
-    return cognisphereRegistry.get();
+  public AgenticScopeRegistry registry() {
+    agenticScopeRegistry.compareAndSet(null, new AgenticScopeRegistry(agentId));
+    return agenticScopeRegistry.get();
   }
 }

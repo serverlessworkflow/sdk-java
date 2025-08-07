@@ -15,10 +15,12 @@
  */
 package io.serverlessworkflow.fluent.agentic.langchain4j;
 
-import dev.langchain4j.agentic.cognisphere.Cognisphere;
-import dev.langchain4j.agentic.cognisphere.DefaultCognisphere;
+import dev.langchain4j.agentic.agent.ErrorContext;
+import dev.langchain4j.agentic.agent.ErrorRecoveryResult;
 import dev.langchain4j.agentic.internal.AgentSpecification;
-import dev.langchain4j.agentic.internal.CognisphereOwner;
+import dev.langchain4j.agentic.internal.AgenticScopeOwner;
+import dev.langchain4j.agentic.scope.AgenticScope;
+import dev.langchain4j.agentic.scope.DefaultAgenticScope;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.fluent.agentic.AgentWorkflowBuilder;
 import io.serverlessworkflow.impl.WorkflowApplication;
@@ -29,7 +31,8 @@ import java.util.function.Function;
 public abstract class AbstractAgentService<T, S> implements WorkflowDefinitionBuilder {
 
   // Workflow OutputAs
-  private static final Function<Cognisphere, Object> DEFAULT_OUTPUT_FUNCTION = cognisphere -> null;
+  private static final Function<AgenticScope, Object> DEFAULT_OUTPUT_FUNCTION =
+      agenticScope -> null;
 
   protected final WorkflowApplication.Builder workflowExecBuilder;
   protected final AgentWorkflowBuilder workflowBuilder;
@@ -46,34 +49,39 @@ public abstract class AbstractAgentService<T, S> implements WorkflowDefinitionBu
     return (T)
         Proxy.newProxyInstance(
             this.agentServiceClass.getClassLoader(),
-            new Class<?>[] {agentServiceClass, AgentSpecification.class, CognisphereOwner.class},
+            new Class<?>[] {agentServiceClass, AgentSpecification.class, AgenticScopeOwner.class},
             new WorkflowInvocationHandler(
                 this.workflowBuilder.build(), this.workflowExecBuilder, this.agentServiceClass));
   }
 
   @SuppressWarnings("unchecked")
-  public S beforeCall(Consumer<Cognisphere> beforeCall) {
+  public S beforeCall(Consumer<AgenticScope> beforeCall) {
     this.workflowBuilder.inputFrom(
         cog -> {
           beforeCall.accept(cog);
           return cog;
         },
-        Cognisphere.class);
+        AgenticScope.class);
     return (S) this;
   }
 
   @SuppressWarnings("unchecked")
   public S outputName(String outputName) {
-    Function<DefaultCognisphere, Object> outputFunction = cog -> cog.readState(outputName);
-    this.workflowBuilder.outputAs(outputFunction, DefaultCognisphere.class);
+    Function<DefaultAgenticScope, Object> outputFunction = cog -> cog.readState(outputName);
+    this.workflowBuilder.outputAs(outputFunction, DefaultAgenticScope.class);
     this.workflowBuilder.document(
         d -> d.metadata(m -> m.metadata(META_KEY_OUTPUTNAME, outputName)));
     return (S) this;
   }
 
   @SuppressWarnings("unchecked")
-  public S output(Function<Cognisphere, Object> output) {
-    this.workflowBuilder.outputAs(output, Cognisphere.class);
+  public S output(Function<AgenticScope, Object> output) {
+    this.workflowBuilder.outputAs(output, AgenticScope.class);
+    return (S) this;
+  }
+
+  @SuppressWarnings("unchecked")
+  public S errorHandler(Function<ErrorContext, ErrorRecoveryResult> errorHandler) {
     return (S) this;
   }
 

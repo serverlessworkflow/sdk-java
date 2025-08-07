@@ -25,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.spy;
 
 import dev.langchain4j.agentic.AgenticServices;
-import dev.langchain4j.agentic.cognisphere.Cognisphere;
+import dev.langchain4j.agentic.scope.AgenticScope;
 import io.serverlessworkflow.api.types.ForkTask;
 import io.serverlessworkflow.api.types.Task;
 import io.serverlessworkflow.api.types.TaskItem;
@@ -117,7 +117,7 @@ class AgentWorkflowBuilderTest {
     Agents.MovieExpert expert = newMovieExpert();
 
     AtomicInteger max = new AtomicInteger(4);
-    Predicate<Cognisphere> exit =
+    Predicate<AgenticScope> exit =
         cog -> {
           // stop when we already have at least one movie picked in state
           var movies = cog.readState("movies", null);
@@ -189,7 +189,7 @@ class AgentWorkflowBuilderTest {
   @Test
   @DisplayName("workflow callFn with Java DSL guard attaches predicate")
   void testWorkflowCallFnWithPredicate() {
-    Predicate<Cognisphere> guard = cog -> true;
+    Predicate<AgenticScope> guard = cog -> true;
 
     Workflow wf =
         AgentWorkflowBuilder.workflow()

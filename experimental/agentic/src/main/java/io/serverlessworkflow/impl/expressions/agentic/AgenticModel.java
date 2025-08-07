@@ -15,16 +15,17 @@
  */
 package io.serverlessworkflow.impl.expressions.agentic;
 
-import dev.langchain4j.agentic.cognisphere.Cognisphere;
+import dev.langchain4j.agentic.scope.AgenticScope;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.expressions.func.JavaModel;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Optional;
 
 class AgenticModel extends JavaModel {
 
-  AgenticModel(Cognisphere cognisphere) {
-    super(cognisphere);
+  AgenticModel(AgenticScope agenticScope) {
+    super(agenticScope);
   }
 
   @Override
@@ -39,8 +40,10 @@ class AgenticModel extends JavaModel {
 
   @Override
   public <T> Optional<T> as(Class<T> clazz) {
-    if (Cognisphere.class.isAssignableFrom(clazz)) {
+    if (AgenticScope.class.isAssignableFrom(clazz)) {
       return Optional.of(clazz.cast(object));
+    } else if (Map.class.isAssignableFrom(clazz)) {
+      return Optional.of(clazz.cast(((AgenticScope) object).state()));
     } else {
       return super.as(clazz);
     }

@@ -15,8 +15,8 @@
  */
 package io.serverlessworkflow.fluent.agentic;
 
-import dev.langchain4j.agentic.cognisphere.DefaultCognisphere;
 import dev.langchain4j.agentic.internal.AgentExecutor;
+import dev.langchain4j.agentic.scope.DefaultAgenticScope;
 import io.serverlessworkflow.api.types.Task;
 import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.fluent.agentic.spi.AgentDoFluent;
@@ -58,7 +58,7 @@ public class AgentTaskItemListBuilder extends BaseTaskItemListBuilder<AgentTaskI
             exec ->
                 this.delegate.callFn(
                     name,
-                    fn -> fn.function(AgentAdapters.toFunction(exec), DefaultCognisphere.class)));
+                    fn -> fn.function(AgentAdapters.toFunction(exec), DefaultAgenticScope.class)));
     return self();
   }
 
@@ -93,7 +93,9 @@ public class AgentTaskItemListBuilder extends BaseTaskItemListBuilder<AgentTaskI
           for (int i = 0; i < execs.size(); i++) {
             AgentExecutor ex = execs.get(i);
             fork.branch(
-                "branch-" + i + "-" + name, AgentAdapters.toFunction(ex), DefaultCognisphere.class);
+                "branch-" + i + "-" + name,
+                AgentAdapters.toFunction(ex),
+                DefaultAgenticScope.class);
           }
         });
     return self();

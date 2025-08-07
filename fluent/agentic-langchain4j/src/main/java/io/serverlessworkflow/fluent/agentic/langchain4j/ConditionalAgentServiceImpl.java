@@ -15,8 +15,8 @@
  */
 package io.serverlessworkflow.fluent.agentic.langchain4j;
 
-import dev.langchain4j.agentic.cognisphere.Cognisphere;
 import dev.langchain4j.agentic.internal.AgentExecutor;
+import dev.langchain4j.agentic.scope.AgenticScope;
 import dev.langchain4j.agentic.workflow.ConditionalAgentService;
 import java.util.Arrays;
 import java.util.List;
@@ -46,7 +46,7 @@ public class ConditionalAgentServiceImpl<T>
   }
 
   @Override
-  public ConditionalAgentService<T> subAgents(Predicate<Cognisphere> condition, Object... agents) {
+  public ConditionalAgentService<T> subAgents(Predicate<AgenticScope> condition, Object... agents) {
     this.workflowBuilder.tasks(
         t -> Arrays.stream(agents).forEach(agent -> t.when(condition).agent(agent)));
     return this;
@@ -54,13 +54,13 @@ public class ConditionalAgentServiceImpl<T>
 
   @Override
   public ConditionalAgentService<T> subAgents(
-      Predicate<Cognisphere> condition, List<AgentExecutor> agentExecutors) {
+      Predicate<AgenticScope> condition, List<AgentExecutor> agentExecutors) {
     return this.subAgents(condition, agentExecutors.toArray());
   }
 
   @Override
   public ConditionalAgentService<T> subAgent(
-      Predicate<Cognisphere> condition, AgentExecutor agentExecutor) {
+      Predicate<AgenticScope> condition, AgentExecutor agentExecutor) {
     this.workflowBuilder.tasks(t -> t.when(condition).agent(agentExecutor));
     return this;
   }

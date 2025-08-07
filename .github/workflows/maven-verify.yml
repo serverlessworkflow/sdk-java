@@ -17,15 +17,7 @@ jobs:
       - name: Checkout sdk-java
         uses: actions/checkout@v4
 
-      # 2. (Temporary) Checkout the langchain4j repo at agentic-module
-      - name: Checkout langchain4j (agentic-module)
-        uses: actions/checkout@v4
-        with:
-          repository: mariofusco/langchain4j
-          ref: agentic-module
-          path: langchain4j
-
-      # 3. Set up JDK 17 for both builds
+      # 2. Set up JDK 17 for both builds
       - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
@@ -33,19 +25,12 @@ jobs:
           java-version: 17
           cache: 'maven'
 
-      # 4. Build the external agentic module
-      - name: Build langchain4j-agentic
-        run: |
-          mvn -B -U -T12C -f langchain4j/pom.xml clean package -DskipTests
-          mvn -B -f langchain4j/langchain4j-agentic/pom.xml clean install -DskipTests
-
-      # 5. Verify the main sdk-java project, excluding the two agentic modules
+      # 3. Verify the main sdk-java project, excluding the two agentic modules
       - name: Verify with Maven
         run: |
-          mvn -B -f pom.xml clean install verify \
-            -am
+          mvn -B -f pom.xml clean install verify -am
 
-      # 6. Verify examples
+      # 4. Verify examples
       - name: Verify Examples with Maven
         run: |
           mvn -B -f examples/pom.xml clean install verify

@@ -15,8 +15,8 @@
  */
 package io.serverlessworkflow.fluent.agentic.langchain4j;
 
-import dev.langchain4j.agentic.cognisphere.Cognisphere;
 import dev.langchain4j.agentic.internal.AgentExecutor;
+import dev.langchain4j.agentic.scope.AgenticScope;
 import dev.langchain4j.agentic.workflow.LoopAgentService;
 import io.serverlessworkflow.fluent.agentic.LoopAgentsBuilder;
 import java.util.List;
@@ -42,7 +42,7 @@ public class LoopAgentServiceImpl<T> extends AbstractAgentService<T, LoopAgentSe
   }
 
   @Override
-  public LoopAgentService<T> exitCondition(Predicate<Cognisphere> exitCondition) {
+  public LoopAgentService<T> exitCondition(Predicate<AgenticScope> exitCondition) {
     this.loopAgentsBuilder.exitCondition(exitCondition);
     return this;
   }

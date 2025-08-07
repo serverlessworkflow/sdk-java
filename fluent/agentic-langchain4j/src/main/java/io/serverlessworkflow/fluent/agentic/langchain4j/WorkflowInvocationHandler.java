@@ -16,29 +16,29 @@
 package io.serverlessworkflow.fluent.agentic.langchain4j;
 
 import dev.langchain4j.agentic.UntypedAgent;
-import dev.langchain4j.agentic.cognisphere.Cognisphere;
-import dev.langchain4j.agentic.cognisphere.CognisphereAccess;
-import dev.langchain4j.agentic.cognisphere.CognisphereRegistry;
-import dev.langchain4j.agentic.cognisphere.DefaultCognisphere;
-import dev.langchain4j.agentic.cognisphere.ResultWithCognisphere;
 import dev.langchain4j.agentic.internal.AgentInvoker;
 import dev.langchain4j.agentic.internal.AgentSpecification;
-import dev.langchain4j.agentic.internal.CognisphereOwner;
+import dev.langchain4j.agentic.internal.AgenticScopeOwner;
+import dev.langchain4j.agentic.scope.AgenticScope;
+import dev.langchain4j.agentic.scope.AgenticScopeAccess;
+import dev.langchain4j.agentic.scope.AgenticScopeRegistry;
+import dev.langchain4j.agentic.scope.DefaultAgenticScope;
+import dev.langchain4j.agentic.scope.ResultWithAgenticScope;
 import dev.langchain4j.service.MemoryId;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.WorkflowApplication;
-import io.serverlessworkflow.impl.expressions.agentic.langchain4j.CognisphereRegistryAssessor;
+import io.serverlessworkflow.impl.expressions.agentic.langchain4j.AgenticScopeRegistryAssessor;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
-public class WorkflowInvocationHandler implements InvocationHandler, CognisphereOwner {
+public class WorkflowInvocationHandler implements InvocationHandler, AgenticScopeOwner {
 
   private final Workflow workflow;
   private final WorkflowApplication.Builder workflowApplicationBuilder;
-  private final CognisphereRegistryAssessor cognisphereRegistryAssessor;
+  private final AgenticScopeRegistryAssessor agenticScopeRegistryAssessor;
 
   WorkflowInvocationHandler(
       Workflow workflow,
@@ -46,19 +46,21 @@ public class WorkflowInvocationHandler implements InvocationHandler, Cognisphere
       Class<?> agentServiceClass) {
     this.workflow = workflow;
     this.workflowApplicationBuilder = workflowApplicationBuilder;
-    this.cognisphereRegistryAssessor = new CognisphereRegistryAssessor(agentServiceClass.getName());
+    this.agenticScopeRegistryAssessor =
+        new AgenticScopeRegistryAssessor(agentServiceClass.getName());
   }
 
   @SuppressWarnings("unchecked")
-  private static void writeCognisphereState(Cognisphere cognisphere, Method method, Object[] args) {
+  private static void writeAgenticScopeState(
+      AgenticScope agenticScope, Method method, Object[] args) {
     if (method.getDeclaringClass() == UntypedAgent.class) {
-      cognisphere.writeStates((Map<String, Object>) args[0]);
+      agenticScope.writeStates((Map<String, Object>) args[0]);
     } else {
       Parameter[] parameters = method.getParameters();
       for (int i = 0; i < parameters.length; i++) {
         int index = i;
         AgentInvoker.optionalParameterName(parameters[i])
-            .ifPresent(argName -> cognisphere.writeState(argName, args[index]));
+            .ifPresent(argName -> agenticScope.writeState(argName, args[index]));
       }
     }
   }
@@ -78,7 +80,7 @@ public class WorkflowInvocationHandler implements InvocationHandler, Cognisphere
 
   @Override
   public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-    CognisphereRegistry registry = registry();
+    AgenticScopeRegistry registry = registry();
     // outputName
     if (method.getDeclaringClass() == AgentSpecification.class) {
       return switch (method.getName()) {
@@ -89,23 +91,23 @@ public class WorkflowInvocationHandler implements InvocationHandler, Cognisphere
       };
     }
     // withCognisphere
-    if (method.getDeclaringClass() == CognisphereOwner.class) {
-      // Ingest the workflow input as a Cognisphere object
+    if (method.getDeclaringClass() == AgenticScopeOwner.class) {
+      // Ingest the workflow input as a AgenticScope object
       // Later, retrieve it and start the workflow with it as input.
       return switch (method.getName()) {
-        case "withCognisphere" -> this.withCognisphere((DefaultCognisphere) args[0]);
+        case "withAgenticScope" -> this.withAgenticScope((DefaultAgenticScope) args[0]);
         case "registry" -> registry;
         default ->
             throw new UnsupportedOperationException(
                 "Unknown method on CognisphereOwner class : " + method.getName());
       };
     }
-    // getCognisphere
+    // getAgenticScope
     // evictCognisphere
-    if (method.getDeclaringClass() == CognisphereAccess.class) {
+    if (method.getDeclaringClass() == AgenticScopeAccess.class) {
       return switch (method.getName()) {
-        case "getCognisphere" -> registry().get(args[0]);
-        case "evictCognisphere" -> registry().evict(args[0]);
+        case "getAgenticScope" -> registry().get(args[0]);
+        case "evictAgenticScope" -> registry().evict(args[0]);
         default ->
             throw new UnsupportedOperationException(
                 "Unknown method on CognisphereAccess class : " + method.getName());
@@ -116,41 +118,41 @@ public class WorkflowInvocationHandler implements InvocationHandler, Cognisphere
     return executeWorkflow(currentCognisphere(method, args), method, args);
   }
 
-  private Object executeWorkflow(DefaultCognisphere cognisphere, Method method, Object[] args) {
-    writeCognisphereState(cognisphere, method, args);
+  private Object executeWorkflow(DefaultAgenticScope agenticScope, Method method, Object[] args) {
+    writeAgenticScopeState(agenticScope, method, args);
 
     try (WorkflowApplication app = workflowApplicationBuilder.build()) {
       // TODO improve result handling
-      DefaultCognisphere output =
+      DefaultAgenticScope output =
           app.workflowDefinition(workflow)
-              .instance(cognisphere)
+              .instance(agenticScope)
               .start()
               .get()
-              .as(DefaultCognisphere.class)
+              .as(DefaultAgenticScope.class)
               .orElseThrow(
                   () ->
                       new IllegalArgumentException(
                           "Workflow hasn't returned a Cognisphere object."));
       Object result = output.readState(outputName());
 
-      return method.getReturnType().equals(ResultWithCognisphere.class)
-          ? new ResultWithCognisphere<>(output, result)
+      return method.getReturnType().equals(ResultWithAgenticScope.class)
+          ? new ResultWithAgenticScope<>(output, result)
           : result;
 
     } catch (ExecutionException | InterruptedException e) {
       throw new RuntimeException(
           "Failed to execute workflow: "
               + workflow.getDocument().getName()
-              + " - Cognisphere: "
-              + cognisphere,
+              + " - AgenticScope: "
+              + agenticScope,
           e);
     }
   }
 
-  private DefaultCognisphere currentCognisphere(Method method, Object[] args) {
+  private DefaultAgenticScope currentCognisphere(Method method, Object[] args) {
     Object memoryId = memoryId(method, args);
-    this.cognisphereRegistryAssessor.setMemoryId(memoryId);
-    return this.cognisphereRegistryAssessor.getCognisphere();
+    this.agenticScopeRegistryAssessor.setMemoryId(memoryId);
+    return this.agenticScopeRegistryAssessor.getAgenticScope();
   }
 
   private Object memoryId(Method method, Object[] args) {
@@ -164,13 +166,13 @@ public class WorkflowInvocationHandler implements InvocationHandler, Cognisphere
   }
 
   @Override
-  public CognisphereOwner withCognisphere(DefaultCognisphere cognisphere) {
-    this.cognisphereRegistryAssessor.withCognisphere(cognisphere);
+  public AgenticScopeOwner withAgenticScope(DefaultAgenticScope agenticScope) {
+    this.agenticScopeRegistryAssessor.withAgenticScope(agenticScope);
     return this;
   }
 
   @Override
-  public CognisphereRegistry registry() {
-    return this.cognisphereRegistryAssessor.registry();
+  public AgenticScopeRegistry registry() {
+    return this.agenticScopeRegistryAssessor.registry();
   }
 }

@@ -109,6 +109,8 @@
         </checkstyle.header.template>
         <checkstyle.header.extensions>java</checkstyle.header.extensions>
         <checkstyle.logViolationsToConsole>true</checkstyle.logViolationsToConsole>
+
+        <integration-tests.includes>**/*IT.java</integration-tests.includes>
     </properties>
 
     <dependencyManagement>
@@ -442,6 +444,9 @@
                     <version>${version.surefire.plugin}</version>
                     <configuration>
                         <argLine>-Xmx1024m -XX:+IgnoreUnrecognizedVMOptions -XX:MaxPermSize=256m</argLine>
+                        <excludes>
+                            <exclude>${integration-tests.includes}</exclude>
+                        </excludes>
                     </configuration>
                 </plugin>
                 <plugin>
@@ -450,6 +455,9 @@
                     <version>${version.failsafe.plugin}</version>
                     <configuration>
                         <argLine>-Xmx1024m -XX:+IgnoreUnrecognizedVMOptions -XX:MaxPermSize=256m</argLine>
+                        <includes>
+                            <include>${integration-tests.includes}</include>
+                        </includes>
                     </configuration>
                 </plugin>
                 <plugin>
@@ -558,6 +566,29 @@
                                 <phase>package</phase>
                                 <goals>
                                     <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>integration-tests</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-failsafe-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>run-integration-tests</id>
+                                <goals>
+                                    <goal>integration-test</goal>
+                                    <goal>verify</goal>
                                 </goals>
                             </execution>
                         </executions>

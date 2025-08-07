@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.langchain4j.agentic.cognisphere.Cognisphere;
+import dev.langchain4j.agentic.scope.AgenticScope;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.api.types.func.CallJava;
 import io.serverlessworkflow.api.types.func.OutputAsFunction;
@@ -78,7 +78,7 @@ class SequentialAgentServiceImplTest {
   @Test
   void shouldSetOutputFunction_extension() {
     // given
-    Function<Cognisphere, Object> fn = ctx -> 42;
+    Function<AgenticScope, Object> fn = ctx -> 42;
     SequentialAgentServiceImpl<DummyAgent> service =
         (SequentialAgentServiceImpl<DummyAgent>)
             SequentialAgentServiceImpl.builder(DummyAgent.class).output(fn);

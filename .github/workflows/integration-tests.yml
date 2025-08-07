@@ -1,0 +1,40 @@
+name: sdk-java Integration Tests
+on:
+  issue_comment:
+    types: [ created ]
+
+jobs:
+  run-integration-tests:
+    # 2) Only run if the comment is exactly "/run integration-tests"
+    #    and it’s on a pull request (not on an issue)
+    if: >
+      github.event.comment.body == '/run integration-tests' &&
+      github.event.issue.pull_request != null
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      pull-requests: write
+      checks: write
+      id-token: write
+
+    steps:
+      # 3) Checkout the **PR’s** code
+      - name: Checkout PR code
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.issue.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.issue.pull_request.head.ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      # 4) Set up Java/Maven (cache enabled)
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: maven
+
+      # 5) Run only the IT suite
+      - name: Run integration-tests profile
+        run: mvn -B -f pom.xml clean verify -Pintegration-tests

@@ -15,8 +15,8 @@
  */
 package io.serverlessworkflow.impl.expressions.agentic;
 
-import dev.langchain4j.agentic.cognisphere.Cognisphere;
-import dev.langchain4j.agentic.cognisphere.ResultWithCognisphere;
+import dev.langchain4j.agentic.scope.AgenticScope;
+import dev.langchain4j.agentic.scope.ResultWithAgenticScope;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.expressions.func.JavaModelCollection;
 import java.util.Collection;
@@ -24,28 +24,28 @@ import java.util.Optional;
 
 class AgenticModelCollection extends JavaModelCollection {
 
-  private final Cognisphere cognisphere;
+  private final AgenticScope agenticScope;
 
-  AgenticModelCollection(Collection<?> object, Cognisphere cognisphere) {
+  AgenticModelCollection(Collection<?> object, AgenticScope agenticScope) {
     super(object);
-    this.cognisphere = cognisphere;
+    this.agenticScope = agenticScope;
   }
 
-  AgenticModelCollection(Cognisphere cognisphere) {
-    this.cognisphere = cognisphere;
+  AgenticModelCollection(AgenticScope agenticScope) {
+    this.agenticScope = agenticScope;
   }
 
   @Override
   protected WorkflowModel nextItem(Object obj) {
-    return new AgenticModel((Cognisphere) obj);
+    return new AgenticModel((AgenticScope) obj);
   }
 
   @Override
   public <T> Optional<T> as(Class<T> clazz) {
-    if (Cognisphere.class.isAssignableFrom(clazz)) {
-      return Optional.of(clazz.cast(cognisphere));
-    } else if (ResultWithCognisphere.class.isAssignableFrom(clazz)) {
-      return Optional.of(clazz.cast(new ResultWithCognisphere<>(cognisphere, object)));
+    if (AgenticScope.class.isAssignableFrom(clazz)) {
+      return Optional.of(clazz.cast(agenticScope));
+    } else if (ResultWithAgenticScope.class.isAssignableFrom(clazz)) {
+      return Optional.of(clazz.cast(new ResultWithAgenticScope<>(agenticScope, object)));
     } else {
       return super.as(clazz);
     }

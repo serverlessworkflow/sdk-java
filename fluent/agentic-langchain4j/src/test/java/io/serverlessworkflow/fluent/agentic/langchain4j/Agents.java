@@ -17,8 +17,8 @@ package io.serverlessworkflow.fluent.agentic.langchain4j;
 
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.agentic.Agent;
-import dev.langchain4j.agentic.cognisphere.CognisphereAccess;
-import dev.langchain4j.agentic.cognisphere.ResultWithCognisphere;
+import dev.langchain4j.agentic.scope.AgenticScopeAccess;
+import dev.langchain4j.agentic.scope.ResultWithAgenticScope;
 import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
@@ -32,7 +32,7 @@ public class Agents {
     String ask(@V("request") String request);
   }
 
-  public interface ExpertRouterAgentWithMemory extends CognisphereAccess {
+  public interface ExpertRouterAgentWithMemory extends AgenticScopeAccess {
 
     @Agent
     String ask(@MemoryId String memoryId, @V("request") String request);
@@ -209,10 +209,10 @@ public class Agents {
     String scoreAndReview(@V("story") String story, @V("style") String style);
   }
 
-  public interface StyledWriter extends CognisphereAccess {
+  public interface StyledWriter extends AgenticScopeAccess {
 
     @Agent
-    ResultWithCognisphere<String> writeStoryWithStyle(
+    ResultWithAgenticScope<String> writeStoryWithStyle(
         @V("topic") String topic, @V("style") String style);
   }
 
