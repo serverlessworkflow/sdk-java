@@ -28,6 +28,19 @@ import java.util.Map;
 
 class AgenticModelFactory implements WorkflowModelFactory {
 
+  private static final String DEFAULT_AGENTIC_SCOPE_STATE_KEY = "input";
+  private final AgenticScopeRegistryAssessor scopeRegistryAssessor =
+      new AgenticScopeRegistryAssessor();
+
+  private AgenticModel asAgenticModel(Object value) {
+    // TODO: fetch memoryId from the object based on known premises
+    final AgenticScope agenticScope = this.scopeRegistryAssessor.getAgenticScope();
+    if (value != null) {
+      agenticScope.writeState(DEFAULT_AGENTIC_SCOPE_STATE_KEY, value);
+    }
+    return new AgenticModel(agenticScope);
+  }
+
   /**
    * Applies any change to the model after running as task. We will always set it to a @AgenticScope
    * object since @AgentExecutor is always adding the output to the agenticScope. We just have to
@@ -60,44 +73,46 @@ class AgenticModelFactory implements WorkflowModelFactory {
 
   @Override
   public WorkflowModel from(boolean value) {
-    return new JavaModel(value);
+    return asAgenticModel(value);
   }
 
   @Override
   public WorkflowModel from(Number value) {
-    return new JavaModel(value);
+    return asAgenticModel(value);
   }
 
   @Override
   public WorkflowModel from(String value) {
-    return new JavaModel(value);
+    return asAgenticModel(value);
   }
 
   @Override
   public WorkflowModel from(CloudEvent ce) {
+    // TODO: serialize the CE into the AgenticScope
     return new JavaModel(ce);
   }
 
   @Override
   public WorkflowModel from(CloudEventData ce) {
+    // TODO: serialize the CE data into the AgenticScope
     return new JavaModel(ce);
   }
 
   @Override
   public WorkflowModel from(OffsetDateTime value) {
-    return new JavaModel(value);
+    return asAgenticModel(value);
   }
 
   @Override
   public WorkflowModel from(Map<String, Object> map) {
-    final AgenticScope agenticScope = new AgenticScopeRegistryAssessor().getAgenticScope();
+    final AgenticScope agenticScope = this.scopeRegistryAssessor.getAgenticScope();
     agenticScope.writeStates(map);
     return new AgenticModel(agenticScope);
   }
 
   @Override
   public WorkflowModel fromNull() {
-    return new JavaModel(null);
+    return asAgenticModel(null);
   }
 
   @Override
@@ -105,6 +120,6 @@ class AgenticModelFactory implements WorkflowModelFactory {
     if (value instanceof AgenticScope) {
       return new AgenticModel((AgenticScope) value);
     }
-    return new JavaModel(value);
+    return asAgenticModel(value);
   }
 }
