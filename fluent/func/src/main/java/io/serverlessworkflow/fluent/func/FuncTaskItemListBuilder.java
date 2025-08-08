@@ -80,6 +80,16 @@ public class FuncTaskItemListBuilder extends BaseTaskItemListBuilder<FuncTaskIte
   }
 
   @Override
+  public FuncTaskItemListBuilder listen(
+      String name, Consumer<FuncListenTaskBuilder> itemsConfigurer) {
+    this.requireNameAndConfig(name, itemsConfigurer);
+    final FuncListenTaskBuilder listenTaskJavaBuilder = new FuncListenTaskBuilder();
+    itemsConfigurer.accept(listenTaskJavaBuilder);
+    return this.addTaskItem(
+        new TaskItem(name, new Task().withListenTask(listenTaskJavaBuilder.build())));
+  }
+
+  @Override
   public FuncTaskItemListBuilder forEach(
       String name, Consumer<FuncForTaskBuilder> itemsConfigurer) {
     this.requireNameAndConfig(name, itemsConfigurer);

@@ -20,6 +20,7 @@ import io.serverlessworkflow.fluent.func.FuncCallTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncEmitTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncForTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncForkTaskBuilder;
+import io.serverlessworkflow.fluent.func.FuncListenTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncSetTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncSwitchTaskBuilder;
 import io.serverlessworkflow.fluent.func.spi.ConditionalTaskBuilder;
@@ -78,6 +79,12 @@ public class AgentDoTaskBuilder
   @Override
   public AgentDoTaskBuilder emit(String name, Consumer<FuncEmitTaskBuilder> itemsConfigurer) {
     this.listBuilder().emit(name, itemsConfigurer);
+    return self();
+  }
+
+  @Override
+  public AgentDoTaskBuilder listen(String name, Consumer<FuncListenTaskBuilder> itemsConfigurer) {
+    this.listBuilder().listen(name, itemsConfigurer);
     return self();
   }
 

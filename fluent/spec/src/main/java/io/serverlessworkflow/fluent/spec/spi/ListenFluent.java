@@ -19,7 +19,7 @@ import io.serverlessworkflow.fluent.spec.TaskBaseBuilder;
 import java.util.UUID;
 import java.util.function.Consumer;
 
-public interface ListenFluent<SELF extends TaskBaseBuilder<SELF>, LIST> {
+public interface ListenFluent<SELF extends TaskBaseBuilder<?>, LIST> {
 
   LIST listen(String name, Consumer<SELF> itemsConfigurer);
 

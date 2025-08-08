@@ -80,6 +80,11 @@ public abstract class TaskBaseBuilder<T extends TaskBaseBuilder<T>>
     return self();
   }
 
+  public T then(String taskName) {
+    this.task.setThen(new FlowDirective().withString(taskName));
+    return self();
+  }
+
   public T exportAs(Object exportAs) {
     this.task.setExport(new ExportBuilder().as(exportAs).build());
     return self();
