@@ -90,7 +90,7 @@ public class WorkflowDefinitionTest {
             Map.of("enabled", false),
             WorkflowDefinitionTest::checkDisableCondition),
         args(
-            "raise-inline copy.yaml",
+            "raise-inline.yaml",
             WorkflowDefinitionTest::checkWorkflowException,
             WorkflowException.class),
         args(

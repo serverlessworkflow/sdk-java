@@ -23,7 +23,7 @@ import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.api.types.func.ForTaskFunction;
 import io.serverlessworkflow.api.types.func.TypedFunction;
 import io.serverlessworkflow.impl.WorkflowApplication;
-import io.serverlessworkflow.impl.WorkflowPosition;
+import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.WorkflowPredicate;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
 import io.serverlessworkflow.impl.executors.ForExecutor.ForExecutorBuilder;
@@ -36,7 +36,7 @@ import java.util.Optional;
 public class JavaForExecutorBuilder extends ForExecutorBuilder {
 
   protected JavaForExecutorBuilder(
-      WorkflowPosition position,
+      WorkflowMutablePosition position,
       ForTask task,
       Workflow workflow,
       WorkflowApplication application,

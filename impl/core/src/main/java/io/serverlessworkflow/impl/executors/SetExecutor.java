@@ -24,7 +24,7 @@ import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowFilter;
 import io.serverlessworkflow.impl.WorkflowModel;
-import io.serverlessworkflow.impl.WorkflowPosition;
+import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
 import java.util.concurrent.CompletableFuture;
@@ -38,7 +38,7 @@ public class SetExecutor extends RegularTaskExecutor<SetTask> {
     private final WorkflowFilter setFilter;
 
     protected SetExecutorBuilder(
-        WorkflowPosition position,
+        WorkflowMutablePosition position,
         SetTask task,
         Workflow workflow,
         WorkflowApplication application,

@@ -19,13 +19,5 @@ public interface WorkflowPosition {
 
   String jsonPointer();
 
-  WorkflowPosition addProperty(String prop);
-
-  WorkflowPosition addIndex(int index);
-
-  WorkflowPosition back();
-
-  WorkflowPosition copy();
-
   Object last();
 }

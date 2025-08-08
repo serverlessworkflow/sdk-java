@@ -21,7 +21,7 @@ import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
-import io.serverlessworkflow.impl.WorkflowPosition;
+import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
 import java.util.concurrent.CompletableFuture;
 
@@ -34,7 +34,7 @@ public class CallTaskExecutor<T extends TaskBase> extends RegularTaskExecutor<T>
     private CallableTask<T> callable;
 
     protected CallTaskExecutorBuilder(
-        WorkflowPosition position,
+        WorkflowMutablePosition position,
         T task,
         Workflow workflow,
         WorkflowApplication application,

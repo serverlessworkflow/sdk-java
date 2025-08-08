@@ -15,7 +15,7 @@
  */
 package io.serverlessworkflow.impl;
 
-public class StringBufferWorkflowPosition implements WorkflowPosition {
+public class StringBufferWorkflowPosition implements WorkflowMutablePosition {
 
   private StringBuilder sb;
 
@@ -32,13 +32,13 @@ public class StringBufferWorkflowPosition implements WorkflowPosition {
   }
 
   @Override
-  public WorkflowPosition addIndex(int index) {
+  public WorkflowMutablePosition addIndex(int index) {
     sb.append('/').append(index);
     return this;
   }
 
   @Override
-  public WorkflowPosition addProperty(String prop) {
+  public WorkflowMutablePosition addProperty(String prop) {
     sb.append('/').append(prop);
     return this;
   }
@@ -54,7 +54,7 @@ public class StringBufferWorkflowPosition implements WorkflowPosition {
   }
 
   @Override
-  public WorkflowPosition back() {
+  public WorkflowMutablePosition back() {
     int indexOf = sb.lastIndexOf("/");
     if (indexOf != -1) {
       sb.substring(0, indexOf);

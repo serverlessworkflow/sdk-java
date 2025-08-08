@@ -13,13 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl;
+package io.serverlessworkflow.impl.lifecycle;
 
-import io.serverlessworkflow.api.types.TaskBase;
+import io.serverlessworkflow.impl.TaskContextData;
+import io.serverlessworkflow.impl.WorkflowContextData;
 
-public interface WorkflowExecutionListener {
+public abstract class TaskEvent extends WorkflowEvent {
 
-  void onTaskStarted(WorkflowPosition currentPos, TaskBase task);
+  protected final TaskContextData task;
 
-  void onTaskEnded(WorkflowPosition currentPos, TaskBase task);
+  protected TaskEvent(WorkflowContextData workflow, TaskContextData task) {
+    super(workflow);
+    this.task = task;
+  }
+
+  public TaskContextData taskContext() {
+    return task;
+  }
 }

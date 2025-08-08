@@ -33,7 +33,8 @@ import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowModelCollection;
-import io.serverlessworkflow.impl.WorkflowPosition;
+import io.serverlessworkflow.impl.WorkflowMutableInstance;
+import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.WorkflowPredicate;
 import io.serverlessworkflow.impl.WorkflowStatus;
 import io.serverlessworkflow.impl.WorkflowUtils;
@@ -84,7 +85,7 @@ public abstract class ListenExecutor extends RegularTaskExecutor<ListenTask> {
     }
 
     protected ListenExecutorBuilder(
-        WorkflowPosition position,
+        WorkflowMutablePosition position,
         ListenTask task,
         Workflow workflow,
         WorkflowApplication application,
@@ -228,7 +229,7 @@ public abstract class ListenExecutor extends RegularTaskExecutor<ListenTask> {
     WorkflowModelCollection output =
         workflow.definition().application().modelFactory().createCollection();
     Collection<EventRegistration> registrations = new ArrayList<>();
-    workflow.instance().status(WorkflowStatus.WAITING);
+    ((WorkflowMutableInstance) workflow.instance()).status(WorkflowStatus.WAITING);
     return buildFuture(
             regBuilders,
             registrations,

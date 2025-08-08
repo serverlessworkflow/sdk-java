@@ -21,7 +21,7 @@ import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
-import io.serverlessworkflow.impl.WorkflowPosition;
+import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.WorkflowStatus;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
 import java.util.Iterator;
@@ -58,7 +58,7 @@ public class TaskExecutorHelper {
   }
 
   public static TaskExecutor<?> createExecutorList(
-      WorkflowPosition position,
+      WorkflowMutablePosition position,
       List<TaskItem> taskItems,
       Workflow workflow,
       WorkflowApplication application,
@@ -75,7 +75,7 @@ public class TaskExecutorHelper {
   }
 
   public static Map<String, TaskExecutor<?>> createBranchList(
-      WorkflowPosition position,
+      WorkflowMutablePosition position,
       List<TaskItem> taskItems,
       Workflow workflow,
       WorkflowApplication application,
@@ -88,7 +88,7 @@ public class TaskExecutorHelper {
   }
 
   private static Map<String, TaskExecutorBuilder<?>> createExecutorBuilderList(
-      WorkflowPosition position,
+      WorkflowMutablePosition position,
       List<TaskItem> taskItems,
       Workflow workflow,
       WorkflowApplication application,

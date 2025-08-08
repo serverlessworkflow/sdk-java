@@ -17,6 +17,7 @@ package io.serverlessworkflow.impl.executors;
 
 import static io.serverlessworkflow.impl.WorkflowUtils.buildWorkflowFilter;
 import static io.serverlessworkflow.impl.WorkflowUtils.getSchemaValidator;
+import static io.serverlessworkflow.impl.lifecycle.LifecycleEventsUtils.publishEvent;
 
 import io.serverlessworkflow.api.types.Export;
 import io.serverlessworkflow.api.types.FlowDirective;
@@ -29,9 +30,13 @@ import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowFilter;
 import io.serverlessworkflow.impl.WorkflowModel;
+import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.WorkflowPosition;
 import io.serverlessworkflow.impl.WorkflowPredicate;
 import io.serverlessworkflow.impl.WorkflowStatus;
+import io.serverlessworkflow.impl.lifecycle.TaskCompletedEvent;
+import io.serverlessworkflow.impl.lifecycle.TaskFailedEvent;
+import io.serverlessworkflow.impl.lifecycle.TaskStartedEvent;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
 import io.serverlessworkflow.impl.schema.SchemaValidator;
 import java.time.Instant;
@@ -62,7 +67,7 @@ public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskEx
     private Optional<SchemaValidator> inputSchemaValidator = Optional.empty();
     private Optional<SchemaValidator> outputSchemaValidator = Optional.empty();
     private Optional<SchemaValidator> contextSchemaValidator = Optional.empty();
-    protected final WorkflowPosition position;
+    protected final WorkflowMutablePosition position;
     protected final T task;
     protected final String taskName;
     protected final WorkflowApplication application;
@@ -72,7 +77,7 @@ public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskEx
     private TaskExecutor<T> instance;
 
     protected AbstractTaskExecutorBuilder(
-        WorkflowPosition position,
+        WorkflowMutablePosition position,
         T task,
         Workflow workflow,
         WorkflowApplication application,
@@ -187,16 +192,24 @@ public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskEx
           completable
               .thenApply(
                   t -> {
-                    workflowContext
-                        .definition()
-                        .listeners()
-                        .forEach(l -> l.onTaskStarted(position, task));
+                    publishEvent(
+                        workflowContext,
+                        l -> l.onTaskStarted(new TaskStartedEvent(workflowContext, taskContext)));
                     inputSchemaValidator.ifPresent(s -> s.validate(t.rawInput()));
                     inputProcessor.ifPresent(
                         p -> taskContext.input(p.apply(workflowContext, t, t.rawInput())));
                     return t;
                   })
               .thenCompose(t -> execute(workflowContext, t))
+              .whenComplete(
+                  (t, e) -> {
+                    if (e != null) {
+                      publishEvent(
+                          workflowContext,
+                          l ->
+                              l.onTaskFailed(new TaskFailedEvent(workflowContext, taskContext, e)));
+                    }
+                  })
               .thenApply(
                   t -> {
                     outputProcessor.ifPresent(
@@ -208,10 +221,11 @@ public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskEx
                                 p.apply(workflowContext, t, workflowContext.context())));
                     contextSchemaValidator.ifPresent(s -> s.validate(workflowContext.context()));
                     t.completedAt(Instant.now());
-                    workflowContext
-                        .definition()
-                        .listeners()
-                        .forEach(l -> l.onTaskEnded(position, task));
+                    publishEvent(
+                        workflowContext,
+                        l ->
+                            l.onTaskCompleted(
+                                new TaskCompletedEvent(workflowContext, taskContext)));
                     return t;
                   }),
           workflowContext);

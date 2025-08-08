@@ -15,20 +15,26 @@
  */
 package io.serverlessworkflow.impl;
 
-public class WorkflowContext {
+public class WorkflowContext implements WorkflowContextData {
   private final WorkflowDefinition definition;
-  private final WorkflowInstance instance;
+  private final WorkflowMutableInstance instance;
   private WorkflowModel context;
 
-  WorkflowContext(WorkflowDefinition definition, WorkflowInstance instance) {
+  WorkflowContext(WorkflowDefinition definition, WorkflowMutableInstance instance) {
     this.definition = definition;
     this.instance = instance;
   }
 
-  public WorkflowInstance instance() {
+  @Override
+  public WorkflowInstanceData instanceData() {
     return instance;
   }
 
+  public WorkflowMutableInstance instance() {
+    return instance;
+  }
+
+  @Override
   public WorkflowModel context() {
     return context;
   }
@@ -37,7 +43,19 @@ public class WorkflowContext {
     this.context = context;
   }
 
+  @Override
   public WorkflowDefinition definition() {
     return definition;
+  }
+
+  @Override
+  public String toString() {
+    return "WorkflowContext [definition="
+        + definition.workflow().getDocument().getName()
+        + ", instance="
+        + instance
+        + ", context="
+        + context
+        + "]";
   }
 }

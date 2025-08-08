@@ -22,7 +22,8 @@ import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
-import io.serverlessworkflow.impl.WorkflowPosition;
+import io.serverlessworkflow.impl.WorkflowMutableInstance;
+import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.WorkflowStatus;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
 import java.time.Duration;
@@ -37,7 +38,7 @@ public class WaitExecutor extends RegularTaskExecutor<WaitTask> {
     private final Duration millisToWait;
 
     protected WaitExecutorBuilder(
-        WorkflowPosition position,
+        WorkflowMutablePosition position,
         WaitTask task,
         Workflow workflow,
         WorkflowApplication application,
@@ -72,7 +73,7 @@ public class WaitExecutor extends RegularTaskExecutor<WaitTask> {
   @Override
   protected CompletableFuture<WorkflowModel> internalExecute(
       WorkflowContext workflow, TaskContext taskContext) {
-    workflow.instance().status(WorkflowStatus.WAITING);
+    ((WorkflowMutableInstance) workflow.instance()).status(WorkflowStatus.WAITING);
     return new CompletableFuture<WorkflowModel>()
         .completeOnTimeout(taskContext.output(), millisToWait.toMillis(), TimeUnit.MILLISECONDS)
         .thenApply(

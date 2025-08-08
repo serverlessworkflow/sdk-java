@@ -18,4 +18,4 @@ package io.serverlessworkflow.impl;
 import java.util.function.Supplier;
 
 @FunctionalInterface
-public interface WorkflowPositionFactory extends Supplier<WorkflowPosition> {}
+public interface WorkflowPositionFactory extends Supplier<WorkflowMutablePosition> {}

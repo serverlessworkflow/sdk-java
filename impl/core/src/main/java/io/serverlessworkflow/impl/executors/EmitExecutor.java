@@ -29,7 +29,7 @@ import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
-import io.serverlessworkflow.impl.WorkflowPosition;
+import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
 import io.serverlessworkflow.impl.events.CloudEventUtils;
@@ -39,7 +39,6 @@ import java.net.URI;
 import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 public class EmitExecutor extends RegularTaskExecutor<EmitTask> {
@@ -51,7 +50,7 @@ public class EmitExecutor extends RegularTaskExecutor<EmitTask> {
     private EventPropertiesBuilder eventBuilder;
 
     protected EmitExecutorBuilder(
-        WorkflowPosition position,
+        WorkflowMutablePosition position,
         EmitTask task,
         Workflow workflow,
         WorkflowApplication application,
@@ -89,13 +88,13 @@ public class EmitExecutor extends RegularTaskExecutor<EmitTask> {
         props
             .idFilter()
             .map(filter -> filter.apply(workflow, taskContext, taskContext.input()))
-            .orElse(UUID.randomUUID().toString()));
+            .orElse(CloudEventUtils.id()));
     ceBuilder.withSource(
         props
             .sourceFilter()
             .map(filter -> filter.apply(workflow, taskContext, taskContext.input()))
             .map(URI::create)
-            .orElse(URI.create("reference-impl")));
+            .orElse(CloudEventUtils.source()));
     ceBuilder.withType(
         props
             .typeFilter()

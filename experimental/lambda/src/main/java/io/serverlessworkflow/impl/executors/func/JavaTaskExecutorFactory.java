@@ -19,7 +19,7 @@ import io.serverlessworkflow.api.types.Task;
 import io.serverlessworkflow.api.types.TaskBase;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.WorkflowApplication;
-import io.serverlessworkflow.impl.WorkflowPosition;
+import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.executors.DefaultTaskExecutorFactory;
 import io.serverlessworkflow.impl.executors.TaskExecutorBuilder;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
@@ -27,7 +27,7 @@ import io.serverlessworkflow.impl.resources.ResourceLoader;
 public class JavaTaskExecutorFactory extends DefaultTaskExecutorFactory {
 
   public TaskExecutorBuilder<? extends TaskBase> getTaskExecutor(
-      WorkflowPosition position,
+      WorkflowMutablePosition position,
       Task task,
       Workflow workflow,
       WorkflowApplication application,
