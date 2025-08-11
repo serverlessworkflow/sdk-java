@@ -18,18 +18,18 @@ package io.serverlessworkflow.fluent.agentic;
 import dev.langchain4j.agentic.Agent;
 import dev.langchain4j.agentic.internal.AgentSpecification;
 import dev.langchain4j.service.MemoryId;
-import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
 import java.util.List;
 
 public interface Agents {
 
-  @SystemMessage(
-      """
-          You are a happy chat bot.
-          """)
   interface ChatBot {
+    @UserMessage(
+        """
+            You are a happy chat bot.
+            """)
+    @Agent
     String chat(@MemoryId String memoryId, @V("message") String message);
   }
 

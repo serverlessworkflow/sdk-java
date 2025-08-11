@@ -15,29 +15,66 @@
  */
 package io.serverlessworkflow.impl.expressions.agentic;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.langchain4j.agentic.scope.AgenticScope;
 import dev.langchain4j.agentic.scope.ResultWithAgenticScope;
+import io.cloudevents.CloudEvent;
+import io.cloudevents.CloudEventData;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.expressions.func.JavaModelCollection;
-import java.util.Collection;
+import java.io.IOException;
+import java.util.Collections;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
-class AgenticModelCollection extends JavaModelCollection {
+public class AgenticModelCollection extends JavaModelCollection {
 
   private final AgenticScope agenticScope;
-
-  AgenticModelCollection(Collection<?> object, AgenticScope agenticScope) {
-    super(object);
-    this.agenticScope = agenticScope;
-  }
+  private final ObjectMapper mapper = new ObjectMapper();
 
   AgenticModelCollection(AgenticScope agenticScope) {
+    super(Collections.emptyList());
     this.agenticScope = agenticScope;
   }
 
   @Override
-  protected WorkflowModel nextItem(Object obj) {
-    return new AgenticModel((AgenticScope) obj);
+  public boolean add(WorkflowModel e) {
+    Optional<Map<String, Object>> asMap = e.asMap();
+    if (asMap.isPresent()) {
+      this.agenticScope.writeStates(asMap.get());
+    } else {
+      // Update the agenticScope with the event body, so agents can use the event data as input
+      Object javaObj = e.asJavaObject();
+      if (javaObj instanceof CloudEvent) {
+        try {
+          this.agenticScope.writeStates(
+              mapper.readValue(
+                  Objects.requireNonNull(((CloudEvent) javaObj).getData()).toString(),
+                  new TypeReference<>() {}));
+        } catch (JsonProcessingException ex) {
+          throw new IllegalArgumentException(
+              "Unable to parse CloudEvent, data must be a valid JSON", ex);
+        }
+      } else if (javaObj instanceof CloudEventData) {
+        try {
+          this.agenticScope.writeStates(
+              mapper.readValue(
+                  Objects.requireNonNull(((CloudEventData) javaObj)).toBytes(),
+                  new TypeReference<>() {}));
+        } catch (IOException ex) {
+          throw new IllegalArgumentException(
+              "Unable to parse CloudEventData, data must be a valid JSON", ex);
+        }
+      } else {
+        this.agenticScope.writeState(AgenticModelFactory.DEFAULT_AGENTIC_SCOPE_STATE_KEY, javaObj);
+      }
+    }
+
+    // add to the collection
+    return super.add(e);
   }
 
   @Override
