@@ -18,13 +18,18 @@ package io.serverlessworkflow.impl;
 import static io.serverlessworkflow.impl.lifecycle.LifecycleEventsUtils.publishEvent;
 
 import io.serverlessworkflow.impl.executors.TaskExecutorHelper;
+import io.serverlessworkflow.impl.lifecycle.WorkflowCancelledEvent;
 import io.serverlessworkflow.impl.lifecycle.WorkflowCompletedEvent;
 import io.serverlessworkflow.impl.lifecycle.WorkflowFailedEvent;
 import io.serverlessworkflow.impl.lifecycle.WorkflowStartedEvent;
 import java.time.Instant;
 import java.util.Optional;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class WorkflowMutableInstance implements WorkflowInstance {
 
@@ -36,7 +41,11 @@ public class WorkflowMutableInstance implements WorkflowInstance {
   private Instant startedAt;
   private Instant completedAt;
   private volatile WorkflowModel output;
+  private Lock statusLock = new ReentrantLock();
   private CompletableFuture<WorkflowModel> completableFuture;
+  private CompletableFuture<TaskContext> suspended;
+  private TaskContext suspendedTask;
+  private CompletableFuture<TaskContext> cancelled;
 
   WorkflowMutableInstance(WorkflowDefinition definition, WorkflowModel input) {
     this.id = definition.application().idFactory().get();
@@ -70,7 +79,17 @@ public class WorkflowMutableInstance implements WorkflowInstance {
   private void whenFailed(WorkflowModel result, Throwable ex) {
     completedAt = Instant.now();
     if (ex != null) {
-      status.compareAndSet(WorkflowStatus.RUNNING, WorkflowStatus.FAULTED);
+      handleException(ex instanceof CompletionException ? ex = ex.getCause() : ex);
+    }
+  }
+
+  private void handleException(Throwable ex) {
+    if (ex instanceof CancellationException) {
+      status.set(WorkflowStatus.CANCELLED);
+      publishEvent(
+          workflowContext, l -> l.onWorkflowCancelled(new WorkflowCancelledEvent(workflowContext)));
+    } else {
+      status.set(WorkflowStatus.FAULTED);
       publishEvent(
           workflowContext, l -> l.onWorkflowFailed(new WorkflowFailedEvent(workflowContext, ex)));
     }
@@ -145,5 +164,77 @@ public class WorkflowMutableInstance implements WorkflowInstance {
         + ", completedAt="
         + completedAt
         + "]";
+  }
+
+  @Override
+  public boolean suspend() {
+    try {
+      statusLock.lock();
+      if (TaskExecutorHelper.isActive(status.get())) {
+        suspended = new CompletableFuture<TaskContext>();
+        return true;
+      } else {
+        return false;
+      }
+    } finally {
+      statusLock.unlock();
+    }
+  }
+
+  @Override
+  public boolean resume() {
+    try {
+      statusLock.lock();
+      if (suspended != null) {
+        if (suspendedTask != null) {
+          CompletableFuture<TaskContext> toBeCompleted = suspended;
+          suspended = null;
+          toBeCompleted.complete(suspendedTask);
+        } else {
+          suspended = null;
+        }
+        return true;
+      } else {
+        return false;
+      }
+    } finally {
+      statusLock.unlock();
+    }
+  }
+
+  public CompletableFuture<TaskContext> completedChecks(TaskContext t) {
+    try {
+      statusLock.lock();
+      if (suspended != null) {
+        suspendedTask = t;
+        workflowContext.instance().status(WorkflowStatus.SUSPENDED);
+        return suspended;
+      }
+      if (cancelled != null) {
+        cancelled = new CompletableFuture<TaskContext>();
+        workflowContext.instance().status(WorkflowStatus.CANCELLED);
+        cancelled.completeExceptionally(
+            new CancellationException("Task " + t.taskName() + " has been cancelled"));
+        return cancelled;
+      }
+    } finally {
+      statusLock.unlock();
+    }
+    return CompletableFuture.completedFuture(t);
+  }
+
+  @Override
+  public boolean cancel() {
+    try {
+      statusLock.lock();
+      if (TaskExecutorHelper.isActive(status.get())) {
+        cancelled = new CompletableFuture<TaskContext>();
+        return true;
+      } else {
+        return false;
+      }
+    } finally {
+      statusLock.unlock();
+    }
   }
 }

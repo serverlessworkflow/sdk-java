@@ -76,10 +76,10 @@ public class WaitExecutor extends RegularTaskExecutor<WaitTask> {
     ((WorkflowMutableInstance) workflow.instance()).status(WorkflowStatus.WAITING);
     return new CompletableFuture<WorkflowModel>()
         .completeOnTimeout(taskContext.output(), millisToWait.toMillis(), TimeUnit.MILLISECONDS)
-        .thenApply(
-            node -> {
-              workflow.instance().status(WorkflowStatus.RUNNING);
-              return node;
-            });
+        .thenApply(this::complete);
+  }
+
+  private WorkflowModel complete(WorkflowModel model) {
+    return model;
   }
 }

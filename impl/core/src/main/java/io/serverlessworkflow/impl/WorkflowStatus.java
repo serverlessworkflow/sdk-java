@@ -21,5 +21,6 @@ public enum WorkflowStatus {
   WAITING,
   COMPLETED,
   FAULTED,
-  CANCELLED
+  CANCELLED,
+  SUSPENDED
 }

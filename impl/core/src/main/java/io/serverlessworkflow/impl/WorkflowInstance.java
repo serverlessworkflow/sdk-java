@@ -19,4 +19,10 @@ import java.util.concurrent.CompletableFuture;
 
 public interface WorkflowInstance extends WorkflowInstanceData {
   CompletableFuture<WorkflowModel> start();
+
+  boolean suspend();
+
+  boolean cancel();
+
+  boolean resume();
 }

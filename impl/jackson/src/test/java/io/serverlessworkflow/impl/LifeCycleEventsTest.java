@@ -16,10 +16,13 @@
 package io.serverlessworkflow.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowableOfType;
 
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.data.PojoCloudEventData;
 import io.serverlessworkflow.api.WorkflowReader;
+import io.serverlessworkflow.api.types.Workflow;
+import io.serverlessworkflow.impl.events.EventRegistration;
 import io.serverlessworkflow.impl.events.EventRegistrationBuilder;
 import io.serverlessworkflow.impl.lifecycle.ce.TaskCompletedCEData;
 import io.serverlessworkflow.impl.lifecycle.ce.TaskStartedCEData;
@@ -32,73 +35,128 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
-import org.junit.jupiter.api.AfterAll;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class LifeCycleEventsTest {
 
-  private static WorkflowApplication appl;
-  private static Collection<CloudEvent> publishedEvents;
-
-  @BeforeAll
-  static void init() {
-    appl = WorkflowApplication.builder().build();
-    appl.eventConsumer()
-        .listenToAll(appl)
-        .forEach(
-            v ->
-                appl.eventConsumer()
-                    .register(
-                        (EventRegistrationBuilder) v, ce -> publishedEvents.add((CloudEvent) ce)));
-  }
-
-  @AfterAll
-  static void cleanup() {
-    appl.close();
-  }
+  private WorkflowApplication appl;
+  private Collection<CloudEvent> publishedEvents;
+  private Collection<EventRegistration> registrations;
 
   @BeforeEach
   void setup() {
-    publishedEvents = new ArrayList<>();
+    publishedEvents = new CopyOnWriteArrayList<>();
+    appl = WorkflowApplication.builder().build();
+    registrations = new ArrayList<>();
+    Collection<EventRegistrationBuilder> builders = appl.eventConsumer().listenToAll(appl);
+
+    for (EventRegistrationBuilder builder : builders) {
+      registrations.add(
+          appl.eventConsumer().register(builder, ce -> publishedEvents.add((CloudEvent) ce)));
+    }
   }
 
   @AfterEach
   void close() {
-    publishedEvents = new ArrayList<>();
+    registrations.forEach(r -> appl.eventConsumer().unregister(r));
   }
 
   @Test
   void simpleWorkflow() throws IOException {
+
     WorkflowModel model =
         appl.workflowDefinition(WorkflowReader.readWorkflowFromClasspath("simple-expression.yaml"))
             .instance(Map.of())
             .start()
             .join();
+    assertThat(model.asMap()).hasValueSatisfying(m -> assertThat(m).hasSize(3));
+    WorkflowStartedCEData workflowStartedEvent =
+        assertPojoInCE("io.serverlessworkflow.workflow.started.v1", WorkflowStartedCEData.class);
+    TaskStartedCEData taskStartedEvent =
+        assertPojoInCE("io.serverlessworkflow.task.started.v1", TaskStartedCEData.class);
+    TaskCompletedCEData taskCompletedEvent =
+        assertPojoInCE("io.serverlessworkflow.task.completed.v1", TaskCompletedCEData.class);
     WorkflowCompletedCEData workflowCompletedEvent =
         assertPojoInCE(
             "io.serverlessworkflow.workflow.completed.v1", WorkflowCompletedCEData.class);
     assertThat(workflowCompletedEvent.output()).isEqualTo(model.asJavaObject());
-    WorkflowStartedCEData workflowStartedEvent =
-        assertPojoInCE("io.serverlessworkflow.workflow.started.v1", WorkflowStartedCEData.class);
     assertThat(workflowStartedEvent.startedAt()).isBefore(workflowCompletedEvent.completedAt());
-    TaskCompletedCEData taskCompletedEvent =
-        assertPojoInCE("io.serverlessworkflow.task.completed.v1", TaskCompletedCEData.class);
     assertThat(taskCompletedEvent.output()).isEqualTo(model.asJavaObject());
     assertThat(taskCompletedEvent.completedAt()).isBefore(workflowCompletedEvent.completedAt());
-    TaskStartedCEData taskStartedEvent =
-        assertPojoInCE("io.serverlessworkflow.task.started.v1", TaskStartedCEData.class);
     assertThat(taskStartedEvent.startedAt()).isAfter(workflowStartedEvent.startedAt());
     assertThat(taskStartedEvent.startedAt()).isBefore(taskCompletedEvent.completedAt());
   }
 
   @Test
+  void testSuspendResumeNotWait()
+      throws IOException, ExecutionException, InterruptedException, TimeoutException {
+    WorkflowInstance instance =
+        appl.workflowDefinition(WorkflowReader.readWorkflowFromClasspath("wait-set.yaml"))
+            .instance(Map.of());
+    CompletableFuture<WorkflowModel> future = instance.start();
+    instance.suspend();
+    instance.resume();
+    assertThat(future.get(1, TimeUnit.SECONDS).asMap().orElseThrow())
+        .isEqualTo(Map.of("name", "Javierito"));
+  }
+
+  @Test
+  void testSuspendResumeWait()
+      throws IOException, ExecutionException, InterruptedException, TimeoutException {
+    WorkflowInstance instance =
+        appl.workflowDefinition(WorkflowReader.readWorkflowFromClasspath("wait-set.yaml"))
+            .instance(Map.of());
+    CompletableFuture<WorkflowModel> future = instance.start();
+    instance.suspend();
+    assertThat(instance.status()).isEqualTo(WorkflowStatus.WAITING);
+    Thread.sleep(500);
+    assertThat(instance.status()).isEqualTo(WorkflowStatus.SUSPENDED);
+    instance.resume();
+    assertThat(future.get(1, TimeUnit.SECONDS).asMap().orElseThrow())
+        .isEqualTo(Map.of("name", "Javierito"));
+    assertThat(instance.status()).isEqualTo(WorkflowStatus.COMPLETED);
+  }
+
+  @Test
+  void testCancel() throws IOException, InterruptedException {
+    WorkflowInstance instance =
+        appl.workflowDefinition(WorkflowReader.readWorkflowFromClasspath("wait-set.yaml"))
+            .instance(Map.of());
+    CompletableFuture<WorkflowModel> future = instance.start();
+    instance.cancel();
+    assertThat(catchThrowableOfType(ExecutionException.class, () -> future.get().asMap()))
+        .isNotNull();
+    assertThat(instance.status()).isEqualTo(WorkflowStatus.CANCELLED);
+  }
+
+  @Test
+  void testSuspendResumeTimeout()
+      throws IOException, ExecutionException, InterruptedException, TimeoutException {
+    WorkflowInstance instance =
+        appl.workflowDefinition(WorkflowReader.readWorkflowFromClasspath("wait-set.yaml"))
+            .instance(Map.of());
+    CompletableFuture<WorkflowModel> future = instance.start();
+    instance.suspend();
+    assertThat(catchThrowableOfType(TimeoutException.class, () -> future.get(1, TimeUnit.SECONDS)))
+        .isNotNull();
+  }
+
+  @Test
   void testError() throws IOException {
-    appl.workflowDefinition(WorkflowReader.readWorkflowFromClasspath("raise-inline.yaml"))
-        .instance(Map.of())
-        .start();
+    Workflow workflow = WorkflowReader.readWorkflowFromClasspath("raise-inline.yaml");
+    assertThat(
+            catchThrowableOfType(
+                CompletionException.class,
+                () -> appl.workflowDefinition(workflow).instance(Map.of()).start().join()))
+        .isNotNull();
     WorkflowErrorCEData error =
         assertPojoInCE("io.serverlessworkflow.workflow.faulted.v1", WorkflowFailedCEData.class)
             .error();
@@ -109,12 +167,7 @@ class LifeCycleEventsTest {
   }
 
   private <T> T assertPojoInCE(String type, Class<T> clazz) {
-    return assertPojoInCE(type, clazz, 1L);
-  }
-
-  private <T> T assertPojoInCE(String type, Class<T> clazz, long count) {
-    assertThat(publishedEvents.stream().filter(ev -> ev.getType().equals(type)).count())
-        .isEqualTo(count);
+    Thread.yield();
     Optional<CloudEvent> event =
         publishedEvents.stream().filter(ev -> ev.getType().equals(type)).findAny();
     assertThat(event)

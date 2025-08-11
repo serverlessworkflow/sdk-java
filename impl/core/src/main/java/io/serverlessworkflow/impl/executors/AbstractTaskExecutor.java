@@ -34,6 +34,7 @@ import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.WorkflowPosition;
 import io.serverlessworkflow.impl.WorkflowPredicate;
 import io.serverlessworkflow.impl.WorkflowStatus;
+import io.serverlessworkflow.impl.lifecycle.TaskCancelledEvent;
 import io.serverlessworkflow.impl.lifecycle.TaskCompletedEvent;
 import io.serverlessworkflow.impl.lifecycle.TaskFailedEvent;
 import io.serverlessworkflow.impl.lifecycle.TaskStartedEvent;
@@ -43,7 +44,9 @@ import java.time.Instant;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 
 public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskExecutor<T> {
 
@@ -201,13 +204,16 @@ public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskEx
                     return t;
                   })
               .thenCompose(t -> execute(workflowContext, t))
+              .thenCompose(t -> workflowContext.instance().completedChecks(t))
               .whenComplete(
                   (t, e) -> {
                     if (e != null) {
-                      publishEvent(
+                      handleException(
                           workflowContext,
-                          l ->
-                              l.onTaskFailed(new TaskFailedEvent(workflowContext, taskContext, e)));
+                          taskContext,
+                          e instanceof CompletionException ? e.getCause() : e);
+                    } else {
+                      workflowContext.instance().status(WorkflowStatus.RUNNING);
                     }
                   })
               .thenApply(
@@ -232,6 +238,19 @@ public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskEx
     } else {
       taskContext.transition(getSkipTransition());
       return executeNext(completable, workflowContext);
+    }
+  }
+
+  private void handleException(
+      WorkflowContext workflowContext, TaskContext taskContext, Throwable e) {
+    if (e instanceof CancellationException) {
+      publishEvent(
+          workflowContext,
+          l -> l.onTaskCancelled(new TaskCancelledEvent(workflowContext, taskContext)));
+    } else {
+      publishEvent(
+          workflowContext,
+          l -> l.onTaskFailed(new TaskFailedEvent(workflowContext, taskContext, e)));
     }
   }
 

@@ -122,7 +122,6 @@ public class TaskContext implements TaskContextData {
     return position;
   }
 
-  @Override
   public Map<String, Object> variables() {
     return contextVariables;
   }
@@ -132,7 +131,6 @@ public class TaskContext implements TaskContextData {
     return startedAt;
   }
 
-  @Override
   public Optional<TaskContext> parent() {
     return parentContext;
   }
