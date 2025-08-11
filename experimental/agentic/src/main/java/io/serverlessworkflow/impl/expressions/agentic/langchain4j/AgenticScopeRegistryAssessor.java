@@ -16,6 +16,7 @@
 package io.serverlessworkflow.impl.expressions.agentic.langchain4j;
 
 import dev.langchain4j.agentic.internal.AgenticScopeOwner;
+import dev.langchain4j.agentic.scope.AgenticScope;
 import dev.langchain4j.agentic.scope.AgenticScopeRegistry;
 import dev.langchain4j.agentic.scope.DefaultAgenticScope;
 import java.util.Objects;
@@ -27,7 +28,7 @@ public class AgenticScopeRegistryAssessor implements AgenticScopeOwner {
   private final AtomicReference<AgenticScopeRegistry> agenticScopeRegistry =
       new AtomicReference<>();
   private final String agentId;
-  private DefaultAgenticScope agenticScope;
+  private AgenticScope agenticScope;
   private Object memoryId;
 
   public AgenticScopeRegistryAssessor(String agentId) {
@@ -44,7 +45,7 @@ public class AgenticScopeRegistryAssessor implements AgenticScopeOwner {
     this.memoryId = memoryId;
   }
 
-  public DefaultAgenticScope getAgenticScope() {
+  public AgenticScope getAgenticScope() {
     if (agenticScope != null) {
       return agenticScope;
     }
@@ -55,6 +56,10 @@ public class AgenticScopeRegistryAssessor implements AgenticScopeOwner {
       this.agenticScope = registry().createEphemeralAgenticScope();
     }
     return this.agenticScope;
+  }
+
+  public void setAgenticScope(AgenticScope agenticScope) {
+    this.agenticScope = agenticScope;
   }
 
   @Override

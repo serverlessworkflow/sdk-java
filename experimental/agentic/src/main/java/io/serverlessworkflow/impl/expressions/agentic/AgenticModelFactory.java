@@ -22,38 +22,31 @@ import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowModelCollection;
 import io.serverlessworkflow.impl.WorkflowModelFactory;
 import io.serverlessworkflow.impl.expressions.agentic.langchain4j.AgenticScopeRegistryAssessor;
-import io.serverlessworkflow.impl.expressions.func.JavaModel;
 import java.time.OffsetDateTime;
 import java.util.Map;
 
 class AgenticModelFactory implements WorkflowModelFactory {
 
-  private static final String DEFAULT_AGENTIC_SCOPE_STATE_KEY = "input";
+  static final String DEFAULT_AGENTIC_SCOPE_STATE_KEY = "input";
   private final AgenticScopeRegistryAssessor scopeRegistryAssessor =
       new AgenticScopeRegistryAssessor();
 
-  private AgenticModel asAgenticModel(Object value) {
-    // TODO: fetch memoryId from the object based on known premises
-    final AgenticScope agenticScope = this.scopeRegistryAssessor.getAgenticScope();
-    if (value != null) {
-      agenticScope.writeState(DEFAULT_AGENTIC_SCOPE_STATE_KEY, value);
-    }
-    return new AgenticModel(agenticScope);
-  }
-
-  /**
-   * Applies any change to the model after running as task. We will always set it to a @AgenticScope
-   * object since @AgentExecutor is always adding the output to the agenticScope. We just have to
-   * make sure that agenticScope is always passed to the next input task.
-   *
-   * @param prev the global AgenticScope object getting updated by the workflow context
-   * @param obj the same AgenticScope object updated by the AgentExecutor
-   * @return the workflow context model holding the agenticScope object.
-   */
   @Override
+  @SuppressWarnings("unchecked")
   public WorkflowModel fromAny(WorkflowModel prev, Object obj) {
-    // We ignore `obj` since it's already included in `prev` within the agenticScope instance
-    return prev;
+    // TODO: we shouldn't update the state if the previous task was an agent call since under the
+    // hood, the agent already updated it.
+    if (prev instanceof AgenticModel agenticModel) {
+      this.scopeRegistryAssessor.setAgenticScope(agenticModel.getAgenticScope());
+    }
+
+    if (obj instanceof Map) {
+      this.scopeRegistryAssessor.getAgenticScope().writeStates((Map<String, Object>) obj);
+    } else {
+      this.scopeRegistryAssessor.getAgenticScope().writeState(DEFAULT_AGENTIC_SCOPE_STATE_KEY, obj);
+    }
+
+    return new AgenticModel(this.scopeRegistryAssessor.getAgenticScope(), obj);
   }
 
   @Override
@@ -66,60 +59,60 @@ class AgenticModelFactory implements WorkflowModelFactory {
 
   @Override
   public WorkflowModelCollection createCollection() {
-    throw new UnsupportedOperationException();
+    return new AgenticModelCollection(this.scopeRegistryAssessor.getAgenticScope());
   }
-
-  // TODO: all these methods can use agenticScope as long as we have access to the `outputName`
 
   @Override
   public WorkflowModel from(boolean value) {
-    return asAgenticModel(value);
+    this.scopeRegistryAssessor.getAgenticScope().writeState(DEFAULT_AGENTIC_SCOPE_STATE_KEY, value);
+    return new AgenticModel(this.scopeRegistryAssessor.getAgenticScope(), value);
   }
 
   @Override
   public WorkflowModel from(Number value) {
-    return asAgenticModel(value);
+    this.scopeRegistryAssessor.getAgenticScope().writeState(DEFAULT_AGENTIC_SCOPE_STATE_KEY, value);
+    return new AgenticModel(this.scopeRegistryAssessor.getAgenticScope(), value);
   }
 
   @Override
   public WorkflowModel from(String value) {
-    return asAgenticModel(value);
+    this.scopeRegistryAssessor.getAgenticScope().writeState(DEFAULT_AGENTIC_SCOPE_STATE_KEY, value);
+    return new AgenticModel(this.scopeRegistryAssessor.getAgenticScope(), value);
   }
 
   @Override
   public WorkflowModel from(CloudEvent ce) {
-    // TODO: serialize the CE into the AgenticScope
-    return new JavaModel(ce);
+    return new AgenticModel(this.scopeRegistryAssessor.getAgenticScope(), ce);
   }
 
   @Override
   public WorkflowModel from(CloudEventData ce) {
-    // TODO: serialize the CE data into the AgenticScope
-    return new JavaModel(ce);
+    return new AgenticModel(this.scopeRegistryAssessor.getAgenticScope(), ce);
   }
 
   @Override
   public WorkflowModel from(OffsetDateTime value) {
-    return asAgenticModel(value);
+    this.scopeRegistryAssessor.getAgenticScope().writeState(DEFAULT_AGENTIC_SCOPE_STATE_KEY, value);
+    return new AgenticModel(this.scopeRegistryAssessor.getAgenticScope(), value);
   }
 
   @Override
   public WorkflowModel from(Map<String, Object> map) {
-    final AgenticScope agenticScope = this.scopeRegistryAssessor.getAgenticScope();
-    agenticScope.writeStates(map);
-    return new AgenticModel(agenticScope);
+    this.scopeRegistryAssessor.getAgenticScope().writeStates(map);
+    return new AgenticModel(this.scopeRegistryAssessor.getAgenticScope(), map);
   }
 
   @Override
   public WorkflowModel fromNull() {
-    return asAgenticModel(null);
+    return new AgenticModel(this.scopeRegistryAssessor.getAgenticScope(), null);
   }
 
   @Override
   public WorkflowModel fromOther(Object value) {
-    if (value instanceof AgenticScope) {
-      return new AgenticModel((AgenticScope) value);
+    if (value instanceof AgenticScope scope) {
+      return new AgenticModel(scope, scope.state());
     }
-    return asAgenticModel(value);
+    this.scopeRegistryAssessor.getAgenticScope().writeState(DEFAULT_AGENTIC_SCOPE_STATE_KEY, value);
+    return new AgenticModel(this.scopeRegistryAssessor.getAgenticScope(), value);
   }
 }

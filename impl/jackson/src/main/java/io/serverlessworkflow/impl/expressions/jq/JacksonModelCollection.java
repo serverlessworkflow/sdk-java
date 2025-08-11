@@ -55,7 +55,7 @@ public class JacksonModelCollection implements WorkflowModelCollection {
 
   @Override
   public boolean contains(Object o) {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException("contains() is not supported yet");
   }
 
   @Override
@@ -85,12 +85,12 @@ public class JacksonModelCollection implements WorkflowModelCollection {
 
   @Override
   public Object[] toArray() {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException("toArray() is not supported yet");
   }
 
   @Override
   public <T> T[] toArray(T[] a) {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException("toArray() is not supported yet");
   }
 
   @Override
@@ -109,7 +109,7 @@ public class JacksonModelCollection implements WorkflowModelCollection {
 
   @Override
   public boolean containsAll(Collection<?> c) {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException("containsAll() is not supported yet");
   }
 
   @Override
@@ -127,7 +127,7 @@ public class JacksonModelCollection implements WorkflowModelCollection {
 
   @Override
   public boolean retainAll(Collection<?> c) {
-    throw new UnsupportedOperationException();
+    throw new UnsupportedOperationException("retainAll() is not supported yet");
   }
 
   @Override
