@@ -59,12 +59,12 @@ public class AgenticScopeRegistryAssessor implements AgenticScopeOwner {
   }
 
   public void setAgenticScope(AgenticScope agenticScope) {
-    this.agenticScope = agenticScope;
+    this.agenticScope = Objects.requireNonNull(agenticScope, "AgenticScope cannot be null");
   }
 
   @Override
   public AgenticScopeOwner withAgenticScope(DefaultAgenticScope agenticScope) {
-    this.agenticScope = agenticScope;
+    this.setAgenticScope(agenticScope);
     return this;
   }
 

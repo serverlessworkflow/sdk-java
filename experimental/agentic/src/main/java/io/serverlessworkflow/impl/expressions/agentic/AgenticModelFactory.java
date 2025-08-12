@@ -31,6 +31,18 @@ class AgenticModelFactory implements WorkflowModelFactory {
   private final AgenticScopeRegistryAssessor scopeRegistryAssessor =
       new AgenticScopeRegistryAssessor();
 
+  private void updateAgenticScope(Object value) {
+    this.scopeRegistryAssessor.getAgenticScope().writeState(DEFAULT_AGENTIC_SCOPE_STATE_KEY, value);
+  }
+
+  private void updateAgenticScope(Map<String, Object> state) {
+    this.scopeRegistryAssessor.getAgenticScope().writeStates(state);
+  }
+
+  private AgenticModel asAgenticModel(Object value) {
+    return new AgenticModel(this.scopeRegistryAssessor.getAgenticScope(), value);
+  }
+
   @Override
   @SuppressWarnings("unchecked")
   public WorkflowModel fromAny(WorkflowModel prev, Object obj) {
@@ -41,12 +53,12 @@ class AgenticModelFactory implements WorkflowModelFactory {
     }
 
     if (obj instanceof Map) {
-      this.scopeRegistryAssessor.getAgenticScope().writeStates((Map<String, Object>) obj);
+      this.updateAgenticScope((Map<String, Object>) obj);
     } else {
-      this.scopeRegistryAssessor.getAgenticScope().writeState(DEFAULT_AGENTIC_SCOPE_STATE_KEY, obj);
+      this.updateAgenticScope(obj);
     }
 
-    return new AgenticModel(this.scopeRegistryAssessor.getAgenticScope(), obj);
+    return asAgenticModel(obj);
   }
 
   @Override
@@ -64,47 +76,47 @@ class AgenticModelFactory implements WorkflowModelFactory {
 
   @Override
   public WorkflowModel from(boolean value) {
-    this.scopeRegistryAssessor.getAgenticScope().writeState(DEFAULT_AGENTIC_SCOPE_STATE_KEY, value);
-    return new AgenticModel(this.scopeRegistryAssessor.getAgenticScope(), value);
+    this.updateAgenticScope(value);
+    return asAgenticModel(value);
   }
 
   @Override
   public WorkflowModel from(Number value) {
-    this.scopeRegistryAssessor.getAgenticScope().writeState(DEFAULT_AGENTIC_SCOPE_STATE_KEY, value);
-    return new AgenticModel(this.scopeRegistryAssessor.getAgenticScope(), value);
+    this.updateAgenticScope(value);
+    return asAgenticModel(value);
   }
 
   @Override
   public WorkflowModel from(String value) {
-    this.scopeRegistryAssessor.getAgenticScope().writeState(DEFAULT_AGENTIC_SCOPE_STATE_KEY, value);
-    return new AgenticModel(this.scopeRegistryAssessor.getAgenticScope(), value);
+    this.updateAgenticScope(value);
+    return asAgenticModel(value);
   }
 
   @Override
   public WorkflowModel from(CloudEvent ce) {
-    return new AgenticModel(this.scopeRegistryAssessor.getAgenticScope(), ce);
+    return asAgenticModel(ce);
   }
 
   @Override
   public WorkflowModel from(CloudEventData ce) {
-    return new AgenticModel(this.scopeRegistryAssessor.getAgenticScope(), ce);
+    return asAgenticModel(ce);
   }
 
   @Override
   public WorkflowModel from(OffsetDateTime value) {
-    this.scopeRegistryAssessor.getAgenticScope().writeState(DEFAULT_AGENTIC_SCOPE_STATE_KEY, value);
-    return new AgenticModel(this.scopeRegistryAssessor.getAgenticScope(), value);
+    this.updateAgenticScope(value);
+    return asAgenticModel(value);
   }
 
   @Override
   public WorkflowModel from(Map<String, Object> map) {
-    this.scopeRegistryAssessor.getAgenticScope().writeStates(map);
-    return new AgenticModel(this.scopeRegistryAssessor.getAgenticScope(), map);
+    this.updateAgenticScope(map);
+    return asAgenticModel(map);
   }
 
   @Override
   public WorkflowModel fromNull() {
-    return new AgenticModel(this.scopeRegistryAssessor.getAgenticScope(), null);
+    return asAgenticModel(null);
   }
 
   @Override
@@ -112,7 +124,7 @@ class AgenticModelFactory implements WorkflowModelFactory {
     if (value instanceof AgenticScope scope) {
       return new AgenticModel(scope, scope.state());
     }
-    this.scopeRegistryAssessor.getAgenticScope().writeState(DEFAULT_AGENTIC_SCOPE_STATE_KEY, value);
-    return new AgenticModel(this.scopeRegistryAssessor.getAgenticScope(), value);
+    this.updateAgenticScope(value);
+    return asAgenticModel(value);
   }
 }
