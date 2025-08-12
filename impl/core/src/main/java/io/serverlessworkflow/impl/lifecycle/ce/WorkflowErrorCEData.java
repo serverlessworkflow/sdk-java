@@ -21,7 +21,6 @@ import io.serverlessworkflow.impl.lifecycle.TaskFailedEvent;
 import io.serverlessworkflow.impl.lifecycle.WorkflowFailedEvent;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.concurrent.CompletionException;
 
 public record WorkflowErrorCEData(
     String type, Integer status, String instance, String title, String detail) {
@@ -35,10 +34,6 @@ public record WorkflowErrorCEData(
   }
 
   private static WorkflowErrorCEData error(Throwable cause) {
-
-    if (cause instanceof CompletionException) {
-      cause = cause.getCause();
-    }
     return cause instanceof WorkflowException ex ? error(ex) : commonError(cause);
   }
 

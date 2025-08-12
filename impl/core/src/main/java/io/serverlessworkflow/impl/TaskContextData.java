@@ -17,8 +17,6 @@ package io.serverlessworkflow.impl;
 
 import io.serverlessworkflow.api.types.TaskBase;
 import java.time.Instant;
-import java.util.Map;
-import java.util.Optional;
 
 public interface TaskContextData {
 
@@ -34,11 +32,7 @@ public interface TaskContextData {
 
   WorkflowPosition position();
 
-  Map<String, Object> variables();
-
   Instant startedAt();
-
-  Optional<TaskContext> parent();
 
   String taskName();
 

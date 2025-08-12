@@ -238,7 +238,6 @@ public abstract class ListenExecutor extends RegularTaskExecutor<ListenTask> {
                     processCe(converter.apply(ce), output, workflow, taskContext, future)))
         .thenApply(
             v -> {
-              workflow.instance().status(WorkflowStatus.RUNNING);
               registrations.forEach(reg -> eventConsumer.unregister(reg));
               return output;
             });
