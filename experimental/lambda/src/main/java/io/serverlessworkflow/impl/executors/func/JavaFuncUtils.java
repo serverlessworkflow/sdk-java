@@ -15,13 +15,20 @@
  */
 package io.serverlessworkflow.impl.executors.func;
 
+import io.serverlessworkflow.api.types.func.TypedPredicate;
 import io.serverlessworkflow.impl.WorkflowModel;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 public class JavaFuncUtils {
 
   static Object safeObject(Object obj) {
     return obj instanceof WorkflowModel model ? model.asJavaObject() : obj;
+  }
+
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  static Object predObject(Predicate<?> pred, Optional<Class<?>> predClass) {
+    return predClass.isPresent() ? new TypedPredicate(pred, predClass.orElseThrow()) : pred;
   }
 
   static <T> T convertT(WorkflowModel model, Optional<Class<T>> inputClass) {

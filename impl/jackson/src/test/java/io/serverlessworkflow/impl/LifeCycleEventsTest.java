@@ -117,7 +117,7 @@ class LifeCycleEventsTest {
     CompletableFuture<WorkflowModel> future = instance.start();
     instance.suspend();
     assertThat(instance.status()).isEqualTo(WorkflowStatus.WAITING);
-    Thread.sleep(500);
+    Thread.sleep(550);
     assertThat(instance.status()).isEqualTo(WorkflowStatus.SUSPENDED);
     instance.resume();
     assertThat(future.get(1, TimeUnit.SECONDS).asMap().orElseThrow())

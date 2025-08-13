@@ -38,6 +38,9 @@ public class JavaTaskExecutorFactory extends DefaultTaskExecutorFactory {
     } else if (task.getSwitchTask() != null) {
       return new JavaSwitchExecutorBuilder(
           position, task.getSwitchTask(), workflow, application, resourceLoader);
+    } else if (task.getListenTask() != null) {
+      return new JavaListenExecutorBuilder(
+          position, task.getListenTask(), workflow, application, resourceLoader);
     } else {
       return super.getTaskExecutor(position, task, workflow, application, resourceLoader);
     }
