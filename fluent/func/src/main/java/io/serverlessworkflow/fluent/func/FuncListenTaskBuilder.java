@@ -15,15 +15,37 @@
  */
 package io.serverlessworkflow.fluent.func;
 
+import io.serverlessworkflow.api.types.AnyEventConsumptionStrategy;
+import io.serverlessworkflow.api.types.ListenTask;
+import io.serverlessworkflow.api.types.func.UntilPredicate;
 import io.serverlessworkflow.fluent.func.spi.ConditionalTaskBuilder;
 import io.serverlessworkflow.fluent.func.spi.FuncTransformations;
 import io.serverlessworkflow.fluent.spec.ListenTaskBuilder;
+import java.util.function.Predicate;
 
 public class FuncListenTaskBuilder extends ListenTaskBuilder
     implements ConditionalTaskBuilder<FuncListenTaskBuilder>,
         FuncTransformations<FuncListenTaskBuilder> {
 
+  private UntilPredicate untilPredicate;
+
   FuncListenTaskBuilder() {
     super();
+  }
+
+  public <T> FuncListenTaskBuilder until(Predicate<T> predicate, Class<T> predClass) {
+    untilPredicate = new UntilPredicate().withPredicate(predicate, predClass);
+    return this;
+  }
+
+  @Override
+  public ListenTask build() {
+    ListenTask task = super.build();
+    AnyEventConsumptionStrategy anyEvent =
+        task.getListen().getTo().getAnyEventConsumptionStrategy();
+    if (untilPredicate != null && anyEvent != null) {
+      anyEvent.withUntil(untilPredicate);
+    }
+    return task;
   }
 }

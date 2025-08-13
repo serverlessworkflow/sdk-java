@@ -70,11 +70,13 @@ public class ChatBotIT {
                     t.listen(
                             "listenToMessages",
                             l ->
-                                l.one(c -> c.with(event -> event.type("org.acme.chatbot.request"))))
-                        .when(message -> !"".equals(message.get("message")), Map.class)
+                                l.until(message -> "".equals(message.get("message")), Map.class)
+                                    .one(
+                                        c ->
+                                            c.with(
+                                                event -> event.type("org.acme.chatbot.request"))))
                         .agent(chatBot)
-                        .emit(emit -> emit.event(e -> e.type("org.acme.chatbot.reply")))
-                        .then("listenToMessages"))
+                        .emit(emit -> emit.event(e -> e.type("org.acme.chatbot.reply"))))
             .build();
 
     try (WorkflowApplication app = WorkflowApplication.builder().build()) {
