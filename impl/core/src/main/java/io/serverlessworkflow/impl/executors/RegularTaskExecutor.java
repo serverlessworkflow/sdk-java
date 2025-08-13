@@ -28,15 +28,14 @@ import java.util.concurrent.CompletableFuture;
 
 public abstract class RegularTaskExecutor<T extends TaskBase> extends AbstractTaskExecutor<T> {
 
-  protected final TransitionInfo transition;
+  protected TransitionInfo transition;
 
   protected RegularTaskExecutor(RegularTaskExecutorBuilder<T> builder) {
     super(builder);
-    this.transition = TransitionInfo.build(builder.transition);
   }
 
   public abstract static class RegularTaskExecutorBuilder<T extends TaskBase>
-      extends AbstractTaskExecutorBuilder<T> {
+      extends AbstractTaskExecutorBuilder<T, RegularTaskExecutor<T>> {
 
     private TransitionInfoBuilder transition;
 
@@ -51,6 +50,11 @@ public abstract class RegularTaskExecutor<T extends TaskBase> extends AbstractTa
 
     public void connect(Map<String, TaskExecutorBuilder<?>> connections) {
       this.transition = next(task.getThen(), connections);
+    }
+
+    @Override
+    protected void buildTransition(RegularTaskExecutor<T> instance) {
+      instance.transition = TransitionInfo.build(transition);
     }
   }
 

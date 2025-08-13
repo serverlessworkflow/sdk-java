@@ -155,7 +155,7 @@ public abstract class ListenExecutor extends RegularTaskExecutor<ListenTask> {
     }
 
     @Override
-    public TaskExecutor<ListenTask> buildInstance() {
+    public ListenExecutor buildInstance() {
       return registrations.isAnd() ? new AndListenExecutor(this) : new OrListenExecutor(this);
     }
   }

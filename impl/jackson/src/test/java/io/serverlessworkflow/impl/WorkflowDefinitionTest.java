@@ -74,6 +74,10 @@ public class WorkflowDefinitionTest {
             Map.of("input", Arrays.asList(1, 2, 3)),
             o -> assertThat(o).isEqualTo(6)),
         args(
+            "switch-then-loop.yaml",
+            Map.of("count", 1),
+            o -> assertThat(o).isEqualTo(Map.of("count", 6))),
+        args(
             "for-collect.yaml",
             Map.of("input", Arrays.asList(1, 2, 3)),
             o -> assertThat(o).isEqualTo(Map.of("output", Arrays.asList(2, 4, 6)))),

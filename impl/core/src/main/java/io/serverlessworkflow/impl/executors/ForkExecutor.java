@@ -62,7 +62,7 @@ public class ForkExecutor extends RegularTaskExecutor<ForkTask> {
     }
 
     @Override
-    public TaskExecutor<ForkTask> buildInstance() {
+    public ForkExecutor buildInstance() {
       return new ForkExecutor(this);
     }
   }

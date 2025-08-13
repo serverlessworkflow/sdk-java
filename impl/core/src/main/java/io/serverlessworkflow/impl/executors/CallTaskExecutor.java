@@ -46,7 +46,7 @@ public class CallTaskExecutor<T extends TaskBase> extends RegularTaskExecutor<T>
     }
 
     @Override
-    public TaskExecutor<T> buildInstance() {
+    public CallTaskExecutor<T> buildInstance() {
       return new CallTaskExecutor<>(this);
     }
   }

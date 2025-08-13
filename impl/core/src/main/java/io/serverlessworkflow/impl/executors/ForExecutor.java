@@ -68,7 +68,7 @@ public class ForExecutor extends RegularTaskExecutor<ForTask> {
     }
 
     @Override
-    public TaskExecutor<ForTask> buildInstance() {
+    public ForExecutor buildInstance() {
       return new ForExecutor(this);
     }
   }
