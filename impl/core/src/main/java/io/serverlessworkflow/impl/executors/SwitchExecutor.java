@@ -39,7 +39,8 @@ public class SwitchExecutor extends AbstractTaskExecutor<SwitchTask> {
   private final Map<WorkflowPredicate, TransitionInfo> workflowFilters;
   private final TransitionInfo defaultTask;
 
-  public static class SwitchExecutorBuilder extends AbstractTaskExecutorBuilder<SwitchTask> {
+  public static class SwitchExecutorBuilder
+      extends AbstractTaskExecutorBuilder<SwitchTask, SwitchExecutor> {
     private final Map<SwitchCase, WorkflowPredicate> workflowFilters = new HashMap<>();
     private Map<WorkflowPredicate, TransitionInfoBuilder> switchFilters = new HashMap<>();
     private FlowDirective defaultDirective;
@@ -77,9 +78,12 @@ public class SwitchExecutor extends AbstractTaskExecutor<SwitchTask> {
     }
 
     @Override
-    protected TaskExecutor<SwitchTask> buildInstance() {
+    protected SwitchExecutor buildInstance() {
       return new SwitchExecutor(this);
     }
+
+    @Override
+    protected void buildTransition(SwitchExecutor ex) {}
   }
 
   @Override

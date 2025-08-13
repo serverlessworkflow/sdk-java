@@ -46,7 +46,7 @@ public class DoExecutor extends RegularTaskExecutor<DoTask> {
     }
 
     @Override
-    public TaskExecutor<DoTask> buildInstance() {
+    public DoExecutor buildInstance() {
       return new DoExecutor(this);
     }
   }

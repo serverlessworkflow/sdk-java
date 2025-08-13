@@ -61,7 +61,7 @@ public class EmitExecutor extends RegularTaskExecutor<EmitTask> {
     }
 
     @Override
-    public TaskExecutor<EmitTask> buildInstance() {
+    public EmitExecutor buildInstance() {
       return new EmitExecutor(this);
     }
   }

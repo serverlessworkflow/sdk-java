@@ -61,7 +61,8 @@ public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskEx
   private final Optional<SchemaValidator> contextSchemaValidator;
   private final Optional<WorkflowPredicate> ifFilter;
 
-  public abstract static class AbstractTaskExecutorBuilder<T extends TaskBase>
+  public abstract static class AbstractTaskExecutorBuilder<
+          T extends TaskBase, V extends AbstractTaskExecutor<T>>
       implements TaskExecutorBuilder<T> {
     private Optional<WorkflowFilter> inputProcessor = Optional.empty();
     private Optional<WorkflowFilter> outputProcessor = Optional.empty();
@@ -77,7 +78,7 @@ public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskEx
     protected final Workflow workflow;
     protected final ResourceLoader resourceLoader;
 
-    private TaskExecutor<T> instance;
+    private V instance;
 
     protected AbstractTaskExecutorBuilder(
         WorkflowMutablePosition position,
@@ -145,17 +146,20 @@ public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskEx
       return next;
     }
 
-    public TaskExecutor<T> build() {
+    public V build() {
       if (instance == null) {
         instance = buildInstance();
+        buildTransition(instance);
       }
       return instance;
     }
 
-    protected abstract TaskExecutor<T> buildInstance();
+    protected abstract V buildInstance();
+
+    protected abstract void buildTransition(V instance);
   }
 
-  protected AbstractTaskExecutor(AbstractTaskExecutorBuilder<T> builder) {
+  protected AbstractTaskExecutor(AbstractTaskExecutorBuilder<T, ?> builder) {
     this.task = builder.task;
     this.taskName = builder.taskName;
     this.position = builder.position;

@@ -77,7 +77,7 @@ public class TryExecutor extends RegularTaskExecutor<TryTask> {
     }
 
     @Override
-    public TaskExecutor<TryTask> buildInstance() {
+    public TryExecutor buildInstance() {
       return new TryExecutor(this);
     }
   }

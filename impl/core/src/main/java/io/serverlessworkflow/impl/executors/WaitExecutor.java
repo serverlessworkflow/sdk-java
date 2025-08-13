@@ -60,7 +60,7 @@ public class WaitExecutor extends RegularTaskExecutor<WaitTask> {
     }
 
     @Override
-    public TaskExecutor<WaitTask> buildInstance() {
+    public WaitExecutor buildInstance() {
       return new WaitExecutor(this);
     }
   }

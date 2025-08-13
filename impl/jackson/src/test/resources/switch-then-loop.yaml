@@ -1,0 +1,18 @@
+document:
+  dsl: 1.0.0-alpha5
+  namespace: test
+  name:  switch-loop
+  version: 0.1.0
+do:
+  - inc:
+     set:
+        count: ${.count+1}
+     then: looping
+  - looping:
+       switch:
+         - loopCount:
+             when: .count < 6
+             then: inc
+         - default:
+             then: exit
+

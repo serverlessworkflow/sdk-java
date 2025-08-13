@@ -114,7 +114,7 @@ public class RaiseExecutor extends RegularTaskExecutor<RaiseTask> {
     }
 
     @Override
-    public TaskExecutor<RaiseTask> buildInstance() {
+    public RaiseExecutor buildInstance() {
       return new RaiseExecutor(this);
     }
   }

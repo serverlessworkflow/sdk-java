@@ -54,7 +54,7 @@ public class SetExecutor extends RegularTaskExecutor<SetTask> {
     }
 
     @Override
-    public TaskExecutor<SetTask> buildInstance() {
+    public SetExecutor buildInstance() {
       return new SetExecutor(this);
     }
   }
