@@ -24,13 +24,13 @@ public class UntilPredicate extends Until {
   private Predicate<?> predicate;
   private Optional<Class<?>> predicateClass;
 
-  public <T> Until withFunction(Predicate<T> predicate) {
+  public <T> UntilPredicate withPredicate(Predicate<T> predicate) {
     this.predicate = predicate;
     this.predicateClass = Optional.empty();
     return this;
   }
 
-  public <T> Until withFunction(Predicate<T> predicate, Class<T> clazz) {
+  public <T> UntilPredicate withPredicate(Predicate<T> predicate, Class<T> clazz) {
     this.predicate = predicate;
     this.predicateClass = Optional.ofNullable(clazz);
     return this;
