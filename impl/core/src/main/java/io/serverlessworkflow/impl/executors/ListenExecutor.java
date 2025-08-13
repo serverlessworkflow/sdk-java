@@ -100,17 +100,17 @@ public abstract class ListenExecutor extends RegularTaskExecutor<ListenTask> {
         registrations = anyEvents(any);
         Until untilDesc = any.getUntil();
         if (untilDesc != null) {
-          if (untilDesc.getAnyEventUntilCondition() != null) {
-            until =
-                WorkflowUtils.buildPredicate(application, untilDesc.getAnyEventUntilCondition());
-          } else if (untilDesc.getAnyEventUntilConsumed() != null) {
-            EventConsumptionStrategy strategy = untilDesc.getAnyEventUntilConsumed();
-            if (strategy.getAllEventConsumptionStrategy() != null) {
-              untilRegistrations = allEvents(strategy.getAllEventConsumptionStrategy());
-            } else if (strategy.getAnyEventConsumptionStrategy() != null) {
-              untilRegistrations = anyEvents(strategy.getAnyEventConsumptionStrategy());
-            } else if (strategy.getOneEventConsumptionStrategy() != null) {
-              untilRegistrations = oneEvent(strategy.getOneEventConsumptionStrategy());
+          until = buildUntilPredicate(untilDesc);
+          if (until == null) {
+            if (untilDesc.getAnyEventUntilConsumed() != null) {
+              EventConsumptionStrategy strategy = untilDesc.getAnyEventUntilConsumed();
+              if (strategy.getAllEventConsumptionStrategy() != null) {
+                untilRegistrations = allEvents(strategy.getAllEventConsumptionStrategy());
+              } else if (strategy.getAnyEventConsumptionStrategy() != null) {
+                untilRegistrations = anyEvents(strategy.getAnyEventConsumptionStrategy());
+              } else if (strategy.getOneEventConsumptionStrategy() != null) {
+                untilRegistrations = oneEvent(strategy.getOneEventConsumptionStrategy());
+              }
             }
           }
         }
@@ -134,6 +134,12 @@ public abstract class ListenExecutor extends RegularTaskExecutor<ListenTask> {
             break;
         }
       }
+    }
+
+    protected WorkflowPredicate buildUntilPredicate(Until until) {
+      return until.getAnyEventUntilCondition() != null
+          ? WorkflowUtils.buildPredicate(application, until.getAnyEventUntilCondition())
+          : null;
     }
 
     private Collection<EventRegistrationBuilder> registerToAll() {

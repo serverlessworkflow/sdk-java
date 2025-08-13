@@ -18,23 +18,22 @@ package io.serverlessworkflow.impl.executors.func;
 
 import static io.serverlessworkflow.impl.executors.func.JavaFuncUtils.predObject;
 
-import io.serverlessworkflow.api.types.SwitchCase;
-import io.serverlessworkflow.api.types.SwitchTask;
+import io.serverlessworkflow.api.types.ListenTask;
+import io.serverlessworkflow.api.types.Until;
 import io.serverlessworkflow.api.types.Workflow;
-import io.serverlessworkflow.api.types.func.SwitchCaseFunction;
+import io.serverlessworkflow.api.types.func.UntilPredicate;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.WorkflowPredicate;
-import io.serverlessworkflow.impl.executors.SwitchExecutor.SwitchExecutorBuilder;
+import io.serverlessworkflow.impl.executors.ListenExecutor.ListenExecutorBuilder;
 import io.serverlessworkflow.impl.expressions.ExpressionDescriptor;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
-import java.util.Optional;
 
-public class JavaSwitchExecutorBuilder extends SwitchExecutorBuilder {
+public class JavaListenExecutorBuilder extends ListenExecutorBuilder {
 
-  protected JavaSwitchExecutorBuilder(
+  protected JavaListenExecutorBuilder(
       WorkflowMutablePosition position,
-      SwitchTask task,
+      ListenTask task,
       Workflow workflow,
       WorkflowApplication application,
       ResourceLoader resourceLoader) {
@@ -42,14 +41,13 @@ public class JavaSwitchExecutorBuilder extends SwitchExecutorBuilder {
   }
 
   @Override
-  protected Optional<WorkflowPredicate> buildFilter(SwitchCase switchCase) {
-    return switchCase instanceof SwitchCaseFunction function
-        ? Optional.of(
-            application
-                .expressionFactory()
-                .buildPredicate(
-                    ExpressionDescriptor.object(
-                        predObject(function.predicate(), function.predicateClass()))))
-        : super.buildFilter(switchCase);
+  protected WorkflowPredicate buildUntilPredicate(Until until) {
+    return until instanceof UntilPredicate untilPred && untilPred.predicate() != null
+        ? application
+            .expressionFactory()
+            .buildPredicate(
+                ExpressionDescriptor.object(
+                    predObject(untilPred.predicate(), untilPred.predicateClass())))
+        : super.buildUntilPredicate(until);
   }
 }
