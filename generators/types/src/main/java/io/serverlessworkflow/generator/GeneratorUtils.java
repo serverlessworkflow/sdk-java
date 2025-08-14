@@ -15,10 +15,13 @@
  */
 package io.serverlessworkflow.generator;
 
+import com.sun.codemodel.JAnnotationArrayMember;
 import com.sun.codemodel.JDefinedClass;
 import com.sun.codemodel.JFieldVar;
 import com.sun.codemodel.JMethod;
 import com.sun.codemodel.JMod;
+import java.lang.annotation.Annotation;
+import java.util.Collection;
 import org.jsonschema2pojo.util.NameHelper;
 
 public class GeneratorUtils {
@@ -39,6 +42,14 @@ public class GeneratorUtils {
             nameHelper.getGetterName(name, instanceField.type(), null));
     method.body()._return(instanceField);
     return method;
+  }
+
+  public static void annotateCollection(
+      JDefinedClass definedClass,
+      Class<? extends Annotation> annotation,
+      Collection<JTypeWrapper> types) {
+    JAnnotationArrayMember unionAnnotation = definedClass.annotate(annotation).paramArray("value");
+    types.forEach(t -> unionAnnotation.param(t.getType()));
   }
 
   private GeneratorUtils() {}

@@ -19,6 +19,8 @@ import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.fasterxml.jackson.databind.Module.SetupContext;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -43,10 +45,11 @@ import io.github.classgraph.ScanResult;
 import io.github.classgraph.TypeArgument;
 import io.github.classgraph.TypeSignature;
 import io.serverlessworkflow.annotations.AdditionalProperties;
+import io.serverlessworkflow.annotations.ExclusiveUnion;
+import io.serverlessworkflow.annotations.InclusiveUnion;
 import io.serverlessworkflow.annotations.Item;
 import io.serverlessworkflow.annotations.ItemKey;
 import io.serverlessworkflow.annotations.ItemValue;
-import io.serverlessworkflow.annotations.Union;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -110,7 +113,8 @@ public class JacksonMixInPojo extends AbstractMojo {
               ._class("JacksonMixInModule")
               ._extends(SimpleModule.class)
               .method(JMod.PUBLIC, codeModel.VOID, SETUP_METHOD);
-      processAnnotatedClasses(result, Union.class, this::buildUnionMixIn);
+      processAnnotatedClasses(result, ExclusiveUnion.class, this::buildExclusiveUnionMixIn);
+      processAnnotatedClasses(result, InclusiveUnion.class, this::buildInclusiveUnionMixIn);
       processAnnotatedClasses(result, AdditionalProperties.class, this::buildAdditionalPropsMixIn);
       processAnnotatedClasses(result, Item.class, this::buildItemMixIn);
       processAnnotatedClasses(result.getAllEnums(), this::buildEnumMixIn);
@@ -188,7 +192,7 @@ public class JacksonMixInPojo extends AbstractMojo {
             GeneratorUtils.generateDeserializer(rootPackage, relClass, getReturnType(valueMethod)));
   }
 
-  private void buildUnionMixIn(ClassInfo unionClassInfo, JDefinedClass unionMixClass)
+  private void buildExclusiveUnionMixIn(ClassInfo unionClassInfo, JDefinedClass unionMixClass)
       throws JClassAlreadyExistsException {
     JClass unionClass = codeModel.ref(unionClassInfo.getName());
     unionMixClass
@@ -199,13 +203,25 @@ public class JacksonMixInPojo extends AbstractMojo {
         .param(
             "using",
             GeneratorUtils.generateDeserializer(
-                rootPackage, unionClass, getUnionClasses(unionClassInfo)));
+                rootPackage, unionClass, getUnionClasses(ExclusiveUnion.class, unionClassInfo)));
+  }
+
+  private void buildInclusiveUnionMixIn(ClassInfo unionClassInfo, JDefinedClass unionMixClass)
+      throws JClassAlreadyExistsException {
+    Collection<JClass> unionClasses = getUnionClasses(InclusiveUnion.class, unionClassInfo);
+    for (MethodInfo methodInfo : unionClassInfo.getMethodInfo()) {
+      JClass typeClass = getReturnType(methodInfo);
+      if (unionClasses.contains(typeClass)) {
+        JMethod method = unionMixClass.method(JMod.ABSTRACT, typeClass, methodInfo.getName());
+        method.annotate(JsonUnwrapped.class);
+        method.annotate(JsonIgnoreProperties.class).param("ignoreUnknown", true);
+      }
+    }
   }
 
   private void buildEnumMixIn(ClassInfo classInfo, JDefinedClass mixClass)
       throws JClassAlreadyExistsException {
     mixClass.method(JMod.ABSTRACT, String.class, "value").annotate(JsonValue.class);
-
     JMethod staticMethod =
         mixClass.method(JMod.STATIC, codeModel.ref(classInfo.getName()), "fromValue");
     staticMethod.param(String.class, "value");
@@ -217,8 +233,9 @@ public class JacksonMixInPojo extends AbstractMojo {
     return rootPackage._class(JMod.ABSTRACT, classInfo.getSimpleName() + "MixIn");
   }
 
-  private Collection<JClass> getUnionClasses(ClassInfo unionClassInfo) {
-    AnnotationInfo info = unionClassInfo.getAnnotationInfoRepeatable(Union.class).get(0);
+  private Collection<JClass> getUnionClasses(
+      Class<? extends Annotation> annotation, ClassInfo unionClassInfo) {
+    AnnotationInfo info = unionClassInfo.getAnnotationInfoRepeatable(annotation).get(0);
     Object[] unionClasses = (Object[]) info.getParameterValues().getValue("value");
     return Stream.of(unionClasses)
         .map(AnnotationClassRef.class::cast)
