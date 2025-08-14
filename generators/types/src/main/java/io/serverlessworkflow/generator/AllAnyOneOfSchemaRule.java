@@ -17,7 +17,6 @@ package io.serverlessworkflow.generator;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.sun.codemodel.JAnnotationArrayMember;
 import com.sun.codemodel.JBlock;
 import com.sun.codemodel.JClass;
 import com.sun.codemodel.JClassAlreadyExistsException;
@@ -32,9 +31,10 @@ import com.sun.codemodel.JMod;
 import com.sun.codemodel.JPackage;
 import com.sun.codemodel.JType;
 import com.sun.codemodel.JVar;
+import io.serverlessworkflow.annotations.ExclusiveUnion;
+import io.serverlessworkflow.annotations.InclusiveUnion;
 import io.serverlessworkflow.annotations.OneOfSetter;
 import io.serverlessworkflow.annotations.OneOfValueProvider;
-import io.serverlessworkflow.annotations.Union;
 import jakarta.validation.ConstraintViolationException;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
@@ -62,9 +62,9 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
     this.ruleFactory = ruleFactory;
   }
 
-  private static final String REF = "$ref";
+  static final String REF = "$ref";
   private static final String TITLE = "title";
-  private static final String PATTERN = "pattern";
+  static final String PATTERN = "pattern";
 
   private enum Format {
     URI_TEMPLATE("^[A-Za-z][A-Za-z0-9+\\-.]*://.*");
@@ -88,46 +88,6 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
     String pattern() {
 
       return pattern;
-    }
-  }
-
-  private static class JTypeWrapper implements Comparable<JTypeWrapper> {
-
-    private final JType type;
-    private final JsonNode node;
-
-    public JTypeWrapper(JType type, JsonNode node) {
-      this.type = type;
-      this.node = node;
-    }
-
-    public JType getType() {
-      return type;
-    }
-
-    public JsonNode getNode() {
-      return node;
-    }
-
-    @Override
-    public int compareTo(JTypeWrapper other) {
-      return typeToNumber() - other.typeToNumber();
-    }
-
-    private int typeToNumber() {
-      if (type.name().equals("Object")) {
-        return 6;
-      } else if (type.name().equals("String")) {
-        return node.has(PATTERN) || node.has(REF) ? 4 : 5;
-      } else if (type.isPrimitive()) {
-        return 3;
-      } else if (type.isReference()) {
-        return 2;
-      } else if (type.isArray()) {
-        return 1;
-      } else {
-        return 0;
-      }
     }
   }
 
@@ -303,6 +263,9 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
 
   private JDefinedClass populateAllOf(
       Schema parentSchema, JDefinedClass definedClass, Collection<JTypeWrapper> allOfTypes) {
+    if (!allOfTypes.isEmpty()) {
+      GeneratorUtils.annotateCollection(definedClass, InclusiveUnion.class, allOfTypes);
+    }
     return wrapAll(parentSchema, definedClass, Optional.empty(), allOfTypes, Optional.empty());
   }
 
@@ -321,8 +284,7 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
     definedClass._implements(
         definedClass.owner().ref(OneOfValueProvider.class).narrow(valueField.type()));
     GeneratorUtils.implementInterface(definedClass, valueField);
-    JAnnotationArrayMember unionAnnotation = definedClass.annotate(Union.class).paramArray("value");
-    oneOfTypes.forEach(t -> unionAnnotation.param(t.getType()));
+    GeneratorUtils.annotateCollection(definedClass, ExclusiveUnion.class, oneOfTypes);
     return wrapAll(parentSchema, definedClass, commonType, oneOfTypes, Optional.of(valueField));
   }
 

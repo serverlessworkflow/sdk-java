@@ -66,11 +66,31 @@ public class ApiTest {
     CallTask callTask = task.getCallTask();
     assertThat(callTask).isNotNull();
     assertThat(callTask.get()).isInstanceOf(CallFunction.class);
-    if (callTask.get() instanceof CallFunction) {
-      CallFunction functionCall = callTask.getCallFunction();
-      assertThat(functionCall).isNotNull();
-      assertThat(callTask.getCallAsyncAPI()).isNull();
-      assertThat(functionCall.getWith()).isNull();
-    }
+    CallFunction functionCall = callTask.getCallFunction();
+    assertThat(functionCall).isNotNull();
+    assertThat(callTask.getCallAsyncAPI()).isNull();
+    assertThat(functionCall.getWith()).isNull();
+  }
+
+  @Test
+  void testOauth2Auth() throws IOException {
+    Workflow workflow = readWorkflowFromClasspath("features/authentication-oauth2.yaml");
+    assertThat(workflow.getDo()).isNotEmpty();
+    assertThat(workflow.getDo().get(0).getName()).isNotNull();
+    assertThat(workflow.getDo().get(0).getTask()).isNotNull();
+    Task task = workflow.getDo().get(0).getTask();
+    CallTask callTask = task.getCallTask();
+    assertThat(callTask).isNotNull();
+    assertThat(callTask.get()).isInstanceOf(CallHTTP.class);
+    CallHTTP httpCall = callTask.getCallHTTP();
+    assertThat(
+            httpCall
+                .getWith()
+                .getEndpoint()
+                .getEndpointConfiguration()
+                .getAuthentication()
+                .getAuthenticationPolicy()
+                .getOAuth2AuthenticationPolicy())
+        .isNotNull();
   }
 }
