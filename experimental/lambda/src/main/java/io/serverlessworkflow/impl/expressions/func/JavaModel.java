@@ -65,6 +65,7 @@ public class JavaModel implements WorkflowModel {
 
   @Override
   public Optional<Map<String, Object>> asMap() {
+
     return object instanceof Map ? Optional.of((Map<String, Object>) object) : Optional.empty();
   }
 
