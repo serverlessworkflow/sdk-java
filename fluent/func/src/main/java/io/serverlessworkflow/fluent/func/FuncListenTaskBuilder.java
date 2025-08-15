@@ -20,8 +20,6 @@ import io.serverlessworkflow.api.types.ListenTask;
 import io.serverlessworkflow.api.types.func.UntilPredicate;
 import io.serverlessworkflow.fluent.func.spi.ConditionalTaskBuilder;
 import io.serverlessworkflow.fluent.func.spi.FuncTransformations;
-import io.serverlessworkflow.fluent.spec.BaseDoTaskBuilder;
-import io.serverlessworkflow.fluent.spec.BaseTaskItemListBuilder;
 import io.serverlessworkflow.fluent.spec.ListenTaskBuilder;
 import java.util.function.Predicate;
 

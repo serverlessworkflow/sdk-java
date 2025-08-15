@@ -17,7 +17,6 @@ package io.serverlessworkflow.fluent.agentic;
 
 import dev.langchain4j.agentic.Agent;
 import dev.langchain4j.agentic.internal.AgentSpecification;
-import dev.langchain4j.service.MemoryId;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
 import java.util.List;
@@ -28,10 +27,10 @@ public interface Agents {
     @UserMessage(
         """
             You are a happy chat bot, reply to my message:
-            {message}.
+            {userInput}.
             """)
     @Agent
-    String chat(@V("message") String message);
+    String chat(@V("userInput") String userInput);
   }
 
   interface MovieExpert {

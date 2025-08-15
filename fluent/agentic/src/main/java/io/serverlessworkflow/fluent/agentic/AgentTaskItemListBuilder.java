@@ -24,7 +24,6 @@ import io.serverlessworkflow.fluent.func.FuncCallTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncEmitTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncForTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncForkTaskBuilder;
-import io.serverlessworkflow.fluent.func.FuncListenTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncSetTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncSwitchTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncTaskItemListBuilder;

@@ -32,11 +32,10 @@ import io.serverlessworkflow.fluent.spec.spi.SwitchFluent;
 // TODO: implement the other builders, e.g. CallHTTP
 
 public interface FuncDoFluent<SELF extends FuncDoFluent<SELF>>
-        extends SetFluent<FuncSetTaskBuilder, SELF>,
+    extends SetFluent<FuncSetTaskBuilder, SELF>,
         EmitFluent<FuncEmitTaskBuilder, SELF>,
         ForEachFluent<FuncForTaskBuilder, SELF>,
         SwitchFluent<FuncSwitchTaskBuilder, SELF>,
         ForkFluent<FuncForkTaskBuilder, SELF>,
         ListenFluent<FuncListenTaskBuilder, SELF>,
-        CallFnFluent<FuncCallTaskBuilder, SELF> {
-}
+        CallFnFluent<FuncCallTaskBuilder, SELF> {}

@@ -15,15 +15,10 @@
  */
 package io.serverlessworkflow.impl.expressions.agentic;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.langchain4j.agentic.scope.AgenticScope;
 import dev.langchain4j.agentic.scope.ResultWithAgenticScope;
-import io.cloudevents.CloudEvent;
-import io.cloudevents.CloudEventData;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.expressions.func.JavaModelCollection;
-import java.io.IOException;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;

@@ -17,8 +17,8 @@ package io.serverlessworkflow.fluent.spec.spi;
 
 import io.serverlessworkflow.fluent.spec.BaseTaskItemListBuilder;
 
-public interface SubscriptionIteratorFluent <SELF, L extends BaseTaskItemListBuilder<L>> extends IteratorFluent<SELF, L>, OutputFluent<SELF> {
+public interface SubscriptionIteratorFluent<SELF, L extends BaseTaskItemListBuilder<L>>
+    extends IteratorFluent<SELF, L>, OutputFluent<SELF> {
 
-    SELF item(String item);
-
+  SELF item(String item);
 }

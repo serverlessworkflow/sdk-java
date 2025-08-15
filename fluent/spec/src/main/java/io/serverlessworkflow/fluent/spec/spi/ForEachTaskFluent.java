@@ -20,13 +20,14 @@ import io.serverlessworkflow.fluent.spec.BaseTaskItemListBuilder;
 import io.serverlessworkflow.fluent.spec.TaskBaseBuilder;
 
 public interface ForEachTaskFluent<
-        SELF extends TaskBaseBuilder<SELF>, L extends BaseTaskItemListBuilder<L>> extends IteratorFluent<SELF, L> {
+        SELF extends TaskBaseBuilder<SELF>, L extends BaseTaskItemListBuilder<L>>
+    extends IteratorFluent<SELF, L> {
 
-    SELF each(String each);
+  SELF each(String each);
 
-    SELF in(String in);
+  SELF in(String in);
 
-    SELF whileC(final String expression);
+  SELF whileC(final String expression);
 
-    ForTask build();
+  ForTask build();
 }
