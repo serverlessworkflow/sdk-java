@@ -41,7 +41,7 @@ public class AgenticModelCollection extends JavaModelCollection {
   @Override
   public boolean add(WorkflowModel e) {
     Optional<Map<String, Object>> asMap = e.asMap();
-    if (asMap.isPresent()) {
+    if (asMap.isPresent() && !asMap.get().isEmpty()) {
       this.agenticScope.writeStates(asMap.get());
       return super.add(e);
     }
