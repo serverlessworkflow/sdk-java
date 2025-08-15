@@ -15,40 +15,61 @@
  */
 package io.serverlessworkflow.fluent.agentic.spi;
 
-import io.serverlessworkflow.fluent.agentic.LoopAgentsBuilder;
-import io.serverlessworkflow.fluent.func.spi.FuncDoFluent;
 import java.util.UUID;
 import java.util.function.Consumer;
 
-public interface AgentDoFluent<SELF extends AgentDoFluent<SELF>> extends FuncDoFluent<SELF> {
+import io.serverlessworkflow.fluent.agentic.AgentListenTaskBuilder;
+import io.serverlessworkflow.fluent.agentic.LoopAgentsBuilder;
+import io.serverlessworkflow.fluent.func.FuncCallTaskBuilder;
+import io.serverlessworkflow.fluent.func.FuncEmitTaskBuilder;
+import io.serverlessworkflow.fluent.func.FuncForTaskBuilder;
+import io.serverlessworkflow.fluent.func.FuncForkTaskBuilder;
+import io.serverlessworkflow.fluent.func.FuncSetTaskBuilder;
+import io.serverlessworkflow.fluent.func.FuncSwitchTaskBuilder;
+import io.serverlessworkflow.fluent.func.spi.CallFnFluent;
+import io.serverlessworkflow.fluent.spec.spi.EmitFluent;
+import io.serverlessworkflow.fluent.spec.spi.ForEachFluent;
+import io.serverlessworkflow.fluent.spec.spi.ForkFluent;
+import io.serverlessworkflow.fluent.spec.spi.ListenFluent;
+import io.serverlessworkflow.fluent.spec.spi.SetFluent;
+import io.serverlessworkflow.fluent.spec.spi.SwitchFluent;
 
-  SELF agent(String name, Object agent);
+public interface AgentDoFluent<SELF extends AgentDoFluent<SELF>>
+        extends SetFluent<FuncSetTaskBuilder, SELF>,
+        EmitFluent<FuncEmitTaskBuilder, SELF>,
+        ForEachFluent<FuncForTaskBuilder, SELF>,
+        SwitchFluent<FuncSwitchTaskBuilder, SELF>,
+        ForkFluent<FuncForkTaskBuilder, SELF>,
+        ListenFluent<AgentListenTaskBuilder, SELF>,
+        CallFnFluent<FuncCallTaskBuilder, SELF> {
 
-  default SELF agent(Object agent) {
-    return agent(UUID.randomUUID().toString(), agent);
-  }
+    SELF agent(String name, Object agent);
 
-  SELF sequence(String name, Object... agents);
+    default SELF agent(Object agent) {
+        return agent(UUID.randomUUID().toString(), agent);
+    }
 
-  default SELF sequence(Object... agents) {
-    return sequence("seq-" + UUID.randomUUID(), agents);
-  }
+    SELF sequence(String name, Object... agents);
 
-  SELF loop(String name, Consumer<LoopAgentsBuilder> builder);
+    default SELF sequence(Object... agents) {
+        return sequence("seq-" + UUID.randomUUID(), agents);
+    }
 
-  default SELF loop(Consumer<LoopAgentsBuilder> builder) {
-    return loop("loop-" + UUID.randomUUID(), builder);
-  }
+    SELF loop(String name, Consumer<LoopAgentsBuilder> builder);
 
-  SELF loop(String name, LoopAgentsBuilder builder);
+    default SELF loop(Consumer<LoopAgentsBuilder> builder) {
+        return loop("loop-" + UUID.randomUUID(), builder);
+    }
 
-  default SELF loop(LoopAgentsBuilder builder) {
-    return loop("loop-" + UUID.randomUUID(), builder);
-  }
+    SELF loop(String name, LoopAgentsBuilder builder);
 
-  SELF parallel(String name, Object... agents);
+    default SELF loop(LoopAgentsBuilder builder) {
+        return loop("loop-" + UUID.randomUUID(), builder);
+    }
 
-  default SELF parallel(Object... agents) {
-    return parallel("par-" + UUID.randomUUID(), agents);
-  }
+    SELF parallel(String name, Object... agents);
+
+    default SELF parallel(Object... agents) {
+        return parallel("par-" + UUID.randomUUID(), agents);
+    }
 }

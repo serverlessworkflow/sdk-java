@@ -15,6 +15,7 @@
  */
 package io.serverlessworkflow.fluent.agentic;
 
+import dev.langchain4j.agentic.Agent;
 import io.serverlessworkflow.fluent.agentic.spi.AgentDoFluent;
 import io.serverlessworkflow.fluent.func.FuncCallTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncEmitTaskBuilder;
@@ -83,7 +84,7 @@ public class AgentDoTaskBuilder
   }
 
   @Override
-  public AgentDoTaskBuilder listen(String name, Consumer<FuncListenTaskBuilder> itemsConfigurer) {
+  public AgentDoTaskBuilder listen(String name, Consumer<AgentListenTaskBuilder> itemsConfigurer) {
     this.listBuilder().listen(name, itemsConfigurer);
     return self();
   }

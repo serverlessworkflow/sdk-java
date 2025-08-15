@@ -31,11 +31,12 @@ import java.util.Optional;
 public class AgenticModelCollection extends JavaModelCollection {
 
   private final AgenticScope agenticScope;
-  private final ObjectMapper mapper = new ObjectMapper();
+  private final AgenticScopeCloudEventsHandler ceHandler;
 
-  AgenticModelCollection(AgenticScope agenticScope) {
+  AgenticModelCollection(AgenticScope agenticScope, AgenticScopeCloudEventsHandler ceHandler) {
     super(Collections.emptyList());
     this.agenticScope = agenticScope;
+    this.ceHandler = ceHandler;
   }
 
   @Override
@@ -47,18 +48,9 @@ public class AgenticModelCollection extends JavaModelCollection {
     }
 
     // Update the agenticScope with the event body, so agents can use the event data as input
-    Object javaObj = e.asJavaObject();
-    try {
-      if (javaObj instanceof CloudEvent ce && ce.getData() != null) {
-        agenticScope.writeStates(
-            mapper.readValue(ce.getData().toBytes(), new TypeReference<>() {}));
-      } else if (javaObj instanceof CloudEventData ced) {
-        agenticScope.writeStates(mapper.readValue(ced.toBytes(), new TypeReference<>() {}));
-      } else {
-        agenticScope.writeState(AgenticModelFactory.DEFAULT_AGENTIC_SCOPE_STATE_KEY, javaObj);
-      }
-    } catch (IOException ex) {
-      throw new IllegalArgumentException("Unable to parse CloudEvent data as JSON", ex);
+    Object value = e.asJavaObject();
+    if (!ceHandler.writeStateIfCloudEvent(this.agenticScope, value)) {
+      this.agenticScope.writeState(AgenticModelFactory.DEFAULT_AGENTIC_SCOPE_STATE_KEY, value);
     }
 
     // add to the collection

@@ -19,6 +19,8 @@ import dev.langchain4j.agentic.internal.AgenticScopeOwner;
 import dev.langchain4j.agentic.scope.AgenticScope;
 import dev.langchain4j.agentic.scope.AgenticScopeRegistry;
 import dev.langchain4j.agentic.scope.DefaultAgenticScope;
+
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
@@ -60,6 +62,14 @@ public class AgenticScopeRegistryAssessor implements AgenticScopeOwner {
 
   public void setAgenticScope(AgenticScope agenticScope) {
     this.agenticScope = Objects.requireNonNull(agenticScope, "AgenticScope cannot be null");
+  }
+
+  public void writeState(String key, Object value) {
+    this.getAgenticScope().writeState(key, value);
+  }
+
+  public void writeStates(Map<String, Object> states) {
+    this.getAgenticScope().writeStates(states);
   }
 
   @Override
