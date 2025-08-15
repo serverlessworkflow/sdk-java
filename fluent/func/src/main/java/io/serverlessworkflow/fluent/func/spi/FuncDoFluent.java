@@ -28,22 +28,15 @@ import io.serverlessworkflow.fluent.spec.spi.ForkFluent;
 import io.serverlessworkflow.fluent.spec.spi.ListenFluent;
 import io.serverlessworkflow.fluent.spec.spi.SetFluent;
 import io.serverlessworkflow.fluent.spec.spi.SwitchFluent;
-import java.util.UUID;
-import java.util.function.Consumer;
 
 // TODO: implement the other builders, e.g. CallHTTP
 
 public interface FuncDoFluent<SELF extends FuncDoFluent<SELF>>
-    extends SetFluent<FuncSetTaskBuilder, SELF>,
+        extends SetFluent<FuncSetTaskBuilder, SELF>,
         EmitFluent<FuncEmitTaskBuilder, SELF>,
         ForEachFluent<FuncForTaskBuilder, SELF>,
         SwitchFluent<FuncSwitchTaskBuilder, SELF>,
         ForkFluent<FuncForkTaskBuilder, SELF>,
-        ListenFluent<FuncListenTaskBuilder, SELF> {
-
-  SELF callFn(String name, Consumer<FuncCallTaskBuilder> cfg);
-
-  default SELF callFn(Consumer<FuncCallTaskBuilder> cfg) {
-    return this.callFn(UUID.randomUUID().toString(), cfg);
-  }
+        ListenFluent<FuncListenTaskBuilder, SELF>,
+        CallFnFluent<FuncCallTaskBuilder, SELF> {
 }

@@ -31,28 +31,30 @@ import java.util.function.Consumer;
  * Fluent builder for a "listen" task in a Serverless Workflow. Enforces exactly one consumption
  * strategy: one, all, or any.
  */
-public class ListenTaskBuilder extends TaskBaseBuilder<ListenTaskBuilder> {
+public class ListenTaskBuilder<T extends BaseTaskItemListBuilder<T>> extends TaskBaseBuilder<ListenTaskBuilder<T>> {
 
   private final ListenTask listenTask;
   private final ListenTaskConfiguration config;
   private boolean oneSet, allSet, anySet;
+  private final T taskItemListBuilder;
 
-  public ListenTaskBuilder() {
+  public ListenTaskBuilder(T taskItemListBuilder) {
     super();
     this.listenTask = new ListenTask();
     this.config = new ListenTaskConfiguration();
     this.config.setTo(new ListenTo());
     this.listenTask.setListen(config);
+    this.taskItemListBuilder = taskItemListBuilder;
     super.setTask(listenTask);
   }
 
   @Override
-  protected ListenTaskBuilder self() {
+  protected ListenTaskBuilder<T> self() {
     return this;
   }
 
   /** Consume exactly one matching event. */
-  public ListenTaskBuilder one(Consumer<EventFilterBuilder> c) {
+  public ListenTaskBuilder<T> one(Consumer<EventFilterBuilder> c) {
     ensureNoneSet();
     oneSet = true;
     EventFilterBuilder fb = new EventFilterBuilder();
@@ -64,7 +66,7 @@ public class ListenTaskBuilder extends TaskBaseBuilder<ListenTaskBuilder> {
   }
 
   /** Consume events only when *all* filters match. */
-  public ListenTaskBuilder all(Consumer<EventFilterBuilder> c) {
+  public ListenTaskBuilder<T> all(Consumer<EventFilterBuilder> c) {
     ensureNoneSet();
     allSet = true;
     EventFilterBuilder fb = new EventFilterBuilder();
@@ -76,7 +78,7 @@ public class ListenTaskBuilder extends TaskBaseBuilder<ListenTaskBuilder> {
   }
 
   /** Consume events when *any* filter matches. */
-  public ListenTaskBuilder any(Consumer<EventFilterBuilder> c) {
+  public ListenTaskBuilder<T> any(Consumer<EventFilterBuilder> c) {
     ensureNoneSet();
     anySet = true;
     EventFilterBuilder fb = new EventFilterBuilder();
@@ -84,6 +86,18 @@ public class ListenTaskBuilder extends TaskBaseBuilder<ListenTaskBuilder> {
     AnyEventConsumptionStrategy strat = new AnyEventConsumptionStrategy();
     strat.setAny(List.of(fb.build()));
     config.getTo().withAnyEventConsumptionStrategy(strat);
+    return this;
+  }
+
+  public ListenTaskBuilder<T> forEach(Consumer<SubscriptionIteratorBuilder<T>> c) {
+    final SubscriptionIteratorBuilder<T> iteratorBuilder = new SubscriptionIteratorBuilder<>(this.taskItemListBuilder);
+    c.accept(iteratorBuilder);
+    this.listenTask.setForeach(iteratorBuilder.build());
+    return this;
+  }
+
+  public ListenTaskBuilder<T> read(ListenTaskConfiguration.ListenAndReadAs listenAndReadAs) {
+    this.config.setRead(listenAndReadAs);
     return this;
   }
 

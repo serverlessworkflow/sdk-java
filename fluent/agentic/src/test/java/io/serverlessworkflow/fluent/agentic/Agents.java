@@ -27,10 +27,11 @@ public interface Agents {
   interface ChatBot {
     @UserMessage(
         """
-            You are a happy chat bot.
+            You are a happy chat bot, reply to my message:
+            {message}.
             """)
     @Agent
-    String chat(@MemoryId String memoryId, @V("message") String message);
+    String chat(@V("message") String message);
   }
 
   interface MovieExpert {
