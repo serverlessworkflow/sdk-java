@@ -56,7 +56,8 @@ public class DoTaskBuilder extends BaseDoTaskBuilder<DoTaskBuilder, TaskItemList
   }
 
   @Override
-  public DoTaskBuilder listen(String name, Consumer<ListenTaskBuilder<TaskItemListBuilder>> itemsConfigurer) {
+  public DoTaskBuilder listen(
+      String name, Consumer<ListenTaskBuilder<TaskItemListBuilder>> itemsConfigurer) {
     this.listBuilder().listen(name, itemsConfigurer);
     return this;
   }

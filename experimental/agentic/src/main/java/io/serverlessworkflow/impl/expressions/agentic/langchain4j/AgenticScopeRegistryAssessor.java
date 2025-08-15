@@ -19,7 +19,6 @@ import dev.langchain4j.agentic.internal.AgenticScopeOwner;
 import dev.langchain4j.agentic.scope.AgenticScope;
 import dev.langchain4j.agentic.scope.AgenticScopeRegistry;
 import dev.langchain4j.agentic.scope.DefaultAgenticScope;
-
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;

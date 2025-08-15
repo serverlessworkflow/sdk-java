@@ -30,7 +30,8 @@ class AgenticModelFactory implements WorkflowModelFactory {
   static final String DEFAULT_AGENTIC_SCOPE_STATE_KEY = "input";
   private final AgenticScopeRegistryAssessor scopeRegistryAssessor =
       new AgenticScopeRegistryAssessor();
-  private final AgenticScopeCloudEventsHandler scopeCloudEventsHandler = new AgenticScopeCloudEventsHandler();
+  private final AgenticScopeCloudEventsHandler scopeCloudEventsHandler =
+      new AgenticScopeCloudEventsHandler();
 
   @SuppressWarnings("unchecked")
   private AgenticModel newAgenticModel(Object state) {
@@ -67,7 +68,8 @@ class AgenticModelFactory implements WorkflowModelFactory {
 
   @Override
   public WorkflowModelCollection createCollection() {
-    return new AgenticModelCollection(this.scopeRegistryAssessor.getAgenticScope(), scopeCloudEventsHandler);
+    return new AgenticModelCollection(
+        this.scopeRegistryAssessor.getAgenticScope(), scopeCloudEventsHandler);
   }
 
   @Override

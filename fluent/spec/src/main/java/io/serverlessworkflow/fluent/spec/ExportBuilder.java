@@ -24,43 +24,43 @@ import io.serverlessworkflow.api.types.SchemaInline;
 import io.serverlessworkflow.api.types.SchemaUnion;
 
 public final class ExportBuilder {
-    private final Export export;
+  private final Export export;
 
-    public ExportBuilder() {
-        this.export = new Export();
-        this.export.setAs(new ExportAs());
-        this.export.setSchema(new SchemaUnion());
-    }
+  public ExportBuilder() {
+    this.export = new Export();
+    this.export.setAs(new ExportAs());
+    this.export.setSchema(new SchemaUnion());
+  }
 
-    public ExportBuilder as(Object as) {
-        this.export.getAs().withObject(as);
-        return this;
-    }
+  public ExportBuilder as(Object as) {
+    this.export.getAs().withObject(as);
+    return this;
+  }
 
-    public ExportBuilder as(String as) {
-        this.export.getAs().withString(as);
-        return this;
-    }
+  public ExportBuilder as(String as) {
+    this.export.getAs().withString(as);
+    return this;
+  }
 
-    public ExportBuilder schema(String schema) {
-        this.export
-                .getSchema()
-                .setSchemaExternal(
-                        new SchemaExternal()
-                                .withResource(
-                                        new ExternalResource()
-                                                .withEndpoint(
-                                                        new Endpoint()
-                                                                .withUriTemplate(UriTemplateBuilder.newUriTemplate(schema)))));
-        return this;
-    }
+  public ExportBuilder schema(String schema) {
+    this.export
+        .getSchema()
+        .setSchemaExternal(
+            new SchemaExternal()
+                .withResource(
+                    new ExternalResource()
+                        .withEndpoint(
+                            new Endpoint()
+                                .withUriTemplate(UriTemplateBuilder.newUriTemplate(schema)))));
+    return this;
+  }
 
-    public ExportBuilder schema(Object schema) {
-        this.export.getSchema().setSchemaInline(new SchemaInline(schema));
-        return this;
-    }
+  public ExportBuilder schema(Object schema) {
+    this.export.getSchema().setSchemaInline(new SchemaInline(schema));
+    return this;
+  }
 
-    public Export build() {
-        return this.export;
-    }
+  public Export build() {
+    return this.export;
+  }
 }

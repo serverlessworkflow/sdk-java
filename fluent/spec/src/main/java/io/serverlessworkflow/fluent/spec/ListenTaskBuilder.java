@@ -31,7 +31,8 @@ import java.util.function.Consumer;
  * Fluent builder for a "listen" task in a Serverless Workflow. Enforces exactly one consumption
  * strategy: one, all, or any.
  */
-public class ListenTaskBuilder<T extends BaseTaskItemListBuilder<T>> extends TaskBaseBuilder<ListenTaskBuilder<T>> {
+public class ListenTaskBuilder<T extends BaseTaskItemListBuilder<T>>
+    extends TaskBaseBuilder<ListenTaskBuilder<T>> {
 
   private final ListenTask listenTask;
   private final ListenTaskConfiguration config;
@@ -90,7 +91,8 @@ public class ListenTaskBuilder<T extends BaseTaskItemListBuilder<T>> extends Tas
   }
 
   public ListenTaskBuilder<T> forEach(Consumer<SubscriptionIteratorBuilder<T>> c) {
-    final SubscriptionIteratorBuilder<T> iteratorBuilder = new SubscriptionIteratorBuilder<>(this.taskItemListBuilder);
+    final SubscriptionIteratorBuilder<T> iteratorBuilder =
+        new SubscriptionIteratorBuilder<>(this.taskItemListBuilder);
     c.accept(iteratorBuilder);
     this.listenTask.setForeach(iteratorBuilder.build());
     return this;
