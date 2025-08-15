@@ -22,25 +22,40 @@ import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowModelCollection;
 import io.serverlessworkflow.impl.WorkflowModelFactory;
 import io.serverlessworkflow.impl.expressions.agentic.langchain4j.AgenticScopeRegistryAssessor;
-import io.serverlessworkflow.impl.expressions.func.JavaModel;
 import java.time.OffsetDateTime;
 import java.util.Map;
 
 class AgenticModelFactory implements WorkflowModelFactory {
 
-  /**
-   * Applies any change to the model after running as task. We will always set it to a @AgenticScope
-   * object since @AgentExecutor is always adding the output to the agenticScope. We just have to
-   * make sure that agenticScope is always passed to the next input task.
-   *
-   * @param prev the global AgenticScope object getting updated by the workflow context
-   * @param obj the same AgenticScope object updated by the AgentExecutor
-   * @return the workflow context model holding the agenticScope object.
-   */
+  static final String DEFAULT_AGENTIC_SCOPE_STATE_KEY = "input";
+  private final AgenticScopeRegistryAssessor scopeRegistryAssessor =
+      new AgenticScopeRegistryAssessor();
+  private final AgenticScopeCloudEventsHandler scopeCloudEventsHandler =
+      new AgenticScopeCloudEventsHandler();
+
+  @SuppressWarnings("unchecked")
+  private AgenticModel newAgenticModel(Object state) {
+    if (state == null) {
+      return new AgenticModel(this.scopeRegistryAssessor.getAgenticScope(), null);
+    }
+
+    if (state instanceof Map) {
+      this.scopeRegistryAssessor.writeStates((Map<String, Object>) state);
+    } else {
+      this.scopeRegistryAssessor.writeState(DEFAULT_AGENTIC_SCOPE_STATE_KEY, state);
+    }
+
+    return new AgenticModel(this.scopeRegistryAssessor.getAgenticScope(), state);
+  }
+
   @Override
   public WorkflowModel fromAny(WorkflowModel prev, Object obj) {
-    // We ignore `obj` since it's already included in `prev` within the agenticScope instance
-    return prev;
+    // TODO: we shouldn't update the state if the previous task was an agent call since under the
+    // hood, the agent already updated it.
+    if (prev instanceof AgenticModel agenticModel) {
+      this.scopeRegistryAssessor.setAgenticScope(agenticModel.getAgenticScope());
+    }
+    return newAgenticModel(obj);
   }
 
   @Override
@@ -53,58 +68,55 @@ class AgenticModelFactory implements WorkflowModelFactory {
 
   @Override
   public WorkflowModelCollection createCollection() {
-    throw new UnsupportedOperationException();
+    return new AgenticModelCollection(
+        this.scopeRegistryAssessor.getAgenticScope(), scopeCloudEventsHandler);
   }
-
-  // TODO: all these methods can use agenticScope as long as we have access to the `outputName`
 
   @Override
   public WorkflowModel from(boolean value) {
-    return new JavaModel(value);
+    return newAgenticModel(value);
   }
 
   @Override
   public WorkflowModel from(Number value) {
-    return new JavaModel(value);
+    return newAgenticModel(value);
   }
 
   @Override
   public WorkflowModel from(String value) {
-    return new JavaModel(value);
+    return newAgenticModel(value);
   }
 
   @Override
   public WorkflowModel from(CloudEvent ce) {
-    return new JavaModel(ce);
+    return from(scopeCloudEventsHandler.extractDataAsMap(ce));
   }
 
   @Override
   public WorkflowModel from(CloudEventData ce) {
-    return new JavaModel(ce);
+    return from(scopeCloudEventsHandler.extractDataAsMap(ce));
   }
 
   @Override
   public WorkflowModel from(OffsetDateTime value) {
-    return new JavaModel(value);
+    return newAgenticModel(value);
   }
 
   @Override
   public WorkflowModel from(Map<String, Object> map) {
-    final AgenticScope agenticScope = new AgenticScopeRegistryAssessor().getAgenticScope();
-    agenticScope.writeStates(map);
-    return new AgenticModel(agenticScope);
+    return newAgenticModel(map);
   }
 
   @Override
   public WorkflowModel fromNull() {
-    return new JavaModel(null);
+    return newAgenticModel(null);
   }
 
   @Override
   public WorkflowModel fromOther(Object value) {
-    if (value instanceof AgenticScope) {
-      return new AgenticModel((AgenticScope) value);
+    if (value instanceof AgenticScope scope) {
+      return new AgenticModel(scope, scope.state());
     }
-    return new JavaModel(value);
+    return newAgenticModel(value);
   }
 }

@@ -23,6 +23,16 @@ import java.util.List;
 
 public interface Agents {
 
+  interface ChatBot {
+    @UserMessage(
+        """
+            You are a happy chat bot, reply to my message:
+            {userInput}.
+            """)
+    @Agent
+    String chat(@V("userInput") String userInput);
+  }
+
   interface MovieExpert {
 
     @UserMessage(

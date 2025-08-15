@@ -7,7 +7,7 @@
         <version>8.0.0-SNAPSHOT</version>
     </parent>
     <artifactId>serverlessworkflow-experimental-agentic</artifactId>
-    <name>ServelessWorkflow:: Experimental:: Agentic</name>
+    <name>Serverless Workflow :: Experimental :: Agentic</name>
     <dependencies>
         <dependency>
             <groupId>io.serverlessworkflow</groupId>

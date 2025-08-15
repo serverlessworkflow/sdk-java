@@ -22,7 +22,7 @@ import java.time.Duration;
 public class Models {
   static final ChatModel BASE_MODEL =
       OllamaChatModel.builder()
-          .baseUrl("http://127.0.0.1:1143")
+          .baseUrl("http://127.0.0.1:11434")
           .modelName("qwen2.5:7b")
           .timeout(Duration.ofMinutes(10))
           .temperature(0.0)

@@ -24,31 +24,33 @@ import java.util.Optional;
 
 class AgenticModel extends JavaModel {
 
-  AgenticModel(AgenticScope agenticScope) {
-    super(agenticScope);
+  private final AgenticScope agenticScope;
+
+  AgenticModel(AgenticScope agenticScope, Object object) {
+    super(object);
+    this.agenticScope = agenticScope;
   }
 
-  @Override
-  public void setObject(Object obj) {
-    super.setObject(obj);
+  public AgenticScope getAgenticScope() {
+    return agenticScope;
   }
 
   @Override
   public Collection<WorkflowModel> asCollection() {
-    throw new UnsupportedOperationException("Not supported yet.");
+    throw new UnsupportedOperationException("asCollection() is not supported yet.");
   }
 
   @Override
   public Optional<Map<String, Object>> asMap() {
-    return Optional.of(((AgenticScope) object).state());
+    return Optional.of(this.agenticScope.state());
   }
 
   @Override
   public <T> Optional<T> as(Class<T> clazz) {
     if (AgenticScope.class.isAssignableFrom(clazz)) {
-      return Optional.of(clazz.cast(object));
+      return Optional.of(clazz.cast(this.agenticScope));
     } else if (Map.class.isAssignableFrom(clazz)) {
-      return Optional.of(clazz.cast(((AgenticScope) object).state()));
+      return asMap().map(clazz::cast);
     } else {
       return super.as(clazz);
     }

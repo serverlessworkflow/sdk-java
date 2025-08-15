@@ -23,7 +23,7 @@ import io.serverlessworkflow.impl.WorkflowModelFactory;
 import java.time.OffsetDateTime;
 import java.util.Map;
 
-class JavaModelFactory implements WorkflowModelFactory {
+public class JavaModelFactory implements WorkflowModelFactory {
   private final JavaModel TrueModel = new JavaModel(Boolean.TRUE);
   private final JavaModel FalseModel = new JavaModel(Boolean.FALSE);
   private final JavaModel NullModel = new JavaModel(null);

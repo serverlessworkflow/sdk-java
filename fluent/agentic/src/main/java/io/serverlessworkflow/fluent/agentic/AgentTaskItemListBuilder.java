@@ -114,6 +114,15 @@ public class AgentTaskItemListBuilder extends BaseTaskItemListBuilder<AgentTaskI
   }
 
   @Override
+  public AgentTaskItemListBuilder listen(
+      String name, Consumer<AgentListenTaskBuilder> itemsConfigurer) {
+    final AgentListenTaskBuilder builder = new AgentListenTaskBuilder();
+    itemsConfigurer.accept(builder);
+    this.addTaskItem(new TaskItem(name, new Task().withListenTask(builder.build())));
+    return self();
+  }
+
+  @Override
   public AgentTaskItemListBuilder forEach(
       String name, Consumer<FuncForTaskBuilder> itemsConfigurer) {
     this.delegate.forEach(name, itemsConfigurer);

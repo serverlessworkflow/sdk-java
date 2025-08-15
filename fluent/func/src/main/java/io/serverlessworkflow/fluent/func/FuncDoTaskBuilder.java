@@ -42,6 +42,12 @@ public class FuncDoTaskBuilder extends BaseDoTaskBuilder<FuncDoTaskBuilder, Func
   }
 
   @Override
+  public FuncDoTaskBuilder listen(String name, Consumer<FuncListenTaskBuilder> itemsConfigurer) {
+    this.listBuilder().listen(name, itemsConfigurer);
+    return this;
+  }
+
+  @Override
   public FuncDoTaskBuilder forEach(String name, Consumer<FuncForTaskBuilder> itemsConfigurer) {
     this.listBuilder().forEach(name, itemsConfigurer);
     return this;
