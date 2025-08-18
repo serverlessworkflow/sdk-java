@@ -18,13 +18,20 @@ package io.serverlessworkflow.api;
 import static io.serverlessworkflow.api.WorkflowReader.readWorkflowFromClasspath;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.serverlessworkflow.api.types.BearerAuthenticationPolicy;
 import io.serverlessworkflow.api.types.CallFunction;
 import io.serverlessworkflow.api.types.CallHTTP;
 import io.serverlessworkflow.api.types.CallTask;
 import io.serverlessworkflow.api.types.HTTPArguments;
+import io.serverlessworkflow.api.types.OAuth2AutenthicationData;
+import io.serverlessworkflow.api.types.OAuth2AutenthicationData.OAuth2AutenthicationDataGrant;
+import io.serverlessworkflow.api.types.OAuth2AuthenticationPolicy;
+import io.serverlessworkflow.api.types.OAuth2AuthenticationPolicyConfiguration;
+import io.serverlessworkflow.api.types.OAuth2AuthenticationPropertiesEndpoints;
 import io.serverlessworkflow.api.types.Task;
 import io.serverlessworkflow.api.types.Workflow;
 import java.io.IOException;
+import java.net.URI;
 import org.junit.jupiter.api.Test;
 
 public class ApiTest {
@@ -66,11 +73,69 @@ public class ApiTest {
     CallTask callTask = task.getCallTask();
     assertThat(callTask).isNotNull();
     assertThat(callTask.get()).isInstanceOf(CallFunction.class);
-    if (callTask.get() instanceof CallFunction) {
-      CallFunction functionCall = callTask.getCallFunction();
-      assertThat(functionCall).isNotNull();
-      assertThat(callTask.getCallAsyncAPI()).isNull();
-      assertThat(functionCall.getWith()).isNull();
-    }
+    CallFunction functionCall = callTask.getCallFunction();
+    assertThat(functionCall).isNotNull();
+    assertThat(callTask.getCallAsyncAPI()).isNull();
+    assertThat(functionCall.getWith()).isNull();
+  }
+
+  @Test
+  void testOauth2Auth() throws IOException {
+    Workflow workflow = readWorkflowFromClasspath("features/authentication-oauth2.yaml");
+    assertThat(workflow.getDo()).isNotEmpty();
+    assertThat(workflow.getDo().get(0).getName()).isNotNull();
+    assertThat(workflow.getDo().get(0).getTask()).isNotNull();
+    Task task = workflow.getDo().get(0).getTask();
+    CallTask callTask = task.getCallTask();
+    assertThat(callTask).isNotNull();
+    assertThat(callTask.get()).isInstanceOf(CallHTTP.class);
+    CallHTTP httpCall = callTask.getCallHTTP();
+    OAuth2AuthenticationPolicy oauthPolicy =
+        httpCall
+            .getWith()
+            .getEndpoint()
+            .getEndpointConfiguration()
+            .getAuthentication()
+            .getAuthenticationPolicy()
+            .getOAuth2AuthenticationPolicy();
+    assertThat(oauthPolicy).isNotNull();
+    OAuth2AuthenticationPolicyConfiguration oauth2Props =
+        oauthPolicy.getOauth2().getOAuth2ConnectAuthenticationProperties();
+    assertThat(oauth2Props).isNotNull();
+    OAuth2AuthenticationPropertiesEndpoints endpoints =
+        oauth2Props.getOAuth2ConnectAuthenticationProperties().getEndpoints();
+    assertThat(endpoints.getToken()).isEqualTo("/auth/token");
+    assertThat(endpoints.getIntrospection()).isEqualTo("/auth/introspect");
+
+    OAuth2AutenthicationData oauth2Data = oauth2Props.getOAuth2AutenthicationData();
+    assertThat(oauth2Data.getAuthority().getLiteralUri())
+        .isEqualTo(URI.create("http://keycloak/realms/fake-authority"));
+    assertThat(oauth2Data.getGrant()).isEqualTo(OAuth2AutenthicationDataGrant.CLIENT_CREDENTIALS);
+    assertThat(oauth2Data.getClient().getId()).isEqualTo("workflow-runtime-id");
+    assertThat(oauth2Data.getClient().getSecret()).isEqualTo("workflow-runtime-secret");
+  }
+
+  @Test
+  void testBearerAuth() throws IOException {
+    Workflow workflow = readWorkflowFromClasspath("features/authentication-bearer.yaml");
+    assertThat(workflow.getDo()).isNotEmpty();
+    assertThat(workflow.getDo().get(0).getName()).isNotNull();
+    assertThat(workflow.getDo().get(0).getTask()).isNotNull();
+    Task task = workflow.getDo().get(0).getTask();
+    CallTask callTask = task.getCallTask();
+    assertThat(callTask).isNotNull();
+    assertThat(callTask.get()).isInstanceOf(CallHTTP.class);
+    CallHTTP httpCall = callTask.getCallHTTP();
+    BearerAuthenticationPolicy bearerPolicy =
+        httpCall
+            .getWith()
+            .getEndpoint()
+            .getEndpointConfiguration()
+            .getAuthentication()
+            .getAuthenticationPolicy()
+            .getBearerAuthenticationPolicy();
+    assertThat(bearerPolicy).isNotNull();
+    assertThat(bearerPolicy.getBearer().getBearerAuthenticationProperties().getToken())
+        .isEqualTo("${ .token }");
   }
 }
