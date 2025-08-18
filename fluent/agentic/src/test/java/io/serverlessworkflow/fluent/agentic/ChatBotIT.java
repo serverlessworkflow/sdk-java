@@ -60,7 +60,8 @@ public class ChatBotIT {
                 // .chatMemoryProvider(memoryId -> MessageWindowChatMemory.withMaxMessages(10))
                 .outputName("conversation")
                 .build());
-    BlockingQueue<CloudEvent> publishedEvents = new LinkedBlockingQueue<>();
+    BlockingQueue<CloudEvent> replyEvents = new LinkedBlockingQueue<>();
+    BlockingQueue<CloudEvent> finishedEvents = new LinkedBlockingQueue<>();
 
     // 1. listen to an event containing `message` key in the body
     // 2. if contains, call the agent, if not end the workflow
@@ -71,7 +72,13 @@ public class ChatBotIT {
                 t ->
                     t.listen(
                             l ->
-                                l.until(message -> "".equals(message.get("userInput")), Map.class)
+                                l.until(
+                                        message ->
+                                            !message
+                                                .getOrDefault("userInput", "")
+                                                .toString()
+                                                .isEmpty(),
+                                        Map.class)
                                     .any(
                                         c ->
                                             c.with(event -> event.type("org.acme.chatbot.request")))
@@ -87,7 +94,16 @@ public class ChatBotIT {
                                                                     e ->
                                                                         e.type(
                                                                             "org.acme.chatbot.reply"))))))
-                        .emit(emit -> emit.event(e -> e.type("org.acme.chatbot.finished"))))
+                        .emit(
+                            emit ->
+                                emit.when(
+                                        message ->
+                                            message
+                                                .getOrDefault("userInput", "")
+                                                .toString()
+                                                .isEmpty(),
+                                        Map.class)
+                                    .event(e -> e.type("org.acme.chatbot.finished"))))
             .build();
 
     try (WorkflowApplication app = WorkflowApplication.builder().build()) {
@@ -98,7 +114,7 @@ public class ChatBotIT {
                       new EventFilter()
                           .withWith(new EventProperties().withType("org.acme.chatbot.reply")),
                       app),
-              ce -> publishedEvents.add((CloudEvent) ce));
+              ce -> replyEvents.add((CloudEvent) ce));
 
       app.eventConsumer()
           .register(
@@ -107,7 +123,7 @@ public class ChatBotIT {
                       new EventFilter()
                           .withWith(new EventProperties().withType("org.acme.chatbot.finished")),
                       app),
-              ce -> publishedEvents.add((CloudEvent) ce));
+              ce -> finishedEvents.add((CloudEvent) ce));
 
       final WorkflowInstance waitingInstance =
           app.workflowDefinition(listenWorkflow).instance(Map.of());
@@ -118,12 +134,12 @@ public class ChatBotIT {
 
       // Publish the event
       app.eventPublisher().publish(newMessageEvent("Hello World!"));
-      CloudEvent reply = publishedEvents.poll(60, TimeUnit.SECONDS);
+      CloudEvent reply = replyEvents.poll(60, TimeUnit.SECONDS);
       assertNotNull(reply);
 
       // Empty message completes the workflow
       app.eventPublisher().publish(newMessageEvent(""));
-      CloudEvent finished = publishedEvents.poll(60, TimeUnit.SECONDS);
+      CloudEvent finished = finishedEvents.poll(60, TimeUnit.SECONDS);
       assertNotNull(finished);
 
       assertThat(runningModel).isCompleted();
@@ -158,7 +174,7 @@ public class ChatBotIT {
             AgenticServices.agentBuilder(Agents.ChatBot.class)
                 .chatModel(Models.BASE_MODEL)
                 .chatMemoryProvider(memoryId -> MessageWindowChatMemory.withMaxMessages(10))
-                .outputName("message")
+                .outputName("userInput")
                 .build());
 
     final Workflow mixedWorkflow =
@@ -170,7 +186,7 @@ public class ChatBotIT {
                                 callJ.function(
                                     input -> {
                                       System.out.println(input);
-                                      return Map.of("message", input);
+                                      return Map.of("userInput", input);
                                     },
                                     String.class))
                         .agent(chatBot)

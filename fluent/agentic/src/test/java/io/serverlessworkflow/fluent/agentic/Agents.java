@@ -27,7 +27,7 @@ public interface Agents {
     @UserMessage(
         """
             You are a happy chat bot, reply to my message:
-            {userInput}.
+            {{userInput}}.
             """)
     @Agent
     String chat(@V("userInput") String userInput);
@@ -39,7 +39,7 @@ public interface Agents {
         """
                                 You are a great evening planner.
                                 Propose a list of 3 movies matching the given mood.
-                                The mood is {mood}.
+                                The mood is {{mood}}.
                                 Provide a list with the 3 items and nothing else.
                                 """)
     @Agent

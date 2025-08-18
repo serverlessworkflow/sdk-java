@@ -58,6 +58,8 @@ public class AgenticModelCollection extends JavaModelCollection {
       return Optional.of(clazz.cast(agenticScope));
     } else if (ResultWithAgenticScope.class.isAssignableFrom(clazz)) {
       return Optional.of(clazz.cast(new ResultWithAgenticScope<>(agenticScope, object)));
+    } else if (Map.class.isAssignableFrom(clazz)) {
+      return Optional.of(clazz.cast(agenticScope.state()));
     } else {
       return super.as(clazz);
     }
