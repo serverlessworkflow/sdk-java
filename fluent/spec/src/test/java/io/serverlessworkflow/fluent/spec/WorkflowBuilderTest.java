@@ -183,7 +183,13 @@ public class WorkflowBuilderTest {
                 d ->
                     d.listen(
                         "waitCheck",
-                        l -> l.one(f -> f.with(p -> p.type("com.fake.pet").source("mySource")))))
+                        l ->
+                            l.to(
+                                to ->
+                                    to.one(
+                                        f ->
+                                            f.with(
+                                                p -> p.type("com.fake.pet").source("mySource"))))))
             .build();
 
     List<TaskItem> items = wf.getDo();

@@ -15,19 +15,15 @@
  */
 package io.serverlessworkflow.fluent.spec.spi;
 
-import io.serverlessworkflow.api.types.ForTask;
-import io.serverlessworkflow.fluent.spec.BaseTaskItemListBuilder;
-import io.serverlessworkflow.fluent.spec.TaskBaseBuilder;
+import io.serverlessworkflow.fluent.spec.ExportBuilder;
+import io.serverlessworkflow.fluent.spec.OutputBuilder;
+import java.util.function.Consumer;
 
-public interface ForEachTaskFluent<
-        SELF extends TaskBaseBuilder<SELF>, L extends BaseTaskItemListBuilder<L>>
-    extends IteratorFluent<SELF, L> {
+public interface OutputFluent<SELF> {
 
-  SELF each(String each);
+  SELF output(Consumer<OutputBuilder> outputConsumer);
 
-  SELF in(String in);
+  SELF export(Consumer<ExportBuilder> exportConsumer);
 
-  SELF whileC(final String expression);
-
-  ForTask build();
+  SELF exportAs(Object exportAs);
 }

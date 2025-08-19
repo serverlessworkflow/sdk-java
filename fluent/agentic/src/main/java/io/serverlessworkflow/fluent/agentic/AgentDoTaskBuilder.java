@@ -82,6 +82,12 @@ public class AgentDoTaskBuilder
   }
 
   @Override
+  public AgentDoTaskBuilder listen(String name, Consumer<AgentListenTaskBuilder> itemsConfigurer) {
+    this.listBuilder().listen(name, itemsConfigurer);
+    return self();
+  }
+
+  @Override
   public AgentDoTaskBuilder forEach(String name, Consumer<FuncForTaskBuilder> itemsConfigurer) {
     this.listBuilder().forEach(name, itemsConfigurer);
     return self();

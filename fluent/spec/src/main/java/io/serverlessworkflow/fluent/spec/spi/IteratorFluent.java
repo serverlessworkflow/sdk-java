@@ -15,19 +15,21 @@
  */
 package io.serverlessworkflow.fluent.spec.spi;
 
-import io.serverlessworkflow.api.types.ForTask;
 import io.serverlessworkflow.fluent.spec.BaseTaskItemListBuilder;
-import io.serverlessworkflow.fluent.spec.TaskBaseBuilder;
+import java.util.function.Consumer;
 
-public interface ForEachTaskFluent<
-        SELF extends TaskBaseBuilder<SELF>, L extends BaseTaskItemListBuilder<L>>
-    extends IteratorFluent<SELF, L> {
+public interface IteratorFluent<SELF, L extends BaseTaskItemListBuilder<L>> {
 
-  SELF each(String each);
+  /**
+   * The name of the variable used to store the index of the current item being enumerated. Defaults
+   * to index.
+   */
+  SELF at(String at);
 
-  SELF in(String in);
-
-  SELF whileC(final String expression);
-
-  ForTask build();
+  /**
+   * `do` in the specification.
+   *
+   * <p>The tasks to perform for each consumed item.
+   */
+  SELF tasks(Consumer<L> doBuilderConsumer);
 }

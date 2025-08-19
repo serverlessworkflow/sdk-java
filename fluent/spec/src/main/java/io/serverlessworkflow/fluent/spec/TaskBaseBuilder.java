@@ -15,23 +15,18 @@
  */
 package io.serverlessworkflow.fluent.spec;
 
-import io.serverlessworkflow.api.types.Endpoint;
 import io.serverlessworkflow.api.types.Export;
-import io.serverlessworkflow.api.types.ExportAs;
-import io.serverlessworkflow.api.types.ExternalResource;
 import io.serverlessworkflow.api.types.FlowDirective;
 import io.serverlessworkflow.api.types.FlowDirectiveEnum;
 import io.serverlessworkflow.api.types.Input;
 import io.serverlessworkflow.api.types.Output;
-import io.serverlessworkflow.api.types.SchemaExternal;
-import io.serverlessworkflow.api.types.SchemaInline;
-import io.serverlessworkflow.api.types.SchemaUnion;
 import io.serverlessworkflow.api.types.TaskBase;
+import io.serverlessworkflow.fluent.spec.spi.OutputFluent;
 import io.serverlessworkflow.fluent.spec.spi.TransformationHandlers;
 import java.util.function.Consumer;
 
 public abstract class TaskBaseBuilder<T extends TaskBaseBuilder<T>>
-    implements TransformationHandlers {
+    implements TransformationHandlers, OutputFluent<T> {
   private TaskBase task;
 
   protected TaskBaseBuilder() {}
@@ -80,6 +75,11 @@ public abstract class TaskBaseBuilder<T extends TaskBaseBuilder<T>>
     return self();
   }
 
+  public T then(String taskName) {
+    this.task.setThen(new FlowDirective().withString(taskName));
+    return self();
+  }
+
   public T exportAs(Object exportAs) {
     this.task.setExport(new ExportBuilder().as(exportAs).build());
     return self();
@@ -108,45 +108,4 @@ public abstract class TaskBaseBuilder<T extends TaskBaseBuilder<T>>
 
   // TODO: add timeout, metadata
 
-  public static final class ExportBuilder {
-    private final Export export;
-
-    public ExportBuilder() {
-      this.export = new Export();
-      this.export.setAs(new ExportAs());
-      this.export.setSchema(new SchemaUnion());
-    }
-
-    public ExportBuilder as(Object as) {
-      this.export.getAs().withObject(as);
-      return this;
-    }
-
-    public ExportBuilder as(String as) {
-      this.export.getAs().withString(as);
-      return this;
-    }
-
-    public ExportBuilder schema(String schema) {
-      this.export
-          .getSchema()
-          .setSchemaExternal(
-              new SchemaExternal()
-                  .withResource(
-                      new ExternalResource()
-                          .withEndpoint(
-                              new Endpoint()
-                                  .withUriTemplate(UriTemplateBuilder.newUriTemplate(schema)))));
-      return this;
-    }
-
-    public ExportBuilder schema(Object schema) {
-      this.export.getSchema().setSchemaInline(new SchemaInline(schema));
-      return this;
-    }
-
-    public Export build() {
-      return this.export;
-    }
-  }
 }

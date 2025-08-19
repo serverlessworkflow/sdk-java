@@ -23,7 +23,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import dev.langchain4j.agentic.AgenticServices;
-import dev.langchain4j.agentic.scope.DefaultAgenticScope;
+import dev.langchain4j.agentic.scope.AgenticScope;
 import dev.langchain4j.agentic.workflow.HumanInTheLoop;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.WorkflowApplication;
@@ -53,12 +53,12 @@ class WorkflowTests {
     topic.put("title", "A Great Story");
 
     try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-      DefaultAgenticScope result =
+      AgenticScope result =
           app.workflowDefinition(workflow)
               .instance(topic)
               .start()
               .get()
-              .as(DefaultAgenticScope.class)
+              .as(AgenticScope.class)
               .orElseThrow();
 
       assertEquals("storySeedAgent", result.readState("premise"));
@@ -93,12 +93,12 @@ class WorkflowTests {
     topic.put("title", "A Great Story");
 
     try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-      DefaultAgenticScope result =
+      AgenticScope result =
           app.workflowDefinition(workflow)
               .instance(topic)
               .start()
               .get()
-              .as(DefaultAgenticScope.class)
+              .as(AgenticScope.class)
               .orElseThrow();
 
       assertEquals("sceneAgent", result.readState("story"));
@@ -129,12 +129,12 @@ class WorkflowTests {
     topic.put("title", "A Great Story");
 
     try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-      DefaultAgenticScope result =
+      AgenticScope result =
           app.workflowDefinition(workflow)
               .instance(topic)
               .start()
               .get()
-              .as(DefaultAgenticScope.class)
+              .as(AgenticScope.class)
               .orElseThrow();
 
       assertEquals("sceneAgent", result.readState("story"));
@@ -166,12 +166,12 @@ class WorkflowTests {
     topic.put("style", "sci-fi");
 
     try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-      DefaultAgenticScope result =
+      AgenticScope result =
           app.workflowDefinition(workflow)
               .instance(topic)
               .start()
               .get()
-              .as(DefaultAgenticScope.class)
+              .as(AgenticScope.class)
               .orElseThrow();
 
       assertEquals("Fake conflict response", result.readState("setting"));
@@ -212,12 +212,12 @@ class WorkflowTests {
     topic.put("fact", "alien");
 
     try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-      DefaultAgenticScope result =
+      AgenticScope result =
           app.workflowDefinition(workflow)
               .instance(topic)
               .start()
               .get()
-              .as(DefaultAgenticScope.class)
+              .as(AgenticScope.class)
               .orElseThrow();
 
       assertEquals(cultureTraits, result.readState("culture"));
@@ -274,12 +274,12 @@ class WorkflowTests {
     initialValues.put("agenda", "Discuss project updates");
 
     try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-      DefaultAgenticScope result =
+      AgenticScope result =
           app.workflowDefinition(workflow)
               .instance(initialValues)
               .start()
               .get()
-              .as(DefaultAgenticScope.class)
+              .as(AgenticScope.class)
               .orElseThrow();
 
       assertEquals("Styled meeting invitation for John Doe", result.readState("styled"));

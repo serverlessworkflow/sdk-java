@@ -19,15 +19,15 @@ import io.serverlessworkflow.fluent.func.FuncCallTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncEmitTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncForTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncForkTaskBuilder;
+import io.serverlessworkflow.fluent.func.FuncListenTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncSetTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncSwitchTaskBuilder;
 import io.serverlessworkflow.fluent.spec.spi.EmitFluent;
 import io.serverlessworkflow.fluent.spec.spi.ForEachFluent;
 import io.serverlessworkflow.fluent.spec.spi.ForkFluent;
+import io.serverlessworkflow.fluent.spec.spi.ListenFluent;
 import io.serverlessworkflow.fluent.spec.spi.SetFluent;
 import io.serverlessworkflow.fluent.spec.spi.SwitchFluent;
-import java.util.UUID;
-import java.util.function.Consumer;
 
 // TODO: implement the other builders, e.g. CallHTTP
 
@@ -36,11 +36,6 @@ public interface FuncDoFluent<SELF extends FuncDoFluent<SELF>>
         EmitFluent<FuncEmitTaskBuilder, SELF>,
         ForEachFluent<FuncForTaskBuilder, SELF>,
         SwitchFluent<FuncSwitchTaskBuilder, SELF>,
-        ForkFluent<FuncForkTaskBuilder, SELF> {
-
-  SELF callFn(String name, Consumer<FuncCallTaskBuilder> cfg);
-
-  default SELF callFn(Consumer<FuncCallTaskBuilder> cfg) {
-    return this.callFn(UUID.randomUUID().toString(), cfg);
-  }
-}
+        ForkFluent<FuncForkTaskBuilder, SELF>,
+        ListenFluent<FuncListenTaskBuilder, SELF>,
+        CallFnFluent<FuncCallTaskBuilder, SELF> {}

@@ -13,21 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.fluent.spec.spi;
+package io.serverlessworkflow.fluent.func.spi;
 
-import io.serverlessworkflow.api.types.ForTask;
-import io.serverlessworkflow.fluent.spec.BaseTaskItemListBuilder;
 import io.serverlessworkflow.fluent.spec.TaskBaseBuilder;
+import java.util.UUID;
+import java.util.function.Consumer;
 
-public interface ForEachTaskFluent<
-        SELF extends TaskBaseBuilder<SELF>, L extends BaseTaskItemListBuilder<L>>
-    extends IteratorFluent<SELF, L> {
+public interface CallFnFluent<SELF extends TaskBaseBuilder<?>, LIST> {
 
-  SELF each(String each);
+  LIST callFn(String name, Consumer<SELF> cfg);
 
-  SELF in(String in);
-
-  SELF whileC(final String expression);
-
-  ForTask build();
+  default LIST callFn(Consumer<SELF> cfg) {
+    return this.callFn(UUID.randomUUID().toString(), cfg);
+  }
 }

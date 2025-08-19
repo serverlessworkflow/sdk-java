@@ -19,25 +19,37 @@ import dev.langchain4j.agentic.scope.AgenticScope;
 import dev.langchain4j.agentic.scope.ResultWithAgenticScope;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.expressions.func.JavaModelCollection;
-import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
 import java.util.Optional;
 
-class AgenticModelCollection extends JavaModelCollection {
+public class AgenticModelCollection extends JavaModelCollection {
 
   private final AgenticScope agenticScope;
+  private final AgenticScopeCloudEventsHandler ceHandler;
 
-  AgenticModelCollection(Collection<?> object, AgenticScope agenticScope) {
-    super(object);
+  AgenticModelCollection(AgenticScope agenticScope, AgenticScopeCloudEventsHandler ceHandler) {
+    super(Collections.emptyList());
     this.agenticScope = agenticScope;
-  }
-
-  AgenticModelCollection(AgenticScope agenticScope) {
-    this.agenticScope = agenticScope;
+    this.ceHandler = ceHandler;
   }
 
   @Override
-  protected WorkflowModel nextItem(Object obj) {
-    return new AgenticModel((AgenticScope) obj);
+  public boolean add(WorkflowModel e) {
+    Optional<Map<String, Object>> asMap = e.asMap();
+    if (asMap.isPresent() && !asMap.get().isEmpty()) {
+      this.agenticScope.writeStates(asMap.get());
+      return super.add(e);
+    }
+
+    // Update the agenticScope with the event body, so agents can use the event data as input
+    Object value = e.asJavaObject();
+    if (!ceHandler.writeStateIfCloudEvent(this.agenticScope, value)) {
+      this.agenticScope.writeState(AgenticModelFactory.DEFAULT_AGENTIC_SCOPE_STATE_KEY, value);
+    }
+
+    // add to the collection
+    return super.add(e);
   }
 
   @Override
@@ -46,6 +58,8 @@ class AgenticModelCollection extends JavaModelCollection {
       return Optional.of(clazz.cast(agenticScope));
     } else if (ResultWithAgenticScope.class.isAssignableFrom(clazz)) {
       return Optional.of(clazz.cast(new ResultWithAgenticScope<>(agenticScope, object)));
+    } else if (Map.class.isAssignableFrom(clazz)) {
+      return Optional.of(clazz.cast(agenticScope.state()));
     } else {
       return super.as(clazz);
     }

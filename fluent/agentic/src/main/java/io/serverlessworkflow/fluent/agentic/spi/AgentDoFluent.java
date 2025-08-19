@@ -15,12 +15,32 @@
  */
 package io.serverlessworkflow.fluent.agentic.spi;
 
+import io.serverlessworkflow.fluent.agentic.AgentListenTaskBuilder;
 import io.serverlessworkflow.fluent.agentic.LoopAgentsBuilder;
-import io.serverlessworkflow.fluent.func.spi.FuncDoFluent;
+import io.serverlessworkflow.fluent.func.FuncCallTaskBuilder;
+import io.serverlessworkflow.fluent.func.FuncEmitTaskBuilder;
+import io.serverlessworkflow.fluent.func.FuncForTaskBuilder;
+import io.serverlessworkflow.fluent.func.FuncForkTaskBuilder;
+import io.serverlessworkflow.fluent.func.FuncSetTaskBuilder;
+import io.serverlessworkflow.fluent.func.FuncSwitchTaskBuilder;
+import io.serverlessworkflow.fluent.func.spi.CallFnFluent;
+import io.serverlessworkflow.fluent.spec.spi.EmitFluent;
+import io.serverlessworkflow.fluent.spec.spi.ForEachFluent;
+import io.serverlessworkflow.fluent.spec.spi.ForkFluent;
+import io.serverlessworkflow.fluent.spec.spi.ListenFluent;
+import io.serverlessworkflow.fluent.spec.spi.SetFluent;
+import io.serverlessworkflow.fluent.spec.spi.SwitchFluent;
 import java.util.UUID;
 import java.util.function.Consumer;
 
-public interface AgentDoFluent<SELF extends AgentDoFluent<SELF>> extends FuncDoFluent<SELF> {
+public interface AgentDoFluent<SELF extends AgentDoFluent<SELF>>
+    extends SetFluent<FuncSetTaskBuilder, SELF>,
+        EmitFluent<FuncEmitTaskBuilder, SELF>,
+        ForEachFluent<FuncForTaskBuilder, SELF>,
+        SwitchFluent<FuncSwitchTaskBuilder, SELF>,
+        ForkFluent<FuncForkTaskBuilder, SELF>,
+        ListenFluent<AgentListenTaskBuilder, SELF>,
+        CallFnFluent<FuncCallTaskBuilder, SELF> {
 
   SELF agent(String name, Object agent);
 

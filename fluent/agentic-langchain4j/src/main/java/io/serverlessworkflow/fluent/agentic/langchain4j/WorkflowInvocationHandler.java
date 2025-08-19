@@ -115,20 +115,20 @@ public class WorkflowInvocationHandler implements InvocationHandler, AgenticScop
     }
 
     // invoke
-    return executeWorkflow(currentCognisphere(method, args), method, args);
+    return executeWorkflow(currentAgenticScope(method, args), method, args);
   }
 
-  private Object executeWorkflow(DefaultAgenticScope agenticScope, Method method, Object[] args) {
+  private Object executeWorkflow(AgenticScope agenticScope, Method method, Object[] args) {
     writeAgenticScopeState(agenticScope, method, args);
 
     try (WorkflowApplication app = workflowApplicationBuilder.build()) {
       // TODO improve result handling
-      DefaultAgenticScope output =
+      AgenticScope output =
           app.workflowDefinition(workflow)
               .instance(agenticScope)
               .start()
               .get()
-              .as(DefaultAgenticScope.class)
+              .as(AgenticScope.class)
               .orElseThrow(
                   () ->
                       new IllegalArgumentException(
@@ -149,7 +149,7 @@ public class WorkflowInvocationHandler implements InvocationHandler, AgenticScop
     }
   }
 
-  private DefaultAgenticScope currentCognisphere(Method method, Object[] args) {
+  private AgenticScope currentAgenticScope(Method method, Object[] args) {
     Object memoryId = memoryId(method, args);
     this.agenticScopeRegistryAssessor.setMemoryId(memoryId);
     return this.agenticScopeRegistryAssessor.getAgenticScope();

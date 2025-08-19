@@ -15,19 +15,23 @@
  */
 package io.serverlessworkflow.fluent.spec.spi;
 
-import io.serverlessworkflow.api.types.ForTask;
-import io.serverlessworkflow.fluent.spec.BaseTaskItemListBuilder;
-import io.serverlessworkflow.fluent.spec.TaskBaseBuilder;
+import io.serverlessworkflow.fluent.spec.EventConsumptionStrategyBuilder;
+import io.serverlessworkflow.fluent.spec.EventFilterBuilder;
+import java.io.Serializable;
+import java.util.function.Consumer;
 
-public interface ForEachTaskFluent<
-        SELF extends TaskBaseBuilder<SELF>, L extends BaseTaskItemListBuilder<L>>
-    extends IteratorFluent<SELF, L> {
+public interface EventConsumptionStrategyFluent<
+    SELF extends EventConsumptionStrategyFluent<SELF, T>, T extends Serializable> {
 
-  SELF each(String each);
+  SELF one(Consumer<EventFilterBuilder> c);
 
-  SELF in(String in);
+  SELF all(Consumer<EventFilterBuilder> c);
 
-  SELF whileC(final String expression);
+  SELF any(Consumer<EventFilterBuilder> c);
 
-  ForTask build();
+  SELF until(Consumer<EventConsumptionStrategyBuilder> c);
+
+  SELF until(String expression);
+
+  T build();
 }

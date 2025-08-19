@@ -16,8 +16,10 @@
 package io.serverlessworkflow.impl.expressions.agentic.langchain4j;
 
 import dev.langchain4j.agentic.internal.AgenticScopeOwner;
+import dev.langchain4j.agentic.scope.AgenticScope;
 import dev.langchain4j.agentic.scope.AgenticScopeRegistry;
 import dev.langchain4j.agentic.scope.DefaultAgenticScope;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
@@ -27,7 +29,7 @@ public class AgenticScopeRegistryAssessor implements AgenticScopeOwner {
   private final AtomicReference<AgenticScopeRegistry> agenticScopeRegistry =
       new AtomicReference<>();
   private final String agentId;
-  private DefaultAgenticScope agenticScope;
+  private AgenticScope agenticScope;
   private Object memoryId;
 
   public AgenticScopeRegistryAssessor(String agentId) {
@@ -44,7 +46,7 @@ public class AgenticScopeRegistryAssessor implements AgenticScopeOwner {
     this.memoryId = memoryId;
   }
 
-  public DefaultAgenticScope getAgenticScope() {
+  public AgenticScope getAgenticScope() {
     if (agenticScope != null) {
       return agenticScope;
     }
@@ -57,9 +59,21 @@ public class AgenticScopeRegistryAssessor implements AgenticScopeOwner {
     return this.agenticScope;
   }
 
+  public void setAgenticScope(AgenticScope agenticScope) {
+    this.agenticScope = Objects.requireNonNull(agenticScope, "AgenticScope cannot be null");
+  }
+
+  public void writeState(String key, Object value) {
+    this.getAgenticScope().writeState(key, value);
+  }
+
+  public void writeStates(Map<String, Object> states) {
+    this.getAgenticScope().writeStates(states);
+  }
+
   @Override
   public AgenticScopeOwner withAgenticScope(DefaultAgenticScope agenticScope) {
-    this.agenticScope = agenticScope;
+    this.setAgenticScope(agenticScope);
     return this;
   }
 
