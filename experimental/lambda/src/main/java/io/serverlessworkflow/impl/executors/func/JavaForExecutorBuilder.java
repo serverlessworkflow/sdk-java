@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package io.serverlessworkflow.impl.executors.func;
 
 import static io.serverlessworkflow.impl.executors.func.JavaFuncUtils.safeObject;

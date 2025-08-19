@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(git rev-parse --show-toplevel)"
+
+# which Java files are staged?
+mapfile -t STAGED_JAVA < <(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.java$' || true)
+[ ${#STAGED_JAVA[@]} -eq 0 ] && exit 0
+
+# stash unstaged changes so we don't accidentally commit them
+git stash -q --keep-index --include-untracked
+
+# Build regexes for Spotless' -DspotlessFiles (matches absolute paths)
+# escape regex metachars, then anchor to ^$ with absolute path
+PATTERNS="$(
+  printf "%s\n" "${STAGED_JAVA[@]}" \
+  | sed -e 's/[.[\*^$()+?{}|\\]/\\&/g' -e "s|^|^$ROOT/|" -e 's|$|$|' \
+  | paste -sd, -
+)"
+
+# run Spotless just on those files (adds headers + formats)
+mvn -q -DskipTests -DspotlessFiles="$PATTERNS" spotless:apply
+
+# re-stage exactly what was staged before
+git add -- "${STAGED_JAVA[@]}"
+
+# restore unstaged changes (may conflict if they touch the same lines the formatter changed)
+git stash pop -q || true
+
+exit 0

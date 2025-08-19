@@ -25,6 +25,10 @@ jobs:
           java-version: 17
           cache: 'maven'
 
+      - name: Check formatting
+        run: |
+          make ci
+
       # 3. Verify the main sdk-java project, excluding the two agentic modules
       - name: Verify with Maven
         run: |

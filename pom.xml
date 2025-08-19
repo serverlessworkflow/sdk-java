@@ -58,6 +58,7 @@
         <!-- Plugin versions, please keep in alphabetical order -->
         <version.buildnumber.plugin>3.2.1</version.buildnumber.plugin>
         <version.checkstyle.plugin>3.6.0</version.checkstyle.plugin>
+        <version.com.diffplug.spotless>2.43.0</version.com.diffplug.spotless>
         <version.compiler.plugin>3.14.0</version.compiler.plugin>
         <version.deploy.plugin>3.1.4</version.deploy.plugin>
         <version.enforcer.plugin>3.6.1</version.enforcer.plugin>
@@ -93,28 +94,12 @@
 
         <!-- Checkstyle props -->
         <checkstyle.failOnViolation>true</checkstyle.failOnViolation>
-        <checkstyle.header.template><![CDATA[
-^\/\*$\n^
-\* Copyright \d\d\d\d-Present The Serverless Workflow Specification Authors$\n^
-\*$\n^
-\* Licensed under the Apache License, Version 2\.0 \(the &quot;License&quot;\);$\n^
-\* you may not use this file except in compliance with the License\.$\n^
-\* You may obtain a copy of the License at$\n^
-\*$\n^
-\* http:\/\/www\.apache\.org\/licenses\/LICENSE-2\.0$\n^
-\*$\n^
-\* Unless required by applicable law or agreed to in writing, software$\n^
-\* distributed under the License is distributed on an &quot;AS IS&quot; BASIS,$\n^
-\* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied\.$\n^
-\* See the License for the specific language governing permissions and$\n^
-\* limitations under the License\.$\n^
-\*\/$
-]]>
-        </checkstyle.header.template>
         <checkstyle.header.extensions>java</checkstyle.header.extensions>
         <checkstyle.logViolationsToConsole>true</checkstyle.logViolationsToConsole>
 
         <integration-tests.includes>**/*IT.java</integration-tests.includes>
+
+        <rootDir>${maven.multiModuleProjectDirectory}</rootDir>
     </properties>
 
     <dependencyManagement>
@@ -282,10 +267,6 @@
                 <configuration>
                     <checkstyleRules>
                         <module name="Checker">
-                            <module name="RegexpHeader">
-                                <property name="header" value="${checkstyle.header.template}" />
-                                <property name="fileExtensions" value="${checkstyle.header.extensions}" />
-                            </module>
                             <module name="TreeWalker">
                                 <module name="RegexpSinglelineJava">
                                     <property name="format" value="@author" />
@@ -317,26 +298,28 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>com.spotify.fmt</groupId>
-                <artifactId>fmt-maven-plugin</artifactId>
+                <groupId>com.diffplug.spotless</groupId>
+                <artifactId>spotless-maven-plugin</artifactId>
                 <configuration>
-                    <sourceDirectory>src/main/java</sourceDirectory>
-                    <testSourceDirectory>src/test/java</testSourceDirectory>
-                    <verbose>false</verbose>
-                    <filesNamePattern>.*\.java</filesNamePattern>
-                    <skip>false</skip>
-                    <skipSortingImports>false</skipSortingImports>
-                    <style>google</style>
+                    <java>
+                        <!-- formatter -->
+                        <googleJavaFormat version="1.17.0" />
+                        <!-- add/normalize headers -->
+                        <licenseHeader>
+                            <file>${rootDir}/config/license-header.txt</file>
+                        </licenseHeader>
+                    </java>
                 </configuration>
                 <executions>
+                    <!-- Fail CI if not formatted -->
                     <execution>
+                        <phase>verify</phase>
                         <goals>
-                            <goal>format</goal>
+                            <goal>check</goal>
                         </goals>
                     </execution>
                 </executions>
             </plugin>
-
         </plugins>
 
         <pluginManagement>
@@ -470,9 +453,9 @@
                     <version>${version.checkstyle.plugin}</version>
                 </plugin>
                 <plugin>
-                    <groupId>com.spotify.fmt</groupId>
-                    <artifactId>fmt-maven-plugin</artifactId>
-                    <version>${version.fmt-maven-plugin}</version>
+                    <groupId>com.diffplug.spotless</groupId>
+                    <artifactId>spotless-maven-plugin</artifactId>
+                    <version>${version.com.diffplug.spotless}</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
