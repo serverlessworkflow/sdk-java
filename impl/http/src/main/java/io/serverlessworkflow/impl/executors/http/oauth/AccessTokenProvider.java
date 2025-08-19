@@ -16,11 +16,12 @@
 
 package io.serverlessworkflow.impl.executors.http.oauth;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
+import io.serverlessworkflow.http.jwt.JWT;
+import io.serverlessworkflow.http.jwt.JWTConverter;
 import io.serverlessworkflow.impl.TaskContext;
-import java.net.http.HttpRequest;
 import java.util.List;
+import java.util.Map;
+import java.util.ServiceLoader;
 
 public class AccessTokenProvider {
 
@@ -28,21 +29,31 @@ public class AccessTokenProvider {
 
   private final TaskContext context;
   private final List<String> issuers;
-  private final HttpRequest requestBuilder;
+  private final InvocationHolder invocation;
 
-  public AccessTokenProvider(
-      HttpRequest requestBuilder, TaskContext context, List<String> issuers) {
-    this.requestBuilder = requestBuilder;
+  private final JWTConverter jwtConverter;
+
+  AccessTokenProvider(InvocationHolder invocation, TaskContext context, List<String> issuers) {
+    this.invocation = invocation;
     this.issuers = issuers;
     this.context = context;
+
+    ServiceLoader<JWTConverter> jwtConverters =
+        ServiceLoader.load(JWTConverter.class, AccessTokenProvider.class.getClassLoader());
+
+    if (jwtConverters.iterator().hasNext()) {
+      this.jwtConverter = jwtConverters.iterator().next();
+    } else {
+      throw new RuntimeException("No JWTConverter implementation found");
+    }
   }
 
   public JWT validateAndGet() {
-    JsonNode token = tokenResponseHandler.apply(requestBuilder, context);
+    Map<String, Object> token = tokenResponseHandler.apply(invocation, context);
     JWT jwt;
     try {
-      jwt = JWT.fromString(token.get("access_token").asText());
-    } catch (JsonProcessingException e) {
+      jwt = jwtConverter.fromToken((String) token.get("access_token"));
+    } catch (IllegalArgumentException e) {
       throw new RuntimeException("Failed to parse JWT token: " + e.getMessage(), e);
     }
     if (!(issuers == null || issuers.isEmpty())) {

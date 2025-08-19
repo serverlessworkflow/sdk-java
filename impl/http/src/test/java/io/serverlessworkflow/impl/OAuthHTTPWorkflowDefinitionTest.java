@@ -113,8 +113,7 @@ public class OAuthHTTPWorkflowDefinitionTest {
     RecordedRequest tokenRequest = authServer.takeRequest();
     assertEquals("POST", tokenRequest.getMethod());
     assertEquals("/realms/test-realm/protocol/openid-connect/token", tokenRequest.getPath());
-    assertEquals(
-        "application/x-www-form-urlencoded; charset=UTF-8", tokenRequest.getHeader("Content-Type"));
+    assertEquals("application/x-www-form-urlencoded", tokenRequest.getHeader("Content-Type"));
 
     String tokenRequestBody = tokenRequest.getBody().readUtf8();
     assertTrue(tokenRequestBody.contains("grant_type=password"));
@@ -177,8 +176,7 @@ public class OAuthHTTPWorkflowDefinitionTest {
     RecordedRequest tokenRequest = authServer.takeRequest();
     assertEquals("POST", tokenRequest.getMethod());
     assertEquals("/realms/test-realm/protocol/openid-connect/token", tokenRequest.getPath());
-    assertEquals(
-        "application/x-www-form-urlencoded; charset=UTF-8", tokenRequest.getHeader("Content-Type"));
+    assertEquals("application/x-www-form-urlencoded", tokenRequest.getHeader("Content-Type"));
 
     String tokenRequestBody = tokenRequest.getBody().readUtf8();
     assertTrue(tokenRequestBody.contains("grant_type=client_credentials"));

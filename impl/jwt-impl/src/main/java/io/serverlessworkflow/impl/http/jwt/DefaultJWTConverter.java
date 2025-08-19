@@ -14,42 +14,32 @@
  * limitations under the License.
  */
 
-package io.serverlessworkflow.impl.executors.http.oauth;
+package io.serverlessworkflow.impl.http.jwt;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.serverlessworkflow.http.jwt.JWT;
+import io.serverlessworkflow.http.jwt.JWTConverter;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Map;
 
-public class JWT {
+public class DefaultJWTConverter implements JWTConverter {
 
   private static final ObjectMapper MAPPER = new ObjectMapper();
 
-  private final String token;
-  private final Map<String, Object> claims;
-
-  private JWT(String token, Map<String, Object> claims) {
-    this.token = token;
-    this.claims = claims;
-  }
-
-  public static JWT fromString(String token) throws JsonProcessingException {
+  @Override
+  public JWT fromToken(String token) throws IllegalArgumentException {
     String[] parts = token.split("\\.");
     if (parts.length < 2) {
       throw new IllegalArgumentException("Invalid JWT token format");
     }
-
-    String payloadJson =
-        new String(Base64.getUrlDecoder().decode(parts[1]), StandardCharsets.UTF_8);
-    return new JWT(token, MAPPER.readValue(payloadJson, Map.class));
-  }
-
-  public String getToken() {
-    return token;
-  }
-
-  public Object getClaim(String name) {
-    return claims.get(name);
+    try {
+      String payloadJson =
+          new String(Base64.getUrlDecoder().decode(parts[1]), StandardCharsets.UTF_8);
+      return new DefaultJWTImpl(token, MAPPER.readValue(payloadJson, Map.class));
+    } catch (JsonProcessingException e) {
+      throw new IllegalArgumentException("Failed to parse JWT token payload: " + e.getMessage(), e);
+    }
   }
 }

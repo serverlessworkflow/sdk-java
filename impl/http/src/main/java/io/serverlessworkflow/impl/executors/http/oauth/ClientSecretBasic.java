@@ -44,7 +44,8 @@ class ClientSecretBasic {
     }
   }
 
-  private void clientCredentials(HttpRequestBuilder requestBuilder, OAuth2AutenthicationData authenticationData) {
+  private void clientCredentials(
+      HttpRequestBuilder requestBuilder, OAuth2AutenthicationData authenticationData) {
     if (authenticationData.getClient() == null
         || authenticationData.getClient().getId() == null
         || authenticationData.getClient().getSecret() == null) {
@@ -58,11 +59,12 @@ class ClientSecretBasic {
 
     requestBuilder
         .addHeader("Authorization", "Basic " + encodedAuth)
-        .withMethod("POST")
-        .addQueryParam("grant_type", "client_credentials");
+        .withRequestContentType(authenticationData.getRequest())
+        .withGrantType(authenticationData.getGrant());
   }
 
-  private void password(HttpRequestBuilder requestBuilder, OAuth2AutenthicationData authenticationData) {
+  private void password(
+      HttpRequestBuilder requestBuilder, OAuth2AutenthicationData authenticationData) {
     if (authenticationData.getUsername() == null || authenticationData.getPassword() == null) {
       throw new IllegalArgumentException(
           "Username and password must be provided for password grant type");
@@ -79,9 +81,9 @@ class ClientSecretBasic {
     String encodedAuth = Base64.getEncoder().encodeToString(idAndSecret.getBytes());
 
     requestBuilder
-        .withMethod("POST")
+        .withGrantType(authenticationData.getGrant())
+        .withRequestContentType(authenticationData.getRequest())
         .addHeader("Authorization", "Basic " + encodedAuth)
-        .addQueryParam("grant_type", "password")
         .addQueryParam("username", authenticationData.getUsername())
         .addQueryParam("password", authenticationData.getPassword());
   }

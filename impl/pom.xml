@@ -59,11 +59,6 @@
               <version>${version.jakarta.ws.rs}</version>
             </dependency>
             <dependency>
-                <groupId>com.fasterxml.jackson.core</groupId>
-                <artifactId>jackson-databind</artifactId>
-                <version>${version.jackson-databind}</version>
-            </dependency>
-            <dependency>
                 <groupId>org.glassfish.jersey.core</groupId>
                 <artifactId>jersey-client</artifactId>
                 <version>${version.org.glassfish.jersey}</version>
@@ -81,5 +76,6 @@
         <module>http</module>
         <module>core</module>
         <module>jackson</module>
+        <module>jwt-impl</module>
     </modules>
 </project>

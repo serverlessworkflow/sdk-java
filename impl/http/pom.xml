@@ -17,16 +17,16 @@
            <artifactId>serverlessworkflow-impl-core</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.serverlessworkflow</groupId>
+            <artifactId>serverlessworkflow-jwt</artifactId>
+        </dependency>
+        <dependency>
           <groupId>org.glassfish.jersey.media</groupId>
           <artifactId>jersey-media-json-jackson</artifactId>
         </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.core</groupId>
             <artifactId>jersey-client</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
         </dependency>
         <dependency>
             <groupId>io.serverlessworkflow</groupId>
@@ -36,6 +36,11 @@
         <dependency>
             <groupId>io.serverlessworkflow</groupId>
             <artifactId>serverlessworkflow-impl-jackson</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.serverlessworkflow</groupId>
+            <artifactId>serverlessworkflow-impl-jwt</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

@@ -16,7 +16,7 @@
 
 package io.serverlessworkflow.impl.executors.http.oauth;
 
-import static io.serverlessworkflow.api.types.OAuth2AutenthicationDataClient.ClientAuthentication.*;
+import static io.serverlessworkflow.api.types.OAuth2AutenthicationDataClient.ClientAuthentication.CLIENT_SECRET_POST;
 
 import io.serverlessworkflow.api.types.OAuth2AutenthicationData;
 import io.serverlessworkflow.api.types.OAuth2AutenthicationDataClient;

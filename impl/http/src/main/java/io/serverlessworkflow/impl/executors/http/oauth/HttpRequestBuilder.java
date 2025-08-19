@@ -16,23 +16,31 @@
 
 package io.serverlessworkflow.impl.executors.http.oauth;
 
+import static io.serverlessworkflow.api.types.OAuth2TokenRequest.Oauth2TokenRequestEncoding;
+import static io.serverlessworkflow.api.types.OAuth2TokenRequest.Oauth2TokenRequestEncoding.APPLICATION_X_WWW_FORM_URLENCODED;
+
+import io.serverlessworkflow.api.types.OAuth2AutenthicationData;
+import io.serverlessworkflow.api.types.OAuth2TokenRequest;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
+import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.client.ClientBuilder;
+import jakarta.ws.rs.client.Entity;
+import jakarta.ws.rs.client.Invocation;
+import jakarta.ws.rs.client.WebTarget;
+import jakarta.ws.rs.core.Form;
+import jakarta.ws.rs.core.MediaType;
 import java.net.URI;
 import java.net.URLEncoder;
-import java.net.http.HttpRequest;
 import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
-public class HttpRequestBuilder {
+class HttpRequestBuilder {
 
   private final Map<String, WorkflowValueResolver<String>> headers;
 
@@ -42,86 +50,99 @@ public class HttpRequestBuilder {
 
   private URI uri;
 
-  private String method;
+  private OAuth2AutenthicationData.OAuth2AutenthicationDataGrant grantType;
 
-  public HttpRequestBuilder(WorkflowApplication app) {
+  private Oauth2TokenRequestEncoding requestContentType = APPLICATION_X_WWW_FORM_URLENCODED;
+
+  HttpRequestBuilder(WorkflowApplication app) {
     this.app = app;
     headers = new HashMap<>();
     queryParams = new HashMap<>();
   }
 
-  public HttpRequestBuilder addHeader(String key, String token) {
+  HttpRequestBuilder addHeader(String key, String token) {
     headers.put(key, WorkflowUtils.buildStringFilter(app, token));
     return this;
   }
 
-  public HttpRequestBuilder addQueryParam(String key, String token) {
+  HttpRequestBuilder addQueryParam(String key, String token) {
     queryParams.put(key, WorkflowUtils.buildStringFilter(app, token));
     return this;
   }
 
-  public HttpRequestBuilder withUri(URI uri) {
+  HttpRequestBuilder withUri(URI uri) {
     this.uri = uri;
     return this;
   }
 
-  public HttpRequestBuilder withMethod(String method) {
-    this.method = method;
+  HttpRequestBuilder withRequestContentType(OAuth2TokenRequest oAuth2TokenRequest) {
+    if (oAuth2TokenRequest != null) {
+      this.requestContentType = oAuth2TokenRequest.getEncoding();
+    }
     return this;
   }
 
-  public HttpRequest build(WorkflowContext workflow, TaskContext task, WorkflowModel model) {
-    HttpRequest.Builder request = HttpRequest.newBuilder();
+  HttpRequestBuilder withGrantType(
+      OAuth2AutenthicationData.OAuth2AutenthicationDataGrant grantType) {
+    this.grantType = grantType;
+    return this;
+  }
+
+  InvocationHolder build(WorkflowContext workflow, TaskContext task, WorkflowModel model) {
+    validate();
+
+    Client client = ClientBuilder.newClient();
+    WebTarget target = client.target(uri);
+
+    Invocation.Builder builder = target.request(MediaType.APPLICATION_JSON);
+
+    builder.header("grant_type", grantType.name().toLowerCase());
+    builder.header("User-Agent", "OAuth2-Client-Credentials/1.0");
+    builder.header("Accept", MediaType.APPLICATION_JSON);
+    builder.header("Cache-Control", "no-cache");
 
     for (var entry : headers.entrySet()) {
       String headerValue = entry.getValue().apply(workflow, task, model);
       if (headerValue != null) {
-        request = request.header(entry.getKey(), headerValue);
+        builder.header(entry.getKey(), headerValue);
       }
     }
 
-    request.header("Accept", "application/json");
+    Entity<?> entity;
+    if (requestContentType.equals(APPLICATION_X_WWW_FORM_URLENCODED)) {
+      Form form = new Form();
+      form.param("grant_type", grantType.value());
+      queryParams.forEach(
+          (key, value) -> {
+            String v = value.apply(workflow, task, model);
+            String encodedKey = URLEncoder.encode(key, StandardCharsets.UTF_8);
+            String encodedValue = URLEncoder.encode(v, StandardCharsets.UTF_8);
+            form.param(encodedKey, encodedValue);
+          });
+      entity = Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED);
+    } else {
+      Map<String, Object> jsonData = new HashMap<>();
+      jsonData.put("grant_type", grantType.value());
+      queryParams.forEach(
+          (key, value) -> {
+            String v = value.apply(workflow, task, model);
+            String encodedKey = URLEncoder.encode(key, StandardCharsets.UTF_8);
+            String encodedValue = URLEncoder.encode(v, StandardCharsets.UTF_8);
+            jsonData.put(encodedKey, encodedValue);
+          });
+      entity = Entity.entity(jsonData, MediaType.APPLICATION_JSON);
+    }
 
+    return new InvocationHolder(client, () -> builder.post(entity));
+  }
+
+  private void validate() {
     if (uri == null) {
       throw new IllegalStateException("URI must be set before building the request");
     }
 
-    String encoded =
-        queryParams.entrySet().stream()
-            .map(
-                e -> {
-                  String v = e.getValue().apply(workflow, task, model);
-                  if (v == null) return null;
-                  return URLEncoder.encode(e.getKey(), StandardCharsets.UTF_8)
-                      + "="
-                      + URLEncoder.encode(v, StandardCharsets.UTF_8);
-                })
-            .filter(Objects::nonNull)
-            .collect(Collectors.joining("&"));
-
-    if (method != null) {
-      switch (method.toUpperCase()) {
-        case "GET" -> {
-          if (!encoded.isEmpty()) {
-            String sep = (uri.getQuery() == null || uri.getQuery().isEmpty()) ? "?" : "&";
-            uri = URI.create(uri.toString() + sep + encoded);
-          }
-          request.uri(uri).GET();
-        }
-        case "POST" -> {
-          request.uri(uri);
-          HttpRequest.BodyPublisher body =
-              encoded.isEmpty()
-                  ? HttpRequest.BodyPublishers.noBody()
-                  : HttpRequest.BodyPublishers.ofString(encoded);
-          request.POST(body);
-        }
-        default -> throw new IllegalArgumentException("Unsupported HTTP method: " + method);
-      }
-    } else {
-      throw new IllegalStateException("HTTP method must be set before building the request");
+    if (grantType == null) {
+      throw new IllegalStateException("Grant type must be set before building the request");
     }
-    request.timeout(Duration.ofSeconds(15));
-    return request.build();
   }
 }

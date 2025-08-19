@@ -43,7 +43,8 @@ class ClientSecretPostStep {
     }
   }
 
-  private void clientCredentials(HttpRequestBuilder requestBuilder, OAuth2AutenthicationData authenticationData) {
+  private void clientCredentials(
+      HttpRequestBuilder requestBuilder, OAuth2AutenthicationData authenticationData) {
     if (authenticationData.getClient() == null
         || authenticationData.getClient().getId() == null
         || authenticationData.getClient().getSecret() == null) {
@@ -52,13 +53,14 @@ class ClientSecretPostStep {
     }
 
     requestBuilder
-        .withMethod("POST")
-        .addQueryParam("grant_type", "client_credentials")
+        .withGrantType(authenticationData.getGrant())
+        .withRequestContentType(authenticationData.getRequest())
         .addQueryParam("client_id", authenticationData.getClient().getId())
         .addQueryParam("client_secret", authenticationData.getClient().getSecret());
   }
 
-  private void password(HttpRequestBuilder requestBuilder, OAuth2AutenthicationData authenticationData) {
+  private void password(
+      HttpRequestBuilder requestBuilder, OAuth2AutenthicationData authenticationData) {
     if (authenticationData.getUsername() == null || authenticationData.getPassword() == null) {
       throw new IllegalArgumentException(
           "Username and password must be provided for password grant type");
@@ -71,8 +73,8 @@ class ClientSecretPostStep {
     }
 
     requestBuilder
-        .withMethod("POST")
-        .addQueryParam("grant_type", "password")
+        .withGrantType(authenticationData.getGrant())
+        .withRequestContentType(authenticationData.getRequest())
         .addQueryParam("client_id", authenticationData.getClient().getId())
         .addQueryParam("client_secret", authenticationData.getClient().getSecret())
         .addQueryParam("username", authenticationData.getUsername())

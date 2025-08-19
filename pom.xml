@@ -46,6 +46,7 @@
     <module>examples</module>
     <module>experimental</module>
     <module>fluent</module>
+    <module>jwt</module>
   </modules>
 
     <properties>
@@ -165,6 +166,16 @@
             <dependency>
                 <groupId>io.serverlessworkflow</groupId>
                 <artifactId>serverlessworkflow-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.serverlessworkflow</groupId>
+                <artifactId>serverlessworkflow-jwt</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.serverlessworkflow</groupId>
+                <artifactId>serverlessworkflow-impl-jwt</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

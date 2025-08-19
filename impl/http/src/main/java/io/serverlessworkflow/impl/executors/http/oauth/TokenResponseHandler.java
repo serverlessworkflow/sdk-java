@@ -16,54 +16,49 @@
 
 package io.serverlessworkflow.impl.executors.http.oauth;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowError;
 import io.serverlessworkflow.impl.WorkflowException;
-import java.io.IOException;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.time.Duration;
+import jakarta.ws.rs.ProcessingException;
+import jakarta.ws.rs.client.ResponseProcessingException;
+import jakarta.ws.rs.core.Response;
+import java.util.Map;
 import java.util.function.BiFunction;
 
-public class TokenResponseHandler implements BiFunction<HttpRequest, TaskContext, JsonNode> {
-
-  private static final ObjectMapper MAPPER = new ObjectMapper();
-  private static final HttpClient CLIENT =
-      HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
+public class TokenResponseHandler
+    implements BiFunction<InvocationHolder, TaskContext, Map<String, Object>> {
 
   @Override
-  public JsonNode apply(HttpRequest requestBuilder, TaskContext context) {
-    HttpResponse<String> response;
-    try {
-      response = CLIENT.send(requestBuilder, HttpResponse.BodyHandlers.ofString());
-      if (response.statusCode() < 200 || response.statusCode() >= 300) {
+  public Map<String, Object> apply(InvocationHolder invocation, TaskContext context) {
+    try (Response response = invocation.invoke()) {
+      if (response.getStatus() < 200 || response.getStatus() >= 300) {
         throw new WorkflowException(
             WorkflowError.communication(
-                    response.statusCode(),
+                    response.getStatus(),
                     context,
                     "Failed to obtain token: HTTP "
-                        + response.statusCode()
+                        + response.getStatus()
                         + " — "
-                        + response.body())
+                        + response.getEntity())
                 .build());
       }
-    } catch (java.net.ConnectException e) {
-      throw new RuntimeException("Connection refused: " + e.getMessage(), e);
-    } catch (IOException e) {
-      throw new RuntimeException("Unable to send request: " + e.getMessage(), e);
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-      throw new RuntimeException("Unable to send request: " + e.getMessage(), e);
-    }
-
-    try {
-      return MAPPER.readTree(response.body());
-    } catch (JsonProcessingException e) {
-      throw new RuntimeException("Failed to parse JSON response: " + e.getMessage(), e);
+      return (Map<String, Object>) response.readEntity(Map.class);
+    } catch (ResponseProcessingException e) {
+      throw new WorkflowException(
+          WorkflowError.communication(
+                  e.getResponse().getStatus(),
+                  context,
+                  "Failed to process response: " + e.getMessage())
+              .build(),
+          e);
+    } catch (ProcessingException e) {
+      throw new WorkflowException(
+          WorkflowError.communication(
+                  -1, context, "Failed to connect or process request: " + e.getMessage())
+              .build(),
+          e);
+    } finally {
+      invocation.close();
     }
   }
 }
