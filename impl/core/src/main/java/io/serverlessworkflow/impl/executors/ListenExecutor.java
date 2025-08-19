@@ -215,9 +215,11 @@ public abstract class ListenExecutor extends RegularTaskExecutor<ListenTask> {
         TaskContext taskContext,
         CompletableFuture<WorkflowModel> future) {
       arrayNode.add(node);
-      if ((until.isEmpty() || until.map(u -> u.test(workflow, taskContext, arrayNode)).isPresent())
+      if (until.map(u -> u.test(workflow, taskContext, arrayNode)).orElse(true)
           && untilRegBuilders == null) {
         future.complete(node);
+      } else {
+        ((WorkflowMutableInstance) workflow.instance()).status(WorkflowStatus.WAITING);
       }
     }
   }
