@@ -24,10 +24,13 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.serverlessworkflow.api.WorkflowReader;
 import io.serverlessworkflow.impl.jackson.JsonUtils;
 import java.io.IOException;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -79,6 +82,31 @@ public class EventDefinitionTest {
     assertThat(future).isCompleted();
     assertThat(waitingInstance.status()).isEqualTo(WorkflowStatus.COMPLETED);
     assertThat(waitingInstance.outputAs(JsonNode.class)).isEqualTo(expectedResult);
+  }
+
+  @Test
+  void testForEachInAnyIsExecutedAsEventArrive() throws IOException, InterruptedException {
+    WorkflowDefinition listenDefinition =
+        appl.workflowDefinition(
+            WorkflowReader.readWorkflowFromClasspath("listen-to-any-until.yaml"));
+    WorkflowDefinition emitDoctorDefinition =
+        appl.workflowDefinition(WorkflowReader.readWorkflowFromClasspath("emit-doctor.yaml"));
+    WorkflowInstance waitingInstance = listenDefinition.instance(Map.of());
+    CompletableFuture<WorkflowModel> future = waitingInstance.start();
+    assertThat(waitingInstance.status()).isEqualTo(WorkflowStatus.WAITING);
+    emitDoctorDefinition.instance(Map.of("temperature", 35)).start().join();
+    assertThat(waitingInstance.status()).isEqualTo(WorkflowStatus.WAITING);
+    Thread.sleep(1100);
+    emitDoctorDefinition.instance(Map.of("temperature", 39)).start().join();
+    assertThat(future).isCompleted();
+    assertThat(waitingInstance.status()).isEqualTo(WorkflowStatus.COMPLETED);
+    ArrayNode result = waitingInstance.outputAs(ArrayNode.class);
+    assertThat(ChronoUnit.SECONDS.between(getInstant(result, 0), getInstant(result, 1)))
+        .isGreaterThanOrEqualTo(1L);
+  }
+
+  private static Instant getInstant(ArrayNode result, int index) {
+    return Instant.ofEpochSecond(result.get(index).get("time").asLong());
   }
 
   private static Stream<Arguments> eventListenerParameters() {

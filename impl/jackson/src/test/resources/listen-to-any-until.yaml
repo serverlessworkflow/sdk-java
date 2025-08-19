@@ -1,0 +1,20 @@
+document:
+  dsl: '1.0.0-alpha5'
+  namespace: test
+  name: listen-to-any-until
+  version: '0.1.0'
+do:
+  - callDoctor:
+      listen:
+        to:
+          any:
+          - with:
+              type: com.fake-hospital.vitals.measurements.temperature
+          until:  . | any (.temperature > 38)
+      foreach:
+        item: event
+        do:
+          - measure: 
+              set:
+                temperature: ${$event.temperature}
+                time: ${ now} 
