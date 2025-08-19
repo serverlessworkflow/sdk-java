@@ -31,7 +31,7 @@ public class OAuth2AuthProvider implements AuthProvider {
 
   private Oauth2 oauth2;
 
-  private WorkflowApplication workflowApplication;
+  private final WorkflowApplication workflowApplication;
 
   private static final String BEARER_TOKEN = "%s %s";
 
@@ -39,7 +39,6 @@ public class OAuth2AuthProvider implements AuthProvider {
       WorkflowApplication application, Workflow workflow, OAuth2AuthenticationPolicy authPolicy) {
     this.workflowApplication = application;
     Oauth2 oauth2 = authPolicy.getOauth2();
-
     if (oauth2.getOAuth2ConnectAuthenticationProperties() != null) {
       this.oauth2 = oauth2;
     } else if (oauth2.getOAuth2AuthenticationPolicySecret() != null) {
@@ -62,7 +61,6 @@ public class OAuth2AuthProvider implements AuthProvider {
             .validateAndGet();
 
     String tokenType = (String) token.getClaim("typ");
-
     builder.header(
         AuthProviderFactory.AUTH_HEADER_NAME,
         String.format(BEARER_TOKEN, tokenType, token.getToken()));

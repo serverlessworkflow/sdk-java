@@ -34,6 +34,8 @@ public class OAuthRequestBuilder {
 
   private final Oauth2 oauth2;
 
+  private final OAuth2AutenthicationData authenticationData;
+
   private final WorkflowApplication application;
 
   private List<String> issuers;
@@ -46,6 +48,8 @@ public class OAuthRequestBuilder {
 
   public OAuthRequestBuilder(WorkflowApplication application, Oauth2 oauth2) {
     this.oauth2 = oauth2;
+    this.authenticationData =
+        oauth2.getOAuth2ConnectAuthenticationProperties().getOAuth2AutenthicationData();
     this.application = application;
   }
 
@@ -85,8 +89,6 @@ public class OAuthRequestBuilder {
   }
 
   private OAuth2AutenthicationDataClient.ClientAuthentication getClientAuthentication() {
-    OAuth2AutenthicationData authenticationData =
-        oauth2.getOAuth2ConnectAuthenticationProperties().getOAuth2AutenthicationData();
     if (authenticationData.getClient() == null
         || authenticationData.getClient().getAuthentication() == null) {
       return CLIENT_SECRET_POST;
@@ -103,8 +105,6 @@ public class OAuthRequestBuilder {
   }
 
   public void audience(HttpRequestBuilder requestBuilder) {
-    OAuth2AutenthicationData authenticationData =
-        oauth2.getOAuth2ConnectAuthenticationProperties().getOAuth2AutenthicationData();
     if (authenticationData.getAudiences() != null && !authenticationData.getAudiences().isEmpty()) {
       String audiences = String.join(" ", authenticationData.getAudiences());
       requestBuilder.addQueryParam("audience", audiences);
@@ -112,8 +112,6 @@ public class OAuthRequestBuilder {
   }
 
   private void scope(HttpRequestBuilder requestBuilder) {
-    OAuth2AutenthicationData authenticationData =
-        oauth2.getOAuth2ConnectAuthenticationProperties().getOAuth2AutenthicationData();
     if (authenticationData.getScopes() != null && !authenticationData.getScopes().isEmpty()) {
       String scopes = String.join(" ", authenticationData.getScopes());
       requestBuilder.addQueryParam("scope", scopes);
@@ -143,9 +141,6 @@ public class OAuthRequestBuilder {
   }
 
   public void requestEncoding(HttpRequestBuilder requestBuilder) {
-    OAuth2AutenthicationData authenticationData =
-        oauth2.getOAuth2ConnectAuthenticationProperties().getOAuth2AutenthicationData();
-
     if (authenticationData.getRequest() != null
         && authenticationData.getRequest().getEncoding() != null) {
       requestBuilder.addHeader(

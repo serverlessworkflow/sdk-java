@@ -78,6 +78,7 @@
         <version.ch.qos.logback>1.5.18</version.ch.qos.logback>
         <version.com.fasterxml.jackson>2.19.2</version.com.fasterxml.jackson>
         <version.com.networknt>1.5.8</version.com.networknt>
+        <version.com.squareup.okhttp3.mockwebserver>4.12.0</version.com.squareup.okhttp3.mockwebserver>
         <version.jakarta.validation>3.1.1</version.jakarta.validation>
         <version.jsonassert>1.5.2</version.jsonassert>
         <version.org.assertj>3.27.4</version.org.assertj>
@@ -221,6 +222,12 @@
                 <groupId>ch.qos.logback</groupId>
                 <artifactId>logback-classic</artifactId>
                 <version>${version.ch.qos.logback}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>com.squareup.okhttp3</groupId>
+                <artifactId>mockwebserver</artifactId>
+                <version>${version.com.squareup.okhttp3.mockwebserver}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>

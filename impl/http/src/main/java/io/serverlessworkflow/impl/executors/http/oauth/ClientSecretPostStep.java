@@ -34,18 +34,16 @@ class ClientSecretPostStep {
         oauth2.getOAuth2ConnectAuthenticationProperties().getOAuth2AutenthicationData();
 
     if (authenticationData.getGrant().equals(PASSWORD)) {
-      password(requestBuilder);
+      password(requestBuilder, authenticationData);
     } else if (authenticationData.getGrant().equals(CLIENT_CREDENTIALS)) {
-      clientCredentials(requestBuilder);
+      clientCredentials(requestBuilder, authenticationData);
     } else {
       throw new UnsupportedOperationException(
           "Unsupported grant type: " + authenticationData.getGrant());
     }
   }
 
-  private void clientCredentials(HttpRequestBuilder requestBuilder) {
-    OAuth2AutenthicationData authenticationData =
-        oauth2.getOAuth2ConnectAuthenticationProperties().getOAuth2AutenthicationData();
+  private void clientCredentials(HttpRequestBuilder requestBuilder, OAuth2AutenthicationData authenticationData) {
     if (authenticationData.getClient() == null
         || authenticationData.getClient().getId() == null
         || authenticationData.getClient().getSecret() == null) {
@@ -60,9 +58,7 @@ class ClientSecretPostStep {
         .addQueryParam("client_secret", authenticationData.getClient().getSecret());
   }
 
-  private void password(HttpRequestBuilder requestBuilder) {
-    OAuth2AutenthicationData authenticationData =
-        oauth2.getOAuth2ConnectAuthenticationProperties().getOAuth2AutenthicationData();
+  private void password(HttpRequestBuilder requestBuilder, OAuth2AutenthicationData authenticationData) {
     if (authenticationData.getUsername() == null || authenticationData.getPassword() == null) {
       throw new IllegalArgumentException(
           "Username and password must be provided for password grant type");
