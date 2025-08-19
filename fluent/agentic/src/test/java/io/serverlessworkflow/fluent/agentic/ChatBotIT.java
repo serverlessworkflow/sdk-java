@@ -72,16 +72,22 @@ public class ChatBotIT {
                 t ->
                     t.listen(
                             l ->
-                                l.until(
-                                        message ->
-                                            !message
-                                                .getOrDefault("userInput", "")
-                                                .toString()
-                                                .isEmpty(),
-                                        Map.class)
-                                    .any(
-                                        c ->
-                                            c.with(event -> event.type("org.acme.chatbot.request")))
+                                l.to(
+                                        to ->
+                                            to.any(
+                                                    c ->
+                                                        c.with(
+                                                            event ->
+                                                                event.type(
+                                                                    "org.acme.chatbot.request")))
+                                                .until(
+                                                    until ->
+                                                        until.one(
+                                                            one ->
+                                                                one.with(
+                                                                    e ->
+                                                                        e.type(
+                                                                            "org.acme.chatbot.finalize")))))
                                     .forEach(
                                         f ->
                                             f.tasks(
@@ -94,16 +100,7 @@ public class ChatBotIT {
                                                                     e ->
                                                                         e.type(
                                                                             "org.acme.chatbot.reply"))))))
-                        .emit(
-                            emit ->
-                                emit.when(
-                                        message ->
-                                            message
-                                                .getOrDefault("userInput", "")
-                                                .toString()
-                                                .isEmpty(),
-                                        Map.class)
-                                    .event(e -> e.type("org.acme.chatbot.finished"))))
+                        .emit(emit -> emit.event(e -> e.type("org.acme.chatbot.finished"))))
             .build();
 
     try (WorkflowApplication app = WorkflowApplication.builder().build()) {
@@ -132,15 +129,16 @@ public class ChatBotIT {
       // The workflow is just waiting for the event
       assertEquals(WorkflowStatus.WAITING, waitingInstance.status());
 
-      // Publish the event
+      // Publish the events
       app.eventPublisher().publish(newMessageEvent("Hello World!"));
       CloudEvent reply = replyEvents.poll(60, TimeUnit.SECONDS);
       assertNotNull(reply);
 
       // Empty message completes the workflow
-      app.eventPublisher().publish(newMessageEvent(""));
+      app.eventPublisher().publish(newMessageEvent("", "org.acme.chatbot.finalize"));
       CloudEvent finished = finishedEvents.poll(60, TimeUnit.SECONDS);
       assertNotNull(finished);
+      assertThat(finishedEvents).isEmpty();
 
       assertThat(runningModel).isCompleted();
       assertEquals(WorkflowStatus.COMPLETED, waitingInstance.status());
@@ -223,9 +221,17 @@ public class ChatBotIT {
   }
 
   private CloudEvent newMessageEvent(String message) {
+    return newMessageEvent(message, null);
+  }
+
+  private CloudEvent newMessageEvent(String message, String type) {
+    if (type == null || type.isEmpty()) {
+      type = "org.acme.chatbot.request";
+    }
+
     return new CloudEventBuilder()
         .withData(String.format("{\"userInput\": \"%s\"}", message).getBytes())
-        .withType("org.acme.chatbot.request")
+        .withType(type)
         .withId(UUID.randomUUID().toString())
         .withDataContentType("application/json")
         .withSource(URI.create("test://localhost"))
