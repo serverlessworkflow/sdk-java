@@ -39,10 +39,13 @@ import java.util.ServiceLoader;
 import java.util.ServiceLoader.Provider;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class WorkflowApplication implements AutoCloseable {
+
+  private static final Logger logger = LoggerFactory.getLogger(WorkflowApplication.class);
 
   private final TaskExecutorFactory taskFactory;
   private final ExpressionFactory exprFactory;
@@ -137,7 +140,7 @@ public class WorkflowApplication implements AutoCloseable {
     private SchemaValidatorFactory schemaValidatorFactory;
     private WorkflowPositionFactory positionFactory = () -> new QueueWorkflowPosition();
     private WorkflowIdFactory idFactory = () -> UlidCreator.getMonotonicUlid().toString();
-    private ExecutorServiceFactory executorFactory = () -> Executors.newCachedThreadPool();
+    private ExecutorServiceFactory executorFactory = new DefaultExecutorServiceFactory();
     private EventConsumer<?, ?> eventConsumer = InMemoryEvents.get();
     private EventPublisher eventPublisher = InMemoryEvents.get();
     private RuntimeDescriptorFactory descriptorFactory =
@@ -236,10 +239,21 @@ public class WorkflowApplication implements AutoCloseable {
 
   @Override
   public void close() {
+    safeClose(executorFactory);
+    safeClose(eventPublisher);
+    safeClose(eventConsumer);
     for (WorkflowDefinition definition : definitions.values()) {
-      definition.close();
+      safeClose(definition);
     }
     definitions.clear();
+  }
+
+  private void safeClose(AutoCloseable closeable) {
+    try {
+      closeable.close();
+    } catch (Exception ex) {
+      logger.warn("Error closing resource {}", closeable.getClass().getName(), ex);
+    }
   }
 
   public WorkflowPositionFactory positionFactory() {

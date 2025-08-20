@@ -16,8 +16,15 @@
 package io.serverlessworkflow.impl;
 
 import java.util.concurrent.ExecutorService;
-import java.util.function.Supplier;
 
-public interface ExecutorServiceFactory extends Supplier<ExecutorService>, AutoCloseable {
-  void close();
+public class ExecutorServiceHolder extends AbstractExecutorServiceHolder {
+
+  public ExecutorServiceHolder(ExecutorService service) {
+    this.service = service;
+  }
+
+  @Override
+  public ExecutorService get() {
+    return service;
+  }
 }

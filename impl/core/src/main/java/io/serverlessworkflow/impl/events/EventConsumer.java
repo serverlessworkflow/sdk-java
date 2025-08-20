@@ -21,7 +21,8 @@ import io.serverlessworkflow.impl.WorkflowApplication;
 import java.util.Collection;
 import java.util.function.Consumer;
 
-public interface EventConsumer<T extends EventRegistration, V extends EventRegistrationBuilder> {
+public interface EventConsumer<T extends EventRegistration, V extends EventRegistrationBuilder>
+    extends AutoCloseable {
 
   V listen(EventFilter filter, WorkflowApplication workflowApplication);
 
@@ -30,4 +31,6 @@ public interface EventConsumer<T extends EventRegistration, V extends EventRegis
   T register(V builder, Consumer<CloudEvent> consumer);
 
   void unregister(T register);
+
+  void close();
 }
