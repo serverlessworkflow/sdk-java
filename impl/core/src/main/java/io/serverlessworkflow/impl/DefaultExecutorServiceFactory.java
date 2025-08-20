@@ -17,23 +17,23 @@ package io.serverlessworkflow.impl;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
-public class DefaultExecutorServiceFactory implements ExecutorServiceFactory {
+public class DefaultExecutorServiceFactory extends AbstractExecutorServiceHolder {
 
-  private static final ExecutorServiceFactory instance = new DefaultExecutorServiceFactory();
-
-  public static ExecutorServiceFactory instance() {
-    return instance;
-  }
-
-  private static class ExecutorServiceHolder {
-    private static ExecutorService instance = Executors.newCachedThreadPool();
-  }
+  private Lock serviceLock = new ReentrantLock();
 
   @Override
   public ExecutorService get() {
-    return ExecutorServiceHolder.instance;
+    try {
+      serviceLock.lock();
+      if (service == null) {
+        service = Executors.newCachedThreadPool();
+      }
+    } finally {
+      serviceLock.unlock();
+    }
+    return service;
   }
-
-  private DefaultExecutorServiceFactory() {}
 }

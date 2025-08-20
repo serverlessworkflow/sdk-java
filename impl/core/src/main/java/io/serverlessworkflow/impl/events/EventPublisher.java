@@ -18,6 +18,8 @@ package io.serverlessworkflow.impl.events;
 import io.cloudevents.CloudEvent;
 import java.util.concurrent.CompletableFuture;
 
-public interface EventPublisher {
+public interface EventPublisher extends AutoCloseable {
   CompletableFuture<Void> publish(CloudEvent event);
+
+  void close();
 }
