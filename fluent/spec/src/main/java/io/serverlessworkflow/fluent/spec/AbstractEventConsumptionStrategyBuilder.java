@@ -25,23 +25,27 @@ import java.util.List;
 import java.util.function.Consumer;
 
 public abstract class AbstractEventConsumptionStrategyBuilder<
-        SELF extends EventConsumptionStrategyFluent<SELF, T>, T extends Serializable>
-    implements EventConsumptionStrategyFluent<SELF, T> {
+        SELF extends EventConsumptionStrategyFluent<SELF, T, F>,
+        T extends Serializable,
+        F extends AbstractEventFilterBuilder<?, ?>>
+    implements EventConsumptionStrategyFluent<SELF, T, F> {
 
   protected boolean oneSet, allSet, anySet;
   private Until until;
 
-  AbstractEventConsumptionStrategyBuilder() {}
+  protected AbstractEventConsumptionStrategyBuilder() {}
 
   @SuppressWarnings("unchecked")
   private SELF self() {
     return (SELF) this;
   }
 
-  public SELF one(Consumer<EventFilterBuilder> c) {
+  protected abstract F newEventFilterBuilder();
+
+  public SELF one(Consumer<F> c) {
     ensureNoneSet();
     oneSet = true;
-    EventFilterBuilder fb = new EventFilterBuilder();
+    F fb = this.newEventFilterBuilder();
     c.accept(fb);
     OneEventConsumptionStrategy strat = new OneEventConsumptionStrategy();
     strat.setOne(fb.build());
@@ -49,12 +53,12 @@ public abstract class AbstractEventConsumptionStrategyBuilder<
     return this.self();
   }
 
-  abstract void setOne(OneEventConsumptionStrategy strategy);
+  protected abstract void setOne(OneEventConsumptionStrategy strategy);
 
-  public SELF all(Consumer<EventFilterBuilder> c) {
+  public SELF all(Consumer<F> c) {
     ensureNoneSet();
     allSet = true;
-    EventFilterBuilder fb = new EventFilterBuilder();
+    F fb = this.newEventFilterBuilder();
     c.accept(fb);
     AllEventConsumptionStrategy strat = new AllEventConsumptionStrategy();
     strat.setAll(List.of(fb.build()));
@@ -62,12 +66,12 @@ public abstract class AbstractEventConsumptionStrategyBuilder<
     return this.self();
   }
 
-  abstract void setAll(AllEventConsumptionStrategy strategy);
+  protected abstract void setAll(AllEventConsumptionStrategy strategy);
 
-  public SELF any(Consumer<EventFilterBuilder> c) {
+  public SELF any(Consumer<F> c) {
     ensureNoneSet();
     anySet = true;
-    EventFilterBuilder fb = new EventFilterBuilder();
+    F fb = this.newEventFilterBuilder();
     c.accept(fb);
     AnyEventConsumptionStrategy strat = new AnyEventConsumptionStrategy();
     strat.setAny(List.of(fb.build()));
@@ -75,7 +79,7 @@ public abstract class AbstractEventConsumptionStrategyBuilder<
     return this.self();
   }
 
-  abstract void setAny(AnyEventConsumptionStrategy strategy);
+  protected abstract void setAny(AnyEventConsumptionStrategy strategy);
 
   public SELF until(Consumer<EventConsumptionStrategyBuilder> c) {
     final EventConsumptionStrategyBuilder eventConsumptionStrategyBuilder =
@@ -108,7 +112,7 @@ public abstract class AbstractEventConsumptionStrategyBuilder<
     return this.getEventConsumptionStrategy();
   }
 
-  abstract T getEventConsumptionStrategy();
+  protected abstract T getEventConsumptionStrategy();
 
-  abstract void setUntil(Until until);
+  protected abstract void setUntil(Until until);
 }

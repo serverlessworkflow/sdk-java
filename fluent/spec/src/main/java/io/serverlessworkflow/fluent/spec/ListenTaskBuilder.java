@@ -15,77 +15,24 @@
  */
 package io.serverlessworkflow.fluent.spec;
 
-import io.serverlessworkflow.api.types.CorrelateProperty;
-import io.serverlessworkflow.api.types.ListenTask;
-import io.serverlessworkflow.api.types.ListenTaskConfiguration;
-import io.serverlessworkflow.api.types.ListenTo;
-import java.util.function.Consumer;
-
 /**
  * Fluent builder for a "listen" task in a Serverless Workflow. Enforces exactly one consumption
  * strategy: one, all, or any.
  */
-public class ListenTaskBuilder<T extends BaseTaskItemListBuilder<T>>
-    extends TaskBaseBuilder<ListenTaskBuilder<T>> {
+public class ListenTaskBuilder
+    extends AbstractListenTaskBuilder<TaskItemListBuilder, ListenToBuilder> {
 
-  private final ListenTask listenTask;
-  private final ListenTaskConfiguration config;
-  private final T taskItemListBuilder;
-
-  public ListenTaskBuilder(T taskItemListBuilder) {
-    super();
-    this.listenTask = new ListenTask();
-    this.config = new ListenTaskConfiguration();
-    this.config.setTo(new ListenTo());
-    this.listenTask.setListen(config);
-    this.taskItemListBuilder = taskItemListBuilder;
-    super.setTask(listenTask);
+  protected ListenTaskBuilder() {
+    super(new TaskItemListBuilder());
   }
 
   @Override
-  protected ListenTaskBuilder<T> self() {
+  protected ListenToBuilder newEventConsumptionStrategyBuilder() {
+    return new ListenToBuilder();
+  }
+
+  @Override
+  protected ListenTaskBuilder self() {
     return this;
-  }
-
-  public ListenTaskBuilder<T> forEach(Consumer<SubscriptionIteratorBuilder<T>> c) {
-    final SubscriptionIteratorBuilder<T> iteratorBuilder =
-        new SubscriptionIteratorBuilder<>(this.taskItemListBuilder);
-    c.accept(iteratorBuilder);
-    this.listenTask.setForeach(iteratorBuilder.build());
-    return this;
-  }
-
-  public ListenTaskBuilder<T> read(ListenTaskConfiguration.ListenAndReadAs listenAndReadAs) {
-    this.config.setRead(listenAndReadAs);
-    return this;
-  }
-
-  public ListenTaskBuilder<T> to(Consumer<ListenToBuilder> c) {
-    final ListenToBuilder listenToBuilder = new ListenToBuilder();
-    c.accept(listenToBuilder);
-    this.config.setTo(listenToBuilder.build());
-    return this;
-  }
-
-  public ListenTask build() {
-    return listenTask;
-  }
-
-  public static final class CorrelatePropertyBuilder {
-    private final CorrelateProperty prop = new CorrelateProperty();
-
-    public CorrelatePropertyBuilder from(String expr) {
-      prop.setFrom(expr);
-      return this;
-    }
-
-    public CorrelatePropertyBuilder expect(String val) {
-      prop.setExpect(val);
-      return this;
-    }
-
-    public CorrelateProperty build() {
-      return prop;
-    }
   }
 }
