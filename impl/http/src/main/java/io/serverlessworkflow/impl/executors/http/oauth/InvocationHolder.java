@@ -18,9 +18,11 @@ package io.serverlessworkflow.impl.executors.http.oauth;
 
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.core.Response;
+import java.io.Closeable;
+import java.util.concurrent.Callable;
 import java.util.function.Supplier;
 
-class InvocationHolder {
+class InvocationHolder implements Callable<Response>, Closeable {
 
   private final Client client;
   private final Supplier<Response> call;
@@ -30,11 +32,11 @@ class InvocationHolder {
     this.call = call;
   }
 
-  Response invoke() {
+  public Response call() {
     return call.get();
   }
 
-  void close() {
+  public void close() {
     if (client != null) {
       client.close();
     }

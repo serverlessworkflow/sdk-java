@@ -30,7 +30,7 @@ public class TokenResponseHandler
 
   @Override
   public Map<String, Object> apply(InvocationHolder invocation, TaskContext context) {
-    try (Response response = invocation.invoke()) {
+    try (Response response = invocation.call()) {
       if (response.getStatus() < 200 || response.getStatus() >= 300) {
         throw new WorkflowException(
             WorkflowError.communication(

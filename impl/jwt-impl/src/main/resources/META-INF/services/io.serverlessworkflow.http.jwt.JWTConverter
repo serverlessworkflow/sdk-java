@@ -1,1 +1,1 @@
-io.serverlessworkflow.impl.http.jwt.DefaultJWTConverter
+io.serverlessworkflow.impl.http.jwt.JacksonJWTConverter

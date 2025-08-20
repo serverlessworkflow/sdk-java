@@ -24,7 +24,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Map;
 
-public class DefaultJWTConverter implements JWTConverter {
+public class JacksonJWTConverter implements JWTConverter {
 
   private static final ObjectMapper MAPPER = new ObjectMapper();
 
@@ -37,7 +37,7 @@ public class DefaultJWTConverter implements JWTConverter {
     try {
       String payloadJson =
           new String(Base64.getUrlDecoder().decode(parts[1]), StandardCharsets.UTF_8);
-      return new DefaultJWTImpl(token, MAPPER.readValue(payloadJson, Map.class));
+      return new JacksonJWTImpl(token, MAPPER.readValue(payloadJson, Map.class));
     } catch (JsonProcessingException e) {
       throw new IllegalArgumentException("Failed to parse JWT token payload: " + e.getMessage(), e);
     }

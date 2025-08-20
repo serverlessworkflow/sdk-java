@@ -38,14 +38,10 @@ public class AccessTokenProvider {
     this.issuers = issuers;
     this.context = context;
 
-    ServiceLoader<JWTConverter> jwtConverters =
-        ServiceLoader.load(JWTConverter.class, AccessTokenProvider.class.getClassLoader());
-
-    if (jwtConverters.iterator().hasNext()) {
-      this.jwtConverter = jwtConverters.iterator().next();
-    } else {
-      throw new RuntimeException("No JWTConverter implementation found");
-    }
+    this.jwtConverter =
+        ServiceLoader.load(JWTConverter.class)
+            .findFirst()
+            .orElseThrow(() -> new IllegalStateException("No JWTConverter implementation found"));
   }
 
   public JWT validateAndGet() {
@@ -54,12 +50,12 @@ public class AccessTokenProvider {
     try {
       jwt = jwtConverter.fromToken((String) token.get("access_token"));
     } catch (IllegalArgumentException e) {
-      throw new RuntimeException("Failed to parse JWT token: " + e.getMessage(), e);
+      throw new IllegalStateException("Failed to parse JWT token: " + e.getMessage(), e);
     }
     if (!(issuers == null || issuers.isEmpty())) {
       String tokenIssuer = (String) jwt.getClaim("iss");
       if (tokenIssuer == null || tokenIssuer.isEmpty() || !issuers.contains(tokenIssuer)) {
-        throw new RuntimeException("Token issuer is not valid: " + tokenIssuer);
+        throw new IllegalStateException("Token issuer is not valid: " + tokenIssuer);
       }
     }
     return jwt;

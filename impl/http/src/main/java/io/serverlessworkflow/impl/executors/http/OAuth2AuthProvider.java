@@ -29,18 +29,15 @@ import jakarta.ws.rs.client.Invocation.Builder;
 
 public class OAuth2AuthProvider implements AuthProvider {
 
-  private Oauth2 oauth2;
-
-  private final WorkflowApplication workflowApplication;
+  private OAuthRequestBuilder requestBuilder;
 
   private static final String BEARER_TOKEN = "%s %s";
 
   public OAuth2AuthProvider(
       WorkflowApplication application, Workflow workflow, OAuth2AuthenticationPolicy authPolicy) {
-    this.workflowApplication = application;
     Oauth2 oauth2 = authPolicy.getOauth2();
     if (oauth2.getOAuth2ConnectAuthenticationProperties() != null) {
-      this.oauth2 = oauth2;
+      this.requestBuilder = new OAuthRequestBuilder(application, oauth2);
     } else if (oauth2.getOAuth2AuthenticationPolicySecret() != null) {
       throw new UnsupportedOperationException("Secrets are still not supported");
     }
@@ -55,11 +52,7 @@ public class OAuth2AuthProvider implements AuthProvider {
   @Override
   public void preRequest(
       Invocation.Builder builder, WorkflowContext workflow, TaskContext task, WorkflowModel model) {
-    JWT token =
-        new OAuthRequestBuilder(workflowApplication, oauth2)
-            .build(workflow, task, model)
-            .validateAndGet();
-
+    JWT token = requestBuilder.build(workflow, task, model).validateAndGet();
     String tokenType = (String) token.getClaim("typ");
     builder.header(
         AuthProviderFactory.AUTH_HEADER_NAME,

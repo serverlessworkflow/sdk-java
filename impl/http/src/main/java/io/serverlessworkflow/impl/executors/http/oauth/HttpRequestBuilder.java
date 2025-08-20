@@ -39,6 +39,7 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 class HttpRequestBuilder {
 
@@ -137,12 +138,7 @@ class HttpRequestBuilder {
   }
 
   private void validate() {
-    if (uri == null) {
-      throw new IllegalStateException("URI must be set before building the request");
-    }
-
-    if (grantType == null) {
-      throw new IllegalStateException("Grant type must be set before building the request");
-    }
+    Objects.requireNonNull(uri, "URI must be set before building the request");
+    Objects.requireNonNull(grantType, "Grant type must be set before building the request");
   }
 }

@@ -19,12 +19,12 @@ package io.serverlessworkflow.impl.http.jwt;
 import io.serverlessworkflow.http.jwt.JWT;
 import java.util.Map;
 
-public class DefaultJWTImpl implements JWT {
+public class JacksonJWTImpl implements JWT {
 
   private final Map<String, Object> claims;
   private final String token;
 
-  DefaultJWTImpl(String token, Map<String, Object> claims) {
+  JacksonJWTImpl(String token, Map<String, Object> claims) {
     this.token = token;
     this.claims = claims;
   }
