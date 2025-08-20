@@ -6,12 +6,11 @@ Thanks for helping improve this project! This guide explains the local dev setup
 
 ## TL;DR (Fast path)
 
-1. **Install prerequisites:** JDK 17+, Maven 3.8+, Git, Make, Bash.
+1. **Install prerequisites:** JDK 17+, Maven 3.8+, Git.
 2. **Clone** the repo and create a branch: `git checkout -b my-fix`.
-3. **Install the repo’s pre-commit hook:** `make hooks` (one-time).
-4. **Commit normally.** The pre-commit hook will auto-format Java files and **add license headers**, restage the changes, and let the commit proceed.
-5. **Before pushing:** `make check` to run Spotless + Checkstyle locally.
-6. **Open a PR** with a clear title and description.
+3. **Build locally:** run `mvn clean install` from the repo root. Spotless will **apply formatting and license headers** during the build.
+4. **Before pushing:** run `mvn -DskipTests spotless:check checkstyle:check`.
+5. **Open a PR** with a clear title and description.
 
 ---
 
@@ -28,17 +27,9 @@ Thanks for helping improve this project! This guide explains the local dev setup
 We use **Spotless** (Maven) to:
 
 * Format Java with **google-java-format**.
-* Insert/normalize **license headers** from `config/license-header.txt`.
+* Insert/normalize **license headers** (the header content is defined **inline** in the parent POM’s `<licenseHeader>` configuration).
 
-> **Do not** hand-format files or hand-edit headers; let Spotless do it. The pre-commit hook runs `spotless:apply` for staged Java files.
-
-Spotless is configured in the **parent POM** and resolves the header file using:
-
-```
-${maven.multiModuleProjectDirectory}/config/license-header.txt
-```
-
-so children modules pick up the root header correctly.
+> **Do not** hand-format files or hand-edit headers; let Spotless do it. Running `mvn clean install` locally will mutate sources to match the standard.
 
 ### Checkstyle
 
@@ -52,46 +43,15 @@ We keep **Checkstyle** to enforce additional rules. CI fails if formatting or st
 
 * **JDK 17+**
 * **Maven 3.8+**
-* **Git**, **Make**, **Bash**
+* **Git**
 * Optional IDE plugins:
 
-    * IntelliJ: *Google Java Format* plugin (for local editing experience). Spotless remains the source of truth.
+  * IntelliJ: *Google Java Format* plugin (for local editing experience). Spotless remains the source of truth.
 
-### Install the Git Hooks (one-time)
+### Local build & formatting
 
-```bash
-make hooks
-```
-
-This calls `scripts/install-git-hooks.sh` which sets `core.hooksPath` to `.githooks` and marks hooks executable.
-
-### Pre-commit Hook Behavior
-
-* Runs only on **staged** `*.java` files.
-* Temporarily stashes unstaged edits (to avoid committing them), runs Spotless, **re-stages** formatted files, then restores the stash.
-* If it reformats something, your commit still proceeds with the updated index.
-
-If something goes wrong:
-
-* Run `make format` to apply formatting to the whole repo.
-* Stage changes and commit again.
-
----
-
-## Make Targets
-
-Common tasks are wrapped in a Makefile:
-
-```text
-make hooks   # Install/enable repo-local git hooks
-make format  # Spotless apply (format + license headers)
-make check   # Spotless check + Checkstyle check
-make verify  # mvn verify (full build)
-make ci      # CI checks (Spotless + Checkstyle, no tests)
-make clean   # mvn clean
-```
-
-> If `make` complains about a “missing separator”, ensure each command line under a target starts with a **TAB**.
+* Run `mvn clean install` from the repo root. During the build, Spotless **applies** formatting and license headers.
+* Before pushing, run `mvn -DskipTests spotless:check checkstyle:check` to ensure CI will pass.
 
 ---
 
@@ -128,10 +88,10 @@ make clean   # mvn clean
 * Link related issues.
 * Check the box:
 
-    * [ ] `make check` passes locally
-    * [ ] Unit/integration tests updated
-    * [ ] Public API changes documented/Javadoc updated
-    * [ ] No unrelated formatting churn (Spotless should keep this minimal)
+  * [ ] `mvn -DskipTests spotless:check checkstyle:check` passes locally
+  * [ ] Unit/integration tests updated
+  * [ ] Public API changes documented/Javadoc updated
+  * [ ] No unrelated formatting churn (Spotless should keep this minimal)
 
 ---
 
@@ -149,24 +109,23 @@ make clean   # mvn clean
 
 ## License Headers
 
-* Header template lives at: `config/license-header.txt` (root).
-* Spotless inserts or normalizes it automatically.
-* If the copyright line needs updates, edit the template and run `make format`.
+* The license header is defined **inline** in the parent POM under Spotless’ `<licenseHeader>`.
+* To update it, edit the parent POM and run `mvn spotless:apply` to propagate changes.
 
 ---
 
 ## CI
 
 * CI runs `spotless:check` and `checkstyle:check` to ensure consistent formatting and style.
-* Builds fail if formatting or headers drift. Run `make format` locally to fix.
+* Builds fail if formatting or headers drift. Run `mvn spotless:apply` locally to fix.
 
 ---
 
 ## Troubleshooting
 
-* **Hook didn’t run?** Did you run `make hooks` after cloning? Check `git config --get core.hooksPath` prints `.githooks`.
-* **Header file not found?** Ensure Spotless uses the root path via `${maven.multiModuleProjectDirectory}/config/license-header.txt`.
-* **Formatting conflicts with unstaged edits?** The hook stashes them. If a conflict occurs, complete the merge in your working copy, then `git add` and commit again.
+* **Spotless changed files during build?** That’s expected locally. Review `git status`, then stage and commit the updates.
+* **CI red on formatting?** Run `mvn spotless:apply` locally, commit, and push.
+* **Running only a submodule?** Prefer `mvn -pl <module> -am …` from the repo root so parent config (Spotless/Checkstyle) is applied consistently.
 
 ---
 

@@ -63,12 +63,12 @@
         <version.deploy.plugin>3.1.4</version.deploy.plugin>
         <version.enforcer.plugin>3.6.1</version.enforcer.plugin>
         <version.failsafe.plugin>3.5.3</version.failsafe.plugin>
-        <version.fmt-maven-plugin>2.27</version.fmt-maven-plugin>
         <version.gpg.plugin>3.2.8</version.gpg.plugin>
         <version.jar.plugin>3.4.2</version.jar.plugin>
         <version.jdk>${java.version}</version.jdk>
         <version.jsonschema2pojo-maven-plugin>1.2.2</version.jsonschema2pojo-maven-plugin>
         <version.javadoc.plugin>3.11.3</version.javadoc.plugin>
+        <version.org.codehaus.mojo>3.5.1</version.org.codehaus.mojo>
         <version.release.plugin>3.1.1</version.release.plugin>
         <version.source.plugin>3.3.1</version.source.plugin>
         <version.surefire.plugin>3.5.3</version.surefire.plugin>
@@ -306,13 +306,38 @@
                         <googleJavaFormat version="1.17.0" />
                         <!-- add/normalize headers -->
                         <licenseHeader>
-                            <file>${rootDir}/config/license-header.txt</file>
+                            <content>
+                                <![CDATA[
+/*
+ * Copyright 2020-Present The Serverless Workflow Specification Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+        ]]>
+                            </content>
                         </licenseHeader>
                     </java>
                 </configuration>
                 <executions>
-                    <!-- Fail CI if not formatted -->
                     <execution>
+                        <id>spotless-apply-on-validate</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>apply</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>spotless-check-on-verify</id>
                         <phase>verify</phase>
                         <goals>
                             <goal>check</goal>
@@ -493,6 +518,18 @@
                     <configuration>
                         <failOnError>false</failOnError>
                     </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>exec-maven-plugin</artifactId>
+                    <version>${version.org.codehaus.mojo}</version>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>java</goal>
+                            </goals>
+                        </execution>
+                    </executions>
                 </plugin>
             </plugins>
         </pluginManagement>
