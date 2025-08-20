@@ -8,6 +8,11 @@
     </parent>
     <artifactId>serverlessworkflow-examples-simpleGet</artifactId>
     <name>Serverless Workflow :: Examples :: SimpleGet</name>
+
+    <properties>
+        <mainClass>io.serverlessworkflow.impl.BlockingExample</mainClass>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>io.serverlessworkflow</groupId>
@@ -30,4 +35,15 @@
             <artifactId>slf4j-simple</artifactId>
         </dependency>
     </dependencies>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <configuration>
+                    <mainClass>${mainClass}</mainClass>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 </project>
