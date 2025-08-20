@@ -27,6 +27,10 @@
             <groupId>io.serverlessworkflow</groupId>
             <artifactId>serverlessworkflow-fluent-spec</artifactId>
         </dependency>
+        <dependency>
+            <groupId>io.cloudevents</groupId>
+            <artifactId>cloudevents-core</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>org.junit.jupiter</groupId>

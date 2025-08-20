@@ -13,12 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.fluent.spec;
+package io.serverlessworkflow.api.types.func;
 
-public class EventPropertiesBuilder extends AbstractEventPropertiesBuilder<EventPropertiesBuilder> {
+import io.serverlessworkflow.api.types.EventData;
+import java.util.Objects;
+import java.util.function.Predicate;
 
-  @Override
-  protected EventPropertiesBuilder self() {
+public class EventDataPredicate extends EventData {
+
+  public <T> EventDataPredicate withPredicate(Predicate<T> predicate) {
+    setObject(predicate);
+    return this;
+  }
+
+  public <T> EventDataPredicate withPredicate(Predicate<T> predicate, Class<T> clazz) {
+    Objects.requireNonNull(clazz);
+    setObject(new TypedPredicate<>(predicate, clazz));
     return this;
   }
 }

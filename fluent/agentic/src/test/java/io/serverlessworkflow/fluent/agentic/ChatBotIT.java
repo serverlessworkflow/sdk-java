@@ -17,46 +17,41 @@ package io.serverlessworkflow.fluent.agentic;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.spy;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.langchain4j.agentic.AgenticServices;
-import dev.langchain4j.agentic.scope.AgenticScope;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import io.cloudevents.CloudEvent;
-import io.cloudevents.core.v1.CloudEventBuilder;
+import io.cloudevents.jackson.JsonCloudEventData;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowInstance;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowStatus;
 import io.serverlessworkflow.impl.events.InMemoryEvents;
-import java.net.URI;
-import java.time.OffsetDateTime;
+import io.serverlessworkflow.impl.jackson.JsonUtils;
 import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 public class ChatBotIT {
 
   @Test
   @SuppressWarnings("unchecked")
-  @Disabled("Figuring out event processing")
   void chat_bot() {
+    final ObjectMapper mapper = new ObjectMapper();
     Agents.ChatBot chatBot =
         spy(
             AgenticServices.agentBuilder(Agents.ChatBot.class)
                 .chatModel(Models.BASE_MODEL)
-                // .chatMemoryProvider(memoryId -> MessageWindowChatMemory.withMaxMessages(10))
+                .chatMemoryProvider(memoryId -> MessageWindowChatMemory.withMaxMessages(10))
                 .outputName("conversation")
                 .build());
     BlockingQueue<CloudEvent> replyEvents = new LinkedBlockingQueue<>();
@@ -98,7 +93,23 @@ public class ChatBotIT {
                                                                 emit.event(
                                                                     e ->
                                                                         e.type(
-                                                                            "org.acme.chatbot.reply"))))))
+                                                                                "org.acme.chatbot.reply")
+                                                                            .data(
+                                                                                convo -> {
+                                                                                  var node =
+                                                                                      JsonUtils
+                                                                                          .object()
+                                                                                          .put(
+                                                                                              "conversation",
+                                                                                              convo
+                                                                                                  .getOrDefault(
+                                                                                                      "conversation",
+                                                                                                      "")
+                                                                                                  .toString());
+                                                                                  return JsonCloudEventData
+                                                                                      .wrap(node);
+                                                                                },
+                                                                                Map.class))))))
                         .emit(emit -> emit.event(e -> e.type("org.acme.chatbot.finished"))))
             .build();
 
@@ -119,12 +130,24 @@ public class ChatBotIT {
       assertEquals(WorkflowStatus.WAITING, waitingInstance.status());
 
       // Publish the events
-      eventBroker.publish(newMessageEvent("Hello World!"));
+
+      eventBroker.publish(newRequestMessage("Hi! Can you tell me a good duck joke?"));
+
       CloudEvent reply = replyEvents.poll(60, TimeUnit.SECONDS);
       assertNotNull(reply);
 
+      eventBroker.publish(newRequestMessage("Oh I didn't like this one, please tell me another."));
+      reply = replyEvents.poll(60, TimeUnit.SECONDS);
+      assertNotNull(reply);
+      assertThat(
+              ((JsonCloudEventData) Objects.requireNonNull(reply.getData()))
+                  .getNode()
+                  .get("conversation")
+                  .asText())
+          .contains("No worries");
+
       // Empty message completes the workflow
-      eventBroker.publish(newMessageEvent("", "org.acme.chatbot.finalize"));
+      eventBroker.publish(newFinalizeMessage());
       CloudEvent finished = finishedEvents.poll(60, TimeUnit.SECONDS);
       assertNotNull(finished);
       assertThat(finishedEvents).isEmpty();
@@ -134,99 +157,15 @@ public class ChatBotIT {
 
     } catch (InterruptedException e) {
       fail(e.getMessage());
-    } finally {
     }
   }
 
-  /**
-   * In this test we validate a workflow mixed with agents and regular Java calls
-   *
-   * <p>
-   *
-   * <ol>
-   *   <li>The first function prints the message input and converts the data into a Map for the
-   *       agent ingestion
-   *   <li>Internally, our factories will add the output to a new AgenticScope since under the hood,
-   *       we are call `as(AgenticScope)`
-   *   <li>The agent is then called with a scope with a state as `message="input"`
-   *   <li>The agent updates the state automatically in the AgenticScope and returns the message as
-   *       a string, this string is then served to the next task
-   *   <li>The next task process the agent response and returns it ending the workflow. Meanwhile,
-   *       the AgenticScope is always updated with the latest result from the given task.
-   * </ol>
-   */
-  @Test
-  void mixed_workflow() {
-    Agents.ChatBot chatBot =
-        spy(
-            AgenticServices.agentBuilder(Agents.ChatBot.class)
-                .chatModel(Models.BASE_MODEL)
-                .chatMemoryProvider(memoryId -> MessageWindowChatMemory.withMaxMessages(10))
-                .outputName("userInput")
-                .build());
-
-    final Workflow mixedWorkflow =
-        AgentWorkflowBuilder.workflow("chat-bot")
-            .tasks(
-                t ->
-                    t.callFn(
-                            callJ ->
-                                callJ.function(
-                                    input -> {
-                                      System.out.println(input);
-                                      return Map.of("userInput", input);
-                                    },
-                                    String.class))
-                        .agent(chatBot)
-                        .callFn(
-                            callJ ->
-                                callJ.function(
-                                    input -> {
-                                      System.out.println(input);
-                                      // Here, we are return a simple string so the internal
-                                      // AgenticScope will add it to the default `input` key
-                                      // If we want to really manipulate it, we could return a
-                                      // Map<>(message, input)
-                                      return "I've changed the input [" + input + "]";
-                                    },
-                                    String.class)))
-            .build();
-
-    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-      WorkflowModel model =
-          app.workflowDefinition(mixedWorkflow).instance("Hello World!").start().join();
-
-      Optional<String> resultAsString = model.as(String.class);
-
-      assertTrue(resultAsString.isPresent());
-      assertFalse(resultAsString.get().isEmpty());
-      assertTrue(resultAsString.get().contains("changed the input"));
-
-      Optional<AgenticScope> resultAsScope = model.as(AgenticScope.class);
-
-      assertTrue(resultAsScope.isPresent());
-      assertFalse(resultAsScope.get().readState("input").toString().isEmpty());
-      assertTrue(resultAsScope.get().readState("input").toString().contains("changed the input"));
-    }
+  private CloudEvent newRequestMessage(String message) {
+    return CloudEventsTestBuilder.newMessage(
+        String.format("{\"userInput\": \"%s\"}", message), "org.acme.chatbot.request");
   }
 
-  private CloudEvent newMessageEvent(String message) {
-    return newMessageEvent(message, null);
-  }
-
-  private CloudEvent newMessageEvent(String message, String type) {
-    if (type == null || type.isEmpty()) {
-      type = "org.acme.chatbot.request";
-    }
-
-    return new CloudEventBuilder()
-        .withData(String.format("{\"userInput\": \"%s\"}", message).getBytes())
-        .withType(type)
-        .withId(UUID.randomUUID().toString())
-        .withDataContentType("application/json")
-        .withSource(URI.create("test://localhost"))
-        .withSubject("A chatbot message")
-        .withTime(OffsetDateTime.now())
-        .build();
+  private CloudEvent newFinalizeMessage() {
+    return CloudEventsTestBuilder.newMessage("", "org.acme.chatbot.finalize");
   }
 }

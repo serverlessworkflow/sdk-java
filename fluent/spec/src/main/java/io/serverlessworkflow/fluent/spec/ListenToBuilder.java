@@ -22,34 +22,39 @@ import io.serverlessworkflow.api.types.OneEventConsumptionStrategy;
 import io.serverlessworkflow.api.types.Until;
 
 public class ListenToBuilder
-    extends AbstractEventConsumptionStrategyBuilder<ListenToBuilder, ListenTo> {
+    extends AbstractEventConsumptionStrategyBuilder<ListenToBuilder, ListenTo, EventFilterBuilder> {
 
   private final ListenTo listenTo = new ListenTo();
 
-  ListenToBuilder() {}
+  protected ListenToBuilder() {}
 
   @Override
-  void setOne(OneEventConsumptionStrategy strategy) {
+  protected EventFilterBuilder newEventFilterBuilder() {
+    return new EventFilterBuilder();
+  }
+
+  @Override
+  protected void setOne(OneEventConsumptionStrategy strategy) {
     this.listenTo.setOneEventConsumptionStrategy(strategy);
   }
 
   @Override
-  void setAll(AllEventConsumptionStrategy strategy) {
+  protected void setAll(AllEventConsumptionStrategy strategy) {
     this.listenTo.setAllEventConsumptionStrategy(strategy);
   }
 
   @Override
-  void setAny(AnyEventConsumptionStrategy strategy) {
+  protected void setAny(AnyEventConsumptionStrategy strategy) {
     this.listenTo.setAnyEventConsumptionStrategy(strategy);
   }
 
   @Override
-  ListenTo getEventConsumptionStrategy() {
+  protected ListenTo getEventConsumptionStrategy() {
     return this.listenTo;
   }
 
   @Override
-  void setUntil(Until until) {
+  protected void setUntil(Until until) {
     this.listenTo.getAnyEventConsumptionStrategy().setUntil(until);
   }
 }

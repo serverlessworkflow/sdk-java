@@ -13,12 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.fluent.spec;
+package io.serverlessworkflow.fluent.func;
 
-public class EventPropertiesBuilder extends AbstractEventPropertiesBuilder<EventPropertiesBuilder> {
+import io.serverlessworkflow.fluent.spec.AbstractEventFilterBuilder;
+
+public class FuncEventFilterBuilder
+    extends AbstractEventFilterBuilder<
+        FuncEventFilterBuilder, FuncPredicateEventPropertiesBuilder> {
 
   @Override
-  protected EventPropertiesBuilder self() {
+  protected FuncEventFilterBuilder self() {
     return this;
+  }
+
+  @Override
+  protected FuncPredicateEventPropertiesBuilder newEventPropertiesBuilder() {
+    return new FuncPredicateEventPropertiesBuilder();
   }
 }
