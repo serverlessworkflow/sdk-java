@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package io.serverlessworkflow.impl.executors.http.oauth;
 
 import static io.serverlessworkflow.api.types.OAuth2AutenthicationDataClient.ClientAuthentication.CLIENT_SECRET_POST;
@@ -27,8 +26,11 @@ import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class OAuthRequestBuilder {
 
@@ -112,9 +114,21 @@ public class OAuthRequestBuilder {
   }
 
   private void scope(HttpRequestBuilder requestBuilder) {
-    if (authenticationData.getScopes() != null && !authenticationData.getScopes().isEmpty()) {
-      String scopes = String.join(" ", authenticationData.getScopes());
-      requestBuilder.addQueryParam("scope", scopes);
+    List<String> scopesList = authenticationData.getScopes();
+    if (scopesList == null || scopesList.isEmpty()) {
+      return;
+    }
+    String scope =
+        scopesList.stream()
+            .filter(Objects::nonNull)
+            .map(String::trim)
+            .filter(s -> !s.isEmpty())
+            .flatMap(s -> Arrays.stream(s.split("\\s+")))
+            .distinct()
+            .collect(Collectors.joining(" "));
+
+    if (!scope.isEmpty()) {
+      requestBuilder.addQueryParam("scope", scope);
     }
   }
 

@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package io.serverlessworkflow.impl;
 
 import static io.serverlessworkflow.api.WorkflowReader.readWorkflowFromClasspath;
@@ -38,6 +37,23 @@ import org.junit.jupiter.api.Test;
 public class OAuthHTTPWorkflowDefinitionTest {
 
   private static final ObjectMapper MAPPER = new ObjectMapper();
+
+  private static final String RESPONSE =
+      """
+                  {
+                      "message": "Hello World"
+                  }
+                  """;
+
+  String TOKEN_RESPONSE_TEMPLATE =
+      """
+                  {
+                    "access_token": "%s",
+                    "token_type": "Bearer",
+                    "expires_in": 3600,
+                    "scope": "read write"
+                  }
+                  """;
 
   private MockWebServer authServer;
   private MockWebServer apiServer;
@@ -67,17 +83,7 @@ public class OAuthHTTPWorkflowDefinitionTest {
   @Test
   public void testOAuthClientSecretPostPasswordWorkflowExecution() throws Exception {
     String jwt = fakeAccessToken();
-
-    String tokenResponse =
-        """
-          {
-            "access_token": "%s",
-            "token_type": "Bearer",
-            "expires_in": 3600,
-            "scope": "read write"
-          }
-          """
-            .formatted(jwt);
+    String tokenResponse = TOKEN_RESPONSE_TEMPLATE.formatted(jwt);
 
     authServer.enqueue(
         new MockResponse()
@@ -85,16 +91,9 @@ public class OAuthHTTPWorkflowDefinitionTest {
             .setHeader("Content-Type", "application/json")
             .setResponseCode(200));
 
-    String response =
-        """
-            {
-                "message": "Hello World"
-            }
-            """;
-
     apiServer.enqueue(
         new MockResponse()
-            .setBody(response)
+            .setBody(RESPONSE)
             .setHeader("Content-Type", "application/json")
             .setResponseCode(200));
 
@@ -127,19 +126,9 @@ public class OAuthHTTPWorkflowDefinitionTest {
   }
 
   @Test
-  public void testOAuthClientSecretPostClientCredentialsWorkflowExecution() throws Exception {
+  public void testOAuthClientSecretPostWithArgsWorkflowExecution() throws Exception {
     String jwt = fakeAccessToken();
-
-    String tokenResponse =
-        """
-              {
-                "access_token": "%s",
-                "token_type": "Bearer",
-                "expires_in": 3600,
-                "scope": "read write"
-              }
-              """
-            .formatted(jwt);
+    String tokenResponse = TOKEN_RESPONSE_TEMPLATE.formatted(jwt);
 
     authServer.enqueue(
         new MockResponse()
@@ -147,16 +136,176 @@ public class OAuthHTTPWorkflowDefinitionTest {
             .setHeader("Content-Type", "application/json")
             .setResponseCode(200));
 
-    String response =
-        """
-                {
-                    "message": "Hello World"
-                }
-                """;
+    apiServer.enqueue(
+        new MockResponse()
+            .setBody(RESPONSE)
+            .setHeader("Content-Type", "application/json")
+            .setResponseCode(200));
+
+    Workflow workflow =
+        readWorkflowFromClasspath("oAuthClientSecretPostPasswordAsArgHttpCall.yaml");
+    Map<String, Object> result;
+    Map<String, String> params =
+        Map.of(
+            "clientId", "serverless-workflow",
+            "clientSecret", "D0ACXCUKOUrL5YL7j6RQWplMaSjPB8MT",
+            "username", "serverless-workflow-test",
+            "password", "serverless-workflow-test");
+
+    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
+      result =
+          app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
+    } catch (Exception e) {
+      throw new RuntimeException("Workflow execution failed", e);
+    }
+
+    assertTrue(result.containsKey("message"));
+    assertTrue(result.get("message").toString().contains("Hello World"));
+
+    RecordedRequest tokenRequest = authServer.takeRequest();
+    assertEquals("POST", tokenRequest.getMethod());
+    assertEquals("/realms/test-realm/protocol/openid-connect/token", tokenRequest.getPath());
+    assertEquals("application/x-www-form-urlencoded", tokenRequest.getHeader("Content-Type"));
+
+    String tokenRequestBody = tokenRequest.getBody().readUtf8();
+    assertTrue(tokenRequestBody.contains("grant_type=password"));
+    assertTrue(tokenRequestBody.contains("username=serverless-workflow-test"));
+    assertTrue(tokenRequestBody.contains("password=serverless-workflow-test"));
+
+    RecordedRequest petRequest = apiServer.takeRequest();
+    assertEquals("GET", petRequest.getMethod());
+    assertEquals("/hello", petRequest.getPath());
+    assertEquals("Bearer " + jwt, petRequest.getHeader("Authorization"));
+  }
+
+  @Test
+  public void testOAuthClientSecretPostWithArgsNoEndPointWorkflowExecution() throws Exception {
+    String jwt = fakeAccessToken();
+    String tokenResponse = TOKEN_RESPONSE_TEMPLATE.formatted(jwt);
+
+    authServer.enqueue(
+        new MockResponse()
+            .setBody(tokenResponse)
+            .setHeader("Content-Type", "application/json")
+            .setResponseCode(200));
 
     apiServer.enqueue(
         new MockResponse()
-            .setBody(response)
+            .setBody(RESPONSE)
+            .setHeader("Content-Type", "application/json")
+            .setResponseCode(200));
+
+    Workflow workflow =
+        readWorkflowFromClasspath("oAuthClientSecretPostPasswordNoEndpointsHttpCall.yaml");
+    Map<String, Object> result;
+    Map<String, String> params =
+        Map.of(
+            "clientId", "serverless-workflow",
+            "clientSecret", "D0ACXCUKOUrL5YL7j6RQWplMaSjPB8MT",
+            "username", "serverless-workflow-test",
+            "password", "serverless-workflow-test");
+
+    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
+      result =
+          app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
+    } catch (Exception e) {
+      throw new RuntimeException("Workflow execution failed", e);
+    }
+
+    assertTrue(result.containsKey("message"));
+    assertTrue(result.get("message").toString().contains("Hello World"));
+
+    RecordedRequest tokenRequest = authServer.takeRequest();
+    assertEquals("POST", tokenRequest.getMethod());
+    assertEquals("/realms/test-realm/oauth2/token", tokenRequest.getPath());
+    assertEquals("application/x-www-form-urlencoded", tokenRequest.getHeader("Content-Type"));
+
+    String tokenRequestBody = tokenRequest.getBody().readUtf8();
+    assertTrue(tokenRequestBody.contains("grant_type=password"));
+    assertTrue(tokenRequestBody.contains("username=serverless-workflow-test"));
+    assertTrue(tokenRequestBody.contains("password=serverless-workflow-test"));
+
+    RecordedRequest petRequest = apiServer.takeRequest();
+    assertEquals("GET", petRequest.getMethod());
+    assertEquals("/hello", petRequest.getPath());
+    assertEquals("Bearer " + jwt, petRequest.getHeader("Authorization"));
+  }
+
+  @Test
+  public void testOAuthClientSecretPostWithArgsAllGrantsWorkflowExecution() throws Exception {
+    String jwt = fakeAccessToken();
+    String tokenResponse = TOKEN_RESPONSE_TEMPLATE.formatted(jwt);
+
+    authServer.enqueue(
+        new MockResponse()
+            .setBody(tokenResponse)
+            .setHeader("Content-Type", "application/json")
+            .setResponseCode(200));
+
+    apiServer.enqueue(
+        new MockResponse()
+            .setBody(RESPONSE)
+            .setHeader("Content-Type", "application/json")
+            .setResponseCode(200));
+
+    Workflow workflow =
+        readWorkflowFromClasspath("oAuthClientSecretPostPasswordAllGrantsHttpCall.yaml");
+    Map<String, Object> result;
+    Map<String, String> params =
+        Map.of(
+            "clientId", "serverless-workflow",
+            "clientSecret", "D0ACXCUKOUrL5YL7j6RQWplMaSjPB8MT",
+            "username", "serverless-workflow-test",
+            "password", "serverless-workflow-test",
+            "openidScope", "openidScope",
+            "audience", "account");
+
+    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
+      result =
+          app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
+    } catch (Exception e) {
+      throw new RuntimeException("Workflow execution failed", e);
+    }
+
+    assertTrue(result.containsKey("message"));
+    assertTrue(result.get("message").toString().contains("Hello World"));
+
+    RecordedRequest tokenRequest = authServer.takeRequest();
+    assertEquals("POST", tokenRequest.getMethod());
+    assertEquals("/realms/test-realm/oauth2/token", tokenRequest.getPath());
+    assertEquals("application/x-www-form-urlencoded", tokenRequest.getHeader("Content-Type"));
+
+    String tokenRequestBody = tokenRequest.getBody().readUtf8();
+    assertTrue(tokenRequestBody.contains("grant_type=password"));
+    assertTrue(tokenRequestBody.contains("username=serverless-workflow-test"));
+    assertTrue(tokenRequestBody.contains("password=serverless-workflow-test"));
+
+    assertTrue(
+        tokenRequestBody.contains("scope=pets%3Aread+pets%3Awrite+pets%3Adelete+pets%3Acreate"));
+    assertTrue(
+        tokenRequestBody.contains("audience=serverless-workflow+another-audience+third-audience"));
+
+    RecordedRequest petRequest = apiServer.takeRequest();
+    assertEquals("GET", petRequest.getMethod());
+    assertEquals("/hello", petRequest.getPath());
+    assertEquals("Bearer " + jwt, petRequest.getHeader("Authorization"));
+  }
+
+  @Test
+  public void testOAuthClientSecretPostClientCredentialsWorkflowExecution() throws Exception {
+    String jwt = fakeAccessToken();
+
+    String tokenResponse = TOKEN_RESPONSE_TEMPLATE.formatted(jwt);
+
+    authServer.enqueue(
+        new MockResponse()
+            .setBody(tokenResponse)
+            .setHeader("Content-Type", "application/json")
+            .setResponseCode(200));
+
+    apiServer.enqueue(
+        new MockResponse()
+            .setBody(RESPONSE)
             .setHeader("Content-Type", "application/json")
             .setResponseCode(200));
 
@@ -182,6 +331,535 @@ public class OAuthHTTPWorkflowDefinitionTest {
     assertTrue(tokenRequestBody.contains("grant_type=client_credentials"));
     assertTrue(tokenRequestBody.contains("client_id=serverless-workflow"));
     assertTrue(tokenRequestBody.contains("secret=D0ACXCUKOUrL5YL7j6RQWplMaSjPB8MT"));
+
+    RecordedRequest petRequest = apiServer.takeRequest();
+    assertEquals("GET", petRequest.getMethod());
+    assertEquals("/hello", petRequest.getPath());
+    assertEquals("Bearer " + jwt, petRequest.getHeader("Authorization"));
+  }
+
+  @Test
+  public void testOAuthClientSecretPostClientCredentialsParamsWorkflowExecution() throws Exception {
+    String jwt = fakeAccessToken();
+
+    String tokenResponse = TOKEN_RESPONSE_TEMPLATE.formatted(jwt);
+
+    authServer.enqueue(
+        new MockResponse()
+            .setBody(tokenResponse)
+            .setHeader("Content-Type", "application/json")
+            .setResponseCode(200));
+
+    apiServer.enqueue(
+        new MockResponse()
+            .setBody(RESPONSE)
+            .setHeader("Content-Type", "application/json")
+            .setResponseCode(200));
+
+    Workflow workflow =
+        readWorkflowFromClasspath("oAuthClientSecretPostClientCredentialsParamsHttpCall.yaml");
+    Map<String, Object> result;
+    Map<String, String> params =
+        Map.of(
+            "clientId", "serverless-workflow",
+            "clientSecret", "D0ACXCUKOUrL5YL7j6RQWplMaSjPB8MT");
+
+    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
+      result =
+          app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
+    } catch (Exception e) {
+      throw new RuntimeException("Workflow execution failed", e);
+    }
+
+    assertTrue(result.containsKey("message"));
+    assertTrue(result.get("message").toString().contains("Hello World"));
+
+    RecordedRequest tokenRequest = authServer.takeRequest();
+    assertEquals("POST", tokenRequest.getMethod());
+    assertEquals("/realms/test-realm/protocol/openid-connect/token", tokenRequest.getPath());
+    assertEquals("application/x-www-form-urlencoded", tokenRequest.getHeader("Content-Type"));
+
+    String tokenRequestBody = tokenRequest.getBody().readUtf8();
+    assertTrue(tokenRequestBody.contains("grant_type=client_credentials"));
+    assertTrue(tokenRequestBody.contains("client_id=serverless-workflow"));
+    assertTrue(tokenRequestBody.contains("secret=D0ACXCUKOUrL5YL7j6RQWplMaSjPB8MT"));
+
+    RecordedRequest petRequest = apiServer.takeRequest();
+    assertEquals("GET", petRequest.getMethod());
+    assertEquals("/hello", petRequest.getPath());
+    assertEquals("Bearer " + jwt, petRequest.getHeader("Authorization"));
+  }
+
+  @Test
+  public void testOAuthClientSecretPostClientCredentialsParamsNoEndpointWorkflowExecution()
+      throws Exception {
+    String jwt = fakeAccessToken();
+
+    String tokenResponse = TOKEN_RESPONSE_TEMPLATE.formatted(jwt);
+
+    authServer.enqueue(
+        new MockResponse()
+            .setBody(tokenResponse)
+            .setHeader("Content-Type", "application/json")
+            .setResponseCode(200));
+
+    apiServer.enqueue(
+        new MockResponse()
+            .setBody(RESPONSE)
+            .setHeader("Content-Type", "application/json")
+            .setResponseCode(200));
+
+    Workflow workflow =
+        readWorkflowFromClasspath(
+            "oAuthClientSecretPostClientCredentialsParamsNoEndPointHttpCall.yaml");
+    Map<String, Object> result;
+    Map<String, String> params =
+        Map.of(
+            "clientId", "serverless-workflow",
+            "clientSecret", "D0ACXCUKOUrL5YL7j6RQWplMaSjPB8MT");
+
+    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
+      result =
+          app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
+    } catch (Exception e) {
+      throw new RuntimeException("Workflow execution failed", e);
+    }
+
+    assertTrue(result.containsKey("message"));
+    assertTrue(result.get("message").toString().contains("Hello World"));
+
+    RecordedRequest tokenRequest = authServer.takeRequest();
+    assertEquals("POST", tokenRequest.getMethod());
+    assertEquals("/realms/test-realm/oauth2/token", tokenRequest.getPath());
+    assertEquals("application/x-www-form-urlencoded", tokenRequest.getHeader("Content-Type"));
+
+    String tokenRequestBody = tokenRequest.getBody().readUtf8();
+    assertTrue(tokenRequestBody.contains("grant_type=client_credentials"));
+    assertTrue(tokenRequestBody.contains("client_id=serverless-workflow"));
+    assertTrue(tokenRequestBody.contains("secret=D0ACXCUKOUrL5YL7j6RQWplMaSjPB8MT"));
+
+    RecordedRequest petRequest = apiServer.takeRequest();
+    assertEquals("GET", petRequest.getMethod());
+    assertEquals("/hello", petRequest.getPath());
+    assertEquals("Bearer " + jwt, petRequest.getHeader("Authorization"));
+  }
+
+  @Test
+  public void testOAuthJSONPasswordWorkflowExecution() throws Exception {
+    String jwt = fakeAccessToken();
+    String tokenResponse = TOKEN_RESPONSE_TEMPLATE.formatted(jwt);
+
+    authServer.enqueue(
+        new MockResponse()
+            .setBody(tokenResponse)
+            .setHeader("Content-Type", "application/json")
+            .setResponseCode(200));
+
+    apiServer.enqueue(
+        new MockResponse()
+            .setBody(RESPONSE)
+            .setHeader("Content-Type", "application/json")
+            .setResponseCode(200));
+
+    Workflow workflow = readWorkflowFromClasspath("oAuthJSONPasswordHttpCall.yaml");
+    Map<String, Object> result;
+    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
+      result =
+          app.workflowDefinition(workflow).instance(Map.of()).start().get().asMap().orElseThrow();
+    } catch (Exception e) {
+      throw new RuntimeException("Workflow execution failed", e);
+    }
+
+    assertTrue(result.containsKey("message"));
+    assertTrue(result.get("message").toString().contains("Hello World"));
+
+    RecordedRequest tokenRequest = authServer.takeRequest();
+    assertEquals("POST", tokenRequest.getMethod());
+
+    assertEquals("/realms/test-realm/protocol/openid-connect/token", tokenRequest.getPath());
+    assertEquals("application/json", tokenRequest.getHeader("Content-Type"));
+
+    String tokenRequestBody = tokenRequest.getBody().readUtf8();
+
+    Map<String, Object> asJson = MAPPER.readValue(tokenRequestBody, Map.class);
+    assertTrue(asJson.containsKey("grant_type") && asJson.get("grant_type").equals("password"));
+
+    assertTrue(
+        asJson.containsKey("client_id") && asJson.get("client_id").equals("serverless-workflow"));
+    assertTrue(
+        asJson.containsKey("client_secret")
+            && asJson.get("client_secret").equals("D0ACXCUKOUrL5YL7j6RQWplMaSjPB8MT"));
+
+    assertTrue(
+        asJson.containsKey("username")
+            && asJson.get("username").equals("serverless-workflow-test"));
+    assertTrue(
+        asJson.containsKey("password")
+            && asJson.get("password").equals("serverless-workflow-test"));
+
+    RecordedRequest petRequest = apiServer.takeRequest();
+    assertEquals("GET", petRequest.getMethod());
+    assertEquals("/hello", petRequest.getPath());
+    assertEquals("Bearer " + jwt, petRequest.getHeader("Authorization"));
+  }
+
+  @Test
+  public void testOAuthJSONWithArgsWorkflowExecution() throws Exception {
+    String jwt = fakeAccessToken();
+    String tokenResponse = TOKEN_RESPONSE_TEMPLATE.formatted(jwt);
+
+    authServer.enqueue(
+        new MockResponse()
+            .setBody(tokenResponse)
+            .setHeader("Content-Type", "application/json")
+            .setResponseCode(200));
+
+    apiServer.enqueue(
+        new MockResponse()
+            .setBody(RESPONSE)
+            .setHeader("Content-Type", "application/json")
+            .setResponseCode(200));
+
+    Workflow workflow = readWorkflowFromClasspath("oAuthJSONPasswordAsArgHttpCall.yaml");
+    Map<String, Object> result;
+    Map<String, String> params =
+        Map.of(
+            "clientId", "serverless-workflow",
+            "clientSecret", "D0ACXCUKOUrL5YL7j6RQWplMaSjPB8MT",
+            "username", "serverless-workflow-test",
+            "password", "serverless-workflow-test");
+
+    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
+      result =
+          app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
+    } catch (Exception e) {
+      throw new RuntimeException("Workflow execution failed", e);
+    }
+
+    assertTrue(result.containsKey("message"));
+    assertTrue(result.get("message").toString().contains("Hello World"));
+
+    RecordedRequest tokenRequest = authServer.takeRequest();
+    assertEquals("POST", tokenRequest.getMethod());
+    assertEquals("/realms/test-realm/protocol/openid-connect/token", tokenRequest.getPath());
+    assertEquals("application/json", tokenRequest.getHeader("Content-Type"));
+
+    String tokenRequestBody = tokenRequest.getBody().readUtf8();
+
+    Map<String, Object> asJson = MAPPER.readValue(tokenRequestBody, Map.class);
+    assertTrue(asJson.containsKey("grant_type") && asJson.get("grant_type").equals("password"));
+    assertTrue(
+        asJson.containsKey("client_id") && asJson.get("client_id").equals("serverless-workflow"));
+    assertTrue(
+        asJson.containsKey("client_secret")
+            && asJson.get("client_secret").equals("D0ACXCUKOUrL5YL7j6RQWplMaSjPB8MT"));
+    assertTrue(
+        asJson.containsKey("username")
+            && asJson.get("username").equals("serverless-workflow-test"));
+    assertTrue(
+        asJson.containsKey("password")
+            && asJson.get("password").equals("serverless-workflow-test"));
+
+    RecordedRequest petRequest = apiServer.takeRequest();
+    assertEquals("GET", petRequest.getMethod());
+    assertEquals("/hello", petRequest.getPath());
+    assertEquals("Bearer " + jwt, petRequest.getHeader("Authorization"));
+  }
+
+  @Test
+  public void testOAuthJSONWithArgsNoEndPointWorkflowExecution() throws Exception {
+    String jwt = fakeAccessToken();
+    String tokenResponse = TOKEN_RESPONSE_TEMPLATE.formatted(jwt);
+
+    authServer.enqueue(
+        new MockResponse()
+            .setBody(tokenResponse)
+            .setHeader("Content-Type", "application/json")
+            .setResponseCode(200));
+
+    apiServer.enqueue(
+        new MockResponse()
+            .setBody(RESPONSE)
+            .setHeader("Content-Type", "application/json")
+            .setResponseCode(200));
+
+    Workflow workflow = readWorkflowFromClasspath("oAuthJSONPasswordNoEndpointsHttpCall.yaml");
+    Map<String, Object> result;
+    Map<String, String> params =
+        Map.of(
+            "clientId", "serverless-workflow",
+            "clientSecret", "D0ACXCUKOUrL5YL7j6RQWplMaSjPB8MT",
+            "username", "serverless-workflow-test",
+            "password", "serverless-workflow-test");
+
+    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
+      result =
+          app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
+    } catch (Exception e) {
+      throw new RuntimeException("Workflow execution failed", e);
+    }
+
+    assertTrue(result.containsKey("message"));
+    assertTrue(result.get("message").toString().contains("Hello World"));
+
+    RecordedRequest tokenRequest = authServer.takeRequest();
+    assertEquals("POST", tokenRequest.getMethod());
+    assertEquals("/realms/test-realm/oauth2/token", tokenRequest.getPath());
+    assertEquals("application/json", tokenRequest.getHeader("Content-Type"));
+
+    String tokenRequestBody = tokenRequest.getBody().readUtf8();
+    Map<String, Object> asJson = MAPPER.readValue(tokenRequestBody, Map.class);
+    assertTrue(asJson.containsKey("grant_type") && asJson.get("grant_type").equals("password"));
+    assertTrue(
+        asJson.containsKey("client_id") && asJson.get("client_id").equals("serverless-workflow"));
+    assertTrue(
+        asJson.containsKey("client_secret")
+            && asJson.get("client_secret").equals("D0ACXCUKOUrL5YL7j6RQWplMaSjPB8MT"));
+    assertTrue(
+        asJson.containsKey("username")
+            && asJson.get("username").equals("serverless-workflow-test"));
+    assertTrue(
+        asJson.containsKey("password")
+            && asJson.get("password").equals("serverless-workflow-test"));
+
+    RecordedRequest petRequest = apiServer.takeRequest();
+    assertEquals("GET", petRequest.getMethod());
+    assertEquals("/hello", petRequest.getPath());
+    assertEquals("Bearer " + jwt, petRequest.getHeader("Authorization"));
+  }
+
+  @Test
+  public void testOAuthJSONWithArgsAllGrantsWorkflowExecution() throws Exception {
+    String jwt = fakeAccessToken();
+    String tokenResponse = TOKEN_RESPONSE_TEMPLATE.formatted(jwt);
+
+    authServer.enqueue(
+        new MockResponse()
+            .setBody(tokenResponse)
+            .setHeader("Content-Type", "application/json")
+            .setResponseCode(200));
+
+    apiServer.enqueue(
+        new MockResponse()
+            .setBody(RESPONSE)
+            .setHeader("Content-Type", "application/json")
+            .setResponseCode(200));
+
+    Workflow workflow = readWorkflowFromClasspath("oAuthJSONPasswordAllGrantsHttpCall.yaml");
+    Map<String, Object> result;
+    Map<String, String> params =
+        Map.of(
+            "clientId", "serverless-workflow",
+            "clientSecret", "D0ACXCUKOUrL5YL7j6RQWplMaSjPB8MT",
+            "username", "serverless-workflow-test",
+            "password", "serverless-workflow-test",
+            "openidScope", "openidScope",
+            "audience", "account");
+
+    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
+      result =
+          app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
+    } catch (Exception e) {
+      throw new RuntimeException("Workflow execution failed", e);
+    }
+
+    assertTrue(result.containsKey("message"));
+    assertTrue(result.get("message").toString().contains("Hello World"));
+
+    RecordedRequest tokenRequest = authServer.takeRequest();
+    assertEquals("POST", tokenRequest.getMethod());
+    assertEquals("/realms/test-realm/oauth2/token", tokenRequest.getPath());
+    assertEquals("application/json", tokenRequest.getHeader("Content-Type"));
+
+    String tokenRequestBody = tokenRequest.getBody().readUtf8();
+
+    Map<String, Object> asJson = MAPPER.readValue(tokenRequestBody, Map.class);
+    assertTrue(asJson.containsKey("grant_type") && asJson.get("grant_type").equals("password"));
+    assertTrue(
+        asJson.containsKey("client_id") && asJson.get("client_id").equals("serverless-workflow"));
+    assertTrue(
+        asJson.containsKey("client_secret")
+            && asJson.get("client_secret").equals("D0ACXCUKOUrL5YL7j6RQWplMaSjPB8MT"));
+    assertTrue(
+        asJson.containsKey("username")
+            && asJson.get("username").equals("serverless-workflow-test"));
+    assertTrue(
+        asJson.containsKey("password")
+            && asJson.get("password").equals("serverless-workflow-test"));
+
+    assertTrue(
+        asJson.containsKey("scope")
+            && asJson.get("scope").equals("pets:read pets:write pets:delete pets:create"));
+
+    assertTrue(
+        asJson.containsKey("audience")
+            && asJson
+                .get("audience")
+                .equals("serverless-workflow another-audience third-audience"));
+
+    RecordedRequest petRequest = apiServer.takeRequest();
+    assertEquals("GET", petRequest.getMethod());
+    assertEquals("/hello", petRequest.getPath());
+    assertEquals("Bearer " + jwt, petRequest.getHeader("Authorization"));
+  }
+
+  @Test
+  public void testOAuthJSONClientCredentialsWorkflowExecution() throws Exception {
+    String jwt = fakeAccessToken();
+
+    String tokenResponse = TOKEN_RESPONSE_TEMPLATE.formatted(jwt);
+
+    authServer.enqueue(
+        new MockResponse()
+            .setBody(tokenResponse)
+            .setHeader("Content-Type", "application/json")
+            .setResponseCode(200));
+
+    apiServer.enqueue(
+        new MockResponse()
+            .setBody(RESPONSE)
+            .setHeader("Content-Type", "application/json")
+            .setResponseCode(200));
+
+    Workflow workflow = readWorkflowFromClasspath("oAuthJSONClientCredentialsHttpCall.yaml");
+    Map<String, Object> result;
+    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
+      result =
+          app.workflowDefinition(workflow).instance(Map.of()).start().get().asMap().orElseThrow();
+    } catch (Exception e) {
+      throw new RuntimeException("Workflow execution failed", e);
+    }
+
+    assertTrue(result.containsKey("message"));
+    assertTrue(result.get("message").toString().contains("Hello World"));
+
+    RecordedRequest tokenRequest = authServer.takeRequest();
+    assertEquals("POST", tokenRequest.getMethod());
+    assertEquals("/realms/test-realm/protocol/openid-connect/token", tokenRequest.getPath());
+    assertEquals("application/json", tokenRequest.getHeader("Content-Type"));
+
+    String tokenRequestBody = tokenRequest.getBody().readUtf8();
+    Map<String, Object> asJson = MAPPER.readValue(tokenRequestBody, Map.class);
+    assertTrue(
+        asJson.containsKey("grant_type") && asJson.get("grant_type").equals("client_credentials"));
+    assertTrue(
+        asJson.containsKey("client_id") && asJson.get("client_id").equals("serverless-workflow"));
+    assertTrue(
+        asJson.containsKey("client_secret")
+            && asJson.get("client_secret").equals("D0ACXCUKOUrL5YL7j6RQWplMaSjPB8MT"));
+
+    RecordedRequest petRequest = apiServer.takeRequest();
+    assertEquals("GET", petRequest.getMethod());
+    assertEquals("/hello", petRequest.getPath());
+    assertEquals("Bearer " + jwt, petRequest.getHeader("Authorization"));
+  }
+
+  @Test
+  public void testOAuthJSONClientCredentialsParamsWorkflowExecution() throws Exception {
+    String jwt = fakeAccessToken();
+
+    String tokenResponse = TOKEN_RESPONSE_TEMPLATE.formatted(jwt);
+
+    authServer.enqueue(
+        new MockResponse()
+            .setBody(tokenResponse)
+            .setHeader("Content-Type", "application/json")
+            .setResponseCode(200));
+
+    apiServer.enqueue(
+        new MockResponse()
+            .setBody(RESPONSE)
+            .setHeader("Content-Type", "application/json")
+            .setResponseCode(200));
+
+    Workflow workflow = readWorkflowFromClasspath("oAuthJSONClientCredentialsParamsHttpCall.yaml");
+    Map<String, Object> result;
+    Map<String, String> params =
+        Map.of(
+            "clientId", "serverless-workflow",
+            "clientSecret", "D0ACXCUKOUrL5YL7j6RQWplMaSjPB8MT");
+
+    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
+      result =
+          app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
+    } catch (Exception e) {
+      throw new RuntimeException("Workflow execution failed", e);
+    }
+
+    assertTrue(result.containsKey("message"));
+    assertTrue(result.get("message").toString().contains("Hello World"));
+
+    RecordedRequest tokenRequest = authServer.takeRequest();
+    assertEquals("POST", tokenRequest.getMethod());
+    assertEquals("/realms/test-realm/protocol/openid-connect/token", tokenRequest.getPath());
+    assertEquals("application/json", tokenRequest.getHeader("Content-Type"));
+
+    String tokenRequestBody = tokenRequest.getBody().readUtf8();
+    Map<String, Object> asJson = MAPPER.readValue(tokenRequestBody, Map.class);
+    assertTrue(
+        asJson.containsKey("grant_type") && asJson.get("grant_type").equals("client_credentials"));
+    assertTrue(
+        asJson.containsKey("client_id") && asJson.get("client_id").equals("serverless-workflow"));
+    assertTrue(
+        asJson.containsKey("client_secret")
+            && asJson.get("client_secret").equals("D0ACXCUKOUrL5YL7j6RQWplMaSjPB8MT"));
+
+    RecordedRequest petRequest = apiServer.takeRequest();
+    assertEquals("GET", petRequest.getMethod());
+    assertEquals("/hello", petRequest.getPath());
+    assertEquals("Bearer " + jwt, petRequest.getHeader("Authorization"));
+  }
+
+  @Test
+  public void testOAuthJSONClientCredentialsParamsNoEndpointWorkflowExecution() throws Exception {
+    String jwt = fakeAccessToken();
+
+    String tokenResponse = TOKEN_RESPONSE_TEMPLATE.formatted(jwt);
+
+    authServer.enqueue(
+        new MockResponse()
+            .setBody(tokenResponse)
+            .setHeader("Content-Type", "application/json")
+            .setResponseCode(200));
+
+    apiServer.enqueue(
+        new MockResponse()
+            .setBody(RESPONSE)
+            .setHeader("Content-Type", "application/json")
+            .setResponseCode(200));
+
+    Workflow workflow =
+        readWorkflowFromClasspath("oAuthJSONClientCredentialsParamsNoEndPointHttpCall.yaml");
+    Map<String, Object> result;
+    Map<String, String> params =
+        Map.of(
+            "clientId", "serverless-workflow",
+            "clientSecret", "D0ACXCUKOUrL5YL7j6RQWplMaSjPB8MT");
+
+    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
+      result =
+          app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
+    } catch (Exception e) {
+      throw new RuntimeException("Workflow execution failed", e);
+    }
+
+    assertTrue(result.containsKey("message"));
+    assertTrue(result.get("message").toString().contains("Hello World"));
+
+    RecordedRequest tokenRequest = authServer.takeRequest();
+    assertEquals("POST", tokenRequest.getMethod());
+    assertEquals("/realms/test-realm/oauth2/token", tokenRequest.getPath());
+    assertEquals("application/json", tokenRequest.getHeader("Content-Type"));
+
+    String tokenRequestBody = tokenRequest.getBody().readUtf8();
+    Map<String, Object> asJson = MAPPER.readValue(tokenRequestBody, Map.class);
+    assertTrue(
+        asJson.containsKey("grant_type") && asJson.get("grant_type").equals("client_credentials"));
+    assertTrue(
+        asJson.containsKey("client_id") && asJson.get("client_id").equals("serverless-workflow"));
+    assertTrue(
+        asJson.containsKey("client_secret")
+            && asJson.get("client_secret").equals("D0ACXCUKOUrL5YL7j6RQWplMaSjPB8MT"));
 
     RecordedRequest petRequest = apiServer.takeRequest();
     assertEquals("GET", petRequest.getMethod());

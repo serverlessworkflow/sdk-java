@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package io.serverlessworkflow.impl.executors.http.oauth;
 
 import static io.serverlessworkflow.api.types.OAuth2TokenRequest.Oauth2TokenRequestEncoding;
@@ -35,8 +34,6 @@ import jakarta.ws.rs.client.WebTarget;
 import jakarta.ws.rs.core.Form;
 import jakarta.ws.rs.core.MediaType;
 import java.net.URI;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -115,10 +112,8 @@ class HttpRequestBuilder {
       form.param("grant_type", grantType.value());
       queryParams.forEach(
           (key, value) -> {
-            String v = value.apply(workflow, task, model);
-            String encodedKey = URLEncoder.encode(key, StandardCharsets.UTF_8);
-            String encodedValue = URLEncoder.encode(v, StandardCharsets.UTF_8);
-            form.param(encodedKey, encodedValue);
+            String resolved = value.apply(workflow, task, model);
+            form.param(key, resolved);
           });
       entity = Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED);
     } else {
@@ -126,10 +121,8 @@ class HttpRequestBuilder {
       jsonData.put("grant_type", grantType.value());
       queryParams.forEach(
           (key, value) -> {
-            String v = value.apply(workflow, task, model);
-            String encodedKey = URLEncoder.encode(key, StandardCharsets.UTF_8);
-            String encodedValue = URLEncoder.encode(v, StandardCharsets.UTF_8);
-            jsonData.put(encodedKey, encodedValue);
+            String resolved = value.apply(workflow, task, model);
+            jsonData.put(key, resolved);
           });
       entity = Entity.entity(jsonData, MediaType.APPLICATION_JSON);
     }
