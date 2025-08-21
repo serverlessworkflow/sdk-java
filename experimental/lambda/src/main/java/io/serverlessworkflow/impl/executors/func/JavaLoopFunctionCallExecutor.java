@@ -20,13 +20,13 @@ import static io.serverlessworkflow.impl.executors.func.JavaFuncUtils.safeObject
 import io.serverlessworkflow.api.types.TaskBase;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.api.types.func.CallJava;
+import io.serverlessworkflow.api.types.func.LoopFunction;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowModelFactory;
 import io.serverlessworkflow.impl.executors.CallableTask;
-import io.serverlessworkflow.impl.expressions.LoopFunction;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
 import java.util.concurrent.CompletableFuture;
 

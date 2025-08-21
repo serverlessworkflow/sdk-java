@@ -16,8 +16,6 @@
 package io.serverlessworkflow.api.types.func;
 
 import io.serverlessworkflow.api.types.ForTask;
-import io.serverlessworkflow.impl.expressions.LoopPredicate;
-import io.serverlessworkflow.impl.expressions.LoopPredicateIndex;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.function.Function;
