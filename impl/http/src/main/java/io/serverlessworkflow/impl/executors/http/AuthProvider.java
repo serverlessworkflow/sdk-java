@@ -20,8 +20,17 @@ import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
 import jakarta.ws.rs.client.Invocation;
 
-@FunctionalInterface
 interface AuthProvider {
+
+  default void preRequest(
+      Invocation.Builder builder, WorkflowContext workflow, TaskContext task, WorkflowModel model) {
+    // Default implementation does nothing
+  }
+
+  default void postRequest(WorkflowContext workflow, TaskContext task, WorkflowModel model) {
+    // Default implementation does nothing
+  }
+
   Invocation.Builder build(
       Invocation.Builder builder, WorkflowContext workflow, TaskContext task, WorkflowModel model);
 }

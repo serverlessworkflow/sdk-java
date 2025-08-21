@@ -154,7 +154,10 @@ public class HttpExecutor implements CallableTask<CallHTTP> {
     return CompletableFuture.supplyAsync(
         () -> {
           try {
-            return requestFunction.apply(request, workflow, taskContext, input);
+            authProvider.ifPresent(auth -> auth.preRequest(request, workflow, taskContext, input));
+            WorkflowModel result = requestFunction.apply(request, workflow, taskContext, input);
+            authProvider.ifPresent(auth -> auth.postRequest(workflow, taskContext, input));
+            return result;
           } catch (WebApplicationException exception) {
             throw new WorkflowException(
                 WorkflowError.communication(

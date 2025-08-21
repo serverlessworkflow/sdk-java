@@ -27,9 +27,11 @@ public record WorkflowError(
   }
 
   public static Builder communication(int status, TaskContext context, Exception ex) {
-    return new Builder(COMM_TYPE, status)
-        .instance(context.position().jsonPointer())
-        .title(ex.getMessage());
+    return communication(status, context, ex.getMessage());
+  }
+
+  public static Builder communication(int status, TaskContext context, String title) {
+    return new Builder(COMM_TYPE, status).instance(context.position().jsonPointer()).title(title);
   }
 
   public static Builder runtime(int status, TaskContext context, Exception ex) {
