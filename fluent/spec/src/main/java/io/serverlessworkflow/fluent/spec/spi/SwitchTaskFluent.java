@@ -24,11 +24,21 @@ import java.util.UUID;
 import java.util.function.Consumer;
 
 public interface SwitchTaskFluent<SELF extends TaskBaseBuilder<SELF>> {
-  default SELF items(Consumer<SwitchTaskFluent.SwitchCaseBuilder> switchCaseConsumer) {
-    return this.items(UUID.randomUUID().toString(), switchCaseConsumer);
+  String DEFAULT_CASE = "default";
+
+  default SELF on(Consumer<SwitchTaskFluent.SwitchCaseBuilder> switchCaseConsumer) {
+    return this.on(UUID.randomUUID().toString(), switchCaseConsumer);
   }
 
-  SELF items(final String name, Consumer<SwitchTaskFluent.SwitchCaseBuilder> switchCaseConsumer);
+  SELF on(final String name, Consumer<SwitchTaskFluent.SwitchCaseBuilder> switchCaseConsumer);
+
+  default SELF onDefault(String taskName) {
+    return this.on(DEFAULT_CASE, c -> c.then(taskName));
+  }
+
+  default SELF onDefault(FlowDirectiveEnum directiveEnum) {
+    return this.on(DEFAULT_CASE, c -> c.then(directiveEnum));
+  }
 
   SwitchTask build();
 
@@ -44,8 +54,8 @@ public interface SwitchTaskFluent<SELF extends TaskBaseBuilder<SELF>> {
       return this;
     }
 
-    public SwitchCaseBuilder then(FlowDirective then) {
-      this.switchCase.setThen(then);
+    public SwitchCaseBuilder then(String then) {
+      this.switchCase.setThen(new FlowDirective().withString(then));
       return this;
     }
 

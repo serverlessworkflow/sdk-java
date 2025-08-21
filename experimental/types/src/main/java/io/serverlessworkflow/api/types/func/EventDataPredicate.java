@@ -17,18 +17,18 @@ package io.serverlessworkflow.api.types.func;
 
 import io.serverlessworkflow.api.types.EventData;
 import java.util.Objects;
-import java.util.function.Function;
+import java.util.function.Predicate;
 
-public class EventDataFunction extends EventData {
+public class EventDataPredicate extends EventData {
 
-  public <T, R> EventData withFunction(Function<T, R> value) {
-    setObject(value);
+  public <T> EventDataPredicate withPredicate(Predicate<T> predicate) {
+    setObject(predicate);
     return this;
   }
 
-  public <T, R> EventData withFunction(Function<T, R> value, Class<T> argClass) {
-    Objects.requireNonNull(argClass);
-    setObject(new TypedFunction<>(value, argClass));
+  public <T> EventDataPredicate withPredicate(Predicate<T> predicate, Class<T> clazz) {
+    Objects.requireNonNull(clazz);
+    setObject(new TypedPredicate<>(predicate, clazz));
     return this;
   }
 }

@@ -13,22 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.api.types.func;
+package org.acme;
 
-import io.serverlessworkflow.api.types.EventData;
-import java.util.Objects;
-import java.util.function.Function;
+import java.util.List;
 
-public class EventDataFunction extends EventData {
-
-  public <T, R> EventData withFunction(Function<T, R> value) {
-    setObject(value);
-    return this;
-  }
-
-  public <T, R> EventData withFunction(Function<T, R> value, Class<T> argClass) {
-    Objects.requireNonNull(argClass);
-    setObject(new TypedFunction<>(value, argClass));
-    return this;
-  }
-}
+public record PolicyDecision(
+    EmailPolicies.Decision decision, EmailDraft draft, List<String> notes) {}

@@ -17,11 +17,14 @@ package io.serverlessworkflow.fluent.spec;
 
 import io.serverlessworkflow.api.types.AllEventConsumptionStrategy;
 import io.serverlessworkflow.api.types.AnyEventConsumptionStrategy;
+import io.serverlessworkflow.api.types.EventFilter;
 import io.serverlessworkflow.api.types.OneEventConsumptionStrategy;
 import io.serverlessworkflow.api.types.Until;
 import io.serverlessworkflow.fluent.spec.spi.EventConsumptionStrategyFluent;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 public abstract class AbstractEventConsumptionStrategyBuilder<
@@ -68,13 +71,28 @@ public abstract class AbstractEventConsumptionStrategyBuilder<
 
   protected abstract void setAll(AllEventConsumptionStrategy strategy);
 
+  @SuppressWarnings("unchecked")
   public SELF any(Consumer<F> c) {
+    return (SELF) any(new Consumer[] {c});
+  }
+
+  @SuppressWarnings("unchecked")
+  @SafeVarargs
+  public final SELF any(Consumer<F>... consumers) {
     ensureNoneSet();
     anySet = true;
-    F fb = this.newEventFilterBuilder();
-    c.accept(fb);
+
+    List<T> built = new ArrayList<>(consumers.length); // replace Object with your filter type
+
+    for (Consumer<? super F> c : consumers) {
+      Objects.requireNonNull(c, "consumer");
+      F fb = this.newEventFilterBuilder(); // fresh builder per consumer
+      c.accept(fb);
+      built.add((T) fb.build());
+    }
+
     AnyEventConsumptionStrategy strat = new AnyEventConsumptionStrategy();
-    strat.setAny(List.of(fb.build()));
+    strat.setAny((List<EventFilter>) built);
     this.setAny(strat);
     return this.self();
   }

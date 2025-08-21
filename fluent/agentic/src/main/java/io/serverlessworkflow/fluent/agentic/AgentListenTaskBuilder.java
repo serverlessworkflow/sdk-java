@@ -19,11 +19,13 @@ import io.serverlessworkflow.api.types.AnyEventConsumptionStrategy;
 import io.serverlessworkflow.api.types.ListenTask;
 import io.serverlessworkflow.api.types.func.UntilPredicate;
 import io.serverlessworkflow.fluent.func.FuncListenToBuilder;
+import io.serverlessworkflow.fluent.func.spi.ConditionalTaskBuilder;
 import io.serverlessworkflow.fluent.spec.AbstractListenTaskBuilder;
 import java.util.function.Predicate;
 
 public class AgentListenTaskBuilder
-    extends AbstractListenTaskBuilder<AgentTaskItemListBuilder, FuncListenToBuilder> {
+    extends AbstractListenTaskBuilder<AgentTaskItemListBuilder, FuncListenToBuilder>
+    implements ConditionalTaskBuilder<AgentListenTaskBuilder> {
 
   private UntilPredicate untilPredicate;
 

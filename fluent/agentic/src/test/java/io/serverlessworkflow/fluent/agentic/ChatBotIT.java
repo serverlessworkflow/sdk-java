@@ -21,9 +21,11 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.spy;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dev.langchain4j.agentic.AgenticServices;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import io.cloudevents.CloudEvent;
+import io.cloudevents.jackson.JsonCloudEventData;
 import io.serverlessworkflow.api.types.EventFilter;
 import io.serverlessworkflow.api.types.EventProperties;
 import io.serverlessworkflow.api.types.Workflow;
@@ -31,7 +33,9 @@ import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowInstance;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowStatus;
+import io.serverlessworkflow.impl.jackson.JsonUtils;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -43,6 +47,7 @@ public class ChatBotIT {
   @Test
   @SuppressWarnings("unchecked")
   void chat_bot() {
+    final ObjectMapper mapper = new ObjectMapper();
     Agents.ChatBot chatBot =
         spy(
             AgenticServices.agentBuilder(Agents.ChatBot.class)
@@ -91,7 +96,21 @@ public class ChatBotIT {
                                                                         e.type(
                                                                                 "org.acme.chatbot.reply")
                                                                             .data(
-                                                                                ".conversation"))))))
+                                                                                convo -> {
+                                                                                  var node =
+                                                                                      JsonUtils
+                                                                                          .object()
+                                                                                          .put(
+                                                                                              "conversation",
+                                                                                              convo
+                                                                                                  .getOrDefault(
+                                                                                                      "conversation",
+                                                                                                      "")
+                                                                                                  .toString());
+                                                                                  return JsonCloudEventData
+                                                                                      .wrap(node);
+                                                                                },
+                                                                                Map.class))))))
                         .emit(emit -> emit.event(e -> e.type("org.acme.chatbot.finished"))))
             .build();
 
@@ -130,6 +149,12 @@ public class ChatBotIT {
           .publish(newRequestMessage("Oh I didn't like this one, please tell me another."));
       reply = replyEvents.poll(60, TimeUnit.SECONDS);
       assertNotNull(reply);
+      assertThat(
+              ((JsonCloudEventData) Objects.requireNonNull(reply.getData()))
+                  .getNode()
+                  .get("conversation")
+                  .asText())
+          .contains("No worries");
 
       // Empty message completes the workflow
       app.eventPublisher().publish(newFinalizeMessage());
