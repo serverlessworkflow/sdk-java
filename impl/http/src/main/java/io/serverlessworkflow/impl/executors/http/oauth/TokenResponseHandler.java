@@ -20,6 +20,7 @@ import io.serverlessworkflow.impl.WorkflowError;
 import io.serverlessworkflow.impl.WorkflowException;
 import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.client.ResponseProcessingException;
+import jakarta.ws.rs.core.GenericType;
 import jakarta.ws.rs.core.Response;
 import java.util.Map;
 import java.util.function.BiFunction;
@@ -41,7 +42,7 @@ public class TokenResponseHandler
                         + response.getEntity())
                 .build());
       }
-      return (Map<String, Object>) response.readEntity(Map.class);
+      return response.readEntity(new GenericType<>() {});
     } catch (ResponseProcessingException e) {
       throw new WorkflowException(
           WorkflowError.communication(

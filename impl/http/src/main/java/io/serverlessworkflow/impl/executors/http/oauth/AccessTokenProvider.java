@@ -45,12 +45,7 @@ public class AccessTokenProvider {
 
   public JWT validateAndGet() {
     Map<String, Object> token = tokenResponseHandler.apply(invocation, context);
-    JWT jwt;
-    try {
-      jwt = jwtConverter.fromToken((String) token.get("access_token"));
-    } catch (IllegalArgumentException e) {
-      throw new IllegalStateException("Failed to parse JWT token: " + e.getMessage(), e);
-    }
+    JWT jwt = jwtConverter.fromToken((String) token.get("access_token"));
     if (!(issuers == null || issuers.isEmpty())) {
       String tokenIssuer = (String) jwt.getClaim("iss");
       if (tokenIssuer == null || tokenIssuer.isEmpty() || !issuers.contains(tokenIssuer)) {
