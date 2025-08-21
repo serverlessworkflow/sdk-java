@@ -21,7 +21,7 @@ import dev.langchain4j.agentic.internal.AgentExecutor;
 import dev.langchain4j.agentic.internal.AgentSpecification;
 import dev.langchain4j.agentic.scope.AgenticScope;
 import dev.langchain4j.agentic.scope.DefaultAgenticScope;
-import io.serverlessworkflow.impl.expressions.LoopPredicateIndex;
+import io.serverlessworkflow.api.types.func.LoopPredicateIndex;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;

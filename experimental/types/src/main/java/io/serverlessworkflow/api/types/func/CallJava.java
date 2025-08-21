@@ -16,8 +16,6 @@
 package io.serverlessworkflow.api.types.func;
 
 import io.serverlessworkflow.api.types.TaskBase;
-import io.serverlessworkflow.impl.expressions.LoopFunction;
-import io.serverlessworkflow.impl.expressions.LoopFunctionIndex;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;

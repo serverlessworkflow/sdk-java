@@ -13,10 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.expressions;
+package io.serverlessworkflow.api.types.func;
 
-public final class TaskMetadataKeys {
+import java.util.function.BiPredicate;
 
-  /** Metadata entry name for the DSL’s “when”/“if” predicate. */
-  public static final String IF_PREDICATE = "if_predicate";
-}
+@FunctionalInterface
+public interface LoopPredicate<T, V> extends BiPredicate<T, V> {}

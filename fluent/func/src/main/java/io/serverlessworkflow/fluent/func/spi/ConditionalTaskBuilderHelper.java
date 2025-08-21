@@ -17,7 +17,7 @@ package io.serverlessworkflow.fluent.func.spi;
 
 import io.serverlessworkflow.api.types.TaskBase;
 import io.serverlessworkflow.api.types.TaskMetadata;
-import io.serverlessworkflow.impl.expressions.TaskMetadataKeys;
+import io.serverlessworkflow.api.types.func.TaskMetadataKeys;
 
 class ConditionalTaskBuilderHelper {
 
