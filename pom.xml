@@ -46,7 +46,6 @@
     <module>examples</module>
     <module>experimental</module>
     <module>fluent</module>
-    <module>jwt</module>
   </modules>
 
     <properties>
