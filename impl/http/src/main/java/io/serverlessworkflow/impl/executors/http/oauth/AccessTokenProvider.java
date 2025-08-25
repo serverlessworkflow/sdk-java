@@ -47,10 +47,13 @@ public class AccessTokenProvider {
     Map<String, Object> token = tokenResponseHandler.apply(invocation, context);
     JWT jwt = jwtConverter.fromToken((String) token.get("access_token"));
     if (!(issuers == null || issuers.isEmpty())) {
-      String tokenIssuer = (String) jwt.getClaim("iss");
-      if (tokenIssuer == null || tokenIssuer.isEmpty() || !issuers.contains(tokenIssuer)) {
-        throw new IllegalStateException("Token issuer is not valid: " + tokenIssuer);
-      }
+      jwt.issuer()
+          .ifPresent(
+              issuer -> {
+                if (!issuers.contains(issuer)) {
+                  throw new IllegalStateException("Token issuer is not valid: " + issuer);
+                }
+              });
     }
     return jwt;
   }

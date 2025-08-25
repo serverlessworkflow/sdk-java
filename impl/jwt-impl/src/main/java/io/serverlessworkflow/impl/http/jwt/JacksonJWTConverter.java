@@ -29,14 +29,24 @@ public class JacksonJWTConverter implements JWTConverter {
 
   @Override
   public JWT fromToken(String token) throws IllegalArgumentException {
+    if (token == null || token.isBlank()) {
+      throw new IllegalArgumentException("JWT token must not be null or blank");
+    }
+
     String[] parts = token.split("\\.");
     if (parts.length < 2) {
       throw new IllegalArgumentException("Invalid JWT token format");
     }
     try {
+      String headerJson =
+          new String(Base64.getUrlDecoder().decode(parts[0]), StandardCharsets.UTF_8);
       String payloadJson =
           new String(Base64.getUrlDecoder().decode(parts[1]), StandardCharsets.UTF_8);
-      return new JacksonJWTImpl(token, MAPPER.readValue(payloadJson, Map.class));
+
+      Map<String, Object> header = MAPPER.readValue(headerJson, Map.class);
+      Map<String, Object> claims = MAPPER.readValue(payloadJson, Map.class);
+
+      return new JacksonJWTImpl(token, header, claims);
     } catch (JsonProcessingException e) {
       throw new IllegalArgumentException("Failed to parse JWT token payload: " + e.getMessage(), e);
     }

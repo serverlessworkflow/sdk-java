@@ -52,10 +52,14 @@ public class OAuth2AuthProvider implements AuthProvider {
   @Override
   public void preRequest(
       Invocation.Builder builder, WorkflowContext workflow, TaskContext task, WorkflowModel model) {
-    JWT token = requestBuilder.build(workflow, task, model).validateAndGet();
-    String tokenType = (String) token.getClaim("typ");
+    JWT jwt = requestBuilder.build(workflow, task, model).validateAndGet();
+    String type =
+        jwt.claim("typ", String.class)
+            .map(String::trim)
+            .filter(t -> !t.isEmpty())
+            .orElseThrow(() -> new IllegalStateException("Token type is not present"));
+
     builder.header(
-        AuthProviderFactory.AUTH_HEADER_NAME,
-        String.format(BEARER_TOKEN, tokenType, token.getToken()));
+        AuthProviderFactory.AUTH_HEADER_NAME, String.format(BEARER_TOKEN, type, jwt.token()));
   }
 }
