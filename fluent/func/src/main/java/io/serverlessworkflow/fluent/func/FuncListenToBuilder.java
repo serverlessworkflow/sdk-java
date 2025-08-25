@@ -13,49 +13,50 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.fluent.spec;
+package io.serverlessworkflow.fluent.func;
 
 import io.serverlessworkflow.api.types.AllEventConsumptionStrategy;
 import io.serverlessworkflow.api.types.AnyEventConsumptionStrategy;
-import io.serverlessworkflow.api.types.EventConsumptionStrategy;
+import io.serverlessworkflow.api.types.ListenTo;
 import io.serverlessworkflow.api.types.OneEventConsumptionStrategy;
 import io.serverlessworkflow.api.types.Until;
+import io.serverlessworkflow.fluent.spec.AbstractEventConsumptionStrategyBuilder;
 
-public class EventConsumptionStrategyBuilder
+public class FuncListenToBuilder
     extends AbstractEventConsumptionStrategyBuilder<
-        EventConsumptionStrategyBuilder, EventConsumptionStrategy, EventFilterBuilder> {
+        FuncListenToBuilder, ListenTo, FuncEventFilterBuilder> {
 
-  private final EventConsumptionStrategy eventConsumptionStrategy = new EventConsumptionStrategy();
-
-  EventConsumptionStrategyBuilder() {}
+  private final ListenTo listenTo = new ListenTo();
 
   @Override
-  protected EventFilterBuilder newEventFilterBuilder() {
-    return new EventFilterBuilder();
+  protected FuncEventFilterBuilder newEventFilterBuilder() {
+    return new FuncEventFilterBuilder();
   }
+
+  // TODO: move these methods to default on an interface
 
   @Override
   protected void setOne(OneEventConsumptionStrategy strategy) {
-    eventConsumptionStrategy.setOneEventConsumptionStrategy(strategy);
+    this.listenTo.setOneEventConsumptionStrategy(strategy);
   }
 
   @Override
   protected void setAll(AllEventConsumptionStrategy strategy) {
-    eventConsumptionStrategy.setAllEventConsumptionStrategy(strategy);
+    this.listenTo.setAllEventConsumptionStrategy(strategy);
   }
 
   @Override
   protected void setAny(AnyEventConsumptionStrategy strategy) {
-    eventConsumptionStrategy.setAnyEventConsumptionStrategy(strategy);
+    this.listenTo.setAnyEventConsumptionStrategy(strategy);
   }
 
   @Override
-  protected EventConsumptionStrategy getEventConsumptionStrategy() {
-    return this.eventConsumptionStrategy;
+  protected ListenTo getEventConsumptionStrategy() {
+    return this.listenTo;
   }
 
   @Override
   protected void setUntil(Until until) {
-    this.eventConsumptionStrategy.getAnyEventConsumptionStrategy().setUntil(until);
+    this.listenTo.getAnyEventConsumptionStrategy().setUntil(until);
   }
 }

@@ -13,12 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.fluent.spec;
+package org.acme;
 
-public class EventPropertiesBuilder extends AbstractEventPropertiesBuilder<EventPropertiesBuilder> {
+import java.util.List;
 
-  @Override
-  protected EventPropertiesBuilder self() {
-    return this;
-  }
-}
+public record PolicyDecision(
+    EmailPolicies.Decision decision, EmailDraft draft, List<String> notes) {}
