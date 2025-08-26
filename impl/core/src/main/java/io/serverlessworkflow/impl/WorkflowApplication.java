@@ -141,8 +141,8 @@ public class WorkflowApplication implements AutoCloseable {
     private WorkflowPositionFactory positionFactory = () -> new QueueWorkflowPosition();
     private WorkflowIdFactory idFactory = () -> UlidCreator.getMonotonicUlid().toString();
     private ExecutorServiceFactory executorFactory = new DefaultExecutorServiceFactory();
-    private EventConsumer<?, ?> eventConsumer = InMemoryEvents.get();
-    private EventPublisher eventPublisher = InMemoryEvents.get();
+    private EventConsumer<?, ?> eventConsumer;
+    private EventPublisher eventPublisher;
     private RuntimeDescriptorFactory descriptorFactory =
         () -> new RuntimeDescriptor("reference impl", "1.0.0_alpha", Collections.emptyMap());
 
@@ -193,12 +193,9 @@ public class WorkflowApplication implements AutoCloseable {
       return this;
     }
 
-    public Builder withEventConsumer(EventConsumer<?, ?> eventConsumer) {
+    public Builder withEventHandler(
+        EventPublisher eventPublisher, EventConsumer<?, ?> eventConsumer) {
       this.eventConsumer = eventConsumer;
-      return this;
-    }
-
-    public Builder withEventPublisher(EventPublisher eventPublisher) {
       this.eventPublisher = eventPublisher;
       return this;
     }
@@ -221,6 +218,11 @@ public class WorkflowApplication implements AutoCloseable {
             ServiceLoader.load(TaskExecutorFactory.class)
                 .findFirst()
                 .orElseGet(() -> DefaultTaskExecutorFactory.get());
+      }
+      if (eventConsumer == null && eventPublisher == null) {
+        InMemoryEvents inMemory = new InMemoryEvents(executorFactory);
+        eventPublisher = inMemory;
+        eventConsumer = inMemory;
       }
       return new WorkflowApplication(this);
     }

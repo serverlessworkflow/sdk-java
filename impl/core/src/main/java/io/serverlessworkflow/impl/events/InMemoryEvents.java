@@ -16,7 +16,6 @@
 package io.serverlessworkflow.impl.events;
 
 import io.cloudevents.CloudEvent;
-import io.serverlessworkflow.impl.DefaultExecutorServiceFactory;
 import io.serverlessworkflow.impl.ExecutorServiceFactory;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -30,15 +29,11 @@ import java.util.function.Consumer;
  */
 public class InMemoryEvents extends AbstractTypeConsumer implements EventPublisher {
 
-  private static InMemoryEvents instance = new InMemoryEvents();
-
-  private InMemoryEvents() {}
-
-  public static InMemoryEvents get() {
-    return instance;
+  public InMemoryEvents(ExecutorServiceFactory serviceFactory) {
+    this.serviceFactory = serviceFactory;
   }
 
-  private ExecutorServiceFactory serviceFactory = new DefaultExecutorServiceFactory();
+  private ExecutorServiceFactory serviceFactory;
 
   private Map<String, Consumer<CloudEvent>> topicMap = new ConcurrentHashMap<>();
 

@@ -15,8 +15,6 @@
  */
 package io.serverlessworkflow.impl.executors.http.oauth;
 
-import io.serverlessworkflow.http.jwt.JWT;
-import io.serverlessworkflow.http.jwt.JWTConverter;
 import io.serverlessworkflow.impl.TaskContext;
 import java.util.List;
 import java.util.Map;

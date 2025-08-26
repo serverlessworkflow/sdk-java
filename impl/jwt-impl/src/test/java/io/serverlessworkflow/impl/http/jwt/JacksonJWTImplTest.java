@@ -17,7 +17,8 @@ package io.serverlessworkflow.impl.http.jwt;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import io.serverlessworkflow.http.jwt.JWT;
+import io.serverlessworkflow.impl.executors.http.oauth.JWT;
+import io.serverlessworkflow.impl.executors.http.oauth.jackson.JacksonJWTConverter;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
