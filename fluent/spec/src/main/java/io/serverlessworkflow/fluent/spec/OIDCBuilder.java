@@ -16,8 +16,8 @@
 package io.serverlessworkflow.fluent.spec;
 
 import io.serverlessworkflow.api.types.AuthenticationPolicy;
-import io.serverlessworkflow.api.types.OAuth2AutenthicationData;
-import io.serverlessworkflow.api.types.OAuth2AutenthicationDataClient;
+import io.serverlessworkflow.api.types.OAuth2AuthenticationData;
+import io.serverlessworkflow.api.types.OAuth2AuthenticationDataClient;
 import io.serverlessworkflow.api.types.OAuth2AuthenticationPropertiesEndpoints;
 import io.serverlessworkflow.api.types.OAuth2TokenDefinition;
 import io.serverlessworkflow.api.types.OAuth2TokenRequest;
@@ -25,10 +25,10 @@ import java.util.List;
 import java.util.function.Consumer;
 
 public abstract class OIDCBuilder<T extends AuthenticationPolicy> {
-  private final OAuth2AutenthicationData authenticationData;
+  private final OAuth2AuthenticationData authenticationData;
 
   OIDCBuilder() {
-    this.authenticationData = new OAuth2AutenthicationData();
+    this.authenticationData = new OAuth2AuthenticationData();
     this.authenticationData.setRequest(new OAuth2TokenRequest());
   }
 
@@ -37,7 +37,7 @@ public abstract class OIDCBuilder<T extends AuthenticationPolicy> {
     return this;
   }
 
-  public OIDCBuilder<T> grant(OAuth2AutenthicationData.OAuth2AutenthicationDataGrant grant) {
+  public OIDCBuilder<T> grant(OAuth2AuthenticationData.OAuth2AuthenticationDataGrant grant) {
     this.authenticationData.setGrant(grant);
     return this;
   }
@@ -100,7 +100,7 @@ public abstract class OIDCBuilder<T extends AuthenticationPolicy> {
     return this;
   }
 
-  protected final OAuth2AutenthicationData getAuthenticationData() {
+  protected final OAuth2AuthenticationData getAuthenticationData() {
     return authenticationData;
   }
 
@@ -129,10 +129,10 @@ public abstract class OIDCBuilder<T extends AuthenticationPolicy> {
   }
 
   public static final class OAuth2AuthenticationDataClientBuilder {
-    private final OAuth2AutenthicationDataClient client;
+    private final OAuth2AuthenticationDataClient client;
 
     OAuth2AuthenticationDataClientBuilder() {
-      this.client = new OAuth2AutenthicationDataClient();
+      this.client = new OAuth2AuthenticationDataClient();
     }
 
     public OAuth2AuthenticationDataClientBuilder id(String id) {
@@ -151,12 +151,12 @@ public abstract class OIDCBuilder<T extends AuthenticationPolicy> {
     }
 
     public OAuth2AuthenticationDataClientBuilder authentication(
-        OAuth2AutenthicationDataClient.ClientAuthentication authentication) {
+        OAuth2AuthenticationDataClient.ClientAuthentication authentication) {
       this.client.setAuthentication(authentication);
       return this;
     }
 
-    public OAuth2AutenthicationDataClient build() {
+    public OAuth2AuthenticationDataClient build() {
       return this.client;
     }
   }

@@ -15,10 +15,10 @@
  */
 package io.serverlessworkflow.impl.executors.http.oauth;
 
-import static io.serverlessworkflow.api.types.OAuth2AutenthicationData.OAuth2AutenthicationDataGrant.CLIENT_CREDENTIALS;
-import static io.serverlessworkflow.api.types.OAuth2AutenthicationData.OAuth2AutenthicationDataGrant.PASSWORD;
+import static io.serverlessworkflow.api.types.OAuth2AuthenticationData.OAuth2AuthenticationDataGrant.CLIENT_CREDENTIALS;
+import static io.serverlessworkflow.api.types.OAuth2AuthenticationData.OAuth2AuthenticationDataGrant.PASSWORD;
 
-import io.serverlessworkflow.api.types.OAuth2AutenthicationData;
+import io.serverlessworkflow.api.types.OAuth2AuthenticationData;
 import io.serverlessworkflow.api.types.Oauth2;
 
 class ClientSecretPostStep {
@@ -29,8 +29,8 @@ class ClientSecretPostStep {
   }
 
   public void execute(HttpRequestBuilder requestBuilder) {
-    OAuth2AutenthicationData authenticationData =
-        oauth2.getOAuth2ConnectAuthenticationProperties().getOAuth2AutenthicationData();
+    OAuth2AuthenticationData authenticationData =
+        oauth2.getOAuth2ConnectAuthenticationProperties().getOAuth2AuthenticationData();
 
     if (authenticationData.getGrant().equals(PASSWORD)) {
       password(requestBuilder, authenticationData);
@@ -43,7 +43,7 @@ class ClientSecretPostStep {
   }
 
   private void clientCredentials(
-      HttpRequestBuilder requestBuilder, OAuth2AutenthicationData authenticationData) {
+      HttpRequestBuilder requestBuilder, OAuth2AuthenticationData authenticationData) {
     if (authenticationData.getClient() == null
         || authenticationData.getClient().getId() == null
         || authenticationData.getClient().getSecret() == null) {
@@ -59,7 +59,7 @@ class ClientSecretPostStep {
   }
 
   private void password(
-      HttpRequestBuilder requestBuilder, OAuth2AutenthicationData authenticationData) {
+      HttpRequestBuilder requestBuilder, OAuth2AuthenticationData authenticationData) {
     if (authenticationData.getUsername() == null || authenticationData.getPassword() == null) {
       throw new IllegalArgumentException(
           "Username and password must be provided for password grant type");

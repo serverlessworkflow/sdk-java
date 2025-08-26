@@ -15,10 +15,10 @@
  */
 package io.serverlessworkflow.impl.executors.http.oauth;
 
-import static io.serverlessworkflow.api.types.OAuth2AutenthicationDataClient.ClientAuthentication.CLIENT_SECRET_POST;
+import static io.serverlessworkflow.api.types.OAuth2AuthenticationDataClient.ClientAuthentication.CLIENT_SECRET_POST;
 
-import io.serverlessworkflow.api.types.OAuth2AutenthicationData;
-import io.serverlessworkflow.api.types.OAuth2AutenthicationDataClient;
+import io.serverlessworkflow.api.types.OAuth2AuthenticationData;
+import io.serverlessworkflow.api.types.OAuth2AuthenticationDataClient;
 import io.serverlessworkflow.api.types.OAuth2AuthenticationPropertiesEndpoints;
 import io.serverlessworkflow.api.types.Oauth2;
 import io.serverlessworkflow.impl.TaskContext;
@@ -36,7 +36,7 @@ public class OAuthRequestBuilder {
 
   private final Oauth2 oauth2;
 
-  private final OAuth2AutenthicationData authenticationData;
+  private final OAuth2AuthenticationData authenticationData;
 
   private final WorkflowApplication application;
 
@@ -51,7 +51,7 @@ public class OAuthRequestBuilder {
   public OAuthRequestBuilder(WorkflowApplication application, Oauth2 oauth2) {
     this.oauth2 = oauth2;
     this.authenticationData =
-        oauth2.getOAuth2ConnectAuthenticationProperties().getOAuth2AutenthicationData();
+        oauth2.getOAuth2ConnectAuthenticationProperties().getOAuth2AuthenticationData();
     this.application = application;
   }
 
@@ -90,7 +90,7 @@ public class OAuthRequestBuilder {
     new ClientSecretPostStep(oauth2).execute(requestBuilder);
   }
 
-  private OAuth2AutenthicationDataClient.ClientAuthentication getClientAuthentication() {
+  private OAuth2AuthenticationDataClient.ClientAuthentication getClientAuthentication() {
     if (authenticationData.getClient() == null
         || authenticationData.getClient().getAuthentication() == null) {
       return CLIENT_SECRET_POST;
@@ -102,7 +102,7 @@ public class OAuthRequestBuilder {
     issuers =
         oauth2
             .getOAuth2ConnectAuthenticationProperties()
-            .getOAuth2AutenthicationData()
+            .getOAuth2AuthenticationData()
             .getIssuers();
   }
 
@@ -142,7 +142,7 @@ public class OAuthRequestBuilder {
     String baseUri =
         oauth2
             .getOAuth2ConnectAuthenticationProperties()
-            .getOAuth2AutenthicationData()
+            .getOAuth2AuthenticationData()
             .getAuthority()
             .getLiteralUri()
             .toString()
