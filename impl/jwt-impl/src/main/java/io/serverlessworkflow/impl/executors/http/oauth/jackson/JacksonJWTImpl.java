@@ -15,7 +15,7 @@
  */
 package io.serverlessworkflow.impl.executors.http.oauth.jackson;
 
-import io.serverlessworkflow.impl.executors.http.oauth.JWT;
+import io.serverlessworkflow.impl.executors.http.auth.jwt.JWT;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collection;

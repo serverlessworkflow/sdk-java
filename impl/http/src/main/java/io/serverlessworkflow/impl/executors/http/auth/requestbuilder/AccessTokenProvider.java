@@ -13,9 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.executors.http.oauth;
+package io.serverlessworkflow.impl.executors.http.auth.requestbuilder;
 
 import io.serverlessworkflow.impl.TaskContext;
+import io.serverlessworkflow.impl.executors.http.auth.jwt.JWT;
+import io.serverlessworkflow.impl.executors.http.auth.jwt.JWTConverter;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;

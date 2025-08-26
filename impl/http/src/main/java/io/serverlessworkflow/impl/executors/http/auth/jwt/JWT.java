@@ -13,31 +13,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.executors.http.oauth;
+package io.serverlessworkflow.impl.executors.http.auth.jwt;
 
-import jakarta.ws.rs.client.Client;
-import jakarta.ws.rs.core.Response;
-import java.io.Closeable;
-import java.util.concurrent.Callable;
-import java.util.function.Supplier;
+import java.time.Instant;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
-class InvocationHolder implements Callable<Response>, Closeable {
+public interface JWT {
 
-  private final Client client;
-  private final Supplier<Response> call;
+  String token();
 
-  InvocationHolder(Client client, Supplier<Response> call) {
-    this.client = client;
-    this.call = call;
-  }
+  List<String> audience();
 
-  public Response call() {
-    return call.get();
-  }
+  Map<String, Object> claims();
 
-  public void close() {
-    if (client != null) {
-      client.close();
-    }
-  }
+  <T> Optional<T> claim(String name, Class<T> type);
+
+  Optional<Instant> expiresAt();
+
+  Map<String, Object> header();
+
+  Optional<Instant> issuedAt();
+
+  Optional<String> issuer();
+
+  Optional<String> subject();
+
+  Optional<String> type();
 }

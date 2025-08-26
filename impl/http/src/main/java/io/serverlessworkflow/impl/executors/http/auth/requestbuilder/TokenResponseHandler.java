@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.executors.http.oauth;
+package io.serverlessworkflow.impl.executors.http.auth.requestbuilder;
 
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowError;
@@ -25,7 +25,7 @@ import jakarta.ws.rs.core.Response;
 import java.util.Map;
 import java.util.function.BiFunction;
 
-public class TokenResponseHandler
+class TokenResponseHandler
     implements BiFunction<InvocationHolder, TaskContext, Map<String, Object>> {
 
   @Override
