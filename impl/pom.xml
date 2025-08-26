@@ -75,7 +75,7 @@
         <module>http</module>
         <module>core</module>
         <module>jackson</module>
-        <module>jwt</module>
         <module>jwt-impl</module>
+        <module>test</module>
     </modules>
 </project>
