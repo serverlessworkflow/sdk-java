@@ -154,12 +154,17 @@
             </dependency>
             <dependency>
                 <groupId>io.serverlessworkflow</groupId>
-                <artifactId>serverlessworkflow-jwt</artifactId>
+                <artifactId>serverlessworkflow-types</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+             <dependency>
+                <groupId>io.serverlessworkflow</groupId>
+                <artifactId>serverlessworkflow-serialization</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.serverlessworkflow</groupId>
-                <artifactId>serverlessworkflow-impl-jackson-jwt</artifactId>
+                <artifactId>serverlessworkflow-annotations</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
