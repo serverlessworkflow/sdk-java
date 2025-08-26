@@ -15,9 +15,30 @@
  */
 package io.serverlessworkflow.http.jwt;
 
+import java.time.Instant;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
 public interface JWT {
 
-  String getToken();
+  String token();
 
-  Object getClaim(String name);
+  List<String> audience();
+
+  Map<String, Object> claims();
+
+  <T> Optional<T> claim(String name, Class<T> type);
+
+  Optional<Instant> expiresAt();
+
+  Map<String, Object> header();
+
+  Optional<Instant> issuedAt();
+
+  Optional<String> issuer();
+
+  Optional<String> subject();
+
+  Optional<String> type();
 }
