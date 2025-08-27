@@ -43,7 +43,7 @@ public final class OAuth2AuthenticationPolicyBuilder
   public OAuth2AuthenticationPolicy build() {
     final OAuth2AuthenticationPolicyConfiguration configuration =
         new OAuth2AuthenticationPolicyConfiguration();
-    configuration.setOAuth2AutenthicationData(this.getAuthenticationData());
+    configuration.setOAuth2AuthenticationData(this.getAuthenticationData());
     configuration.setOAuth2ConnectAuthenticationProperties(this.properties);
 
     final Oauth2 oauth2 = new Oauth2();

@@ -18,7 +18,7 @@ package io.serverlessworkflow.impl.executors.http.oauth;
 import static io.serverlessworkflow.api.types.OAuth2TokenRequest.Oauth2TokenRequestEncoding;
 import static io.serverlessworkflow.api.types.OAuth2TokenRequest.Oauth2TokenRequestEncoding.APPLICATION_X_WWW_FORM_URLENCODED;
 
-import io.serverlessworkflow.api.types.OAuth2AutenthicationData;
+import io.serverlessworkflow.api.types.OAuth2AuthenticationData;
 import io.serverlessworkflow.api.types.OAuth2TokenRequest;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
@@ -48,7 +48,7 @@ class HttpRequestBuilder {
 
   private URI uri;
 
-  private OAuth2AutenthicationData.OAuth2AutenthicationDataGrant grantType;
+  private OAuth2AuthenticationData.OAuth2AuthenticationDataGrant grantType;
 
   private Oauth2TokenRequestEncoding requestContentType = APPLICATION_X_WWW_FORM_URLENCODED;
 
@@ -81,7 +81,7 @@ class HttpRequestBuilder {
   }
 
   HttpRequestBuilder withGrantType(
-      OAuth2AutenthicationData.OAuth2AutenthicationDataGrant grantType) {
+      OAuth2AuthenticationData.OAuth2AuthenticationDataGrant grantType) {
     this.grantType = grantType;
     return this;
   }

@@ -23,8 +23,8 @@ import io.serverlessworkflow.api.types.CallFunction;
 import io.serverlessworkflow.api.types.CallHTTP;
 import io.serverlessworkflow.api.types.CallTask;
 import io.serverlessworkflow.api.types.HTTPArguments;
-import io.serverlessworkflow.api.types.OAuth2AutenthicationData;
-import io.serverlessworkflow.api.types.OAuth2AutenthicationData.OAuth2AutenthicationDataGrant;
+import io.serverlessworkflow.api.types.OAuth2AuthenticationData;
+import io.serverlessworkflow.api.types.OAuth2AuthenticationData.OAuth2AuthenticationDataGrant;
 import io.serverlessworkflow.api.types.OAuth2AuthenticationPolicy;
 import io.serverlessworkflow.api.types.OAuth2AuthenticationPolicyConfiguration;
 import io.serverlessworkflow.api.types.OAuth2AuthenticationPropertiesEndpoints;
@@ -107,10 +107,10 @@ public class ApiTest {
     assertThat(endpoints.getToken()).isEqualTo("/auth/token");
     assertThat(endpoints.getIntrospection()).isEqualTo("/auth/introspect");
 
-    OAuth2AutenthicationData oauth2Data = oauth2Props.getOAuth2AutenthicationData();
+    OAuth2AuthenticationData oauth2Data = oauth2Props.getOAuth2AuthenticationData();
     assertThat(oauth2Data.getAuthority().getLiteralUri())
         .isEqualTo(URI.create("http://keycloak/realms/fake-authority"));
-    assertThat(oauth2Data.getGrant()).isEqualTo(OAuth2AutenthicationDataGrant.CLIENT_CREDENTIALS);
+    assertThat(oauth2Data.getGrant()).isEqualTo(OAuth2AuthenticationDataGrant.CLIENT_CREDENTIALS);
     assertThat(oauth2Data.getClient().getId()).isEqualTo("workflow-runtime-id");
     assertThat(oauth2Data.getClient().getSecret()).isEqualTo("workflow-runtime-secret");
   }
