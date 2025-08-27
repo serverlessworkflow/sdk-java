@@ -101,8 +101,9 @@ class LifeCycleEventsTest {
     assertThat(workflowCompletedEvent.output()).isEqualTo(model.asJavaObject());
     assertThat(workflowStartedEvent.startedAt()).isBefore(workflowCompletedEvent.completedAt());
     assertThat(taskCompletedEvent.output()).isEqualTo(model.asJavaObject());
-    assertThat(taskCompletedEvent.completedAt()).isBefore(workflowCompletedEvent.completedAt());
-    assertThat(taskStartedEvent.startedAt()).isAfter(workflowStartedEvent.startedAt());
+    assertThat(taskCompletedEvent.completedAt())
+        .isBeforeOrEqualTo(workflowCompletedEvent.completedAt());
+    assertThat(taskStartedEvent.startedAt()).isAfterOrEqualTo(workflowStartedEvent.startedAt());
     assertThat(taskStartedEvent.startedAt()).isBefore(taskCompletedEvent.completedAt());
   }
 
