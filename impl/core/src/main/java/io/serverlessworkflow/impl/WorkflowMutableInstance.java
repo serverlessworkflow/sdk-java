@@ -18,10 +18,14 @@ package io.serverlessworkflow.impl;
 import static io.serverlessworkflow.impl.lifecycle.LifecycleEventsUtils.publishEvent;
 
 import io.serverlessworkflow.impl.executors.TaskExecutorHelper;
+import io.serverlessworkflow.impl.lifecycle.TaskResumedEvent;
+import io.serverlessworkflow.impl.lifecycle.TaskSuspendedEvent;
 import io.serverlessworkflow.impl.lifecycle.WorkflowCancelledEvent;
 import io.serverlessworkflow.impl.lifecycle.WorkflowCompletedEvent;
 import io.serverlessworkflow.impl.lifecycle.WorkflowFailedEvent;
+import io.serverlessworkflow.impl.lifecycle.WorkflowResumedEvent;
 import io.serverlessworkflow.impl.lifecycle.WorkflowStartedEvent;
+import io.serverlessworkflow.impl.lifecycle.WorkflowSuspendedEvent;
 import java.time.Instant;
 import java.util.Optional;
 import java.util.concurrent.CancellationException;
@@ -190,6 +194,11 @@ public class WorkflowMutableInstance implements WorkflowInstance {
           CompletableFuture<TaskContext> toBeCompleted = suspended;
           suspended = null;
           toBeCompleted.complete(suspendedTask);
+          publishEvent(
+              workflowContext,
+              l -> l.onTaskResumed(new TaskResumedEvent(workflowContext, suspendedTask)));
+          publishEvent(
+              workflowContext, l -> l.onWorkflowResumed(new WorkflowResumedEvent(workflowContext)));
         } else {
           suspended = null;
         }
@@ -208,6 +217,11 @@ public class WorkflowMutableInstance implements WorkflowInstance {
       if (suspended != null) {
         suspendedTask = t;
         workflowContext.instance().status(WorkflowStatus.SUSPENDED);
+        publishEvent(
+            workflowContext, l -> l.onTaskSuspended(new TaskSuspendedEvent(workflowContext, t)));
+        publishEvent(
+            workflowContext,
+            l -> l.onWorkflowSuspended(new WorkflowSuspendedEvent(workflowContext)));
         return suspended;
       }
       if (cancelled != null) {

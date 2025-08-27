@@ -28,12 +28,18 @@ import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowStatus;
 import io.serverlessworkflow.impl.events.EventRegistration;
 import io.serverlessworkflow.impl.events.EventRegistrationBuilder;
+import io.serverlessworkflow.impl.lifecycle.ce.TaskCancelledCEData;
 import io.serverlessworkflow.impl.lifecycle.ce.TaskCompletedCEData;
+import io.serverlessworkflow.impl.lifecycle.ce.TaskResumedCEData;
 import io.serverlessworkflow.impl.lifecycle.ce.TaskStartedCEData;
+import io.serverlessworkflow.impl.lifecycle.ce.TaskSuspendedCEData;
+import io.serverlessworkflow.impl.lifecycle.ce.WorkflowCancelledCEData;
 import io.serverlessworkflow.impl.lifecycle.ce.WorkflowCompletedCEData;
 import io.serverlessworkflow.impl.lifecycle.ce.WorkflowErrorCEData;
 import io.serverlessworkflow.impl.lifecycle.ce.WorkflowFailedCEData;
+import io.serverlessworkflow.impl.lifecycle.ce.WorkflowResumedCEData;
 import io.serverlessworkflow.impl.lifecycle.ce.WorkflowStartedCEData;
+import io.serverlessworkflow.impl.lifecycle.ce.WorkflowSuspendedCEData;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -128,6 +134,17 @@ class LifeCycleEventsTest {
     assertThat(future.get(1, TimeUnit.SECONDS).asMap().orElseThrow())
         .isEqualTo(Map.of("name", "Javierito"));
     assertThat(instance.status()).isEqualTo(WorkflowStatus.COMPLETED);
+    TaskSuspendedCEData taskSuspendedEvent =
+        assertPojoInCE("io.serverlessworkflow.task.suspended.v1", TaskSuspendedCEData.class);
+    WorkflowSuspendedCEData workflowSuspendedEvent =
+        assertPojoInCE(
+            "io.serverlessworkflow.workflow.suspended.v1", WorkflowSuspendedCEData.class);
+    TaskResumedCEData taskResumedEvent =
+        assertPojoInCE("io.serverlessworkflow.task.resumed.v1", TaskResumedCEData.class);
+    WorkflowResumedCEData workflowResumedEvent =
+        assertPojoInCE("io.serverlessworkflow.workflow.resumed.v1", WorkflowResumedCEData.class);
+    assertThat(workflowSuspendedEvent.suspendedAt()).isBefore(workflowResumedEvent.resumedAt());
+    assertThat(taskSuspendedEvent.suspendedAt()).isBefore(taskResumedEvent.resumedAt());
   }
 
   @Test
@@ -140,6 +157,13 @@ class LifeCycleEventsTest {
     assertThat(catchThrowableOfType(ExecutionException.class, () -> future.get().asMap()))
         .isNotNull();
     assertThat(instance.status()).isEqualTo(WorkflowStatus.CANCELLED);
+    TaskCancelledCEData taskCancelledEvent =
+        assertPojoInCE("io.serverlessworkflow.task.cancelled.v1", TaskCancelledCEData.class);
+    WorkflowCancelledCEData workflowCancelledEvent =
+        assertPojoInCE(
+            "io.serverlessworkflow.workflow.cancelled.v1", WorkflowCancelledCEData.class);
+    assertThat(taskCancelledEvent.cancelledAt())
+        .isBeforeOrEqualTo(workflowCancelledEvent.cancelledAt());
   }
 
   @Test

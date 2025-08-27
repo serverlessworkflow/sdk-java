@@ -25,15 +25,21 @@ import io.cloudevents.core.data.PojoCloudEventData.ToBytes;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.events.CloudEventUtils;
 import io.serverlessworkflow.impl.events.EventPublisher;
+import io.serverlessworkflow.impl.lifecycle.TaskCancelledEvent;
 import io.serverlessworkflow.impl.lifecycle.TaskCompletedEvent;
 import io.serverlessworkflow.impl.lifecycle.TaskEvent;
 import io.serverlessworkflow.impl.lifecycle.TaskFailedEvent;
+import io.serverlessworkflow.impl.lifecycle.TaskResumedEvent;
 import io.serverlessworkflow.impl.lifecycle.TaskStartedEvent;
+import io.serverlessworkflow.impl.lifecycle.TaskSuspendedEvent;
+import io.serverlessworkflow.impl.lifecycle.WorkflowCancelledEvent;
 import io.serverlessworkflow.impl.lifecycle.WorkflowCompletedEvent;
 import io.serverlessworkflow.impl.lifecycle.WorkflowEvent;
 import io.serverlessworkflow.impl.lifecycle.WorkflowExecutionListener;
 import io.serverlessworkflow.impl.lifecycle.WorkflowFailedEvent;
+import io.serverlessworkflow.impl.lifecycle.WorkflowResumedEvent;
 import io.serverlessworkflow.impl.lifecycle.WorkflowStartedEvent;
+import io.serverlessworkflow.impl.lifecycle.WorkflowSuspendedEvent;
 import java.time.OffsetDateTime;
 
 public abstract class AbstractLifeCyclePublisher implements WorkflowExecutionListener {
@@ -66,6 +72,45 @@ public abstract class AbstractLifeCyclePublisher implements WorkflowExecutionLis
   }
 
   @Override
+  public void onTaskSuspended(TaskSuspendedEvent ev) {
+    eventPublisher(ev)
+        .publish(
+            builder()
+                .withData(
+                    cloudEventData(
+                        new TaskSuspendedCEData(id(ev), pos(ev), ref(ev), ev.eventDate()),
+                        this::convert))
+                .withType("io.serverlessworkflow.task.suspended.v1")
+                .build());
+  }
+
+  @Override
+  public void onTaskResumed(TaskResumedEvent ev) {
+    eventPublisher(ev)
+        .publish(
+            builder()
+                .withData(
+                    cloudEventData(
+                        new TaskResumedCEData(id(ev), pos(ev), ref(ev), ev.eventDate()),
+                        this::convert))
+                .withType("io.serverlessworkflow.task.resumed.v1")
+                .build());
+  }
+
+  @Override
+  public void onTaskCancelled(TaskCancelledEvent ev) {
+    eventPublisher(ev)
+        .publish(
+            builder()
+                .withData(
+                    cloudEventData(
+                        new TaskCancelledCEData(id(ev), pos(ev), ref(ev), ev.eventDate()),
+                        this::convert))
+                .withType("io.serverlessworkflow.task.cancelled.v1")
+                .build());
+  }
+
+  @Override
   public void onTaskFailed(TaskFailedEvent ev) {
     eventPublisher(ev)
         .publish(
@@ -87,6 +132,44 @@ public abstract class AbstractLifeCyclePublisher implements WorkflowExecutionLis
                     cloudEventData(
                         new WorkflowStartedCEData(id(ev), ref(ev), ev.eventDate()), this::convert))
                 .withType("io.serverlessworkflow.workflow.started.v1")
+                .build());
+  }
+
+  @Override
+  public void onWorkflowSuspended(WorkflowSuspendedEvent ev) {
+    eventPublisher(ev)
+        .publish(
+            builder()
+                .withData(
+                    cloudEventData(
+                        new WorkflowSuspendedCEData(id(ev), ref(ev), ev.eventDate()),
+                        this::convert))
+                .withType("io.serverlessworkflow.workflow.suspended.v1")
+                .build());
+  }
+
+  @Override
+  public void onWorkflowCancelled(WorkflowCancelledEvent ev) {
+    eventPublisher(ev)
+        .publish(
+            builder()
+                .withData(
+                    cloudEventData(
+                        new WorkflowCancelledCEData(id(ev), ref(ev), ev.eventDate()),
+                        this::convert))
+                .withType("io.serverlessworkflow.workflow.cancelled.v1")
+                .build());
+  }
+
+  @Override
+  public void onWorkflowResumed(WorkflowResumedEvent ev) {
+    eventPublisher(ev)
+        .publish(
+            builder()
+                .withData(
+                    cloudEventData(
+                        new WorkflowResumedCEData(id(ev), ref(ev), ev.eventDate()), this::convert))
+                .withType("io.serverlessworkflow.workflow.resumed.v1")
                 .build());
   }
 
@@ -118,6 +201,12 @@ public abstract class AbstractLifeCyclePublisher implements WorkflowExecutionLis
 
   protected abstract byte[] convert(WorkflowStartedCEData data);
 
+  protected abstract byte[] convert(WorkflowSuspendedCEData data);
+
+  protected abstract byte[] convert(WorkflowResumedCEData data);
+
+  protected abstract byte[] convert(WorkflowCancelledCEData data);
+
   protected abstract byte[] convert(WorkflowCompletedCEData data);
 
   protected abstract byte[] convert(TaskStartedCEData data);
@@ -125,6 +214,12 @@ public abstract class AbstractLifeCyclePublisher implements WorkflowExecutionLis
   protected abstract byte[] convert(TaskCompletedCEData data);
 
   protected abstract byte[] convert(TaskFailedCEData data);
+
+  protected abstract byte[] convert(TaskSuspendedCEData data);
+
+  protected abstract byte[] convert(TaskCancelledCEData data);
+
+  protected abstract byte[] convert(TaskResumedCEData data);
 
   protected abstract byte[] convert(WorkflowFailedCEData data);
 
