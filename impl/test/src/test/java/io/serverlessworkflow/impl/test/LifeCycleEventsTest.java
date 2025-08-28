@@ -115,9 +115,18 @@ class LifeCycleEventsTest {
             .instance(Map.of());
     CompletableFuture<WorkflowModel> future = instance.start();
     instance.suspend();
+    assertThat(instance.status()).isEqualTo(WorkflowStatus.SUSPENDED);
     instance.resume();
     assertThat(future.get(1, TimeUnit.SECONDS).asMap().orElseThrow())
         .isEqualTo(Map.of("name", "Javierito"));
+    assertThat(instance.status()).isEqualTo(WorkflowStatus.COMPLETED);
+    WorkflowSuspendedCEData workflowSuspendedEvent =
+        assertPojoInCE(
+            "io.serverlessworkflow.workflow.suspended.v1", WorkflowSuspendedCEData.class);
+    WorkflowResumedCEData workflowResumedEvent =
+        assertPojoInCE("io.serverlessworkflow.workflow.resumed.v1", WorkflowResumedCEData.class);
+    assertThat(workflowSuspendedEvent.suspendedAt())
+        .isBeforeOrEqualTo(workflowResumedEvent.resumedAt());
   }
 
   @Test
@@ -127,10 +136,10 @@ class LifeCycleEventsTest {
         appl.workflowDefinition(WorkflowReader.readWorkflowFromClasspath("wait-set.yaml"))
             .instance(Map.of());
     CompletableFuture<WorkflowModel> future = instance.start();
-    instance.suspend();
     assertThat(instance.status()).isEqualTo(WorkflowStatus.WAITING);
-    Thread.sleep(550);
+    instance.suspend();
     assertThat(instance.status()).isEqualTo(WorkflowStatus.SUSPENDED);
+    Thread.sleep(550);
     instance.resume();
     assertThat(future.get(1, TimeUnit.SECONDS).asMap().orElseThrow())
         .isEqualTo(Map.of("name", "Javierito"));
