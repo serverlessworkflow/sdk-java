@@ -50,20 +50,20 @@ public class FuncSwitchTaskBuilder extends TaskBaseBuilder<FuncSwitchTaskBuilder
     return this;
   }
 
-  public FuncSwitchTaskBuilder functions(Consumer<SwitchCaseFunctionBuilder> consumer) {
-    return this.functions(UUID.randomUUID().toString(), consumer);
+  public FuncSwitchTaskBuilder onPredicate(Consumer<SwitchCasePredicateBuilder> consumer) {
+    return this.onPredicate(UUID.randomUUID().toString(), consumer);
   }
 
-  public FuncSwitchTaskBuilder functions(
-      String name, Consumer<SwitchCaseFunctionBuilder> consumer) {
-    final SwitchCaseFunctionBuilder switchCase = new SwitchCaseFunctionBuilder();
+  public FuncSwitchTaskBuilder onPredicate(
+      String name, Consumer<SwitchCasePredicateBuilder> consumer) {
+    final SwitchCasePredicateBuilder switchCase = new SwitchCasePredicateBuilder();
     consumer.accept(switchCase);
     this.switchItems.add(new SwitchItem(name, switchCase.build()));
     return this;
   }
 
   @Override
-  public FuncSwitchTaskBuilder items(String name, Consumer<SwitchCaseBuilder> switchCaseConsumer) {
+  public FuncSwitchTaskBuilder on(String name, Consumer<SwitchCaseBuilder> switchCaseConsumer) {
     final SwitchCaseBuilder switchCase = new SwitchCaseBuilder();
     switchCaseConsumer.accept(switchCase);
     this.switchItems.add(new SwitchItem(name, switchCase.build()));
@@ -75,29 +75,29 @@ public class FuncSwitchTaskBuilder extends TaskBaseBuilder<FuncSwitchTaskBuilder
     return switchTask;
   }
 
-  public static final class SwitchCaseFunctionBuilder {
+  public static final class SwitchCasePredicateBuilder {
     private final SwitchCaseFunction switchCase;
 
-    SwitchCaseFunctionBuilder() {
+    SwitchCasePredicateBuilder() {
       this.switchCase = new SwitchCaseFunction();
     }
 
-    public <T> SwitchCaseFunctionBuilder when(Predicate<T> when) {
+    public <T> SwitchCasePredicateBuilder when(Predicate<T> when) {
       this.switchCase.withPredicate(when);
       return this;
     }
 
-    public <T> SwitchCaseFunctionBuilder when(Predicate<T> when, Class<T> whenClass) {
+    public <T> SwitchCasePredicateBuilder when(Predicate<T> when, Class<T> whenClass) {
       this.switchCase.withPredicate(when, whenClass);
       return this;
     }
 
-    public SwitchCaseFunctionBuilder then(FlowDirective then) {
-      this.switchCase.setThen(then);
+    public SwitchCasePredicateBuilder then(String taskName) {
+      this.switchCase.setThen(new FlowDirective().withString(taskName));
       return this;
     }
 
-    public SwitchCaseFunctionBuilder then(FlowDirectiveEnum then) {
+    public SwitchCasePredicateBuilder then(FlowDirectiveEnum then) {
       this.switchCase.setThen(new FlowDirective().withFlowDirectiveEnum(then));
       return this;
     }

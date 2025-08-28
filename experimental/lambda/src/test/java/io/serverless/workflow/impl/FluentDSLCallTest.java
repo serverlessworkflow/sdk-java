@@ -82,7 +82,7 @@ public class FluentDSLCallTest {
                       tasks
                           .switchCase(
                               switchOdd ->
-                                  switchOdd.functions(
+                                  switchOdd.onPredicate(
                                       item ->
                                           item.when(CallTest::isOdd).then(FlowDirectiveEnum.END)))
                           .callFn(callJava -> callJava.function(CallTest::zero)))

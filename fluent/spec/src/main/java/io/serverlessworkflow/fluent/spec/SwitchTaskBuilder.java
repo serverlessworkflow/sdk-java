@@ -41,7 +41,7 @@ public class SwitchTaskBuilder extends TaskBaseBuilder<SwitchTaskBuilder>
   }
 
   @Override
-  public SwitchTaskBuilder items(
+  public SwitchTaskBuilder on(
       final String name, Consumer<SwitchTaskFluent.SwitchCaseBuilder> switchCaseConsumer) {
     final SwitchTaskFluent.SwitchCaseBuilder switchCaseBuilder =
         new SwitchTaskFluent.SwitchCaseBuilder();

@@ -15,19 +15,21 @@
  */
 package io.serverlessworkflow.fluent.spec.spi;
 
+import io.serverlessworkflow.fluent.spec.AbstractEventFilterBuilder;
 import io.serverlessworkflow.fluent.spec.EventConsumptionStrategyBuilder;
-import io.serverlessworkflow.fluent.spec.EventFilterBuilder;
 import java.io.Serializable;
 import java.util.function.Consumer;
 
 public interface EventConsumptionStrategyFluent<
-    SELF extends EventConsumptionStrategyFluent<SELF, T>, T extends Serializable> {
+    SELF extends EventConsumptionStrategyFluent<SELF, T, F>,
+    T extends Serializable,
+    F extends AbstractEventFilterBuilder<?, ?>> {
 
-  SELF one(Consumer<EventFilterBuilder> c);
+  SELF one(Consumer<F> c);
 
-  SELF all(Consumer<EventFilterBuilder> c);
+  SELF all(Consumer<F> c);
 
-  SELF any(Consumer<EventFilterBuilder> c);
+  SELF any(Consumer<F> c);
 
   SELF until(Consumer<EventConsumptionStrategyBuilder> c);
 

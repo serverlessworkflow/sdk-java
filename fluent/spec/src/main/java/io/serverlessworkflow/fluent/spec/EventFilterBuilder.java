@@ -15,35 +15,16 @@
  */
 package io.serverlessworkflow.fluent.spec;
 
-import io.serverlessworkflow.api.types.EventFilter;
-import io.serverlessworkflow.api.types.EventFilterCorrelate;
-import java.util.function.Consumer;
+public class EventFilterBuilder
+    extends AbstractEventFilterBuilder<EventFilterBuilder, EventPropertiesBuilder> {
 
-/** Builder for event filters used in consumption strategies. */
-public final class EventFilterBuilder {
-  private final EventFilter filter = new EventFilter();
-  private final EventFilterCorrelate correlate = new EventFilterCorrelate();
-
-  /** Predicate to match event properties. */
-  public EventFilterBuilder with(Consumer<EventPropertiesBuilder> c) {
-    EventPropertiesBuilder pb = new EventPropertiesBuilder();
-    c.accept(pb);
-    filter.setWith(pb.build());
+  @Override
+  protected EventFilterBuilder self() {
     return this;
   }
 
-  /** Correlation property for the filter. */
-  public EventFilterBuilder correlate(
-      String key, Consumer<ListenTaskBuilder.CorrelatePropertyBuilder> c) {
-    ListenTaskBuilder.CorrelatePropertyBuilder cpb =
-        new ListenTaskBuilder.CorrelatePropertyBuilder();
-    c.accept(cpb);
-    correlate.withAdditionalProperty(key, cpb.build());
-    return this;
-  }
-
-  public EventFilter build() {
-    filter.setCorrelate(correlate);
-    return filter;
+  @Override
+  protected EventPropertiesBuilder newEventPropertiesBuilder() {
+    return new EventPropertiesBuilder();
   }
 }

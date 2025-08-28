@@ -41,5 +41,5 @@ public interface DoFluent<T>
         EmitFluent<EmitTaskBuilder, T>,
         ForEachFluent<ForEachTaskBuilder<TaskItemListBuilder>, T>,
         ForkFluent<ForkTaskBuilder, T>,
-        ListenFluent<ListenTaskBuilder<TaskItemListBuilder>, T>,
+        ListenFluent<ListenTaskBuilder, T>,
         RaiseFluent<RaiseTaskBuilder, T> {}
