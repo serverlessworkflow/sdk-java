@@ -59,6 +59,7 @@ public class WorkflowApplication implements AutoCloseable {
   private final RuntimeDescriptorFactory runtimeDescriptorFactory;
   private final EventConsumer<?, ?> eventConsumer;
   private final EventPublisher eventPublisher;
+  private final boolean lifeCycleCEPublishingEnabled;
 
   private WorkflowApplication(Builder builder) {
     this.taskFactory = builder.taskFactory;
@@ -73,6 +74,7 @@ public class WorkflowApplication implements AutoCloseable {
     this.definitions = new ConcurrentHashMap<>();
     this.eventConsumer = builder.eventConsumer;
     this.eventPublisher = builder.eventPublisher;
+    this.lifeCycleCEPublishingEnabled = builder.lifeCycleCEPublishingEnabled;
   }
 
   public TaskExecutorFactory taskFactory() {
@@ -145,6 +147,7 @@ public class WorkflowApplication implements AutoCloseable {
     private EventPublisher eventPublisher;
     private RuntimeDescriptorFactory descriptorFactory =
         () -> new RuntimeDescriptor("reference impl", "1.0.0_alpha", Collections.emptyMap());
+    private boolean lifeCycleCEPublishingEnabled = true;
 
     private Builder() {}
 
@@ -165,6 +168,11 @@ public class WorkflowApplication implements AutoCloseable {
 
     public Builder withResourceLoaderFactory(ResourceLoaderFactory resourceLoader) {
       this.resourceLoaderFactory = resourceLoader;
+      return this;
+    }
+
+    public Builder disableLifeCycleCEPublishing() {
+      this.lifeCycleCEPublishingEnabled = false;
       return this;
     }
 
@@ -277,5 +285,9 @@ public class WorkflowApplication implements AutoCloseable {
 
   public ExecutorService executorService() {
     return executorFactory.get();
+  }
+
+  public boolean isLifeCycleCEPublishingEnabled() {
+    return lifeCycleCEPublishingEnabled;
   }
 }

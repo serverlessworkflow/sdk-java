@@ -18,13 +18,14 @@ package io.serverlessworkflow.impl.lifecycle.ce;
 import static io.serverlessworkflow.impl.lifecycle.ce.WorkflowDefinitionCEData.ref;
 import static io.serverlessworkflow.impl.lifecycle.ce.WorkflowErrorCEData.error;
 
+import io.cloudevents.CloudEvent;
 import io.cloudevents.CloudEventData;
 import io.cloudevents.core.builder.CloudEventBuilder;
 import io.cloudevents.core.data.PojoCloudEventData;
 import io.cloudevents.core.data.PojoCloudEventData.ToBytes;
+import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.events.CloudEventUtils;
-import io.serverlessworkflow.impl.events.EventPublisher;
 import io.serverlessworkflow.impl.lifecycle.TaskCancelledEvent;
 import io.serverlessworkflow.impl.lifecycle.TaskCompletedEvent;
 import io.serverlessworkflow.impl.lifecycle.TaskEvent;
@@ -41,13 +42,15 @@ import io.serverlessworkflow.impl.lifecycle.WorkflowResumedEvent;
 import io.serverlessworkflow.impl.lifecycle.WorkflowStartedEvent;
 import io.serverlessworkflow.impl.lifecycle.WorkflowSuspendedEvent;
 import java.time.OffsetDateTime;
+import java.util.function.Function;
 
 public abstract class AbstractLifeCyclePublisher implements WorkflowExecutionListener {
 
   @Override
-  public void onTaskStarted(TaskStartedEvent ev) {
-    eventPublisher(ev)
-        .publish(
+  public void onTaskStarted(TaskStartedEvent event) {
+    publish(
+        event,
+        ev ->
             builder()
                 .withData(
                     cloudEventData(
@@ -58,9 +61,10 @@ public abstract class AbstractLifeCyclePublisher implements WorkflowExecutionLis
   }
 
   @Override
-  public void onTaskCompleted(TaskCompletedEvent ev) {
-    eventPublisher(ev)
-        .publish(
+  public void onTaskCompleted(TaskCompletedEvent event) {
+    publish(
+        event,
+        ev ->
             builder()
                 .withData(
                     cloudEventData(
@@ -72,9 +76,10 @@ public abstract class AbstractLifeCyclePublisher implements WorkflowExecutionLis
   }
 
   @Override
-  public void onTaskSuspended(TaskSuspendedEvent ev) {
-    eventPublisher(ev)
-        .publish(
+  public void onTaskSuspended(TaskSuspendedEvent event) {
+    publish(
+        event,
+        ev ->
             builder()
                 .withData(
                     cloudEventData(
@@ -85,9 +90,10 @@ public abstract class AbstractLifeCyclePublisher implements WorkflowExecutionLis
   }
 
   @Override
-  public void onTaskResumed(TaskResumedEvent ev) {
-    eventPublisher(ev)
-        .publish(
+  public void onTaskResumed(TaskResumedEvent event) {
+    publish(
+        event,
+        ev ->
             builder()
                 .withData(
                     cloudEventData(
@@ -98,9 +104,10 @@ public abstract class AbstractLifeCyclePublisher implements WorkflowExecutionLis
   }
 
   @Override
-  public void onTaskCancelled(TaskCancelledEvent ev) {
-    eventPublisher(ev)
-        .publish(
+  public void onTaskCancelled(TaskCancelledEvent event) {
+    publish(
+        event,
+        ev ->
             builder()
                 .withData(
                     cloudEventData(
@@ -111,9 +118,10 @@ public abstract class AbstractLifeCyclePublisher implements WorkflowExecutionLis
   }
 
   @Override
-  public void onTaskFailed(TaskFailedEvent ev) {
-    eventPublisher(ev)
-        .publish(
+  public void onTaskFailed(TaskFailedEvent event) {
+    publish(
+        event,
+        ev ->
             builder()
                 .withData(
                     cloudEventData(
@@ -124,9 +132,10 @@ public abstract class AbstractLifeCyclePublisher implements WorkflowExecutionLis
   }
 
   @Override
-  public void onWorkflowStarted(WorkflowStartedEvent ev) {
-    eventPublisher(ev)
-        .publish(
+  public void onWorkflowStarted(WorkflowStartedEvent event) {
+    publish(
+        event,
+        ev ->
             builder()
                 .withData(
                     cloudEventData(
@@ -136,9 +145,10 @@ public abstract class AbstractLifeCyclePublisher implements WorkflowExecutionLis
   }
 
   @Override
-  public void onWorkflowSuspended(WorkflowSuspendedEvent ev) {
-    eventPublisher(ev)
-        .publish(
+  public void onWorkflowSuspended(WorkflowSuspendedEvent event) {
+    publish(
+        event,
+        ev ->
             builder()
                 .withData(
                     cloudEventData(
@@ -149,9 +159,10 @@ public abstract class AbstractLifeCyclePublisher implements WorkflowExecutionLis
   }
 
   @Override
-  public void onWorkflowCancelled(WorkflowCancelledEvent ev) {
-    eventPublisher(ev)
-        .publish(
+  public void onWorkflowCancelled(WorkflowCancelledEvent event) {
+    publish(
+        event,
+        ev ->
             builder()
                 .withData(
                     cloudEventData(
@@ -162,9 +173,10 @@ public abstract class AbstractLifeCyclePublisher implements WorkflowExecutionLis
   }
 
   @Override
-  public void onWorkflowResumed(WorkflowResumedEvent ev) {
-    eventPublisher(ev)
-        .publish(
+  public void onWorkflowResumed(WorkflowResumedEvent event) {
+    publish(
+        event,
+        ev ->
             builder()
                 .withData(
                     cloudEventData(
@@ -174,9 +186,10 @@ public abstract class AbstractLifeCyclePublisher implements WorkflowExecutionLis
   }
 
   @Override
-  public void onWorkflowCompleted(WorkflowCompletedEvent ev) {
-    eventPublisher(ev)
-        .publish(
+  public void onWorkflowCompleted(WorkflowCompletedEvent event) {
+    publish(
+        event,
+        ev ->
             builder()
                 .withData(
                     cloudEventData(
@@ -187,9 +200,10 @@ public abstract class AbstractLifeCyclePublisher implements WorkflowExecutionLis
   }
 
   @Override
-  public void onWorkflowFailed(WorkflowFailedEvent ev) {
-    eventPublisher(ev)
-        .publish(
+  public void onWorkflowFailed(WorkflowFailedEvent event) {
+    publish(
+        event,
+        ev ->
             builder()
                 .withData(
                     cloudEventData(
@@ -199,29 +213,65 @@ public abstract class AbstractLifeCyclePublisher implements WorkflowExecutionLis
                 .build());
   }
 
-  protected abstract byte[] convert(WorkflowStartedCEData data);
+  protected byte[] convert(WorkflowStartedCEData data) {
+    return convertToBytes(data);
+  }
 
-  protected abstract byte[] convert(WorkflowSuspendedCEData data);
+  protected byte[] convert(WorkflowCompletedCEData data) {
+    return convertToBytes(data);
+  }
 
-  protected abstract byte[] convert(WorkflowResumedCEData data);
+  protected byte[] convert(TaskStartedCEData data) {
+    return convertToBytes(data);
+  }
 
-  protected abstract byte[] convert(WorkflowCancelledCEData data);
+  protected byte[] convert(TaskCompletedCEData data) {
+    return convertToBytes(data);
+  }
 
-  protected abstract byte[] convert(WorkflowCompletedCEData data);
+  protected byte[] convert(TaskFailedCEData data) {
+    return convertToBytes(data);
+  }
 
-  protected abstract byte[] convert(TaskStartedCEData data);
+  protected byte[] convert(WorkflowFailedCEData data) {
+    return convertToBytes(data);
+  }
 
-  protected abstract byte[] convert(TaskCompletedCEData data);
+  protected byte[] convert(WorkflowSuspendedCEData data) {
+    return convertToBytes(data);
+  }
 
-  protected abstract byte[] convert(TaskFailedCEData data);
+  protected byte[] convert(WorkflowResumedCEData data) {
+    return convertToBytes(data);
+  }
 
-  protected abstract byte[] convert(TaskSuspendedCEData data);
+  protected byte[] convert(WorkflowCancelledCEData data) {
+    return convertToBytes(data);
+  }
 
-  protected abstract byte[] convert(TaskCancelledCEData data);
+  protected byte[] convert(TaskSuspendedCEData data) {
+    return convertToBytes(data);
+  }
 
-  protected abstract byte[] convert(TaskResumedCEData data);
+  protected byte[] convert(TaskCancelledCEData data) {
+    return convertToBytes(data);
+  }
 
-  protected abstract byte[] convert(WorkflowFailedCEData data);
+  protected byte[] convert(TaskResumedCEData data) {
+    return convertToBytes(data);
+  }
+
+  protected abstract <T> byte[] convertToBytes(T data);
+
+  /* By default, generated cloud events are published, if user has not disabled them at application level,
+   * using application event publisher. That might be changed if needed by children.
+   */
+  protected <T extends WorkflowEvent> void publish(T ev, Function<T, CloudEvent> ce) {
+    WorkflowApplication application = ev.workflowContext().definition().application();
+    if (application.isLifeCycleCEPublishingEnabled()) {
+      application.eventPublisher().publish(ce.apply(ev));
+    }
+  }
 
   private static <T> CloudEventData cloudEventData(T data, ToBytes<T> toBytes) {
     return PojoCloudEventData.wrap(data, toBytes);
@@ -244,10 +294,6 @@ public abstract class AbstractLifeCyclePublisher implements WorkflowExecutionLis
 
   private static Object output(WorkflowEvent ev) {
     return from(ev.workflowContext().instanceData().output());
-  }
-
-  private static EventPublisher eventPublisher(WorkflowEvent ev) {
-    return ev.workflowContext().definition().application().eventPublisher();
   }
 
   private static Object output(TaskEvent ev) {

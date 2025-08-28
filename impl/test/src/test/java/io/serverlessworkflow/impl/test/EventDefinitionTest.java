@@ -46,7 +46,7 @@ public class EventDefinitionTest {
 
   @BeforeAll
   static void init() {
-    appl = WorkflowApplication.builder().build();
+    appl = WorkflowApplication.builder().disableLifeCycleCEPublishing().build();
   }
 
   @ParameterizedTest
