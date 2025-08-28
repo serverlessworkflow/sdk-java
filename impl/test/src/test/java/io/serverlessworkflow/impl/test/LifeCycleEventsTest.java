@@ -26,8 +26,8 @@ import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowInstance;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowStatus;
-import io.serverlessworkflow.impl.events.EventRegistration;
-import io.serverlessworkflow.impl.events.EventRegistrationBuilder;
+import io.serverlessworkflow.impl.events.InMemoryEvents;
+import io.serverlessworkflow.impl.lifecycle.ce.AbstractLifeCyclePublisher;
 import io.serverlessworkflow.impl.lifecycle.ce.TaskCancelledCEData;
 import io.serverlessworkflow.impl.lifecycle.ce.TaskCompletedCEData;
 import io.serverlessworkflow.impl.lifecycle.ce.TaskResumedCEData;
@@ -41,7 +41,6 @@ import io.serverlessworkflow.impl.lifecycle.ce.WorkflowResumedCEData;
 import io.serverlessworkflow.impl.lifecycle.ce.WorkflowStartedCEData;
 import io.serverlessworkflow.impl.lifecycle.ce.WorkflowSuspendedCEData;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
@@ -59,24 +58,23 @@ class LifeCycleEventsTest {
 
   private WorkflowApplication appl;
   private Collection<CloudEvent> publishedEvents;
-  private Collection<EventRegistration> registrations;
 
   @BeforeEach
   void setup() {
     publishedEvents = new CopyOnWriteArrayList<>();
-    appl = WorkflowApplication.builder().build();
-    registrations = new ArrayList<>();
-    Collection<EventRegistrationBuilder> builders = appl.eventConsumer().listenToAll(appl);
-
-    for (EventRegistrationBuilder builder : builders) {
-      registrations.add(
-          appl.eventConsumer().register(builder, ce -> publishedEvents.add((CloudEvent) ce)));
+    InMemoryEvents eventBroker = new InMemoryEvents();
+    for (String type : AbstractLifeCyclePublisher.getLifeCycleTypes()) {
+      eventBroker.register(type, ce -> publishedEvents.add(ce));
     }
+    appl =
+        WorkflowApplication.builder()
+            .withEventConsumer(eventBroker)
+            .withEventPublisher(eventBroker)
+            .build();
   }
 
   @AfterEach
   void close() {
-    registrations.forEach(r -> appl.eventConsumer().unregister(r));
     appl.close();
   }
 

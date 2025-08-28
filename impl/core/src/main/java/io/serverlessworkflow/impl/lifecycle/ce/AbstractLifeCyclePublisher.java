@@ -42,9 +42,41 @@ import io.serverlessworkflow.impl.lifecycle.WorkflowResumedEvent;
 import io.serverlessworkflow.impl.lifecycle.WorkflowStartedEvent;
 import io.serverlessworkflow.impl.lifecycle.WorkflowSuspendedEvent;
 import java.time.OffsetDateTime;
+import java.util.Collection;
+import java.util.Set;
 import java.util.function.Function;
 
 public abstract class AbstractLifeCyclePublisher implements WorkflowExecutionListener {
+
+  private static final String TASK_STARTED = "io.serverlessworkflow.task.started.v1";
+  private static final String TASK_COMPLETED = "io.serverlessworkflow.task.completed.v1";
+  private static final String TASK_SUSPENDED = "io.serverlessworkflow.task.suspended.v1";
+  private static final String TASK_RESUMED = "io.serverlessworkflow.task.resumed.v1";
+  private static final String TASK_FAULTED = "io.serverlessworkflow.task.faulted.v1";
+  private static final String TASK_CANCELLED = "io.serverlessworkflow.task.cancelled.v1";
+
+  private static final String WORKFLOW_STARTED = "io.serverlessworkflow.workflow.started.v1";
+  private static final String WORKFLOW_COMPLETED = "io.serverlessworkflow.workflow.completed.v1";
+  private static final String WORKFLOW_SUSPENDED = "io.serverlessworkflow.workflow.suspended.v1";
+  private static final String WORKFLOW_RESUMED = "io.serverlessworkflow.workflow.resumed.v1";
+  private static final String WORKFLOW_FAULTED = "io.serverlessworkflow.workflow.faulted.v1";
+  private static final String WORKFLOW_CANCELLED = "io.serverlessworkflow.workflow.cancelled.v1";
+
+  public static Collection<String> getLifeCycleTypes() {
+    return Set.of(
+        TASK_STARTED,
+        TASK_COMPLETED,
+        TASK_SUSPENDED,
+        TASK_RESUMED,
+        TASK_FAULTED,
+        TASK_CANCELLED,
+        WORKFLOW_STARTED,
+        WORKFLOW_COMPLETED,
+        WORKFLOW_SUSPENDED,
+        WORKFLOW_RESUMED,
+        WORKFLOW_FAULTED,
+        WORKFLOW_CANCELLED);
+  }
 
   @Override
   public void onTaskStarted(TaskStartedEvent event) {
@@ -56,7 +88,7 @@ public abstract class AbstractLifeCyclePublisher implements WorkflowExecutionLis
                     cloudEventData(
                         new TaskStartedCEData(id(ev), pos(ev), ref(ev), ev.eventDate()),
                         this::convert))
-                .withType("io.serverlessworkflow.task.started.v1")
+                .withType(TASK_STARTED)
                 .build());
   }
 
@@ -71,7 +103,7 @@ public abstract class AbstractLifeCyclePublisher implements WorkflowExecutionLis
                         new TaskCompletedCEData(
                             id(ev), pos(ev), ref(ev), ev.eventDate(), output(ev)),
                         this::convert))
-                .withType("io.serverlessworkflow.task.completed.v1")
+                .withType(TASK_COMPLETED)
                 .build());
   }
 
@@ -85,7 +117,7 @@ public abstract class AbstractLifeCyclePublisher implements WorkflowExecutionLis
                     cloudEventData(
                         new TaskSuspendedCEData(id(ev), pos(ev), ref(ev), ev.eventDate()),
                         this::convert))
-                .withType("io.serverlessworkflow.task.suspended.v1")
+                .withType(TASK_SUSPENDED)
                 .build());
   }
 
@@ -99,7 +131,7 @@ public abstract class AbstractLifeCyclePublisher implements WorkflowExecutionLis
                     cloudEventData(
                         new TaskResumedCEData(id(ev), pos(ev), ref(ev), ev.eventDate()),
                         this::convert))
-                .withType("io.serverlessworkflow.task.resumed.v1")
+                .withType(TASK_RESUMED)
                 .build());
   }
 
@@ -113,7 +145,7 @@ public abstract class AbstractLifeCyclePublisher implements WorkflowExecutionLis
                     cloudEventData(
                         new TaskCancelledCEData(id(ev), pos(ev), ref(ev), ev.eventDate()),
                         this::convert))
-                .withType("io.serverlessworkflow.task.cancelled.v1")
+                .withType(TASK_CANCELLED)
                 .build());
   }
 
@@ -127,7 +159,7 @@ public abstract class AbstractLifeCyclePublisher implements WorkflowExecutionLis
                     cloudEventData(
                         new TaskFailedCEData(id(ev), pos(ev), ref(ev), ev.eventDate(), error(ev)),
                         this::convert))
-                .withType("io.serverlessworkflow.task.faulted.v1")
+                .withType(TASK_FAULTED)
                 .build());
   }
 
@@ -140,7 +172,7 @@ public abstract class AbstractLifeCyclePublisher implements WorkflowExecutionLis
                 .withData(
                     cloudEventData(
                         new WorkflowStartedCEData(id(ev), ref(ev), ev.eventDate()), this::convert))
-                .withType("io.serverlessworkflow.workflow.started.v1")
+                .withType(WORKFLOW_STARTED)
                 .build());
   }
 
@@ -154,7 +186,7 @@ public abstract class AbstractLifeCyclePublisher implements WorkflowExecutionLis
                     cloudEventData(
                         new WorkflowSuspendedCEData(id(ev), ref(ev), ev.eventDate()),
                         this::convert))
-                .withType("io.serverlessworkflow.workflow.suspended.v1")
+                .withType(WORKFLOW_SUSPENDED)
                 .build());
   }
 
@@ -168,7 +200,7 @@ public abstract class AbstractLifeCyclePublisher implements WorkflowExecutionLis
                     cloudEventData(
                         new WorkflowCancelledCEData(id(ev), ref(ev), ev.eventDate()),
                         this::convert))
-                .withType("io.serverlessworkflow.workflow.cancelled.v1")
+                .withType(WORKFLOW_CANCELLED)
                 .build());
   }
 
@@ -181,7 +213,7 @@ public abstract class AbstractLifeCyclePublisher implements WorkflowExecutionLis
                 .withData(
                     cloudEventData(
                         new WorkflowResumedCEData(id(ev), ref(ev), ev.eventDate()), this::convert))
-                .withType("io.serverlessworkflow.workflow.resumed.v1")
+                .withType(WORKFLOW_RESUMED)
                 .build());
   }
 
@@ -195,7 +227,7 @@ public abstract class AbstractLifeCyclePublisher implements WorkflowExecutionLis
                     cloudEventData(
                         new WorkflowCompletedCEData(id(ev), ref(ev), ev.eventDate(), output(ev)),
                         this::convert))
-                .withType("io.serverlessworkflow.workflow.completed.v1")
+                .withType(WORKFLOW_COMPLETED)
                 .build());
   }
 
@@ -209,7 +241,7 @@ public abstract class AbstractLifeCyclePublisher implements WorkflowExecutionLis
                     cloudEventData(
                         new WorkflowFailedCEData(id(ev), ref(ev), ev.eventDate(), error(ev)),
                         this::convert))
-                .withType("io.serverlessworkflow.workflow.faulted.v1")
+                .withType(WORKFLOW_FAULTED)
                 .build());
   }
 
@@ -263,14 +295,18 @@ public abstract class AbstractLifeCyclePublisher implements WorkflowExecutionLis
 
   protected abstract <T> byte[] convertToBytes(T data);
 
-  /* By default, generated cloud events are published, if user has not disabled them at application level,
-   * using application event publisher. That might be changed if needed by children.
-   */
-  protected <T extends WorkflowEvent> void publish(T ev, Function<T, CloudEvent> ce) {
-    WorkflowApplication application = ev.workflowContext().definition().application();
-    if (application.isLifeCycleCEPublishingEnabled()) {
-      application.eventPublisher().publish(ce.apply(ev));
+  protected <T extends WorkflowEvent> void publish(T ev, Function<T, CloudEvent> ceFunction) {
+    WorkflowApplication appl = ev.workflowContext().definition().application();
+    if (appl.isLifeCycleCEPublishingEnabled()) {
+      publish(appl, ceFunction.apply(ev));
     }
+  }
+
+  /* By default, generated cloud events are published, if user has not disabled them at application level,
+   * using application event publishers. That might be changed if needed by children by overriding this method
+   */
+  protected void publish(WorkflowApplication application, CloudEvent ce) {
+    application.eventPublishers().forEach(p -> p.publish(ce));
   }
 
   private static <T> CloudEventData cloudEventData(T data, ToBytes<T> toBytes) {

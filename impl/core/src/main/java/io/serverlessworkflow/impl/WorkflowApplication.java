@@ -32,6 +32,7 @@ import io.serverlessworkflow.impl.resources.ResourceLoaderFactory;
 import io.serverlessworkflow.impl.resources.StaticResource;
 import io.serverlessworkflow.impl.schema.SchemaValidator;
 import io.serverlessworkflow.impl.schema.SchemaValidatorFactory;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -58,7 +59,7 @@ public class WorkflowApplication implements AutoCloseable {
   private final ExecutorServiceFactory executorFactory;
   private final RuntimeDescriptorFactory runtimeDescriptorFactory;
   private final EventConsumer<?, ?> eventConsumer;
-  private final EventPublisher eventPublisher;
+  private final Collection<EventPublisher> eventPublishers;
   private final boolean lifeCycleCEPublishingEnabled;
 
   private WorkflowApplication(Builder builder) {
@@ -73,7 +74,7 @@ public class WorkflowApplication implements AutoCloseable {
     this.listeners = builder.listeners != null ? builder.listeners : Collections.emptySet();
     this.definitions = new ConcurrentHashMap<>();
     this.eventConsumer = builder.eventConsumer;
-    this.eventPublisher = builder.eventPublisher;
+    this.eventPublishers = builder.eventPublishers;
     this.lifeCycleCEPublishingEnabled = builder.lifeCycleCEPublishingEnabled;
   }
 
@@ -101,8 +102,8 @@ public class WorkflowApplication implements AutoCloseable {
     return listeners;
   }
 
-  public EventPublisher eventPublisher() {
-    return eventPublisher;
+  public Collection<EventPublisher> eventPublishers() {
+    return eventPublishers;
   }
 
   public WorkflowIdFactory idFactory() {
@@ -144,7 +145,7 @@ public class WorkflowApplication implements AutoCloseable {
     private WorkflowIdFactory idFactory = () -> UlidCreator.getMonotonicUlid().toString();
     private ExecutorServiceFactory executorFactory = new DefaultExecutorServiceFactory();
     private EventConsumer<?, ?> eventConsumer;
-    private EventPublisher eventPublisher;
+    private Collection<EventPublisher> eventPublishers = new ArrayList<>();
     private RuntimeDescriptorFactory descriptorFactory =
         () -> new RuntimeDescriptor("reference impl", "1.0.0_alpha", Collections.emptyMap());
     private boolean lifeCycleCEPublishingEnabled = true;
@@ -201,10 +202,13 @@ public class WorkflowApplication implements AutoCloseable {
       return this;
     }
 
-    public Builder withEventHandler(
-        EventPublisher eventPublisher, EventConsumer<?, ?> eventConsumer) {
+    public Builder withEventConsumer(EventConsumer<?, ?> eventConsumer) {
       this.eventConsumer = eventConsumer;
-      this.eventPublisher = eventPublisher;
+      return this;
+    }
+
+    public Builder withEventPublisher(EventPublisher eventPublisher) {
+      this.eventPublishers.add(eventPublisher);
       return this;
     }
 
@@ -227,10 +231,19 @@ public class WorkflowApplication implements AutoCloseable {
                 .findFirst()
                 .orElseGet(() -> DefaultTaskExecutorFactory.get());
       }
-      if (eventConsumer == null && eventPublisher == null) {
-        InMemoryEvents inMemory = new InMemoryEvents(executorFactory);
-        eventPublisher = inMemory;
-        eventConsumer = inMemory;
+      ServiceLoader.load(EventPublisher.class).forEach(e -> eventPublishers.add(e));
+      if (eventConsumer == null) {
+        eventConsumer =
+            ServiceLoader.load(EventConsumer.class)
+                .findFirst()
+                .orElseGet(
+                    () -> {
+                      InMemoryEvents inMemory = new InMemoryEvents(executorFactory);
+                      if (eventPublishers.isEmpty()) {
+                        eventPublishers.add(inMemory);
+                      }
+                      return inMemory;
+                    });
       }
       return new WorkflowApplication(this);
     }
@@ -250,8 +263,11 @@ public class WorkflowApplication implements AutoCloseable {
   @Override
   public void close() {
     safeClose(executorFactory);
-    safeClose(eventPublisher);
+    for (EventPublisher eventPublisher : eventPublishers) {
+      safeClose(eventPublisher);
+    }
     safeClose(eventConsumer);
+
     for (WorkflowDefinition definition : definitions.values()) {
       safeClose(definition);
     }
