@@ -37,7 +37,7 @@ public class EventExample {
       WorkflowInstance waitingInstance = listenDefinition.instance(Map.of());
       waitingInstance
           .start()
-          .thenAccept(node -> logger.info("Waiting instance completed with result {}", node));
+          .thenAccept(output -> logger.info("Waiting instance completed with result {}", output));
       logger.info("Listen instance waiting for proper event, Status {}", waitingInstance.status());
       logger.info("Publishing event with temperature 35");
       emitDefinition.instance(Map.of("temperature", 35)).start().join();

@@ -5,12 +5,9 @@
 
 Welcome to Java SDK runtime reference implementation, a lightweight implementation of the Serverless Workflow specification which provides a simple, non blocking, reactive API for workflow execution. 
 
-Although initially conceived mainly for testing purposes, it was designed to be easily expanded, so it can eventually become production ready. 
-
 ## Status
 
 This reference implementation is currently capable of running workflows consisting of:
-
 
 * Tasks
     * Switch 
@@ -25,6 +22,9 @@ This reference implementation is currently capable of running workflows consisti
     * Wait
     * Call
         * HTTP
+          * Basic authentication
+          * Bearer authentication
+          * OAuth2 authentication
 * Schema Validation
     * Input
     * Output
@@ -34,6 +34,14 @@ This reference implementation is currently capable of running workflows consisti
     * Export
     * Special keywords: runtime, workflow, task...
 * Error definitions
+* Lifecycle events: 
+    * Pending
+    * Started
+    * Suspended
+    * Faulted
+    * Resumed
+    * Cancelled
+    * Completed
 
 
 ## Setup
@@ -47,19 +55,19 @@ Install [Gradle](https://gradle.org/install) (if using Gradle)
 ### Dependencies
 
 This implementation follows a modular approach, keeping dependencies minimal:
-- The core library is always required.
+- There is the core library, `serverlessworkflow-impl-core`, which depends on the types generated from the workflow schema and CloudEvent SDK. It contains the workflow engine implementation and those interfaces the user will operate with. 
+- There is the Jackson library, `serverlessworkflow-impl-jackson`, which depends on core and contains Jackson depending stuff, among others, JQ expression implementation, Json schema validation implementation and Jackson cloud events marshalling/unmarshalling. This is the library most users will include as dependency in their modules. 
 - Additional dependencies must be explicitly included if your workflow interacts with external services (e.g., HTTP).
 This ensures you only include what you need, preventing unnecessary dependencies.
 
 #### Maven
 
-You always need to add this dependency to your pom.xml `dependencies` section:
+In order to execute workflows written in YAML that use JQ expression, you just need to add this dependency to your pom.xml `dependencies` section:
 
 ```xml
 <dependency>
       <groupId>io.serverlessworkflow</groupId>
-      <artifactId>serverlessworkflow-impl-core</artifactId>
-      <version>7.0.0.Final</version>
+      <artifactId>serverlessworkflow-impl-jackson</artifactId>
 </dependency>
 ```
 
@@ -69,23 +77,39 @@ And only if your workflow is using HTTP calls, you must add:
 <dependency>
       <groupId>io.serverlessworkflow</groupId>
       <artifactId>serverlessworkflow-impl-http</artifactId>
-      <version>7.0.0.Final</version>
 </dependency>
 ```
 
+If you http call requires Oauth2 authorization, you must add:
+
+```xml
+<dependency>
+      <groupId>io.serverlessworkflow</groupId>
+      <artifactId>serverlessworkflow-impl-jackson-jwt</artifactId>
+</dependency>
+```
+
+
 #### Gradle projects:
 
-You always need to add this dependency to your build.gradle `dependencies` section:
+In order to execute workflows written in YAML that use JQ expression, you just need to add this dependency to your pom.xml `dependencies` section:
 
 ```text
-implementation("io.serverlessworkflow:serverlessworkflow-impl-core:7.0.0.Final")
+implementation("io.serverlessworkflow:serverlessworkflow-impl-jackson")
 ```
 
 And only if your workflow is using HTTP calls, you must add:
 
 ```text
-implementation("io.serverlessworkflow:serverlessworkflow-impl-http:7.0.0.Final")
+implementation("io.serverlessworkflow:serverlessworkflow-impl-http")
 ```
+
+If you http call requires Oauth2 authorization, you must add:
+
+```text
+implementation("io.serverlessworkflow:serverlessworkflow-impl-jackson-jwt")
+```
+
 
 ## How to use
 
@@ -121,7 +145,7 @@ In order to execute the workflow without blocking the calling thread till the HT
       appl.workflowDefinition(WorkflowReader.readWorkflowFromClasspath("get.yaml"))
           .instance(Map.of("petId", 10))
           .start()
-          .thenAccept(node -> logger.info("Workflow output is {}", node));
+          .thenAccept(output -> logger.info("Workflow output is {}", output));
     }
 ```
 When the HTTP request is done, both examples will print a similar output
@@ -168,12 +192,12 @@ To execute a workflow, we first create a [WorkflowInstance](core/src/main/java/i
   WorkflowInstance waitingInstance = listenDefinition.instance(Map.of());
       waitingInstance
           .start()
-          .thenAccept(node -> logger.info("Waiting instance completed with result {}", node));
+          .thenAccept(output -> logger.info("Waiting instance completed with result {}", output));
 ```
 
-As soon as the workflow execution reach the point where it waits for events to arrive, control is returned to the calling thread. Since the execution is not blocking, we can execute another workflow instance while the first one is waiting. 
+As soon as the workflow execution reach the point where it waits for events to arrive, control is returned to the calling thread. Since the execution is not blocking, we can execute another workflow instance while the first one is waiting. Also, you might suspend workflow execution by calling `WorkflowInstance::suspend` (the workflow progress will be paused till you invoke `WorkflowInstance::resume`). In case workflow execution needs to be aborted you might use `WorkflowInstance::cancel`
 
-We will send an event with a temperature that does not satisfy the criteria, so the listen instance will continue waiting. We use a regular Java `Map` to pass parameters to the workflow instance that sends the event. Note that since we want to wait till the event is published, we call `join` after `start`, telling the `CompletableFuture` to wait for workflow completion.
+In this example, we are invoking a workflow that publishes an event with a temperature that does not satisfy the waiting criteria, so the listen instance will continue waiting. We use a regular Java `Map` to pass parameters to the workflow instance that sends the event. Note that since we want to wait till the event is published, we call `join` after `start`, telling the `CompletableFuture` to wait for workflow completion.
 
 ```java
  emitDefinition.instance(Map.of("temperature", 35)).start().join();
@@ -191,4 +215,3 @@ After that, listen instance will be completed and we will see this log message
 [pool-1-thread-1] INFO events.EventExample - Waiting instance completed with result [{"temperature":39}]
 ```
 The source code of the example is [here](../examples/events/src/main/java/events/EventExample.java)
-

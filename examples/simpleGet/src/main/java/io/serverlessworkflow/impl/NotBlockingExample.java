@@ -30,7 +30,7 @@ public class NotBlockingExample {
       appl.workflowDefinition(WorkflowReader.readWorkflowFromClasspath("get.yaml"))
           .instance(Map.of("petId", 10))
           .start()
-          .thenAccept(node -> logger.info("Workflow output is {}", node));
+          .thenAccept(output -> logger.info("Workflow output is {}", output));
       logger.info("The request has been sent, this thread might continue doing stuff");
     }
   }
