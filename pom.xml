@@ -46,6 +46,7 @@
     <module>examples</module>
     <module>experimental</module>
     <module>fluent</module>
+    <module>mermaid</module>
   </modules>
 
     <properties>
