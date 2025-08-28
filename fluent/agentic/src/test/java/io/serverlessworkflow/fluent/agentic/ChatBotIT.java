@@ -28,13 +28,12 @@ import dev.langchain4j.agentic.scope.AgenticScope;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.v1.CloudEventBuilder;
-import io.serverlessworkflow.api.types.EventFilter;
-import io.serverlessworkflow.api.types.EventProperties;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowInstance;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowStatus;
+import io.serverlessworkflow.impl.events.InMemoryEvents;
 import java.net.URI;
 import java.time.OffsetDateTime;
 import java.util.Map;
@@ -103,25 +102,15 @@ public class ChatBotIT {
                         .emit(emit -> emit.event(e -> e.type("org.acme.chatbot.finished"))))
             .build();
 
-    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-      app.eventConsumer()
-          .register(
-              app.eventConsumer()
-                  .listen(
-                      new EventFilter()
-                          .withWith(new EventProperties().withType("org.acme.chatbot.reply")),
-                      app),
-              ce -> replyEvents.add((CloudEvent) ce));
+    InMemoryEvents eventBroker = new InMemoryEvents();
+    eventBroker.register("org.acme.chatbot.reply", ce -> replyEvents.add((CloudEvent) ce));
+    eventBroker.register("org.acme.chatbot.finished", ce -> finishedEvents.add((CloudEvent) ce));
 
-      app.eventConsumer()
-          .register(
-              app.eventConsumer()
-                  .listen(
-                      new EventFilter()
-                          .withWith(new EventProperties().withType("org.acme.chatbot.finished")),
-                      app),
-              ce -> finishedEvents.add((CloudEvent) ce));
-
+    try (WorkflowApplication app =
+        WorkflowApplication.builder()
+            .withEventConsumer(eventBroker)
+            .withEventPublisher(eventBroker)
+            .build()) {
       final WorkflowInstance waitingInstance =
           app.workflowDefinition(listenWorkflow).instance(Map.of());
       final CompletableFuture<WorkflowModel> runningModel = waitingInstance.start();
@@ -130,12 +119,12 @@ public class ChatBotIT {
       assertEquals(WorkflowStatus.WAITING, waitingInstance.status());
 
       // Publish the events
-      app.eventPublisher().publish(newMessageEvent("Hello World!"));
+      eventBroker.publish(newMessageEvent("Hello World!"));
       CloudEvent reply = replyEvents.poll(60, TimeUnit.SECONDS);
       assertNotNull(reply);
 
       // Empty message completes the workflow
-      app.eventPublisher().publish(newMessageEvent("", "org.acme.chatbot.finalize"));
+      eventBroker.publish(newMessageEvent("", "org.acme.chatbot.finalize"));
       CloudEvent finished = finishedEvents.poll(60, TimeUnit.SECONDS);
       assertNotNull(finished);
       assertThat(finishedEvents).isEmpty();
@@ -145,6 +134,7 @@ public class ChatBotIT {
 
     } catch (InterruptedException e) {
       fail(e.getMessage());
+    } finally {
     }
   }
 

@@ -176,6 +176,10 @@ public class WorkflowMutableInstance implements WorkflowInstance {
       statusLock.lock();
       if (TaskExecutorHelper.isActive(status.get())) {
         suspended = new CompletableFuture<TaskContext>();
+        workflowContext.instance().status(WorkflowStatus.SUSPENDED);
+        publishEvent(
+            workflowContext,
+            l -> l.onWorkflowSuspended(new WorkflowSuspendedEvent(workflowContext)));
         return true;
       } else {
         return false;
@@ -197,11 +201,11 @@ public class WorkflowMutableInstance implements WorkflowInstance {
           publishEvent(
               workflowContext,
               l -> l.onTaskResumed(new TaskResumedEvent(workflowContext, suspendedTask)));
-          publishEvent(
-              workflowContext, l -> l.onWorkflowResumed(new WorkflowResumedEvent(workflowContext)));
         } else {
           suspended = null;
         }
+        publishEvent(
+            workflowContext, l -> l.onWorkflowResumed(new WorkflowResumedEvent(workflowContext)));
         return true;
       } else {
         return false;
@@ -216,12 +220,8 @@ public class WorkflowMutableInstance implements WorkflowInstance {
       statusLock.lock();
       if (suspended != null) {
         suspendedTask = t;
-        workflowContext.instance().status(WorkflowStatus.SUSPENDED);
         publishEvent(
             workflowContext, l -> l.onTaskSuspended(new TaskSuspendedEvent(workflowContext, t)));
-        publishEvent(
-            workflowContext,
-            l -> l.onWorkflowSuspended(new WorkflowSuspendedEvent(workflowContext)));
         return suspended;
       }
       if (cancelled != null) {

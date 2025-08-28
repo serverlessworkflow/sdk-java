@@ -16,6 +16,7 @@
 package io.serverlessworkflow.impl.events;
 
 import io.cloudevents.CloudEvent;
+import io.serverlessworkflow.impl.DefaultExecutorServiceFactory;
 import io.serverlessworkflow.impl.ExecutorServiceFactory;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -29,6 +30,10 @@ import java.util.function.Consumer;
  */
 public class InMemoryEvents extends AbstractTypeConsumer implements EventPublisher {
 
+  public InMemoryEvents() {
+    this(new DefaultExecutorServiceFactory());
+  }
+
   public InMemoryEvents(ExecutorServiceFactory serviceFactory) {
     this.serviceFactory = serviceFactory;
   }
@@ -40,7 +45,7 @@ public class InMemoryEvents extends AbstractTypeConsumer implements EventPublish
   private AtomicReference<Consumer<CloudEvent>> allConsumerRef = new AtomicReference<>();
 
   @Override
-  protected void register(String topicName, Consumer<CloudEvent> consumer) {
+  public void register(String topicName, Consumer<CloudEvent> consumer) {
     topicMap.put(topicName, consumer);
   }
 
@@ -77,6 +82,7 @@ public class InMemoryEvents extends AbstractTypeConsumer implements EventPublish
 
   @Override
   public void close() {
+    topicMap.clear();
     serviceFactory.close();
   }
 }

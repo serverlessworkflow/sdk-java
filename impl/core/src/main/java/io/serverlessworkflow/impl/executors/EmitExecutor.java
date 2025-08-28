@@ -33,10 +33,12 @@ import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
 import io.serverlessworkflow.impl.events.CloudEventUtils;
+import io.serverlessworkflow.impl.events.EventPublisher;
 import io.serverlessworkflow.impl.expressions.ExpressionDescriptor;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
 import java.net.URI;
 import java.time.OffsetDateTime;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -74,11 +76,13 @@ public class EmitExecutor extends RegularTaskExecutor<EmitTask> {
   @Override
   protected CompletableFuture<WorkflowModel> internalExecute(
       WorkflowContext workflow, TaskContext taskContext) {
-    return workflow
-        .definition()
-        .application()
-        .eventPublisher()
-        .publish(buildCloudEvent(workflow, taskContext))
+    Collection<EventPublisher> eventPublishers =
+        workflow.definition().application().eventPublishers();
+    CloudEvent ce = buildCloudEvent(workflow, taskContext);
+    return CompletableFuture.allOf(
+            eventPublishers.stream()
+                .map(eventPublisher -> eventPublisher.publish(ce))
+                .toArray(size -> new CompletableFuture[size]))
         .thenApply(v -> taskContext.input());
   }
 
