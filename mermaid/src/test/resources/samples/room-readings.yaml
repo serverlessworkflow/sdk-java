@@ -1,0 +1,44 @@
+document:
+  dsl: '1.0.0'
+  namespace: examples
+  name: accumulate-room-readings
+  version: '0.1.0'
+do:
+  - consumeReading:
+      listen:
+        to:
+          all:
+            - with:
+                source: https://my.home.com/sensor
+                type: my.home.sensors.temperature
+              correlate:
+                roomId:
+                  from: .roomid
+            - with:
+                source: https://my.home.com/sensor
+                type: my.home.sensors.humidity
+              correlate:
+                roomId:
+                  from: .roomid
+      output:
+        as: .data.reading
+  - logReading:
+      for:
+        each: reading
+        in: .readings
+      do:
+        - callOrderService:
+            call: openapi
+            with:
+              document:
+                endpoint: http://myorg.io/ordersservices.json
+              operationId: logreading
+  - generateReport:
+      call: openapi
+      with:
+        document:
+          endpoint: http://myorg.io/ordersservices.json
+        operationId: produceReport
+timeout:
+  after:
+    hours: 1
