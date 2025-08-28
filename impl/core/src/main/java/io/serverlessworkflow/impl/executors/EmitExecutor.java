@@ -38,7 +38,6 @@ import io.serverlessworkflow.impl.expressions.ExpressionDescriptor;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
 import java.net.URI;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
@@ -80,12 +79,10 @@ public class EmitExecutor extends RegularTaskExecutor<EmitTask> {
     Collection<EventPublisher> eventPublishers =
         workflow.definition().application().eventPublishers();
     CloudEvent ce = buildCloudEvent(workflow, taskContext);
-    Collection<CompletableFuture<Void>> allCompletables = new ArrayList<>();
-    for (EventPublisher eventPublisher : eventPublishers) {
-      allCompletables.add(eventPublisher.publish(ce));
-    }
     return CompletableFuture.allOf(
-            allCompletables.toArray(new CompletableFuture[allCompletables.size()]))
+            eventPublishers.stream()
+                .map(eventPublisher -> eventPublisher.publish(ce))
+                .toArray(size -> new CompletableFuture[size]))
         .thenApply(v -> taskContext.input());
   }
 
