@@ -14,6 +14,10 @@
       </dependency>
       <dependency>
         <groupId>io.serverlessworkflow</groupId>
+        <artifactId>serverlessworkflow-api</artifactId>
+      </dependency>
+      <dependency>
+        <groupId>io.serverlessworkflow</groupId>
         <artifactId>serverlessworkflow-impl-http</artifactId>
       </dependency>
       <dependency>
