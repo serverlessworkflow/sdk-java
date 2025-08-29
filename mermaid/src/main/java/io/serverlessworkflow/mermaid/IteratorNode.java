@@ -20,7 +20,7 @@ import io.serverlessworkflow.api.types.SubscriptionIterator;
 public class IteratorNode extends SubgraphNode {
 
   public IteratorNode(String label, SubscriptionIterator iterator) {
-    super(Ids.newId(), label);
+    super(Ids.random(), label);
 
     if (iterator.getDo().isEmpty()) {
       return;
@@ -32,15 +32,15 @@ public class IteratorNode extends SubgraphNode {
     Node loop = NodeBuilder.junction();
     this.addBranch(loop.getId(), loop);
 
-    this.branches.putAll(new MermaidGraph().build(iterator.getDo()));
+    this.addBranches(new MermaidGraph().build(iterator.getDo()));
     final Node firstTask = this.branches.get(iterator.getDo().get(0).getName());
 
-    note.setNext(loop);
-    loop.setNext(firstTask);
+    note.addEdge(Edge.to(loop));
+    loop.addEdge(Edge.to(firstTask));
 
     String lastForTask = iterator.getDo().get(iterator.getDo().size() - 1).getName();
-    String renderedArrow = "-. |next| .->";
+    String renderedArrow = "-. |edge| .->";
 
-    this.getBranches().get(lastForTask).withNext(loop).setRenderedArrow(renderedArrow);
+    this.getBranches().get(lastForTask).withEdge(Edge.to(loop).withArrow(renderedArrow));
   }
 }

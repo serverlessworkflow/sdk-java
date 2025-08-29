@@ -37,7 +37,7 @@ public class TryCatchNode extends TaskSubgraphNode {
           new MermaidGraph().build(task.getTask().getTryTask().getCatch().getDo()));
       this.addBranch("catch_lane", catchNode);
 
-      tryNode.setNext(catchNode);
+      tryNode.addEdge(Edge.to(catchNode));
     }
   }
 }

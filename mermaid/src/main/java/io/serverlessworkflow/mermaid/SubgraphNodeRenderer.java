@@ -33,10 +33,10 @@ public class SubgraphNodeRenderer extends DefaultNodeRenderer implements NodeRen
         .append("subgraph ")
         .append(getNode().getId())
         .append("[\"")
-        .append(NodeRenderer.escNodeLabel(getNode().getLabel()))
+        .append(NodeRenderer.escLabel(getNode().getLabel()))
         .append("\"]\n");
     this.renderBody(sb, level);
-    this.renderNext(sb, level);
+    this.renderEdge(sb, level);
   }
 
   @Override

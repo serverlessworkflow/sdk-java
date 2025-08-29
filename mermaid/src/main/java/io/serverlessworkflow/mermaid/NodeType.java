@@ -19,6 +19,7 @@ public enum NodeType {
   RECT("rect"),
   STOP("stop"),
   SUBGRAPH("subgraph"),
+  SWITCH("diam"),
   TRY_CATCH("subgraph"),
   TRY_BLOCK("subgraph"),
   NOTE("note"),
@@ -26,6 +27,10 @@ public enum NodeType {
   START("sm-circ"),
   EVENT("rounded"),
   EMIT("lean-r"),
+  ERROR("cross-circ"),
+  RAISE("trap-b"),
+  COMMENT("braces"),
+  WAIT("hourglass"),
   JUNCTION("f-circ");
 
   private final String type;

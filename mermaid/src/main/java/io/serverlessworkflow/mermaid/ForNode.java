@@ -43,18 +43,18 @@ public class ForNode extends TaskSubgraphNode {
     Node loop = NodeBuilder.split();
     this.addBranch(loop.getId(), loop);
 
-    this.branches.putAll(new MermaidGraph().build(forTask.getDo()));
+    this.addBranches(new MermaidGraph().build(forTask.getDo()));
     final Node firstTask = this.branches.get(forTask.getDo().get(0).getName());
 
-    note.setNext(loop);
-    loop.setNext(firstTask);
+    note.addEdge(Edge.to(loop));
+    loop.addEdge(Edge.to(firstTask));
 
     String lastForTask = forTask.getDo().get(forTask.getDo().size() - 1).getName();
-    String renderedArrow = "-. |next| .->";
+    String renderedArrow = "-. |edge| .->";
     if (forTask.getWhile() != null && !forTask.getWhile().isEmpty()) {
-      renderedArrow = "-. |while: " + NodeRenderer.escNodeLabel(forTask.getWhile()) + "| .->";
+      renderedArrow = "-. |while: " + NodeRenderer.escLabel(forTask.getWhile()) + "| .->";
     }
 
-    this.getBranches().get(lastForTask).withNext(loop).setRenderedArrow(renderedArrow);
+    this.getBranches().get(lastForTask).withEdge(Edge.to(loop).withArrow(renderedArrow));
   }
 }
