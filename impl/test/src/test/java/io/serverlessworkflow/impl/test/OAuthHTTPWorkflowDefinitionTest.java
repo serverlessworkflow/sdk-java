@@ -98,7 +98,8 @@ public class OAuthHTTPWorkflowDefinitionTest {
             .setHeader("Content-Type", "application/json")
             .setResponseCode(200));
 
-    Workflow workflow = readWorkflowFromClasspath("oAuthClientSecretPostPasswordHttpCall.yaml");
+    Workflow workflow =
+        readWorkflowFromClasspath("workflows-samples/oAuthClientSecretPostPasswordHttpCall.yaml");
     Map<String, Object> result;
     try (WorkflowApplication app = WorkflowApplication.builder().build()) {
       result =
@@ -142,7 +143,8 @@ public class OAuthHTTPWorkflowDefinitionTest {
             .setResponseCode(200));
 
     Workflow workflow =
-        readWorkflowFromClasspath("oAuthClientSecretPostPasswordAsArgHttpCall.yaml");
+        readWorkflowFromClasspath(
+            "workflows-samples/oAuthClientSecretPostPasswordAsArgHttpCall.yaml");
     Map<String, Object> result;
     Map<String, String> params =
         Map.of(
@@ -193,7 +195,8 @@ public class OAuthHTTPWorkflowDefinitionTest {
             .setResponseCode(200));
 
     Workflow workflow =
-        readWorkflowFromClasspath("oAuthClientSecretPostPasswordNoEndpointsHttpCall.yaml");
+        readWorkflowFromClasspath(
+            "workflows-samples/oAuthClientSecretPostPasswordNoEndpointsHttpCall.yaml");
     Map<String, Object> result;
     Map<String, String> params =
         Map.of(
@@ -244,7 +247,8 @@ public class OAuthHTTPWorkflowDefinitionTest {
             .setResponseCode(200));
 
     Workflow workflow =
-        readWorkflowFromClasspath("oAuthClientSecretPostPasswordAllGrantsHttpCall.yaml");
+        readWorkflowFromClasspath(
+            "workflows-samples/oAuthClientSecretPostPasswordAllGrantsHttpCall.yaml");
     Map<String, Object> result;
     Map<String, String> params =
         Map.of(
@@ -303,7 +307,8 @@ public class OAuthHTTPWorkflowDefinitionTest {
             .setResponseCode(200));
 
     Workflow workflow =
-        readWorkflowFromClasspath("oAuthClientSecretPostClientCredentialsHttpCall.yaml");
+        readWorkflowFromClasspath(
+            "workflows-samples/oAuthClientSecretPostClientCredentialsHttpCall.yaml");
     Map<String, Object> result;
     try (WorkflowApplication app = WorkflowApplication.builder().build()) {
       result =
@@ -348,7 +353,8 @@ public class OAuthHTTPWorkflowDefinitionTest {
             .setResponseCode(200));
 
     Workflow workflow =
-        readWorkflowFromClasspath("oAuthClientSecretPostClientCredentialsParamsHttpCall.yaml");
+        readWorkflowFromClasspath(
+            "workflows-samples/oAuthClientSecretPostClientCredentialsParamsHttpCall.yaml");
     Map<String, Object> result;
     Map<String, String> params =
         Map.of(
@@ -400,7 +406,7 @@ public class OAuthHTTPWorkflowDefinitionTest {
 
     Workflow workflow =
         readWorkflowFromClasspath(
-            "oAuthClientSecretPostClientCredentialsParamsNoEndPointHttpCall.yaml");
+            "workflows-samples/oAuthClientSecretPostClientCredentialsParamsNoEndPointHttpCall.yaml");
     Map<String, Object> result;
     Map<String, String> params =
         Map.of(
@@ -448,7 +454,8 @@ public class OAuthHTTPWorkflowDefinitionTest {
             .setHeader("Content-Type", "application/json")
             .setResponseCode(200));
 
-    Workflow workflow = readWorkflowFromClasspath("oAuthJSONPasswordHttpCall.yaml");
+    Workflow workflow =
+        readWorkflowFromClasspath("workflows-samples/oAuthJSONPasswordHttpCall.yaml");
     Map<String, Object> result;
     try (WorkflowApplication app = WorkflowApplication.builder().build()) {
       result =
@@ -505,7 +512,8 @@ public class OAuthHTTPWorkflowDefinitionTest {
             .setHeader("Content-Type", "application/json")
             .setResponseCode(200));
 
-    Workflow workflow = readWorkflowFromClasspath("oAuthJSONPasswordAsArgHttpCall.yaml");
+    Workflow workflow =
+        readWorkflowFromClasspath("workflows-samples/oAuthJSONPasswordAsArgHttpCall.yaml");
     Map<String, Object> result;
     Map<String, String> params =
         Map.of(
@@ -566,7 +574,8 @@ public class OAuthHTTPWorkflowDefinitionTest {
             .setHeader("Content-Type", "application/json")
             .setResponseCode(200));
 
-    Workflow workflow = readWorkflowFromClasspath("oAuthJSONPasswordNoEndpointsHttpCall.yaml");
+    Workflow workflow =
+        readWorkflowFromClasspath("workflows-samples/oAuthJSONPasswordNoEndpointsHttpCall.yaml");
     Map<String, Object> result;
     Map<String, String> params =
         Map.of(
@@ -626,7 +635,8 @@ public class OAuthHTTPWorkflowDefinitionTest {
             .setHeader("Content-Type", "application/json")
             .setResponseCode(200));
 
-    Workflow workflow = readWorkflowFromClasspath("oAuthJSONPasswordAllGrantsHttpCall.yaml");
+    Workflow workflow =
+        readWorkflowFromClasspath("workflows-samples/oAuthJSONPasswordAllGrantsHttpCall.yaml");
     Map<String, Object> result;
     Map<String, String> params =
         Map.of(
@@ -700,7 +710,8 @@ public class OAuthHTTPWorkflowDefinitionTest {
             .setHeader("Content-Type", "application/json")
             .setResponseCode(200));
 
-    Workflow workflow = readWorkflowFromClasspath("oAuthJSONClientCredentialsHttpCall.yaml");
+    Workflow workflow =
+        readWorkflowFromClasspath("workflows-samples/oAuthJSONClientCredentialsHttpCall.yaml");
     Map<String, Object> result;
     try (WorkflowApplication app = WorkflowApplication.builder().build()) {
       result =
@@ -749,7 +760,9 @@ public class OAuthHTTPWorkflowDefinitionTest {
             .setHeader("Content-Type", "application/json")
             .setResponseCode(200));
 
-    Workflow workflow = readWorkflowFromClasspath("oAuthJSONClientCredentialsParamsHttpCall.yaml");
+    Workflow workflow =
+        readWorkflowFromClasspath(
+            "workflows-samples/oAuthJSONClientCredentialsParamsHttpCall.yaml");
     Map<String, Object> result;
     Map<String, String> params =
         Map.of(
@@ -804,7 +817,8 @@ public class OAuthHTTPWorkflowDefinitionTest {
             .setResponseCode(200));
 
     Workflow workflow =
-        readWorkflowFromClasspath("oAuthJSONClientCredentialsParamsNoEndPointHttpCall.yaml");
+        readWorkflowFromClasspath(
+            "workflows-samples/oAuthJSONClientCredentialsParamsNoEndPointHttpCall.yaml");
     Map<String, Object> result;
     Map<String, String> params =
         Map.of(

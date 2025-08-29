@@ -82,7 +82,9 @@ class LifeCycleEventsTest {
   void simpleWorkflow() throws IOException {
 
     WorkflowModel model =
-        appl.workflowDefinition(WorkflowReader.readWorkflowFromClasspath("simple-expression.yaml"))
+        appl.workflowDefinition(
+                WorkflowReader.readWorkflowFromClasspath(
+                    "workflows-samples/simple-expression.yaml"))
             .instance(Map.of())
             .start()
             .join();
@@ -109,7 +111,8 @@ class LifeCycleEventsTest {
   void testSuspendResumeNotWait()
       throws IOException, ExecutionException, InterruptedException, TimeoutException {
     WorkflowInstance instance =
-        appl.workflowDefinition(WorkflowReader.readWorkflowFromClasspath("wait-set.yaml"))
+        appl.workflowDefinition(
+                WorkflowReader.readWorkflowFromClasspath("workflows-samples/wait-set.yaml"))
             .instance(Map.of());
     CompletableFuture<WorkflowModel> future = instance.start();
     instance.suspend();
@@ -131,7 +134,8 @@ class LifeCycleEventsTest {
   void testSuspendResumeWait()
       throws IOException, ExecutionException, InterruptedException, TimeoutException {
     WorkflowInstance instance =
-        appl.workflowDefinition(WorkflowReader.readWorkflowFromClasspath("wait-set.yaml"))
+        appl.workflowDefinition(
+                WorkflowReader.readWorkflowFromClasspath("workflows-samples/wait-set.yaml"))
             .instance(Map.of());
     CompletableFuture<WorkflowModel> future = instance.start();
     assertThat(instance.status()).isEqualTo(WorkflowStatus.WAITING);
@@ -158,7 +162,8 @@ class LifeCycleEventsTest {
   @Test
   void testCancel() throws IOException, InterruptedException {
     WorkflowInstance instance =
-        appl.workflowDefinition(WorkflowReader.readWorkflowFromClasspath("wait-set.yaml"))
+        appl.workflowDefinition(
+                WorkflowReader.readWorkflowFromClasspath("workflows-samples/wait-set.yaml"))
             .instance(Map.of());
     CompletableFuture<WorkflowModel> future = instance.start();
     instance.cancel();
@@ -178,7 +183,8 @@ class LifeCycleEventsTest {
   void testSuspendResumeTimeout()
       throws IOException, ExecutionException, InterruptedException, TimeoutException {
     WorkflowInstance instance =
-        appl.workflowDefinition(WorkflowReader.readWorkflowFromClasspath("wait-set.yaml"))
+        appl.workflowDefinition(
+                WorkflowReader.readWorkflowFromClasspath("workflows-samples/wait-set.yaml"))
             .instance(Map.of());
     CompletableFuture<WorkflowModel> future = instance.start();
     instance.suspend();
@@ -188,7 +194,8 @@ class LifeCycleEventsTest {
 
   @Test
   void testError() throws IOException {
-    Workflow workflow = WorkflowReader.readWorkflowFromClasspath("raise-inline.yaml");
+    Workflow workflow =
+        WorkflowReader.readWorkflowFromClasspath("workflows-samples/raise-inline.yaml");
     assertThat(
             catchThrowableOfType(
                 CompletionException.class,

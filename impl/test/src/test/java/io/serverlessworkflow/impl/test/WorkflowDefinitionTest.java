@@ -60,56 +60,59 @@ public class WorkflowDefinitionTest {
   private static Stream<Arguments> provideParameters() {
     return Stream.of(
         args(
-            "switch-then-string.yaml",
+            "workflows-samples/switch-then-string.yaml",
             Map.of("orderType", "electronic"),
             o -> assertThat(o).isEqualTo(Map.of("validate", true, "status", "fulfilled"))),
         args(
-            "switch-then-string.yaml",
+            "workflows-samples/switch-then-string.yaml",
             Map.of("orderType", "physical"),
             o ->
                 assertThat(o)
                     .isEqualTo(Map.of("inventory", "clear", "items", 1, "address", "Elmer St"))),
         args(
-            "switch-then-string.yaml",
+            "workflows-samples/switch-then-string.yaml",
             Map.of("orderType", "unknown"),
             o -> assertThat(o).isEqualTo(Map.of("log", "warn", "message", "something's wrong"))),
         args(
-            "for-sum.yaml",
+            "workflows-samples/for-sum.yaml",
             Map.of("input", Arrays.asList(1, 2, 3)),
             o -> assertThat(o).isEqualTo(6)),
         args(
-            "switch-then-loop.yaml",
+            "workflows-samples/switch-then-loop.yaml",
             Map.of("count", 1),
             o -> assertThat(o).isEqualTo(Map.of("count", 6))),
         args(
-            "for-collect.yaml",
+            "workflows-samples/for-collect.yaml",
             Map.of("input", Arrays.asList(1, 2, 3)),
             o -> assertThat(o).isEqualTo(Map.of("output", Arrays.asList(2, 4, 6)))),
         args(
-            "simple-expression.yaml",
+            "workflows-samples/simple-expression.yaml",
             Map.of("input", Arrays.asList(1, 2, 3)),
             WorkflowDefinitionTest::checkSpecialKeywords),
         args(
-            "conditional-set.yaml",
+            "workflows-samples/conditional-set.yaml",
             Map.of("enabled", true),
             WorkflowDefinitionTest::checkEnableCondition),
         args(
-            "conditional-set.yaml",
+            "workflows-samples/conditional-set.yaml",
             Map.of("enabled", false),
             WorkflowDefinitionTest::checkDisableCondition),
         args(
-            "raise-inline.yaml",
+            "workflows-samples/raise-inline.yaml",
             WorkflowDefinitionTest::checkWorkflowException,
             WorkflowException.class),
         args(
-            "raise-reusable.yaml",
+            "workflows-samples/raise-reusable.yaml",
             WorkflowDefinitionTest::checkWorkflowException,
             WorkflowException.class),
         args(
-            "fork.yaml",
+            "workflows-samples/fork.yaml",
             Map.of(),
             o -> assertThat(((Map<String, Object>) o).get("patientId")).isIn("John", "Smith")),
-        argsJson("fork-no-compete.yaml", Map.of(), WorkflowDefinitionTest::checkNotCompeteOuput));
+        argsJson(
+            "workflows-samples/fork-no-compete.yaml",
+            Map.of(),
+            WorkflowDefinitionTest::checkNotCompeteOuput));
   }
 
   private static Arguments args(

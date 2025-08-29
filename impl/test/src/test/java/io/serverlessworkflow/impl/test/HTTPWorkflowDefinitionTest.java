@@ -55,8 +55,8 @@ public class HTTPWorkflowDefinitionTest {
   @ParameterizedTest
   @ValueSource(
       strings = {
-        "call-http-query-parameters.yaml",
-        "call-http-query-parameters-external-schema.yaml"
+        "workflows-samples/call-http-query-parameters.yaml",
+        "workflows-samples/call-http-query-parameters-external-schema.yaml"
       })
   void testWrongSchema(String fileName) {
     IllegalArgumentException exception =
@@ -86,18 +86,22 @@ public class HTTPWorkflowDefinitionTest {
                     .equals("Star Trek"),
             "StartTrek");
     return Stream.of(
-        Arguments.of("callGetHttp.yaml", petInput, petCondition),
+        Arguments.of("workflows-samples/callGetHttp.yaml", petInput, petCondition),
         Arguments.of(
-            "callGetHttp.yaml",
+            "workflows-samples/callGetHttp.yaml",
             Map.of("petId", "-1"),
             new Condition<WorkflowModel>(
                 o -> o.asMap().orElseThrow().containsKey("petId"), "notFoundCondition")),
-        Arguments.of("call-http-endpoint-interpolation.yaml", petInput, petCondition),
-        Arguments.of("call-http-query-parameters.yaml", starTrekInput, starTrekCondition),
         Arguments.of(
-            "call-http-query-parameters-external-schema.yaml", starTrekInput, starTrekCondition),
+            "workflows-samples/call-http-endpoint-interpolation.yaml", petInput, petCondition),
         Arguments.of(
-            "callPostHttp.yaml",
+            "workflows-samples/call-http-query-parameters.yaml", starTrekInput, starTrekCondition),
+        Arguments.of(
+            "workflows-samples/call-http-query-parameters-external-schema.yaml",
+            starTrekInput,
+            starTrekCondition),
+        Arguments.of(
+            "workflows-samples/callPostHttp.yaml",
             Map.of("name", "Javierito", "surname", "Unknown"),
             new Condition<WorkflowModel>(
                 o -> o.asText().orElseThrow().equals("Javierito"), "CallHttpPostCondition")));
