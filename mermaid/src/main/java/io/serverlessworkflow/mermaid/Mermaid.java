@@ -20,6 +20,7 @@ import io.serverlessworkflow.api.types.Workflow;
 import java.io.IOException;
 import java.util.Map;
 
+/** Main entrypoint to generate a Mermaid representation of a Workflow definition. */
 public class Mermaid {
 
   private static final String FLOWCHART = "flowchart TD\n";

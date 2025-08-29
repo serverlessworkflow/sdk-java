@@ -15,22 +15,18 @@
  */
 package io.serverlessworkflow.mermaid;
 
-public class SplitNodeRenderer extends DefaultNodeRenderer {
+import io.serverlessworkflow.api.types.TaskItem;
 
-  public SplitNodeRenderer(SplitNode node) {
-    super(node);
-  }
+public class RaiseNode extends TaskNode {
 
-  @Override
-  protected void renderNext(StringBuilder sb, int level) {
-    SplitNode splitNode = (SplitNode) this.getNode();
-
-    for (Node next : splitNode.getNexts()) {
-      sb.append(ind(level))
-          .append(this.getNode().getId())
-          .append(renderedArrow)
-          .append(next.getId())
-          .append("\n");
+  public RaiseNode(TaskItem task) {
+    super(String.format("raise: %s", task.getName()), task, NodeType.RAISE);
+    if (task.getTask().getRaiseTask() == null) {
+      throw new IllegalStateException("Raise node must have a raise task");
     }
+
+    Node errorNode = NodeBuilder.error();
+    this.addBranch("error", errorNode);
+    this.addEdge(Edge.to(errorNode));
   }
 }

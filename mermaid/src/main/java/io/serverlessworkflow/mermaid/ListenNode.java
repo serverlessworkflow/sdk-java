@@ -45,7 +45,7 @@ public class ListenNode extends TaskSubgraphNode {
         junctionArrow =
             String.format(
                 "-. until: %s .->",
-                NodeRenderer.escNodeLabel(
+                NodeRenderer.escLabel(
                     to.getAnyEventConsumptionStrategy().getUntil().get().toString()));
       }
     } else if (to.getOneEventConsumptionStrategy() != null) {
@@ -66,8 +66,8 @@ public class ListenNode extends TaskSubgraphNode {
     Node junctionNote = NodeBuilder.junction();
     Node inner = NodeBuilder.rect(task.getName());
 
-    junctionNote.withNext(inner);
-    nodeNote.withNext(junctionNote);
+    junctionNote.withEdge(Edge.to(inner));
+    nodeNote.withEdge(Edge.to(junctionNote));
 
     this.addBranch("note", nodeNote);
     this.addBranch("junction", junctionNote);
@@ -78,14 +78,15 @@ public class ListenNode extends TaskSubgraphNode {
         && !listenTask.getForeach().getDo().isEmpty()) {
       Node forEach = new IteratorNode("for:", listenTask.getForeach());
       this.addBranch("forEach", forEach);
-      inner.setNext(forEach);
-      forEach.setNext(junctionNote);
+      Edge forEachEdge = Edge.to(forEach);
+      inner.addEdge(forEachEdge);
+      forEach.addEdge(Edge.to(junctionNote));
 
       if (!junctionArrow.isEmpty()) {
-        forEach.setRenderedArrow(junctionArrow);
+        forEachEdge.setArrow(junctionArrow);
       }
     } else if (!junctionArrow.isEmpty()) {
-      inner.withNext(junctionNote).setRenderedArrow(junctionArrow);
+      inner.withEdge(Edge.to(junctionNote).withArrow(junctionArrow));
     }
   }
 }

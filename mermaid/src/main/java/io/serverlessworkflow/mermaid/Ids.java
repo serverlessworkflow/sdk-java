@@ -15,6 +15,10 @@
  */
 package io.serverlessworkflow.mermaid;
 
+import io.serverlessworkflow.api.types.TaskItem;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.text.Normalizer;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -22,11 +26,49 @@ public final class Ids {
   private final String salt = Integer.toString(ThreadLocalRandom.current().nextInt(), 36);
   private final AtomicInteger seq = new AtomicInteger();
 
-  private String build() {
-    return "n_" + salt + "_" + Integer.toString(seq.getAndIncrement(), 36);
+  public static String random() {
+    return new Ids().build();
   }
 
-  public static String newId() {
-    return new Ids().build();
+  public static String of(TaskItem task) {
+    String slug = slug(task.getName());
+    String h = shortHash(task.getName());
+    return "n_" + slug + "_" + h;
+  }
+
+  public static String of(String taskName) {
+    String slug = slug(taskName);
+    String h = shortHash(taskName);
+    return "n_" + slug + "_" + h;
+  }
+
+  /** Lowercase slug for Mermaid ids: letters/digits/hyphen only; must start with a letter. */
+  private static String slug(String s) {
+    if (s == null || s.isBlank()) return "x";
+    String n =
+        Normalizer.normalize(s, Normalizer.Form.NFKD)
+            .replaceAll("[^\\p{Alnum}]+", "-")
+            .replaceAll("(^-+|-+$)", "")
+            .toLowerCase();
+    if (n.isEmpty() || !Character.isLetter(n.charAt(0))) n = "x-" + n;
+    return n;
+  }
+
+  private static String shortHash(String s) {
+    try {
+      MessageDigest md = MessageDigest.getInstance("SHA-256");
+      byte[] d = md.digest(s.getBytes(StandardCharsets.UTF_8));
+      // first 6 bytes => 12 hex chars; small + stable
+      StringBuilder sb = new StringBuilder(12);
+      for (int i = 0; i < 6; i++) sb.append(String.format("%02x", d[i]));
+      return sb.toString();
+    } catch (Exception e) {
+      // Very unlikely; fallback to simple sanitized length if crypto unavailable
+      return Integer.toHexString(s.hashCode());
+    }
+  }
+
+  private String build() {
+    return "n_" + salt + "_" + Integer.toString(seq.getAndIncrement(), 36);
   }
 }

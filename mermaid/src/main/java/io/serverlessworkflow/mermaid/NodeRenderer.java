@@ -19,12 +19,10 @@ public interface NodeRenderer {
 
   void render(StringBuilder sb, int level);
 
-  void setRenderedArrow(String renderedArrow);
-
-  static String escNodeLabel(String s) {
+  static String escLabel(String s) {
     if (s == null) return "";
     return s.replace("\\", "\\\\")
-        .replace("\"", "\\\"")
+        .replace("\"", "#quot;")
         .replace("]", "\\]")
         .replace("[", "\\[")
         .replace("\r\n", "<br/>")

@@ -18,7 +18,6 @@ package io.serverlessworkflow.mermaid;
 public class DefaultNodeRenderer implements NodeRenderer {
 
   private final Node node;
-  protected String renderedArrow = "-->";
 
   public DefaultNodeRenderer(Node node) {
     this.node = node;
@@ -28,21 +27,16 @@ public class DefaultNodeRenderer implements NodeRenderer {
     return node;
   }
 
-  @Override
-  public void setRenderedArrow(String renderedArrow) {
-    this.renderedArrow = renderedArrow;
-  }
-
   public void render(StringBuilder sb, int level) {
     sb.append(ind(level))
         .append(node.id)
         .append("@{ shape: ")
         .append(node.type.mermaidShape())
         .append(", label: \"")
-        .append(NodeRenderer.escNodeLabel(node.label))
+        .append(NodeRenderer.escLabel(node.label))
         .append("\" }\n");
     this.renderBody(sb, level);
-    this.renderNext(sb, level);
+    this.renderEdge(sb, level);
   }
 
   protected void renderBody(StringBuilder sb, int level) {
@@ -51,12 +45,12 @@ public class DefaultNodeRenderer implements NodeRenderer {
     }
   }
 
-  protected void renderNext(StringBuilder sb, int level) {
-    if (node.getNext() != null) {
+  protected void renderEdge(StringBuilder sb, int level) {
+    for (Edge edge : this.getNode().getEdge()) {
       sb.append(ind(level))
           .append(node.getId())
-          .append(renderedArrow)
-          .append(node.getNext().getId())
+          .append(edge.getArrow())
+          .append(edge.getNodeId())
           .append("\n");
     }
   }

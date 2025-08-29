@@ -15,52 +15,19 @@
  */
 package io.serverlessworkflow.mermaid;
 
-import io.serverlessworkflow.api.types.CallTask;
-import io.serverlessworkflow.api.types.DoTask;
-import io.serverlessworkflow.api.types.EmitTask;
-import io.serverlessworkflow.api.types.ForTask;
-import io.serverlessworkflow.api.types.ForkTask;
-import io.serverlessworkflow.api.types.ListenTask;
-import io.serverlessworkflow.api.types.RaiseTask;
-import io.serverlessworkflow.api.types.RunTask;
-import io.serverlessworkflow.api.types.SetTask;
-import io.serverlessworkflow.api.types.SwitchTask;
 import io.serverlessworkflow.api.types.TaskItem;
-import io.serverlessworkflow.api.types.TryTask;
-import io.serverlessworkflow.api.types.WaitTask;
-import java.util.Map;
 
 public class TaskNode extends Node {
 
-  protected static final Map<Class<?>, NodeType> NODE_TYPE_BY_CLASS =
-      Map.ofEntries(
-          Map.entry(CallTask.class, NodeType.RECT),
-          Map.entry(DoTask.class, NodeType.SUBGRAPH),
-          Map.entry(ForkTask.class, NodeType.SUBGRAPH),
-          Map.entry(EmitTask.class, NodeType.EMIT),
-          Map.entry(ForTask.class, NodeType.SUBGRAPH),
-          Map.entry(ListenTask.class, NodeType.EVENT),
-          Map.entry(RaiseTask.class, NodeType.RECT),
-          Map.entry(RunTask.class, NodeType.RECT),
-          Map.entry(SetTask.class, NodeType.RECT),
-          Map.entry(SwitchTask.class, NodeType.SUBGRAPH),
-          Map.entry(TryTask.class, NodeType.TRY_CATCH),
-          Map.entry(WaitTask.class, NodeType.RECT));
   protected final TaskItem task;
 
-  public TaskNode(String label, TaskItem task) {
-    super(Ids.newId(), label);
-    this.task = task;
-
-    Object concrete = task.getTask().get();
-    Class<?> cls = concrete.getClass();
-
-    this.type = NODE_TYPE_BY_CLASS.getOrDefault(cls, NodeType.RECT);
-  }
-
   public TaskNode(String label, TaskItem task, NodeType type) {
-    super(Ids.newId(), label);
+    super(Ids.of(task), label);
     this.task = task;
     this.type = type;
+  }
+
+  public TaskItem getTask() {
+    return task;
   }
 }

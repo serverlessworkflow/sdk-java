@@ -16,17 +16,21 @@
 package io.serverlessworkflow.mermaid;
 
 import java.io.Serializable;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 public class Node implements Serializable {
   protected final String id;
+  protected final Set<Edge> edge;
+  protected final Map<String, Node> branches;
   protected String label;
-  protected Node next;
   protected NodeType type;
-  protected Map<String, Node> branches;
   protected NodeRenderer renderer;
+  private String defaultEdgeArrow;
 
   public Node(String id, String label) {
     this.id = id;
@@ -34,6 +38,7 @@ public class Node implements Serializable {
     this.type = NodeType.RECT;
     this.branches = new LinkedHashMap<>();
     this.renderer = new DefaultNodeRenderer(this);
+    this.edge = new HashSet<>();
   }
 
   public Node(String id, String label, NodeType type) {
@@ -41,8 +46,8 @@ public class Node implements Serializable {
     this.type = type;
   }
 
-  public Node withNext(Node next) {
-    this.next = next;
+  public Node withEdge(Edge edge) {
+    this.edge.add(edge);
     return this;
   }
 
@@ -50,12 +55,18 @@ public class Node implements Serializable {
     return type;
   }
 
-  public Node getNext() {
-    return next;
+  public Set<Edge> getEdge() {
+    return Collections.unmodifiableSet(edge);
   }
 
-  public void setNext(Node next) {
-    this.next = next;
+  public void addEdge(Edge edge) {
+    if (edge == null) {
+      return;
+    }
+    if (defaultEdgeArrow != null) {
+      edge.setArrow(defaultEdgeArrow);
+    }
+    this.edge.add(edge);
   }
 
   public String getId() {
@@ -63,7 +74,7 @@ public class Node implements Serializable {
   }
 
   public String getLabel() {
-    return NodeRenderer.escNodeLabel(label);
+    return NodeRenderer.escLabel(label);
   }
 
   public void setLabel(String label) {
@@ -74,7 +85,7 @@ public class Node implements Serializable {
     branches.put(name, branch);
   }
 
-  public void addBranches(Map<String, Node> branches) {
+  public void addBranches(Map<String, ? extends Node> branches) {
     this.branches.putAll(branches);
   }
 
@@ -82,8 +93,9 @@ public class Node implements Serializable {
     return branches;
   }
 
-  public void setRenderedArrow(String renderedArrow) {
-    this.renderer.setRenderedArrow(renderedArrow);
+  public Node withDefaultEdgeArrow(String edgeArrow) {
+    this.defaultEdgeArrow = edgeArrow;
+    return this;
   }
 
   /** Renders the Mermaid representation of this node. */
@@ -96,8 +108,8 @@ public class Node implements Serializable {
     return "Node{"
         + "type="
         + type
-        + ", next="
-        + next
+        + ", edge="
+        + edge
         + ", label='"
         + label
         + '\''
@@ -113,12 +125,12 @@ public class Node implements Serializable {
     Node node = (Node) o;
     return Objects.equals(id, node.id)
         && Objects.equals(label, node.label)
-        && Objects.equals(next, node.next)
+        && Objects.equals(edge, node.edge)
         && type == node.type;
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, label, next, type);
+    return Objects.hash(id, label, edge, type);
   }
 }

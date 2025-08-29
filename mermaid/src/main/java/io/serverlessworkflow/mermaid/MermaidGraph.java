@@ -26,6 +26,9 @@ import java.util.Map;
 
 final class MermaidGraph {
 
+  static final String START_NODE_ID = "n__start__";
+  static final String END_NODE_ID = "n__end__";
+
   MermaidGraph() {}
 
   private static FlowDirective extractThen(TaskItem task) {
@@ -47,31 +50,44 @@ final class MermaidGraph {
   }
 
   Map<String, Node> buildWithTerminals(List<TaskItem> tasks) {
-    final Map<String, Node> graph = this.build(tasks);
-    final Node startNode = new Node(Ids.newId(), "__start", NodeType.START);
-    final Node endNode = new Node(Ids.newId(), "__end", NodeType.STOP);
+    final Map<String, Node> graph = new LinkedHashMap<>(this.build(tasks));
+    final Node startNode = new Node(START_NODE_ID, "Start", NodeType.START);
+    final Node endNode = new Node(END_NODE_ID, "End", NodeType.STOP);
     for (Node n : graph.values()) {
-      if (n.getNext() == null && n.getType() != NodeType.START && n.getType() != NodeType.STOP) {
-        n.setNext(endNode);
+      if (n.getEdge().isEmpty() && n.getType() != NodeType.START && n.getType() != NodeType.STOP) {
+        n.addEdge(Edge.to(endNode));
       }
     }
-    graph.put("start", startNode.withNext(graph.get(tasks.get(0).getName())));
-    graph.put("end", endNode);
+    graph.put(START_NODE_ID, startNode.withEdge(Edge.to(graph.get(tasks.get(0).getName()))));
+    graph.put(END_NODE_ID, endNode);
     return graph;
   }
 
-  Map<String, Node> build(List<TaskItem> tasks) {
-    Map<String, Node> graph = new LinkedHashMap<>(Math.max(16, tasks.size() * 2));
+  Map<String, ? extends Node> build(List<TaskItem> tasks) {
+    Map<String, TaskNode> graph = new LinkedHashMap<>(Math.max(16, tasks.size() * 2));
 
     for (int i = 0; i < tasks.size(); i++) {
       TaskItem task = tasks.get(i);
-      Node u = graph.computeIfAbsent(task.getName(), n -> NodeBuilder.task(task));
+      TaskNode u = graph.computeIfAbsent(task.getName(), n -> NodeBuilder.task(task));
+
+      // Switch and Raise handles the graph differently
+      if (NodeType.SWITCH.equals(u.getType()) || NodeType.RAISE.equals(u.getType())) {
+        continue;
+      }
+
       FlowDirective next = extractThen(task);
       if ((next == null || FlowDirectiveEnum.CONTINUE.equals(next.getFlowDirectiveEnum()))
           && (i + 1 < tasks.size())) {
         TaskItem nextTask = tasks.get(i + 1);
-        Node v = graph.computeIfAbsent(nextTask.getName(), n -> NodeBuilder.task(nextTask));
-        u.setNext(v);
+        TaskNode v = graph.computeIfAbsent(nextTask.getName(), n -> NodeBuilder.task(nextTask));
+        u.addEdge(Edge.to(v));
+      } else if (next != null && next.getFlowDirectiveEnum() != null) {
+        switch (next.getFlowDirectiveEnum()) {
+          case EXIT: // TODO: exit should have a X node edge
+          case END:
+            u.addEdge(Edge.toEnd());
+            break;
+        }
       }
     }
 
@@ -88,7 +104,7 @@ final class MermaidGraph {
                   + cur.getName()
                   + "')");
         }
-        from.setNext(to);
+        from.addEdge(Edge.to(to));
       }
     }
 

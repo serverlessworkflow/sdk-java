@@ -34,9 +34,9 @@ public class ForkNode extends TaskSubgraphNode {
     this.setDirection("LR");
 
     // Split and join badges
-    SplitNode split = NodeBuilder.split();
+    Node split = NodeBuilder.split();
     String competeLabel = fork.getFork().isCompete() ? "ANY" : "ALL";
-    Node join = new Node(Ids.newId(), competeLabel, NodeType.JUNCTION);
+    Node join = new Node(Ids.random(), competeLabel, NodeType.JUNCTION);
     this.addBranch(split.getId(), split);
     this.addBranch(join.getId(), join);
 
@@ -62,9 +62,8 @@ public class ForkNode extends TaskSubgraphNode {
     for (TaskItem branchRoot : branches) {
       String name = branchRoot.getName();
       Node branch = branchRoots.get(name);
-      split.addNext(branch);
-      branch.setNext(join);
-      branch.setRenderedArrow("-- |" + competeLabel + "| -->");
+      split.addEdge(Edge.to(branch));
+      branch.addEdge(Edge.to(join).withArrow("-- |" + competeLabel + "| -->"));
     }
   }
 }
