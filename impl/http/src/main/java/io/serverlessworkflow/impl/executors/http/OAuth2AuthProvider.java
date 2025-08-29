@@ -22,16 +22,17 @@ import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
-import io.serverlessworkflow.impl.executors.http.oauth.JWT;
-import io.serverlessworkflow.impl.executors.http.oauth.OAuthRequestBuilder;
+import io.serverlessworkflow.impl.executors.http.auth.jwt.JWT;
+import io.serverlessworkflow.impl.executors.http.auth.requestbuilder.AuthRequestBuilder;
+import io.serverlessworkflow.impl.executors.http.auth.requestbuilder.OAuthRequestBuilder;
 import jakarta.ws.rs.client.Invocation;
 import jakarta.ws.rs.client.Invocation.Builder;
 
 public class OAuth2AuthProvider implements AuthProvider {
 
-  private OAuthRequestBuilder requestBuilder;
+  private AuthRequestBuilder requestBuilder;
 
-  private static final String BEARER_TOKEN = "%s %s";
+  private static final String BEARER_TOKEN = "Bearer %s";
 
   public OAuth2AuthProvider(
       WorkflowApplication application, Workflow workflow, OAuth2AuthenticationPolicy authPolicy) {
@@ -53,9 +54,6 @@ public class OAuth2AuthProvider implements AuthProvider {
   public void preRequest(
       Invocation.Builder builder, WorkflowContext workflow, TaskContext task, WorkflowModel model) {
     JWT jwt = requestBuilder.build(workflow, task, model).validateAndGet();
-    String type =
-        jwt.type().orElseThrow(() -> new IllegalStateException("Token type is not present"));
-    builder.header(
-        AuthProviderFactory.AUTH_HEADER_NAME, String.format(BEARER_TOKEN, type, jwt.token()));
+    builder.header(AuthProviderFactory.AUTH_HEADER_NAME, String.format(BEARER_TOKEN, jwt.token()));
   }
 }
