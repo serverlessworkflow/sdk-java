@@ -93,9 +93,10 @@ public class EventDefinitionTest {
   void testForEachInAnyIsExecutedAsEventArrive() throws IOException, InterruptedException {
     WorkflowDefinition listenDefinition =
         appl.workflowDefinition(
-            WorkflowReader.readWorkflowFromClasspath("listen-to-any-until.yaml"));
+            WorkflowReader.readWorkflowFromClasspath("workflows-samples/listen-to-any-until.yaml"));
     WorkflowDefinition emitDoctorDefinition =
-        appl.workflowDefinition(WorkflowReader.readWorkflowFromClasspath("emit-doctor.yaml"));
+        appl.workflowDefinition(
+            WorkflowReader.readWorkflowFromClasspath("workflows-samples/emit-doctor.yaml"));
     WorkflowInstance waitingInstance = listenDefinition.instance(Map.of());
     CompletableFuture<WorkflowModel> future = waitingInstance.start();
     assertThat(waitingInstance.status()).isEqualTo(WorkflowStatus.WAITING);
@@ -116,22 +117,29 @@ public class EventDefinitionTest {
 
   private static Stream<Arguments> eventListenerParameters() {
     return Stream.of(
-        Arguments.of("listen-to-any.yaml", "emit.yaml", array(cruellaDeVil()), Map.of()),
         Arguments.of(
-            "listen-to-any-filter.yaml", "emit-doctor.yaml", doctor(), Map.of("temperature", 39)));
+            "workflows-samples/listen-to-any.yaml",
+            "workflows-samples/emit.yaml",
+            array(cruellaDeVil()),
+            Map.of()),
+        Arguments.of(
+            "workflows-samples/listen-to-any-filter.yaml",
+            "workflows-samples/emit-doctor.yaml",
+            doctor(),
+            Map.of("temperature", 39)));
   }
 
   private static Stream<Arguments> eventsListenerParameters() {
     return Stream.of(
         Arguments.of(
-            "listen-to-all.yaml",
-            "emit-doctor.yaml",
-            "emit.yaml",
+            "workflows-samples/listen-to-all.yaml",
+            "workflows-samples/emit-doctor.yaml",
+            "workflows-samples/emit.yaml",
             array(temperature(), cruellaDeVil())),
         Arguments.of(
-            "listen-to-any-until-consumed.yaml",
-            "emit-doctor.yaml",
-            "emit-out.yaml",
+            "workflows-samples/listen-to-any-until-consumed.yaml",
+            "workflows-samples/emit-doctor.yaml",
+            "workflows-samples/emit-out.yaml",
             array(temperature())));
   }
 
