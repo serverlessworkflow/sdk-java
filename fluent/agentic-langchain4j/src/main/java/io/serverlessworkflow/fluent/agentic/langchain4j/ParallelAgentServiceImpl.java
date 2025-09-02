@@ -19,6 +19,7 @@ import dev.langchain4j.agentic.internal.AgentExecutor;
 import dev.langchain4j.agentic.workflow.ParallelAgentService;
 import io.serverlessworkflow.impl.ExecutorServiceHolder;
 import java.util.List;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 
 public class ParallelAgentServiceImpl<T> extends AbstractAgentService<T, ParallelAgentService<T>>
@@ -33,12 +34,6 @@ public class ParallelAgentServiceImpl<T> extends AbstractAgentService<T, Paralle
   }
 
   @Override
-  public ParallelAgentService<T> executorService(ExecutorService executorService) {
-    this.workflowExecBuilder.withExecutorFactory(new ExecutorServiceHolder(executorService));
-    return this;
-  }
-
-  @Override
   public ParallelAgentService<T> subAgents(Object... agents) {
     this.workflowBuilder.tasks(t -> t.parallel(agents));
     return this;
@@ -47,5 +42,17 @@ public class ParallelAgentServiceImpl<T> extends AbstractAgentService<T, Paralle
   @Override
   public ParallelAgentService<T> subAgents(List<AgentExecutor> agentExecutors) {
     return this.subAgents(agentExecutors.toArray());
+  }
+
+  @Override
+  public ParallelAgentService<T> executor(Executor executor) {
+    if (!(executor instanceof ExecutorService)) {
+      throw new IllegalArgumentException(
+          "ExecutorService is required for the ParallelAgentService");
+    }
+    // TODO: create an adapter or change or internal holder to accept a plain `Executor`.
+    this.workflowExecBuilder.withExecutorFactory(
+        new ExecutorServiceHolder((ExecutorService) executor));
+    return this;
   }
 }

@@ -82,11 +82,24 @@ public abstract class AbstractAgentService<T, S> implements WorkflowDefinitionBu
 
   @SuppressWarnings("unchecked")
   public S errorHandler(Function<ErrorContext, ErrorRecoveryResult> errorHandler) {
+    // TODO: implement
     return (S) this;
   }
 
   @Override
   public Workflow getDefinition() {
     return this.workflowBuilder.build();
+  }
+
+  @SuppressWarnings("unchecked")
+  public S name(String name) {
+    this.workflowBuilder.document(d -> d.name(name));
+    return (S) this;
+  }
+
+  @SuppressWarnings("unchecked")
+  public S description(String description) {
+    this.workflowBuilder.document(d -> d.summary(description));
+    return (S) this;
   }
 }
