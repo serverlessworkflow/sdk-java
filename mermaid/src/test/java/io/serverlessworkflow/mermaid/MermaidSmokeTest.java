@@ -15,6 +15,11 @@
  */
 package io.serverlessworkflow.mermaid;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import io.serverlessworkflow.api.WorkflowReader;
+import java.io.IOException;
+import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
@@ -22,30 +27,26 @@ class MermaidSmokeTest {
 
   private static final String BASE = "workflows-samples"; // folder on test classpath
 
-  static java.util.stream.Stream<String> yamlSamples() {
-    try {
-      // First try the folder you expect, then rely on the fallback baked into the finder
-      var list = ClasspathYamlFinder.listYamlResources(BASE);
-      if (list.isEmpty()) {
-        throw new IllegalStateException(
-            """
-                        No YAML resources found on the test classpath.
-                        - Is serverlessworkflow-impl-test built and its *-tests.jar on the test classpath?
-                        - Are YAMLs under src/test/resources in that module?
-                        - Path inside JAR may differ from '/'.
-                        """);
-      }
-      return list.stream();
-    } catch (java.io.IOException e) {
-      throw new java.io.UncheckedIOException(e);
+  static Stream<String> yamlSamples() throws IOException {
+    // First try the folder you expect, then rely on the fallback baked into the finder
+    var list = ClasspathYamlFinder.listYamlResources(BASE);
+    if (list.isEmpty()) {
+      throw new IllegalStateException(
+          """
+                          No YAML resources found on the test classpath.
+                          - Is serverlessworkflow-impl-test built and its *-tests.jar on the test classpath?
+                          - Are YAMLs under src/test/resources in that module?
+                          - Path inside JAR may differ from '/'.
+                          """);
     }
+    return list.stream();
   }
 
   @ParameterizedTest(name = "{index} => {0}")
   @MethodSource("yamlSamples")
   void rendersBasicMermaidStructure(String resourcePath) throws Exception {
-    var wf = io.serverlessworkflow.api.WorkflowReader.readWorkflowFromClasspath(resourcePath);
+    var wf = WorkflowReader.readWorkflowFromClasspath(resourcePath);
     var mermaid = new io.serverlessworkflow.mermaid.Mermaid().from(wf);
-    org.assertj.core.api.Assertions.assertThat(mermaid).isNotBlank().contains("flowchart TD");
+    assertThat(mermaid).isNotBlank().contains("flowchart TD");
   }
 }
