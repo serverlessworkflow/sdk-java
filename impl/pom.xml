@@ -10,7 +10,7 @@
     <packaging>pom</packaging>
     <properties>
         <version.org.glassfish.jersey>3.1.11</version.org.glassfish.jersey>
-        <version.net.thisptr>1.5.0</version.net.thisptr>
+        <version.net.thisptr>1.6.0</version.net.thisptr>
         <version.com.github.f4b6a3>5.2.3</version.com.github.f4b6a3>
         <version.jakarta.ws.rs>4.0.0</version.jakarta.ws.rs>
     </properties>
