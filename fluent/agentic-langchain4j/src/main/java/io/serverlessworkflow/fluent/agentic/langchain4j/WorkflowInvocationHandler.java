@@ -84,13 +84,15 @@ public class WorkflowInvocationHandler implements InvocationHandler, AgenticScop
     // outputName
     if (method.getDeclaringClass() == AgentSpecification.class) {
       return switch (method.getName()) {
+        case "name" -> this.workflow.getDocument().getName();
+        case "description" -> this.workflow.getDocument().getSummary();
         case "outputName" -> outputName();
         default ->
             throw new UnsupportedOperationException(
                 "Unknown method on AgentInstance class : " + method.getName());
       };
     }
-    // withCognisphere
+    // withAgenticScope
     if (method.getDeclaringClass() == AgenticScopeOwner.class) {
       // Ingest the workflow input as a AgenticScope object
       // Later, retrieve it and start the workflow with it as input.
@@ -99,11 +101,11 @@ public class WorkflowInvocationHandler implements InvocationHandler, AgenticScop
         case "registry" -> registry;
         default ->
             throw new UnsupportedOperationException(
-                "Unknown method on CognisphereOwner class : " + method.getName());
+                "Unknown method on AgenticScopeOwner class : " + method.getName());
       };
     }
     // getAgenticScope
-    // evictCognisphere
+    // evictAgenticScope
     if (method.getDeclaringClass() == AgenticScopeAccess.class) {
       return switch (method.getName()) {
         case "getAgenticScope" -> registry().get(args[0]);
@@ -132,7 +134,7 @@ public class WorkflowInvocationHandler implements InvocationHandler, AgenticScop
               .orElseThrow(
                   () ->
                       new IllegalArgumentException(
-                          "Workflow hasn't returned a Cognisphere object."));
+                          "Workflow hasn't returned a AgenticScope object."));
       Object result = output.readState(outputName());
 
       return method.getReturnType().equals(ResultWithAgenticScope.class)
