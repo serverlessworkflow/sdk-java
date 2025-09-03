@@ -13,26 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.executors.http.oauth;
+package io.serverlessworkflow.impl.executors.http.auth.requestbuilder;
 
 import static io.serverlessworkflow.api.types.OAuth2AuthenticationData.OAuth2AuthenticationDataGrant.CLIENT_CREDENTIALS;
 import static io.serverlessworkflow.api.types.OAuth2AuthenticationData.OAuth2AuthenticationDataGrant.PASSWORD;
 
 import io.serverlessworkflow.api.types.OAuth2AuthenticationData;
-import io.serverlessworkflow.api.types.Oauth2;
 import java.util.Base64;
 
 class ClientSecretBasic {
 
-  private final Oauth2 oauth2;
+  private final OAuth2AuthenticationData authenticationData;
 
-  public ClientSecretBasic(Oauth2 oauth2) {
-    this.oauth2 = oauth2;
+  ClientSecretBasic(OAuth2AuthenticationData authenticationData) {
+    this.authenticationData = authenticationData;
   }
 
-  public void execute(HttpRequestBuilder requestBuilder) {
-    OAuth2AuthenticationData authenticationData =
-        oauth2.getOAuth2ConnectAuthenticationProperties().getOAuth2AuthenticationData();
+  void execute(HttpRequestBuilder requestBuilder) {
     if (authenticationData.getGrant().equals(PASSWORD)) {
       password(requestBuilder, authenticationData);
     } else if (authenticationData.getGrant().equals(CLIENT_CREDENTIALS)) {

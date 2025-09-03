@@ -13,15 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.executors.http.oauth;
+package io.serverlessworkflow.impl.executors.http.auth.requestbuilder;
 
-public interface JWTConverter {
+import io.serverlessworkflow.impl.TaskContext;
+import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.WorkflowModel;
 
-  /**
-   * Converts a JWT token string into a JWT object.
-   *
-   * @param token the JWT token string
-   * @return a JWT object containing the token and its claims
-   */
-  JWT fromToken(String token) throws IllegalArgumentException;
+public interface AuthRequestBuilder {
+
+  public AccessTokenProvider build(WorkflowContext workflow, TaskContext task, WorkflowModel model);
 }
