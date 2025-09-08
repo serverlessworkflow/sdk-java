@@ -16,24 +16,49 @@
 package io.serverlessworkflow.impl.executors.http;
 
 import io.serverlessworkflow.api.types.OpenIdConnectAuthenticationPolicy;
+import io.serverlessworkflow.api.types.OpenIdConnectAuthenticationPolicyConfiguration;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
+import io.serverlessworkflow.impl.executors.http.auth.jwt.JWT;
+import io.serverlessworkflow.impl.executors.http.auth.requestbuilder.AuthRequestBuilder;
+import io.serverlessworkflow.impl.executors.http.auth.requestbuilder.OpenIdRequestBuilder;
+import jakarta.ws.rs.client.Invocation;
 import jakarta.ws.rs.client.Invocation.Builder;
 
 public class OpenIdAuthProvider implements AuthProvider {
 
+  private AuthRequestBuilder requestBuilder;
+
+  private static final String BEARER_TOKEN = "Bearer %s";
+
   public OpenIdAuthProvider(
-      WorkflowApplication app, Workflow workflow, OpenIdConnectAuthenticationPolicy authPolicy) {
-    throw new UnsupportedOperationException("OpenId auth not supported yet");
+      WorkflowApplication application,
+      Workflow workflow,
+      OpenIdConnectAuthenticationPolicy authPolicy) {
+    OpenIdConnectAuthenticationPolicyConfiguration configuration = authPolicy.getOidc();
+
+    if (configuration.getOpenIdConnectAuthenticationProperties() != null) {
+      this.requestBuilder =
+          new OpenIdRequestBuilder(
+              application, configuration.getOpenIdConnectAuthenticationProperties());
+    } else if (configuration.getOpenIdConnectAuthenticationPolicySecret() != null) {
+      throw new UnsupportedOperationException("Secrets are still not supported");
+    }
   }
 
   @Override
   public Builder build(
       Builder builder, WorkflowContext workflow, TaskContext task, WorkflowModel model) {
-    // TODO Auto-generated method stub
     return builder;
+  }
+
+  @Override
+  public void preRequest(
+      Invocation.Builder builder, WorkflowContext workflow, TaskContext task, WorkflowModel model) {
+    JWT jwt = requestBuilder.build(workflow, task, model).validateAndGet();
+    builder.header(AuthProviderFactory.AUTH_HEADER_NAME, String.format(BEARER_TOKEN, jwt.token()));
   }
 }

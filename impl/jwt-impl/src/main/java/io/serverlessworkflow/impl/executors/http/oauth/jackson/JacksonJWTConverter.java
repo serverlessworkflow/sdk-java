@@ -16,8 +16,8 @@
 package io.serverlessworkflow.impl.executors.http.oauth.jackson;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import io.serverlessworkflow.impl.executors.http.oauth.JWT;
-import io.serverlessworkflow.impl.executors.http.oauth.JWTConverter;
+import io.serverlessworkflow.impl.executors.http.auth.jwt.JWT;
+import io.serverlessworkflow.impl.executors.http.auth.jwt.JWTConverter;
 import io.serverlessworkflow.impl.jackson.JsonUtils;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
