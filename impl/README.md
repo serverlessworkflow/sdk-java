@@ -1,217 +1,289 @@
-![Verify JAVA SDK](https://github.com/serverlessworkflow/sdk-java/workflows/Verify%20JAVA%20SDK/badge.svg)
-![Deploy JAVA SDK](https://github.com/serverlessworkflow/sdk-java/workflows/Deploy%20JAVA%20SDK/badge.svg) [![Gitpod ready-to-code](https://img.shields.io/badge/Gitpod-ready--to--code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/serverlessworkflow/sdk-java)
+[![Gitpod ready-to-code](https://img.shields.io/badge/Gitpod-ready--to--code-blue?logo=gitpod)](https://gitpod.io/#https://github.com/serverlessworkflow/sdk-java)
 
-# Serverless Workflow Specification - Java SDK- Reference Implementation
+# Serverless Workflow Specification — Java SDK (Reference Implementation)
 
-Welcome to Java SDK runtime reference implementation, a lightweight implementation of the Serverless Workflow specification which provides a simple, non blocking, reactive API for workflow execution. 
+A lightweight, non-blocking, reactive **runtime** for the [Serverless Workflow](https://serverlessworkflow.io/) specification. Use it to load, validate, and execute workflows written in YAML/JSON—or build them programmatically with our Fluent DSL.
 
-## Status
+---
 
-This reference implementation is currently capable of running workflows consisting of:
+## Contents
 
-* Tasks
-    * Switch 
-    * Set
-    * Do
-    * Raise
-    * Listen
-    * Emit
-    * Fork
-    * For
-    * Try
-    * Wait
-    * Call
-        * HTTP
-          * Basic authentication
-          * Bearer authentication
-          * OAuth2 authentication
-* Schema Validation
-    * Input
-    * Output
-* Expressions
-    * Input
-    * Output 
-    * Export
-    * Special keywords: runtime, workflow, task...
-* Error definitions
-* Lifecycle events: 
-    * Pending
-    * Started
-    * Suspended
-    * Faulted
-    * Resumed
-    * Cancelled
-    * Completed
+* [Status & Features](#status--features)
+* [Modules](#modules)
+* [Installation](#installation)
+* [Quick Start](#quick-start)
+* [Detailed Walkthrough](#detailed-walkthrough)
+* [Fluent Java DSL](#fluent-java-dsl)
+* [Mermaid Diagrams](#mermaid-diagrams)
+* [Lifecycle Events](#lifecycle-events)
+* [Errors & Auth](#errors--auth)
+* [Development](#development)
+* [License](#license)
 
+---
 
-## Setup
+## Status & Features
 
-Before getting started, ensure you have Java 17+ and Maven or Gradle installed.
+This reference implementation can run workflows consisting of:
 
-Install [Java 17](https://openjdk.org/projects/jdk/17/)
-Install [Maven](https://maven.apache.org/install.html) (if using Maven)
-Install [Gradle](https://gradle.org/install) (if using Gradle)
+**Tasks**
 
-### Dependencies
+* `Switch`
+* `Set`
+* `Do`
+* `Raise`
+* `Listen`
+* `Emit`
+* `Fork`
+* `For` / `ForEach`
+* `Try` (with `Catch`/`Retry`)
+* `Wait`
+* `Call`
 
-This implementation follows a modular approach, keeping dependencies minimal:
-- There is the core library, `serverlessworkflow-impl-core`, which depends on the types generated from the workflow schema and CloudEvent SDK. It contains the workflow engine implementation and those interfaces the user will operate with. 
-- There is the Jackson library, `serverlessworkflow-impl-jackson`, which depends on core and contains Jackson depending stuff, among others, JQ expression implementation, Json schema validation implementation and Jackson cloud events marshalling/unmarshalling. This is the library most users will include as dependency in their modules. 
-- Additional dependencies must be explicitly included if your workflow interacts with external services (e.g., HTTP).
-This ensures you only include what you need, preventing unnecessary dependencies.
+  * **HTTP**
 
-#### Maven
+    * Basic auth
+    * Bearer auth
+    * OAuth2 / OIDC auth
+    * Digest auth (via Fluent DSL)
 
-In order to execute workflows written in YAML that use JQ expression, you just need to add this dependency to your pom.xml `dependencies` section:
+**Schema Validation**
+
+* Input / Output validation
+
+**Expressions**
+
+* Input / Output / Export
+* Special keywords: `runtime`, `workflow`, `task`, …
+
+**Error Definitions**
+
+* Standard & custom error types
+
+**Lifecycle Events**
+
+* `Pending`, `Started`, `Suspended`, `Faulted`, `Resumed`, `Cancelled`, `Completed`
+
+---
+
+## Modules
+
+This SDK is modular by design—pull in only what you need:
+
+* **`serverlessworkflow-impl-core`**
+  Workflow engine & core interfaces. Depends on generated types and CloudEvents SDK.
+
+* **`serverlessworkflow-impl-jackson`**
+  Adds Jackson integration, JQ expressions, JSON Schema validation, and CloudEvents (de)serialization.
+  👉 **Most users add this one.**
+
+* **`serverlessworkflow-impl-http`**
+  HTTP `Call` task handler.
+
+* **`serverlessworkflow-impl-jackson-jwt`**
+  OAuth2/OIDC helpers for HTTP calls.
+
+There are also companion modules/docs for:
+
+* **Fluent DSL** (programmatic builder)
+* **Mermaid** (diagramming workflows)
+
+Links below.
+
+---
+
+## Installation
+
+### Maven
 
 ```xml
+<!-- Core + Jackson (YAML, JQ, JSON Schema, CloudEvents) -->
 <dependency>
-      <groupId>io.serverlessworkflow</groupId>
-      <artifactId>serverlessworkflow-impl-jackson</artifactId>
+  <groupId>io.serverlessworkflow</groupId>
+  <artifactId>serverlessworkflow-impl-jackson</artifactId>
+</dependency>
+
+<!-- Add if you use HTTP Call tasks -->
+<dependency>
+  <groupId>io.serverlessworkflow</groupId>
+  <artifactId>serverlessworkflow-impl-http</artifactId>
+</dependency>
+
+<!-- Add if your HTTP calls require OAuth2/OIDC -->
+<dependency>
+  <groupId>io.serverlessworkflow</groupId>
+  <artifactId>serverlessworkflow-impl-jackson-jwt</artifactId>
 </dependency>
 ```
 
-And only if your workflow is using HTTP calls, you must add:
+### Gradle (Kotlin/Groovy)
 
-```xml
-<dependency>
-      <groupId>io.serverlessworkflow</groupId>
-      <artifactId>serverlessworkflow-impl-http</artifactId>
-</dependency>
-```
-
-If you http call requires Oauth2 authorization, you must add:
-
-```xml
-<dependency>
-      <groupId>io.serverlessworkflow</groupId>
-      <artifactId>serverlessworkflow-impl-jackson-jwt</artifactId>
-</dependency>
-```
-
-
-#### Gradle projects:
-
-In order to execute workflows written in YAML that use JQ expression, you just need to add this dependency to your pom.xml `dependencies` section:
-
-```text
+```gradle
 implementation("io.serverlessworkflow:serverlessworkflow-impl-jackson")
+implementation("io.serverlessworkflow:serverlessworkflow-impl-http")        // if using HTTP
+implementation("io.serverlessworkflow:serverlessworkflow-impl-jackson-jwt") // if using OAuth2/OIDC
 ```
 
-And only if your workflow is using HTTP calls, you must add:
+> Requires **Java 17+**.
 
-```text
-implementation("io.serverlessworkflow:serverlessworkflow-impl-http")
-```
+---
 
-If you http call requires Oauth2 authorization, you must add:
+## Quick Start
 
-```text
-implementation("io.serverlessworkflow:serverlessworkflow-impl-jackson-jwt")
-```
+We’ll run a simple workflow that performs an HTTP GET. See the full YAML in
+`examples/simpleGet/src/main/resources/get.yaml`.
 
+### Blocking execution
 
-## How to use
-
-The quick version is intended for impatient users who want to try something as soon as possible.
-
-The detailed version is more suitable for those users interested in a more thoughtful discussion of the API.
-
-### Quick version
-
-For a quick introduction, we will use a simple workflow [definition](../examples/simpleGet/src/main/resources/get.yaml) that performs a get call. 
-We are going to show two ways of invoking the workflow: 
-  - blocking the thread till the get request goes through
-  - returning control to the caller, so the main thread continues while the get is executed
-
-In order to execute the workflow, blocking the thread till the HTTP request is completed, you should write
-
-``` java 
+```java
 try (WorkflowApplication appl = WorkflowApplication.builder().build()) {
-      logger.info(
-          "Workflow output is {}",
-          appl.workflowDefinition(WorkflowReader.readWorkflowFromClasspath("get.yaml"))
-              .instance(Map.of("petId", 10))
-              .start()
-              .join());
-    }
-```
-You can find the complete java code [here](../examples/simpleGet/src/main/java/io/serverlessworkflow/impl/BlockingExample.java)
-
-In order to execute the workflow without blocking the calling thread till the HTTP request is completed, you should write
-
-``` java 
-  try (WorkflowApplication appl = WorkflowApplication.builder().build()) {
+  var output =
       appl.workflowDefinition(WorkflowReader.readWorkflowFromClasspath("get.yaml"))
           .instance(Map.of("petId", 10))
           .start()
-          .thenAccept(output -> logger.info("Workflow output is {}", output));
-    }
-```
-When the HTTP request is done, both examples will print a similar output
-
-
-```shell
-Workflow output is {"id":10,"category":{"id":10,"name":"string"},"name":"doggie","photoUrls":["string"],"tags":[{"id":10,"name":"string"}],"status":"string"}
+          .join();
+  logger.info("Workflow output is {}", output);
+}
 ```
 
-You can find the complete java code [here](../examples/simpleGet/src/main/java/io/serverlessworkflow/impl/NotBlockingExample.java)
-
-### Detailed version
-
-To discuss runtime API we are going to use a couple of workflow:
-- [listen.yaml](../examples/events/src/main/listen.yaml), which waits for an event reporting a temperature greater than 38
-- [emit.yaml](../examples/events/src/main/emit.yaml), which emits events with a certain temperature, specified as workflow parameter.
-
-Here is a summary of what we are trying to do: 
-
-- The listen.yaml workflow waits for an event (not-blocking).
-- We send an event with a low temperature (ignored).
-- We send an event with a high temperature (completes the workflow).
-
-The first step is to create a [WorkflowApplication](core/src/main/java/io/serverlessworkflow/impl/WorkflowApplication.java) instance. An application is an abstraction that allows customization of different aspects of the workflow execution (for example, change the default `ExecutorService` for thread spawning)
-
-Since `WorkflowApplication` implements `Autocloseable`, we better use a **try-with-resources** block, ensuring any resource that the workflow might have used is freed when done. 
-
-`try (WorkflowApplication appl = WorkflowApplication.builder().build())`
-
-Once we have the application object, we use it to parse our definition examples. To load each workflow definition, we use the `readFromClasspath` helper method defined in [WorkflowReader](api/src/main/java/io/serverlessworkflow/api/WorkflowReader.java) class.
+### Non-blocking execution
 
 ```java
-      WorkflowDefinition listenDefinition =
-          appl.workflowDefinition(WorkflowReader.readWorkflowFromClasspath("listen.yaml"));
-      WorkflowDefinition emitDefinition =
-          appl.workflowDefinition(WorkflowReader.readWorkflowFromClasspath("emit.yaml")); 
+try (WorkflowApplication appl = WorkflowApplication.builder().build()) {
+  appl.workflowDefinition(WorkflowReader.readWorkflowFromClasspath("get.yaml"))
+      .instance(Map.of("petId", 10))
+      .start()
+      .thenAccept(output -> logger.info("Workflow output is {}", output));
+}
 ```
 
-A [WorkflowDefinition](core/src/main/java/io/serverlessworkflow/impl/WorkflowDefinition.java) object is immutable and, therefore, thread-safe. It is used to execute as many workflow instances as desired. 
+Example output:
 
-To execute a workflow, we first create a [WorkflowInstance](core/src/main/java/io/serverlessworkflow/impl/WorkflowInstance.java) object (its initial status is PENDING) and then invoke the `start` method on it (its status is changed to RUNNING). The `start` method returns a [CompletableFuture](https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/CompletableFuture.html), which we use to indicate that a log message should be printed when the workflow is completed.
-
-```java
-  WorkflowInstance waitingInstance = listenDefinition.instance(Map.of());
-      waitingInstance
-          .start()
-          .thenAccept(output -> logger.info("Waiting instance completed with result {}", output));
+```text
+Workflow output is {"id":10,"category":{"id":10,"name":"string"},"name":"doggie",...}
 ```
 
-As soon as the workflow execution reach the point where it waits for events to arrive, control is returned to the calling thread. Since the execution is not blocking, we can execute another workflow instance while the first one is waiting. Also, you might suspend workflow execution by calling `WorkflowInstance::suspend` (the workflow progress will be paused till you invoke `WorkflowInstance::resume`). In case workflow execution needs to be aborted you might use `WorkflowInstance::cancel`
+Full examples:
 
-In this example, we are invoking a workflow that publishes an event with a temperature that does not satisfy the waiting criteria, so the listen instance will continue waiting. We use a regular Java `Map` to pass parameters to the workflow instance that sends the event. Note that since we want to wait till the event is published, we call `join` after `start`, telling the `CompletableFuture` to wait for workflow completion.
+* Blocking: `examples/simpleGet/src/main/java/io/serverlessworkflow/impl/BlockingExample.java`
+* Non-blocking: `examples/simpleGet/src/main/java/io/serverlessworkflow/impl/NotBlockingExample.java`
+
+---
+
+## Detailed Walkthrough
+
+We’ll coordinate two workflows—one **listens** for high temperatures and the other **emits** temperature events:
+
+* `listen.yaml` waits for an event with `temperature > 38` (non-blocking)
+* `emit.yaml` emits events using a workflow parameter
+
+Create an application (customize thread pools, etc.). `WorkflowApplication` is `AutoCloseable`, so use try-with-resources:
 
 ```java
- emitDefinition.instance(Map.of("temperature", 35)).start().join();
- ```
- 
- It's time to complete the waiting instance and send an event with the expected temperature. We do so by reusing `emitDefinition`.
+try (WorkflowApplication appl = WorkflowApplication.builder().build()) {
+  var listen = appl.workflowDefinition(WorkflowReader.readWorkflowFromClasspath("listen.yaml"));
+  var emit   = appl.workflowDefinition(WorkflowReader.readWorkflowFromClasspath("emit.yaml"));
 
-```java
- emitDefinition.instance(Map.of("temperature", 39)).start().join();
- ```
- 
-After that, listen instance will be completed and we will see this log message
+  // Start the listener (non-blocking)
+  listen.instance(Map.of())
+        .start()
+        .thenAccept(out -> logger.info("Waiting instance completed with {}", out));
 
-```java
-[pool-1-thread-1] INFO events.EventExample - Waiting instance completed with result [{"temperature":39}]
+  // Emit a low temperature (ignored)
+  emit.instance(Map.of("temperature", 35)).start().join();
+
+  // Emit a high temperature (completes the waiting workflow)
+  emit.instance(Map.of("temperature", 39)).start().join();
+}
 ```
-The source code of the example is [here](../examples/events/src/main/java/events/EventExample.java)
+
+You’ll see:
+
+```
+Waiting instance completed with [{"temperature":39}]
+```
+
+Source: `examples/events/src/main/java/events/EventExample.java`
+
+---
+
+## Fluent Java DSL
+
+Prefer building workflows programmatically with type-safe builders and recipes?
+👉 **Docs:** [https://github.com/serverlessworkflow/sdk-java/blob/main/fluent/README.md](https://github.com/serverlessworkflow/sdk-java/blob/main/fluent/README.md)
+
+Highlights:
+
+* Chainable builders for `Call HTTP`, `Listen/Emit`, `Try/Catch/Retry`, `Switch`, `Fork`, etc.
+* Reusable “recipes” (e.g., `http().GET().acceptJSON().endpoint("${ ... }")`)
+* Static helpers for auth (`basic(...)`, `bearer(...)`, `oidc(...)`, …) and standard error types.
+
+---
+
+## Mermaid Diagrams
+
+Generate Mermaid diagrams for your workflows right from the SDK.
+👉 **Docs:** [https://github.com/serverlessworkflow/sdk-java/blob/main/mermaid/README.md](https://github.com/serverlessworkflow/sdk-java/blob/main/mermaid/README.md)
+
+Great for docs, PRs, and visual reviews.
+
+---
+
+## Lifecycle Events
+
+Every workflow publishes CloudEvents you can subscribe to (in-memory or your own broker):
+
+* `io.serverlessworkflow.workflow.*` → `pending`, `started`, `suspended`, `faulted`, `resumed`, `cancelled`, `completed`
+* `io.serverlessworkflow.task.*` → `started`, `suspended`, `resumed`, `cancelled`, `completed`
+
+See `impl` tests/examples for consuming and asserting on these events.
+
+---
+
+## Errors & Auth
+
+**Errors**
+
+* Raise standard errors with versioned URIs (e.g., `runtime`, `communication`, `timeout`, …) or custom ones.
+* Fluent helpers (e.g., `serverError()`, `timeoutError()`) set both **type URI** and default **HTTP status**; override as needed.
+
+**Authentication (HTTP Call)**
+
+* Basic / Bearer / Digest
+* OAuth2 / OpenID Connect (client credentials, etc.)
+* Fluent helpers: `basic("user","pass")`, `bearer("token")`, `oidc(authority, grant, clientId, clientSecret)`, …
+
+---
+
+## Development
+
+**Prereqs**
+
+* Java 17+
+* Maven (or Gradle)
+
+**Build & Verify**
+
+```bash
+mvn -B clean verify
+```
+
+**Formatting & Lint (CI parity)**
+
+```bash
+mvn -B -DskipTests spotless:check checkstyle:check
+```
+
+**Run examples**
+
+* See `examples/` directory for runnable samples.
+
+---
+
+## License
+
+Apache License 2.0. See `LICENSE` for details.
+
+---
+
+*Questions or ideas? PRs and issues welcome!*
