@@ -22,7 +22,7 @@
     <dependencies>
         <dependency>
             <groupId>io.serverlessworkflow</groupId>
-            <artifactId>serverlessworkflow-fluent-func</artifactId>
+            <artifactId>serverlessworkflow-experimental-fluent-func</artifactId>
         </dependency>
         <dependency>
             <groupId>io.serverlessworkflow</groupId>

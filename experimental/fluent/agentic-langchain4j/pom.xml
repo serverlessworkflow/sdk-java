@@ -5,12 +5,12 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>io.serverlessworkflow</groupId>
-        <artifactId>serverlessworkflow-fluent</artifactId>
+        <artifactId>serverlessworkflow-experimental-fluent</artifactId>
         <version>8.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>serverlessworkflow-fluent-agentic-langchain4j</artifactId>
-    <name>Serverless Workflow :: Fluent :: Agentic LangChain4j</name>
+    <artifactId>serverlessworkflow-experimental-fluent-agentic-langchain4j</artifactId>
+    <name>Serverless Workflow :: Experimental :: Fluent :: Agentic LangChain4j</name>
     <description>Agentic Workflow DSL Implementation for langchain4j-agentic</description>
 
     <dependencies>
@@ -20,7 +20,7 @@
         </dependency>
         <dependency>
             <groupId>io.serverlessworkflow</groupId>
-            <artifactId>serverlessworkflow-fluent-agentic</artifactId>
+            <artifactId>serverlessworkflow-experimental-fluent-agentic</artifactId>
         </dependency>
         <dependency>
             <groupId>dev.langchain4j</groupId>
@@ -55,7 +55,7 @@
         </dependency>
         <dependency>
             <groupId>io.serverlessworkflow</groupId>
-            <artifactId>serverlessworkflow-fluent-agentic</artifactId>
+            <artifactId>serverlessworkflow-experimental-fluent-agentic</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
         </dependency>
