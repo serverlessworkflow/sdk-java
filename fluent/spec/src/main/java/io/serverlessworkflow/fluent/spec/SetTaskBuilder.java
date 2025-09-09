@@ -40,7 +40,7 @@ public class SetTaskBuilder extends TaskBaseBuilder<SetTaskBuilder> {
     return this;
   }
 
-  public SetTaskBuilder put(String key, String value) {
+  public SetTaskBuilder put(String key, Object value) {
     setTaskConfiguration.withAdditionalProperty(key, value);
     return this;
   }

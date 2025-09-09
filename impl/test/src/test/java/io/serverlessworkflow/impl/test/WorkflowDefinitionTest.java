@@ -177,12 +177,12 @@ public class WorkflowDefinitionTest {
   }
 
   private static void checkWorkflowException(WorkflowException ex) {
-    assertThat(ex.getWorflowError().type())
+    assertThat(ex.getWorkflowError().type())
         .isEqualTo("https://serverlessworkflow.io/errors/not-implemented");
-    assertThat(ex.getWorflowError().status()).isEqualTo(500);
-    assertThat(ex.getWorflowError().title()).isEqualTo("Not Implemented");
-    assertThat(ex.getWorflowError().details()).contains("raise-not-implemented");
-    assertThat(ex.getWorflowError().instance()).isEqualTo("do/0/notImplemented");
+    assertThat(ex.getWorkflowError().status()).isEqualTo(500);
+    assertThat(ex.getWorkflowError().title()).isEqualTo("Not Implemented");
+    assertThat(ex.getWorkflowError().details()).contains("raise-not-implemented");
+    assertThat(ex.getWorkflowError().instance()).isEqualTo("do/0/notImplemented");
   }
 
   private static void checkSpecialKeywords(Object obj) {

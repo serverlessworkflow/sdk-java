@@ -57,8 +57,9 @@ public class TryTaskBuilder<T extends BaseTaskItemListBuilder<T>>
     return this;
   }
 
-  public TryTaskBuilder<T> catchHandler(Consumer<TryTaskCatchBuilder> consumer) {
-    final TryTaskCatchBuilder catchBuilder = new TryTaskCatchBuilder();
+  public TryTaskBuilder<T> catchHandler(Consumer<TryTaskCatchBuilder<T>> consumer) {
+    final TryTaskCatchBuilder<T> catchBuilder =
+        new TryTaskCatchBuilder<>(this.doTaskBuilderFactory);
     consumer.accept(catchBuilder);
     this.tryTask.setCatch(catchBuilder.build());
     return this;
@@ -68,39 +69,48 @@ public class TryTaskBuilder<T extends BaseTaskItemListBuilder<T>>
     return tryTask;
   }
 
-  public static final class TryTaskCatchBuilder {
+  public static final class TryTaskCatchBuilder<T extends BaseTaskItemListBuilder<T>> {
     private final TryTaskCatch tryTaskCatch;
+    private final T doTaskBuilderFactory;
 
-    TryTaskCatchBuilder() {
+    TryTaskCatchBuilder(T doTaskBuilderFactory) {
+      this.doTaskBuilderFactory = doTaskBuilderFactory;
       this.tryTaskCatch = new TryTaskCatch();
     }
 
-    public TryTaskCatchBuilder as(final String as) {
+    public TryTaskCatchBuilder<T> as(final String as) {
       this.tryTaskCatch.setAs(as);
       return this;
     }
 
-    public TryTaskCatchBuilder when(final String when) {
+    public TryTaskCatchBuilder<T> when(final String when) {
       this.tryTaskCatch.setWhen(when);
       return this;
     }
 
-    public TryTaskCatchBuilder exceptWhen(final String exceptWhen) {
+    public TryTaskCatchBuilder<T> exceptWhen(final String exceptWhen) {
       this.tryTaskCatch.setExceptWhen(exceptWhen);
       return this;
     }
 
-    public TryTaskCatchBuilder retry(Consumer<RetryPolicyBuilder> consumer) {
+    public TryTaskCatchBuilder<T> retry(Consumer<RetryPolicyBuilder> consumer) {
       final RetryPolicyBuilder retryPolicyBuilder = new RetryPolicyBuilder();
       consumer.accept(retryPolicyBuilder);
       this.tryTaskCatch.setRetry(new Retry().withRetryPolicyDefinition(retryPolicyBuilder.build()));
       return this;
     }
 
-    public TryTaskCatchBuilder errorsWith(Consumer<CatchErrorsBuilder> consumer) {
+    public TryTaskCatchBuilder<T> errorsWith(Consumer<CatchErrorsBuilder> consumer) {
       final CatchErrorsBuilder catchErrorsBuilder = new CatchErrorsBuilder();
       consumer.accept(catchErrorsBuilder);
       this.tryTaskCatch.setErrors(catchErrorsBuilder.build());
+      return this;
+    }
+
+    public TryTaskCatchBuilder<T> doTasks(Consumer<T> consumer) {
+      final T taskItemListBuilder = this.doTaskBuilderFactory.newItemListBuilder();
+      consumer.accept(taskItemListBuilder);
+      this.tryTaskCatch.setDo(taskItemListBuilder.build());
       return this;
     }
 
@@ -153,30 +163,30 @@ public class TryTaskBuilder<T extends BaseTaskItemListBuilder<T>>
       this.retryPolicyJitter = new RetryPolicyJitter();
     }
 
-    public RetryPolicyJitter to(Consumer<DurationInlineBuilder> consumer) {
+    public RetryPolicyJitterBuilder to(Consumer<DurationInlineBuilder> consumer) {
       final DurationInlineBuilder durationInlineBuilder = new DurationInlineBuilder();
       consumer.accept(durationInlineBuilder);
       this.retryPolicyJitter.setTo(
           new TimeoutAfter().withDurationInline(durationInlineBuilder.build()));
-      return retryPolicyJitter;
+      return this;
     }
 
-    public RetryPolicyJitter to(String expression) {
+    public RetryPolicyJitterBuilder to(String expression) {
       this.retryPolicyJitter.setTo(new TimeoutAfter().withDurationExpression(expression));
-      return retryPolicyJitter;
+      return this;
     }
 
-    public RetryPolicyJitter from(Consumer<DurationInlineBuilder> consumer) {
+    public RetryPolicyJitterBuilder from(Consumer<DurationInlineBuilder> consumer) {
       final DurationInlineBuilder durationInlineBuilder = new DurationInlineBuilder();
       consumer.accept(durationInlineBuilder);
       this.retryPolicyJitter.setFrom(
           new TimeoutAfter().withDurationInline(durationInlineBuilder.build()));
-      return retryPolicyJitter;
+      return this;
     }
 
-    public RetryPolicyJitter from(String expression) {
+    public RetryPolicyJitterBuilder from(String expression) {
       this.retryPolicyJitter.setFrom(new TimeoutAfter().withDurationExpression(expression));
-      return retryPolicyJitter;
+      return this;
     }
 
     public RetryPolicyJitter build() {

@@ -47,7 +47,7 @@ public record WorkflowErrorCEData(
   }
 
   private static WorkflowErrorCEData error(WorkflowException ex) {
-    WorkflowError error = ex.getWorflowError();
+    WorkflowError error = ex.getWorkflowError();
     return new WorkflowErrorCEData(
         error.type(), error.status(), error.instance(), error.title(), error.details());
   }

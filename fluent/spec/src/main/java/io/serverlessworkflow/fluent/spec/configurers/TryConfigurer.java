@@ -13,24 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl;
+package io.serverlessworkflow.fluent.spec.configurers;
 
-public class WorkflowException extends RuntimeException {
+import io.serverlessworkflow.fluent.spec.TaskItemListBuilder;
+import io.serverlessworkflow.fluent.spec.TryTaskBuilder;
+import java.util.function.Consumer;
 
-  private static final long serialVersionUID = 1L;
-
-  private final WorkflowError workflowError;
-
-  public WorkflowException(WorkflowError error) {
-    this(error, null);
-  }
-
-  public WorkflowException(WorkflowError error, Throwable cause) {
-    super(error.toString(), cause);
-    this.workflowError = error;
-  }
-
-  public WorkflowError getWorkflowError() {
-    return workflowError;
-  }
-}
+public interface TryConfigurer extends Consumer<TryTaskBuilder<TaskItemListBuilder>> {}

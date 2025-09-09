@@ -15,12 +15,13 @@
  */
 package io.serverlessworkflow.impl;
 
+import io.serverlessworkflow.types.Errors;
+
 public record WorkflowError(
     String type, int status, String instance, String title, String details) {
 
-  private static final String ERROR_FORMAT = "https://serverlessworkflow.io/spec/1.0.0/errors/%s";
-  public static final String RUNTIME_TYPE = String.format(ERROR_FORMAT, "runtime");
-  public static final String COMM_TYPE = String.format(ERROR_FORMAT, "communication");
+  public static final Errors.Standard RUNTIME_TYPE = Errors.RUNTIME;
+  public static final Errors.Standard COMM_TYPE = Errors.COMMUNICATION;
 
   public static Builder error(String type, int status) {
     return new Builder(type, status);
@@ -31,13 +32,23 @@ public record WorkflowError(
   }
 
   public static Builder communication(int status, TaskContext context, String title) {
-    return new Builder(COMM_TYPE, status).instance(context.position().jsonPointer()).title(title);
+    return new Builder(COMM_TYPE.toString(), status)
+        .instance(context.position().jsonPointer())
+        .title(title);
+  }
+
+  public static Builder communication(TaskContext context, String title) {
+    return communication(COMM_TYPE.status(), context, title);
   }
 
   public static Builder runtime(int status, TaskContext context, Exception ex) {
-    return new Builder(RUNTIME_TYPE, status)
+    return new Builder(RUNTIME_TYPE.toString(), status)
         .instance(context.position().jsonPointer())
         .title(ex.getMessage());
+  }
+
+  public static Builder runtime(TaskContext context, Exception ex) {
+    return runtime(RUNTIME_TYPE.status(), context, ex);
   }
 
   public static class Builder {
