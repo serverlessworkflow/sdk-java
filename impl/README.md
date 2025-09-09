@@ -8,7 +8,8 @@ A lightweight, non-blocking, reactive **runtime** for the [Serverless Workflow](
 
 ## Contents
 
-* [Status & Features](#status--features)
+* [Status](#status)
+* [Features](#features)
 * [Modules](#modules)
 * [Installation](#installation)
 * [Quick Start](#quick-start)
@@ -22,7 +23,20 @@ A lightweight, non-blocking, reactive **runtime** for the [Serverless Workflow](
 
 ---
 
-## Status & Features
+## Status
+
+|                                     Latest Releases                                    |                        Conformance to spec version                       |
+| :------------------------------------------------------------------------------------: | :----------------------------------------------------------------------: |
+| [7.x](https://github.com/serverlessworkflow/sdk-java/releases/tag/7.1.0.Final) (Java 17)| [v1.0.0](https://github.com/serverlessworkflow/specification/tree/1.0.x) |
+| [5.x](https://github.com/serverlessworkflow/sdk-java/releases/tag/5.1.0.Final) (Java 11) |  [v0.8](https://github.com/serverlessworkflow/specification/tree/0.8.x)  |
+| [4.x](https://github.com/serverlessworkflow/sdk-java/releases/tag/4.1.0.Final) (Java 1.8) |  [v0.8](https://github.com/serverlessworkflow/specification/tree/0.8.x)  |
+| [3.0.0.Final](https://github.com/serverlessworkflow/sdk-java/releases/tag/3.0.0.Final) (Java 1.8) |  [v0.7](https://github.com/serverlessworkflow/specification/tree/0.7.x)  |
+| [2.0.0.Final](https://github.com/serverlessworkflow/sdk-java/releases/tag/2.0.0.Final) (Java 1.8) |  [v0.6](https://github.com/serverlessworkflow/specification/tree/0.6.x)  |
+| [1.0.3.Final](https://github.com/serverlessworkflow/sdk-java/releases/tag/1.0.3.Final) (Java 1.8) |  [v0.5](https://github.com/serverlessworkflow/specification/tree/0.5.x)  |
+
+> **Note:** `6.0.0.Final` (planned for spec **v0.9**) is intentionally **skipped** to leave room for anyone who wants to work on it.
+
+## Features
 
 This reference implementation can run workflows consisting of:
 
@@ -131,7 +145,7 @@ implementation("io.serverlessworkflow:serverlessworkflow-impl-jackson-jwt") // i
 ## Quick Start
 
 We’ll run a simple workflow that performs an HTTP GET. See the full YAML in
-`examples/simpleGet/src/main/resources/get.yaml`.
+[examples/simpleGet/src/main/resources/get.yaml]().
 
 ### Blocking execution
 
@@ -165,8 +179,8 @@ Workflow output is {"id":10,"category":{"id":10,"name":"string"},"name":"doggie"
 
 Full examples:
 
-* Blocking: `examples/simpleGet/src/main/java/io/serverlessworkflow/impl/BlockingExample.java`
-* Non-blocking: `examples/simpleGet/src/main/java/io/serverlessworkflow/impl/NotBlockingExample.java`
+* Blocking: [examples/simpleGet/src/main/java/io/serverlessworkflow/impl/BlockingExample.java]()
+* Non-blocking: [examples/simpleGet/src/main/java/io/serverlessworkflow/impl/NotBlockingExample.java]()
 
 ---
 
