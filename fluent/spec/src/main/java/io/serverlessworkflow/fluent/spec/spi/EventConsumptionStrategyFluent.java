@@ -27,7 +27,9 @@ public interface EventConsumptionStrategyFluent<
 
   SELF one(Consumer<F> c);
 
-  SELF all(Consumer<F> c);
+  SELF all(Consumer<F>... c);
+
+  SELF any(Consumer<F>... c);
 
   SELF any(Consumer<F> c);
 

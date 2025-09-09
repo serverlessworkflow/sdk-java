@@ -106,7 +106,7 @@ public class TryExecutor extends RegularTaskExecutor<TryTask> {
     }
     if (e instanceof WorkflowException) {
       WorkflowException exception = (WorkflowException) e;
-      if (errorFilter.map(f -> f.test(exception.getWorflowError())).orElse(true)
+      if (errorFilter.map(f -> f.test(exception.getWorkflowError())).orElse(true)
           && whenFilter.map(w -> w.test(workflow, taskContext, taskContext.input())).orElse(true)
           && exceptFilter
               .map(w -> !w.test(workflow, taskContext, taskContext.input()))

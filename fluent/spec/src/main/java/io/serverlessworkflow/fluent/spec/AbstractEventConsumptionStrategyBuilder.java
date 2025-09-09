@@ -58,13 +58,22 @@ public abstract class AbstractEventConsumptionStrategyBuilder<
 
   protected abstract void setOne(OneEventConsumptionStrategy strategy);
 
-  public SELF all(Consumer<F> c) {
+  @SafeVarargs
+  public final SELF all(Consumer<F>... consumers) {
     ensureNoneSet();
     allSet = true;
-    F fb = this.newEventFilterBuilder();
-    c.accept(fb);
+
+    List<EventFilter> built = new ArrayList<>(consumers.length);
+
+    for (Consumer<? super F> c : consumers) {
+      Objects.requireNonNull(c, "consumer");
+      F fb = this.newEventFilterBuilder();
+      c.accept(fb);
+      built.add(fb.build());
+    }
+
     AllEventConsumptionStrategy strat = new AllEventConsumptionStrategy();
-    strat.setAll(List.of(fb.build()));
+    strat.setAll(built);
     this.setAll(strat);
     return this.self();
   }

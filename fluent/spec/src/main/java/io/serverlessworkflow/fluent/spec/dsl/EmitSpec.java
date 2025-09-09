@@ -13,24 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl;
+package io.serverlessworkflow.fluent.spec.dsl;
 
-public class WorkflowException extends RuntimeException {
+import io.serverlessworkflow.fluent.spec.EmitTaskBuilder;
+import io.serverlessworkflow.fluent.spec.configurers.EmitConfigurer;
+import io.serverlessworkflow.fluent.spec.configurers.EventConfigurer;
 
-  private static final long serialVersionUID = 1L;
+public final class EmitSpec extends EventFilterSpec<EmitSpec> implements EmitConfigurer {
 
-  private final WorkflowError workflowError;
-
-  public WorkflowException(WorkflowError error) {
-    this(error, null);
+  @Override
+  protected EmitSpec self() {
+    return this;
   }
 
-  public WorkflowException(WorkflowError error, Throwable cause) {
-    super(error.toString(), cause);
-    this.workflowError = error;
-  }
-
-  public WorkflowError getWorkflowError() {
-    return workflowError;
+  @Override
+  public void accept(EmitTaskBuilder emitTaskBuilder) {
+    emitTaskBuilder.event(
+        e -> {
+          for (EventConfigurer step : steps) {
+            step.accept(e);
+          }
+        });
   }
 }

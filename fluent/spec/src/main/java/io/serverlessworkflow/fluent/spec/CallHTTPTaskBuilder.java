@@ -17,11 +17,13 @@ package io.serverlessworkflow.fluent.spec;
 
 import io.serverlessworkflow.api.types.CallHTTP;
 import io.serverlessworkflow.api.types.Endpoint;
+import io.serverlessworkflow.api.types.EndpointConfiguration;
 import io.serverlessworkflow.api.types.HTTPArguments;
 import io.serverlessworkflow.api.types.HTTPHeaders;
 import io.serverlessworkflow.api.types.HTTPQuery;
 import io.serverlessworkflow.api.types.Headers;
 import io.serverlessworkflow.api.types.Query;
+import io.serverlessworkflow.api.types.ReferenceableAuthenticationPolicy;
 import io.serverlessworkflow.api.types.UriTemplate;
 import java.net.URI;
 import java.util.Map;
@@ -55,12 +57,44 @@ public class CallHTTPTaskBuilder extends TaskBaseBuilder<CallHTTPTaskBuilder> {
     return this;
   }
 
+  public CallHTTPTaskBuilder endpoint(
+      URI endpoint, Consumer<AuthenticationPolicyUnionBuilder> auth) {
+    final AuthenticationPolicyUnionBuilder policy = new AuthenticationPolicyUnionBuilder();
+    auth.accept(policy);
+    this.callHTTP
+        .getWith()
+        .setEndpoint(
+            new Endpoint()
+                .withEndpointConfiguration(
+                    new EndpointConfiguration()
+                        .withAuthentication(
+                            new ReferenceableAuthenticationPolicy()
+                                .withAuthenticationPolicy(policy.build())))
+                .withUriTemplate(new UriTemplate().withLiteralUri(endpoint)));
+    return this;
+  }
+
   public CallHTTPTaskBuilder endpoint(String expr) {
     this.callHTTP.getWith().setEndpoint(new Endpoint().withRuntimeExpression(expr));
     return this;
   }
 
-  // TODO: add endpoint configuration to support authentication
+  public CallHTTPTaskBuilder endpoint(
+      String expr, Consumer<AuthenticationPolicyUnionBuilder> auth) {
+    final AuthenticationPolicyUnionBuilder policy = new AuthenticationPolicyUnionBuilder();
+    auth.accept(policy);
+    this.callHTTP
+        .getWith()
+        .setEndpoint(
+            new Endpoint()
+                .withEndpointConfiguration(
+                    new EndpointConfiguration()
+                        .withAuthentication(
+                            new ReferenceableAuthenticationPolicy()
+                                .withAuthenticationPolicy(policy.build())))
+                .withRuntimeExpression(expr));
+    return this;
+  }
 
   public CallHTTPTaskBuilder headers(String expr) {
     this.callHTTP.getWith().setHeaders(new Headers().withRuntimeExpression(expr));
@@ -70,7 +104,18 @@ public class CallHTTPTaskBuilder extends TaskBaseBuilder<CallHTTPTaskBuilder> {
   public CallHTTPTaskBuilder headers(Consumer<HTTPHeadersBuilder> consumer) {
     HTTPHeadersBuilder hb = new HTTPHeadersBuilder();
     consumer.accept(hb);
-    callHTTP.getWith().setHeaders(hb.build());
+    if (callHTTP.getWith().getHeaders() != null
+        && callHTTP.getWith().getHeaders().getHTTPHeaders() != null) {
+      Headers h = callHTTP.getWith().getHeaders();
+      Headers built = hb.build();
+      built
+          .getHTTPHeaders()
+          .getAdditionalProperties()
+          .forEach((k, v) -> h.getHTTPHeaders().setAdditionalProperty(k, v));
+    } else {
+      callHTTP.getWith().setHeaders(hb.build());
+    }
+
     return this;
   }
 

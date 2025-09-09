@@ -15,7 +15,10 @@
  */
 package io.serverlessworkflow.fluent.spec;
 
-import static io.serverlessworkflow.fluent.spec.WorkflowBuilderConsumers.authBasic;
+import static io.serverlessworkflow.fluent.spec.dsl.DSL.basic;
+import static io.serverlessworkflow.fluent.spec.dsl.DSL.cases;
+import static io.serverlessworkflow.fluent.spec.dsl.DSL.event;
+import static io.serverlessworkflow.fluent.spec.dsl.DSL.http;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -27,6 +30,7 @@ import io.serverlessworkflow.api.types.CatchErrors;
 import io.serverlessworkflow.api.types.Document;
 import io.serverlessworkflow.api.types.ErrorFilter;
 import io.serverlessworkflow.api.types.EventFilter;
+import io.serverlessworkflow.api.types.FlowDirectiveEnum;
 import io.serverlessworkflow.api.types.HTTPArguments;
 import io.serverlessworkflow.api.types.HTTPHeaders;
 import io.serverlessworkflow.api.types.HTTPQuery;
@@ -80,10 +84,7 @@ public class WorkflowBuilderTest {
   void testUseAuthenticationsBasic() {
     Workflow wf =
         WorkflowBuilder.workflow("flowAuth")
-            .use(
-                u ->
-                    u.authentications(
-                        a -> a.authentication("basicAuth", authBasic("admin", "pass"))))
+            .use(u -> u.authentications(a -> a.authentication("basicAuth", basic("admin", "pass"))))
             .build();
 
     Use use = wf.getUse();
@@ -128,11 +129,7 @@ public class WorkflowBuilderTest {
                 d ->
                     d.set("init", s -> s.expr("$.init = true"))
                         .forEach("items", f -> f.each("item").in("$.list"))
-                        .switchCase(
-                            "choice",
-                            sw -> {
-                              // no-op configuration
-                            })
+                        .switchCase("choice", cases().onDefault(FlowDirectiveEnum.CONTINUE))
                         .raise(
                             "alert",
                             r -> {
@@ -217,15 +214,15 @@ public class WorkflowBuilderTest {
                         "emitEvent",
                         e ->
                             e.event(
-                                p ->
-                                    p.source(URI.create("https://petstore.com"))
-                                        .type("com.petstore.order.placed.v1")
-                                        .data(
-                                            Map.of(
-                                                "client",
+                                event()
+                                    .type("com.petstore.order.placed.v1")
+                                    .source(URI.create("https://petstore.com"))
+                                    .jsonData(
+                                        Map.of(
+                                            "client",
                                                 Map.of(
                                                     "firstName", "Cruella", "lastName", "de Vil"),
-                                                "items",
+                                            "items",
                                                 List.of(
                                                     Map.of(
                                                         "breed", "dalmatian", "quantity", 101)))))))
@@ -412,10 +409,10 @@ public class WorkflowBuilderTest {
                 d ->
                     d.callHTTP(
                         "basicCall",
-                        c ->
-                            c.method("POST")
-                                .endpoint(URI.create("http://example.com/api"))
-                                .body(Map.of("foo", "bar"))))
+                        http()
+                            .POST()
+                            .uri(URI.create("http://example.com/api"))
+                            .andThen(b -> b.body(Map.of("foo", "bar")))))
             .build();
     List<TaskItem> items = wf.getDo();
     assertEquals(1, items.size(), "Should have one HTTP call task");
@@ -438,10 +435,7 @@ public class WorkflowBuilderTest {
                 d ->
                     d.callHTTP(
                         "hdrCall",
-                        c ->
-                            c.method("GET")
-                                .endpoint("${uriExpr}")
-                                .headers(h -> h.header("A", "1").header("B", "2"))))
+                        http().GET().endpoint("${uriExpr}").headers(Map.of("A", "1", "B", "2"))))
             .build();
     CallHTTP call = wf.getDo().get(0).getTask().getCallTask().getCallHTTP();
     HTTPHeaders hh = call.getWith().getHeaders().getHTTPHeaders();
@@ -452,9 +446,7 @@ public class WorkflowBuilderTest {
         WorkflowBuilder.workflow()
             .tasks(
                 d ->
-                    d.callHTTP(
-                        c ->
-                            c.method("GET").endpoint("expr").headers(Map.of("X", "10", "Y", "20"))))
+                    d.callHTTP(http().GET().endpoint("expr").headers(Map.of("X", "10", "Y", "20"))))
             .build();
     CallHTTP call2 = wf2.getDo().get(0).getTask().getCallTask().getCallHTTP();
     HTTPHeaders hh2 = call2.getWith().getHeaders().getHTTPHeaders();
@@ -470,10 +462,10 @@ public class WorkflowBuilderTest {
                 d ->
                     d.callHTTP(
                         "qryCall",
-                        c ->
-                            c.method("GET")
-                                .endpoint("exprUri")
-                                .query(q -> q.query("k1", "v1").query("k2", "v2"))))
+                        http()
+                            .GET()
+                            .endpoint("exprUri")
+                            .andThen(q -> q.query(Map.of("k1", "v1", "k2", "v2")))))
             .build();
     HTTPQuery hq =
         wf.getDo().get(0).getTask().getCallTask().getCallHTTP().getWith().getQuery().getHTTPQuery();

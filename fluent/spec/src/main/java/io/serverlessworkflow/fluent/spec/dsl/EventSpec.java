@@ -13,24 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl;
+package io.serverlessworkflow.fluent.spec.dsl;
 
-public class WorkflowException extends RuntimeException {
+import io.serverlessworkflow.fluent.spec.EventPropertiesBuilder;
+import io.serverlessworkflow.fluent.spec.configurers.EventConfigurer;
 
-  private static final long serialVersionUID = 1L;
+public final class EventSpec extends EventFilterSpec<EventSpec> implements EventConfigurer {
 
-  private final WorkflowError workflowError;
-
-  public WorkflowException(WorkflowError error) {
-    this(error, null);
+  @Override
+  protected EventSpec self() {
+    return this;
   }
 
-  public WorkflowException(WorkflowError error, Throwable cause) {
-    super(error.toString(), cause);
-    this.workflowError = error;
-  }
-
-  public WorkflowError getWorkflowError() {
-    return workflowError;
+  @Override
+  public void accept(EventPropertiesBuilder eventPropertiesBuilder) {
+    steps.forEach(step -> step.accept(eventPropertiesBuilder));
   }
 }
