@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>io.serverlessworkflow</groupId>
@@ -36,18 +37,18 @@
         <tag>HEAD</tag>
     </scm>
 
-  <modules>
-    <module>api</module>
-    <module>impl</module>
-    <module>types</module>
-    <module>annotations</module>
-    <module>generators</module>
-    <module>serialization</module>
-    <module>examples</module>
-    <module>experimental</module>
-    <module>fluent</module>
-    <module>mermaid</module>
-  </modules>
+    <modules>
+        <module>api</module>
+        <module>impl</module>
+        <module>types</module>
+        <module>annotations</module>
+        <module>generators</module>
+        <module>serialization</module>
+        <module>examples</module>
+        <module>experimental</module>
+        <module>fluent</module>
+        <module>mermaid</module>
+    </modules>
 
     <properties>
         <java.version>17</java.version>
@@ -77,6 +78,7 @@
 
 
         <!-- Dependencies versions, please keep in alphabetical order -->
+        <version.awaitility>4.2.0</version.awaitility>
         <version.ch.qos.logback>1.5.18</version.ch.qos.logback>
         <version.com.fasterxml.jackson>2.20.0</version.com.fasterxml.jackson>
         <version.com.fasterxml.jackson.annotations>2.20</version.com.fasterxml.jackson.annotations>
@@ -170,7 +172,7 @@
                 <artifactId>serverlessworkflow-types</artifactId>
                 <version>${project.version}</version>
             </dependency>
-             <dependency>
+            <dependency>
                 <groupId>io.serverlessworkflow</groupId>
                 <artifactId>serverlessworkflow-serialization</artifactId>
                 <version>${project.version}</version>
@@ -250,9 +252,15 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
-              <groupId>dev.langchain4j</groupId>
-              <artifactId>langchain4j-agentic</artifactId>
-              <version>${version.dev.langchain4j.beta}</version>
+                <groupId>org.awaitility</groupId>
+                <artifactId>awaitility</artifactId>
+                <version>${version.awaitility}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>dev.langchain4j</groupId>
+                <artifactId>langchain4j-agentic</artifactId>
+                <version>${version.dev.langchain4j.beta}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -304,8 +312,8 @@
                         <module name="Checker">
                             <module name="TreeWalker">
                                 <module name="RegexpSinglelineJava">
-                                    <property name="format" value="@author" />
-                                    <property name="message" value="No @author tag allowed" />
+                                    <property name="format" value="@author"/>
+                                    <property name="message" value="No @author tag allowed"/>
                                 </module>
                             </module>
                         </module>
@@ -338,7 +346,7 @@
                 <configuration>
                     <java>
                         <!-- formatter -->
-                        <googleJavaFormat version="1.17.0" />
+                        <googleJavaFormat version="1.17.0"/>
                         <!-- add/normalize headers -->
                         <licenseHeader>
                             <content>

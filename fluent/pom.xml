@@ -18,58 +18,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>io.serverlessworkflow</groupId>
-                <artifactId>serverlessworkflow-experimental-types</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.serverlessworkflow</groupId>
-                <artifactId>serverlessworkflow-fluent-spec</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.serverlessworkflow</groupId>
-                <artifactId>serverlessworkflow-fluent-func</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.serverlessworkflow</groupId>
-                <artifactId>serverlessworkflow-fluent-agentic</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.serverlessworkflow</groupId>
-                <artifactId>serverlessworkflow-fluent-agentic-langchain4j</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.serverlessworkflow</groupId>
-                <artifactId>serverlessworkflow-experimental-agentic</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.serverlessworkflow</groupId>
-                <artifactId>serverlessworkflow-experimental-lambda</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.serverlessworkflow</groupId>
-                <artifactId>serverlessworkflow-fluent-agentic</artifactId>
-                <version>${project.version}</version>
-                <type>test-jar</type>
-                <scope>test</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
-
     <modules>
         <module>spec</module>
-        <module>func</module>
-        <module>agentic</module>
-        <module>agentic-langchain4j</module>
     </modules>
 
 </project>

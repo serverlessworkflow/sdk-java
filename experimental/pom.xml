@@ -27,7 +27,7 @@
         </dependency>
         <dependency>
             <groupId>io.serverlessworkflow</groupId>
-            <artifactId>serverlessworkflow-fluent-func</artifactId>
+            <artifactId>serverlessworkflow-experimental-fluent-func</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>
@@ -37,5 +37,6 @@
     <module>lambda</module>
     <module>agentic</module>
     <module>lambda-fluent</module>
+    <module>fluent</module>
   </modules>
 </project>

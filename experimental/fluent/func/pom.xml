@@ -5,12 +5,12 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>io.serverlessworkflow</groupId>
-        <artifactId>serverlessworkflow-fluent</artifactId>
+        <artifactId>serverlessworkflow-experimental-fluent</artifactId>
         <version>8.0.0-SNAPSHOT</version>
     </parent>
 
-    <name>Serverless Workflow :: Fluent :: Functional</name>
-    <artifactId>serverlessworkflow-fluent-func</artifactId>
+    <name>Serverless Workflow :: Experimental :: Fluent :: Functional</name>
+    <artifactId>serverlessworkflow-experimental-fluent-func</artifactId>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>

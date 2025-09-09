@@ -17,6 +17,7 @@ package io.serverlessworkflow.impl.test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowableOfType;
+import static org.awaitility.Awaitility.await;
 
 import io.cloudevents.CloudEvent;
 import io.cloudevents.core.data.PojoCloudEventData;
@@ -41,8 +42,10 @@ import io.serverlessworkflow.impl.lifecycle.ce.WorkflowResumedCEData;
 import io.serverlessworkflow.impl.lifecycle.ce.WorkflowStartedCEData;
 import io.serverlessworkflow.impl.lifecycle.ce.WorkflowSuspendedCEData;
 import java.io.IOException;
+import java.time.Duration;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -211,14 +214,17 @@ class LifeCycleEventsTest {
   }
 
   private <T> T assertPojoInCE(String type, Class<T> clazz) {
-    Thread.yield();
-    Optional<CloudEvent> event =
-        publishedEvents.stream().filter(ev -> ev.getType().equals(type)).findAny();
-    assertThat(event)
-        .hasValueSatisfying(ce -> assertThat(ce.getData()).isInstanceOf(PojoCloudEventData.class));
-    assertThat(event)
-        .hasValueSatisfying(
-            ce -> assertThat(((PojoCloudEventData) ce.getData()).getValue()).isInstanceOf(clazz));
-    return clazz.cast(((PojoCloudEventData) event.orElseThrow().getData()).getValue());
+    CloudEvent ce =
+        await()
+            .atMost(Duration.ofSeconds(2))
+            .pollInterval(Duration.ofMillis(10))
+            .until(
+                () -> publishedEvents.stream().filter(ev -> ev.getType().equals(type)).findAny(),
+                Optional::isPresent)
+            .orElseThrow();
+    assertThat(ce.getData()).isInstanceOf(PojoCloudEventData.class);
+    Object pojo = ((PojoCloudEventData<?>) Objects.requireNonNull(ce.getData())).getValue();
+    assertThat(pojo).isInstanceOf(clazz);
+    return clazz.cast(pojo);
   }
 }
