@@ -1,4 +1,4 @@
-# Quick #2 release process
+# Rerun #3 release process
 release:
   current-version: 7.2.0.Final
   next-version: 8.0.0-SNAPSHOT
