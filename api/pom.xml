@@ -4,7 +4,7 @@
     <parent>
         <groupId>io.serverlessworkflow</groupId>
         <artifactId>serverlessworkflow-parent</artifactId>
-        <version>8.0.0-SNAPSHOT</version>
+        <version>7.2.0.Final</version>
     </parent>
 
     <artifactId>serverlessworkflow-api</artifactId>
@@ -82,7 +82,7 @@
             <groupId>io.serverlessworkflow</groupId>
             <artifactId>serverless-workflow-jackson-generator</artifactId>
             <version>${project.version}</version>
-            <dependencies/>
+            <dependencies />
             <configuration>
               <srcPackage>io.serverlessworkflow.api.types</srcPackage>
               <targetPackage>io.serverlessworkflow.api.types.jackson</targetPackage>
