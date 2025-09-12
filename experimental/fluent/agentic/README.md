@@ -9,7 +9,7 @@ This module uses the **CNCF Workflow Specification Java Fluent DSL (DSL 1.0.0, t
 * **Tasks first.** Compose first‑class **tasks** (sequence/branches) rather than legacy “states”.
 * **Fluent builders.** Typed verbs guide valid configurations:
 
-    * `agent(id, Agents.Foo)` — call an LLM/agent and capture outputs via `outputName`.
+    * `agent(id, Agents.Foo)` — **integrates with LangChain4j (LC4J) agentic modules**. Build the agent via `AgenticServices.agentBuilder(...)`, select the model/provider through config, and capture outputs via `outputName`.
     * `callFn(id, c -> c.function(MethodRef, ArgClass))` — call **pure Java functions** with static typing.
     * `switchCase(id, s -> …)` — branch with **typed predicates** and `onDefault(...)`.
     * `emit(id, e -> e.event(...))` — publish **CloudEvents** with typed payload marshalling.
