@@ -67,30 +67,35 @@ public final class NodeBuilder {
   }
 
   public static TaskNode task(TaskItem task) {
-    if (task.getTask().get() instanceof TryTask) {
+
+    // Sometimes task.getTask().get() is null
+
+    if (task.getTask().get() instanceof TryTask || task.getTask().getTryTask() != null) {
       return new TryCatchNode(task);
-    } else if (task.getTask().get() instanceof DoTask) {
+    } else if (task.getTask().get() instanceof DoTask || task.getTask().getDoTask() != null) {
       return new TaskSubgraphNode(task, String.format("do: %s", task.getName()))
           .withBranches(task.getTask().getDoTask().getDo());
-    } else if (task.getTask().get() instanceof SetTask) {
+    } else if (task.getTask().get() instanceof SetTask || task.getTask().getSetTask() != null) {
       return new TaskNode(String.format("set: %s", task.getName()), task, NodeType.RECT);
-    } else if (task.getTask().get() instanceof ForTask) {
+    } else if (task.getTask().get() instanceof ForTask || task.getTask().getForTask() != null) {
       return new ForNode(task);
-    } else if (task.getTask().get() instanceof ListenTask) {
+    } else if (task.getTask().get() instanceof ListenTask
+        || task.getTask().getListenTask() != null) {
       return new ListenNode(task);
-    } else if (task.getTask().get() instanceof EmitTask) {
+    } else if (task.getTask().get() instanceof EmitTask || task.getTask().getEmitTask() != null) {
       return new EmitNode(task);
-    } else if (task.getTask().get() instanceof ForkTask) {
+    } else if (task.getTask().get() instanceof ForkTask || task.getTask().getForkTask() != null) {
       return new ForkNode(task);
-    } else if (task.getTask().get() instanceof SwitchTask) {
+    } else if (task.getTask().get() instanceof SwitchTask
+        || task.getTask().getSwitchTask() != null) {
       return new SwitchNode(task);
-    } else if (task.getTask().get() instanceof RaiseTask) {
+    } else if (task.getTask().get() instanceof RaiseTask || task.getTask().getRaiseTask() != null) {
       return new RaiseNode(task);
-    } else if (task.getTask().get() instanceof RunTask) {
+    } else if (task.getTask().get() instanceof RunTask || task.getTask().getRunTask() != null) {
       return new RunNode(task);
-    } else if (task.getTask().get() instanceof WaitTask) {
+    } else if (task.getTask().get() instanceof WaitTask || task.getTask().getWaitTask() != null) {
       return new WaitNode(task);
-    } else if (task.getTask().get() instanceof CallTask) {
+    } else if (task.getTask().get() instanceof CallTask || task.getTask().getCallTask() != null) {
       return new CallNode(task);
     }
 

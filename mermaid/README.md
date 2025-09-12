@@ -1,4 +1,4 @@
-# serverlessworkflow-mermaid
+# CNCF Serverless Workflow SDK Java — Mermaid Exporter
 
 Generate **Mermaid** diagrams for [Serverless Workflow](https://serverlessworkflow.io/) definitions.
 This library turns a `Workflow` into a Mermaid **flowchart**, with sensible shapes and wiring for common DSL constructs, and can optionally export **SVG/PNG** via a lightweight HTTP helper.
