@@ -56,10 +56,13 @@ public class EmailDrafterIT {
             .tasks(
                 tasks ->
                     tasks
-                        .agent(emailDrafter)
-                        .callFn(c -> c.function(EmailDrafts::parse, String.class))
-                        .callFn(c -> c.function(EmailPolicies::policyCheck, EmailDraft.class))
+                        .agent("agentEmailDrafter", emailDrafter)
+                        .callFn("parseDraft", c -> c.function(EmailDrafts::parse, String.class))
+                        .callFn(
+                            "policyCheck",
+                            c -> c.function(EmailPolicies::policyCheck, EmailDraft.class))
                         .switchCase(
+                            "needsHumanReview?",
                             s ->
                                 s.onPredicate(
                                         c ->
@@ -69,7 +72,7 @@ public class EmailDrafterIT {
                                                             decision.decision()),
                                                     PolicyDecision.class)
                                                 .then("requestReview"))
-                                    .onDefault("emailReady"))
+                                    .onDefault("emailFinished"))
                         .emit(
                             "requestReview",
                             emit ->
@@ -94,7 +97,8 @@ public class EmailDrafterIT {
                                             any -> any.with(r -> r.type("org.acme.email.approved")),
                                             any -> any.with(r -> r.type("org.acme.email.denied")))))
                         .emit(
-                            "emailReady", emit -> emit.event(e -> e.type("org.acme.email.ready"))))
+                            "emailFinished",
+                            emit -> emit.event(e -> e.type("org.acme.email.finished"))))
             .build();
 
     try (WorkflowApplication app = WorkflowApplication.builder().build()) {
@@ -127,7 +131,7 @@ public class EmailDrafterIT {
               app.eventConsumer()
                   .listen(
                       new EventFilter()
-                          .withWith(new EventProperties().withType("org.acme.email.ready")),
+                          .withWith(new EventProperties().withType("org.acme.email.finished")),
                       app),
               ce -> finishedEvents.add((CloudEvent) ce));
 
