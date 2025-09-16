@@ -122,6 +122,7 @@
         <module>jackson</module>
         <module>jwt-impl</module>
         <module>persistence</module>
+        <module>openapi</module>
         <module>test</module>
         <module>jq</module>
         <module>json-utils</module>
