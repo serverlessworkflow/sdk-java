@@ -99,7 +99,6 @@ public class OpenIDCHTTPWorkflowDefinitionTest {
 
     Workflow workflow = readWorkflowFromClasspath("openidcClientSecretPostPasswordHttpCall.yaml");
     Map<String, Object> result;
-    System.err.println("START");
     try (WorkflowApplication app = WorkflowApplication.builder().build()) {
       result =
           app.workflowDefinition(workflow).instance(Map.of()).start().get().asMap().orElseThrow();

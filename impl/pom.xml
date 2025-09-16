@@ -70,6 +70,7 @@
         <module>core</module>
         <module>jackson</module>
         <module>jwt-impl</module>
+        <module>openapi</module>
         <module>test</module>
     </modules>
 </project>
