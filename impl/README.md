@@ -170,7 +170,7 @@ Full examples:
 
 ---
 
-## Detailed Walkthrough
+## Event publish/subscribe example
 
 We’ll coordinate two workflows—one **listens** for high temperatures and the other **emits** temperature events:
 
@@ -181,8 +181,8 @@ Create an application (customize thread pools, etc.). `WorkflowApplication` is `
 
 ```java
 try (WorkflowApplication appl = WorkflowApplication.builder().build()) {
-  var listen = appl.workflowDefinition(WorkflowReader.readWorkflowFromClasspath("listen.yaml"));
-  var emit   = appl.workflowDefinition(WorkflowReader.readWorkflowFromClasspath("emit.yaml"));
+  WorkflowDefinition listen = appl.workflowDefinition(WorkflowReader.readWorkflowFromClasspath("listen.yaml"));
+  WorkflowDefinition emit   = appl.workflowDefinition(WorkflowReader.readWorkflowFromClasspath("emit.yaml"));
 
   // Start the listener (non-blocking)
   listen.instance(Map.of())
@@ -206,6 +206,12 @@ Waiting instance completed with [{"temperature":39}]
 Source: `examples/events/src/main/java/events/EventExample.java`
 
 ---
+
+## Workflow execution control
+
+As shown in previous examples, to start a new workflow instance, first a [WorkflowInstance](https://github.com/serverlessworkflow/sdk-java/blob/main/impl/core/src/main/java/io/serverlessworkflow/impl/WorkflowInstance) is created from a [WorkflowDefinition](https://github.com/serverlessworkflow/sdk-java/blob/main/impl/core/src/main/java/io/serverlessworkflow/impl/WorkflowDefinition.java#L74), specifying the desired input, and then start method is invoked over it. Start method returns a CompletableFuture, which might be used to obtain the output, either synchronously or asynchronously. 
+
+Once started, and before it completes, a workflow instance execution can be suspended or cancelled. Once cancelled, a workflow instance is done, while a suspended one might be resumed. 
 
 ## Fluent Java DSL
 
