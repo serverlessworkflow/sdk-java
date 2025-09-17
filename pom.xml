@@ -94,7 +94,7 @@
         <version.org.hibernate.validator>9.0.1.Final</version.org.hibernate.validator>
         <version.org.glassfish.expressly>6.0.0</version.org.glassfish.expressly>
         <!-- Experimental modules from langchain4j -->
-        <version.dev.langchain4j.beta>1.4.0-beta10</version.dev.langchain4j.beta>
+        <version.dev.langchain4j.beta>1.4.1-beta10</version.dev.langchain4j.beta>
         <!-- Base langchain4j version -->
         <version.dev.langchain4j>1.4.0</version.dev.langchain4j>
 
