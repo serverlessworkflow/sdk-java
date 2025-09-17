@@ -70,7 +70,10 @@ public class WorkflowDefinition implements AutoCloseable, WorkflowDefinitionData
   }
 
   public WorkflowInstance instance(Object input) {
-    return new WorkflowMutableInstance(this, application.modelFactory().fromAny(input));
+    WorkflowModel inputModel = application.modelFactory().fromAny(input);
+    inputSchemaValidator().ifPresent(v -> v.validate(inputModel));
+    return new WorkflowMutableInstance(
+        this, application().idFactory().get(), inputModel, WorkflowStatus.PENDING);
   }
 
   Optional<SchemaValidator> inputSchemaValidator() {
@@ -108,7 +111,5 @@ public class WorkflowDefinition implements AutoCloseable, WorkflowDefinitionData
   }
 
   @Override
-  public void close() {
-    // TODO close resourcers hold for uncompleted process instances, if any
-  }
+  public void close() {}
 }

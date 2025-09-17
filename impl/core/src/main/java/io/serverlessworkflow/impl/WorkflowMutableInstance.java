@@ -49,18 +49,18 @@ public class WorkflowMutableInstance implements WorkflowInstance {
   private CompletableFuture<WorkflowModel> completableFuture;
   private Map<CompletableFuture<TaskContext>, TaskContext> suspended;
 
-  WorkflowMutableInstance(WorkflowDefinition definition, WorkflowModel input) {
-    this.id = definition.application().idFactory().get();
+  public WorkflowMutableInstance(
+      WorkflowDefinition definition, String id, WorkflowModel input, WorkflowStatus status) {
+    this.id = id;
     this.input = input;
-    this.status = new AtomicReference<>(WorkflowStatus.PENDING);
-    definition.inputSchemaValidator().ifPresent(v -> v.validate(input));
+    this.status = new AtomicReference<>(status);
     this.workflowContext = new WorkflowContext(definition, this);
   }
 
   @Override
   public CompletableFuture<WorkflowModel> start() {
-    this.startedAt = Instant.now();
-    this.status.set(WorkflowStatus.RUNNING);
+    startedAt = Instant.now();
+    status.set(WorkflowStatus.RUNNING);
     publishEvent(
         workflowContext, l -> l.onWorkflowStarted(new WorkflowStartedEvent(workflowContext)));
     this.completableFuture =
@@ -234,6 +234,13 @@ public class WorkflowMutableInstance implements WorkflowInstance {
       statusLock.unlock();
     }
     return CompletableFuture.completedFuture(t);
+  }
+
+  // internal purposes only, not to be invoked directly by users of the API
+  public void restore(
+      WorkflowPosition position, WorkflowModel model, WorkflowModel context, Instant startedAt) {
+    this.startedAt = startedAt;
+    workflowContext.context(context);
   }
 
   @Override
