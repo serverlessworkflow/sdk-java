@@ -17,32 +17,23 @@ package io.serverlessworkflow.impl.executors.func;
 
 import io.serverlessworkflow.api.types.Task;
 import io.serverlessworkflow.api.types.TaskBase;
-import io.serverlessworkflow.api.types.Workflow;
-import io.serverlessworkflow.impl.WorkflowApplication;
+import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.executors.DefaultTaskExecutorFactory;
 import io.serverlessworkflow.impl.executors.TaskExecutorBuilder;
-import io.serverlessworkflow.impl.resources.ResourceLoader;
 
 public class JavaTaskExecutorFactory extends DefaultTaskExecutorFactory {
 
   public TaskExecutorBuilder<? extends TaskBase> getTaskExecutor(
-      WorkflowMutablePosition position,
-      Task task,
-      Workflow workflow,
-      WorkflowApplication application,
-      ResourceLoader resourceLoader) {
+      WorkflowMutablePosition position, Task task, WorkflowDefinition definition) {
     if (task.getForTask() != null) {
-      return new JavaForExecutorBuilder(
-          position, task.getForTask(), workflow, application, resourceLoader);
+      return new JavaForExecutorBuilder(position, task.getForTask(), definition);
     } else if (task.getSwitchTask() != null) {
-      return new JavaSwitchExecutorBuilder(
-          position, task.getSwitchTask(), workflow, application, resourceLoader);
+      return new JavaSwitchExecutorBuilder(position, task.getSwitchTask(), definition);
     } else if (task.getListenTask() != null) {
-      return new JavaListenExecutorBuilder(
-          position, task.getListenTask(), workflow, application, resourceLoader);
+      return new JavaListenExecutorBuilder(position, task.getListenTask(), definition);
     } else {
-      return super.getTaskExecutor(position, task, workflow, application, resourceLoader);
+      return super.getTaskExecutor(position, task, definition);
     }
   }
 }

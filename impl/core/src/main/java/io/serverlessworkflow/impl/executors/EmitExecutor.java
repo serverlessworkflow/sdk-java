@@ -24,10 +24,10 @@ import io.serverlessworkflow.api.types.EventDataschema;
 import io.serverlessworkflow.api.types.EventProperties;
 import io.serverlessworkflow.api.types.EventSource;
 import io.serverlessworkflow.api.types.EventTime;
-import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.WorkflowUtils;
@@ -35,7 +35,6 @@ import io.serverlessworkflow.impl.WorkflowValueResolver;
 import io.serverlessworkflow.impl.events.CloudEventUtils;
 import io.serverlessworkflow.impl.events.EventPublisher;
 import io.serverlessworkflow.impl.expressions.ExpressionDescriptor;
-import io.serverlessworkflow.impl.resources.ResourceLoader;
 import java.net.URI;
 import java.time.OffsetDateTime;
 import java.util.Collection;
@@ -52,12 +51,8 @@ public class EmitExecutor extends RegularTaskExecutor<EmitTask> {
     private EventPropertiesBuilder eventBuilder;
 
     protected EmitExecutorBuilder(
-        WorkflowMutablePosition position,
-        EmitTask task,
-        Workflow workflow,
-        WorkflowApplication application,
-        ResourceLoader resourceLoader) {
-      super(position, task, workflow, application, resourceLoader);
+        WorkflowMutablePosition position, EmitTask task, WorkflowDefinition definition) {
+      super(position, task, definition);
       this.eventBuilder =
           EventPropertiesBuilder.build(task.getEmit().getEvent().getWith(), application);
     }

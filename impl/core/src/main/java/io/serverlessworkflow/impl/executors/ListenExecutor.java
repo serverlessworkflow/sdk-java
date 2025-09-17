@@ -27,10 +27,9 @@ import io.serverlessworkflow.api.types.ListenTo;
 import io.serverlessworkflow.api.types.OneEventConsumptionStrategy;
 import io.serverlessworkflow.api.types.SubscriptionIterator;
 import io.serverlessworkflow.api.types.Until;
-import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.TaskContext;
-import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowModelCollection;
 import io.serverlessworkflow.impl.WorkflowMutableInstance;
@@ -41,7 +40,6 @@ import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.events.EventConsumer;
 import io.serverlessworkflow.impl.events.EventRegistration;
 import io.serverlessworkflow.impl.events.EventRegistrationBuilder;
-import io.serverlessworkflow.impl.resources.ResourceLoader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -85,12 +83,8 @@ public abstract class ListenExecutor extends RegularTaskExecutor<ListenTask> {
     }
 
     protected ListenExecutorBuilder(
-        WorkflowMutablePosition position,
-        ListenTask task,
-        Workflow workflow,
-        WorkflowApplication application,
-        ResourceLoader resourceLoader) {
-      super(position, task, workflow, application, resourceLoader);
+        WorkflowMutablePosition position, ListenTask task, WorkflowDefinition definition) {
+      super(position, task, definition);
       ListenTaskConfiguration listen = task.getListen();
       ListenTo to = listen.getTo();
       if (to.getAllEventConsumptionStrategy() != null) {
@@ -119,9 +113,7 @@ public abstract class ListenExecutor extends RegularTaskExecutor<ListenTask> {
       }
       SubscriptionIterator forEach = task.getForeach();
       if (forEach != null) {
-        loop =
-            TaskExecutorHelper.createExecutorList(
-                position, forEach.getDo(), workflow, application, resourceLoader);
+        loop = TaskExecutorHelper.createExecutorList(position, forEach.getDo(), definition);
       }
       ListenAndReadAs readAs = listen.getRead();
       if (readAs != null) {

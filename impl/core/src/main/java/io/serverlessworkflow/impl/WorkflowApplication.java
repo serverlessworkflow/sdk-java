@@ -16,7 +16,6 @@
 package io.serverlessworkflow.impl;
 
 import com.github.f4b6a3.ulid.UlidCreator;
-import io.serverlessworkflow.api.types.Document;
 import io.serverlessworkflow.api.types.SchemaInline;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.events.EventConsumer;
@@ -62,7 +61,7 @@ public class WorkflowApplication implements AutoCloseable {
   private final Collection<EventPublisher> eventPublishers;
   private final boolean lifeCycleCEPublishingEnabled;
 
-  private WorkflowApplication(Builder builder) {
+  protected WorkflowApplication(Builder builder) {
     this.taskFactory = builder.taskFactory;
     this.exprFactory = builder.exprFactory;
     this.resourceLoaderFactory = builder.resourceLoaderFactory;
@@ -150,7 +149,7 @@ public class WorkflowApplication implements AutoCloseable {
         () -> new RuntimeDescriptor("reference impl", "1.0.0_alpha", Collections.emptyMap());
     private boolean lifeCycleCEPublishingEnabled = true;
 
-    private Builder() {}
+    protected Builder() {}
 
     public Builder withListener(WorkflowExecutionListener listener) {
       listeners.add(listener);
@@ -249,15 +248,12 @@ public class WorkflowApplication implements AutoCloseable {
     }
   }
 
-  private static record WorkflowId(String namespace, String name, String version) {
-    static WorkflowId of(Document document) {
-      return new WorkflowId(document.getNamespace(), document.getName(), document.getVersion());
-    }
+  public WorkflowDefinition workflowDefinition(Workflow workflow) {
+    return definitions.computeIfAbsent(WorkflowId.of(workflow), k -> createDefinition(workflow));
   }
 
-  public WorkflowDefinition workflowDefinition(Workflow workflow) {
-    return definitions.computeIfAbsent(
-        WorkflowId.of(workflow.getDocument()), k -> WorkflowDefinition.of(this, workflow));
+  protected WorkflowDefinition createDefinition(Workflow workflow) {
+    return WorkflowDefinition.of(this, workflow);
   }
 
   @Override
