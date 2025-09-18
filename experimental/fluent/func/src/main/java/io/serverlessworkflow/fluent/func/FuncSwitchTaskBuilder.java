@@ -27,6 +27,7 @@ import io.serverlessworkflow.fluent.spec.TaskBaseBuilder;
 import io.serverlessworkflow.fluent.spec.spi.SwitchTaskFluent;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -58,6 +59,18 @@ public class FuncSwitchTaskBuilder extends TaskBaseBuilder<FuncSwitchTaskBuilder
       String name, Consumer<SwitchCasePredicateBuilder> consumer) {
     final SwitchCasePredicateBuilder switchCase = new SwitchCasePredicateBuilder();
     consumer.accept(switchCase);
+    final SwitchCaseFunction switchCaseValue = (SwitchCaseFunction) switchCase.build();
+
+    // Handling default cases
+    if (switchCaseValue.predicate() == null) {
+      Objects.requireNonNull(switchCaseValue.getThen(), "When is required");
+      if (switchCaseValue.getThen().getFlowDirectiveEnum() != null) {
+        return this.onDefault(switchCaseValue.getThen().getFlowDirectiveEnum());
+      } else {
+        return this.onDefault(switchCaseValue.getThen().getString());
+      }
+    }
+
     this.switchItems.add(new SwitchItem(name, switchCase.build()));
     return this;
   }

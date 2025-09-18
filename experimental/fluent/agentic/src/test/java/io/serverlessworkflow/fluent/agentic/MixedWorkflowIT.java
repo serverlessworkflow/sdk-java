@@ -15,6 +15,9 @@
  */
 package io.serverlessworkflow.fluent.agentic;
 
+import static io.serverlessworkflow.fluent.agentic.dsl.AgenticDSL.agent;
+import static io.serverlessworkflow.fluent.agentic.dsl.AgenticDSL.doTasks;
+import static io.serverlessworkflow.fluent.agentic.dsl.AgenticDSL.function;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.spy;
@@ -60,28 +63,14 @@ public class MixedWorkflowIT {
     final Workflow mixedWorkflow =
         AgentWorkflowBuilder.workflow("chat-bot")
             .tasks(
-                t ->
-                    t.callFn(
-                            callJ ->
-                                callJ.function(
-                                    input -> {
-                                      System.out.println(input);
-                                      return Map.of("userInput", input);
-                                    },
-                                    String.class))
-                        .agent(chatBot)
-                        .callFn(
-                            callJ ->
-                                callJ.function(
-                                    input -> {
-                                      System.out.println(input);
-                                      // Here, we are return a simple string so the internal
-                                      // AgenticScope will add it to the default `input` key
-                                      // If we want to really manipulate it, we could return a
-                                      // Map<>(message, input)
-                                      return "I've changed the input [" + input + "]";
-                                    },
-                                    String.class)))
+                doTasks(
+                    function(input -> Map.of("userInput", input), String.class),
+                    agent(chatBot),
+                    // Here, we are return a simple string so the internal
+                    // AgenticScope will add it to the default `input` key
+                    // If we want to really manipulate it, we could return a
+                    // Map<>(message, input)
+                    function(input -> "I've changed the input [" + input + "]", String.class)))
             .build();
 
     try (WorkflowApplication app = WorkflowApplication.builder().build()) {
