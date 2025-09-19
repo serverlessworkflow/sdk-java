@@ -15,6 +15,12 @@
  */
 package io.serverlessworkflow.fluent.agentic;
 
+import static io.serverlessworkflow.fluent.agentic.dsl.AgenticDSL.cases;
+import static io.serverlessworkflow.fluent.agentic.dsl.AgenticDSL.event;
+import static io.serverlessworkflow.fluent.agentic.dsl.AgenticDSL.fn;
+import static io.serverlessworkflow.fluent.agentic.dsl.AgenticDSL.on;
+import static io.serverlessworkflow.fluent.agentic.dsl.AgenticDSL.onDefault;
+import static io.serverlessworkflow.fluent.agentic.dsl.AgenticDSL.toAny;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
 
@@ -57,48 +63,32 @@ public class EmailDrafterIT {
                 tasks ->
                     tasks
                         .agent("agentEmailDrafter", emailDrafter)
-                        .callFn("parseDraft", c -> c.function(EmailDrafts::parse, String.class))
-                        .callFn(
-                            "policyCheck",
-                            c -> c.function(EmailPolicies::policyCheck, EmailDraft.class))
+                        .callFn("parseDraft", fn(EmailDrafts::parse, String.class))
+                        .callFn("policyCheck", fn(EmailPolicies::policyCheck, EmailDraft.class))
                         .switchCase(
                             "needsHumanReview?",
-                            s ->
-                                s.onPredicate(
-                                        c ->
-                                            c.when(
-                                                    decision ->
-                                                        !EmailPolicies.Decision.AUTO_SEND.equals(
-                                                            decision.decision()),
-                                                    PolicyDecision.class)
-                                                .then("requestReview"))
-                                    .onDefault("emailFinished"))
+                            cases(
+                                on(
+                                        d -> !EmailPolicies.Decision.AUTO_SEND.equals(d.decision()),
+                                        PolicyDecision.class)
+                                    .then("requestReview"),
+                                onDefault("emailFinished")))
                         .emit(
                             "requestReview",
-                            emit ->
-                                emit.event(
-                                    e ->
-                                        e.type("org.acme.email.review.required")
-                                            .data(
-                                                payload ->
-                                                    PojoCloudEventData.wrap(
-                                                        payload,
-                                                        p ->
-                                                            JsonUtils.mapper()
-                                                                .writeValueAsString(payload)
-                                                                .getBytes()),
-                                                PolicyDecision.class)))
+                            event(
+                                "org.acme.email.review.required",
+                                payload ->
+                                    PojoCloudEventData.wrap(
+                                        payload,
+                                        p ->
+                                            JsonUtils.mapper()
+                                                .writeValueAsString(payload)
+                                                .getBytes()),
+                                PolicyDecision.class))
                         .listen(
                             "waitForReview",
-                            listen ->
-                                listen.to(
-                                    e ->
-                                        e.any(
-                                            any -> any.with(r -> r.type("org.acme.email.approved")),
-                                            any -> any.with(r -> r.type("org.acme.email.denied")))))
-                        .emit(
-                            "emailFinished",
-                            emit -> emit.event(e -> e.type("org.acme.email.finished"))))
+                            toAny("org.acme.email.approved", "org.acme.email.denied"))
+                        .emit("emailFinished", event("org.acme.email.finished", null)))
             .build();
 
     try (WorkflowApplication app = WorkflowApplication.builder().build()) {

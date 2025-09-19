@@ -15,6 +15,7 @@
  */
 package io.serverlessworkflow.fluent.agentic;
 
+import static io.serverlessworkflow.fluent.agentic.AgentWorkflowBuilder.workflow;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.serverlessworkflow.api.types.TaskItem;
@@ -34,11 +35,24 @@ class AgentDslWorkflowTest {
     var a2 = AgentsUtils.newMovieExpert();
     var a3 = AgentsUtils.newMovieExpert();
 
-    Workflow wf =
-        AgentWorkflowBuilder.workflow("seqFlow")
-            .tasks(tasks -> tasks.sequence("process", a1, a2, a3))
-            .build();
+    Workflow wf = workflow("seqFlow").tasks(tasks -> tasks.sequence("process", a1, a2, a3)).build();
 
+    this.assertSequentialAgents(wf);
+  }
+
+  @Test
+  @DisplayName("Sequential agents via DSL.sequence(...)")
+  void dslSequentialAgentsShortcut() {
+    var a1 = AgentsUtils.newMovieExpert();
+    var a2 = AgentsUtils.newMovieExpert();
+    var a3 = AgentsUtils.newMovieExpert();
+
+    Workflow wf = workflow("seqFlow").sequence("process", a1, a2, a3).build();
+
+    this.assertSequentialAgents(wf);
+  }
+
+  private void assertSequentialAgents(Workflow wf) {
     List<TaskItem> items = wf.getDo();
     assertThat(items).hasSize(3);
     // names should be process-0, process-1, process-2
@@ -53,7 +67,7 @@ class AgentDslWorkflowTest {
   @DisplayName("Bare Java‑bean call via DSL.callFn(...)")
   void dslCallFnBare() {
     Workflow wf =
-        AgentWorkflowBuilder.workflow("beanCall")
+        workflow("beanCall")
             .tasks(tasks -> tasks.callFn("plainCall", fn -> fn.function(ctx -> "pong")))
             .build();
 
@@ -71,14 +85,7 @@ class AgentDslWorkflowTest {
 
     Workflow wf =
         AgentWorkflowBuilder.workflow("retryFlow")
-            .tasks(
-                tasks ->
-                    tasks.loop(
-                        "reviewLoop",
-                        loop ->
-                            loop.maxIterations(5)
-                                .exitCondition(c -> c.readState("score", 0).doubleValue() > 0.75)
-                                .subAgents("reviewer", scorer, editor)))
+            .loop("reviewLoop", c -> c.readState("score", 0).doubleValue() > 0.75, scorer, editor)
             .build();
 
     List<TaskItem> items = wf.getDo();
@@ -96,10 +103,7 @@ class AgentDslWorkflowTest {
     var a1 = AgentsUtils.newMovieExpert();
     var a2 = AgentsUtils.newMovieExpert();
 
-    Workflow wf =
-        AgentWorkflowBuilder.workflow("forkFlow")
-            .tasks(tasks -> tasks.parallel("fanout", a1, a2))
-            .build();
+    Workflow wf = workflow("forkFlow").parallel("fanout", a1, a2).build();
 
     List<TaskItem> items = wf.getDo();
     assertThat(items).hasSize(1);
@@ -117,7 +121,7 @@ class AgentDslWorkflowTest {
     var agent = AgentsUtils.newMovieExpert();
 
     Workflow wf =
-        AgentWorkflowBuilder.workflow("mixedFlow")
+        workflow("mixedFlow")
             .tasks(
                 tasks ->
                     tasks
