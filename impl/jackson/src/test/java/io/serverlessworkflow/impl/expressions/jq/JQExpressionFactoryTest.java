@@ -25,41 +25,23 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 
 class JQExpressionFactoryTest {
 
-  @Test
-  void testNestedMap() {
-    WorkflowContext workflowContext = Mockito.mock(WorkflowContext.class);
-    JQExpressionFactory factory = new JQExpressionFactory();
-    WorkflowValueResolver<Map<String, Object>> expr =
-        factory.resolveMap(
-            ExpressionDescriptor.object(
-                Map.of(
-                    "name",
-                    "${.name}",
-                    "surname",
-                    "Doe",
-                    "nested",
-                    Map.of("name", "${.name}", "surname", "Doe"))));
-    Map<String, Object> result =
-        expr.apply(
-            workflowContext,
-            null,
-            new JacksonModel(JsonUtils.mapper().createObjectNode().put("name", "John")));
-    assertThat(result.get("name")).isEqualTo("John");
-    assertThat(result.get("surname")).isEqualTo("Doe");
-    Map<String, Object> nested = (Map<String, Object>) result.get("nested");
-    assertThat(result.get("name")).isEqualTo("John");
-    assertThat(result.get("surname")).isEqualTo("Doe");
+  private WorkflowContext workflowContext;
+  private JQExpressionFactory factory;
+
+  @BeforeEach
+  void setup() {
+    workflowContext = Mockito.mock(WorkflowContext.class);
+    factory = new JQExpressionFactory();
   }
 
   @Test
-  void testNestedArray() {
-    WorkflowContext workflowContext = Mockito.mock(WorkflowContext.class);
-    JQExpressionFactory factory = new JQExpressionFactory();
+  void testArrayExpression() {
     WorkflowValueResolver<Map<String, Object>> expr =
         factory.resolveMap(
             ExpressionDescriptor.object(
@@ -78,20 +60,32 @@ class JQExpressionFactoryTest {
   }
 
   @Test
-  void testList() {
-    WorkflowContext workflowContext = Mockito.mock(WorkflowContext.class);
-    JQExpressionFactory factory = new JQExpressionFactory();
+  void testNesterMapAndArrayTogether() {
     WorkflowValueResolver<Map<String, Object>> expr =
         factory.resolveMap(
-            ExpressionDescriptor.object(Map.of("array", List.of("item1", "item2", "${.name}"))));
+            ExpressionDescriptor.object(
+                Map.of(
+                    "name",
+                    "${.name}",
+                    "surname",
+                    "Doe",
+                    "nested",
+                    Map.of("name", "${.name}", "surname", "Doe"),
+                    "array",
+                    List.of("item1", "item2", "${.name}"))));
     Map<String, Object> result =
         expr.apply(
             workflowContext,
             null,
-            new JacksonModel(JsonUtils.mapper().createObjectNode().put("name", "item3")));
+            new JacksonModel(JsonUtils.mapper().createObjectNode().put("name", "John")));
     Iterator<Object> iter = ((Collection<Object>) result.get("array")).iterator();
     assertThat(iter.next()).isEqualTo("item1");
     assertThat(iter.next()).isEqualTo("item2");
-    assertThat(iter.next()).isEqualTo("item3");
+    assertThat(iter.next()).isEqualTo("John");
+    assertThat(result.get("name")).isEqualTo("John");
+    assertThat(result.get("surname")).isEqualTo("Doe");
+    Map<String, Object> nested = (Map<String, Object>) result.get("nested");
+    assertThat(result.get("name")).isEqualTo("John");
+    assertThat(result.get("surname")).isEqualTo("Doe");
   }
 }

@@ -43,7 +43,7 @@ public abstract class ObjectExpressionFactory extends AbstractExpressionFactory 
     } else if (obj instanceof Map map) {
       return buildExpressionMap(map, factory);
     } else if (obj instanceof Collection col) {
-      return buildExpressionList(col, factory);
+      return buildExpressionCollection(col, factory);
     } else {
       return obj;
     }
@@ -84,7 +84,7 @@ public abstract class ObjectExpressionFactory extends AbstractExpressionFactory 
                 : buildExpressionObject(o, factory));
   }
 
-  private Collection<Object> buildExpressionList(
+  private Collection<Object> buildExpressionCollection(
       Collection<Object> col, ExpressionFactory factory) {
     return new ProxyCollection(
         col,
