@@ -34,7 +34,7 @@ public abstract class BaseWorkflowBuilder<
   public static final String DEFAULT_VERSION = "0.0.1";
   public static final String DEFAULT_NAMESPACE = "org.acme";
 
-  private final Workflow workflow;
+  protected final Workflow workflow;
   private final Document document;
 
   protected BaseWorkflowBuilder(final String name, final String namespace, final String version) {
@@ -87,7 +87,11 @@ public abstract class BaseWorkflowBuilder<
   public SELF tasks(Consumer<DBuilder> doTaskConsumer) {
     final DBuilder doTaskBuilder = newDo();
     doTaskConsumer.accept(doTaskBuilder);
-    this.workflow.setDo(doTaskBuilder.build().getDo());
+    if (this.workflow.getDo() == null) {
+      this.workflow.setDo(doTaskBuilder.build().getDo());
+    } else {
+      this.workflow.getDo().addAll(doTaskBuilder.build().getDo());
+    }
     return self();
   }
 

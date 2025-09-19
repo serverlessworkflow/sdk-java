@@ -15,6 +15,7 @@
  */
 package io.serverlessworkflow.fluent.agentic.dsl;
 
+import dev.langchain4j.agentic.scope.AgenticScope;
 import io.cloudevents.CloudEventData;
 import io.serverlessworkflow.api.types.FlowDirectiveEnum;
 import io.serverlessworkflow.fluent.agentic.AgentDoTaskBuilder;
@@ -105,6 +106,19 @@ public final class AgenticDSL {
   public static <T> Consumer<FuncEmitTaskBuilder> event(
       String type, Function<T, CloudEventData> function, Class<T> clazz) {
     return event -> event.event(e -> e.type(type).data(function, clazz));
+  }
+
+  // -------- Agentic Workflow Patterns -------- //
+  public static AgentTaskConfigurer sequence(Object... agents) {
+    return list -> list.sequence(agents);
+  }
+
+  public static AgentTaskConfigurer loop(Predicate<AgenticScope> exitCondition, Object... agents) {
+    return list -> list.loop(l -> l.subAgents(agents).exitCondition(exitCondition));
+  }
+
+  public static AgentTaskConfigurer parallel(Object... agents) {
+    return list -> list.parallel(agents);
   }
 
   // --------- Tasks ------ //
