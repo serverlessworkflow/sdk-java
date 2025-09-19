@@ -17,17 +17,11 @@ package io.serverlessworkflow.impl.executors;
 
 import io.serverlessworkflow.api.types.Task;
 import io.serverlessworkflow.api.types.TaskBase;
-import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.ServicePriority;
-import io.serverlessworkflow.impl.WorkflowApplication;
+import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowMutablePosition;
-import io.serverlessworkflow.impl.resources.ResourceLoader;
 
 public interface TaskExecutorFactory extends ServicePriority {
   TaskExecutorBuilder<? extends TaskBase> getTaskExecutor(
-      WorkflowMutablePosition position,
-      Task task,
-      Workflow workflow,
-      WorkflowApplication application,
-      ResourceLoader resourceLoader);
+      WorkflowMutablePosition position, Task task, WorkflowDefinition definition);
 }

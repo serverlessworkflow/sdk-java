@@ -19,14 +19,12 @@ import io.serverlessworkflow.api.types.FlowDirective;
 import io.serverlessworkflow.api.types.SwitchCase;
 import io.serverlessworkflow.api.types.SwitchItem;
 import io.serverlessworkflow.api.types.SwitchTask;
-import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.TaskContext;
-import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.WorkflowPredicate;
 import io.serverlessworkflow.impl.WorkflowUtils;
-import io.serverlessworkflow.impl.resources.ResourceLoader;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -47,12 +45,8 @@ public class SwitchExecutor extends AbstractTaskExecutor<SwitchTask> {
     private TransitionInfoBuilder defaultTask;
 
     public SwitchExecutorBuilder(
-        WorkflowMutablePosition position,
-        SwitchTask task,
-        Workflow workflow,
-        WorkflowApplication application,
-        ResourceLoader resourceLoader) {
-      super(position, task, workflow, application, resourceLoader);
+        WorkflowMutablePosition position, SwitchTask task, WorkflowDefinition definition) {
+      super(position, task, definition);
       for (SwitchItem item : task.getSwitch()) {
         SwitchCase switchCase = item.getSwitchCase();
         buildFilter(switchCase)

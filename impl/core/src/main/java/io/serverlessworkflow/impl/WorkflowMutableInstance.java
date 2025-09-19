@@ -51,18 +51,18 @@ public class WorkflowMutableInstance implements WorkflowInstance {
   private TaskContext suspendedTask;
   private CompletableFuture<TaskContext> cancelled;
 
-  WorkflowMutableInstance(WorkflowDefinition definition, WorkflowModel input) {
-    this.id = definition.application().idFactory().get();
+  public WorkflowMutableInstance(
+      WorkflowDefinition definition, String id, WorkflowModel input, WorkflowStatus status) {
+    this.id = id;
     this.input = input;
-    this.status = new AtomicReference<>(WorkflowStatus.PENDING);
-    definition.inputSchemaValidator().ifPresent(v -> v.validate(input));
+    this.status = new AtomicReference<>(status);
     this.workflowContext = new WorkflowContext(definition, this);
   }
 
   @Override
   public CompletableFuture<WorkflowModel> start() {
-    this.startedAt = Instant.now();
-    this.status.set(WorkflowStatus.RUNNING);
+    startedAt = Instant.now();
+    status.set(WorkflowStatus.RUNNING);
     publishEvent(
         workflowContext, l -> l.onWorkflowStarted(new WorkflowStartedEvent(workflowContext)));
     this.completableFuture =
@@ -107,7 +107,7 @@ public class WorkflowMutableInstance implements WorkflowInstance {
             .map(f -> f.apply(workflowContext, null, node))
             .orElse(node);
     workflowContext.definition().outputSchemaValidator().ifPresent(v -> v.validate(output));
-    status.compareAndSet(WorkflowStatus.RUNNING, WorkflowStatus.COMPLETED);
+    status.set(WorkflowStatus.COMPLETED);
     publishEvent(
         workflowContext, l -> l.onWorkflowCompleted(new WorkflowCompletedEvent(workflowContext)));
     return output;
@@ -145,12 +145,14 @@ public class WorkflowMutableInstance implements WorkflowInstance {
 
   @Override
   public <T> T outputAs(Class<T> clazz) {
-    return output
-        .as(clazz)
-        .orElseThrow(
-            () ->
-                new IllegalArgumentException(
-                    "Output " + output + " cannot be converted to class " + clazz));
+    return output != null
+        ? output
+            .as(clazz)
+            .orElseThrow(
+                () ->
+                    new IllegalArgumentException(
+                        "Output " + output + " cannot be converted to class " + clazz))
+        : null;
   }
 
   public void status(WorkflowStatus state) {
@@ -215,15 +217,9 @@ public class WorkflowMutableInstance implements WorkflowInstance {
     }
   }
 
-  public CompletableFuture<TaskContext> completedChecks(TaskContext t) {
+  public CompletableFuture<TaskContext> cancelCheck(TaskContext t) {
     try {
       statusLock.lock();
-      if (suspended != null) {
-        suspendedTask = t;
-        publishEvent(
-            workflowContext, l -> l.onTaskSuspended(new TaskSuspendedEvent(workflowContext, t)));
-        return suspended;
-      }
       if (cancelled != null) {
         cancelled = new CompletableFuture<TaskContext>();
         workflowContext.instance().status(WorkflowStatus.CANCELLED);
@@ -235,6 +231,29 @@ public class WorkflowMutableInstance implements WorkflowInstance {
       statusLock.unlock();
     }
     return CompletableFuture.completedFuture(t);
+  }
+
+  public CompletableFuture<TaskContext> suspendedCheck(TaskContext t) {
+    try {
+      statusLock.lock();
+      if (suspended != null) {
+        this.suspendedTask = t;
+        publishEvent(
+            workflowContext,
+            l -> l.onTaskSuspended(new TaskSuspendedEvent(workflowContext, suspendedTask)));
+        return suspended;
+      }
+    } finally {
+      statusLock.unlock();
+    }
+    return CompletableFuture.completedFuture(t);
+  }
+
+  // internal purposes only, not to be invoked directly by users of the API
+  public void restore(
+      WorkflowPosition position, WorkflowModel model, WorkflowModel context, Instant startedAt) {
+    this.startedAt = startedAt;
+    workflowContext.context(context);
   }
 
   @Override

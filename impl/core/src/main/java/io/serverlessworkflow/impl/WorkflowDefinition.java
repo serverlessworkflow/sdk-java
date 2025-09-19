@@ -36,11 +36,13 @@ public class WorkflowDefinition implements AutoCloseable, WorkflowDefinitionData
   private Optional<WorkflowFilter> outputFilter = Optional.empty();
   private final WorkflowApplication application;
   private final TaskExecutor<?> taskExecutor;
+  private ResourceLoader resourceLoader;
 
   private WorkflowDefinition(
       WorkflowApplication application, Workflow workflow, ResourceLoader resourceLoader) {
     this.workflow = workflow;
     this.application = application;
+    this.resourceLoader = resourceLoader;
     if (workflow.getInput() != null) {
       Input input = workflow.getInput();
       this.inputSchemaValidator =
@@ -55,11 +57,7 @@ public class WorkflowDefinition implements AutoCloseable, WorkflowDefinitionData
     }
     this.taskExecutor =
         TaskExecutorHelper.createExecutorList(
-            application.positionFactory().get(),
-            workflow.getDo(),
-            workflow,
-            application,
-            resourceLoader);
+            application.positionFactory().get(), workflow.getDo(), this);
   }
 
   static WorkflowDefinition of(WorkflowApplication application, Workflow workflow) {
@@ -72,7 +70,10 @@ public class WorkflowDefinition implements AutoCloseable, WorkflowDefinitionData
   }
 
   public WorkflowInstance instance(Object input) {
-    return new WorkflowMutableInstance(this, application.modelFactory().fromAny(input));
+    WorkflowModel inputModel = application.modelFactory().fromAny(input);
+    inputSchemaValidator().ifPresent(v -> v.validate(inputModel));
+    return new WorkflowMutableInstance(
+        this, application().idFactory().get(), inputModel, WorkflowStatus.PENDING);
   }
 
   Optional<SchemaValidator> inputSchemaValidator() {
@@ -106,7 +107,9 @@ public class WorkflowDefinition implements AutoCloseable, WorkflowDefinitionData
   }
 
   @Override
-  public void close() {
-    // TODO close resourcers hold for uncompleted process instances, if any
+  public void close() {}
+
+  public ResourceLoader resourceLoader() {
+    return resourceLoader;
   }
 }

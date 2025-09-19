@@ -17,15 +17,13 @@ package io.serverlessworkflow.impl.executors;
 
 import io.serverlessworkflow.api.types.DurationInline;
 import io.serverlessworkflow.api.types.WaitTask;
-import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.TaskContext;
-import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowMutableInstance;
 import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.WorkflowStatus;
-import io.serverlessworkflow.impl.resources.ResourceLoader;
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -38,12 +36,8 @@ public class WaitExecutor extends RegularTaskExecutor<WaitTask> {
     private final Duration millisToWait;
 
     protected WaitExecutorBuilder(
-        WorkflowMutablePosition position,
-        WaitTask task,
-        Workflow workflow,
-        WorkflowApplication application,
-        ResourceLoader resourceLoader) {
-      super(position, task, workflow, application, resourceLoader);
+        WorkflowMutablePosition position, WaitTask task, WorkflowDefinition definition) {
+      super(position, task, definition);
       this.millisToWait =
           task.getWait().getDurationInline() != null
               ? toLong(task.getWait().getDurationInline())

@@ -20,17 +20,15 @@ import io.serverlessworkflow.api.types.ErrorFilter;
 import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.api.types.TryTask;
 import io.serverlessworkflow.api.types.TryTaskCatch;
-import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.TaskContext;
-import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowError;
 import io.serverlessworkflow.impl.WorkflowException;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.WorkflowPredicate;
 import io.serverlessworkflow.impl.WorkflowUtils;
-import io.serverlessworkflow.impl.resources.ResourceLoader;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -54,25 +52,20 @@ public class TryExecutor extends RegularTaskExecutor<TryTask> {
     private final Optional<TaskExecutor<?>> catchTaskExecutor;
 
     protected TryExecutorBuilder(
-        WorkflowMutablePosition position,
-        TryTask task,
-        Workflow workflow,
-        WorkflowApplication application,
-        ResourceLoader resourceLoader) {
-      super(position, task, workflow, application, resourceLoader);
+        WorkflowMutablePosition position, TryTask task, WorkflowDefinition definition) {
+      super(position, task, definition);
       TryTaskCatch catchInfo = task.getCatch();
       this.errorFilter = buildErrorFilter(catchInfo.getErrors());
       this.whenFilter = WorkflowUtils.optionalPredicate(application, catchInfo.getWhen());
       this.exceptFilter = WorkflowUtils.optionalPredicate(application, catchInfo.getExceptWhen());
       this.taskExecutor =
-          TaskExecutorHelper.createExecutorList(
-              position, task.getTry(), workflow, application, resourceLoader);
+          TaskExecutorHelper.createExecutorList(position, task.getTry(), definition);
       List<TaskItem> catchTask = task.getCatch().getDo();
       this.catchTaskExecutor =
           catchTask != null && !catchTask.isEmpty()
               ? Optional.of(
                   TaskExecutorHelper.createExecutorList(
-                      position, task.getCatch().getDo(), workflow, application, resourceLoader))
+                      position, task.getCatch().getDo(), definition))
               : Optional.empty();
     }
 
