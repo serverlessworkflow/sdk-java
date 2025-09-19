@@ -83,61 +83,12 @@ public class ProxyMap implements Map<String, Object> {
 
   @Override
   public Collection<Object> values() {
-    return new ProxyCollection(map.values());
+    return new ProxyCollection(map.values(), function);
   }
 
   @Override
   public Set<Entry<String, Object>> entrySet() {
     return new ProxyEntrySet(map.entrySet());
-  }
-
-  private abstract class AbstractProxyCollection<T> {
-
-    protected Collection<T> values;
-
-    protected AbstractProxyCollection(Collection<T> values) {
-      this.values = values;
-    }
-
-    public int size() {
-      return values.size();
-    }
-
-    public boolean isEmpty() {
-      return values.isEmpty();
-    }
-
-    public boolean contains(Object o) {
-      return values.contains(o);
-    }
-
-    public boolean remove(Object o) {
-      return values.remove(o);
-    }
-
-    public boolean containsAll(Collection<?> c) {
-      return values.containsAll(c);
-    }
-
-    public boolean retainAll(Collection<?> c) {
-      return values.retainAll(c);
-    }
-
-    public boolean removeAll(Collection<?> c) {
-      return values.removeAll(c);
-    }
-
-    public void clear() {
-      values.clear();
-    }
-
-    public boolean addAll(Collection<? extends T> c) {
-      return values.addAll(c);
-    }
-
-    public boolean add(T e) {
-      return values.add(e);
-    }
   }
 
   private class ProxyEntrySet extends AbstractProxyCollection<Entry<String, Object>>
@@ -170,36 +121,6 @@ public class ProxyMap implements Map<String, Object> {
     }
   }
 
-  private class ProxyCollection extends AbstractProxyCollection<Object>
-      implements Collection<Object> {
-
-    public ProxyCollection(Collection<Object> values) {
-      super(values);
-    }
-
-    @Override
-    public Iterator<Object> iterator() {
-      return new ProxyIterator(values.iterator());
-    }
-
-    @Override
-    public Object[] toArray() {
-      return processArray(values.toArray());
-    }
-
-    @Override
-    public <T> T[] toArray(T[] a) {
-      return processArray(values.toArray(a));
-    }
-
-    private <S> S[] processArray(S[] array) {
-      for (int i = 0; i < array.length; i++) {
-        array[i] = (S) processValue(array[i]);
-      }
-      return array;
-    }
-  }
-
   private class ProxyEntry implements Entry<String, Object> {
 
     private Entry<String, Object> entry;
@@ -221,30 +142,6 @@ public class ProxyMap implements Map<String, Object> {
     @Override
     public Object setValue(Object value) {
       return entry.setValue(value);
-    }
-  }
-
-  private class ProxyIterator implements Iterator<Object> {
-
-    private Iterator<Object> iter;
-
-    public ProxyIterator(Iterator<Object> iter) {
-      this.iter = iter;
-    }
-
-    @Override
-    public boolean hasNext() {
-      return iter.hasNext();
-    }
-
-    @Override
-    public Object next() {
-      return processValue(iter.next());
-    }
-
-    @Override
-    public void remove() {
-      iter.remove();
     }
   }
 
