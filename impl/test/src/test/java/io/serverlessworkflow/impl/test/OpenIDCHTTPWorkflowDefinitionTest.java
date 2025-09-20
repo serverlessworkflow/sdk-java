@@ -16,7 +16,7 @@
 package io.serverlessworkflow.impl.test;
 
 import static io.serverlessworkflow.api.WorkflowReader.readWorkflowFromClasspath;
-import static io.serverlessworkflow.impl.test.OAuthHTTPWorkflowDefinitionTest.fakeAccessToken;
+import static io.serverlessworkflow.impl.test.AccessTokenProvider.fakeAccessToken;
 import static org.junit.Assert.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
