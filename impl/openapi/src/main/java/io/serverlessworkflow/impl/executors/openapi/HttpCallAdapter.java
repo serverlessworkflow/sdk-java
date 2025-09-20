@@ -24,6 +24,9 @@ import io.serverlessworkflow.api.types.HTTPQuery;
 import io.serverlessworkflow.api.types.Headers;
 import io.serverlessworkflow.api.types.Query;
 import io.serverlessworkflow.api.types.ReferenceableAuthenticationPolicy;
+import io.serverlessworkflow.api.types.TaskTimeout;
+import io.serverlessworkflow.api.types.Timeout;
+import io.serverlessworkflow.api.types.TimeoutAfter;
 import io.serverlessworkflow.api.types.UriTemplate;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.parameters.Parameter;
@@ -81,6 +84,14 @@ public class HttpCallAdapter {
     addBody(httpArgs);
 
     addTarget(endpoint);
+
+    TaskTimeout taskTimeout = new TaskTimeout();
+    Timeout timeout = new Timeout();
+    taskTimeout.withTaskTimeoutDefinition(timeout);
+    TimeoutAfter timeoutAfter = new TimeoutAfter();
+    timeout.setAfter(timeoutAfter);
+    timeoutAfter.withDurationExpression("PT30S");
+    callHTTP.setTimeout(taskTimeout);
 
     return callHTTP;
   }
@@ -176,8 +187,17 @@ public class HttpCallAdapter {
           Object value = workflowParams.get(name);
           if (value instanceof String asString) {
             httpQuery.setAdditionalProperty(name, asString);
+          } else if (value instanceof Number asNumber) {
+            httpQuery.setAdditionalProperty(name, asNumber.toString());
+          } else if (value instanceof Boolean asBoolean) {
+            httpQuery.setAdditionalProperty(name, asBoolean.toString());
+          } else if (value instanceof Character asCharacter) {
+            httpQuery.setAdditionalProperty(name, asCharacter.toString());
           } else {
-            throw new IllegalArgumentException("Query parameter " + name + " must be a String");
+            throw new IllegalArgumentException(
+                "Query parameter "
+                    + name
+                    + " must be a type of String, Number, Boolean or Character");
           }
         }
       }

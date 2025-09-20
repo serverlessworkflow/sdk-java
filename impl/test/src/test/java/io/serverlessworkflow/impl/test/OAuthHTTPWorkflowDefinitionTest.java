@@ -16,6 +16,7 @@
 package io.serverlessworkflow.impl.test;
 
 import static io.serverlessworkflow.api.WorkflowReader.readWorkflowFromClasspath;
+import static io.serverlessworkflow.impl.test.AccessTokenProvider.fakeAccessToken;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -23,9 +24,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.time.Instant;
-import java.util.Base64;
 import java.util.Map;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -817,35 +815,5 @@ public class OAuthHTTPWorkflowDefinitionTest {
     assertEquals("GET", petRequest.getMethod());
     assertEquals("/hello", petRequest.getPath());
     assertEquals("Bearer " + jwt, petRequest.getHeader("Authorization"));
-  }
-
-  public static String fakeJwt(Map<String, Object> payload) throws Exception {
-    String headerJson =
-        MAPPER.writeValueAsString(
-            Map.of(
-                "alg", "RS256",
-                "typ", "Bearer",
-                "kid", "test"));
-    String payloadJson = MAPPER.writeValueAsString(payload);
-    return b64Url(headerJson) + "." + b64Url(payloadJson) + ".sig";
-  }
-
-  private static String b64Url(String s) {
-    return Base64.getUrlEncoder()
-        .withoutPadding()
-        .encodeToString(s.getBytes(StandardCharsets.UTF_8));
-  }
-
-  public static String fakeAccessToken() throws Exception {
-    long now = Instant.now().getEpochSecond();
-    return fakeJwt(
-        Map.of(
-            "iss", "http://localhost:8888/realms/test-realm",
-            "aud", "account",
-            "sub", "test-subject",
-            "azp", "serverless-workflow",
-            "scope", "profile email",
-            "exp", now + 3600,
-            "iat", now));
   }
 }

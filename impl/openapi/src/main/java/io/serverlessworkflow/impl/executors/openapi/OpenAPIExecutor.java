@@ -37,7 +37,6 @@ import jakarta.ws.rs.core.UriBuilder;
 import java.net.URI;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 public class OpenAPIExecutor implements CallableTask<CallOpenAPI> {
@@ -129,7 +128,9 @@ public class OpenAPIExecutor implements CallableTask<CallOpenAPI> {
 
             try {
               return executor.apply(workflowContext, taskContext, input).get();
-            } catch (InterruptedException | RuntimeException | ExecutionException e) {
+            } catch (Exception e) {
+
+              System.out.println("Call to " + server + " failed: " + e.getMessage());
               ex = new RuntimeException(e);
             }
           }

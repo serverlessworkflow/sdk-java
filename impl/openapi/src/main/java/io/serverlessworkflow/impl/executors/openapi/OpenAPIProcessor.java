@@ -47,7 +47,7 @@ public class OpenAPIProcessor {
 
   public OperationDefinition getOperation(OpenAPI openAPI) {
     if (openAPI == null || openAPI.getPaths() == null) {
-      return null;
+      throw new IllegalArgumentException("Invalid OpenAPI document");
     }
 
     Set<String> paths = openAPI.getPaths().keySet();
