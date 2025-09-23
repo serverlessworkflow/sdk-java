@@ -31,6 +31,4 @@ public interface EventConsumer<T extends EventRegistration, V extends EventRegis
   T register(V builder, Consumer<CloudEvent> consumer);
 
   void unregister(T register);
-
-  void close();
 }

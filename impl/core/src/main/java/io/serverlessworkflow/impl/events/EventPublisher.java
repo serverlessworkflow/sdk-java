@@ -20,6 +20,4 @@ import java.util.concurrent.CompletableFuture;
 
 public interface EventPublisher extends AutoCloseable {
   CompletableFuture<Void> publish(CloudEvent event);
-
-  void close();
 }

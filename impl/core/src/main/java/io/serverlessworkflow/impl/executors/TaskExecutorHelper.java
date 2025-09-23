@@ -54,7 +54,9 @@ public class TaskExecutorHelper {
   }
 
   public static boolean isActive(WorkflowStatus status) {
-    return status == WorkflowStatus.RUNNING || status == WorkflowStatus.WAITING;
+    return status == WorkflowStatus.RUNNING
+        || status == WorkflowStatus.WAITING
+        || status == WorkflowStatus.SUSPENDED;
   }
 
   public static TaskExecutor<?> createExecutorList(

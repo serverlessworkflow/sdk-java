@@ -1,7 +1,7 @@
 document:
   dsl: '1.0.0-alpha5'
   namespace: test
-  name: simple-expression
+  name: wait-set
   version: '0.1.0'
 do: 
   - waitABit:

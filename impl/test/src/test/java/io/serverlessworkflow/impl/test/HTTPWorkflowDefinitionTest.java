@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.stream.Stream;
 import org.assertj.core.api.Condition;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -38,6 +39,11 @@ public class HTTPWorkflowDefinitionTest {
   @BeforeAll
   static void init() {
     appl = WorkflowApplication.builder().build();
+  }
+
+  @AfterAll
+  static void cleanup() {
+    appl.close();
   }
 
   @ParameterizedTest

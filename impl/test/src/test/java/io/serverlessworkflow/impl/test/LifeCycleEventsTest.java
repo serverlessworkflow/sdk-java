@@ -31,9 +31,7 @@ import io.serverlessworkflow.impl.events.InMemoryEvents;
 import io.serverlessworkflow.impl.lifecycle.ce.AbstractLifeCyclePublisher;
 import io.serverlessworkflow.impl.lifecycle.ce.TaskCancelledCEData;
 import io.serverlessworkflow.impl.lifecycle.ce.TaskCompletedCEData;
-import io.serverlessworkflow.impl.lifecycle.ce.TaskResumedCEData;
 import io.serverlessworkflow.impl.lifecycle.ce.TaskStartedCEData;
-import io.serverlessworkflow.impl.lifecycle.ce.TaskSuspendedCEData;
 import io.serverlessworkflow.impl.lifecycle.ce.WorkflowCancelledCEData;
 import io.serverlessworkflow.impl.lifecycle.ce.WorkflowCompletedCEData;
 import io.serverlessworkflow.impl.lifecycle.ce.WorkflowErrorCEData;
@@ -53,18 +51,18 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class LifeCycleEventsTest {
 
-  private WorkflowApplication appl;
-  private Collection<CloudEvent> publishedEvents;
+  private static WorkflowApplication appl;
+  private static Collection<CloudEvent> publishedEvents;
 
-  @BeforeEach
-  void setup() {
-    publishedEvents = new CopyOnWriteArrayList<>();
+  @BeforeAll
+  static void init() {
     InMemoryEvents eventBroker = new InMemoryEvents();
     for (String type : AbstractLifeCyclePublisher.getLifeCycleTypes()) {
       eventBroker.register(type, ce -> publishedEvents.add(ce));
@@ -76,9 +74,14 @@ class LifeCycleEventsTest {
             .build();
   }
 
-  @AfterEach
-  void close() {
+  @AfterAll
+  static void cleanup() {
     appl.close();
+  }
+
+  @BeforeEach
+  void setup() {
+    publishedEvents = new CopyOnWriteArrayList<>();
   }
 
   @Test
@@ -149,17 +152,12 @@ class LifeCycleEventsTest {
     assertThat(future.get(1, TimeUnit.SECONDS).asMap().orElseThrow())
         .isEqualTo(Map.of("name", "Javierito"));
     assertThat(instance.status()).isEqualTo(WorkflowStatus.COMPLETED);
-    TaskSuspendedCEData taskSuspendedEvent =
-        assertPojoInCE("io.serverlessworkflow.task.suspended.v1", TaskSuspendedCEData.class);
     WorkflowSuspendedCEData workflowSuspendedEvent =
         assertPojoInCE(
             "io.serverlessworkflow.workflow.suspended.v1", WorkflowSuspendedCEData.class);
-    TaskResumedCEData taskResumedEvent =
-        assertPojoInCE("io.serverlessworkflow.task.resumed.v1", TaskResumedCEData.class);
     WorkflowResumedCEData workflowResumedEvent =
         assertPojoInCE("io.serverlessworkflow.workflow.resumed.v1", WorkflowResumedCEData.class);
     assertThat(workflowSuspendedEvent.suspendedAt()).isBefore(workflowResumedEvent.resumedAt());
-    assertThat(taskSuspendedEvent.suspendedAt()).isBefore(taskResumedEvent.resumedAt());
   }
 
   @Test
@@ -173,13 +171,8 @@ class LifeCycleEventsTest {
     assertThat(catchThrowableOfType(ExecutionException.class, () -> future.get().asMap()))
         .isNotNull();
     assertThat(instance.status()).isEqualTo(WorkflowStatus.CANCELLED);
-    TaskCancelledCEData taskCancelledEvent =
-        assertPojoInCE("io.serverlessworkflow.task.cancelled.v1", TaskCancelledCEData.class);
-    WorkflowCancelledCEData workflowCancelledEvent =
-        assertPojoInCE(
-            "io.serverlessworkflow.workflow.cancelled.v1", WorkflowCancelledCEData.class);
-    assertThat(taskCancelledEvent.cancelledAt())
-        .isBeforeOrEqualTo(workflowCancelledEvent.cancelledAt());
+    assertPojoInCE("io.serverlessworkflow.task.cancelled.v1", TaskCancelledCEData.class);
+    assertPojoInCE("io.serverlessworkflow.workflow.cancelled.v1", WorkflowCancelledCEData.class);
   }
 
   @Test
