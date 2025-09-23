@@ -42,6 +42,17 @@ public class AgentWorkflowBuilder
     return new AgentWorkflowBuilder(name, ns, DEFAULT_VERSION);
   }
 
+  public AgentWorkflowBuilder agent(Object agent) {
+    return agent(UUID.randomUUID().toString(), agent);
+  }
+
+  public AgentWorkflowBuilder agent(String name, Object agent) {
+    final AgentDoTaskBuilder doTaskBuilder = this.newDo();
+    doTaskBuilder.agent(name, agent);
+    this.workflow.setDo(doTaskBuilder.build().getDo());
+    return this;
+  }
+
   public AgentWorkflowBuilder sequence(Object... agents) {
     return sequence(UUID.randomUUID().toString(), agents);
   }
