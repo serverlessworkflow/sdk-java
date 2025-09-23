@@ -79,4 +79,36 @@ public final class AgentsUtils {
             .outputName("horoscope")
             .build());
   }
+
+  public static Agents.CategoryRouter newCategoryRouter() {
+    return spy(
+        AgenticServices.agentBuilder(Agents.CategoryRouter.class)
+            .chatModel(BASE_MODEL)
+            .outputName("category")
+            .build());
+  }
+
+  public static Agents.MedicalExpert newMedicalExpert() {
+    return spy(
+        AgenticServices.agentBuilder(Agents.MedicalExpert.class)
+            .chatModel(BASE_MODEL)
+            .outputName("response")
+            .build());
+  }
+
+  public static Agents.TechnicalExpert newTechnicalExpert() {
+    return spy(
+        AgenticServices.agentBuilder(Agents.TechnicalExpert.class)
+            .chatModel(BASE_MODEL)
+            .outputName("response")
+            .build());
+  }
+
+  public static Agents.LegalExpert newLegalExpert() {
+    return spy(
+        AgenticServices.agentBuilder(Agents.LegalExpert.class)
+            .chatModel(BASE_MODEL)
+            .outputName("response")
+            .build());
+  }
 }

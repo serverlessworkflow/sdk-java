@@ -68,7 +68,7 @@ public class LC4JEquivalenceIT {
   }
 
   @Test
-  @DisplayName("Looping agents via DSL.loop(...)") // TODO maxIterations(5)
+  @DisplayName("Looping agents via DSL.loop(...)")
   public void loopWorkflow() {
 
     var scorer = AgentsUtils.newStyleScorer();
@@ -77,6 +77,48 @@ public class LC4JEquivalenceIT {
     Workflow wf =
         AgentWorkflowBuilder.workflow("retryFlow")
             .loop("reviewLoop", c -> c.readState("score", 0).doubleValue() >= 0.8, scorer, editor)
+            .build();
+
+    List<TaskItem> items = wf.getDo();
+    assertThat(items).hasSize(1);
+
+    var fn = (ForTaskFunction) items.get(0).getTask().getForTask();
+    assertThat(fn.getDo()).isNotNull();
+    assertThat(fn.getDo()).hasSize(2);
+    fn.getDo()
+        .forEach(si -> assertThat(si.getTask().getCallTask()).isInstanceOf(CallTaskJava.class));
+
+    Map<String, Object> input =
+        Map.of(
+            "story", "dragons and wizards",
+            "style", "comedy");
+
+    Map<String, Object> result;
+    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
+      result = app.workflowDefinition(wf).instance(input).start().get().asMap().orElseThrow();
+    } catch (Exception e) {
+      throw new RuntimeException("Workflow execution failed", e);
+    }
+
+    assertThat(result).containsKey("story");
+  }
+
+  @Test
+  @DisplayName("Looping agents via DSL.loop(...)")
+  public void loopWorkflowWithMaxIterations() {
+    var scorer = AgentsUtils.newStyleScorer();
+    var editor = AgentsUtils.newStyleEditor();
+
+    Workflow wf =
+        AgentWorkflowBuilder.workflow("maxFlow")
+            .tasks(
+                d ->
+                    d.loop(
+                        "limit",
+                        l ->
+                            l.maxIterations(5)
+                                .exitCondition(c -> c.readState("score", 0).doubleValue() >= 0.8)
+                                .subAgents("sub", scorer, editor)))
             .build();
 
     List<TaskItem> items = wf.getDo();
@@ -115,7 +157,9 @@ public class LC4JEquivalenceIT {
     assertThat(items).hasSize(1);
 
     var fork = items.get(0).getTask().getForkTask();
+    // two branches created
     assertThat(fork.getFork().getBranches()).hasSize(2);
+    // branch names follow "branch-{index}-{name}"
     assertThat(fork.getFork().getBranches().get(0).getName()).isEqualTo("branch-0-fanout");
     assertThat(fork.getFork().getBranches().get(1).getName()).isEqualTo("branch-1-fanout");
 
@@ -130,6 +174,50 @@ public class LC4JEquivalenceIT {
 
     assertEquals("Fake conflict response", result.get("meals"));
     assertEquals("Fake conflict response", result.get("movies"));
+  }
+
+  // TODO
+  @Test
+  @DisplayName("Conditional agents via choice(...)")
+  public void conditionalWorkflow() {
+
+    var category = AgentsUtils.newCategoryRouter();
+    var a1 = AgentsUtils.newMedicalExpert();
+    var a2 = AgentsUtils.newTechnicalExpert();
+    var a3 = AgentsUtils.newLegalExpert();
+  }
+
+  // TODO
+  @Test
+  @DisplayName("Error handling with agents")
+  public void errorHandling() {
+    var a1 = AgentsUtils.newCreativeWriter();
+    var a2 = AgentsUtils.newAudienceEditor();
+    var a3 = AgentsUtils.newStyleEditor();
+
+    Workflow wf = workflow("seqFlow").tasks(tasks -> tasks.sequence("process", a1, a2, a3)).build();
+
+    List<TaskItem> items = wf.getDo();
+    assertThat(items).hasSize(3);
+
+    assertThat(items.get(0).getName()).isEqualTo("process-0");
+    assertThat(items.get(1).getName()).isEqualTo("process-1");
+    assertThat(items.get(2).getName()).isEqualTo("process-2");
+    items.forEach(it -> assertThat(it.getTask().getCallTask()).isInstanceOf(CallTaskJava.class));
+
+    Map<String, Object> input =
+        Map.of(
+            "style", "fantasy",
+            "audience", "young adults");
+
+    Map<String, Object> result;
+    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
+      result = app.workflowDefinition(wf).instance(input).start().get().asMap().orElseThrow();
+    } catch (Exception e) {
+      throw new RuntimeException("Workflow execution failed", e);
+    }
+
+    assertThat(result).containsKey("story");
   }
 
   @Test
@@ -149,8 +237,7 @@ public class LC4JEquivalenceIT {
 
     var a1 = AgentsUtils.newAstrologyAgent();
 
-    Workflow wf =
-        workflow("seqFlow").tasks(tasks -> tasks.sequence("process", a1, humanInTheLoop)).build();
+    Workflow wf = workflow("seqFlow").sequence("process", a1, humanInTheLoop).build();
 
     assertThat(wf.getDo()).hasSize(2);
 

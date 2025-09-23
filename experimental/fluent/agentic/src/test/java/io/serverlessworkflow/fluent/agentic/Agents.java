@@ -15,6 +15,7 @@
  */
 package io.serverlessworkflow.fluent.agentic;
 
+import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.agentic.Agent;
 import dev.langchain4j.agentic.internal.AgentSpecification;
 import dev.langchain4j.service.SystemMessage;
@@ -317,5 +318,61 @@ public interface Agents {
         """)
     @Agent("An astrologist that generates horoscopes based on the user's name and zodiac sign.")
     String horoscope(@V("name") String name, @V("sign") String sign);
+  }
+
+  enum RequestCategory {
+    LEGAL,
+    MEDICAL,
+    TECHNICAL,
+    UNKNOWN
+  }
+
+  interface CategoryRouter {
+
+    @UserMessage(
+        """
+        Analyze the following user request and categorize it as 'legal', 'medical' or 'technical'.
+        In case the request doesn't belong to any of those categories categorize it as 'unknown'.
+        Reply with only one of those words and nothing else.
+        The user request is: '{{request}}'.
+        """)
+    @Agent("Categorizes a user request")
+    RequestCategory classify(@V("request") String request);
+  }
+
+  interface MedicalExpert {
+
+    @dev.langchain4j.service.UserMessage(
+        """
+            You are a medical expert.
+            Analyze the following user request under a medical point of view and provide the best possible answer.
+            The user request is {{it}}.
+            """)
+    @Tool("A medical expert")
+    String medicalRequest(String request);
+  }
+
+  interface LegalExpert {
+
+    @dev.langchain4j.service.UserMessage(
+        """
+            You are a legal expert.
+            Analyze the following user request under a legal point of view and provide the best possible answer.
+            The user request is {{it}}.
+            """)
+    @Tool("A legal expert")
+    String legalRequest(String request);
+  }
+
+  interface TechnicalExpert {
+
+    @dev.langchain4j.service.UserMessage(
+        """
+            You are a technical expert.
+            Analyze the following user request under a technical point of view and provide the best possible answer.
+            The user request is {{it}}.
+            """)
+    @Tool("A technical expert")
+    String technicalRequest(String request);
   }
 }
