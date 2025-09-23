@@ -18,7 +18,7 @@ package io.serverlessworkflow.impl;
 import io.serverlessworkflow.api.types.Document;
 import io.serverlessworkflow.api.types.Workflow;
 
-record WorkflowDefinitionId(String namespace, String name, String version) {
+public record WorkflowDefinitionId(String namespace, String name, String version) {
 
   public static final String DEFAULT_VERSION = "0.0.1";
   public static final String DEFAULT_NAMESPACE = "org.acme";
