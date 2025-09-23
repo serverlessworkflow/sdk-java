@@ -31,4 +31,52 @@ public final class AgentsUtils {
             .chatModel(BASE_MODEL)
             .build());
   }
+
+  public static Agents.CreativeWriter newCreativeWriter() {
+    return spy(
+        AgenticServices.agentBuilder(Agents.CreativeWriter.class)
+            .outputName("story")
+            .chatModel(BASE_MODEL)
+            .build());
+  }
+
+  public static Agents.AudienceEditor newAudienceEditor() {
+    return spy(
+        AgenticServices.agentBuilder(Agents.AudienceEditor.class)
+            .outputName("story")
+            .chatModel(BASE_MODEL)
+            .build());
+  }
+
+  public static Agents.StyleEditor newStyleEditor() {
+    return spy(
+        AgenticServices.agentBuilder(Agents.StyleEditor.class)
+            .outputName("story")
+            .chatModel(BASE_MODEL)
+            .build());
+  }
+
+  public static Agents.StyleScorer newStyleScorer() {
+    return spy(
+        AgenticServices.agentBuilder(Agents.StyleScorer.class)
+            .outputName("score")
+            .chatModel(BASE_MODEL)
+            .build());
+  }
+
+  public static Agents.FoodExpert newFoodExpert() {
+    return spy(
+        AgenticServices.agentBuilder(Agents.FoodExpert.class)
+            .chatModel(BASE_MODEL)
+            .outputName("meals")
+            .build());
+  }
+
+  public static Agents.AstrologyAgent newAstrologyAgent() {
+    return spy(
+        AgenticServices.agentBuilder(Agents.AstrologyAgent.class)
+            .chatModel(BASE_MODEL)
+            .outputName("horoscope")
+            .build());
+  }
 }
