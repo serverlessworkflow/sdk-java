@@ -140,6 +140,10 @@ public final class AgenticDSL {
     return list -> list.agent(agent);
   }
 
+  public static AgentTaskConfigurer conditional(Predicate<?> predicate, Object agent) {
+    return list -> list.agent(agent).when(predicate);
+  }
+
   public static AgentTaskConfigurer emit(Consumer<FuncEmitTaskBuilder> event) {
     return list -> list.emit(event);
   }
