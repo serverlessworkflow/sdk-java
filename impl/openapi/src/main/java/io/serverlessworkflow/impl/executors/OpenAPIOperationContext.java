@@ -36,14 +36,14 @@ public record OpenAPIOperationContext(
         String name = parameter.getName();
         Object value = replacements.get(name);
         if (value != null) {
-          finalPath = path.replace("{" + name + "}", value.toString());
+          finalPath = path.replaceAll("\\{\\s*" + name + "\\s*}", value.toString());
         }
       }
     }
     return finalPath;
   }
 
-  public MultivaluedMap<String, Object> buildQuery(Map<String, Object> replacements) {
+  public MultivaluedMap<String, Object> buildQueryParams(Map<String, Object> replacements) {
     MultivaluedMap<String, Object> queryParams = new MultivaluedHashMap<>();
     for (Parameter parameter : operation.getParameters()) {
       if ("query".equals(parameter.getIn())) {

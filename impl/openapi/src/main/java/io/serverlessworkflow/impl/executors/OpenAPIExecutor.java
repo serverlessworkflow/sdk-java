@@ -78,7 +78,7 @@ public class OpenAPIExecutor implements CallableTask<CallOpenAPI> {
                       .path(ctx.buildPath(withParams.getAdditionalProperties())));
 
           MultivaluedMap<String, Object> queryParams =
-              ctx.buildQuery(withParams.getAdditionalProperties());
+              ctx.buildQueryParams(withParams.getAdditionalProperties());
           queryParams.forEach(
               (key, value) -> {
                 for (Object o : value) {

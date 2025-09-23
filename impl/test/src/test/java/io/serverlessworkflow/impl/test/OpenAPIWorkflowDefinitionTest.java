@@ -20,6 +20,7 @@ import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowModel;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -45,5 +46,11 @@ public class OpenAPIWorkflowDefinitionTest {
             .join();
 
     Assertions.assertThat(model.asCollection()).isNotEmpty();
+    Assertions.assertThat(model.asCollection())
+        .allMatch(
+            m -> {
+              Map<String, Object> pet = m.asMap().orElseThrow(RuntimeException::new);
+              return pet.get("status").equals("available");
+            });
   }
 }
