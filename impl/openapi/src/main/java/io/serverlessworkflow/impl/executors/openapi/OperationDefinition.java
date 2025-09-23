@@ -26,36 +26,36 @@ import io.swagger.v3.oas.models.servers.Server;
 import java.util.List;
 import java.util.Map;
 
-public class OperationDefinition {
+class OperationDefinition {
   private final Operation operation;
   private final String method;
   private final OpenAPI openAPI;
   private final String path;
 
-  public OperationDefinition(OpenAPI openAPI, Operation operation, String path, String method) {
+  OperationDefinition(OpenAPI openAPI, Operation operation, String path, String method) {
     this.openAPI = openAPI;
     this.operation = operation;
     this.path = path;
     this.method = method;
   }
 
-  public String getMethod() {
+  String getMethod() {
     return method;
   }
 
-  public String getPath() {
+  String getPath() {
     return path;
   }
 
-  public Operation getOperation() {
+  Operation getOperation() {
     return operation;
   }
 
-  public List<String> getServers() {
+  List<String> getServers() {
     return openAPI.getServers().stream().map(Server::getUrl).toList();
   }
 
-  public List<Parameter> getParameters() {
+  List<Parameter> getParameters() {
     if (operation.getParameters() == null) {
       return List.of();
     }
@@ -63,7 +63,7 @@ public class OperationDefinition {
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
-  public Map<String, Schema> getBody() {
+  Map<String, Schema> getBody() {
     if (operation.getRequestBody() != null && operation.getRequestBody().getContent() != null) {
       Content content = operation.getRequestBody().getContent();
       if (content.containsKey("application/json")) {
@@ -84,7 +84,7 @@ public class OperationDefinition {
     return Map.of();
   }
 
-  public String getContentType() {
+  String getContentType() {
     String method = getMethod().toUpperCase();
 
     if (method.equals("POST") || method.equals("PUT") || method.equals("PATCH")) {
@@ -115,7 +115,7 @@ public class OperationDefinition {
         "No content type found for operation " + operation.getOperationId() + " [" + method + "]");
   }
 
-  public Schema<?> resolveSchema(String ref) {
+  Schema<?> resolveSchema(String ref) {
     if (ref == null || !ref.startsWith("#/components/schemas/")) {
       throw new IllegalArgumentException("Unsupported $ref format: " + ref);
     }

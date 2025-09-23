@@ -24,17 +24,17 @@ import java.net.URI;
 import java.util.List;
 import java.util.Set;
 
-public class OpenAPIProcessor {
+class OpenAPIProcessor {
 
   private final String operationId;
   private final URI openAPIEndpoint;
 
-  public OpenAPIProcessor(String operationId, URI openAPIEndpoint) {
+  OpenAPIProcessor(String operationId, URI openAPIEndpoint) {
     this.operationId = operationId;
     this.openAPIEndpoint = openAPIEndpoint;
   }
 
-  public OperationDefinition parse() {
+  OperationDefinition parse() {
     OpenAPIV3Parser parser = new OpenAPIV3Parser();
     ParseOptions opts = new ParseOptions();
     opts.setResolve(true);
@@ -45,7 +45,7 @@ public class OpenAPIProcessor {
     return getOperation(openapi);
   }
 
-  public OperationDefinition getOperation(OpenAPI openAPI) {
+  OperationDefinition getOperation(OpenAPI openAPI) {
     if (openAPI == null || openAPI.getPaths() == null) {
       throw new IllegalArgumentException("Invalid OpenAPI document");
     }

@@ -17,6 +17,7 @@ package io.serverlessworkflow.impl.test;
 
 import static io.serverlessworkflow.api.WorkflowReader.readWorkflowFromClasspath;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -27,6 +28,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import okhttp3.OkHttpClient;
 import okhttp3.mockwebserver.MockResponse;
@@ -64,6 +66,34 @@ public class OpenAPITest {
                   }
                   """;
 
+  private static String PROJECT_JSON_FALSE =
+      """
+                  {
+                      "success": false,
+                      "error": {
+                          "code": "PROJECT_CONFLICT",
+                          "message": "A project with the code "crm-2025" already exists.",
+                          "details": null
+                      }
+                  }
+                  """;
+
+  private static String PROJECT_GET_JSON_POSITIVE =
+      """
+                  {
+                    "success": true,
+                    "data": {
+                      "id": 40099,
+                      "name": "Severus Calix",
+                      "email": "severus.calix@hive-terra.example.com"
+                    },
+                    "meta": {
+                      "request_id": "req_terra123def456",
+                      "timestamp": "999.M41-01-20T12:00:00Z"
+                    }
+                  }
+                  """;
+
   @BeforeEach
   void setUp() throws IOException {
     authServer = new MockWebServer();
@@ -86,11 +116,11 @@ public class OpenAPITest {
   }
 
   @Test
-  public void testOpenAPIBearerQueryInlinedBodyWithPositiveResponce() throws Exception {
+  public void testOpenAPIBearerQueryInlinedBodyWithPositiveResponse() throws Exception {
     Workflow workflow =
         readWorkflowFromClasspath("workflows-samples/openapi/project-post-positive.yaml");
 
-    URL url = this.getClass().getResource("/workflows-samples/openapi/schema.yaml");
+    URL url = this.getClass().getResource("/schema/openapi/openapi.yaml");
 
     Path workflowPath = Path.of(url.getPath());
     String yaml = Files.readString(workflowPath, StandardCharsets.UTF_8);
@@ -105,7 +135,7 @@ public class OpenAPITest {
         new MockResponse()
             .setBody(PROJECT_JSON_SUCCESS)
             .setHeader("Content-Type", "application/json")
-            .setResponseCode(200));
+            .setResponseCode(201));
 
     Map<String, Object> result;
 
@@ -124,5 +154,166 @@ public class OpenAPITest {
     assertTrue(restRequest.getPath().contains("lang=en"));
     assertEquals("application/json", restRequest.getHeader("Content-Type"));
     assertEquals("Bearer eyJhbnNpc2l0b3IuYm9sdXMubWFnbnVz", restRequest.getHeader("Authorization"));
+
+    assertEquals(true, result.get("success"));
+    Map<String, Object> data = (Map<String, Object>) result.get("data");
+    assertEquals(55504, data.get("id"));
+    assertEquals("CRM", data.get("name"));
+    assertEquals("crm-20251111", data.get("code"));
+    assertEquals(12345, data.get("ownerId"));
+    assertEquals("2025-09-20T00:58:50.170784Z", data.get("created_at"));
+    assertTrue(data.containsKey("members"));
+    List<Integer> members = (List<Integer>) data.get("members");
+    assertEquals(2, members.size());
+    assertEquals(12345, members.get(0));
+    assertEquals(67890, members.get(1));
+  }
+
+  @Test
+  public void testOpenAPIBearerQueryInlinedBodyWithNegativeResponse() throws Exception {
+    Workflow workflow =
+        readWorkflowFromClasspath("workflows-samples/openapi/project-post-positive.yaml");
+
+    URL url = this.getClass().getResource("/schema/openapi/openapi.yaml");
+
+    Path workflowPath = Path.of(url.getPath());
+    String yaml = Files.readString(workflowPath, StandardCharsets.UTF_8);
+
+    openApiServer.enqueue(
+        new MockResponse()
+            .setBody(yaml)
+            .setHeader("Content-Type", "application/yaml")
+            .setResponseCode(200));
+
+    restServer.enqueue(
+        new MockResponse()
+            .setBody(PROJECT_JSON_FALSE)
+            .setHeader("Content-Type", "application/json")
+            .setResponseCode(409));
+
+    Map<String, Object> result;
+
+    Exception exception = null;
+
+    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
+      result =
+          app.workflowDefinition(workflow).instance(Map.of()).start().get().asMap().orElseThrow();
+    } catch (Exception e) {
+      exception = e;
+    }
+
+    RecordedRequest restRequest = restServer.takeRequest();
+    assertEquals("POST", restRequest.getMethod());
+    assertTrue(restRequest.getPath().startsWith("/projects?"));
+    assertTrue(restRequest.getPath().contains("notifyMembers=true"));
+    assertTrue(restRequest.getPath().contains("validateOnly=false"));
+    assertTrue(restRequest.getPath().contains("lang=en"));
+    assertEquals("application/json", restRequest.getHeader("Content-Type"));
+    assertEquals("Bearer eyJhbnNpc2l0b3IuYm9sdXMubWFnbnVz", restRequest.getHeader("Authorization"));
+
+    assertNotNull(exception);
+    assertTrue(exception.getMessage().contains("status=409"));
+    assertTrue(exception.getMessage().contains("title=HTTP 409 Client Error"));
+  }
+
+  @Test
+  public void testOpenAPIGetWithPositiveResponse() throws Exception {
+    Workflow workflow =
+        readWorkflowFromClasspath("workflows-samples/openapi/get-user-get-request.yaml");
+
+    URL url = this.getClass().getResource("/schema/openapi/openapi.yaml");
+
+    Path workflowPath = Path.of(url.getPath());
+    String yaml = Files.readString(workflowPath, StandardCharsets.UTF_8);
+
+    openApiServer.enqueue(
+        new MockResponse()
+            .setBody(yaml)
+            .setHeader("Content-Type", "application/yaml")
+            .setResponseCode(200));
+
+    restServer.enqueue(
+        new MockResponse()
+            .setBody(PROJECT_GET_JSON_POSITIVE)
+            .setHeader("Content-Type", "application/json")
+            .setResponseCode(200));
+
+    Map<String, Object> result;
+    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
+      result =
+          app.workflowDefinition(workflow).instance(Map.of()).start().get().asMap().orElseThrow();
+    } catch (Exception e) {
+      throw new RuntimeException("Workflow execution failed", e);
+    }
+
+    RecordedRequest restRequest = restServer.takeRequest();
+    assertEquals("GET", restRequest.getMethod());
+    assertTrue(restRequest.getPath().startsWith("/users/40099?"));
+
+    assertTrue(result.containsKey("data"));
+    Map<String, Object> data = (Map<String, Object>) result.get("data");
+    assertEquals(40099, data.get("id"));
+    assertEquals("Severus Calix", data.get("name"));
+    assertEquals("severus.calix@hive-terra.example.com", data.get("email"));
+  }
+
+  @Test
+  public void testOpenAPIGetWithPositiveResponseAndVars() throws Exception {
+    Workflow workflow =
+        readWorkflowFromClasspath("workflows-samples/openapi/get-user-get-request-vars.yaml");
+
+    URL url = this.getClass().getResource("/schema/openapi/openapi.yaml");
+
+    Path workflowPath = Path.of(url.getPath());
+    String yaml = Files.readString(workflowPath, StandardCharsets.UTF_8);
+
+    openApiServer.enqueue(
+        new MockResponse()
+            .setBody(yaml)
+            .setHeader("Content-Type", "application/yaml")
+            .setResponseCode(200));
+
+    restServer.enqueue(
+        new MockResponse()
+            .setBody(PROJECT_GET_JSON_POSITIVE)
+            .setHeader("Content-Type", "application/json")
+            .setResponseCode(200));
+
+    Map<String, Object> result;
+    Map<String, Object> params =
+        Map.of(
+            "userId",
+            40099,
+            "id",
+            "id",
+            "name",
+            "name",
+            "email",
+            "email",
+            "include_deleted",
+            "false",
+            "lang",
+            "en",
+            "format",
+            "full",
+            "limit",
+            20);
+
+    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
+      result =
+          app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
+    } catch (Exception e) {
+      throw new RuntimeException("Workflow execution failed", e);
+    }
+
+    RecordedRequest restRequest = restServer.takeRequest();
+    assertEquals("GET", restRequest.getMethod());
+    assertTrue(restRequest.getPath().startsWith("/users/40099?"));
+
+    assertTrue(result.containsKey("data"));
+    Map<String, Object> data = (Map<String, Object>) result.get("data");
+    assertEquals(40099, data.get("id"));
+    assertEquals("Severus Calix", data.get("name"));
+    assertEquals("severus.calix@hive-terra.example.com", data.get("email"));
   }
 }

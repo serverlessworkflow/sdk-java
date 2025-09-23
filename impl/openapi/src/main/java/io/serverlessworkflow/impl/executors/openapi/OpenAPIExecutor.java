@@ -25,8 +25,8 @@ import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.WorkflowException;
 import io.serverlessworkflow.impl.WorkflowModel;
-import io.serverlessworkflow.impl.WorkflowValueResolver;
 import io.serverlessworkflow.impl.executors.CallableTask;
 import io.serverlessworkflow.impl.executors.http.HttpExecutor;
 import io.serverlessworkflow.impl.expressions.ExpressionDescriptor;
@@ -34,7 +34,6 @@ import io.serverlessworkflow.impl.expressions.ExpressionFactory;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
 import jakarta.ws.rs.core.UriBuilder;
 import java.net.URI;
-import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -47,39 +46,6 @@ public class OpenAPIExecutor implements CallableTask<CallOpenAPI> {
 
   private ResourceLoader resourceLoader;
 
-  private static TargetSupplier getTargetSupplier(
-      Endpoint endpoint, ExpressionFactory expressionFactory) {
-    if (endpoint.getEndpointConfiguration() != null) {
-      EndpointUri uri = endpoint.getEndpointConfiguration().getUri();
-      if (uri.getLiteralEndpointURI() != null) {
-        return getURISupplier(uri.getLiteralEndpointURI());
-      } else if (uri.getExpressionEndpointURI() != null) {
-        return new ExpressionURISupplier(
-            expressionFactory.resolveString(
-                ExpressionDescriptor.from(uri.getExpressionEndpointURI())));
-      }
-    } else if (endpoint.getRuntimeExpression() != null) {
-      return new ExpressionURISupplier(
-          expressionFactory.resolveString(
-              ExpressionDescriptor.from(endpoint.getRuntimeExpression())));
-    } else if (endpoint.getUriTemplate() != null) {
-      return getURISupplier(endpoint.getUriTemplate());
-    }
-    throw new IllegalArgumentException("Invalid endpoint definition " + endpoint);
-  }
-
-  private static TargetSupplier getURISupplier(UriTemplate template) {
-    if (template.getLiteralUri() != null) {
-      return (w, t, n) -> template.getLiteralUri();
-    } else if (template.getLiteralUriTemplate() != null) {
-      return (w, t, n) ->
-          UriBuilder.fromUri(template.getLiteralUriTemplate())
-              .resolveTemplates(n.asMap().orElseThrow(), false)
-              .build();
-    }
-    throw new IllegalArgumentException("Invalid uritemplate definition " + template);
-  }
-
   @Override
   public boolean accept(Class<? extends TaskBase> clazz) {
     return clazz.equals(CallOpenAPI.class);
@@ -88,37 +54,38 @@ public class OpenAPIExecutor implements CallableTask<CallOpenAPI> {
   @Override
   public CompletableFuture<WorkflowModel> apply(
       WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel input) {
-
     String operationId = task.getWith().getOperationId();
     URI openAPIEndpoint = targetSupplier.apply(workflowContext, taskContext, input);
     OpenAPIProcessor processor = new OpenAPIProcessor(operationId, openAPIEndpoint);
     OperationDefinition operation = processor.parse();
 
     OperationPathResolver pathResolver =
-        new OperationPathResolver(operation.getPath(), input.asMap().orElseThrow());
-    URI resolvedPath = pathResolver.passPathParams().apply(workflowContext, taskContext, input);
-
-    HttpCallAdapter httpCallAdapter =
-        new HttpCallAdapter()
-            .auth(task.getWith().getAuthentication())
-            .body(operation.getBody())
-            .contentType(operation.getContentType())
-            .headers(
-                operation.getParameters().stream()
-                    .filter(p -> "header".equals(p.getIn()))
-                    .collect(Collectors.toUnmodifiableSet()))
-            .method(operation.getMethod())
-            .query(
-                operation.getParameters().stream()
-                    .filter(p -> "query".equals(p.getIn()))
-                    .collect(Collectors.toUnmodifiableSet()))
-            .redirect(task.getWith().isRedirect())
-            .target(resolvedPath)
-            .workflowParams(task.getWith().getParameters().getAdditionalProperties());
+        new OperationPathResolver(
+            operation.getPath(),
+            application,
+            task.getWith().getParameters().getAdditionalProperties());
 
     return CompletableFuture.supplyAsync(
         () -> {
-          RuntimeException ex = null;
+          HttpCallAdapter httpCallAdapter =
+              new HttpCallAdapter()
+                  .auth(task.getWith().getAuthentication())
+                  .body(operation.getBody())
+                  .contentType(operation.getContentType())
+                  .headers(
+                      operation.getParameters().stream()
+                          .filter(p -> "header".equals(p.getIn()))
+                          .collect(Collectors.toUnmodifiableSet()))
+                  .method(operation.getMethod())
+                  .query(
+                      operation.getParameters().stream()
+                          .filter(p -> "query".equals(p.getIn()))
+                          .collect(Collectors.toUnmodifiableSet()))
+                  .redirect(task.getWith().isRedirect())
+                  .target(pathResolver.resolve(workflowContext, taskContext, input))
+                  .workflowParams(task.getWith().getParameters().getAdditionalProperties());
+
+          WorkflowException workflowException = null;
 
           for (var server : operation.getServers()) {
             CallHTTP callHTTP = httpCallAdapter.server(server).build();
@@ -127,14 +94,13 @@ public class OpenAPIExecutor implements CallableTask<CallOpenAPI> {
 
             try {
               return executor.apply(workflowContext, taskContext, input).get();
+            } catch (WorkflowException e) {
+              workflowException = e;
             } catch (Exception e) {
-
-              System.out.println("Call to " + server + " failed: " + e.getMessage());
-              ex = new RuntimeException(e);
+              throw new RuntimeException(e);
             }
           }
-          Objects.requireNonNull(ex, "Should have at least one exception");
-          throw ex; // if we there, we failed all servers and ex is not null
+          throw workflowException; // if we there, we failed all servers and ex is not null
         },
         workflowContext.definition().application().executorService());
   }
@@ -154,20 +120,35 @@ public class OpenAPIExecutor implements CallableTask<CallOpenAPI> {
     this.resourceLoader = resourceLoader;
   }
 
-  public interface TargetSupplier {
-    URI apply(WorkflowContext workflow, TaskContext taskContext, WorkflowModel input);
+  private TargetSupplier getTargetSupplier(Endpoint endpoint, ExpressionFactory expressionFactory) {
+    if (endpoint.getEndpointConfiguration() != null) {
+      EndpointUri uri = endpoint.getEndpointConfiguration().getUri();
+      if (uri.getLiteralEndpointURI() != null) {
+        return getURISupplier(uri.getLiteralEndpointURI());
+      } else if (uri.getExpressionEndpointURI() != null) {
+        return new ExpressionURISupplier(
+            expressionFactory.resolveString(
+                ExpressionDescriptor.from(uri.getExpressionEndpointURI())));
+      }
+    } else if (endpoint.getRuntimeExpression() != null) {
+      return new ExpressionURISupplier(
+          expressionFactory.resolveString(
+              ExpressionDescriptor.from(endpoint.getRuntimeExpression())));
+    } else if (endpoint.getUriTemplate() != null) {
+      return getURISupplier(endpoint.getUriTemplate());
+    }
+    throw new IllegalArgumentException("Invalid endpoint definition " + endpoint);
   }
 
-  private static class ExpressionURISupplier implements TargetSupplier {
-    private WorkflowValueResolver<String> expr;
-
-    public ExpressionURISupplier(WorkflowValueResolver<String> expr) {
-      this.expr = expr;
+  private TargetSupplier getURISupplier(UriTemplate template) {
+    if (template.getLiteralUri() != null) {
+      return (w, t, n) -> template.getLiteralUri();
+    } else if (template.getLiteralUriTemplate() != null) {
+      return (w, t, n) ->
+          UriBuilder.fromUri(template.getLiteralUriTemplate())
+              .resolveTemplates(n.asMap().orElseThrow(), false)
+              .build();
     }
-
-    @Override
-    public URI apply(WorkflowContext workflow, TaskContext task, WorkflowModel node) {
-      return URI.create(expr.apply(workflow, task, node));
-    }
+    throw new IllegalArgumentException("Invalid uri template definition " + template);
   }
 }
