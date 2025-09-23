@@ -36,7 +36,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 @SuppressWarnings("rawtypes")
-public class HttpCallAdapter {
+class HttpCallAdapter {
 
   private ReferenceableAuthenticationPolicy auth;
   private Map<String, Schema> body;
@@ -49,19 +49,19 @@ public class HttpCallAdapter {
   private URI target;
   private Map<String, Object> workflowParams;
 
-  public HttpCallAdapter auth(ReferenceableAuthenticationPolicy policy) {
+  HttpCallAdapter auth(ReferenceableAuthenticationPolicy policy) {
     if (policy != null) {
       this.auth = policy;
     }
     return this;
   }
 
-  public HttpCallAdapter body(Map<String, Schema> body) {
+  HttpCallAdapter body(Map<String, Schema> body) {
     this.body = body;
     return this;
   }
 
-  public CallHTTP build() {
+  CallHTTP build() {
     CallHTTP callHTTP = new CallHTTP();
 
     HTTPArguments httpArgs = new HTTPArguments();
@@ -96,43 +96,42 @@ public class HttpCallAdapter {
     return callHTTP;
   }
 
-  public HttpCallAdapter contentType(String contentType) {
+  HttpCallAdapter contentType(String contentType) {
     this.contentType = contentType;
     return this;
   }
 
-  public HttpCallAdapter headers(
-      Collection<io.swagger.v3.oas.models.parameters.Parameter> headers) {
+  HttpCallAdapter headers(Collection<io.swagger.v3.oas.models.parameters.Parameter> headers) {
     this.headers = headers;
     return this;
   }
 
-  public HttpCallAdapter method(String method) {
+  HttpCallAdapter method(String method) {
     this.method = method;
     return this;
   }
 
-  public HttpCallAdapter query(Collection<io.swagger.v3.oas.models.parameters.Parameter> query) {
+  HttpCallAdapter query(Collection<io.swagger.v3.oas.models.parameters.Parameter> query) {
     this.query = query;
     return this;
   }
 
-  public HttpCallAdapter redirect(boolean redirect) {
+  HttpCallAdapter redirect(boolean redirect) {
     this.redirect = redirect;
     return this;
   }
 
-  public HttpCallAdapter server(String server) {
+  HttpCallAdapter server(String server) {
     this.server = URI.create(server);
     return this;
   }
 
-  public HttpCallAdapter target(URI target) {
+  HttpCallAdapter target(URI target) {
     this.target = target;
     return this;
   }
 
-  public HttpCallAdapter workflowParams(Map<String, Object> workflowParams) {
+  HttpCallAdapter workflowParams(Map<String, Object> workflowParams) {
     this.workflowParams = workflowParams;
     return this;
   }
@@ -194,10 +193,7 @@ public class HttpCallAdapter {
           } else if (value instanceof Character asCharacter) {
             httpQuery.setAdditionalProperty(name, asCharacter.toString());
           } else {
-            throw new IllegalArgumentException(
-                "Query parameter "
-                    + name
-                    + " must be a type of String, Number, Boolean or Character");
+            httpQuery.setAdditionalProperty(name, value.toString());
           }
         }
       }

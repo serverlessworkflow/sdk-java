@@ -16,32 +16,20 @@
 package io.serverlessworkflow.impl.executors.openapi;
 
 import io.serverlessworkflow.impl.TaskContext;
-import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
-import io.serverlessworkflow.impl.expressions.ExpressionDescriptor;
-import jakarta.ws.rs.core.UriBuilder;
 import java.net.URI;
-import java.util.Map;
 
-class OperationPathResolver {
+class ExpressionURISupplier implements TargetSupplier {
+  private WorkflowValueResolver<String> resolver;
 
-  private final Map<String, Object> args;
-  private final String path;
-  private WorkflowApplication application;
-
-  OperationPathResolver(String path, WorkflowApplication application, Map<String, Object> args) {
-    this.path = path;
-    this.args = args;
-    this.application = application;
+  ExpressionURISupplier(WorkflowValueResolver<String> resolver) {
+    this.resolver = resolver;
   }
 
-  URI resolve(WorkflowContext workflow, TaskContext task, WorkflowModel model) {
-    WorkflowValueResolver<Map<String, Object>> asMap =
-        application.expressionFactory().resolveMap(ExpressionDescriptor.object(args));
-    return UriBuilder.fromUri(path)
-        .resolveTemplates(asMap.apply(workflow, task, model), false)
-        .build();
+  @Override
+  public URI apply(WorkflowContext workflow, TaskContext task, WorkflowModel node) {
+    return URI.create(resolver.apply(workflow, task, node));
   }
 }

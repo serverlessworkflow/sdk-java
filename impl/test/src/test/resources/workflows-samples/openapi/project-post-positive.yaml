@@ -4,7 +4,7 @@ document:
   name: openapi-example
   version: '0.1.0'
 do:
-  - findPet:
+  - addProject:
       call: openapi
       with:
         document:
