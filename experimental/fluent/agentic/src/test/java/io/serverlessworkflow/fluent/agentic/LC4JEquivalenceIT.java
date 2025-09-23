@@ -16,11 +16,15 @@
 package io.serverlessworkflow.fluent.agentic;
 
 import static io.serverlessworkflow.fluent.agentic.AgentWorkflowBuilder.workflow;
+import static io.serverlessworkflow.fluent.agentic.dsl.AgenticDSL.conditional;
+import static io.serverlessworkflow.fluent.agentic.dsl.AgenticDSL.doTasks;
+import static io.serverlessworkflow.fluent.spec.dsl.DSL.tasks;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import dev.langchain4j.agentic.AgenticServices;
 import dev.langchain4j.agentic.workflow.HumanInTheLoop;
+import io.serverlessworkflow.api.types.FlowDirectiveEnum;
 import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.api.types.func.CallTaskJava;
@@ -178,17 +182,6 @@ public class LC4JEquivalenceIT {
 
   // TODO
   @Test
-  @DisplayName("Conditional agents via choice(...)")
-  public void conditionalWorkflow() {
-
-    var category = AgentsUtils.newCategoryRouter();
-    var a1 = AgentsUtils.newMedicalExpert();
-    var a2 = AgentsUtils.newTechnicalExpert();
-    var a3 = AgentsUtils.newLegalExpert();
-  }
-
-  // TODO
-  @Test
   @DisplayName("Error handling with agents")
   public void errorHandling() {
     var a1 = AgentsUtils.newCreativeWriter();
@@ -218,6 +211,53 @@ public class LC4JEquivalenceIT {
     }
 
     assertThat(result).containsKey("story");
+  }
+
+  @SuppressWarnings("unchecked")
+  @Test
+  @DisplayName("Conditional agents via choice(...)")
+  public void conditionalWorkflow() {
+
+    var category = AgentsUtils.newCategoryRouter();
+    var a1 = AgentsUtils.newMedicalExpert();
+    var a2 = AgentsUtils.newTechnicalExpert();
+    var a3 = AgentsUtils.newLegalExpert();
+
+    Workflow wf =
+        workflow("conditional")
+            .sequence("process", category)
+            .tasks(
+                t ->
+                    t.switchCase(
+                        p ->
+                            p.onPredicate(
+                                item ->
+                                    item.when(
+                                            m ->
+                                                "unknown"
+                                                    .equals(
+                                                        ((Map<String, Object>) m).get("category")))
+                                        .then(FlowDirectiveEnum.END))))
+            .tasks(
+                doTasks(
+                    conditional(
+                        m -> "medical".equals(((Map<String, Object>) m).get("category")), a1),
+                    conditional(
+                        m -> "technical".equals(((Map<String, Object>) m).get("category")), a2),
+                    conditional(
+                        m -> "legal".equals(((Map<String, Object>) m).get("category")), a3)))
+            .build();
+
+    Map<String, Object> input = Map.of("question", "What is the best treatment for a common cold?");
+
+    Map<String, Object> result;
+    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
+      result = app.workflowDefinition(wf).instance(input).start().get().asMap().orElseThrow();
+    } catch (Exception e) {
+      throw new RuntimeException("Workflow execution failed", e);
+    }
+
+    assertThat(result).containsKey("response");
   }
 
   @Test
