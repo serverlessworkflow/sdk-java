@@ -21,6 +21,7 @@ import io.swagger.v3.oas.models.parameters.Parameter;
 import jakarta.ws.rs.core.MultivaluedHashMap;
 import jakarta.ws.rs.core.MultivaluedMap;
 import java.util.Map;
+import java.util.Objects;
 
 public record OpenAPIOperationContext(
     String operationId, String path, PathItem.HttpMethod httpMethod, Operation operation) {
@@ -31,6 +32,9 @@ public record OpenAPIOperationContext(
 
   public String buildPath(Map<String, Object> replacements) {
     String finalPath = path;
+    if (Objects.isNull(operation.getParameters())) {
+      return "";
+    }
     for (Parameter parameter : operation.getParameters()) {
       if ("path".equals(parameter.getIn())) {
         String name = parameter.getName();
@@ -44,6 +48,9 @@ public record OpenAPIOperationContext(
   }
 
   public MultivaluedMap<String, Object> buildQueryParams(Map<String, Object> replacements) {
+    if (Objects.isNull(operation.getParameters())) {
+      return new MultivaluedHashMap<>();
+    }
     MultivaluedMap<String, Object> queryParams = new MultivaluedHashMap<>();
     for (Parameter parameter : operation.getParameters()) {
       if ("query".equals(parameter.getIn())) {

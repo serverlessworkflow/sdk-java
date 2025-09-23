@@ -24,25 +24,31 @@ import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.WorkflowError;
+import io.serverlessworkflow.impl.WorkflowException;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.parser.OpenAPIV3Parser;
+import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.client.Invocation;
 import jakarta.ws.rs.client.WebTarget;
 import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.Response;
 import java.net.URI;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class OpenAPIExecutor implements CallableTask<CallOpenAPI> {
 
   private static final Client client = ClientBuilder.newClient();
   private WebTargetSupplier webTargetSupplier;
   private RequestSupplier requestSupplier;
-  private final OpenAPIModelConverter converter = new OpenAPIModelConverter() {};
+  private OpenAPIModelConverter converter = new OpenAPIModelConverter() {};
 
   @FunctionalInterface
   private interface WebTargetSupplier {
@@ -59,7 +65,6 @@ public class OpenAPIExecutor implements CallableTask<CallOpenAPI> {
   public void init(
       CallOpenAPI task, Workflow workflow, WorkflowApplication application, ResourceLoader loader) {
     OpenAPIArguments args = task.getWith();
-    WithOpenAPIParameters withParams = args.getParameters();
 
     URI uri = getOpenAPIDocumentURI(args.getDocument().getEndpoint().getUriTemplate());
 
@@ -69,31 +74,73 @@ public class OpenAPIExecutor implements CallableTask<CallOpenAPI> {
 
     OpenAPIOperationContext ctx = generateContext(openAPI, args, uri);
 
-    this.webTargetSupplier =
-        () -> {
-          final AtomicReference<WebTarget> webTarget =
-              new AtomicReference<>(
-                  client
-                      .target(openAPI.getServers().get(0).getUrl())
-                      .path(ctx.buildPath(withParams.getAdditionalProperties())));
+    WithOpenAPIParameters withParams =
+        Optional.ofNullable(args.getParameters()).orElse(new WithOpenAPIParameters());
 
-          MultivaluedMap<String, Object> queryParams =
-              ctx.buildQueryParams(withParams.getAdditionalProperties());
-          queryParams.forEach(
-              (key, value) -> {
-                for (Object o : value) {
-                  webTarget.set(webTarget.get().queryParam(key, o));
-                }
-              });
-
-          return webTarget.get();
-        };
+    this.webTargetSupplier = getTargetSupplier(openAPI, ctx, withParams);
 
     this.requestSupplier =
         (request, w, taskContext, node) -> {
-          Object response = request.method(ctx.httpMethodName(), node.objectClass());
-          return converter.toModel(application.modelFactory(), node, response);
+          try {
+            Response response = request.method(ctx.httpMethodName(), Response.class);
+
+            if (!args.isRedirect() && !is2xx(response)) {
+              throw new WorkflowException(
+                  WorkflowError.communication(
+                          response.getStatus(),
+                          taskContext,
+                          "Received a non-2xx nor 3xx response but redirects are enabled")
+                      .build());
+            }
+
+            if (args.isRedirect() && isNot2xxNor3xx(response)) {
+              throw new WorkflowException(
+                  WorkflowError.communication(
+                          response.getStatus(),
+                          taskContext,
+                          "Received a non-2xx nor 3xx response but redirects are enabled")
+                      .build());
+            }
+
+            return converter.toModel(
+                application.modelFactory(), node, response.readEntity(node.objectClass()));
+          } catch (WebApplicationException exception) {
+            throw new WorkflowException(
+                WorkflowError.communication(
+                        exception.getResponse().getStatus(), taskContext, exception)
+                    .build());
+          }
         };
+  }
+
+  private static WebTargetSupplier getTargetSupplier(
+      OpenAPI openAPI, OpenAPIOperationContext ctx, WithOpenAPIParameters withParams) {
+    return () -> {
+      WebTarget webTarget =
+          client
+              .target(openAPI.getServers().get(0).getUrl())
+              .path(ctx.buildPath(withParams.getAdditionalProperties()));
+
+      MultivaluedMap<String, Object> queryParams =
+          ctx.buildQueryParams(withParams.getAdditionalProperties());
+
+      for (Map.Entry<String, List<Object>> queryParam : queryParams.entrySet()) {
+        for (Object value : queryParam.getValue()) {
+          webTarget = webTarget.queryParam(queryParam.getKey(), value);
+        }
+      }
+
+      return webTarget;
+    };
+  }
+
+  private static boolean is2xx(Response response) {
+    return response.getStatusInfo().getFamily().equals(Response.Status.Family.SUCCESSFUL);
+  }
+
+  private static boolean isNot2xxNor3xx(Response response) {
+    return !(response.getStatusInfo().getFamily().equals(Response.Status.Family.SUCCESSFUL)
+        || response.getStatusInfo().getFamily().equals(Response.Status.Family.REDIRECTION));
   }
 
   private static OpenAPIOperationContext generateContext(
@@ -142,7 +189,6 @@ public class OpenAPIExecutor implements CallableTask<CallOpenAPI> {
     if (template.getLiteralUri() != null) {
       return template.getLiteralUri();
     } else if (template.getLiteralUriTemplate() != null) {
-      // TODO: Support
       // https://github.com/serverlessworkflow/specification/blob/main/dsl-reference.md#uri-template
       throw new UnsupportedOperationException(
           "URI templates with parameters are not supported yet");
