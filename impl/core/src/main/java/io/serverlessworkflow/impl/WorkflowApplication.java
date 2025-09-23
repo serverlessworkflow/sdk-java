@@ -16,7 +16,6 @@
 package io.serverlessworkflow.impl;
 
 import com.github.f4b6a3.ulid.UlidCreator;
-import io.serverlessworkflow.api.types.Document;
 import io.serverlessworkflow.api.types.SchemaInline;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.events.EventConsumer;
@@ -52,9 +51,9 @@ public class WorkflowApplication implements AutoCloseable {
   private final ExpressionFactory exprFactory;
   private final ResourceLoaderFactory resourceLoaderFactory;
   private final SchemaValidatorFactory schemaValidatorFactory;
-  private final WorkflowIdFactory idFactory;
+  private final WorkflowInstanceIdFactory idFactory;
   private final Collection<WorkflowExecutionListener> listeners;
-  private final Map<WorkflowId, WorkflowDefinition> definitions;
+  private final Map<WorkflowDefinitionId, WorkflowDefinition> definitions;
   private final WorkflowPositionFactory positionFactory;
   private final ExecutorServiceFactory executorFactory;
   private final RuntimeDescriptorFactory runtimeDescriptorFactory;
@@ -106,7 +105,7 @@ public class WorkflowApplication implements AutoCloseable {
     return eventPublishers;
   }
 
-  public WorkflowIdFactory idFactory() {
+  public WorkflowInstanceIdFactory idFactory() {
     return idFactory;
   }
 
@@ -142,7 +141,7 @@ public class WorkflowApplication implements AutoCloseable {
     private ResourceLoaderFactory resourceLoaderFactory = DefaultResourceLoaderFactory.get();
     private SchemaValidatorFactory schemaValidatorFactory;
     private WorkflowPositionFactory positionFactory = () -> new QueueWorkflowPosition();
-    private WorkflowIdFactory idFactory = () -> UlidCreator.getMonotonicUlid().toString();
+    private WorkflowInstanceIdFactory idFactory = () -> UlidCreator.getMonotonicUlid().toString();
     private ExecutorServiceFactory executorFactory = new DefaultExecutorServiceFactory();
     private EventConsumer<?, ?> eventConsumer;
     private Collection<EventPublisher> eventPublishers = new ArrayList<>();
@@ -192,7 +191,7 @@ public class WorkflowApplication implements AutoCloseable {
       return this;
     }
 
-    public Builder withIdFactory(WorkflowIdFactory factory) {
+    public Builder withIdFactory(WorkflowInstanceIdFactory factory) {
       this.idFactory = factory;
       return this;
     }
@@ -249,15 +248,13 @@ public class WorkflowApplication implements AutoCloseable {
     }
   }
 
-  private static record WorkflowId(String namespace, String name, String version) {
-    static WorkflowId of(Document document) {
-      return new WorkflowId(document.getNamespace(), document.getName(), document.getVersion());
-    }
+  public Map<WorkflowDefinitionId, WorkflowDefinition> workflowDefinitions() {
+    return Collections.unmodifiableMap(definitions);
   }
 
   public WorkflowDefinition workflowDefinition(Workflow workflow) {
     return definitions.computeIfAbsent(
-        WorkflowId.of(workflow.getDocument()), k -> WorkflowDefinition.of(this, workflow));
+        WorkflowDefinitionId.of(workflow), k -> WorkflowDefinition.of(this, workflow));
   }
 
   @Override
