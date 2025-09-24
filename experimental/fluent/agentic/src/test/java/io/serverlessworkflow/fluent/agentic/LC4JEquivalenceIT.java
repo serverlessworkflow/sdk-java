@@ -180,7 +180,6 @@ public class LC4JEquivalenceIT {
     assertEquals("Fake conflict response", result.get("movies"));
   }
 
-  // TODO
   @Test
   @DisplayName("Error handling with agents")
   public void errorHandling() {
@@ -232,20 +231,13 @@ public class LC4JEquivalenceIT {
                         p ->
                             p.onPredicate(
                                 item ->
-                                    item.when(
-                                            m ->
-                                                "unknown"
-                                                    .equals(
-                                                        ((Map<String, Object>) m).get("category")))
+                                    item.when(Agents.RequestCategory.UNKNOWN::equals)
                                         .then(FlowDirectiveEnum.END))))
             .tasks(
                 doTasks(
-                    conditional(
-                        m -> "medical".equals(((Map<String, Object>) m).get("category")), a1),
-                    conditional(
-                        m -> "technical".equals(((Map<String, Object>) m).get("category")), a2),
-                    conditional(
-                        m -> "legal".equals(((Map<String, Object>) m).get("category")), a3)))
+                    conditional(Agents.RequestCategory.MEDICAL::equals, a1),
+                    conditional(Agents.RequestCategory.TECHNICAL::equals, a2),
+                    conditional(Agents.RequestCategory.LEGAL::equals, a3)))
             .build();
 
     Map<String, Object> input = Map.of("question", "What is the best treatment for a common cold?");
