@@ -144,6 +144,14 @@ public final class AgenticDSL {
     return list -> list.agent(agent).when(predicate);
   }
 
+  public static AgentTaskConfigurer conditionalSequence(Predicate<?> predicate, Object... agents) {
+    return list -> list.sequence(agents).when(predicate);
+  }
+
+  public static AgentTaskConfigurer conditionalParallel(Predicate<?> predicate, Object... agents) {
+    return list -> list.parallel(agents).when(predicate);
+  }
+
   public static AgentTaskConfigurer emit(Consumer<FuncEmitTaskBuilder> event) {
     return list -> list.emit(event);
   }
