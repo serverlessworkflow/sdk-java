@@ -18,13 +18,14 @@ package io.serverlessworkflow.fluent.agentic;
 import static io.serverlessworkflow.fluent.agentic.AgentWorkflowBuilder.workflow;
 import static io.serverlessworkflow.fluent.agentic.dsl.AgenticDSL.conditional;
 import static io.serverlessworkflow.fluent.agentic.dsl.AgenticDSL.doTasks;
+import static io.serverlessworkflow.fluent.agentic.dsl.AgenticDSL.loop;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.tasks;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import dev.langchain4j.agentic.AgenticServices;
+import dev.langchain4j.agentic.scope.AgenticScope;
 import dev.langchain4j.agentic.workflow.HumanInTheLoop;
-import io.serverlessworkflow.api.types.FlowDirectiveEnum;
 import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.api.types.func.CallTaskJava;
@@ -33,6 +34,7 @@ import io.serverlessworkflow.impl.WorkflowApplication;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Predicate;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -41,11 +43,14 @@ public class LC4JEquivalenceIT {
   @Test
   @DisplayName("Sequential agents via DSL.sequence(...)")
   public void sequentialWorkflow() {
-    var a1 = AgentsUtils.newCreativeWriter();
-    var a2 = AgentsUtils.newAudienceEditor();
-    var a3 = AgentsUtils.newStyleEditor();
+    var creativeWriter = AgentsUtils.newCreativeWriter();
+    var audienceEditor = AgentsUtils.newAudienceEditor();
+    var styleEditor = AgentsUtils.newStyleEditor();
 
-    Workflow wf = workflow("seqFlow").tasks(tasks -> tasks.sequence("process", a1, a2, a3)).build();
+    Workflow wf =
+        workflow("seqFlow")
+            .tasks(tasks -> tasks.sequence("process", creativeWriter, audienceEditor, styleEditor))
+            .build();
 
     List<TaskItem> items = wf.getDo();
     assertThat(items).hasSize(3);
@@ -113,17 +118,10 @@ public class LC4JEquivalenceIT {
     var scorer = AgentsUtils.newStyleScorer();
     var editor = AgentsUtils.newStyleEditor();
 
+    Predicate<AgenticScope> until = s -> s.readState("score", 0).doubleValue() >= 0.8;
+
     Workflow wf =
-        AgentWorkflowBuilder.workflow("maxFlow")
-            .tasks(
-                d ->
-                    d.loop(
-                        "limit",
-                        l ->
-                            l.maxIterations(5)
-                                .exitCondition(c -> c.readState("score", 0).doubleValue() >= 0.8)
-                                .subAgents("sub", scorer, editor)))
-            .build();
+        AgentWorkflowBuilder.workflow("retryFlow").tasks(loop(until, scorer, 5, editor)).build();
 
     List<TaskItem> items = wf.getDo();
     assertThat(items).hasSize(1);
@@ -152,10 +150,10 @@ public class LC4JEquivalenceIT {
   @Test
   @DisplayName("Parallel agents via DSL.parallel(...)")
   public void parallelWorkflow() {
-    var a1 = AgentsUtils.newFoodExpert();
-    var a2 = AgentsUtils.newMovieExpert();
+    var foodExpert = AgentsUtils.newFoodExpert();
+    var movieExpert = AgentsUtils.newMovieExpert();
 
-    Workflow wf = workflow("forkFlow").parallel("fanout", a1, a2).build();
+    Workflow wf = workflow("forkFlow").parallel("fanout", foodExpert, movieExpert).build();
 
     List<TaskItem> items = wf.getDo();
     assertThat(items).hasSize(1);
@@ -183,11 +181,14 @@ public class LC4JEquivalenceIT {
   @Test
   @DisplayName("Error handling with agents")
   public void errorHandling() {
-    var a1 = AgentsUtils.newCreativeWriter();
-    var a2 = AgentsUtils.newAudienceEditor();
-    var a3 = AgentsUtils.newStyleEditor();
+    var creativeWriter = AgentsUtils.newCreativeWriter();
+    var audienceEditor = AgentsUtils.newAudienceEditor();
+    var styleEditor = AgentsUtils.newStyleEditor();
 
-    Workflow wf = workflow("seqFlow").tasks(tasks -> tasks.sequence("process", a1, a2, a3)).build();
+    Workflow wf =
+        workflow("seqFlow")
+            .tasks(tasks -> tasks.sequence("process", creativeWriter, audienceEditor, styleEditor))
+            .build();
 
     List<TaskItem> items = wf.getDo();
     assertThat(items).hasSize(3);
@@ -218,26 +219,18 @@ public class LC4JEquivalenceIT {
   public void conditionalWorkflow() {
 
     var category = AgentsUtils.newCategoryRouter();
-    var a1 = AgentsUtils.newMedicalExpert();
-    var a2 = AgentsUtils.newTechnicalExpert();
-    var a3 = AgentsUtils.newLegalExpert();
+    var medicalExpert = AgentsUtils.newMedicalExpert();
+    var technicalExpert = AgentsUtils.newTechnicalExpert();
+    var legalExpert = AgentsUtils.newLegalExpert();
 
     Workflow wf =
         workflow("conditional")
             .sequence("process", category)
             .tasks(
-                t ->
-                    t.switchCase(
-                        p ->
-                            p.onPredicate(
-                                item ->
-                                    item.when(Agents.RequestCategory.UNKNOWN::equals)
-                                        .then(FlowDirectiveEnum.END))))
-            .tasks(
                 doTasks(
-                    conditional(Agents.RequestCategory.MEDICAL::equals, a1),
-                    conditional(Agents.RequestCategory.TECHNICAL::equals, a2),
-                    conditional(Agents.RequestCategory.LEGAL::equals, a3)))
+                    conditional(Agents.RequestCategory.MEDICAL::equals, medicalExpert),
+                    conditional(Agents.RequestCategory.TECHNICAL::equals, technicalExpert),
+                    conditional(Agents.RequestCategory.LEGAL::equals, legalExpert)))
             .build();
 
     Map<String, Object> input = Map.of("question", "What is the best treatment for a common cold?");
@@ -267,9 +260,9 @@ public class LC4JEquivalenceIT {
             .responseReader(() -> "piscis")
             .build();
 
-    var a1 = AgentsUtils.newAstrologyAgent();
+    var astrologyAgent = AgentsUtils.newAstrologyAgent();
 
-    Workflow wf = workflow("seqFlow").sequence("process", a1, humanInTheLoop).build();
+    Workflow wf = workflow("seqFlow").sequence("process", astrologyAgent, humanInTheLoop).build();
 
     assertThat(wf.getDo()).hasSize(2);
 
