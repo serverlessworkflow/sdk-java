@@ -113,12 +113,20 @@ public final class AgenticDSL {
     return list -> list.sequence(agents);
   }
 
+  public static AgentTaskConfigurer sequence(Predicate<?> predicate, Object... agents) {
+    return list -> list.sequence(agents).when(predicate);
+  }
+
   public static AgentTaskConfigurer loop(Predicate<AgenticScope> exitCondition, Object... agents) {
     return list -> list.loop(l -> l.subAgents(agents).exitCondition(exitCondition));
   }
 
   public static AgentTaskConfigurer parallel(Object... agents) {
     return list -> list.parallel(agents);
+  }
+
+  public static AgentTaskConfigurer parallel(Predicate<?> predicate, Object... agents) {
+    return list -> list.parallel(agents).when(predicate);
   }
 
   // --------- Tasks ------ //
@@ -142,14 +150,6 @@ public final class AgenticDSL {
 
   public static AgentTaskConfigurer conditional(Predicate<?> predicate, Object agent) {
     return list -> list.agent(agent).when(predicate);
-  }
-
-  public static AgentTaskConfigurer conditionalSequence(Predicate<?> predicate, Object... agents) {
-    return list -> list.sequence(agents).when(predicate);
-  }
-
-  public static AgentTaskConfigurer conditionalParallel(Predicate<?> predicate, Object... agents) {
-    return list -> list.parallel(agents).when(predicate);
   }
 
   public static AgentTaskConfigurer emit(Consumer<FuncEmitTaskBuilder> event) {
