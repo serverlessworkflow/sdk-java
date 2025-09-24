@@ -121,6 +121,13 @@ public final class AgenticDSL {
     return list -> list.loop(l -> l.subAgents(agents).exitCondition(exitCondition));
   }
 
+  public static AgentTaskConfigurer loop(
+      Predicate<AgenticScope> exitCondition, int maxIterations, Object... agents) {
+    return list ->
+        list.loop(
+            l -> l.subAgents(agents).exitCondition(exitCondition).maxIterations(maxIterations));
+  }
+
   public static AgentTaskConfigurer parallel(Object... agents) {
     return list -> list.parallel(agents);
   }
