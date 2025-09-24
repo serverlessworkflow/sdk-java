@@ -80,7 +80,7 @@ String story = (String) novelCreator.invoke(input);
 ### Serverless Workflow
 
 ```java
-Workflow wf = workflow("seqFlow").tasks(tasks -> tasks.sequence("process", creativeWriter, audienceEditor, styleEditor)).build();
+Workflow wf = workflow("seqFlow").sequence("process", creativeWriter, audienceEditor, styleEditor).build();
 
 try (WorkflowApplication app = WorkflowApplication.builder().build()) {
     String result = app.workflowDefinition(wf).instance(input).start().get().asText().orElseThrow();
@@ -151,10 +151,8 @@ String story = styledWriter.writeStoryWithStyle("dragons and wizards", "comedy")
 ```java
 Predicate<AgenticScope> until = s -> s.readState("score", 0).doubleValue() >= 0.8;
 
-Workflow wf =
-        AgentWorkflowBuilder.workflow("retryFlow")
-                .tasks(loop(until, scorer, 5, editor))
-                .build();
+Workflow wf = workflow("retryFlow").loop(until, scorer, 5, editor).build();
+
 
 Map<String, Object> input =
         Map.of(

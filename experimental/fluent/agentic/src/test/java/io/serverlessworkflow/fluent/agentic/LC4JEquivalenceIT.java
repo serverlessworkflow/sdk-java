@@ -18,8 +18,6 @@ package io.serverlessworkflow.fluent.agentic;
 import static io.serverlessworkflow.fluent.agentic.AgentWorkflowBuilder.workflow;
 import static io.serverlessworkflow.fluent.agentic.dsl.AgenticDSL.conditional;
 import static io.serverlessworkflow.fluent.agentic.dsl.AgenticDSL.doTasks;
-import static io.serverlessworkflow.fluent.agentic.dsl.AgenticDSL.loop;
-import static io.serverlessworkflow.fluent.spec.dsl.DSL.tasks;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -49,7 +47,7 @@ public class LC4JEquivalenceIT {
 
     Workflow wf =
         workflow("seqFlow")
-            .tasks(tasks -> tasks.sequence("process", creativeWriter, audienceEditor, styleEditor))
+            .sequence("process", creativeWriter, audienceEditor, styleEditor)
             .build();
 
     List<TaskItem> items = wf.getDo();
@@ -120,8 +118,7 @@ public class LC4JEquivalenceIT {
 
     Predicate<AgenticScope> until = s -> s.readState("score", 0).doubleValue() >= 0.8;
 
-    Workflow wf =
-        AgentWorkflowBuilder.workflow("retryFlow").tasks(loop(until, scorer, 5, editor)).build();
+    Workflow wf = workflow("retryFlow").loop(until, scorer, 5, editor).build();
 
     List<TaskItem> items = wf.getDo();
     assertThat(items).hasSize(1);
@@ -187,7 +184,7 @@ public class LC4JEquivalenceIT {
 
     Workflow wf =
         workflow("seqFlow")
-            .tasks(tasks -> tasks.sequence("process", creativeWriter, audienceEditor, styleEditor))
+            .sequence("process", creativeWriter, audienceEditor, styleEditor)
             .build();
 
     List<TaskItem> items = wf.getDo();
