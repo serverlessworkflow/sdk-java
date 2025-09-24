@@ -16,7 +16,7 @@
 package io.serverlessworkflow.impl.test;
 
 import static io.serverlessworkflow.api.WorkflowReader.readWorkflowFromClasspath;
-import static io.serverlessworkflow.impl.test.OAuthHTTPWorkflowDefinitionTest.fakeAccessToken;
+import static io.serverlessworkflow.impl.test.AccessTokenProvider.fakeAccessToken;
 import static org.junit.Assert.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -100,7 +100,6 @@ public class OpenIDCHTTPWorkflowDefinitionTest {
     Workflow workflow =
         readWorkflowFromClasspath("workflows-samples/openidcClientSecretPostPasswordHttpCall.yaml");
     Map<String, Object> result;
-    System.err.println("START");
     try (WorkflowApplication app = WorkflowApplication.builder().build()) {
       result =
           app.workflowDefinition(workflow).instance(Map.of()).start().get().asMap().orElseThrow();
