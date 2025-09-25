@@ -27,11 +27,12 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.Map;
-import okhttp3.OkHttpClient;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -56,23 +57,27 @@ public class OAuthHTTPWorkflowDefinitionTest {
                   }
                   """;
 
+  private static WorkflowApplication app;
   private MockWebServer authServer;
   private MockWebServer apiServer;
-  private OkHttpClient httpClient;
-  private String authBaseUrl;
-  private String apiBaseUrl;
+
+  @BeforeAll
+  static void init() {
+    app = WorkflowApplication.builder().build();
+  }
+
+  @AfterAll
+  static void cleanup() {
+    app.close();
+  }
 
   @BeforeEach
   void setUp() throws IOException {
     authServer = new MockWebServer();
     authServer.start(8888);
-    authBaseUrl = "http://localhost:8888";
 
     apiServer = new MockWebServer();
     apiServer.start(8081);
-    apiBaseUrl = "http://localhost:8081";
-
-    httpClient = new OkHttpClient();
   }
 
   @AfterEach
@@ -100,11 +105,8 @@ public class OAuthHTTPWorkflowDefinitionTest {
 
     Workflow workflow =
         readWorkflowFromClasspath("workflows-samples/oAuthClientSecretPostPasswordHttpCall.yaml");
-    Map<String, Object> result;
-    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-      result =
-          app.workflowDefinition(workflow).instance(Map.of()).start().get().asMap().orElseThrow();
-    }
+    Map<String, Object> result =
+        app.workflowDefinition(workflow).instance(Map.of()).start().get().asMap().orElseThrow();
 
     assertTrue(result.containsKey("message"));
     assertTrue(result.get("message").toString().contains("Hello World"));
@@ -145,7 +147,7 @@ public class OAuthHTTPWorkflowDefinitionTest {
     Workflow workflow =
         readWorkflowFromClasspath(
             "workflows-samples/oAuthClientSecretPostPasswordAsArgHttpCall.yaml");
-    Map<String, Object> result;
+
     Map<String, String> params =
         Map.of(
             "clientId", "serverless-workflow",
@@ -153,10 +155,8 @@ public class OAuthHTTPWorkflowDefinitionTest {
             "username", "serverless-workflow-test",
             "password", "serverless-workflow-test");
 
-    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-      result =
-          app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
-    }
+    Map<String, Object> result =
+        app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
 
     assertTrue(result.containsKey("message"));
     assertTrue(result.get("message").toString().contains("Hello World"));
@@ -197,7 +197,7 @@ public class OAuthHTTPWorkflowDefinitionTest {
     Workflow workflow =
         readWorkflowFromClasspath(
             "workflows-samples/oAuthClientSecretPostPasswordNoEndpointsHttpCall.yaml");
-    Map<String, Object> result;
+
     Map<String, String> params =
         Map.of(
             "clientId", "serverless-workflow",
@@ -205,10 +205,8 @@ public class OAuthHTTPWorkflowDefinitionTest {
             "username", "serverless-workflow-test",
             "password", "serverless-workflow-test");
 
-    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-      result =
-          app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
-    }
+    Map<String, Object> result =
+        app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
 
     assertTrue(result.containsKey("message"));
     assertTrue(result.get("message").toString().contains("Hello World"));
@@ -249,7 +247,6 @@ public class OAuthHTTPWorkflowDefinitionTest {
     Workflow workflow =
         readWorkflowFromClasspath(
             "workflows-samples/oAuthClientSecretPostPasswordAllGrantsHttpCall.yaml");
-    Map<String, Object> result;
     Map<String, String> params =
         Map.of(
             "clientId", "serverless-workflow",
@@ -259,10 +256,8 @@ public class OAuthHTTPWorkflowDefinitionTest {
             "openidScope", "openidScope",
             "audience", "account");
 
-    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-      result =
-          app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
-    }
+    Map<String, Object> result =
+        app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
 
     assertTrue(result.containsKey("message"));
     assertTrue(result.get("message").toString().contains("Hello World"));
@@ -309,11 +304,8 @@ public class OAuthHTTPWorkflowDefinitionTest {
     Workflow workflow =
         readWorkflowFromClasspath(
             "workflows-samples/oAuthClientSecretPostClientCredentialsHttpCall.yaml");
-    Map<String, Object> result;
-    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-      result =
-          app.workflowDefinition(workflow).instance(Map.of()).start().get().asMap().orElseThrow();
-    }
+    Map<String, Object> result =
+        app.workflowDefinition(workflow).instance(Map.of()).start().get().asMap().orElseThrow();
 
     assertTrue(result.containsKey("message"));
     assertTrue(result.get("message").toString().contains("Hello World"));
@@ -355,16 +347,13 @@ public class OAuthHTTPWorkflowDefinitionTest {
     Workflow workflow =
         readWorkflowFromClasspath(
             "workflows-samples/oAuthClientSecretPostClientCredentialsParamsHttpCall.yaml");
-    Map<String, Object> result;
     Map<String, String> params =
         Map.of(
             "clientId", "serverless-workflow",
             "clientSecret", "D0ACXCUKOUrL5YL7j6RQWplMaSjPB8MT");
 
-    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-      result =
-          app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
-    }
+    Map<String, Object> result =
+        app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
 
     assertTrue(result.containsKey("message"));
     assertTrue(result.get("message").toString().contains("Hello World"));
@@ -407,16 +396,13 @@ public class OAuthHTTPWorkflowDefinitionTest {
     Workflow workflow =
         readWorkflowFromClasspath(
             "workflows-samples/oAuthClientSecretPostClientCredentialsParamsNoEndPointHttpCall.yaml");
-    Map<String, Object> result;
     Map<String, String> params =
         Map.of(
             "clientId", "serverless-workflow",
             "clientSecret", "D0ACXCUKOUrL5YL7j6RQWplMaSjPB8MT");
 
-    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-      result =
-          app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
-    }
+    Map<String, Object> result =
+        app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
 
     assertTrue(result.containsKey("message"));
     assertTrue(result.get("message").toString().contains("Hello World"));
@@ -456,11 +442,8 @@ public class OAuthHTTPWorkflowDefinitionTest {
 
     Workflow workflow =
         readWorkflowFromClasspath("workflows-samples/oAuthJSONPasswordHttpCall.yaml");
-    Map<String, Object> result;
-    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-      result =
-          app.workflowDefinition(workflow).instance(Map.of()).start().get().asMap().orElseThrow();
-    }
+    Map<String, Object> result =
+        app.workflowDefinition(workflow).instance(Map.of()).start().get().asMap().orElseThrow();
 
     assertTrue(result.containsKey("message"));
     assertTrue(result.get("message").toString().contains("Hello World"));
@@ -514,7 +497,6 @@ public class OAuthHTTPWorkflowDefinitionTest {
 
     Workflow workflow =
         readWorkflowFromClasspath("workflows-samples/oAuthJSONPasswordAsArgHttpCall.yaml");
-    Map<String, Object> result;
     Map<String, String> params =
         Map.of(
             "clientId", "serverless-workflow",
@@ -522,10 +504,8 @@ public class OAuthHTTPWorkflowDefinitionTest {
             "username", "serverless-workflow-test",
             "password", "serverless-workflow-test");
 
-    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-      result =
-          app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
-    }
+    Map<String, Object> result =
+        app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
 
     assertTrue(result.containsKey("message"));
     assertTrue(result.get("message").toString().contains("Hello World"));
@@ -576,7 +556,6 @@ public class OAuthHTTPWorkflowDefinitionTest {
 
     Workflow workflow =
         readWorkflowFromClasspath("workflows-samples/oAuthJSONPasswordNoEndpointsHttpCall.yaml");
-    Map<String, Object> result;
     Map<String, String> params =
         Map.of(
             "clientId", "serverless-workflow",
@@ -584,10 +563,8 @@ public class OAuthHTTPWorkflowDefinitionTest {
             "username", "serverless-workflow-test",
             "password", "serverless-workflow-test");
 
-    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-      result =
-          app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
-    }
+    Map<String, Object> result =
+        app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
 
     assertTrue(result.containsKey("message"));
     assertTrue(result.get("message").toString().contains("Hello World"));
@@ -637,7 +614,6 @@ public class OAuthHTTPWorkflowDefinitionTest {
 
     Workflow workflow =
         readWorkflowFromClasspath("workflows-samples/oAuthJSONPasswordAllGrantsHttpCall.yaml");
-    Map<String, Object> result;
     Map<String, String> params =
         Map.of(
             "clientId", "serverless-workflow",
@@ -647,10 +623,8 @@ public class OAuthHTTPWorkflowDefinitionTest {
             "openidScope", "openidScope",
             "audience", "account");
 
-    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-      result =
-          app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
-    }
+    Map<String, Object> result =
+        app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
 
     assertTrue(result.containsKey("message"));
     assertTrue(result.get("message").toString().contains("Hello World"));
@@ -712,11 +686,8 @@ public class OAuthHTTPWorkflowDefinitionTest {
 
     Workflow workflow =
         readWorkflowFromClasspath("workflows-samples/oAuthJSONClientCredentialsHttpCall.yaml");
-    Map<String, Object> result;
-    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-      result =
-          app.workflowDefinition(workflow).instance(Map.of()).start().get().asMap().orElseThrow();
-    }
+    Map<String, Object> result =
+        app.workflowDefinition(workflow).instance(Map.of()).start().get().asMap().orElseThrow();
 
     assertTrue(result.containsKey("message"));
     assertTrue(result.get("message").toString().contains("Hello World"));
@@ -763,16 +734,13 @@ public class OAuthHTTPWorkflowDefinitionTest {
     Workflow workflow =
         readWorkflowFromClasspath(
             "workflows-samples/oAuthJSONClientCredentialsParamsHttpCall.yaml");
-    Map<String, Object> result;
     Map<String, String> params =
         Map.of(
             "clientId", "serverless-workflow",
             "clientSecret", "D0ACXCUKOUrL5YL7j6RQWplMaSjPB8MT");
 
-    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-      result =
-          app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
-    }
+    Map<String, Object> result =
+        app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
 
     assertTrue(result.containsKey("message"));
     assertTrue(result.get("message").toString().contains("Hello World"));
@@ -819,16 +787,13 @@ public class OAuthHTTPWorkflowDefinitionTest {
     Workflow workflow =
         readWorkflowFromClasspath(
             "workflows-samples/oAuthJSONClientCredentialsParamsNoEndPointHttpCall.yaml");
-    Map<String, Object> result;
     Map<String, String> params =
         Map.of(
             "clientId", "serverless-workflow",
             "clientSecret", "D0ACXCUKOUrL5YL7j6RQWplMaSjPB8MT");
 
-    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-      result =
-          app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
-    }
+    Map<String, Object> result =
+        app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
 
     assertTrue(result.containsKey("message"));
     assertTrue(result.get("message").toString().contains("Hello World"));

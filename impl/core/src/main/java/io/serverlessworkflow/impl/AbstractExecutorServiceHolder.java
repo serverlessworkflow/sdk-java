@@ -16,15 +16,17 @@
 package io.serverlessworkflow.impl;
 
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public abstract class AbstractExecutorServiceHolder implements ExecutorServiceFactory {
 
   protected ExecutorService service;
 
   @Override
-  public void close() {
+  public void close() throws InterruptedException {
     if (service != null && !service.isShutdown()) {
       service.shutdown();
+      service.awaitTermination(2, TimeUnit.SECONDS);
     }
   }
 }

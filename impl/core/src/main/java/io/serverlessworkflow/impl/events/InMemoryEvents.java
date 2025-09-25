@@ -81,7 +81,7 @@ public class InMemoryEvents extends AbstractTypeConsumer implements EventPublish
   }
 
   @Override
-  public void close() {
+  public void close() throws Exception {
     topicMap.clear();
     serviceFactory.close();
   }

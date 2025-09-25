@@ -197,6 +197,7 @@ public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskEx
     if (ifFilter.map(f -> f.test(workflowContext, taskContext, input)).orElse(true)) {
       return executeNext(
           completable
+              .thenCompose(workflowContext.instance()::suspendedCheck)
               .thenApply(
                   t -> {
                     publishEvent(
@@ -208,7 +209,7 @@ public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskEx
                     return t;
                   })
               .thenCompose(t -> execute(workflowContext, t))
-              .thenCompose(t -> workflowContext.instance().completedChecks(t))
+              .thenCompose(workflowContext.instance()::cancelCheck)
               .whenComplete(
                   (t, e) -> {
                     if (e != null) {
@@ -216,8 +217,6 @@ public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskEx
                           workflowContext,
                           taskContext,
                           e instanceof CompletionException ? e.getCause() : e);
-                    } else {
-                      workflowContext.instance().status(WorkflowStatus.RUNNING);
                     }
                   })
               .thenApply(

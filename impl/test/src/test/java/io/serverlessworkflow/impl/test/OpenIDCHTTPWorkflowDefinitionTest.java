@@ -25,11 +25,12 @@ import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import java.io.IOException;
 import java.util.Map;
-import okhttp3.OkHttpClient;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -54,23 +55,27 @@ public class OpenIDCHTTPWorkflowDefinitionTest {
                   }
                   """;
 
+  private static WorkflowApplication app;
   private MockWebServer authServer;
   private MockWebServer apiServer;
-  private OkHttpClient httpClient;
-  private String authBaseUrl;
-  private String apiBaseUrl;
+
+  @BeforeAll
+  static void init() {
+    app = WorkflowApplication.builder().build();
+  }
+
+  @AfterAll
+  static void cleanup() {
+    app.close();
+  }
 
   @BeforeEach
   void setUp() throws IOException {
     authServer = new MockWebServer();
     authServer.start(8888);
-    authBaseUrl = "http://localhost:8888";
 
     apiServer = new MockWebServer();
     apiServer.start(8881);
-    apiBaseUrl = "http://localhost:8881";
-
-    httpClient = new OkHttpClient();
   }
 
   @AfterEach
@@ -99,12 +104,8 @@ public class OpenIDCHTTPWorkflowDefinitionTest {
 
     Workflow workflow =
         readWorkflowFromClasspath("workflows-samples/openidcClientSecretPostPasswordHttpCall.yaml");
-    Map<String, Object> result;
-    System.err.println("START");
-    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-      result =
-          app.workflowDefinition(workflow).instance(Map.of()).start().get().asMap().orElseThrow();
-    }
+    Map<String, Object> result =
+        app.workflowDefinition(workflow).instance(Map.of()).start().get().asMap().orElseThrow();
 
     assertTrue(result.containsKey("message"));
     assertTrue(result.get("message").toString().contains("Hello World"));
@@ -148,7 +149,6 @@ public class OpenIDCHTTPWorkflowDefinitionTest {
     Workflow workflow =
         readWorkflowFromClasspath(
             "workflows-samples/openidcClientSecretPostPasswordAsArgHttpCall.yaml");
-    Map<String, Object> result;
     Map<String, String> params =
         Map.of(
             "clientId", "serverless-workflow",
@@ -156,10 +156,8 @@ public class OpenIDCHTTPWorkflowDefinitionTest {
             "username", "serverless-workflow-test",
             "password", "serverless-workflow-test");
 
-    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-      result =
-          app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
-    }
+    Map<String, Object> result =
+        app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
 
     assertTrue(result.containsKey("message"));
     assertTrue(result.get("message").toString().contains("Hello World"));
@@ -202,7 +200,6 @@ public class OpenIDCHTTPWorkflowDefinitionTest {
     Workflow workflow =
         readWorkflowFromClasspath(
             "workflows-samples/openidcClientSecretPostPasswordAllGrantsHttpCall.yaml");
-    Map<String, Object> result;
     Map<String, String> params =
         Map.of(
             "clientId", "serverless-workflow",
@@ -210,10 +207,8 @@ public class OpenIDCHTTPWorkflowDefinitionTest {
             "username", "serverless-workflow-test",
             "password", "serverless-workflow-test");
 
-    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-      result =
-          app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
-    }
+    Map<String, Object> result =
+        app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
 
     assertTrue(result.containsKey("message"));
     assertTrue(result.get("message").toString().contains("Hello World"));
@@ -264,16 +259,13 @@ public class OpenIDCHTTPWorkflowDefinitionTest {
     Workflow workflow =
         readWorkflowFromClasspath(
             "workflows-samples/openidcClientSecretPostClientCredentialsParamsHttpCall.yaml");
-    Map<String, Object> result;
     Map<String, String> params =
         Map.of(
             "clientId", "serverless-workflow",
             "clientSecret", "D0ACXCUKOUrL5YL7j6RQWplMaSjPB8MT");
 
-    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-      result =
-          app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
-    }
+    Map<String, Object> result =
+        app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
 
     assertTrue(result.containsKey("message"));
     assertTrue(result.get("message").toString().contains("Hello World"));
@@ -316,16 +308,13 @@ public class OpenIDCHTTPWorkflowDefinitionTest {
     Workflow workflow =
         readWorkflowFromClasspath(
             "workflows-samples/openidcClientSecretPostClientCredentialsParamsNoEndPointHttpCall.yaml");
-    Map<String, Object> result;
     Map<String, String> params =
         Map.of(
             "clientId", "serverless-workflow",
             "clientSecret", "D0ACXCUKOUrL5YL7j6RQWplMaSjPB8MT");
 
-    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-      result =
-          app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
-    }
+    Map<String, Object> result =
+        app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
 
     assertTrue(result.containsKey("message"));
     assertTrue(result.get("message").toString().contains("Hello World"));
@@ -364,11 +353,8 @@ public class OpenIDCHTTPWorkflowDefinitionTest {
 
     Workflow workflow =
         readWorkflowFromClasspath("workflows-samples/openidcJSONPasswordHttpCall.yaml");
-    Map<String, Object> result;
-    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-      result =
-          app.workflowDefinition(workflow).instance(Map.of()).start().get().asMap().orElseThrow();
-    }
+    Map<String, Object> result =
+        app.workflowDefinition(workflow).instance(Map.of()).start().get().asMap().orElseThrow();
 
     assertTrue(result.containsKey("message"));
     assertTrue(result.get("message").toString().contains("Hello World"));
@@ -422,7 +408,6 @@ public class OpenIDCHTTPWorkflowDefinitionTest {
 
     Workflow workflow =
         readWorkflowFromClasspath("workflows-samples/openidcJSONPasswordAsArgHttpCall.yaml");
-    Map<String, Object> result;
     Map<String, String> params =
         Map.of(
             "clientId", "serverless-workflow",
@@ -430,10 +415,8 @@ public class OpenIDCHTTPWorkflowDefinitionTest {
             "username", "serverless-workflow-test",
             "password", "serverless-workflow-test");
 
-    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-      result =
-          app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
-    }
+    Map<String, Object> result =
+        app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
 
     assertTrue(result.containsKey("message"));
     assertTrue(result.get("message").toString().contains("Hello World"));
@@ -484,7 +467,6 @@ public class OpenIDCHTTPWorkflowDefinitionTest {
 
     Workflow workflow =
         readWorkflowFromClasspath("workflows-samples/openidcJSONPasswordNoEndpointsHttpCall.yaml");
-    Map<String, Object> result;
     Map<String, String> params =
         Map.of(
             "clientId", "serverless-workflow",
@@ -492,10 +474,8 @@ public class OpenIDCHTTPWorkflowDefinitionTest {
             "username", "serverless-workflow-test",
             "password", "serverless-workflow-test");
 
-    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-      result =
-          app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
-    }
+    Map<String, Object> result =
+        app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
 
     assertTrue(result.containsKey("message"));
     assertTrue(result.get("message").toString().contains("Hello World"));
@@ -545,7 +525,6 @@ public class OpenIDCHTTPWorkflowDefinitionTest {
 
     Workflow workflow =
         readWorkflowFromClasspath("workflows-samples/openidcJSONPasswordAllGrantsHttpCall.yaml");
-    Map<String, Object> result;
     Map<String, String> params =
         Map.of(
             "clientId", "serverless-workflow",
@@ -555,10 +534,8 @@ public class OpenIDCHTTPWorkflowDefinitionTest {
             "openidScope", "openidScope",
             "audience", "account");
 
-    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-      result =
-          app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
-    }
+    Map<String, Object> result =
+        app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
 
     assertTrue(result.containsKey("message"));
     assertTrue(result.get("message").toString().contains("Hello World"));
@@ -620,11 +597,8 @@ public class OpenIDCHTTPWorkflowDefinitionTest {
 
     Workflow workflow =
         readWorkflowFromClasspath("workflows-samples/openidcJSONClientCredentialsHttpCall.yaml");
-    Map<String, Object> result;
-    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-      result =
-          app.workflowDefinition(workflow).instance(Map.of()).start().get().asMap().orElseThrow();
-    }
+    Map<String, Object> result =
+        app.workflowDefinition(workflow).instance(Map.of()).start().get().asMap().orElseThrow();
 
     assertTrue(result.containsKey("message"));
     assertTrue(result.get("message").toString().contains("Hello World"));
@@ -671,16 +645,13 @@ public class OpenIDCHTTPWorkflowDefinitionTest {
     Workflow workflow =
         readWorkflowFromClasspath(
             "workflows-samples/openidcJSONClientCredentialsParamsHttpCall.yaml");
-    Map<String, Object> result;
     Map<String, String> params =
         Map.of(
             "clientId", "serverless-workflow",
             "clientSecret", "D0ACXCUKOUrL5YL7j6RQWplMaSjPB8MT");
 
-    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-      result =
-          app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
-    }
+    Map<String, Object> result =
+        app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
 
     assertTrue(result.containsKey("message"));
     assertTrue(result.get("message").toString().contains("Hello World"));
@@ -727,16 +698,13 @@ public class OpenIDCHTTPWorkflowDefinitionTest {
     Workflow workflow =
         readWorkflowFromClasspath(
             "workflows-samples/openidcJSONClientCredentialsParamsNoEndPointHttpCall.yaml");
-    Map<String, Object> result;
     Map<String, String> params =
         Map.of(
             "clientId", "serverless-workflow",
             "clientSecret", "D0ACXCUKOUrL5YL7j6RQWplMaSjPB8MT");
 
-    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-      result =
-          app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
-    }
+    Map<String, Object> result =
+        app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
 
     assertTrue(result.containsKey("message"));
     assertTrue(result.get("message").toString().contains("Hello World"));
