@@ -2,6 +2,8 @@
 
 # Sequential workflow
 ### Common part:
+<details><summary>Click to expand</summary>
+
 ```java
 public interface AudienceEditor {
 
@@ -65,33 +67,53 @@ Map<String, Object> input = Map.of(
         "audience", "young adults"
 );
 ```
+</details>
 
-### LangChain4j
-```java
-UntypedAgent novelCreator = AgenticServices
-        .sequenceBuilder()
-        .subAgents(creativeWriter, audienceEditor, styleEditor)
-        .outputName("story")
-        .build();
+<table style="table-layout:fixed; width:100%;">
+  <tr>
+    <th style="width:50%; text-align:left;">LangChain4j</th>
+    <th style="text-align:left;">Serverless Workflow</th>
+  </tr>
+  <tr>
+    <td style="vertical-align:top;">
+<pre style="background:none; margin:0; padding:0; font-family:monospace; line-height:1.4;">
+<code class="language-java" style="background:none;white-space:pre;">UntypedAgent novelCreator = AgenticServices
+    .sequenceBuilder()
+    .subAgents(creativeWriter, audienceEditor, styleEditor)
+    .outputName("story")
+    .build();
 
 String story = (String) novelCreator.invoke(input);
-```
 
-### Serverless Workflow
+</code>
+</pre>
+</td>
 
-```java
-Workflow wf = workflow("seqFlow").sequence("process", creativeWriter, audienceEditor, styleEditor).build();
+<td style="vertical-align:top;">
+<pre style="background:none; margin:0; padding:0; font-family:monospace; line-height:1.4;">
+<code class="language-java" style="background:none;white-space:pre;">Workflow wf = workflow("seqFlow")
+    .sequence(creativeWriter, audienceEditor, styleEditor)
+    .build();
+&nbsp;
+&nbsp;
 
 try (WorkflowApplication app = WorkflowApplication.builder().build()) {
     String result = app.workflowDefinition(wf).instance(input).start().get().asText().orElseThrow();
 } catch (Exception e) {
     throw new RuntimeException("Workflow execution failed", e);
 }
-```
+
+</code>
+</pre>
+</td>
+  </tr>
+</table>
 
 
 ### Loop workflow
 ### Common part:
+<details><summary>Click to expand</summary>
+
 ```java
   interface StyleEditor {
 
@@ -136,38 +158,58 @@ StyleScorer styleScorer = AgenticServices
 
 ```
 
-### LangChain4j
-```java
+</details>
+
+<table style="table-layout:fixed; width:100%;">
+  <tr>
+    <th style="width:50%; text-align:left;">LangChain4j</th>
+    <th style="text-align:left;">Serverless Workflow</th>
+  </tr>
+  <tr>
+    <td style="vertical-align:top;">
+<pre style="background:none; margin:0; padding:0; font-family:monospace; line-height:1.4;">
+<code class="language-java" style="background:none;white-space:pre;">
+&nbsp;
+&nbsp;
 StyledWriter styledWriter = AgenticServices
-        .sequenceBuilder(StyledWriter.class)
-        .subAgents(creativeWriter, styleReviewLoop)
-        .outputName("story")
-        .build();
+    .sequenceBuilder(StyledWriter.class)
+    .subAgents(creativeWriter, styleReviewLoop)
+    .outputName("story")
+    .build();
 
 String story = styledWriter.writeStoryWithStyle("dragons and wizards", "comedy");
-```
 
-### Serverless Workflow
-```java
+</code>
+</pre>
+</td>
+
+<td style="vertical-align:top;">
+<pre style="background:none; margin:0; padding:0; font-family:monospace; line-height:1.4;">
+<code class="language-java" style="background:none;white-space:pre;">Map&lt;String, Object> input =  Map.of("story", "dragons and wizards","style", "comedy");
 Predicate<AgenticScope> until = s -> s.readState("score", 0).doubleValue() >= 0.8;
 
-Workflow wf = workflow("retryFlow").loop(until, scorer, 5, editor).build();
-
-
-Map<String, Object> input =
-        Map.of(
-                "story", "dragons and wizards",
-                "style", "comedy");
-
+Workflow wf = workflow("retryFlow")
+    .loop(until, scorer, editor)
+    .build();
+&nbsp;
+&nbsp;
+&nbsp;
 try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-  String result = app.workflowDefinition(wf).instance(input).start().get().asText().orElseThrow();
+    String result = app.workflowDefinition(wf).instance(input).start().get().asText().orElseThrow();
 } catch (Exception e) {
-  throw new RuntimeException("Workflow execution failed", e);
+    throw new RuntimeException("Workflow execution failed", e);
 }
-```
+
+</code>
+</pre>
+</td>
+  </tr>
+</table>
 
 ### Parallel workflow
 ### Common part:
+<details><summary>Click to expand</summary>
+
 ```java
 public interface FoodExpert {
 
@@ -206,65 +248,81 @@ MovieExpert movieExpert = AgenticServices
         .outputName("movies")
         .build();
 ```
+</details>
 
-### LangChain4j
-```java
+
+<table style="table-layout:fixed; width:100%;">
+  <tr>
+    <th style="width:50%; text-align:left;">LangChain4j</th>
+    <th style="text-align:left;">Serverless Workflow</th>
+  </tr>
+  <tr>
+    <td style="vertical-align:top;">
+<pre style="background:none; margin:0; padding:0; font-family:monospace; line-height:1.4;">
+<code class="language-java" style="background:none;white-space:pre;">
 EveningPlannerAgent eveningPlannerAgent = AgenticServices
-        .parallelBuilder(EveningPlannerAgent.class)
-        .subAgents(foodExpert, movieExpert)
-        .executor(Executors.newFixedThreadPool(2))
-        .outputName("plans")
-        .output(agenticScope -> {
-            List<String> movies = agenticScope.readState("movies", List.of());
-            List<String> meals = agenticScope.readState("meals", List.of());
-
-            List<EveningPlan> moviesAndMeals = new ArrayList<>();
-            for (int i = 0; i < movies.size(); i++) {
-                if (i >= meals.size()) {
-                    break;
-                }
-                moviesAndMeals.add(new EveningPlan(movies.get(i), meals.get(i)));
-            }
-            return moviesAndMeals;
-        })
-        .build();
+    .parallelBuilder(EveningPlannerAgent.class)
+    .subAgents(foodExpert, movieExpert)
+    .executor(Executors.newFixedThreadPool(2))
+    .outputName("plans")
+    .output(agenticScope -> {
+        List<String> movies = agenticScope.readState("movies", List.of());
+        List<String> meals = agenticScope.readState("meals", List.of());
+        List<EveningPlan> moviesAndMeals = new ArrayList<>();
+        for (int i = 0; i < movies.size(); i++) {
+        if (i >= meals.size()) {
+            break;
+        }
+        moviesAndMeals.add(new EveningPlan(movies.get(i), meals.get(i)));
+        }
+        return moviesAndMeals;
+    })
+    .build();
 
 List<EveningPlan> plans = eveningPlannerAgent.plan("romantic");
-```
 
-### Serverless Workflow
-```java
-Workflow wf = workflow("forkFlow").parallel("fanout", foodExpert, movieExpert).build();
+</code>
+</pre>
+</td>
 
-Map<String, Object> input = Map.of("mood", "I am hungry and bored");
+<td style="vertical-align:top;">
+<pre style="background:none; margin:0; padding:0; font-family:monospace; line-height:1.4;">
+<code class="language-java" style="background:none;white-space:pre;">
+Workflow wf = workflow("forkFlow")
+    .parallel(foodExpert, movieExpert)
+    .build();
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+Map&lt;String, Object> input = Map.of("mood", "I am hungry and bored");
 
-Map<String, Object> result;
 try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-    result = app.workflowDefinition(wf).instance(input).start().get().asMap().orElseThrow();
+    Map<String, Object> result = app.workflowDefinition(wf).instance(input).start().get().asMap().orElseThrow();
 } catch (Exception e) {
-   throw new RuntimeException("Workflow execution failed", e);
+    throw new RuntimeException("Workflow execution failed", e);
 }
-```
 
-### Error handling
-### Common part:
-```java
+</code>
+</pre>
+</td>
+  </tr>
+</table>
 
-```
-
-### LangChain4j
-```java
-
-```
-
-### Serverless Workflow
-
-```java
-
-```
 
 ### Human-in-the-loop
 ### Common part:
+<details><summary>Click to expand</summary>
+
 ```java
 public record HumanInTheLoop(Consumer<String> requestWriter, Supplier<String> responseReader) {
 
@@ -302,9 +360,17 @@ HumanInTheLoop humanInTheLoop = AgenticServices
         .responseReader(() -> System.console().readLine())
         .build();
 ```
+</details>
 
-### LangChain4j
-```java
+<table style="table-layout:fixed; width:100%;">
+  <tr>
+    <th style="width:50%; text-align:left;">LangChain4j</th>
+    <th style="text-align:left;">Serverless Workflow</th>
+  </tr>
+  <tr>
+    <td style="vertical-align:top;">
+<pre style="background:none; margin:0; padding:0; font-family:monospace; line-height:1.4;">
+<code class="language-java" style="background:none;white-space:pre;">
 SupervisorAgent horoscopeAgent = AgenticServices
         .supervisorBuilder()
         .chatModel(PLANNER_MODEL)
@@ -312,18 +378,28 @@ SupervisorAgent horoscopeAgent = AgenticServices
         .build();
 
 horoscopeAgent.invoke("My name is Mario. What is my horoscope?")
-```
 
-### Serverless Workflow
+</code>
+</pre>
+</td>
 
-```java
-Workflow wf = workflow("seqFlow").sequence("process", astrologyAgent, humanInTheLoop).build();
+<td style="vertical-align:top;">
+<pre style="background:none; margin:0; padding:0; font-family:monospace; line-height:1.4;">
+<code class="language-java" style="background:none;white-space:pre;">
+Workflow wf = workflow("seqFlow")
+    .sequence(astrologyAgent, humanInTheLoop)
+    .build();
 
 Map<String, Object> input = Map.of("request", "My name is Mario. What is my horoscope?");
 
 try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-  String result = app.workflowDefinition(wf).instance(input).start().get().asMap().orElseThrow();
+    String result = app.workflowDefinition(wf).instance(input).start().get().asMap().orElseThrow();
 } catch (Exception e) {
-  throw new RuntimeException("Workflow execution failed", e);
+    throw new RuntimeException("Workflow execution failed", e);
 }
-```
+
+</code>
+</pre>
+</td>
+  </tr>
+</table>

@@ -122,7 +122,7 @@ public final class AgenticDSL {
   }
 
   public static AgentTaskConfigurer loop(
-      Predicate<AgenticScope> exitCondition, int maxIterations, Object... agents) {
+      int maxIterations, Predicate<AgenticScope> exitCondition, Object... agents) {
     return list ->
         list.loop(
             l -> l.subAgents(agents).exitCondition(exitCondition).maxIterations(maxIterations));
