@@ -164,14 +164,18 @@ StyleScorer styleScorer = AgenticServices
   <tr>
     <td style="vertical-align:top;">
 <pre style="background:none; margin:0; padding:0; font-family:monospace; line-height:1.4;">
-<code class="language-java" style="background:none;white-space:pre;">
-&nbsp;
-&nbsp;
+<code class="language-java" style="background:none;white-space:pre;">UntypedAgent styleReviewLoop = AgenticServices
+        .loopBuilder()
+        .subAgents(styleScorer, styleEditor)
+        .maxIterations(5)
+        .exitCondition(agenticScope -> agenticScope.readState("score", 0.0) >= 0.8)
+        .build();
+
 StyledWriter styledWriter = AgenticServices
-    .sequenceBuilder(StyledWriter.class)
-    .subAgents(creativeWriter, styleReviewLoop)
-    .outputName("story")
-    .build();
+        .sequenceBuilder(StyledWriter.class)
+        .subAgents(creativeWriter, styleReviewLoop)
+        .outputName("story")
+        .build();
 
 String story = styledWriter.writeStoryWithStyle("dragons and wizards", "comedy");
 
@@ -183,12 +187,16 @@ String story = styledWriter.writeStoryWithStyle("dragons and wizards", "comedy")
 <pre style="background:none; margin:0; padding:0; font-family:monospace; line-height:1.4;">
 <code class="language-java" style="background:none;white-space:pre;">Map&lt;String, Object> input =  Map.of("story", "dragons and wizards","style", "comedy");
 Predicate<AgenticScope> until = s -> s.readState("score", 0).doubleValue() >= 0.8;
-
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
 Workflow wf = workflow("retryFlow")
-    .loop(until, scorer, editor)
+    .agent(creativeWriter)
+    .loop(until, styleScorer, styleEditor)
     .build();
-&nbsp;
-&nbsp;
 &nbsp;
 String result = app.workflowDefinition(wf).instance(input).start().get().asText().orElseThrow();
 

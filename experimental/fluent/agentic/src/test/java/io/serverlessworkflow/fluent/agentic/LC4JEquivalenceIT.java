@@ -75,13 +75,18 @@ public class LC4JEquivalenceIT {
   @Test
   @DisplayName("Looping agents via DSL.loop(...)")
   public void loopWorkflow() {
-
-    var scorer = AgentsUtils.newStyleScorer();
-    var editor = AgentsUtils.newStyleEditor();
+    var creativeWriter = AgentsUtils.newCreativeWriter();
+    var styleScorer = AgentsUtils.newStyleScorer();
+    var styleEditor = AgentsUtils.newStyleEditor();
 
     Workflow wf =
         AgentWorkflowBuilder.workflow("retryFlow")
-            .loop("reviewLoop", c -> c.readState("score", 0).doubleValue() >= 0.8, scorer, editor)
+            .agent(creativeWriter)
+            .loop(
+                "reviewLoop",
+                c -> c.readState("score", 0).doubleValue() >= 0.8,
+                styleScorer,
+                styleEditor)
             .build();
 
     List<TaskItem> items = wf.getDo();
