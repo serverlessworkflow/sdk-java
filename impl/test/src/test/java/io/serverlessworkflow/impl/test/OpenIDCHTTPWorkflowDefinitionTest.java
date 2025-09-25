@@ -482,8 +482,7 @@ public class OpenIDCHTTPWorkflowDefinitionTest {
 
     RecordedRequest tokenRequest = authServer.takeRequest();
     assertEquals("POST", tokenRequest.getMethod());
-    assertEquals(
-        "/realms/test-realm/protocol/openid-connect/token", tokenRequest.getPath());
+    assertEquals("/realms/test-realm/protocol/openid-connect/token", tokenRequest.getPath());
     assertEquals("application/json", tokenRequest.getHeader("Content-Type"));
 
     String tokenRequestBody = tokenRequest.getBody().readUtf8();

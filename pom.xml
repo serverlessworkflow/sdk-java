@@ -52,6 +52,7 @@
     <properties>
         <java.version>17</java.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
+        <maven.compiler.release>${java.version}</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <version.maven>3.9.11</version.maven>
 
@@ -308,10 +309,6 @@
                 <configuration>
                     <showDeprecation>true</showDeprecation>
                     <showWarnings>true</showWarnings>
-                    <source>${maven.compiler.source}</source>
-                    <target>${maven.compiler.target}</target>
-                    <testSource>${maven.compiler.source}</testSource>
-                    <testTarget>${maven.compiler.target}</testTarget>
                     <parameters>true</parameters>
                     <compilerArgs>
                         <arg>-Xlint:unchecked</arg>
