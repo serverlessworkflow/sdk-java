@@ -30,7 +30,6 @@ import io.serverlessworkflow.impl.resources.ResourceLoaderFactory;
 import io.serverlessworkflow.impl.resources.StaticResource;
 import io.serverlessworkflow.impl.schema.SchemaValidator;
 import io.serverlessworkflow.impl.schema.SchemaValidatorFactory;
-import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -141,7 +140,6 @@ public class WorkflowApplication implements AutoCloseable {
     private ResourceLoaderFactory resourceLoaderFactory = DefaultResourceLoaderFactory.get();
     private SchemaValidatorFactory schemaValidatorFactory;
     private WorkflowPositionFactory positionFactory = () -> new QueueWorkflowPosition();
-    private final SecureRandom secureRandom = new SecureRandom();
     private WorkflowInstanceIdFactory idFactory = new UlidWorkflowInstanceIdFactory();
     private ExecutorServiceFactory executorFactory = new DefaultExecutorServiceFactory();
     private EventConsumer<?, ?> eventConsumer;
