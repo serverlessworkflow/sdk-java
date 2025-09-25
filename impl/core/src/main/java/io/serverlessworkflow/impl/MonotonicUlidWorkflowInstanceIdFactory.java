@@ -19,15 +19,22 @@ import de.huxhorn.sulky.ulid.ULID;
 import java.security.SecureRandom;
 
 /**
- * A {@link WorkflowInstanceIdFactory} implementation that generates ULIDs as workflow instance IDs.
+ * A {@link WorkflowInstanceIdFactory} implementation that generates Monotonic ULIDs as workflow
+ * instance IDs.
  */
-public class UlidWorkflowInstanceIdFactory implements WorkflowInstanceIdFactory {
+public class MonotonicUlidWorkflowInstanceIdFactory implements WorkflowInstanceIdFactory {
 
   private final SecureRandom random = new SecureRandom();
   private final ULID ulid = new ULID(random);
+  private ULID.Value previousUlid;
 
   @Override
-  public String get() {
-    return ulid.nextULID();
+  public synchronized String get() {
+    if (previousUlid == null) {
+      previousUlid = ulid.nextValue();
+    } else {
+      previousUlid = ulid.nextMonotonicValue(previousUlid);
+    }
+    return previousUlid.toString();
   }
 }

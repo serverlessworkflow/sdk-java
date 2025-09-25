@@ -140,7 +140,7 @@ public class WorkflowApplication implements AutoCloseable {
     private ResourceLoaderFactory resourceLoaderFactory = DefaultResourceLoaderFactory.get();
     private SchemaValidatorFactory schemaValidatorFactory;
     private WorkflowPositionFactory positionFactory = () -> new QueueWorkflowPosition();
-    private WorkflowInstanceIdFactory idFactory = new UlidWorkflowInstanceIdFactory();
+    private WorkflowInstanceIdFactory idFactory = new MonotonicUlidWorkflowInstanceIdFactory();
     private ExecutorServiceFactory executorFactory = new DefaultExecutorServiceFactory();
     private EventConsumer<?, ?> eventConsumer;
     private Collection<EventPublisher> eventPublishers = new ArrayList<>();
