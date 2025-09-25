@@ -97,11 +97,7 @@ String story = (String) novelCreator.invoke(input);
 &nbsp;
 &nbsp;
 
-try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-    String result = app.workflowDefinition(wf).instance(input).start().get().asText().orElseThrow();
-} catch (Exception e) {
-    throw new RuntimeException("Workflow execution failed", e);
-}
+String result = app.workflowDefinition(wf).instance(input).start().get().asText().orElseThrow();
 
 </code>
 </pre>
@@ -194,11 +190,7 @@ Workflow wf = workflow("retryFlow")
 &nbsp;
 &nbsp;
 &nbsp;
-try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-    String result = app.workflowDefinition(wf).instance(input).start().get().asText().orElseThrow();
-} catch (Exception e) {
-    throw new RuntimeException("Workflow execution failed", e);
-}
+String result = app.workflowDefinition(wf).instance(input).start().get().asText().orElseThrow();
 
 </code>
 </pre>
@@ -304,13 +296,10 @@ Workflow wf = workflow("forkFlow")
 &nbsp;
 &nbsp;
 &nbsp;
+&nbsp;
 Map&lt;String, Object> input = Map.of("mood", "I am hungry and bored");
 
-try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-    Map<String, Object> result = app.workflowDefinition(wf).instance(input).start().get().asMap().orElseThrow();
-} catch (Exception e) {
-    throw new RuntimeException("Workflow execution failed", e);
-}
+Map<String, Object> result = app.workflowDefinition(wf).instance(input).start().get().asMap().orElseThrow();
 
 </code>
 </pre>
@@ -390,13 +379,9 @@ Workflow wf = workflow("seqFlow")
     .sequence(astrologyAgent, humanInTheLoop)
     .build();
 
-Map<String, Object> input = Map.of("request", "My name is Mario. What is my horoscope?");
-
-try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-    String result = app.workflowDefinition(wf).instance(input).start().get().asMap().orElseThrow();
-} catch (Exception e) {
-    throw new RuntimeException("Workflow execution failed", e);
-}
+&nbsp;
+&nbsp;
+String result = app.workflowDefinition(wf).instance("My name is Mario. What is my horoscope?").start().get().asMap().orElseThrow();
 
 </code>
 </pre>
