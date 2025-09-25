@@ -52,7 +52,7 @@
     <properties>
         <java.version>17</java.version>
         <maven.compiler.source>${java.version}</maven.compiler.source>
-        <maven.compiler.target>${java.version}</maven.compiler.target>
+        <maven.compiler.release>${java.version}</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <version.maven>3.9.11</version.maven>
 
@@ -94,9 +94,9 @@
         <version.org.hibernate.validator>9.0.1.Final</version.org.hibernate.validator>
         <version.org.glassfish.expressly>6.0.0</version.org.glassfish.expressly>
         <!-- Experimental modules from langchain4j -->
-        <version.dev.langchain4j.beta>1.4.1-beta10</version.dev.langchain4j.beta>
+        <version.dev.langchain4j.beta>1.5.0-beta11</version.dev.langchain4j.beta>
         <!-- Base langchain4j version -->
-        <version.dev.langchain4j>1.4.0</version.dev.langchain4j>
+        <version.dev.langchain4j>1.5.0</version.dev.langchain4j>
 
         <!-- Checkstyle props -->
         <checkstyle.failOnViolation>true</checkstyle.failOnViolation>
@@ -309,10 +309,6 @@
                 <configuration>
                     <showDeprecation>true</showDeprecation>
                     <showWarnings>true</showWarnings>
-                    <source>${maven.compiler.source}</source>
-                    <target>${maven.compiler.target}</target>
-                    <testSource>${maven.compiler.source}</testSource>
-                    <testTarget>${maven.compiler.target}</testTarget>
                     <parameters>true</parameters>
                     <compilerArgs>
                         <arg>-Xlint:unchecked</arg>

@@ -162,7 +162,9 @@ public class JsonUtils {
 
   private static Object toJavaValue(ObjectNode node) {
     Map<String, Object> result = new HashMap<>();
-    node.fields().forEachRemaining(iter -> result.put(iter.getKey(), toJavaValue(iter.getValue())));
+    node.properties()
+        .iterator()
+        .forEachRemaining(iter -> result.put(iter.getKey(), toJavaValue(iter.getValue())));
     return result;
   }
 

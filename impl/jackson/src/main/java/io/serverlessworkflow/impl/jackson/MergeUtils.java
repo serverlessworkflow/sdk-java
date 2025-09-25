@@ -19,7 +19,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -56,9 +55,7 @@ public class MergeUtils {
 
   private static ObjectNode mergeObject(JsonNode src, ObjectNode target, boolean mergeArray) {
     if (src.isObject()) {
-      Iterator<Map.Entry<String, JsonNode>> mergedIterator = src.fields();
-      while (mergedIterator.hasNext()) {
-        Map.Entry<String, JsonNode> entry = mergedIterator.next();
+      for (Map.Entry<String, JsonNode> entry : src.properties()) {
         JsonNode found = target.get(entry.getKey());
         target.set(
             entry.getKey(),

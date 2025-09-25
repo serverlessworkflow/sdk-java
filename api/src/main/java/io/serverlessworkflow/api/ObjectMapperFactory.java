@@ -34,11 +34,11 @@ class ObjectMapperFactory {
   private static final ObjectMapper yamlMapper =
       configure(new ObjectMapper(new YAMLFactory().enable(Feature.MINIMIZE_QUOTES)));
 
-  public static final ObjectMapper jsonMapper() {
+  public static ObjectMapper jsonMapper() {
     return jsonMapper;
   }
 
-  public static final ObjectMapper yamlMapper() {
+  public static ObjectMapper yamlMapper() {
     return yamlMapper;
   }
 
@@ -49,7 +49,7 @@ class ObjectMapperFactory {
     validationModule.setDeserializerModifier(new BeanDeserializerModifierWithValidation());
 
     return mapper
-        .setSerializationInclusion(Include.NON_NULL)
+        .setDefaultPropertyInclusion(Include.NON_NULL)
         .configure(SerializationFeature.INDENT_OUTPUT, true)
         .configure(SerializationFeature.WRITE_EMPTY_JSON_ARRAYS, false)
         .configure(SerializationFeature.WRITE_NULL_MAP_VALUES, false)
