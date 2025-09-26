@@ -288,17 +288,17 @@ List<EveningPlan> plans = eveningPlannerAgent.plan("romantic");
 <td style="vertical-align:top;">
 <pre style="background:none; margin:0; padding:0; font-family:monospace; line-height:1.4;">
 <code class="language-java" style="background:none;white-space:pre;">
-Workflow wf = workflow("forkFlow")
-    .parallel(foodExpert, movieExpert)
-    .build();
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
+    Workflow wf = workflow("forkFlow")
+            .tasks(d -> d.parallel(foodExpert, movieExpert)
+                    .callFn(fn((Map&lt;String, List<String>> m) -> {
+                      var movies = m.getOrDefault("movies", List.of());
+                      var meals  = m.getOrDefault("meals",  List.of());
+                      return java.util.stream.IntStream
+                              .range(0, Math.min(movies.size(), meals.size()))
+                              .mapToObj(i -> new EveningPlan(movies.get(i), meals.get(i)))
+                              .toList();
+                    }))
+            ).build();
 &nbsp;
 &nbsp;
 &nbsp;
@@ -307,7 +307,7 @@ Workflow wf = workflow("forkFlow")
 &nbsp;
 Map&lt;String, Object> input = Map.of("mood", "I am hungry and bored");
 
-Map<String, Object> result = app.workflowDefinition(wf).instance(input).start().get().asMap().orElseThrow();
+List<EveningPlan> result = app.workflowDefinition(wf).instance(input).start().get().asMap().orElseThrow();
 
 </code>
 </pre>
