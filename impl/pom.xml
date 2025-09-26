@@ -13,6 +13,7 @@
         <version.net.thisptr>1.6.0</version.net.thisptr>
         <version.com.github.f4b6a3>5.2.3</version.com.github.f4b6a3>
         <version.jakarta.ws.rs>4.0.0</version.jakarta.ws.rs>
+        <version.io.swagger.parser.v3>2.1.34</version.io.swagger.parser.v3>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -37,6 +38,11 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
+                <groupId>io.serverlessworkflow</groupId>
+                <artifactId>serverlessworkflow-impl-openapi</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>net.thisptr</groupId>
                 <artifactId>jackson-jq</artifactId>
                 <version>${version.net.thisptr}</version>
@@ -47,9 +53,9 @@
                 <version>${version.com.github.f4b6a3}</version>
             </dependency>
             <dependency>
-              <groupId>jakarta.ws.rs</groupId>
-              <artifactId>jakarta.ws.rs-api</artifactId>
-              <version>${version.jakarta.ws.rs}</version>
+                <groupId>jakarta.ws.rs</groupId>
+                <artifactId>jakarta.ws.rs-api</artifactId>
+                <version>${version.jakarta.ws.rs}</version>
             </dependency>
             <dependency>
                 <groupId>org.glassfish.jersey.core</groupId>
@@ -63,6 +69,11 @@
                 <version>${version.org.glassfish.jersey}</version>
                 <scope>test</scope>
             </dependency>
+            <dependency>
+                <groupId>io.swagger.parser.v3</groupId>
+                <artifactId>swagger-parser</artifactId>
+                <version>${version.io.swagger.parser.v3}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
     <modules>
@@ -71,5 +82,6 @@
         <module>jackson</module>
         <module>jwt-impl</module>
         <module>test</module>
+        <module>openapi</module>
     </modules>
 </project>

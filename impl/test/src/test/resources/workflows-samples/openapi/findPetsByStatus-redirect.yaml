@@ -1,0 +1,13 @@
+document:
+  dsl: '1.0.1'
+  namespace: test
+  name: openapi-example-with-redirect
+  version: '0.1.0'
+do:
+  - findPet:
+      call: openapi
+      with:
+        document:
+          endpoint: http://localhost:9999
+        operationId: redirectToDocs
+        redirect: false
