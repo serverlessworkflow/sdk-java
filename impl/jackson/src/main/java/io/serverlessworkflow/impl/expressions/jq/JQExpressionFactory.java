@@ -25,6 +25,7 @@ import io.serverlessworkflow.impl.jackson.JsonUtils;
 import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Supplier;
 import net.thisptr.jackson.jq.BuiltinFunctionLoader;
 import net.thisptr.jackson.jq.Scope;
@@ -35,7 +36,15 @@ public class JQExpressionFactory extends ObjectExpressionFactory {
 
   private WorkflowModelFactory modelFactory = new JacksonModelFactory();
 
-  private static Supplier<Scope> scopeSupplier = new DefaultScopeSupplier();
+  private final Supplier<Scope> scopeSupplier;
+
+  public JQExpressionFactory() {
+    this(new DefaultScopeSupplier());
+  }
+
+  public JQExpressionFactory(Supplier<Scope> scopeSupplier) {
+    this.scopeSupplier = Objects.requireNonNull(scopeSupplier, "scopeSupplier must be not null");
+  }
 
   private static class DefaultScopeSupplier implements Supplier<Scope> {
     private static class DefaultScope {
