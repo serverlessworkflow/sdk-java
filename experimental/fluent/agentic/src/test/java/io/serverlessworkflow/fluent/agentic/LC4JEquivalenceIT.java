@@ -180,18 +180,22 @@ public class LC4JEquivalenceIT {
                             })))
         .build();
 
-    Workflow wf = workflow("forkFlow")
-            .tasks(d -> d
-                    .parallel("fanout", foodExpert, movieExpert)
-                    .callFn(fn((Map<String, List<String>> m) -> {
-                      var movies = m.getOrDefault("movies", List.of());
-                      var meals  = m.getOrDefault("meals",  List.of());
-                      return java.util.stream.IntStream
-                              .range(0, Math.min(movies.size(), meals.size()))
-                              .mapToObj(i -> new EveningPlan(movies.get(i), meals.get(i)))
-                              .toList();
-                    }))
-            ).build();
+    Workflow wf =
+        workflow("forkFlow")
+            .tasks(
+                d ->
+                    d.parallel("fanout", foodExpert, movieExpert)
+                        .callFn(
+                            fn(
+                                (Map<String, List<String>> m) -> {
+                                  var movies = m.getOrDefault("movies", List.of());
+                                  var meals = m.getOrDefault("meals", List.of());
+                                  return java.util.stream.IntStream.range(
+                                          0, Math.min(movies.size(), meals.size()))
+                                      .mapToObj(i -> new EveningPlan(movies.get(i), meals.get(i)))
+                                      .toList();
+                                })))
+            .build();
 
     List<TaskItem> items = wf.getDo();
     assertThat(items).hasSize(1);
