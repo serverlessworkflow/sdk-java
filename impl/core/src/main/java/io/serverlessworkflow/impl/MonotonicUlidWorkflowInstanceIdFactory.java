@@ -17,6 +17,7 @@ package io.serverlessworkflow.impl;
 
 import de.huxhorn.sulky.ulid.ULID;
 import java.security.SecureRandom;
+import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * A {@link WorkflowInstanceIdFactory} implementation that generates Monotonic ULIDs as workflow
@@ -24,17 +25,17 @@ import java.security.SecureRandom;
  */
 public class MonotonicUlidWorkflowInstanceIdFactory implements WorkflowInstanceIdFactory {
 
-  private final SecureRandom random = new SecureRandom();
-  private final ULID ulid = new ULID(random);
-  private ULID.Value previousUlid;
+  private final ULID ulid;
+  private ULID.Value current;
+  private final ReentrantLock lock = new ReentrantLock();
 
-  @Override
-  public synchronized String get() {
-    if (previousUlid == null) {
-      previousUlid = ulid.nextValue();
-    } else {
-      previousUlid = ulid.nextMonotonicValue(previousUlid);
-    }
-    return previousUlid.toString();
+  public MonotonicUlidWorkflowInstanceIdFactory() {
+    this.ulid = new ULID(new SecureRandom());
+    this.current = ulid.nextValue();
+  }
+
+  public String get() {
+    this.current = ulid.nextMonotonicValue(this.current);
+    return current.toString();
   }
 }
