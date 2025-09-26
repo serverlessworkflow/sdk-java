@@ -59,5 +59,4 @@ public class Agents {
     @Agent("Edit a story to better fit a given style")
     String editStory(@V("story") String story, @V("style") String style);
   }
-
 }

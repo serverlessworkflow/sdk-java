@@ -77,5 +77,4 @@ public class WorkflowAgentsIT {
     verify(audienceEditor).editStory(any(), eq("young adults"));
     verify(styleEditor).editStory(any(), eq("fantasy"));
   }
-
 }

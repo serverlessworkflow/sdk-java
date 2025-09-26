@@ -28,27 +28,20 @@ import static io.serverlessworkflow.fluent.agentic.AgentsUtils.newStyleScorer;
 import static io.serverlessworkflow.fluent.agentic.AgentsUtils.newSummaryStory;
 import static io.serverlessworkflow.fluent.agentic.dsl.AgenticDSL.conditional;
 import static io.serverlessworkflow.fluent.agentic.dsl.AgenticDSL.doTasks;
-import static io.serverlessworkflow.fluent.agentic.dsl.AgenticDSL.loop;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.spy;
-import static org.mockito.Mockito.verify;
 
 import dev.langchain4j.agentic.scope.AgenticScope;
 import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.api.types.func.CallTaskJava;
 import io.serverlessworkflow.impl.WorkflowApplication;
-
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.IntStream;
-
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -61,9 +54,9 @@ public class AgenticWorkflowHelperIT {
     var audienceEditor = newAudienceEditor();
     var styleEditor = newStyleEditor();
 
-    NovelCreator novelCreator = AgenticWorkflow.of(NovelCreator.class)
-            .flow(workflow("seqFlow")
-            .sequence(creativeWriter, audienceEditor, styleEditor))
+    NovelCreator novelCreator =
+        AgenticWorkflow.of(NovelCreator.class)
+            .flow(workflow("seqFlow").sequence(creativeWriter, audienceEditor, styleEditor))
             .build();
 
     String story = novelCreator.createNovel("dragons and wizards", "young adults", "fantasy");
@@ -76,19 +69,20 @@ public class AgenticWorkflowHelperIT {
     var foodExpert = newFoodExpert();
     var movieExpert = newMovieExpert();
 
-    Function<AgenticScope, List<EveningPlan>> planEvening = input -> {
-      List<String> movies = (List<String>) input.readState("movies");
-      List<String> meals = (List<String>) input.readState("meals");
+    Function<AgenticScope, List<EveningPlan>> planEvening =
+        input -> {
+          List<String> movies = (List<String>) input.readState("movies");
+          List<String> meals = (List<String>) input.readState("meals");
 
-      int max = Math.min(movies.size(), meals.size());
-      return IntStream.range(0, max)
+          int max = Math.min(movies.size(), meals.size());
+          return IntStream.range(0, max)
               .mapToObj(i -> new EveningPlan(movies.get(i), meals.get(i)))
               .toList();
-    };
+        };
 
-    EveningPlannerAgent eveningPlannerAgent = AgenticWorkflow.of(EveningPlannerAgent.class)
-            .flow(workflow("parallelFlow")
-            .parallel(foodExpert, movieExpert).outputAs(planEvening))
+    EveningPlannerAgent eveningPlannerAgent =
+        AgenticWorkflow.of(EveningPlannerAgent.class)
+            .flow(workflow("parallelFlow").parallel(foodExpert, movieExpert).outputAs(planEvening))
             .build();
     List<EveningPlan> result = eveningPlannerAgent.plan("romantic");
     assertEquals(3, result.size());
@@ -103,11 +97,10 @@ public class AgenticWorkflowHelperIT {
 
     Predicate<AgenticScope> until = s -> s.readState("score", 0.0) >= 0.8;
 
-    StyledWriter styledWriter = AgenticWorkflow.of(StyledWriter.class)
-                    .flow(workflow("loopFlow")
-                    .agent(creativeWriter)
-                    .loop(until, styleScorer, styleEditor))
-                    .build();
+    StyledWriter styledWriter =
+        AgenticWorkflow.of(StyledWriter.class)
+            .flow(workflow("loopFlow").agent(creativeWriter).loop(until, styleScorer, styleEditor))
+            .build();
 
     String story = styledWriter.writeStoryWithStyle("dragons and wizards", "comedy");
     assertNotNull(story);
@@ -122,13 +115,13 @@ public class AgenticWorkflowHelperIT {
     var summaryStory = newSummaryStory();
 
     NovelCreator novelCreator =
-            AgenticWorkflow.of(NovelCreator.class)
-                    .flow(
-                            workflow("seqFlow")
-                                    .agent(creativeWriter)
-                                    .sequence(audienceEditor, styleEditor)
-                                    .agent(summaryStory))
-                    .build();
+        AgenticWorkflow.of(NovelCreator.class)
+            .flow(
+                workflow("seqFlow")
+                    .agent(creativeWriter)
+                    .sequence(audienceEditor, styleEditor)
+                    .agent(summaryStory))
+            .build();
 
     String story = novelCreator.createNovel("dragons and wizards", "young adults", "fantasy");
     assertNotNull(story);
@@ -140,25 +133,25 @@ public class AgenticWorkflowHelperIT {
     var astrologyAgent = newAstrologyAgent();
 
     var askSign =
-            new Function<AgenticScope, AgenticScope>() {
-              @Override
-              public AgenticScope apply(AgenticScope holder) {
-                System.out.println("What's your star sign?");
-                // var sign = System.console().readLine();
-                holder.writeState("sign", "piscis");
-                return holder;
-              }
-            };
+        new Function<AgenticScope, AgenticScope>() {
+          @Override
+          public AgenticScope apply(AgenticScope holder) {
+            System.out.println("What's your star sign?");
+            // var sign = System.console().readLine();
+            holder.writeState("sign", "piscis");
+            return holder;
+          }
+        };
 
     String result =
-            AgenticWorkflow.of(HoroscopeAgent.class)
-                    .flow(
-                            workflow("humanInTheLoop")
-                                    .inputFrom(askSign)
-                                    // .tasks(tasks -> tasks.callFn(fn(askSign))) // TODO should work too
-                                    .agent(astrologyAgent))
-                    .build()
-                    .invoke("My name is Mario. What is my horoscope?");
+        AgenticWorkflow.of(HoroscopeAgent.class)
+            .flow(
+                workflow("humanInTheLoop")
+                    .inputFrom(askSign)
+                    // .tasks(tasks -> tasks.callFn(fn(askSign))) // TODO should work too
+                    .agent(astrologyAgent))
+            .build()
+            .invoke("My name is Mario. What is my horoscope?");
 
     assertNotNull(result);
   }
@@ -171,9 +164,9 @@ public class AgenticWorkflowHelperIT {
     var styleEditor = newStyleEditor();
 
     Workflow wf =
-            workflow("seqFlow")
-                    .sequence("process", creativeWriter, audienceEditor, styleEditor)
-                    .build();
+        workflow("seqFlow")
+            .sequence("process", creativeWriter, audienceEditor, styleEditor)
+            .build();
 
     List<TaskItem> items = wf.getDo();
     assertThat(items).hasSize(3);
@@ -184,9 +177,9 @@ public class AgenticWorkflowHelperIT {
     items.forEach(it -> assertThat(it.getTask().getCallTask()).isInstanceOf(CallTaskJava.class));
 
     Map<String, Object> input =
-            Map.of(
-                    "style", "fantasy",
-                    "audience", "young adults");
+        Map.of(
+            "style", "fantasy",
+            "audience", "young adults");
 
     Map<String, Object> result;
     try (WorkflowApplication app = WorkflowApplication.builder().build()) {
@@ -209,14 +202,14 @@ public class AgenticWorkflowHelperIT {
     var legalExpert = newLegalExpert();
 
     Workflow wf =
-            workflow("conditional")
-                    .sequence("process", category)
-                    .tasks(
-                            doTasks(
-                                    conditional(RequestCategory.MEDICAL::equals, medicalExpert),
-                                    conditional(RequestCategory.TECHNICAL::equals, technicalExpert),
-                                    conditional(RequestCategory.LEGAL::equals, legalExpert)))
-                    .build();
+        workflow("conditional")
+            .sequence("process", category)
+            .tasks(
+                doTasks(
+                    conditional(RequestCategory.MEDICAL::equals, medicalExpert),
+                    conditional(RequestCategory.TECHNICAL::equals, technicalExpert),
+                    conditional(RequestCategory.LEGAL::equals, legalExpert)))
+            .build();
 
     Map<String, Object> input = Map.of("question", "What is the best treatment for a common cold?");
 
@@ -229,5 +222,4 @@ public class AgenticWorkflowHelperIT {
 
     assertThat(result).containsKey("response");
   }
-
 }

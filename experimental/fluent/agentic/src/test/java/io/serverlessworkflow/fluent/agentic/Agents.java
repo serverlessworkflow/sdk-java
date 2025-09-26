@@ -406,5 +406,4 @@ public interface Agents {
     @Agent
     List<EveningPlan> plan(@V("mood") String mood);
   }
-
 }
