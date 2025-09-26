@@ -16,13 +16,11 @@
 package io.serverlessworkflow.impl.executors;
 
 import io.serverlessworkflow.api.types.DoTask;
-import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.TaskContext;
-import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowMutablePosition;
-import io.serverlessworkflow.impl.resources.ResourceLoader;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
@@ -34,15 +32,9 @@ public class DoExecutor extends RegularTaskExecutor<DoTask> {
     private TaskExecutor<?> taskExecutor;
 
     protected DoExecutorBuilder(
-        WorkflowMutablePosition position,
-        DoTask task,
-        Workflow workflow,
-        WorkflowApplication application,
-        ResourceLoader resourceLoader) {
-      super(position, task, workflow, application, resourceLoader);
-      taskExecutor =
-          TaskExecutorHelper.createExecutorList(
-              position, task.getDo(), workflow, application, resourceLoader);
+        WorkflowMutablePosition position, DoTask task, WorkflowDefinition definition) {
+      super(position, task, definition);
+      taskExecutor = TaskExecutorHelper.createExecutorList(position, task.getDo(), definition);
     }
 
     @Override

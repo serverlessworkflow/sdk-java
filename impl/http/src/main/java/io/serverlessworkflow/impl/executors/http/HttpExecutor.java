@@ -23,10 +23,10 @@ import io.serverlessworkflow.api.types.EndpointUri;
 import io.serverlessworkflow.api.types.HTTPArguments;
 import io.serverlessworkflow.api.types.TaskBase;
 import io.serverlessworkflow.api.types.UriTemplate;
-import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowError;
 import io.serverlessworkflow.impl.WorkflowException;
 import io.serverlessworkflow.impl.WorkflowModel;
@@ -34,7 +34,6 @@ import io.serverlessworkflow.impl.WorkflowValueResolver;
 import io.serverlessworkflow.impl.executors.CallableTask;
 import io.serverlessworkflow.impl.expressions.ExpressionDescriptor;
 import io.serverlessworkflow.impl.expressions.ExpressionFactory;
-import io.serverlessworkflow.impl.resources.ResourceLoader;
 import jakarta.ws.rs.HttpMethod;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.client.Client;
@@ -69,16 +68,16 @@ public class HttpExecutor implements CallableTask<CallHTTP> {
   }
 
   @Override
-  public void init(
-      CallHTTP task,
-      Workflow workflow,
-      WorkflowApplication application,
-      ResourceLoader resourceLoader) {
+  public void init(CallHTTP task, WorkflowDefinition definition) {
     HTTPArguments httpArgs = task.getWith();
+
+    WorkflowApplication application = definition.application();
 
     this.authProvider =
         AuthProviderFactory.getAuth(
-            application, workflow, task.getWith().getEndpoint().getEndpointConfiguration());
+            application,
+            definition.workflow(),
+            task.getWith().getEndpoint().getEndpointConfiguration());
 
     this.targetSupplier =
         getTargetSupplier(httpArgs.getEndpoint(), application.expressionFactory());

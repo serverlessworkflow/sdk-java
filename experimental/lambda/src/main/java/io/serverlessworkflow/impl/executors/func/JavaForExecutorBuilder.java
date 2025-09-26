@@ -18,29 +18,23 @@ package io.serverlessworkflow.impl.executors.func;
 import static io.serverlessworkflow.impl.executors.func.JavaFuncUtils.safeObject;
 
 import io.serverlessworkflow.api.types.ForTask;
-import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.api.types.func.ForTaskFunction;
 import io.serverlessworkflow.api.types.func.LoopPredicateIndex;
 import io.serverlessworkflow.api.types.func.TypedFunction;
-import io.serverlessworkflow.impl.WorkflowApplication;
+import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.WorkflowPredicate;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
 import io.serverlessworkflow.impl.executors.ForExecutor.ForExecutorBuilder;
 import io.serverlessworkflow.impl.expressions.ExpressionDescriptor;
-import io.serverlessworkflow.impl.resources.ResourceLoader;
 import java.util.Collection;
 import java.util.Optional;
 
 public class JavaForExecutorBuilder extends ForExecutorBuilder {
 
   protected JavaForExecutorBuilder(
-      WorkflowMutablePosition position,
-      ForTask task,
-      Workflow workflow,
-      WorkflowApplication application,
-      ResourceLoader resourceLoader) {
-    super(position, task, workflow, application, resourceLoader);
+      WorkflowMutablePosition position, ForTask task, WorkflowDefinition definition) {
+    super(position, task, definition);
   }
 
   @Override

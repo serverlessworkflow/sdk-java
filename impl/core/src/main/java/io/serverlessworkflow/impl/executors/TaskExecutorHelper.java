@@ -16,14 +16,12 @@
 package io.serverlessworkflow.impl.executors;
 
 import io.serverlessworkflow.api.types.TaskItem;
-import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.TaskContext;
-import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.WorkflowStatus;
-import io.serverlessworkflow.impl.resources.ResourceLoader;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -62,11 +60,9 @@ public class TaskExecutorHelper {
   public static TaskExecutor<?> createExecutorList(
       WorkflowMutablePosition position,
       List<TaskItem> taskItems,
-      Workflow workflow,
-      WorkflowApplication application,
-      ResourceLoader resourceLoader) {
+      WorkflowDefinition workflowDefinition) {
     Map<String, TaskExecutorBuilder<?>> executors =
-        createExecutorBuilderList(position, taskItems, workflow, application, resourceLoader, "do");
+        createExecutorBuilderList(position, taskItems, workflowDefinition, "do");
     executors.values().forEach(t -> t.connect(executors));
     Iterator<TaskExecutorBuilder<?>> iter = executors.values().iterator();
     TaskExecutor<?> first = iter.next().build();
@@ -77,34 +73,24 @@ public class TaskExecutorHelper {
   }
 
   public static Map<String, TaskExecutor<?>> createBranchList(
-      WorkflowMutablePosition position,
-      List<TaskItem> taskItems,
-      Workflow workflow,
-      WorkflowApplication application,
-      ResourceLoader resourceLoader) {
-    return createExecutorBuilderList(
-            position, taskItems, workflow, application, resourceLoader, "branch")
-        .entrySet()
-        .stream()
+      WorkflowMutablePosition position, List<TaskItem> taskItems, WorkflowDefinition definition) {
+    return createExecutorBuilderList(position, taskItems, definition, "branch").entrySet().stream()
         .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().build()));
   }
 
   private static Map<String, TaskExecutorBuilder<?>> createExecutorBuilderList(
       WorkflowMutablePosition position,
       List<TaskItem> taskItems,
-      Workflow workflow,
-      WorkflowApplication application,
-      ResourceLoader resourceLoader,
+      WorkflowDefinition definition,
       String containerName) {
-    TaskExecutorFactory taskFactory = application.taskFactory();
+    TaskExecutorFactory taskFactory = definition.application().taskFactory();
     Map<String, TaskExecutorBuilder<?>> executors = new LinkedHashMap<>();
     position.addProperty(containerName);
     int index = 0;
     for (TaskItem item : taskItems) {
       position.addIndex(index++).addProperty(item.getName());
       TaskExecutorBuilder<?> taskExecutorBuilder =
-          taskFactory.getTaskExecutor(
-              position.copy(), item.getTask(), workflow, application, resourceLoader);
+          taskFactory.getTaskExecutor(position.copy(), item.getTask(), definition);
       executors.put(item.getName(), taskExecutorBuilder);
       position.back().back();
     }

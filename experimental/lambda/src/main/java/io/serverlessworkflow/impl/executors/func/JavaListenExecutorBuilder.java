@@ -19,24 +19,18 @@ import static io.serverlessworkflow.impl.executors.func.JavaFuncUtils.predObject
 
 import io.serverlessworkflow.api.types.ListenTask;
 import io.serverlessworkflow.api.types.Until;
-import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.api.types.func.UntilPredicate;
-import io.serverlessworkflow.impl.WorkflowApplication;
+import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.WorkflowPredicate;
 import io.serverlessworkflow.impl.executors.ListenExecutor.ListenExecutorBuilder;
 import io.serverlessworkflow.impl.expressions.ExpressionDescriptor;
-import io.serverlessworkflow.impl.resources.ResourceLoader;
 
 public class JavaListenExecutorBuilder extends ListenExecutorBuilder {
 
   protected JavaListenExecutorBuilder(
-      WorkflowMutablePosition position,
-      ListenTask task,
-      Workflow workflow,
-      WorkflowApplication application,
-      ResourceLoader resourceLoader) {
-    super(position, task, workflow, application, resourceLoader);
+      WorkflowMutablePosition position, ListenTask task, WorkflowDefinition definition) {
+    super(position, task, definition);
   }
 
   @Override

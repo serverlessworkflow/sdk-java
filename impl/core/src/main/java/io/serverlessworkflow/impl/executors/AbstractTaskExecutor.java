@@ -28,6 +28,7 @@ import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowFilter;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowMutablePosition;
@@ -81,17 +82,13 @@ public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskEx
     private V instance;
 
     protected AbstractTaskExecutorBuilder(
-        WorkflowMutablePosition position,
-        T task,
-        Workflow workflow,
-        WorkflowApplication application,
-        ResourceLoader resourceLoader) {
-      this.workflow = workflow;
+        WorkflowMutablePosition position, T task, WorkflowDefinition definition) {
+      this.workflow = definition.workflow();
       this.taskName = position.last().toString();
       this.position = position;
       this.task = task;
-      this.application = application;
-      this.resourceLoader = resourceLoader;
+      this.application = definition.application();
+      this.resourceLoader = definition.resourceLoader();
       if (task.getInput() != null) {
         Input input = task.getInput();
         this.inputProcessor = buildWorkflowFilter(application, input.getFrom());
@@ -174,16 +171,18 @@ public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskEx
 
   protected final CompletableFuture<TaskContext> executeNext(
       CompletableFuture<TaskContext> future, WorkflowContext workflow) {
-    return future.thenCompose(
-        t -> {
-          TransitionInfo transition = t.transition();
-          if (transition.isEndNode()) {
-            workflow.instance().status(WorkflowStatus.COMPLETED);
-          } else if (transition.next() != null) {
-            return transition.next().apply(workflow, t.parent(), t.output());
-          }
-          return CompletableFuture.completedFuture(t);
-        });
+    return future.thenCompose(t -> executeNext(workflow, t));
+  }
+
+  private CompletableFuture<TaskContext> executeNext(
+      WorkflowContext workflow, TaskContext taskContext) {
+    TransitionInfo transition = taskContext.transition();
+    if (transition.isEndNode()) {
+      workflow.instance().status(WorkflowStatus.COMPLETED);
+    } else if (transition.next() != null) {
+      return transition.next().apply(workflow, taskContext.parent(), taskContext.output());
+    }
+    return CompletableFuture.completedFuture(taskContext);
   }
 
   @Override

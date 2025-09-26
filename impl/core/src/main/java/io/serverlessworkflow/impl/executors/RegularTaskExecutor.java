@@ -16,13 +16,11 @@
 package io.serverlessworkflow.impl.executors;
 
 import io.serverlessworkflow.api.types.TaskBase;
-import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.TaskContext;
-import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowMutablePosition;
-import io.serverlessworkflow.impl.resources.ResourceLoader;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
@@ -40,12 +38,8 @@ public abstract class RegularTaskExecutor<T extends TaskBase> extends AbstractTa
     private TransitionInfoBuilder transition;
 
     protected RegularTaskExecutorBuilder(
-        WorkflowMutablePosition position,
-        T task,
-        Workflow workflow,
-        WorkflowApplication application,
-        ResourceLoader resourceLoader) {
-      super(position, task, workflow, application, resourceLoader);
+        WorkflowMutablePosition position, T task, WorkflowDefinition definition) {
+      super(position, task, definition);
     }
 
     public void connect(Map<String, TaskExecutorBuilder<?>> connections) {

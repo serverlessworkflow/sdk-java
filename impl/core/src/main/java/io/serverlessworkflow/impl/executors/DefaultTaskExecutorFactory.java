@@ -18,8 +18,7 @@ package io.serverlessworkflow.impl.executors;
 import io.serverlessworkflow.api.types.CallTask;
 import io.serverlessworkflow.api.types.Task;
 import io.serverlessworkflow.api.types.TaskBase;
-import io.serverlessworkflow.api.types.Workflow;
-import io.serverlessworkflow.impl.WorkflowApplication;
+import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.executors.CallTaskExecutor.CallTaskExecutorBuilder;
 import io.serverlessworkflow.impl.executors.DoExecutor.DoExecutorBuilder;
@@ -32,7 +31,6 @@ import io.serverlessworkflow.impl.executors.SetExecutor.SetExecutorBuilder;
 import io.serverlessworkflow.impl.executors.SwitchExecutor.SwitchExecutorBuilder;
 import io.serverlessworkflow.impl.executors.TryExecutor.TryExecutorBuilder;
 import io.serverlessworkflow.impl.executors.WaitExecutor.WaitExecutorBuilder;
-import io.serverlessworkflow.impl.resources.ResourceLoader;
 import java.util.ServiceLoader;
 import java.util.ServiceLoader.Provider;
 
@@ -50,53 +48,34 @@ public class DefaultTaskExecutorFactory implements TaskExecutorFactory {
 
   @Override
   public TaskExecutorBuilder<? extends TaskBase> getTaskExecutor(
-      WorkflowMutablePosition position,
-      Task task,
-      Workflow workflow,
-      WorkflowApplication application,
-      ResourceLoader resourceLoader) {
+      WorkflowMutablePosition position, Task task, WorkflowDefinition definition) {
     if (task.getCallTask() != null) {
       CallTask callTask = task.getCallTask();
       TaskBase taskBase = (TaskBase) callTask.get();
       if (taskBase != null) {
         return new CallTaskExecutorBuilder(
-            position,
-            taskBase,
-            workflow,
-            application,
-            resourceLoader,
-            findCallTask(taskBase.getClass()));
+            position, taskBase, definition, findCallTask(taskBase.getClass()));
       }
     } else if (task.getSwitchTask() != null) {
-      return new SwitchExecutorBuilder(
-          position, task.getSwitchTask(), workflow, application, resourceLoader);
+      return new SwitchExecutorBuilder(position, task.getSwitchTask(), definition);
     } else if (task.getDoTask() != null) {
-      return new DoExecutorBuilder(
-          position, task.getDoTask(), workflow, application, resourceLoader);
+      return new DoExecutorBuilder(position, task.getDoTask(), definition);
     } else if (task.getSetTask() != null) {
-      return new SetExecutorBuilder(
-          position, task.getSetTask(), workflow, application, resourceLoader);
+      return new SetExecutorBuilder(position, task.getSetTask(), definition);
     } else if (task.getForTask() != null) {
-      return new ForExecutorBuilder(
-          position, task.getForTask(), workflow, application, resourceLoader);
+      return new ForExecutorBuilder(position, task.getForTask(), definition);
     } else if (task.getRaiseTask() != null) {
-      return new RaiseExecutorBuilder(
-          position, task.getRaiseTask(), workflow, application, resourceLoader);
+      return new RaiseExecutorBuilder(position, task.getRaiseTask(), definition);
     } else if (task.getTryTask() != null) {
-      return new TryExecutorBuilder(
-          position, task.getTryTask(), workflow, application, resourceLoader);
+      return new TryExecutorBuilder(position, task.getTryTask(), definition);
     } else if (task.getForkTask() != null) {
-      return new ForkExecutorBuilder(
-          position, task.getForkTask(), workflow, application, resourceLoader);
+      return new ForkExecutorBuilder(position, task.getForkTask(), definition);
     } else if (task.getWaitTask() != null) {
-      return new WaitExecutorBuilder(
-          position, task.getWaitTask(), workflow, application, resourceLoader);
+      return new WaitExecutorBuilder(position, task.getWaitTask(), definition);
     } else if (task.getListenTask() != null) {
-      return new ListenExecutorBuilder(
-          position, task.getListenTask(), workflow, application, resourceLoader);
+      return new ListenExecutorBuilder(position, task.getListenTask(), definition);
     } else if (task.getEmitTask() != null) {
-      return new EmitExecutorBuilder(
-          position, task.getEmitTask(), workflow, application, resourceLoader);
+      return new EmitExecutorBuilder(position, task.getEmitTask(), definition);
     }
     throw new UnsupportedOperationException(task.get().getClass().getName() + " not supported yet");
   }

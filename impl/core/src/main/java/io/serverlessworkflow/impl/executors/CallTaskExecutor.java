@@ -16,13 +16,11 @@
 package io.serverlessworkflow.impl.executors;
 
 import io.serverlessworkflow.api.types.TaskBase;
-import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.TaskContext;
-import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowMutablePosition;
-import io.serverlessworkflow.impl.resources.ResourceLoader;
 import java.util.concurrent.CompletableFuture;
 
 public class CallTaskExecutor<T extends TaskBase> extends RegularTaskExecutor<T> {
@@ -36,13 +34,11 @@ public class CallTaskExecutor<T extends TaskBase> extends RegularTaskExecutor<T>
     protected CallTaskExecutorBuilder(
         WorkflowMutablePosition position,
         T task,
-        Workflow workflow,
-        WorkflowApplication application,
-        ResourceLoader resourceLoader,
+        WorkflowDefinition definition,
         CallableTask<T> callable) {
-      super(position, task, workflow, application, resourceLoader);
+      super(position, task, definition);
       this.callable = callable;
-      callable.init(task, workflow, application, resourceLoader);
+      callable.init(task, definition);
     }
 
     @Override

@@ -20,17 +20,16 @@ import io.serverlessworkflow.api.types.ErrorInstance;
 import io.serverlessworkflow.api.types.ErrorType;
 import io.serverlessworkflow.api.types.RaiseTask;
 import io.serverlessworkflow.api.types.RaiseTaskError;
-import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowError;
 import io.serverlessworkflow.impl.WorkflowException;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
-import io.serverlessworkflow.impl.resources.ResourceLoader;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -49,12 +48,8 @@ public class RaiseExecutor extends RegularTaskExecutor<RaiseTask> {
     private final WorkflowValueResolver<String> detailFilter;
 
     protected RaiseExecutorBuilder(
-        WorkflowMutablePosition position,
-        RaiseTask task,
-        Workflow workflow,
-        WorkflowApplication application,
-        ResourceLoader resourceLoader) {
-      super(position, task, workflow, application, resourceLoader);
+        WorkflowMutablePosition position, RaiseTask task, WorkflowDefinition definition) {
+      super(position, task, definition);
       RaiseTaskError raiseError = task.getRaise().getError();
       Error error =
           raiseError.getRaiseErrorDefinition() != null
