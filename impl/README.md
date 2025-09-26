@@ -209,7 +209,7 @@ Source: `examples/events/src/main/java/events/EventExample.java`
 
 ## Workflow execution control
 
-As shown in previous examples, to start a new workflow instance, first a [WorkflowInstance](https://github.com/serverlessworkflow/sdk-java/blob/main/impl/core/src/main/java/io/serverlessworkflow/impl/WorkflowInstance) is created from a [WorkflowDefinition](https://github.com/serverlessworkflow/sdk-java/blob/main/impl/core/src/main/java/io/serverlessworkflow/impl/WorkflowDefinition.java#L74), specifying the desired input, and then start method is invoked over it. Start method returns a CompletableFuture, which might be used to obtain the output, either synchronously or asynchronously. 
+As shown in previous examples, to start a new workflow instance, first a [WorkflowInstance](https://github.com/serverlessworkflow/sdk-java/blob/main/impl/core/src/main/java/io/serverlessworkflow/impl/WorkflowInstance.java) is created from a [WorkflowDefinition](https://github.com/serverlessworkflow/sdk-java/blob/main/impl/core/src/main/java/io/serverlessworkflow/impl/WorkflowDefinition.java#L74), specifying the desired input, and then start method is invoked over it. Start method returns a CompletableFuture, which might be used to obtain the output, either synchronously or asynchronously. 
 
 Once started, and before it completes, a workflow instance execution can be suspended or cancelled. Once cancelled, a workflow instance is done, while a suspended one might be resumed. 
 
