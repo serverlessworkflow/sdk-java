@@ -194,9 +194,9 @@ Predicate<AgenticScope> until = s -> s.readState("score", 0).doubleValue() >= 0.
 &nbsp;
 &nbsp;
 Workflow wf = workflow("retryFlow")
-    .agent(creativeWriter)
-    .loop(until, styleScorer, styleEditor)
-    .build();
+        .agent(creativeWriter)
+        .tasks(loop(5,  c -> c.readState("score", 0).doubleValue() >= 0.8, styleScorer, styleEditor))
+        .build();
 &nbsp;
 String result = app.workflowDefinition(wf).instance(input).start().get().asText().orElseThrow();
 
