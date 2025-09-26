@@ -18,15 +18,13 @@ package io.serverlessworkflow.impl.executors;
 import io.serverlessworkflow.api.types.Set;
 import io.serverlessworkflow.api.types.SetTask;
 import io.serverlessworkflow.api.types.SetTaskConfiguration;
-import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.TaskContext;
-import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowFilter;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.WorkflowUtils;
-import io.serverlessworkflow.impl.resources.ResourceLoader;
 import java.util.concurrent.CompletableFuture;
 
 public class SetExecutor extends RegularTaskExecutor<SetTask> {
@@ -38,12 +36,8 @@ public class SetExecutor extends RegularTaskExecutor<SetTask> {
     private final WorkflowFilter setFilter;
 
     protected SetExecutorBuilder(
-        WorkflowMutablePosition position,
-        SetTask task,
-        Workflow workflow,
-        WorkflowApplication application,
-        ResourceLoader resourceLoader) {
-      super(position, task, workflow, application, resourceLoader);
+        WorkflowMutablePosition position, SetTask task, WorkflowDefinition definition) {
+      super(position, task, definition);
       Set setInfo = task.getSet();
       SetTaskConfiguration setConfig = setInfo.getSetTaskConfiguration();
       this.setFilter =

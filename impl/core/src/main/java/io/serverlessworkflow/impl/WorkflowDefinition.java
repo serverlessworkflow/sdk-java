@@ -36,11 +36,13 @@ public class WorkflowDefinition implements AutoCloseable, WorkflowDefinitionData
   private Optional<WorkflowFilter> outputFilter = Optional.empty();
   private final WorkflowApplication application;
   private final TaskExecutor<?> taskExecutor;
+  private final ResourceLoader resourceLoader;
 
   private WorkflowDefinition(
       WorkflowApplication application, Workflow workflow, ResourceLoader resourceLoader) {
     this.workflow = workflow;
     this.application = application;
+    this.resourceLoader = resourceLoader;
     if (workflow.getInput() != null) {
       Input input = workflow.getInput();
       this.inputSchemaValidator =
@@ -55,11 +57,7 @@ public class WorkflowDefinition implements AutoCloseable, WorkflowDefinitionData
     }
     this.taskExecutor =
         TaskExecutorHelper.createExecutorList(
-            application.positionFactory().get(),
-            workflow.getDo(),
-            workflow,
-            application,
-            resourceLoader);
+            application.positionFactory().get(), workflow.getDo(), this);
   }
 
   static WorkflowDefinition of(WorkflowApplication application, Workflow workflow) {
@@ -103,6 +101,10 @@ public class WorkflowDefinition implements AutoCloseable, WorkflowDefinitionData
   @Override
   public WorkflowApplication application() {
     return application;
+  }
+
+  public ResourceLoader resourceLoader() {
+    return resourceLoader;
   }
 
   @Override

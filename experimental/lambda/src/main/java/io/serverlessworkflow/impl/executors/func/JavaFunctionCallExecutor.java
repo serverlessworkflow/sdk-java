@@ -16,15 +16,13 @@
 package io.serverlessworkflow.impl.executors.func;
 
 import io.serverlessworkflow.api.types.TaskBase;
-import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.api.types.func.CallJava;
 import io.serverlessworkflow.impl.TaskContext;
-import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowModelFactory;
 import io.serverlessworkflow.impl.executors.CallableTask;
-import io.serverlessworkflow.impl.resources.ResourceLoader;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
@@ -39,11 +37,7 @@ public class JavaFunctionCallExecutor<T, V>
     return Integer.toString(integer);
   }
 
-  public void init(
-      CallJava.CallJavaFunction<T, V> task,
-      Workflow workflow,
-      WorkflowApplication application,
-      ResourceLoader loader) {
+  public void init(CallJava.CallJavaFunction<T, V> task, WorkflowDefinition definition) {
     function = task.function();
     inputClass = task.inputClass();
   }

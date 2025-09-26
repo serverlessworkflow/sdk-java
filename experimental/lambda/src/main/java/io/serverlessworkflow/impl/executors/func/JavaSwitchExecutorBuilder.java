@@ -19,25 +19,19 @@ import static io.serverlessworkflow.impl.executors.func.JavaFuncUtils.predObject
 
 import io.serverlessworkflow.api.types.SwitchCase;
 import io.serverlessworkflow.api.types.SwitchTask;
-import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.api.types.func.SwitchCaseFunction;
-import io.serverlessworkflow.impl.WorkflowApplication;
+import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.WorkflowPredicate;
 import io.serverlessworkflow.impl.executors.SwitchExecutor.SwitchExecutorBuilder;
 import io.serverlessworkflow.impl.expressions.ExpressionDescriptor;
-import io.serverlessworkflow.impl.resources.ResourceLoader;
 import java.util.Optional;
 
 public class JavaSwitchExecutorBuilder extends SwitchExecutorBuilder {
 
   protected JavaSwitchExecutorBuilder(
-      WorkflowMutablePosition position,
-      SwitchTask task,
-      Workflow workflow,
-      WorkflowApplication application,
-      ResourceLoader resourceLoader) {
-    super(position, task, workflow, application, resourceLoader);
+      WorkflowMutablePosition position, SwitchTask task, WorkflowDefinition definition) {
+    super(position, task, definition);
   }
 
   @Override

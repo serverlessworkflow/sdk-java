@@ -17,14 +17,12 @@ package io.serverlessworkflow.impl.executors;
 
 import io.serverlessworkflow.api.types.ForkTask;
 import io.serverlessworkflow.api.types.ForkTaskConfiguration;
-import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.TaskContext;
-import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.executors.RegularTaskExecutor.RegularTaskExecutorBuilder;
-import io.serverlessworkflow.impl.resources.ResourceLoader;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -48,16 +46,11 @@ public class ForkExecutor extends RegularTaskExecutor<ForkTask> {
     private final boolean compete;
 
     protected ForkExecutorBuilder(
-        WorkflowMutablePosition position,
-        ForkTask task,
-        Workflow workflow,
-        WorkflowApplication application,
-        ResourceLoader resourceLoader) {
-      super(position, task, workflow, application, resourceLoader);
+        WorkflowMutablePosition position, ForkTask task, WorkflowDefinition definition) {
+      super(position, task, definition);
       ForkTaskConfiguration forkConfig = task.getFork();
       this.taskExecutors =
-          TaskExecutorHelper.createBranchList(
-              position, forkConfig.getBranches(), workflow, application, resourceLoader);
+          TaskExecutorHelper.createBranchList(position, forkConfig.getBranches(), definition);
       this.compete = forkConfig.isCompete();
     }
 

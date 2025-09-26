@@ -16,17 +16,15 @@
 package io.serverlessworkflow.impl.executors;
 
 import io.serverlessworkflow.api.types.ForTask;
-import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.TaskContext;
-import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.WorkflowPredicate;
 import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
 import io.serverlessworkflow.impl.expressions.ExpressionDescriptor;
-import io.serverlessworkflow.impl.resources.ResourceLoader;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Optional;
@@ -44,17 +42,11 @@ public class ForExecutor extends RegularTaskExecutor<ForTask> {
     private TaskExecutor<?> taskExecutor;
 
     protected ForExecutorBuilder(
-        WorkflowMutablePosition position,
-        ForTask task,
-        Workflow workflow,
-        WorkflowApplication application,
-        ResourceLoader resourceLoader) {
-      super(position, task, workflow, application, resourceLoader);
+        WorkflowMutablePosition position, ForTask task, WorkflowDefinition definition) {
+      super(position, task, definition);
       this.collectionExpr = buildCollectionFilter();
       this.whileExpr = buildWhileFilter();
-      this.taskExecutor =
-          TaskExecutorHelper.createExecutorList(
-              position, task.getDo(), workflow, application, resourceLoader);
+      this.taskExecutor = TaskExecutorHelper.createExecutorList(position, task.getDo(), definition);
     }
 
     protected Optional<WorkflowPredicate> buildWhileFilter() {

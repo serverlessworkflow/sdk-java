@@ -16,14 +16,12 @@
 package io.serverlessworkflow.impl.executors.func;
 
 import io.serverlessworkflow.api.types.TaskBase;
-import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.api.types.func.CallJava;
 import io.serverlessworkflow.impl.TaskContext;
-import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.executors.CallableTask;
-import io.serverlessworkflow.impl.resources.ResourceLoader;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
@@ -31,11 +29,7 @@ public class JavaConsumerCallExecutor implements CallableTask<CallJava.CallJavaC
 
   private Consumer consumer;
 
-  public void init(
-      CallJava.CallJavaConsumer task,
-      Workflow workflow,
-      WorkflowApplication application,
-      ResourceLoader loader) {
+  public void init(CallJava.CallJavaConsumer task, WorkflowDefinition definition) {
     consumer = task.consumer();
   }
 
