@@ -212,8 +212,13 @@ public class Agents {
   public interface StyledWriter extends AgenticScopeAccess {
 
     @Agent
-    ResultWithAgenticScope<String> writeStoryWithStyle(
-        @V("topic") String topic, @V("style") String style);
+    String writeStoryWithStyle(@V("topic") String topic, @V("style") String style);
+  }
+
+  public interface NovelCreator {
+
+    @Agent
+    String createNovel(@V("topic") String topic, @V("audience") String audience, @V("style") String style);
   }
 
   public interface FoodExpert {
@@ -250,4 +255,11 @@ public class Agents {
     @Agent
     List<EveningPlan> plan(@V("mood") String mood);
   }
+
+  public interface HoroscopeAgent {
+
+    @Agent
+    String invoke(@V("name") String name);
+  }
+
 }
