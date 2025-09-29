@@ -59,7 +59,7 @@
         <!-- Plugin versions, please keep in alphabetical order -->
         <version.buildnumber.plugin>3.2.1</version.buildnumber.plugin>
         <version.checkstyle.plugin>3.6.0</version.checkstyle.plugin>
-        <version.com.diffplug.spotless>2.46.1</version.com.diffplug.spotless>
+        <version.com.diffplug.spotless>3.0.0</version.com.diffplug.spotless>
         <version.compiler.plugin>3.14.1</version.compiler.plugin>
         <version.deploy.plugin>3.1.4</version.deploy.plugin>
         <version.enforcer.plugin>3.6.1</version.enforcer.plugin>
