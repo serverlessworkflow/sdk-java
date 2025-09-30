@@ -139,12 +139,14 @@ public class WorkflowMutableInstance implements WorkflowInstance {
 
   @Override
   public <T> T outputAs(Class<T> clazz) {
-    return output
-        .as(clazz)
-        .orElseThrow(
-            () ->
-                new IllegalArgumentException(
-                    "Output " + output + " cannot be converted to class " + clazz));
+    return output != null
+        ? output
+            .as(clazz)
+            .orElseThrow(
+                () ->
+                    new IllegalArgumentException(
+                        "Output " + output + " cannot be converted to class " + clazz))
+        : null;
   }
 
   public void status(WorkflowStatus state) {
