@@ -32,5 +32,7 @@ public interface WorkflowPersistenceWriter extends AutoCloseable {
 
   void resumed(WorkflowContextData workflowContext);
 
-  void updated(WorkflowContextData workflowContext, TaskContextData taskContext);
+  void taskStarted(WorkflowContextData workflowContext, TaskContextData taskContext);
+
+  void taskCompleted(WorkflowContextData workflowContext, TaskContextData taskContext);
 }

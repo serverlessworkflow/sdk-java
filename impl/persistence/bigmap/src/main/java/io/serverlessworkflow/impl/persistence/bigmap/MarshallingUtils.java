@@ -15,32 +15,14 @@
  */
 package io.serverlessworkflow.impl.persistence.bigmap;
 
-import java.io.Closeable;
-import java.time.Instant;
+class MarshallingUtils {
 
-public interface WorkflowOutputBuffer extends Closeable {
+  private MarshallingUtils() {}
 
-  WorkflowOutputBuffer writeString(String text);
+  public static final byte VERSION_0 = 0;
 
-  WorkflowOutputBuffer writeInt(int number);
-
-  WorkflowOutputBuffer writeShort(short number);
-
-  WorkflowOutputBuffer writeLong(long number);
-
-  WorkflowOutputBuffer writeFloat(float number);
-
-  WorkflowOutputBuffer writeDouble(double number);
-
-  WorkflowOutputBuffer writeBoolean(boolean bool);
-
-  WorkflowOutputBuffer writeByte(byte one);
-
-  WorkflowOutputBuffer writeBytes(byte[] bytes);
-
-  WorkflowOutputBuffer writeInstant(Instant instant);
-
-  <T extends Enum<T>> WorkflowOutputBuffer writeEnum(T value);
-
-  void close();
+  public enum TaskStatus {
+    STARTED,
+    COMPLETED
+  }
 }

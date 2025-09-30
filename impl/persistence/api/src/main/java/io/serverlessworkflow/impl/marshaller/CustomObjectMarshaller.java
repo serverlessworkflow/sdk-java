@@ -13,20 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.persistence.bigmap;
+package io.serverlessworkflow.impl.marshaller;
 
-import io.serverlessworkflow.impl.WorkflowDefinitionData;
-import java.util.Map;
+public interface CustomObjectMarshaller<T> {
+  void write(WorkflowOutputBuffer buffer, T object);
 
-public interface BigMapPersistenceStore<K, V, T, S, C> extends AutoCloseable {
+  T read(WorkflowInputBuffer buffer);
 
-  Map<K, V> instanceData(WorkflowDefinitionData definition);
-
-  Map<K, C> context(WorkflowDefinitionData workflowContext);
-
-  Map<K, S> status(WorkflowDefinitionData workflowContext);
-
-  Map<String, T> tasks(K instanceId);
-
-  void cleanupTasks(K instanceId);
+  Class<T> getObjectClass();
 }

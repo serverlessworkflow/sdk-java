@@ -13,19 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.persistence.bigmap;
+package io.serverlessworkflow.impl.marshaller;
 
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
-import java.time.Instant;
+import java.util.Collection;
 
-public class DefaultInputBuffer implements WorkflowInputBuffer {
+public class DefaultInputBuffer extends AbstractInputBuffer {
 
   private DataInputStream input;
 
-  public DefaultInputBuffer(InputStream in) {
+  public DefaultInputBuffer(InputStream in, Collection<CustomObjectMarshaller> marshallers) {
+    super(marshallers);
     input = new DataInputStream(in);
   }
 
@@ -108,16 +109,6 @@ public class DefaultInputBuffer implements WorkflowInputBuffer {
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
-  }
-
-  @Override
-  public <T extends Enum<T>> T readEnum(Class<T> enumClass) {
-    return Enum.valueOf(enumClass, readString());
-  }
-
-  @Override
-  public Instant readInstant() {
-    return Instant.ofEpochMilli(readLong());
   }
 
   @Override

@@ -15,18 +15,7 @@
  */
 package io.serverlessworkflow.impl.persistence.bigmap;
 
-import io.serverlessworkflow.impl.WorkflowDefinitionData;
-import java.util.Map;
+import io.serverlessworkflow.impl.WorkflowModel;
+import java.time.Instant;
 
-public interface BigMapPersistenceStore<K, V, T, S, C> extends AutoCloseable {
-
-  Map<K, V> instanceData(WorkflowDefinitionData definition);
-
-  Map<K, C> context(WorkflowDefinitionData workflowContext);
-
-  Map<K, S> status(WorkflowDefinitionData workflowContext);
-
-  Map<String, T> tasks(K instanceId);
-
-  void cleanupTasks(K instanceId);
-}
+public record PersistenceInstanceInfo(Instant startedAt, WorkflowModel input) {}

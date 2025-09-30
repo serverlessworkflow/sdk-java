@@ -13,19 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.persistence.bigmap;
+package io.serverlessworkflow.impl.marshaller;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
-import java.time.Instant;
+import java.util.Collection;
 
-public class DefaultOutputBuffer implements WorkflowOutputBuffer {
+public class DefaultOutputBuffer extends AbstractOutputBuffer {
 
   private DataOutputStream output;
 
-  public DefaultOutputBuffer(OutputStream out) {
+  public DefaultOutputBuffer(
+      OutputStream out, Collection<CustomObjectMarshaller> customMarshallers) {
+    super(customMarshallers);
     output = new DataOutputStream(out);
   }
 
@@ -103,7 +105,6 @@ public class DefaultOutputBuffer implements WorkflowOutputBuffer {
   public WorkflowOutputBuffer writeByte(byte one) {
     try {
       output.writeByte(one);
-      ;
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
@@ -118,18 +119,6 @@ public class DefaultOutputBuffer implements WorkflowOutputBuffer {
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
-    return this;
-  }
-
-  @Override
-  public WorkflowOutputBuffer writeInstant(Instant instant) {
-    writeLong(instant.getEpochSecond());
-    return this;
-  }
-
-  @Override
-  public <T extends Enum<T>> WorkflowOutputBuffer writeEnum(T value) {
-    writeString(value.name());
     return this;
   }
 

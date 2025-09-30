@@ -25,6 +25,8 @@ import io.serverlessworkflow.impl.executors.TaskExecutorHelper;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
 import io.serverlessworkflow.impl.schema.SchemaValidator;
 import java.nio.file.Path;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 public class WorkflowDefinition implements AutoCloseable, WorkflowDefinitionData {
@@ -37,6 +39,7 @@ public class WorkflowDefinition implements AutoCloseable, WorkflowDefinitionData
   private final WorkflowApplication application;
   private final TaskExecutor<?> taskExecutor;
   private final ResourceLoader resourceLoader;
+  private final Map<String, TaskExecutor<?>> executors = new HashMap<>();
 
   private WorkflowDefinition(
       WorkflowApplication application, Workflow workflow, ResourceLoader resourceLoader) {
@@ -72,8 +75,7 @@ public class WorkflowDefinition implements AutoCloseable, WorkflowDefinitionData
   public WorkflowInstance instance(Object input) {
     WorkflowModel inputModel = application.modelFactory().fromAny(input);
     inputSchemaValidator().ifPresent(v -> v.validate(inputModel));
-    return new WorkflowMutableInstance(
-        this, application().idFactory().get(), inputModel, WorkflowStatus.PENDING);
+    return new WorkflowMutableInstance(this, application().idFactory().get(), inputModel);
   }
 
   Optional<SchemaValidator> inputSchemaValidator() {
@@ -108,6 +110,14 @@ public class WorkflowDefinition implements AutoCloseable, WorkflowDefinitionData
 
   public ResourceLoader resourceLoader() {
     return resourceLoader;
+  }
+
+  public TaskExecutor<?> taskExecutor(String jsonPointer) {
+    return executors.get(jsonPointer);
+  }
+
+  public void addTaskExecutor(WorkflowMutablePosition position, TaskExecutor<?> taskExecutor) {
+    executors.put(position.jsonPointer(), taskExecutor);
   }
 
   @Override

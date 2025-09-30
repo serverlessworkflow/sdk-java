@@ -15,12 +15,17 @@
  */
 package io.serverlessworkflow.impl.persistence.bigmap;
 
-import java.io.InputStream;
-import java.io.OutputStream;
+import io.serverlessworkflow.impl.WorkflowContextData;
 
-public interface WorkflowBufferFactory {
+public abstract class BigMapIdPersistenceWriter<V, T, S, C>
+    extends BigMapPersistenceWriter<String, V, T, S, C> {
 
-  WorkflowInputBuffer input(InputStream input);
+  protected BigMapIdPersistenceWriter(BigMapPersistenceStore<String, V, T, S, C> store) {
+    super(store);
+  }
 
-  WorkflowOutputBuffer output(OutputStream output);
+  @Override
+  protected String key(WorkflowContextData workflowContext) {
+    return workflowContext.instanceData().id();
+  }
 }

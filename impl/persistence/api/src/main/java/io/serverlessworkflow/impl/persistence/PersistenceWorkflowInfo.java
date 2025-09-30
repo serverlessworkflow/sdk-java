@@ -15,16 +15,15 @@
  */
 package io.serverlessworkflow.impl.persistence;
 
-import io.serverlessworkflow.impl.WorkflowDefinition;
-import io.serverlessworkflow.impl.WorkflowInstance;
-import java.util.stream.Stream;
+import io.serverlessworkflow.impl.WorkflowModel;
+import io.serverlessworkflow.impl.WorkflowStatus;
+import java.time.Instant;
+import java.util.Map;
 
-public interface WorkflowMinimumPersistenceReader extends AutoCloseable {
-
-  /**
-   * Allow streaming over all stored workflow instances for a certain definition
-   *
-   * @return
-   */
-  Stream<WorkflowInstance> all(WorkflowDefinition definition);
-}
+public record PersistenceWorkflowInfo(
+    String id,
+    Instant startedAt,
+    WorkflowModel input,
+    WorkflowModel context,
+    WorkflowStatus status,
+    Map<String, PersistenceTaskInfo> tasks) {}

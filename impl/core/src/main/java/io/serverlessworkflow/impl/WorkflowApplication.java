@@ -60,7 +60,7 @@ public class WorkflowApplication implements AutoCloseable {
   private final Collection<EventPublisher> eventPublishers;
   private final boolean lifeCycleCEPublishingEnabled;
 
-  protected WorkflowApplication(Builder builder) {
+  private WorkflowApplication(Builder builder) {
     this.taskFactory = builder.taskFactory;
     this.exprFactory = builder.exprFactory;
     this.resourceLoaderFactory = builder.resourceLoaderFactory;
@@ -148,7 +148,7 @@ public class WorkflowApplication implements AutoCloseable {
         () -> new RuntimeDescriptor("reference impl", "1.0.0_alpha", Collections.emptyMap());
     private boolean lifeCycleCEPublishingEnabled = true;
 
-    protected Builder() {}
+    private Builder() {}
 
     public Builder withListener(WorkflowExecutionListener listener) {
       listeners.add(listener);
@@ -256,11 +256,7 @@ public class WorkflowApplication implements AutoCloseable {
 
   public WorkflowDefinition workflowDefinition(Workflow workflow) {
     return definitions.computeIfAbsent(
-        WorkflowDefinitionId.of(workflow), k -> createDefinition(workflow));
-  }
-
-  protected WorkflowDefinition createDefinition(Workflow workflow) {
-    return WorkflowDefinition.of(this, workflow);
+        WorkflowDefinitionId.of(workflow), k -> WorkflowDefinition.of(this, workflow));
   }
 
   @Override

@@ -13,34 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.persistence.bigmap;
+package io.serverlessworkflow.impl.marshaller;
 
-import java.io.Closeable;
-import java.time.Instant;
+import java.io.InputStream;
+import java.io.OutputStream;
 
-public interface WorkflowInputBuffer extends Closeable {
+public interface WorkflowBufferFactory {
 
-  String readString();
+  WorkflowInputBuffer input(InputStream input);
 
-  int readInt();
-
-  short readShort();
-
-  long readLong();
-
-  float readFloat();
-
-  double readDouble();
-
-  boolean readBoolean();
-
-  byte readByte();
-
-  byte[] readBytes();
-
-  <T extends Enum<T>> T readEnum(Class<T> enumClass);
-
-  Instant readInstant();
-
-  void close();
+  WorkflowOutputBuffer output(OutputStream output);
 }

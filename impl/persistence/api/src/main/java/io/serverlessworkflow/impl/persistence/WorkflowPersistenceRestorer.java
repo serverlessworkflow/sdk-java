@@ -17,15 +17,15 @@ package io.serverlessworkflow.impl.persistence;
 
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowInstance;
+import java.util.Collection;
+import java.util.Map;
 import java.util.Optional;
 
-public interface WorkflowIdPersistentReader extends WorkflowMinimumPersistenceReader {
+public interface WorkflowPersistenceRestorer extends AutoCloseable {
+  Map<String, WorkflowInstance> restoreAll(WorkflowDefinition definition);
 
-  /**
-   * Allow recovering by process instance id
-   *
-   * @param workflowInstanceId
-   * @return
-   */
-  Optional<WorkflowInstance> findById(WorkflowDefinition definition, String workflowInstanceId);
+  Map<String, WorkflowInstance> restore(
+      WorkflowDefinition definition, Collection<String> instanceIds);
+
+  Optional<WorkflowInstance> restore(WorkflowDefinition definition, String instanceId);
 }

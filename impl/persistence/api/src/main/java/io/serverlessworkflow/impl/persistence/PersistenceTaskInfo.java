@@ -13,20 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.persistence.bigmap;
+package io.serverlessworkflow.impl.persistence;
 
-import java.io.InputStream;
-import java.io.OutputStream;
+import io.serverlessworkflow.impl.WorkflowModel;
+import java.time.Instant;
 
-public class DefaultBufferFactory implements WorkflowBufferFactory {
-
-  @Override
-  public WorkflowInputBuffer input(InputStream input) {
-    return new DefaultInputBuffer(input);
-  }
-
-  @Override
-  public WorkflowOutputBuffer output(OutputStream output) {
-    return new DefaultOutputBuffer(output);
-  }
-}
+public record PersistenceTaskInfo(
+    Instant instant, WorkflowModel model, Boolean isEndNode, String nextPosition) {}

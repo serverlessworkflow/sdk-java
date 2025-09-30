@@ -18,11 +18,12 @@ package io.serverlessworkflow.impl.persistence.mvstore;
 import io.serverlessworkflow.api.types.Document;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.WorkflowDefinitionData;
-import io.serverlessworkflow.impl.persistence.bigmap.BytesBigMapPersistenceStore;
+import io.serverlessworkflow.impl.persistence.bigmap.BigMapPersistenceStore;
 import java.util.Map;
 import org.h2.mvstore.MVStore;
 
-public class MVStorePersistenceStore extends BytesBigMapPersistenceStore {
+public class MVStorePersistenceStore
+    implements BigMapPersistenceStore<String, byte[], byte[], byte[], byte[]> {
   private final MVStore mvStore;
 
   protected static final String ID_SEPARATOR = "-";
@@ -37,14 +38,43 @@ public class MVStorePersistenceStore extends BytesBigMapPersistenceStore {
   }
 
   @Override
-  protected Map<String, byte[]> instances(WorkflowDefinitionData definition) {
-    return mvStore.openMap(identifier(definition.workflow(), ID_SEPARATOR));
-  }
-
-  @Override
   public void close() {
     if (!mvStore.isClosed()) {
       mvStore.close();
     }
+  }
+
+  @Override
+  public Map<String, byte[]> instanceData(WorkflowDefinitionData workflowContext) {
+    return openMap(workflowContext, "instances");
+  }
+
+  @Override
+  public Map<String, byte[]> tasks(String instanceId) {
+    return mvStore.openMap(mapTaskName(instanceId));
+  }
+
+  @Override
+  public Map<String, byte[]> status(WorkflowDefinitionData workflowContext) {
+    return openMap(workflowContext, "status");
+  }
+
+  @Override
+  public Map<String, byte[]> context(WorkflowDefinitionData workflowContext) {
+    return openMap(workflowContext, "context");
+  }
+
+  private Map<String, byte[]> openMap(WorkflowDefinitionData workflowDefinition, String suffix) {
+    return mvStore.openMap(
+        identifier(workflowDefinition.workflow(), ID_SEPARATOR) + ID_SEPARATOR + suffix);
+  }
+
+  private String mapTaskName(String instanceId) {
+    return instanceId + ID_SEPARATOR + "tasks";
+  }
+
+  @Override
+  public void cleanupTasks(String instanceId) {
+    mvStore.removeMap(mapTaskName(instanceId));
   }
 }

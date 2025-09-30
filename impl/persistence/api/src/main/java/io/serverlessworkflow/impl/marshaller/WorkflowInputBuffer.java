@@ -13,20 +13,42 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.persistence.bigmap;
+package io.serverlessworkflow.impl.marshaller;
 
-import io.serverlessworkflow.impl.WorkflowDefinitionData;
+import java.io.Closeable;
+import java.time.Instant;
+import java.util.Collection;
 import java.util.Map;
 
-public interface BigMapPersistenceStore<K, V, T, S, C> extends AutoCloseable {
+public interface WorkflowInputBuffer extends Closeable {
 
-  Map<K, V> instanceData(WorkflowDefinitionData definition);
+  String readString();
 
-  Map<K, C> context(WorkflowDefinitionData workflowContext);
+  int readInt();
 
-  Map<K, S> status(WorkflowDefinitionData workflowContext);
+  short readShort();
 
-  Map<String, T> tasks(K instanceId);
+  long readLong();
 
-  void cleanupTasks(K instanceId);
+  float readFloat();
+
+  double readDouble();
+
+  boolean readBoolean();
+
+  byte readByte();
+
+  byte[] readBytes();
+
+  <T extends Enum<T>> T readEnum(Class<T> enumClass);
+
+  Instant readInstant();
+
+  Map<String, Object> readMap();
+
+  Collection<Object> readCollection();
+
+  Object readObject();
+
+  void close();
 }
