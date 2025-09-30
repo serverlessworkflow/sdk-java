@@ -22,6 +22,7 @@ import dev.langchain4j.agentic.scope.AgenticScope;
 import dev.langchain4j.agentic.scope.DefaultAgenticScope;
 import io.serverlessworkflow.api.types.func.LoopPredicateIndex;
 import java.util.List;
+import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -39,5 +40,10 @@ public final class AgentAdapters {
 
   public static LoopPredicateIndex<AgenticScope, Object> toWhile(Predicate<AgenticScope> exit) {
     return (model, item, idx) -> !exit.test(model);
+  }
+
+  public static LoopPredicateIndex<AgenticScope, Object> toWhile(
+      BiPredicate<AgenticScope, Integer> exit) {
+    return (model, item, idx) -> !exit.test(model, idx);
   }
 }

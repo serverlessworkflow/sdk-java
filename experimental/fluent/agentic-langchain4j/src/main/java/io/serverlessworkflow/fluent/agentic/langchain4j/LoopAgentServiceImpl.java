@@ -53,8 +53,8 @@ public class LoopAgentServiceImpl<T> extends AbstractAgentService<T, LoopAgentSe
 
   @Override
   public LoopAgentService<T> exitCondition(BiPredicate<AgenticScope, Integer> biPredicate) {
-    throw new UnsupportedOperationException(
-        "Feature not implemented yet. See: https://github.com/serverlessworkflow/sdk-java/issues/836");
+    this.loopAgentsBuilder.exitCondition(biPredicate);
+    return this;
   }
 
   @Override

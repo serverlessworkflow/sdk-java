@@ -22,6 +22,7 @@ import io.serverlessworkflow.api.types.func.ForTaskFunction;
 import io.serverlessworkflow.fluent.func.FuncTaskItemListBuilder;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.BiPredicate;
 import java.util.function.ObjIntConsumer;
 import java.util.function.Predicate;
 import java.util.stream.IntStream;
@@ -61,6 +62,11 @@ public class LoopAgentsBuilder {
   }
 
   public LoopAgentsBuilder exitCondition(Predicate<AgenticScope> exitCondition) {
+    this.forTask.withWhile(AgentAdapters.toWhile(exitCondition), AgenticScope.class);
+    return this;
+  }
+
+  public LoopAgentsBuilder exitCondition(BiPredicate<AgenticScope, Integer> exitCondition) {
     this.forTask.withWhile(AgentAdapters.toWhile(exitCondition), AgenticScope.class);
     return this;
   }
