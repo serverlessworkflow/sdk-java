@@ -15,11 +15,15 @@
  */
 package io.serverlessworkflow.fluent.agentic.langchain4j;
 
+import dev.langchain4j.agentic.agent.AgentRequest;
+import dev.langchain4j.agentic.agent.AgentResponse;
 import dev.langchain4j.agentic.internal.AgentExecutor;
 import dev.langchain4j.agentic.scope.AgenticScope;
 import dev.langchain4j.agentic.workflow.LoopAgentService;
 import io.serverlessworkflow.fluent.agentic.LoopAgentsBuilder;
 import java.util.List;
+import java.util.function.BiPredicate;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 public class LoopAgentServiceImpl<T> extends AbstractAgentService<T, LoopAgentService<T>>
@@ -48,6 +52,18 @@ public class LoopAgentServiceImpl<T> extends AbstractAgentService<T, LoopAgentSe
   }
 
   @Override
+  public LoopAgentService<T> exitCondition(BiPredicate<AgenticScope, Integer> biPredicate) {
+    throw new UnsupportedOperationException(
+        "Feature not implemented yet. See: https://github.com/serverlessworkflow/sdk-java/issues/836");
+  }
+
+  @Override
+  public LoopAgentService<T> testExitAtLoopEnd(boolean b) {
+    throw new UnsupportedOperationException(
+        "Feature not implemented yet. See: https://github.com/serverlessworkflow/sdk-java/issues/836");
+  }
+
+  @Override
   public LoopAgentService<T> subAgents(Object... agents) {
     this.loopAgentsBuilder.subAgents(agents);
     this.workflowBuilder.tasks(t -> t.loop(this.loopAgentsBuilder));
@@ -59,5 +75,17 @@ public class LoopAgentServiceImpl<T> extends AbstractAgentService<T, LoopAgentSe
     this.loopAgentsBuilder.subAgents(agentExecutors.toArray());
     this.workflowBuilder.tasks(t -> t.loop(this.loopAgentsBuilder));
     return this;
+  }
+
+  @Override
+  public LoopAgentService<T> beforeAgentInvocation(Consumer<AgentRequest> consumer) {
+    throw new UnsupportedOperationException(
+        "Feature not implemented yet. See: https://github.com/serverlessworkflow/sdk-java/issues/836");
+  }
+
+  @Override
+  public LoopAgentService<T> afterAgentInvocation(Consumer<AgentResponse> consumer) {
+    throw new UnsupportedOperationException(
+        "Feature not implemented yet. See: https://github.com/serverlessworkflow/sdk-java/issues/836");
   }
 }

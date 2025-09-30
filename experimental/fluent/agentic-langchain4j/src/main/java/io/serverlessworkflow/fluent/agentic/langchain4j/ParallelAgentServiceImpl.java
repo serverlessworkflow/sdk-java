@@ -15,12 +15,15 @@
  */
 package io.serverlessworkflow.fluent.agentic.langchain4j;
 
+import dev.langchain4j.agentic.agent.AgentRequest;
+import dev.langchain4j.agentic.agent.AgentResponse;
 import dev.langchain4j.agentic.internal.AgentExecutor;
 import dev.langchain4j.agentic.workflow.ParallelAgentService;
 import io.serverlessworkflow.impl.ExecutorServiceHolder;
 import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Consumer;
 
 public class ParallelAgentServiceImpl<T> extends AbstractAgentService<T, ParallelAgentService<T>>
     implements ParallelAgentService<T> {
@@ -42,6 +45,18 @@ public class ParallelAgentServiceImpl<T> extends AbstractAgentService<T, Paralle
   @Override
   public ParallelAgentService<T> subAgents(List<AgentExecutor> agentExecutors) {
     return this.subAgents(agentExecutors.toArray());
+  }
+
+  @Override
+  public ParallelAgentService<T> beforeAgentInvocation(Consumer<AgentRequest> consumer) {
+    throw new UnsupportedOperationException(
+        "Feature not implemented yet. See: https://github.com/serverlessworkflow/sdk-java/issues/836");
+  }
+
+  @Override
+  public ParallelAgentService<T> afterAgentInvocation(Consumer<AgentResponse> consumer) {
+    throw new UnsupportedOperationException(
+        "Feature not implemented yet. See: https://github.com/serverlessworkflow/sdk-java/issues/836");
   }
 
   @Override

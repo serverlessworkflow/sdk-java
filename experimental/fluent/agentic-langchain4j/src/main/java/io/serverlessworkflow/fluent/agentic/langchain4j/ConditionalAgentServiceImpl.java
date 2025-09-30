@@ -15,11 +15,14 @@
  */
 package io.serverlessworkflow.fluent.agentic.langchain4j;
 
+import dev.langchain4j.agentic.agent.AgentRequest;
+import dev.langchain4j.agentic.agent.AgentResponse;
 import dev.langchain4j.agentic.internal.AgentExecutor;
 import dev.langchain4j.agentic.scope.AgenticScope;
 import dev.langchain4j.agentic.workflow.ConditionalAgentService;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 public class ConditionalAgentServiceImpl<T>
@@ -43,6 +46,18 @@ public class ConditionalAgentServiceImpl<T>
   @Override
   public ConditionalAgentService<T> subAgents(List<AgentExecutor> agentExecutors) {
     return this.subAgents(agentExecutors.toArray());
+  }
+
+  @Override
+  public ConditionalAgentService<T> beforeAgentInvocation(Consumer<AgentRequest> consumer) {
+    throw new UnsupportedOperationException(
+        "Feature not implemented yet. See: https://github.com/serverlessworkflow/sdk-java/issues/836");
+  }
+
+  @Override
+  public ConditionalAgentService<T> afterAgentInvocation(Consumer<AgentResponse> consumer) {
+    throw new UnsupportedOperationException(
+        "Feature not implemented yet. See: https://github.com/serverlessworkflow/sdk-java/issues/836");
   }
 
   @Override
