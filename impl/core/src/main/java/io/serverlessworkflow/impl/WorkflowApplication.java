@@ -15,7 +15,6 @@
  */
 package io.serverlessworkflow.impl;
 
-import com.github.f4b6a3.ulid.UlidCreator;
 import io.serverlessworkflow.api.types.SchemaInline;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.events.EventConsumer;
@@ -141,7 +140,7 @@ public class WorkflowApplication implements AutoCloseable {
     private ResourceLoaderFactory resourceLoaderFactory = DefaultResourceLoaderFactory.get();
     private SchemaValidatorFactory schemaValidatorFactory;
     private WorkflowPositionFactory positionFactory = () -> new QueueWorkflowPosition();
-    private WorkflowInstanceIdFactory idFactory = () -> UlidCreator.getMonotonicUlid().toString();
+    private WorkflowInstanceIdFactory idFactory;
     private ExecutorServiceFactory executorFactory = new DefaultExecutorServiceFactory();
     private EventConsumer<?, ?> eventConsumer;
     private Collection<EventPublisher> eventPublishers = new ArrayList<>();
@@ -243,6 +242,9 @@ public class WorkflowApplication implements AutoCloseable {
                       }
                       return inMemory;
                     });
+      }
+      if (idFactory == null) {
+        idFactory = new MonotonicUlidWorkflowInstanceIdFactory();
       }
       return new WorkflowApplication(this);
     }

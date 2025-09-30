@@ -9,10 +9,10 @@
     <name>Serverless Workflow :: Impl</name>
     <packaging>pom</packaging>
     <properties>
-        <version.org.glassfish.jersey>3.1.11</version.org.glassfish.jersey>
-        <version.net.thisptr>1.6.0</version.net.thisptr>
-        <version.com.github.f4b6a3>5.2.3</version.com.github.f4b6a3>
+        <version.de.huxhorn.sulky>8.3.0</version.de.huxhorn.sulky>
         <version.jakarta.ws.rs>4.0.0</version.jakarta.ws.rs>
+        <version.net.thisptr>1.6.0</version.net.thisptr>
+        <version.org.glassfish.jersey>3.1.11</version.org.glassfish.jersey>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -42,9 +42,9 @@
                 <version>${version.net.thisptr}</version>
             </dependency>
             <dependency>
-                <groupId>com.github.f4b6a3</groupId>
-                <artifactId>ulid-creator</artifactId>
-                <version>${version.com.github.f4b6a3}</version>
+                <groupId>de.huxhorn.sulky</groupId>
+                <artifactId>de.huxhorn.sulky.ulid</artifactId>
+                <version>${version.de.huxhorn.sulky}</version>
             </dependency>
             <dependency>
               <groupId>jakarta.ws.rs</groupId>
