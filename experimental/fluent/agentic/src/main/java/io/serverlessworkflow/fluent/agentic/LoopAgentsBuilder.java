@@ -31,6 +31,8 @@ public class LoopAgentsBuilder {
   private final FuncTaskItemListBuilder funcDelegate;
   private final ForTaskFunction forTask;
 
+  private int maxIterations = 1024;
+
   public LoopAgentsBuilder() {
     this.forTask = new ForTaskFunction();
     this.forTask.setFor(new ForTaskConfiguration());
@@ -56,7 +58,7 @@ public class LoopAgentsBuilder {
   }
 
   public LoopAgentsBuilder maxIterations(int maxIterations) {
-    this.forTask.withCollection(ignored -> IntStream.range(0, maxIterations).boxed().toList());
+    this.maxIterations = maxIterations;
     return this;
   }
 
@@ -67,6 +69,7 @@ public class LoopAgentsBuilder {
 
   public ForTaskFunction build() {
     this.forTask.setDo(this.funcDelegate.build());
+    this.forTask.withCollection(ignored -> IntStream.range(0, maxIterations).boxed().toList());
     return this.forTask;
   }
 }
