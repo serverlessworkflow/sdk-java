@@ -19,7 +19,6 @@ import dev.langchain4j.agentic.Agent;
 import dev.langchain4j.service.V;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.WorkflowApplication;
-
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -48,11 +47,11 @@ public class AgenticServices<T> {
   }
 
   public T build() {
-    Objects.requireNonNull(builder, "AgenticServices.flow(AgentWorkflowBuilder) must be called before build()");
+    Objects.requireNonNull(
+        builder, "AgenticServices.flow(AgentWorkflowBuilder) must be called before build()");
     Workflow workflow = builder.build();
     return AgenticServiceBuilder.create(agent, new AgentInvocationHandler(workflow));
   }
-
 
   private static class AgenticServiceBuilder {
 
@@ -63,7 +62,7 @@ public class AgenticServices<T> {
       }
 
       ClassLoader cl = runner.getClassLoader();
-      Class<?>[] ifaces = new Class<?>[]{runner};
+      Class<?>[] ifaces = new Class<?>[] {runner};
       return (T) Proxy.newProxyInstance(cl, ifaces, h);
     }
   }
@@ -82,14 +81,15 @@ public class AgenticServices<T> {
         return switch (method.getName()) {
           case "toString" -> "AgentProxy(" + workflow.getDocument().getName() + ")";
           case "hashCode" -> System.identityHashCode(proxy);
-          case "equals"   -> proxy == args[0];
+          case "equals" -> proxy == args[0];
           default -> throw new IllegalStateException("Unexpected Object method: " + method);
         };
       }
 
       Agent agent = method.getAnnotation(Agent.class);
       if (agent == null) {
-        throw new IllegalStateException("Method " + method.getName() + " is not annotated with @Agent");
+        throw new IllegalStateException(
+            "Method " + method.getName() + " is not annotated with @Agent");
       }
 
       Annotation[][] annotations = method.getParameterAnnotations();
@@ -106,7 +106,12 @@ public class AgenticServices<T> {
           }
         }
         if (!found) {
-          throw new IllegalStateException("Parameter " + (i + 1) + " of method " + method.getName() + " is not annotated with @V");
+          throw new IllegalStateException(
+              "Parameter "
+                  + (i + 1)
+                  + " of method "
+                  + method.getName()
+                  + " is not annotated with @V");
         }
       }
 
@@ -117,5 +122,4 @@ public class AgenticServices<T> {
       }
     }
   }
-
 }

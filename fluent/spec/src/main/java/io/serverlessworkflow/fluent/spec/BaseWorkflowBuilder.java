@@ -19,8 +19,12 @@ import io.serverlessworkflow.api.types.Document;
 import io.serverlessworkflow.api.types.Export;
 import io.serverlessworkflow.api.types.Input;
 import io.serverlessworkflow.api.types.Output;
+import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.fluent.spec.spi.TransformationHandlers;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -90,7 +94,9 @@ public abstract class BaseWorkflowBuilder<
     if (this.workflow.getDo() == null) {
       this.workflow.setDo(doTaskBuilder.build().getDo());
     } else {
-      this.workflow.getDo().addAll(doTaskBuilder.build().getDo());
+      List<TaskItem> existingTasks = new ArrayList<>(this.workflow.getDo());
+      existingTasks.addAll(doTaskBuilder.build().getDo());
+      this.workflow.setDo(Collections.unmodifiableList(existingTasks));
     }
     return self();
   }
