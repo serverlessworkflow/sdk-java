@@ -16,8 +16,12 @@
 package io.serverlessworkflow.fluent.agentic;
 
 import dev.langchain4j.agentic.scope.AgenticScope;
+import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.fluent.func.spi.FuncTransformations;
 import io.serverlessworkflow.fluent.spec.BaseWorkflowBuilder;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 import java.util.function.Predicate;
 
@@ -49,7 +53,7 @@ public class AgentWorkflowBuilder
   public AgentWorkflowBuilder agent(String name, Object agent) {
     final AgentDoTaskBuilder doTaskBuilder = this.newDo();
     doTaskBuilder.agent(name, agent);
-    this.workflow.setDo(doTaskBuilder.build().getDo());
+    setDo(doTaskBuilder);
     return this;
   }
 
@@ -60,7 +64,7 @@ public class AgentWorkflowBuilder
   public AgentWorkflowBuilder sequence(String name, Object... agents) {
     final AgentDoTaskBuilder doTaskBuilder = this.newDo();
     doTaskBuilder.sequence(name, agents);
-    this.workflow.setDo(doTaskBuilder.build().getDo());
+    setDo(doTaskBuilder);
     return this;
   }
 
@@ -71,7 +75,7 @@ public class AgentWorkflowBuilder
   public AgentWorkflowBuilder parallel(String name, Object... agents) {
     final AgentDoTaskBuilder doTaskBuilder = this.newDo();
     doTaskBuilder.parallel(name, agents);
-    this.workflow.setDo(doTaskBuilder.build().getDo());
+    setDo(doTaskBuilder);
     return this;
   }
 
@@ -83,7 +87,7 @@ public class AgentWorkflowBuilder
       String name, Predicate<AgenticScope> exitCondition, Object... agents) {
     final AgentDoTaskBuilder doTaskBuilder = this.newDo();
     doTaskBuilder.loop(name, loop -> loop.subAgents(agents).exitCondition(exitCondition));
-    this.workflow.setDo(doTaskBuilder.build().getDo());
+    setDo(doTaskBuilder);
     return this;
   }
 
@@ -95,5 +99,15 @@ public class AgentWorkflowBuilder
   @Override
   protected AgentWorkflowBuilder self() {
     return this;
+  }
+
+  private void setDo(AgentDoTaskBuilder doTaskBuilder) {
+    if (workflow.getDo() != null) {
+      List<TaskItem> existing = new ArrayList<>(workflow.getDo());
+      existing.addAll(doTaskBuilder.build().getDo());
+      this.workflow.setDo(Collections.unmodifiableList(existing));
+    } else {
+      this.workflow.setDo(doTaskBuilder.build().getDo());
+    }
   }
 }
