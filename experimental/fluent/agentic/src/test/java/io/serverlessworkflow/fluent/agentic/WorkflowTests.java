@@ -182,6 +182,20 @@ class WorkflowTests {
       assertEquals("Fake hero response", result.get("hero").toString());
       assertEquals("Fake setting response", result.get("conflict").toString());
     }
+
+    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
+      AgenticScope result =
+          app.workflowDefinition(workflow)
+              .instance(topic)
+              .start()
+              .get()
+              .as(AgenticScope.class)
+              .orElseThrow();
+
+      assertEquals("Fake conflict response", result.readState("setting").toString());
+      assertEquals("Fake hero response", result.readState("hero").toString());
+      assertEquals("Fake setting response", result.readState("conflict").toString());
+    }
   }
 
   @Test
@@ -224,6 +238,19 @@ class WorkflowTests {
 
       assertEquals(cultureTraits, result.get("culture"));
       assertEquals(technologyTraits, result.get("technology"));
+    }
+
+    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
+      AgenticScope result =
+          app.workflowDefinition(workflow)
+              .instance(topic)
+              .start()
+              .get()
+              .as(AgenticScope.class)
+              .orElseThrow();
+
+      assertEquals(cultureTraits, result.readState("culture"));
+      assertEquals(technologyTraits, result.readState("technology"));
     }
   }
 
