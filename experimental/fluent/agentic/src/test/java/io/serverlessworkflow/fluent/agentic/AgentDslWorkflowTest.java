@@ -101,7 +101,7 @@ class AgentDslWorkflowTest {
   @Test
   void dslParallelAgents() {
     var a1 = AgentsUtils.newMovieExpert();
-    var a2 = AgentsUtils.newMovieExpert();
+    var a2 = AgentsUtils.newMovieExpert2();
 
     Workflow wf = workflow("forkFlow").parallel("fanout", a1, a2).build();
 
@@ -112,8 +112,8 @@ class AgentDslWorkflowTest {
     // two branches created
     assertThat(fork.getFork().getBranches()).hasSize(2);
     // branch names follow "branch-{index}-{name}"
-    assertThat(fork.getFork().getBranches().get(0).getName()).isEqualTo("branch-0-fanout");
-    assertThat(fork.getFork().getBranches().get(1).getName()).isEqualTo("branch-1-fanout");
+    assertThat(fork.getFork().getBranches().get(0).getName()).isEqualTo("findMovie");
+    assertThat(fork.getFork().getBranches().get(1).getName()).isEqualTo("findMovie2");
   }
 
   @Test

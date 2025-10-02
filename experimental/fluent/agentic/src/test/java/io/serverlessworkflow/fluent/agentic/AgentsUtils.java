@@ -32,6 +32,15 @@ public final class AgentsUtils {
             .build());
   }
 
+  public static Agents.MovieExpert newMovieExpert2() {
+    return spy(
+        AgenticServices.agentBuilder(Agents.MovieExpert.class)
+            .outputName("movies")
+            .name("findMovie2")
+            .chatModel(BASE_MODEL)
+            .build());
+  }
+
   public static Agents.CreativeWriter newCreativeWriter() {
     return spy(
         AgenticServices.agentBuilder(Agents.CreativeWriter.class)
