@@ -175,17 +175,12 @@ class WorkflowTests {
     topic.put("style", "sci-fi");
 
     try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-      AgenticScope result =
-          app.workflowDefinition(workflow)
-              .instance(topic)
-              .start()
-              .get()
-              .as(AgenticScope.class)
-              .orElseThrow();
+      Map<String, Object> result =
+          app.workflowDefinition(workflow).instance(topic).start().get().asMap().orElseThrow();
 
-      assertEquals("Fake conflict response", result.readState("setting"));
-      assertEquals("Fake hero response", result.readState("hero"));
-      assertEquals("Fake setting response", result.readState("conflict"));
+      assertEquals("Fake conflict response", result.get("setting").toString());
+      assertEquals("Fake hero response", result.get("hero").toString());
+      assertEquals("Fake setting response", result.get("conflict").toString());
     }
   }
 
@@ -224,16 +219,11 @@ class WorkflowTests {
     topic.put("fact", "alien");
 
     try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-      AgenticScope result =
-          app.workflowDefinition(workflow)
-              .instance(topic)
-              .start()
-              .get()
-              .as(AgenticScope.class)
-              .orElseThrow();
+      Map<String, Object> result =
+          app.workflowDefinition(workflow).instance(topic).start().get().asMap().orElseThrow();
 
-      assertEquals(cultureTraits, result.readState("culture"));
-      assertEquals(technologyTraits, result.readState("technology"));
+      assertEquals(cultureTraits, result.get("culture"));
+      assertEquals(technologyTraits, result.get("technology"));
     }
   }
 
