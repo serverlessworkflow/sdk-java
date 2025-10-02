@@ -15,9 +15,12 @@
  */
 package io.serverlessworkflow.fluent.agentic.langchain4j;
 
+import dev.langchain4j.agentic.agent.AgentRequest;
+import dev.langchain4j.agentic.agent.AgentResponse;
 import dev.langchain4j.agentic.internal.AgentExecutor;
 import dev.langchain4j.agentic.workflow.SequentialAgentService;
 import java.util.List;
+import java.util.function.Consumer;
 
 public class SequentialAgentServiceImpl<T>
     extends AbstractAgentService<T, SequentialAgentService<T>>
@@ -41,5 +44,17 @@ public class SequentialAgentServiceImpl<T>
   public SequentialAgentService<T> subAgents(List<AgentExecutor> agentExecutors) {
     this.subAgents(agentExecutors.toArray());
     return this;
+  }
+
+  @Override
+  public SequentialAgentService<T> beforeAgentInvocation(Consumer<AgentRequest> consumer) {
+    throw new UnsupportedOperationException(
+        "Feature not implemented yet. See: https://github.com/serverlessworkflow/sdk-java/issues/836");
+  }
+
+  @Override
+  public SequentialAgentService<T> afterAgentInvocation(Consumer<AgentResponse> consumer) {
+    throw new UnsupportedOperationException(
+        "Feature not implemented yet. See: https://github.com/serverlessworkflow/sdk-java/issues/836");
   }
 }
