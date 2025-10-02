@@ -17,6 +17,7 @@ package io.serverlessworkflow.fluent.agentic;
 
 import dev.langchain4j.agentic.scope.AgenticScope;
 import io.serverlessworkflow.api.types.TaskItem;
+import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.fluent.func.spi.FuncTransformations;
 import io.serverlessworkflow.fluent.spec.BaseWorkflowBuilder;
 import java.util.ArrayList;
@@ -29,8 +30,11 @@ public class AgentWorkflowBuilder
     extends BaseWorkflowBuilder<AgentWorkflowBuilder, AgentDoTaskBuilder, AgentTaskItemListBuilder>
     implements FuncTransformations<AgentWorkflowBuilder> {
 
+  private final List<AgentDoTaskBuilder> agentDoTaskBuilders;
+
   AgentWorkflowBuilder(final String name, final String namespace, final String version) {
     super(name, namespace, version);
+    agentDoTaskBuilders = new ArrayList<>();
   }
 
   public static AgentWorkflowBuilder workflow() {
@@ -53,7 +57,7 @@ public class AgentWorkflowBuilder
   public AgentWorkflowBuilder agent(String name, Object agent) {
     final AgentDoTaskBuilder doTaskBuilder = this.newDo();
     doTaskBuilder.agent(name, agent);
-    setDo(doTaskBuilder);
+    agentDoTaskBuilders.add(doTaskBuilder);
     return this;
   }
 
@@ -64,7 +68,7 @@ public class AgentWorkflowBuilder
   public AgentWorkflowBuilder sequence(String name, Object... agents) {
     final AgentDoTaskBuilder doTaskBuilder = this.newDo();
     doTaskBuilder.sequence(name, agents);
-    setDo(doTaskBuilder);
+    agentDoTaskBuilders.add(doTaskBuilder);
     return this;
   }
 
@@ -75,7 +79,7 @@ public class AgentWorkflowBuilder
   public AgentWorkflowBuilder parallel(String name, Object... agents) {
     final AgentDoTaskBuilder doTaskBuilder = this.newDo();
     doTaskBuilder.parallel(name, agents);
-    setDo(doTaskBuilder);
+    agentDoTaskBuilders.add(doTaskBuilder);
     return this;
   }
 
@@ -87,7 +91,7 @@ public class AgentWorkflowBuilder
       String name, Predicate<AgenticScope> exitCondition, Object... agents) {
     final AgentDoTaskBuilder doTaskBuilder = this.newDo();
     doTaskBuilder.loop(name, loop -> loop.subAgents(agents).exitCondition(exitCondition));
-    setDo(doTaskBuilder);
+    agentDoTaskBuilders.add(doTaskBuilder);
     return this;
   }
 
@@ -101,13 +105,14 @@ public class AgentWorkflowBuilder
     return this;
   }
 
-  private void setDo(AgentDoTaskBuilder doTaskBuilder) {
-    if (workflow.getDo() != null) {
-      List<TaskItem> existing = new ArrayList<>(workflow.getDo());
-      existing.addAll(doTaskBuilder.build().getDo());
-      this.workflow.setDo(Collections.unmodifiableList(existing));
-    } else {
-      this.workflow.setDo(doTaskBuilder.build().getDo());
-    }
+  @Override
+  public Workflow build() {
+    List<TaskItem> items = new ArrayList<>(workflow.getDo());
+    this.agentDoTaskBuilders.stream()
+        .map(AgentDoTaskBuilder::build)
+        .forEach(b -> items.addAll(b.getDo()));
+    this.workflow.setDo(Collections.unmodifiableList(items));
+    this.agentDoTaskBuilders.clear();
+    return this.workflow;
   }
 }
