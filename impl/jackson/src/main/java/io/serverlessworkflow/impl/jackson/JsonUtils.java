@@ -44,7 +44,9 @@ import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BinaryOperator;
@@ -54,10 +56,26 @@ import java.util.stream.Collector;
 
 public class JsonUtils {
 
-  private static ObjectMapper mapper = new ObjectMapper();
+  private static class DefaultMapperFactory implements ObjectMapperFactory {
+    private static ObjectMapper mapper = new ObjectMapper().findAndRegisterModules();
+
+    @Override
+    public ObjectMapper get() {
+      return mapper;
+    }
+  }
+
+  private static ObjectMapperFactory mapperFactory =
+      ServiceLoader.load(ObjectMapperFactory.class)
+          .findFirst()
+          .orElseGet(() -> new DefaultMapperFactory());
+
+  public static void setMapperFactory(ObjectMapperFactory mapperFactory) {
+    JsonUtils.mapperFactory = Objects.requireNonNull(mapperFactory);
+  }
 
   public static ObjectMapper mapper() {
-    return mapper;
+    return mapperFactory.get();
   }
 
   public static Collector<JsonNode, ArrayNode, ArrayNode> arrayNodeCollector() {
@@ -87,7 +105,7 @@ public class JsonUtils {
 
       @Override
       public Supplier<ArrayNode> supplier() {
-        return () -> mapper.createArrayNode();
+        return () -> mapper().createArrayNode();
       }
     };
   }
@@ -129,7 +147,7 @@ public class JsonUtils {
     } else if (value instanceof WorkflowModel model) {
       return modelToJson(model);
     } else {
-      return mapper.convertValue(value, JsonNode.class);
+      return mapper().convertValue(value, JsonNode.class);
     }
   }
 
@@ -152,7 +170,7 @@ public class JsonUtils {
     String trimmedValue = value.trim();
     if (trimmedValue.startsWith("{") && trimmedValue.endsWith("}")) {
       try {
-        return mapper.readTree(trimmedValue);
+        return mapper().readTree(trimmedValue);
       } catch (IOException ex) {
         // ignore and return test node
       }
@@ -186,7 +204,7 @@ public class JsonUtils {
     } else if (obj instanceof JsonNode) {
       return convertValue((JsonNode) obj, returnType);
     } else {
-      return mapper.convertValue(obj, returnType);
+      return mapper().convertValue(obj, returnType);
     }
   }
 
@@ -203,7 +221,7 @@ public class JsonUtils {
     } else if (String.class.isAssignableFrom(returnType)) {
       obj = jsonNode.asText();
     } else {
-      obj = mapper.convertValue(jsonNode, returnType);
+      obj = mapper().convertValue(jsonNode, returnType);
     }
     return returnType.cast(obj);
   }
@@ -233,12 +251,12 @@ public class JsonUtils {
     } else if (jsonNode.isObject()) {
       return objectFunction.apply((ObjectNode) jsonNode);
     } else {
-      return mapper.convertValue(jsonNode, Object.class);
+      return mapper().convertValue(jsonNode, Object.class);
     }
   }
 
   public static String toString(JsonNode node) throws JsonProcessingException {
-    return mapper.writeValueAsString(node);
+    return mapper().writeValueAsString(node);
   }
 
   public static void addToNode(String name, Object value, ObjectNode dest) {
@@ -246,7 +264,7 @@ public class JsonUtils {
   }
 
   private static ObjectNode mapToNode(Map<String, Object> value) {
-    ObjectNode objectNode = mapper.createObjectNode();
+    ObjectNode objectNode = mapper().createObjectNode();
     for (Map.Entry<String, Object> entry : value.entrySet()) {
       addToNode(entry.getKey(), entry.getValue(), objectNode);
     }
@@ -254,7 +272,7 @@ public class JsonUtils {
   }
 
   private static ArrayNode mapToArray(Collection<?> collection) {
-    return mapToArray(collection, mapper.createArrayNode());
+    return mapToArray(collection, mapper().createArrayNode());
   }
 
   private static ArrayNode mapToArray(Collection<?> collection, ArrayNode arrayNode) {
@@ -265,11 +283,11 @@ public class JsonUtils {
   }
 
   public static ObjectNode object() {
-    return mapper.createObjectNode();
+    return mapper().createObjectNode();
   }
 
   public static ArrayNode array() {
-    return mapper.createArrayNode();
+    return mapper().createArrayNode();
   }
 
   public static Optional<OffsetDateTime> toDate(JsonNode node) {
