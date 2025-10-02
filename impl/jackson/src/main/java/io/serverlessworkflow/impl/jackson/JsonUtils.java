@@ -54,7 +54,7 @@ import java.util.stream.Collector;
 
 public class JsonUtils {
 
-  private static ObjectMapper mapper = new ObjectMapper();
+  private static ObjectMapper mapper = ObjectMapperFactoryProvider.instance().get().get();
 
   public static ObjectMapper mapper() {
     return mapper;
