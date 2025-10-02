@@ -60,10 +60,7 @@ class AgenticModelFactory implements WorkflowModelFactory {
 
   @Override
   public WorkflowModel combine(Map<String, WorkflowModel> workflowVariables) {
-    // TODO: create a new agenticScope object in the AgenticScopeRegistryAssessor per branch
-    // TODO: Since we share the same agenticScope object, both branches are updating the same
-    // instance, so for now we return the first key.
-    return workflowVariables.values().iterator().next();
+    return newAgenticModel(workflowVariables);
   }
 
   @Override

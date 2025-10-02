@@ -92,8 +92,8 @@ public class AgentTaskItemListBuilder extends BaseTaskItemListBuilder<AgentTaskI
           List<AgentExecutor> execs = AgentAdapters.toExecutors(agents);
           for (int i = 0; i < execs.size(); i++) {
             AgentExecutor ex = execs.get(i);
-            fork.branch(
-                "branch-" + i + "-" + name,
+            String agentName = ex.agentName() != null ? ex.agentName() : "branch-" + i + "-" + name;
+            fork.branch(agentName,
                 AgentAdapters.toFunction(ex),
                 DefaultAgenticScope.class);
           }
