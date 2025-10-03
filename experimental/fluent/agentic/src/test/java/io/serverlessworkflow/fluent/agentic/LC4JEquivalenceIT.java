@@ -18,6 +18,8 @@ package io.serverlessworkflow.fluent.agentic;
 import static io.serverlessworkflow.fluent.agentic.AgentWorkflowBuilder.workflow;
 import static io.serverlessworkflow.fluent.agentic.dsl.AgenticDSL.conditional;
 import static io.serverlessworkflow.fluent.agentic.dsl.AgenticDSL.doTasks;
+import static io.serverlessworkflow.fluent.agentic.dsl.AgenticDSL.fn;
+import static io.serverlessworkflow.fluent.agentic.dsl.AgenticDSL.loop;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -29,6 +31,7 @@ import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.api.types.func.CallTaskJava;
 import io.serverlessworkflow.api.types.func.ForTaskFunction;
 import io.serverlessworkflow.impl.WorkflowApplication;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
@@ -45,10 +48,7 @@ public class LC4JEquivalenceIT {
     var audienceEditor = AgentsUtils.newAudienceEditor();
     var styleEditor = AgentsUtils.newStyleEditor();
 
-    Workflow wf =
-        workflow("seqFlow")
-            .sequence("process", creativeWriter, audienceEditor, styleEditor)
-            .build();
+    Workflow wf = workflow("seqFlow").sequence(creativeWriter, audienceEditor, styleEditor).build();
 
     List<TaskItem> items = wf.getDo();
     assertThat(items).hasSize(3);
@@ -77,13 +77,18 @@ public class LC4JEquivalenceIT {
   @Test
   @DisplayName("Looping agents via DSL.loop(...)")
   public void loopWorkflow() {
-
-    var scorer = AgentsUtils.newStyleScorer();
-    var editor = AgentsUtils.newStyleEditor();
+    var creativeWriter = AgentsUtils.newCreativeWriter();
+    var styleScorer = AgentsUtils.newStyleScorer();
+    var styleEditor = AgentsUtils.newStyleEditor();
 
     Workflow wf =
         AgentWorkflowBuilder.workflow("retryFlow")
-            .loop("reviewLoop", c -> c.readState("score", 0).doubleValue() >= 0.8, scorer, editor)
+            .agent(creativeWriter)
+            .loop(
+                "reviewLoop",
+                c -> c.readState("score", 0).doubleValue() >= 0.8,
+                styleScorer,
+                styleEditor)
             .build();
 
     List<TaskItem> items = wf.getDo();
@@ -118,7 +123,7 @@ public class LC4JEquivalenceIT {
 
     Predicate<AgenticScope> until = s -> s.readState("score", 0).doubleValue() >= 0.8;
 
-    Workflow wf = workflow("retryFlow").loop(until, scorer, 5, editor).build();
+    Workflow wf = workflow("retryFlow").tasks(loop(5, until, scorer, editor)).build();
 
     List<TaskItem> items = wf.getDo();
     assertThat(items).hasSize(1);
@@ -144,13 +149,53 @@ public class LC4JEquivalenceIT {
     assertThat(result).containsKey("story");
   }
 
+  public record EveningPlan(String movie, String meal) {}
+
   @Test
   @DisplayName("Parallel agents via DSL.parallel(...)")
   public void parallelWorkflow() {
     var foodExpert = AgentsUtils.newFoodExpert();
     var movieExpert = AgentsUtils.newMovieExpert();
 
-    Workflow wf = workflow("forkFlow").parallel("fanout", foodExpert, movieExpert).build();
+    workflow("forkFlow")
+        .tasks(
+            d ->
+                d.parallel(foodExpert, movieExpert)
+                    .callFn(
+                        fn(
+                            f -> {
+                              Map<String, List<String>> asMap = (Map<String, List<String>>) f;
+                              List<EveningPlan> result = new ArrayList<>();
+                              int max =
+                                  asMap.values().stream()
+                                      .map(List::size)
+                                      .min(Integer::compareTo)
+                                      .orElse(0);
+                              for (int i = 0; i < max; i++) {
+                                result.add(
+                                    new EveningPlan(
+                                        asMap.get("movies").get(i), asMap.get("meals").get(i)));
+                              }
+                              return result;
+                            })))
+        .build();
+
+    Workflow wf =
+        workflow("forkFlow")
+            .tasks(
+                d ->
+                    d.parallel("fanout", foodExpert, movieExpert)
+                        .callFn(
+                            fn(
+                                (Map<String, List<String>> m) -> {
+                                  var movies = m.getOrDefault("movies", List.of());
+                                  var meals = m.getOrDefault("meals", List.of());
+                                  return java.util.stream.IntStream.range(
+                                          0, Math.min(movies.size(), meals.size()))
+                                      .mapToObj(i -> new EveningPlan(movies.get(i), meals.get(i)))
+                                      .toList();
+                                })))
+            .build();
 
     List<TaskItem> items = wf.getDo();
     assertThat(items).hasSize(1);
