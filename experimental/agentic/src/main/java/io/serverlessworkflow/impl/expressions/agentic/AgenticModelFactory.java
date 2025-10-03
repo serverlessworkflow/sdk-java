@@ -24,6 +24,7 @@ import io.serverlessworkflow.impl.WorkflowModelFactory;
 import io.serverlessworkflow.impl.expressions.agentic.langchain4j.AgenticScopeRegistryAssessor;
 import java.time.OffsetDateTime;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 class AgenticModelFactory implements WorkflowModelFactory {
 
@@ -60,10 +61,11 @@ class AgenticModelFactory implements WorkflowModelFactory {
 
   @Override
   public WorkflowModel combine(Map<String, WorkflowModel> workflowVariables) {
-    // TODO: create a new agenticScope object in the AgenticScopeRegistryAssessor per branch
-    // TODO: Since we share the same agenticScope object, both branches are updating the same
-    // instance, so for now we return the first key.
-    return workflowVariables.values().iterator().next();
+    Map<String, Object> combinedState =
+        workflowVariables.entrySet().stream()
+            .map(e -> Map.entry(e.getKey(), e.getValue().asJavaObject()))
+            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+    return newAgenticModel(combinedState);
   }
 
   @Override
