@@ -13,21 +13,42 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.lifecycle;
+package io.serverlessworkflow.impl.marshaller;
 
-import io.serverlessworkflow.impl.WorkflowContextData;
-import io.serverlessworkflow.impl.WorkflowModel;
+import java.io.Closeable;
+import java.time.Instant;
+import java.util.Collection;
+import java.util.Map;
 
-public class WorkflowCompletedEvent extends WorkflowEvent {
+public interface WorkflowInputBuffer extends Closeable {
 
-  private WorkflowModel output;
+  String readString();
 
-  public WorkflowCompletedEvent(WorkflowContextData workflow, WorkflowModel output) {
-    super(workflow);
-    this.output = output;
-  }
+  int readInt();
 
-  public WorkflowModel output() {
-    return output;
-  }
+  short readShort();
+
+  long readLong();
+
+  float readFloat();
+
+  double readDouble();
+
+  boolean readBoolean();
+
+  byte readByte();
+
+  byte[] readBytes();
+
+  <T extends Enum<T>> T readEnum(Class<T> enumClass);
+
+  Instant readInstant();
+
+  Map<String, Object> readMap();
+
+  Collection<Object> readCollection();
+
+  Object readObject();
+
+  void close();
 }

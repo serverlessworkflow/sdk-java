@@ -13,21 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.lifecycle;
+package io.serverlessworkflow.impl.persistence.bigmap;
 
 import io.serverlessworkflow.impl.WorkflowContextData;
-import io.serverlessworkflow.impl.WorkflowModel;
 
-public class WorkflowCompletedEvent extends WorkflowEvent {
+public abstract class BigMapIdPersistenceWriter<V, T, S, C>
+    extends BigMapPersistenceWriter<String, V, T, S, C> {
 
-  private WorkflowModel output;
-
-  public WorkflowCompletedEvent(WorkflowContextData workflow, WorkflowModel output) {
-    super(workflow);
-    this.output = output;
+  protected BigMapIdPersistenceWriter(BigMapPersistenceStore<String, V, T, S, C> store) {
+    super(store);
   }
 
-  public WorkflowModel output() {
-    return output;
+  @Override
+  protected String key(WorkflowContextData workflowContext) {
+    return workflowContext.instanceData().id();
   }
 }

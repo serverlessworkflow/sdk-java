@@ -13,21 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.lifecycle;
+package io.serverlessworkflow.impl.persistence;
 
-import io.serverlessworkflow.impl.WorkflowContextData;
 import io.serverlessworkflow.impl.WorkflowModel;
+import java.time.Instant;
 
-public class WorkflowCompletedEvent extends WorkflowEvent {
-
-  private WorkflowModel output;
-
-  public WorkflowCompletedEvent(WorkflowContextData workflow, WorkflowModel output) {
-    super(workflow);
-    this.output = output;
-  }
-
-  public WorkflowModel output() {
-    return output;
-  }
-}
+public record PersistenceTaskInfo(
+    Instant instant, WorkflowModel model, Boolean isEndNode, String nextPosition) {}

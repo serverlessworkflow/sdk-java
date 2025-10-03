@@ -225,7 +225,8 @@ public abstract class AbstractLifeCyclePublisher implements WorkflowExecutionLis
             builder()
                 .withData(
                     cloudEventData(
-                        new WorkflowCompletedCEData(id(ev), ref(ev), ev.eventDate(), output(ev)),
+                        new WorkflowCompletedCEData(
+                            id(ev), ref(ev), ev.eventDate(), from(event.output())),
                         this::convert))
                 .withType(WORKFLOW_COMPLETED)
                 .build());
@@ -326,10 +327,6 @@ public abstract class AbstractLifeCyclePublisher implements WorkflowExecutionLis
 
   private static String pos(TaskEvent ev) {
     return ev.taskContext().position().jsonPointer();
-  }
-
-  private static Object output(WorkflowEvent ev) {
-    return from(ev.workflowContext().instanceData().output());
   }
 
   private static Object output(TaskEvent ev) {

@@ -38,32 +38,43 @@ import java.util.concurrent.locks.ReentrantLock;
 public class WorkflowMutableInstance implements WorkflowInstance {
 
   protected final AtomicReference<WorkflowStatus> status;
-  private final String id;
-  private final WorkflowModel input;
+  protected final String id;
+  protected final WorkflowModel input;
 
-  private WorkflowContext workflowContext;
-  private Instant startedAt;
-  private Instant completedAt;
-  private volatile WorkflowModel output;
+  protected final WorkflowContext workflowContext;
+  protected Instant startedAt;
+
+  protected AtomicReference<CompletableFuture<WorkflowModel>> futureRef = new AtomicReference<>();
+  protected Instant completedAt;
+
   private Lock statusLock = new ReentrantLock();
-  private CompletableFuture<WorkflowModel> completableFuture;
   private Map<CompletableFuture<TaskContext>, TaskContext> suspended;
 
-  WorkflowMutableInstance(WorkflowDefinition definition, WorkflowModel input) {
-    this.id = definition.application().idFactory().get();
+  public WorkflowMutableInstance(WorkflowDefinition definition, String id, WorkflowModel input) {
+    this.id = id;
     this.input = input;
     this.status = new AtomicReference<>(WorkflowStatus.PENDING);
-    definition.inputSchemaValidator().ifPresent(v -> v.validate(input));
     this.workflowContext = new WorkflowContext(definition, this);
   }
 
   @Override
   public CompletableFuture<WorkflowModel> start() {
-    this.startedAt = Instant.now();
-    this.status.set(WorkflowStatus.RUNNING);
-    publishEvent(
-        workflowContext, l -> l.onWorkflowStarted(new WorkflowStartedEvent(workflowContext)));
-    this.completableFuture =
+    return startExecution(
+        () -> {
+          startedAt = Instant.now();
+          status.set(WorkflowStatus.RUNNING);
+          publishEvent(
+              workflowContext, l -> l.onWorkflowStarted(new WorkflowStartedEvent(workflowContext)));
+        });
+  }
+
+  protected final CompletableFuture<WorkflowModel> startExecution(Runnable runnable) {
+    CompletableFuture<WorkflowModel> future = futureRef.get();
+    if (future != null) {
+      return future;
+    }
+    runnable.run();
+    future =
         TaskExecutorHelper.processTaskList(
                 workflowContext.definition().startTask(),
                 workflowContext,
@@ -75,7 +86,8 @@ public class WorkflowMutableInstance implements WorkflowInstance {
                     .orElse(input))
             .whenComplete(this::whenFailed)
             .thenApply(this::whenSuccess);
-    return completableFuture;
+    futureRef.set(future);
+    return future;
   }
 
   private void whenFailed(WorkflowModel result, Throwable ex) {
@@ -94,7 +106,7 @@ public class WorkflowMutableInstance implements WorkflowInstance {
   }
 
   private WorkflowModel whenSuccess(WorkflowModel node) {
-    output =
+    WorkflowModel output =
         workflowContext
             .definition()
             .outputFilter()
@@ -103,7 +115,8 @@ public class WorkflowMutableInstance implements WorkflowInstance {
     workflowContext.definition().outputSchemaValidator().ifPresent(v -> v.validate(output));
     status.set(WorkflowStatus.COMPLETED);
     publishEvent(
-        workflowContext, l -> l.onWorkflowCompleted(new WorkflowCompletedEvent(workflowContext)));
+        workflowContext,
+        l -> l.onWorkflowCompleted(new WorkflowCompletedEvent(workflowContext, output)));
     return output;
   }
 
@@ -134,19 +147,17 @@ public class WorkflowMutableInstance implements WorkflowInstance {
 
   @Override
   public WorkflowModel output() {
-    return output;
+    return futureRef.get().join();
   }
 
   @Override
   public <T> T outputAs(Class<T> clazz) {
-    return output != null
-        ? output
-            .as(clazz)
-            .orElseThrow(
-                () ->
-                    new IllegalArgumentException(
-                        "Output " + output + " cannot be converted to class " + clazz))
-        : null;
+    return output()
+        .as(clazz)
+        .orElseThrow(
+            () ->
+                new IllegalArgumentException(
+                    "Output " + output() + " cannot be converted to class " + clazz));
   }
 
   public void status(WorkflowStatus state) {
@@ -253,4 +264,6 @@ public class WorkflowMutableInstance implements WorkflowInstance {
       statusLock.unlock();
     }
   }
+
+  public void restoreContext(WorkflowDefinition definition, TaskContext context) {}
 }

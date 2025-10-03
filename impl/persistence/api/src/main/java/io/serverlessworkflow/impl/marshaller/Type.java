@@ -13,21 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.lifecycle;
+package io.serverlessworkflow.impl.marshaller;
 
-import io.serverlessworkflow.impl.WorkflowContextData;
-import io.serverlessworkflow.impl.WorkflowModel;
-
-public class WorkflowCompletedEvent extends WorkflowEvent {
-
-  private WorkflowModel output;
-
-  public WorkflowCompletedEvent(WorkflowContextData workflow, WorkflowModel output) {
-    super(workflow);
-    this.output = output;
-  }
-
-  public WorkflowModel output() {
-    return output;
-  }
+enum Type {
+  BYTE,
+  BYTES,
+  INT,
+  SHORT,
+  LONG,
+  FLOAT,
+  DOUBLE,
+  BOOLEAN,
+  STRING,
+  INSTANT,
+  MAP,
+  COLLECTION,
+  NULL
 }

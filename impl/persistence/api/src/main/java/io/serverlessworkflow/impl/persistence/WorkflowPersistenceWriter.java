@@ -13,21 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.lifecycle;
+package io.serverlessworkflow.impl.persistence;
 
+import io.serverlessworkflow.impl.TaskContextData;
 import io.serverlessworkflow.impl.WorkflowContextData;
-import io.serverlessworkflow.impl.WorkflowModel;
 
-public class WorkflowCompletedEvent extends WorkflowEvent {
+public interface WorkflowPersistenceWriter extends AutoCloseable {
 
-  private WorkflowModel output;
+  void started(WorkflowContextData workflowContext);
 
-  public WorkflowCompletedEvent(WorkflowContextData workflow, WorkflowModel output) {
-    super(workflow);
-    this.output = output;
-  }
+  void completed(WorkflowContextData workflowContext);
 
-  public WorkflowModel output() {
-    return output;
-  }
+  void failed(WorkflowContextData workflowContext, Throwable ex);
+
+  void aborted(WorkflowContextData workflowContext);
+
+  void suspended(WorkflowContextData workflowContext);
+
+  void resumed(WorkflowContextData workflowContext);
+
+  void taskStarted(WorkflowContextData workflowContext, TaskContextData taskContext);
+
+  void taskCompleted(WorkflowContextData workflowContext, TaskContextData taskContext);
 }

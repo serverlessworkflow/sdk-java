@@ -13,21 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.lifecycle;
+package io.serverlessworkflow.impl.marshaller;
 
-import io.serverlessworkflow.impl.WorkflowContextData;
-import io.serverlessworkflow.impl.WorkflowModel;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Collection;
 
-public class WorkflowCompletedEvent extends WorkflowEvent {
+public class DefaultBufferFactory implements WorkflowBufferFactory {
 
-  private WorkflowModel output;
+  private final Collection<CustomObjectMarshaller> marshallers;
 
-  public WorkflowCompletedEvent(WorkflowContextData workflow, WorkflowModel output) {
-    super(workflow);
-    this.output = output;
+  public DefaultBufferFactory(Collection<CustomObjectMarshaller> marshallers) {
+    this.marshallers = marshallers;
   }
 
-  public WorkflowModel output() {
-    return output;
+  @Override
+  public WorkflowInputBuffer input(InputStream input) {
+    return new DefaultInputBuffer(input, marshallers);
+  }
+
+  @Override
+  public WorkflowOutputBuffer output(OutputStream output) {
+    return new DefaultOutputBuffer(output, marshallers);
   }
 }

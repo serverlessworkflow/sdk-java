@@ -13,21 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.lifecycle;
+package io.serverlessworkflow.impl.marshaller;
 
-import io.serverlessworkflow.impl.WorkflowContextData;
-import io.serverlessworkflow.impl.WorkflowModel;
+public interface CustomObjectMarshaller<T> {
+  void write(WorkflowOutputBuffer buffer, T object);
 
-public class WorkflowCompletedEvent extends WorkflowEvent {
+  T read(WorkflowInputBuffer buffer);
 
-  private WorkflowModel output;
-
-  public WorkflowCompletedEvent(WorkflowContextData workflow, WorkflowModel output) {
-    super(workflow);
-    this.output = output;
-  }
-
-  public WorkflowModel output() {
-    return output;
-  }
+  Class<T> getObjectClass();
 }

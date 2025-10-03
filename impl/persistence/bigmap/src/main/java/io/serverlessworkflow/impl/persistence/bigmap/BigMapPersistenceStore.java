@@ -13,21 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.lifecycle;
+package io.serverlessworkflow.impl.persistence.bigmap;
 
-import io.serverlessworkflow.impl.WorkflowContextData;
-import io.serverlessworkflow.impl.WorkflowModel;
+import io.serverlessworkflow.impl.WorkflowDefinitionData;
+import java.util.Map;
 
-public class WorkflowCompletedEvent extends WorkflowEvent {
+public interface BigMapPersistenceStore<K, V, T, S, C> extends AutoCloseable {
 
-  private WorkflowModel output;
+  Map<K, V> instanceData(WorkflowDefinitionData definition);
 
-  public WorkflowCompletedEvent(WorkflowContextData workflow, WorkflowModel output) {
-    super(workflow);
-    this.output = output;
-  }
+  Map<K, C> context(WorkflowDefinitionData workflowContext);
 
-  public WorkflowModel output() {
-    return output;
-  }
+  Map<K, S> status(WorkflowDefinitionData workflowContext);
+
+  Map<String, T> tasks(K instanceId);
+
+  void cleanupTasks(K instanceId);
 }

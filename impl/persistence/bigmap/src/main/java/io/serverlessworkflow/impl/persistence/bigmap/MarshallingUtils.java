@@ -13,21 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.lifecycle;
+package io.serverlessworkflow.impl.persistence.bigmap;
 
-import io.serverlessworkflow.impl.WorkflowContextData;
-import io.serverlessworkflow.impl.WorkflowModel;
+class MarshallingUtils {
 
-public class WorkflowCompletedEvent extends WorkflowEvent {
+  private MarshallingUtils() {}
 
-  private WorkflowModel output;
+  public static final byte VERSION_0 = 0;
 
-  public WorkflowCompletedEvent(WorkflowContextData workflow, WorkflowModel output) {
-    super(workflow);
-    this.output = output;
-  }
-
-  public WorkflowModel output() {
-    return output;
+  public enum TaskStatus {
+    STARTED,
+    COMPLETED
   }
 }

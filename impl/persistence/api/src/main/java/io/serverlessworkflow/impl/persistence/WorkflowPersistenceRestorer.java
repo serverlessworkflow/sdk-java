@@ -13,21 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.lifecycle;
+package io.serverlessworkflow.impl.persistence;
 
-import io.serverlessworkflow.impl.WorkflowContextData;
-import io.serverlessworkflow.impl.WorkflowModel;
+import io.serverlessworkflow.impl.WorkflowDefinition;
+import io.serverlessworkflow.impl.WorkflowInstance;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Optional;
 
-public class WorkflowCompletedEvent extends WorkflowEvent {
+public interface WorkflowPersistenceRestorer extends AutoCloseable {
+  Map<String, WorkflowInstance> restoreAll(WorkflowDefinition definition);
 
-  private WorkflowModel output;
+  Map<String, WorkflowInstance> restore(
+      WorkflowDefinition definition, Collection<String> instanceIds);
 
-  public WorkflowCompletedEvent(WorkflowContextData workflow, WorkflowModel output) {
-    super(workflow);
-    this.output = output;
-  }
-
-  public WorkflowModel output() {
-    return output;
-  }
+  Optional<WorkflowInstance> restore(WorkflowDefinition definition, String instanceId);
 }

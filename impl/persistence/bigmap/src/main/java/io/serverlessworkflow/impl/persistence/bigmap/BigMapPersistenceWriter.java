@@ -1,0 +1,109 @@
+/*
+ * Copyright 2020-Present The Serverless Workflow Specification Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.serverlessworkflow.impl.persistence.bigmap;
+
+import io.serverlessworkflow.impl.TaskContext;
+import io.serverlessworkflow.impl.TaskContextData;
+import io.serverlessworkflow.impl.WorkflowContextData;
+import io.serverlessworkflow.impl.WorkflowInstanceData;
+import io.serverlessworkflow.impl.WorkflowStatus;
+import io.serverlessworkflow.impl.persistence.WorkflowPersistenceWriter;
+
+public abstract class BigMapPersistenceWriter<K, V, T, S, C> implements WorkflowPersistenceWriter {
+
+  private BigMapPersistenceStore<K, V, T, S, C> store;
+
+  protected BigMapPersistenceWriter(BigMapPersistenceStore<K, V, T, S, C> store) {
+    this.store = store;
+  }
+
+  @Override
+  public void started(WorkflowContextData workflowContext) {
+    store
+        .instanceData(workflowContext.definition())
+        .put(key(workflowContext), marshallInstance(workflowContext.instanceData()));
+  }
+
+  @Override
+  public void completed(WorkflowContextData workflowContext) {
+    removeProcessInstance(workflowContext);
+  }
+
+  @Override
+  public void failed(WorkflowContextData workflowContext, Throwable ex) {
+    removeProcessInstance(workflowContext);
+  }
+
+  @Override
+  public void aborted(WorkflowContextData workflowContext) {
+    removeProcessInstance(workflowContext);
+  }
+
+  @Override
+  public void taskStarted(WorkflowContextData workflowContext, TaskContextData taskContext) {}
+
+  @Override
+  public void taskCompleted(WorkflowContextData workflowContext, TaskContextData taskContext) {
+    K key = key(workflowContext);
+    store
+        .tasks(key)
+        .put(
+            taskContext.position().jsonPointer(),
+            marshallTaskCompleted(workflowContext, (TaskContext) taskContext));
+    store.context(workflowContext.definition()).put(key, marshallContext(workflowContext));
+  }
+
+  @Override
+  public void suspended(WorkflowContextData workflowContext) {
+    store
+        .status(workflowContext.definition())
+        .put(key(workflowContext), marshallStatus(WorkflowStatus.SUSPENDED));
+  }
+
+  @Override
+  public void resumed(WorkflowContextData workflowContext) {
+    store
+        .status(workflowContext.definition())
+        .put(key(workflowContext), marshallStatus(WorkflowStatus.RUNNING));
+  }
+
+  protected void removeProcessInstance(WorkflowContextData workflowContext) {
+    K key = key(workflowContext);
+    store.instanceData(workflowContext.definition()).remove(key);
+    store.context(workflowContext.definition()).remove(key);
+    store.status(workflowContext.definition()).remove(key);
+    store.cleanupTasks(key);
+  }
+
+  protected abstract K key(WorkflowContextData workflowContext);
+
+  protected abstract V marshallInstance(WorkflowInstanceData instance);
+
+  protected abstract C marshallContext(WorkflowContextData workflowContext);
+
+  protected abstract T marshallTaskCompleted(
+      WorkflowContextData workflowContext, TaskContext taskContext);
+
+  protected abstract S marshallStatus(WorkflowStatus status);
+
+  public void close() {
+    try {
+      store.close();
+    } catch (Exception e) {
+      // ignore exception
+    }
+  }
+}
