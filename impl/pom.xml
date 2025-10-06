@@ -9,6 +9,7 @@
     <name>Serverless Workflow :: Impl</name>
     <packaging>pom</packaging>
     <properties>
+        <version.com.h2database>1.4.199</version.com.h2database>
         <version.de.huxhorn.sulky>8.3.0</version.de.huxhorn.sulky>
         <version.jakarta.ws.rs>4.0.0</version.jakarta.ws.rs>
         <version.net.thisptr>1.6.0</version.net.thisptr>
@@ -40,6 +41,11 @@
                 <groupId>io.serverlessworkflow</groupId>
                 <artifactId>serverlessworkflow-persistence-jackson-marshaller</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+            <dependency>
+              <groupId>io.serverlessworkflow</groupId>
+              <artifactId>serverlessworkflow-persistence-mvstore</artifactId>
+              <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.serverlessworkflow</groupId>
@@ -78,6 +84,11 @@
                 <version>${version.org.glassfish.jersey}</version>
                 <scope>test</scope>
             </dependency>
+            <dependency>
+                <groupId>com.h2database</groupId>
+                <artifactId>h2-mvstore</artifactId>
+                <version>${version.com.h2database}</version>
+             </dependency>
         </dependencies>
     </dependencyManagement>
     <modules>

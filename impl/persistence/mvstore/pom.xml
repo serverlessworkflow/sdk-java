@@ -14,39 +14,10 @@
         <dependency>
           <groupId>com.h2database</groupId>
           <artifactId>h2-mvstore</artifactId>
-          <version>${version.com.h2database}</version>
-        </dependency>
+         </dependency>
         <dependency>
           <groupId>io.serverlessworkflow</groupId>
           <artifactId>serverlessworkflow-persistence-big-map</artifactId>
-        </dependency>
-        <dependency>
-          <groupId>io.serverlessworkflow</groupId>
-          <artifactId>serverlessworkflow-api</artifactId>
-          <scope>test</scope>
-        </dependency>
-        <dependency>
-          <groupId>io.serverlessworkflow</groupId>
-          <artifactId>serverlessworkflow-impl-jackson</artifactId>
-          <scope>test</scope>
-        </dependency>
-        <dependency>
-          <groupId>ch.qos.logback</groupId>
-          <artifactId>logback-classic</artifactId>
-          <scope>test</scope>
-        </dependency>
-        <dependency>
-          <groupId>io.serverlessworkflow</groupId>
-          <artifactId>serverlessworkflow-persistence-jackson-marshaller</artifactId>
-          <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter-engine</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.assertj</groupId>
-            <artifactId>assertj-core</artifactId>
         </dependency>
     </dependencies>
 </project>

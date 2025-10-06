@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.tests.persistence;
+package io.serverlessworkflow.impl.test;
 
 import static io.serverlessworkflow.api.WorkflowReader.readWorkflowFromClasspath;
 
@@ -31,7 +31,8 @@ public class DBGenerator {
         WorkflowApplication application =
             BytesBigMapApplicationBuilder.builder(WorkflowApplication.builder(), store).build()) {
       WorkflowDefinition definition =
-          application.workflowDefinition(readWorkflowFromClasspath("listen-to-any.yaml"));
+          application.workflowDefinition(
+              readWorkflowFromClasspath("workflows-samples/listen-to-any.yaml"));
       definition.instance(Map.of()).start();
     }
   }

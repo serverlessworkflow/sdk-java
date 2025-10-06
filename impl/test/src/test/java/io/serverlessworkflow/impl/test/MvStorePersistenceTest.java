@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.tests.persistence;
+package io.serverlessworkflow.impl.test;
 
 import static io.serverlessworkflow.api.WorkflowReader.readWorkflowFromClasspath;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -45,7 +45,8 @@ public class MvStorePersistenceTest {
         WorkflowPersistenceRestorer restorer =
             new BytesBigMapPersistenceRestorer(store, bufferFactory); ) {
       WorkflowDefinition definition =
-          application.workflowDefinition(readWorkflowFromClasspath("listen-to-any.yaml"));
+          application.workflowDefinition(
+              readWorkflowFromClasspath("workflows-samples/listen-to-any.yaml"));
       Collection<WorkflowInstance> instances = restorer.restoreAll(definition).values();
       assertThat(instances).hasSize(1);
       instances.forEach(WorkflowInstance::start);

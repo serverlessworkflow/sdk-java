@@ -17,6 +17,15 @@
             <artifactId>serverlessworkflow-api</artifactId>
         </dependency>
         <dependency>
+          <groupId>io.serverlessworkflow</groupId>
+          <artifactId>serverlessworkflow-persistence-mvstore</artifactId>
+        </dependency>
+        <dependency>
+          <groupId>io.serverlessworkflow</groupId>
+          <artifactId>serverlessworkflow-persistence-jackson-marshaller</artifactId>
+          <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>io.serverlessworkflow</groupId>
             <artifactId>serverlessworkflow-impl-http</artifactId>
         </dependency>
