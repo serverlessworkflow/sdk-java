@@ -55,4 +55,9 @@ class AgenticModel extends JavaModel {
       return super.as(clazz);
     }
   }
+
+  @Override
+  public Object asJavaObject() {
+    return agenticScope;
+  }
 }

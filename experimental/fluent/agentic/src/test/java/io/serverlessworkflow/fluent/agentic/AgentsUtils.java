@@ -18,7 +18,9 @@ package io.serverlessworkflow.fluent.agentic;
 import static io.serverlessworkflow.fluent.agentic.Models.BASE_MODEL;
 import static org.mockito.Mockito.spy;
 
+import dev.langchain4j.agentic.Agent;
 import dev.langchain4j.agentic.AgenticServices;
+import dev.langchain4j.service.V;
 
 public final class AgentsUtils {
 
@@ -60,6 +62,14 @@ public final class AgentsUtils {
   public static Agents.StyleEditor newStyleEditor() {
     return spy(
         AgenticServices.agentBuilder(Agents.StyleEditor.class)
+            .outputName("story")
+            .chatModel(BASE_MODEL)
+            .build());
+  }
+
+  public static Agents.SummaryStory newSummaryStory() {
+    return spy(
+        AgenticServices.agentBuilder(Agents.SummaryStory.class)
             .outputName("story")
             .chatModel(BASE_MODEL)
             .build());
@@ -119,5 +129,12 @@ public final class AgentsUtils {
             .chatModel(BASE_MODEL)
             .outputName("response")
             .build());
+  }
+
+  public interface NovelCreator {
+
+    @Agent
+    String createNovel(
+        @V("topic") String topic, @V("audience") String audience, @V("style") String style);
   }
 }

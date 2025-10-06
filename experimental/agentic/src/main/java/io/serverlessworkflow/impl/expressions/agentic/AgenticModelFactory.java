@@ -23,8 +23,8 @@ import io.serverlessworkflow.impl.WorkflowModelCollection;
 import io.serverlessworkflow.impl.WorkflowModelFactory;
 import io.serverlessworkflow.impl.expressions.agentic.langchain4j.AgenticScopeRegistryAssessor;
 import java.time.OffsetDateTime;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 class AgenticModelFactory implements WorkflowModelFactory {
 
@@ -55,17 +55,22 @@ class AgenticModelFactory implements WorkflowModelFactory {
     // hood, the agent already updated it.
     if (prev instanceof AgenticModel agenticModel) {
       this.scopeRegistryAssessor.setAgenticScope(agenticModel.getAgenticScope());
+      agenticModel.getAgenticScope().state().put(DEFAULT_AGENTIC_SCOPE_STATE_KEY, obj);
     }
     return newAgenticModel(obj);
   }
 
   @Override
   public WorkflowModel combine(Map<String, WorkflowModel> workflowVariables) {
-    Map<String, Object> combinedState =
-        workflowVariables.entrySet().stream()
-            .map(e -> Map.entry(e.getKey(), e.getValue().asJavaObject()))
-            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-    return newAgenticModel(combinedState);
+    Map<String, Object> map = new HashMap<>();
+    for (Map.Entry<String, WorkflowModel> e : workflowVariables.entrySet()) {
+      if (e.getValue() instanceof AgenticModel agenticModel) {
+        map.putAll(agenticModel.getAgenticScope().state());
+      } else {
+        map.put(e.getKey(), e.getValue().asJavaObject());
+      }
+    }
+    return newAgenticModel(map);
   }
 
   @Override
