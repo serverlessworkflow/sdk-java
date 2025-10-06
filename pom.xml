@@ -69,7 +69,7 @@
         <version.jdk>${java.version}</version.jdk>
         <version.jsonschema2pojo-maven-plugin>1.2.2</version.jsonschema2pojo-maven-plugin>
         <version.javadoc.plugin>3.12.0</version.javadoc.plugin>
-        <version.org.codehaus.mojo>3.5.1</version.org.codehaus.mojo>
+        <version.org.codehaus.mojo>3.6.1</version.org.codehaus.mojo>
         <version.org.sonatype.central>0.9.0</version.org.sonatype.central>
         <version.release.plugin>3.1.1</version.release.plugin>
         <version.source.plugin>3.3.1</version.source.plugin>
