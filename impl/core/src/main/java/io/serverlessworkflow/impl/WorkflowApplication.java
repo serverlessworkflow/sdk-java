@@ -15,6 +15,8 @@
  */
 package io.serverlessworkflow.impl;
 
+import static io.serverlessworkflow.impl.WorkflowUtils.safeClose;
+
 import io.serverlessworkflow.api.types.SchemaInline;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.events.EventConsumer;
@@ -39,12 +41,8 @@ import java.util.ServiceLoader.Provider;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class WorkflowApplication implements AutoCloseable {
-
-  private static final Logger logger = LoggerFactory.getLogger(WorkflowApplication.class);
 
   private final TaskExecutorFactory taskFactory;
   private final ExpressionFactory exprFactory;
@@ -271,14 +269,11 @@ public class WorkflowApplication implements AutoCloseable {
       safeClose(definition);
     }
     definitions.clear();
-  }
 
-  private void safeClose(AutoCloseable closeable) {
-    try {
-      closeable.close();
-    } catch (Exception ex) {
-      logger.warn("Error closing resource {}", closeable.getClass().getName(), ex);
+    for (WorkflowExecutionListener listener : listeners) {
+      safeClose(listener);
     }
+    listeners.clear();
   }
 
   public WorkflowPositionFactory positionFactory() {

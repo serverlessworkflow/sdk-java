@@ -16,6 +16,7 @@
 package io.serverlessworkflow.impl.persistence;
 
 import io.serverlessworkflow.impl.TaskContext;
+import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowMutableInstance;
@@ -36,13 +37,11 @@ public class WorkflowPersistenceInstance extends WorkflowMutableInstance {
     return startExecution(
         () -> {
           startedAt = info.startedAt();
-          status.set(info.status());
-          workflowContext.context(info.context());
         });
   }
 
   @Override
-  public void restoreContext(WorkflowDefinition definition, TaskContext context) {
+  public void restoreContext(WorkflowContext workflow, TaskContext context) {
     PersistenceTaskInfo taskInfo = info.tasks().get(context.position().jsonPointer());
     if (taskInfo != null) {
       context.output(taskInfo.model());
@@ -51,8 +50,9 @@ public class WorkflowPersistenceInstance extends WorkflowMutableInstance {
           new TransitionInfo(
               taskInfo.nextPosition() == null
                   ? null
-                  : definition.taskExecutor(taskInfo.nextPosition()),
+                  : workflow.definition().taskExecutor(taskInfo.nextPosition()),
               taskInfo.isEndNode()));
+      workflow.context(taskInfo.context());
     }
   }
 }

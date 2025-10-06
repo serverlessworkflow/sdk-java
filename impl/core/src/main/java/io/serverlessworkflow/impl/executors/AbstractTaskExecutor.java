@@ -192,7 +192,7 @@ public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskEx
   public CompletableFuture<TaskContext> apply(
       WorkflowContext workflowContext, Optional<TaskContext> parentContext, WorkflowModel input) {
     TaskContext taskContext = new TaskContext(input, position, parentContext, taskName, task);
-    workflowContext.instance().restoreContext(workflowContext.definition(), taskContext);
+    workflowContext.instance().restoreContext(workflowContext, taskContext);
     CompletableFuture<TaskContext> completable = CompletableFuture.completedFuture(taskContext);
     if (taskContext.isCompleted() && !TaskExecutorHelper.isActive(workflowContext)) {
       return completable;

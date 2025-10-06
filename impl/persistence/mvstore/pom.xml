@@ -5,17 +5,48 @@
         <artifactId>serverlessworkflow-persistence</artifactId>
         <version>8.0.0-SNAPSHOT</version>
     </parent>
+    <properties>
+       <version.com.h2database>1.4.199</version.com.h2database>
+    </properties>
     <artifactId>serverlessworkflow-persistence-mvstore</artifactId>
     <name>Serverless Workflow :: Impl :: Persistence:: MVStore</name>
     <dependencies>
         <dependency>
-            <groupId>io.serverlessworkflow</groupId>
-            <artifactId>serverlessworkflow-persistence-big-map</artifactId>
-        </dependency>
-        <dependency>
           <groupId>com.h2database</groupId>
           <artifactId>h2-mvstore</artifactId>
-          <version>1.4.199</version>
+          <version>${version.com.h2database}</version>
+        </dependency>
+        <dependency>
+          <groupId>io.serverlessworkflow</groupId>
+          <artifactId>serverlessworkflow-persistence-big-map</artifactId>
+        </dependency>
+        <dependency>
+          <groupId>io.serverlessworkflow</groupId>
+          <artifactId>serverlessworkflow-api</artifactId>
+          <scope>test</scope>
+        </dependency>
+        <dependency>
+          <groupId>io.serverlessworkflow</groupId>
+          <artifactId>serverlessworkflow-impl-jackson</artifactId>
+          <scope>test</scope>
+        </dependency>
+        <dependency>
+          <groupId>ch.qos.logback</groupId>
+          <artifactId>logback-classic</artifactId>
+          <scope>test</scope>
+        </dependency>
+        <dependency>
+          <groupId>io.serverlessworkflow</groupId>
+          <artifactId>serverlessworkflow-persistence-jackson-marshaller</artifactId>
+          <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
         </dependency>
     </dependencies>
 </project>

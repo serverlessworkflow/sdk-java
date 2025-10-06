@@ -18,10 +18,18 @@ package io.serverlessworkflow.impl.marshaller;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Collection;
+import java.util.ServiceLoader;
 
 public class DefaultBufferFactory implements WorkflowBufferFactory {
 
   private final Collection<CustomObjectMarshaller> marshallers;
+
+  public static DefaultBufferFactory factory() {
+    return new DefaultBufferFactory(
+        ServiceLoader.load(CustomObjectMarshaller.class).stream()
+            .map(ServiceLoader.Provider::get)
+            .toList());
+  }
 
   public DefaultBufferFactory(Collection<CustomObjectMarshaller> marshallers) {
     this.marshallers = marshallers;

@@ -17,7 +17,6 @@ package io.serverlessworkflow.impl.persistence.bigmap;
 
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowInstance;
-import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowStatus;
 import io.serverlessworkflow.impl.persistence.PersistenceTaskInfo;
 import io.serverlessworkflow.impl.persistence.PersistenceWorkflowInfo;
@@ -29,11 +28,11 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public abstract class BigMapPersistenceRestorer<V, T, S, C> implements WorkflowPersistenceRestorer {
+public abstract class BigMapPersistenceRestorer<V, T, S> implements WorkflowPersistenceRestorer {
 
-  private final BigMapPersistenceStore<String, V, T, S, C> store;
+  private final BigMapPersistenceStore<String, V, T, S> store;
 
-  protected BigMapPersistenceRestorer(BigMapPersistenceStore<String, V, T, S, C> store) {
+  protected BigMapPersistenceRestorer(BigMapPersistenceStore<String, V, T, S> store) {
     this.store = store;
   }
 
@@ -41,7 +40,6 @@ public abstract class BigMapPersistenceRestorer<V, T, S, C> implements WorkflowP
   public Map<String, WorkflowInstance> restoreAll(WorkflowDefinition definition) {
     Map<String, V> instances = store.instanceData(definition);
     Map<String, S> status = store.status(definition);
-    Map<String, C> context = store.context(definition);
     return instances.entrySet().stream()
         .map(
             e ->
@@ -50,8 +48,7 @@ public abstract class BigMapPersistenceRestorer<V, T, S, C> implements WorkflowP
                     e.getKey(),
                     e.getValue(),
                     store.tasks(e.getKey()),
-                    status.get(e.getKey()),
-                    context.get(e.getKey())))
+                    status.get(e.getKey())))
         .collect(Collectors.toMap(WorkflowInstance::id, i -> i));
   }
 
@@ -75,8 +72,7 @@ public abstract class BigMapPersistenceRestorer<V, T, S, C> implements WorkflowP
                 instanceId,
                 instances.get(instanceId),
                 store.tasks(instanceId),
-                store.status(definition).get(instanceId),
-                store.context(definition).get(instanceId)));
+                store.status(definition).get(instanceId)));
   }
 
   public void close() {}
@@ -86,29 +82,25 @@ public abstract class BigMapPersistenceRestorer<V, T, S, C> implements WorkflowP
       String instanceId,
       V instanceData,
       Map<String, T> tasksData,
-      S status,
-      C context) {
+      S status) {
     return new WorkflowPersistenceInstance(
-        definition, readPersistenceInfo(instanceId, instanceData, tasksData, status, context));
+        definition, readPersistenceInfo(instanceId, instanceData, tasksData, status));
   }
 
   protected abstract PersistenceTaskInfo unmarshallTaskInfo(T taskData);
 
   protected abstract PersistenceInstanceInfo unmarshallInstanceInfo(V instanceData);
 
-  protected abstract WorkflowModel unmarshallContext(C contextData);
-
   protected abstract WorkflowStatus unmarshallStatus(S statusData);
 
   protected PersistenceWorkflowInfo readPersistenceInfo(
-      String instanceId, V instanceData, Map<String, T> tasksData, S status, C context) {
+      String instanceId, V instanceData, Map<String, T> tasksData, S status) {
     PersistenceInstanceInfo instanceInfo = unmarshallInstanceInfo(instanceData);
     return new PersistenceWorkflowInfo(
         instanceId,
         instanceInfo.startedAt(),
         instanceInfo.input(),
-        unmarshallContext(context),
-        unmarshallStatus(status),
+        status == null ? null : unmarshallStatus(status),
         tasksData.entrySet().stream()
             .collect(
                 Collectors.toMap(Entry::getKey, entry -> unmarshallTaskInfo(entry.getValue()))));

@@ -17,26 +17,24 @@ package io.serverlessworkflow.impl.persistence.bigmap;
 
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowApplication.Builder;
-import io.serverlessworkflow.impl.marshaller.CustomObjectMarshaller;
 import io.serverlessworkflow.impl.marshaller.DefaultBufferFactory;
 import io.serverlessworkflow.impl.marshaller.WorkflowBufferFactory;
 import io.serverlessworkflow.impl.persistence.WorkflowPersistenceListener;
-import java.util.ServiceLoader;
 
 public class BytesBigMapApplicationBuilder {
 
   public static BytesBigMapApplicationBuilder builder(
       WorkflowApplication.Builder builder,
-      BigMapPersistenceStore<String, byte[], byte[], byte[], byte[]> store) {
+      BigMapPersistenceStore<String, byte[], byte[], byte[]> store) {
     return new BytesBigMapApplicationBuilder(builder, store);
   }
 
-  private final BigMapPersistenceStore<String, byte[], byte[], byte[], byte[]> store;
+  private final BigMapPersistenceStore<String, byte[], byte[], byte[]> store;
   private final WorkflowApplication.Builder appBuilder;
   private WorkflowBufferFactory factory;
 
   protected BytesBigMapApplicationBuilder(
-      Builder appBuilder, BigMapPersistenceStore<String, byte[], byte[], byte[], byte[]> store) {
+      Builder appBuilder, BigMapPersistenceStore<String, byte[], byte[], byte[]> store) {
     this.appBuilder = appBuilder;
     this.store = store;
   }
@@ -48,11 +46,7 @@ public class BytesBigMapApplicationBuilder {
 
   public WorkflowApplication build() {
     if (factory == null) {
-      factory =
-          new DefaultBufferFactory(
-              ServiceLoader.load(CustomObjectMarshaller.class).stream()
-                  .map(ServiceLoader.Provider::get)
-                  .toList());
+      factory = DefaultBufferFactory.factory();
     }
     appBuilder.withListener(
         new WorkflowPersistenceListener(new BytesBigMapPersistenceWriter(store, factory)));

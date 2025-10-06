@@ -19,4 +19,8 @@ import io.serverlessworkflow.impl.WorkflowModel;
 import java.time.Instant;
 
 public record PersistenceTaskInfo(
-    Instant instant, WorkflowModel model, Boolean isEndNode, String nextPosition) {}
+    Instant instant,
+    WorkflowModel model,
+    WorkflowModel context,
+    Boolean isEndNode,
+    String nextPosition) {}

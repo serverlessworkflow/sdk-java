@@ -28,4 +28,7 @@ public interface WorkflowPersistenceRestorer extends AutoCloseable {
       WorkflowDefinition definition, Collection<String> instanceIds);
 
   Optional<WorkflowInstance> restore(WorkflowDefinition definition, String instanceId);
+
+  @Override
+  default void close() {}
 }

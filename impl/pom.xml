@@ -38,6 +38,11 @@
             </dependency>
             <dependency>
                 <groupId>io.serverlessworkflow</groupId>
+                <artifactId>serverlessworkflow-persistence-jackson-marshaller</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.serverlessworkflow</groupId>
                 <artifactId>serverlessworkflow-impl-jackson-jwt</artifactId>
                 <version>${project.version}</version>
             </dependency>

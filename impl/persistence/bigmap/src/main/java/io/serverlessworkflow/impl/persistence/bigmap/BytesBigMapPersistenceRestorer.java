@@ -24,13 +24,12 @@ import java.io.ByteArrayInputStream;
 import java.time.Instant;
 
 public class BytesBigMapPersistenceRestorer
-    extends BigMapPersistenceRestorer<byte[], byte[], byte[], byte[]> {
+    extends BigMapPersistenceRestorer<byte[], byte[], byte[]> {
 
   private final WorkflowBufferFactory factory;
 
-  protected BytesBigMapPersistenceRestorer(
-      BigMapPersistenceStore<String, byte[], byte[], byte[], byte[]> store,
-      WorkflowBufferFactory factory) {
+  public BytesBigMapPersistenceRestorer(
+      BigMapPersistenceStore<String, byte[], byte[], byte[]> store, WorkflowBufferFactory factory) {
     super(store);
     this.factory = factory;
   }
@@ -41,6 +40,7 @@ public class BytesBigMapPersistenceRestorer
       buffer.readByte(); // version byte not used at the moment
       Instant date = buffer.readInstant();
       WorkflowModel model = (WorkflowModel) buffer.readObject();
+      WorkflowModel context = (WorkflowModel) buffer.readObject();
       Boolean isEndNode = null;
       String nextPosition = null;
       isEndNode = buffer.readBoolean();
@@ -48,7 +48,7 @@ public class BytesBigMapPersistenceRestorer
       if (hasNext) {
         nextPosition = buffer.readString();
       }
-      return new PersistenceTaskInfo(date, model, isEndNode, nextPosition);
+      return new PersistenceTaskInfo(date, model, context, isEndNode, nextPosition);
     }
   }
 
@@ -57,14 +57,6 @@ public class BytesBigMapPersistenceRestorer
     try (WorkflowInputBuffer buffer = factory.input(new ByteArrayInputStream(instanceData))) {
       buffer.readByte(); // version byte not used at the moment
       return new PersistenceInstanceInfo(buffer.readInstant(), (WorkflowModel) buffer.readObject());
-    }
-  }
-
-  @Override
-  protected WorkflowModel unmarshallContext(byte[] contextData) {
-    try (WorkflowInputBuffer buffer = factory.input(new ByteArrayInputStream(contextData))) {
-      buffer.readByte(); // version byte not used at the moment
-      return (WorkflowModel) buffer.readObject();
     }
   }
 

@@ -22,11 +22,11 @@ import io.serverlessworkflow.impl.WorkflowInstanceData;
 import io.serverlessworkflow.impl.WorkflowStatus;
 import io.serverlessworkflow.impl.persistence.WorkflowPersistenceWriter;
 
-public abstract class BigMapPersistenceWriter<K, V, T, S, C> implements WorkflowPersistenceWriter {
+public abstract class BigMapPersistenceWriter<K, V, T, S> implements WorkflowPersistenceWriter {
 
-  private BigMapPersistenceStore<K, V, T, S, C> store;
+  private BigMapPersistenceStore<K, V, T, S> store;
 
-  protected BigMapPersistenceWriter(BigMapPersistenceStore<K, V, T, S, C> store) {
+  protected BigMapPersistenceWriter(BigMapPersistenceStore<K, V, T, S> store) {
     this.store = store;
   }
 
@@ -63,7 +63,6 @@ public abstract class BigMapPersistenceWriter<K, V, T, S, C> implements Workflow
         .put(
             taskContext.position().jsonPointer(),
             marshallTaskCompleted(workflowContext, (TaskContext) taskContext));
-    store.context(workflowContext.definition()).put(key, marshallContext(workflowContext));
   }
 
   @Override
@@ -83,7 +82,6 @@ public abstract class BigMapPersistenceWriter<K, V, T, S, C> implements Workflow
   protected void removeProcessInstance(WorkflowContextData workflowContext) {
     K key = key(workflowContext);
     store.instanceData(workflowContext.definition()).remove(key);
-    store.context(workflowContext.definition()).remove(key);
     store.status(workflowContext.definition()).remove(key);
     store.cleanupTasks(key);
   }
@@ -92,18 +90,8 @@ public abstract class BigMapPersistenceWriter<K, V, T, S, C> implements Workflow
 
   protected abstract V marshallInstance(WorkflowInstanceData instance);
 
-  protected abstract C marshallContext(WorkflowContextData workflowContext);
-
   protected abstract T marshallTaskCompleted(
       WorkflowContextData workflowContext, TaskContext taskContext);
 
   protected abstract S marshallStatus(WorkflowStatus status);
-
-  public void close() {
-    try {
-      store.close();
-    } catch (Exception e) {
-      // ignore exception
-    }
-  }
 }

@@ -99,6 +99,7 @@ public abstract class AbstractOutputBuffer implements WorkflowOutputBuffer {
       writeType(Type.BYTES);
       writeBytes(bytes);
     } else {
+      writeType(Type.CUSTOM);
       writeCustomObject(object);
     }
     return this;
@@ -109,15 +110,14 @@ public abstract class AbstractOutputBuffer implements WorkflowOutputBuffer {
   }
 
   protected void writeCustomObject(Object object) {
-    customMarshallers.stream()
-        .filter(m -> m.getObjectClass().isAssignableFrom(object.getClass()))
-        .findFirst()
-        .ifPresentOrElse(
-            m -> {
-              writeClass(m.getObjectClass());
-              m.write(this, m.getObjectClass().cast(object));
-            },
-            () -> new IllegalArgumentException("Unsupported type " + object.getClass()));
+    CustomObjectMarshaller marshaller =
+        customMarshallers.stream()
+            .filter(m -> m.getObjectClass().isAssignableFrom(object.getClass()))
+            .findFirst()
+            .orElseThrow(
+                () -> new IllegalArgumentException("Unsupported type " + object.getClass()));
+    writeClass(marshaller.getObjectClass());
+    marshaller.write(this, marshaller.getObjectClass().cast(object));
   }
 
   protected void writeType(Type type) {

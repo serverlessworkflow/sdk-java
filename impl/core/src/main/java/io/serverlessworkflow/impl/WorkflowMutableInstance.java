@@ -50,7 +50,7 @@ public class WorkflowMutableInstance implements WorkflowInstance {
   private Lock statusLock = new ReentrantLock();
   private Map<CompletableFuture<TaskContext>, TaskContext> suspended;
 
-  public WorkflowMutableInstance(WorkflowDefinition definition, String id, WorkflowModel input) {
+  protected WorkflowMutableInstance(WorkflowDefinition definition, String id, WorkflowModel input) {
     this.id = id;
     this.input = input;
     this.status = new AtomicReference<>(WorkflowStatus.PENDING);
@@ -265,5 +265,5 @@ public class WorkflowMutableInstance implements WorkflowInstance {
     }
   }
 
-  public void restoreContext(WorkflowDefinition definition, TaskContext context) {}
+  public void restoreContext(WorkflowContext workflow, TaskContext context) {}
 }

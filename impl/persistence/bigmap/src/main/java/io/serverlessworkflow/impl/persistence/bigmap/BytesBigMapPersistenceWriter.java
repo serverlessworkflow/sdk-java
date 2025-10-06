@@ -28,13 +28,12 @@ import io.serverlessworkflow.impl.persistence.bigmap.MarshallingUtils.TaskStatus
 import java.io.ByteArrayOutputStream;
 
 public class BytesBigMapPersistenceWriter
-    extends BigMapIdPersistenceWriter<byte[], byte[], byte[], byte[]> {
+    extends BigMapIdPersistenceWriter<byte[], byte[], byte[]> {
 
   private final WorkflowBufferFactory factory;
 
   public BytesBigMapPersistenceWriter(
-      BigMapPersistenceStore<String, byte[], byte[], byte[], byte[]> store,
-      WorkflowBufferFactory factory) {
+      BigMapPersistenceStore<String, byte[], byte[], byte[]> store, WorkflowBufferFactory factory) {
     super(store);
     this.factory = factory;
   }
@@ -46,6 +45,7 @@ public class BytesBigMapPersistenceWriter
       writer.writeByte(MarshallingUtils.VERSION_0);
       writer.writeInstant(taskContext.completedAt());
       writeModel(writer, taskContext.output());
+      writeModel(writer, contextData.context());
       boolean isEndNode = taskContext.transition().isEndNode();
       writer.writeBoolean(isEndNode);
       TaskExecutor<?> next = taskContext.transition().next();
@@ -79,17 +79,8 @@ public class BytesBigMapPersistenceWriter
     ByteArrayOutputStream bytes = new ByteArrayOutputStream();
     try (WorkflowOutputBuffer writer = factory.output(bytes)) {
       writer.writeByte(MarshallingUtils.VERSION_0);
-      writeModel(writer, instance.input());
       writer.writeInstant(instance.startedAt());
-    }
-    return bytes.toByteArray();
-  }
-
-  @Override
-  protected byte[] marshallContext(WorkflowContextData workflowContext) {
-    ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-    try (WorkflowOutputBuffer writer = factory.output(bytes)) {
-      writeModel(writer, workflowContext.context());
+      writeModel(writer, instance.input());
     }
     return bytes.toByteArray();
   }

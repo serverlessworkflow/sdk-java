@@ -17,10 +17,10 @@ package io.serverlessworkflow.impl.persistence.bigmap;
 
 import io.serverlessworkflow.impl.WorkflowContextData;
 
-public abstract class BigMapIdPersistenceWriter<V, T, S, C>
-    extends BigMapPersistenceWriter<String, V, T, S, C> {
+public abstract class BigMapIdPersistenceWriter<V, T, S>
+    extends BigMapPersistenceWriter<String, V, T, S> {
 
-  protected BigMapIdPersistenceWriter(BigMapPersistenceStore<String, V, T, S, C> store) {
+  protected BigMapIdPersistenceWriter(BigMapPersistenceStore<String, V, T, S> store) {
     super(store);
   }
 

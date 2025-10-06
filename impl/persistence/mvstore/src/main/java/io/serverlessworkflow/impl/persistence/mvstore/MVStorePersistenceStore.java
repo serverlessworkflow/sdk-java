@@ -23,7 +23,7 @@ import java.util.Map;
 import org.h2.mvstore.MVStore;
 
 public class MVStorePersistenceStore
-    implements BigMapPersistenceStore<String, byte[], byte[], byte[], byte[]> {
+    implements BigMapPersistenceStore<String, byte[], byte[], byte[]> {
   private final MVStore mvStore;
 
   protected static final String ID_SEPARATOR = "-";
@@ -57,11 +57,6 @@ public class MVStorePersistenceStore
   @Override
   public Map<String, byte[]> status(WorkflowDefinitionData workflowContext) {
     return openMap(workflowContext, "status");
-  }
-
-  @Override
-  public Map<String, byte[]> context(WorkflowDefinitionData workflowContext) {
-    return openMap(workflowContext, "context");
   }
 
   private Map<String, byte[]> openMap(WorkflowDefinitionData workflowDefinition, String suffix) {

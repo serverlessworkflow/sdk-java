@@ -15,7 +15,7 @@
  */
 package io.serverlessworkflow.impl.lifecycle;
 
-public interface WorkflowExecutionListener {
+public interface WorkflowExecutionListener extends AutoCloseable {
 
   default void onWorkflowStarted(WorkflowStartedEvent ev) {}
 
@@ -42,4 +42,7 @@ public interface WorkflowExecutionListener {
   default void onTaskResumed(TaskResumedEvent ev) {}
 
   default void onTaskRetried(TaskRetriedEvent ev) {}
+
+  @Override
+  default void close() {}
 }

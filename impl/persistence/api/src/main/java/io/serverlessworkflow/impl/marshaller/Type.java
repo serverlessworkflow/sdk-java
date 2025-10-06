@@ -28,5 +28,6 @@ enum Type {
   INSTANT,
   MAP,
   COLLECTION,
-  NULL
+  NULL,
+  CUSTOM
 }

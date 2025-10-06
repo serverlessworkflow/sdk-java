@@ -24,6 +24,5 @@ public record PersistenceWorkflowInfo(
     String id,
     Instant startedAt,
     WorkflowModel input,
-    WorkflowModel context,
     WorkflowStatus status,
     Map<String, PersistenceTaskInfo> tasks) {}

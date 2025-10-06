@@ -108,8 +108,11 @@ public abstract class AbstractInputBuffer implements WorkflowInputBuffer {
       case INSTANT:
         return readInstant();
 
-      default:
+      case CUSTOM:
         return readCustomObject();
+
+      default:
+        throw new IllegalStateException("Unsupported type " + type);
     }
   }
 

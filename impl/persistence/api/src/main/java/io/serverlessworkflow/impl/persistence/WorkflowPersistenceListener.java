@@ -15,9 +15,12 @@
  */
 package io.serverlessworkflow.impl.persistence;
 
+import static io.serverlessworkflow.impl.WorkflowUtils.safeClose;
+
 import io.serverlessworkflow.impl.lifecycle.TaskCompletedEvent;
 import io.serverlessworkflow.impl.lifecycle.TaskStartedEvent;
 import io.serverlessworkflow.impl.lifecycle.WorkflowCancelledEvent;
+import io.serverlessworkflow.impl.lifecycle.WorkflowCompletedEvent;
 import io.serverlessworkflow.impl.lifecycle.WorkflowExecutionListener;
 import io.serverlessworkflow.impl.lifecycle.WorkflowFailedEvent;
 import io.serverlessworkflow.impl.lifecycle.WorkflowResumedEvent;
@@ -28,8 +31,8 @@ public class WorkflowPersistenceListener implements WorkflowExecutionListener {
 
   private final WorkflowPersistenceWriter persistenceWriter;
 
-  public WorkflowPersistenceListener(WorkflowPersistenceWriter persistenceStore) {
-    this.persistenceWriter = persistenceStore;
+  public WorkflowPersistenceListener(WorkflowPersistenceWriter persistenceWriter) {
+    this.persistenceWriter = persistenceWriter;
   }
 
   @Override
@@ -58,6 +61,11 @@ public class WorkflowPersistenceListener implements WorkflowExecutionListener {
   }
 
   @Override
+  public void onWorkflowCompleted(WorkflowCompletedEvent ev) {
+    persistenceWriter.completed(ev.workflowContext());
+  }
+
+  @Override
   public void onTaskStarted(TaskStartedEvent ev) {
     persistenceWriter.taskStarted(ev.workflowContext(), ev.taskContext());
   }
@@ -65,5 +73,9 @@ public class WorkflowPersistenceListener implements WorkflowExecutionListener {
   @Override
   public void onTaskCompleted(TaskCompletedEvent ev) {
     persistenceWriter.taskCompleted(ev.workflowContext(), ev.taskContext());
+  }
+
+  public void close() {
+    safeClose(persistenceWriter);
   }
 }
