@@ -15,7 +15,7 @@ With the SDK you can:
 
 |                                     Latest Releases                                    |                        Conformance to spec version                       |
 | :------------------------------------------------------------------------------------: | :----------------------------------------------------------------------: |
-| [7.x](https://github.com/serverlessworkflow/sdk-java/releases/tag/7.2.0.Final)| [v1.0.0](https://github.com/serverlessworkflow/specification/tree/1.0.x) |
+| [7.x](https://github.com/serverlessworkflow/sdk-java/releases/tag/7.2.1.Final)| [v1.0.0](https://github.com/serverlessworkflow/specification/tree/1.0.x) |
 | [5.x](https://github.com/serverlessworkflow/sdk-java/releases/tag/5.1.0.Final)|  [v0.8](https://github.com/serverlessworkflow/specification/tree/0.8.x)  |
 | [4.x](https://github.com/serverlessworkflow/sdk-java/releases/tag/4.1.0.Final)|  [v0.8](https://github.com/serverlessworkflow/specification/tree/0.8.x)  |
 | [3.0.0.Final](https://github.com/serverlessworkflow/sdk-java/releases/tag/3.0.0.Final)|  [v0.7](https://github.com/serverlessworkflow/specification/tree/0.7.x)  |
@@ -55,7 +55,7 @@ Add the following dependencies to your pom.xml `dependencies` section:
 <dependency>
     <groupId>io.serverlessworkflow</groupId>
     <artifactId>serverlessworkflow-api</artifactId>
-    <version>7.2.0.Final</version>
+    <version>7.2.1.Final</version>
 </dependency>
 ```
 
