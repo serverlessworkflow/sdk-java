@@ -20,9 +20,4 @@ class MarshallingUtils {
   private MarshallingUtils() {}
 
   public static final byte VERSION_0 = 0;
-
-  public enum TaskStatus {
-    STARTED,
-    COMPLETED
-  }
 }

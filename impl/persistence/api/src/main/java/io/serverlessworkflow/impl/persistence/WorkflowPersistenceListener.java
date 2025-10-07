@@ -29,9 +29,9 @@ import io.serverlessworkflow.impl.lifecycle.WorkflowSuspendedEvent;
 
 public class WorkflowPersistenceListener implements WorkflowExecutionListener {
 
-  private final WorkflowPersistenceWriter persistenceWriter;
+  private final PersistenceInstanceWriter persistenceWriter;
 
-  public WorkflowPersistenceListener(WorkflowPersistenceWriter persistenceWriter) {
+  public WorkflowPersistenceListener(PersistenceInstanceWriter persistenceWriter) {
     this.persistenceWriter = persistenceWriter;
   }
 

@@ -15,26 +15,18 @@
  */
 package io.serverlessworkflow.impl.persistence;
 
-import io.serverlessworkflow.impl.TaskContextData;
-import io.serverlessworkflow.impl.WorkflowContextData;
+import io.serverlessworkflow.impl.WorkflowDefinition;
+import io.serverlessworkflow.impl.WorkflowInstance;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Optional;
 
-public interface WorkflowPersistenceWriter extends AutoCloseable {
+public interface PersistenceInstanceReader extends AutoCloseable {
+  Map<String, WorkflowInstance> readAll(WorkflowDefinition definition);
 
-  void started(WorkflowContextData workflowContext);
+  Map<String, WorkflowInstance> read(WorkflowDefinition definition, Collection<String> instanceIds);
 
-  void completed(WorkflowContextData workflowContext);
-
-  void failed(WorkflowContextData workflowContext, Throwable ex);
-
-  void aborted(WorkflowContextData workflowContext);
-
-  void suspended(WorkflowContextData workflowContext);
-
-  void resumed(WorkflowContextData workflowContext);
-
-  void taskStarted(WorkflowContextData workflowContext, TaskContextData taskContext);
-
-  void taskCompleted(WorkflowContextData workflowContext, TaskContextData taskContext);
+  Optional<WorkflowInstance> read(WorkflowDefinition definition, String instanceId);
 
   @Override
   default void close() {}

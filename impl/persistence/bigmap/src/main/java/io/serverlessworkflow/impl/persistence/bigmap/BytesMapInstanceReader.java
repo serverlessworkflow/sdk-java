@@ -23,13 +23,12 @@ import io.serverlessworkflow.impl.persistence.PersistenceTaskInfo;
 import java.io.ByteArrayInputStream;
 import java.time.Instant;
 
-public class BytesBigMapPersistenceRestorer
-    extends BigMapPersistenceRestorer<byte[], byte[], byte[]> {
+public class BytesMapInstanceReader extends BigMapInstanceReader<byte[], byte[], byte[]> {
 
   private final WorkflowBufferFactory factory;
 
-  public BytesBigMapPersistenceRestorer(
-      BigMapPersistenceStore<String, byte[], byte[], byte[]> store, WorkflowBufferFactory factory) {
+  public BytesMapInstanceReader(
+      BigMapInstanceStore<String, byte[], byte[], byte[]> store, WorkflowBufferFactory factory) {
     super(store);
     this.factory = factory;
   }

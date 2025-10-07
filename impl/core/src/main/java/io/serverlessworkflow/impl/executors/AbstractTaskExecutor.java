@@ -194,10 +194,11 @@ public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskEx
     TaskContext taskContext = new TaskContext(input, position, parentContext, taskName, task);
     workflowContext.instance().restoreContext(workflowContext, taskContext);
     CompletableFuture<TaskContext> completable = CompletableFuture.completedFuture(taskContext);
-    if (taskContext.isCompleted() && !TaskExecutorHelper.isActive(workflowContext)) {
+    if (!TaskExecutorHelper.isActive(workflowContext)) {
       return completable;
-    }
-    if (ifFilter.map(f -> f.test(workflowContext, taskContext, input)).orElse(true)) {
+    } else if (taskContext.isCompleted()) {
+      return executeNext(completable, workflowContext);
+    } else if (ifFilter.map(f -> f.test(workflowContext, taskContext, input)).orElse(true)) {
       return executeNext(
           completable
               .thenCompose(workflowContext.instance()::suspendedCheck)

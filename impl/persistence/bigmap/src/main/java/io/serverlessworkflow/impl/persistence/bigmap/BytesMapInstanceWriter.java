@@ -24,16 +24,14 @@ import io.serverlessworkflow.impl.executors.AbstractTaskExecutor;
 import io.serverlessworkflow.impl.executors.TaskExecutor;
 import io.serverlessworkflow.impl.marshaller.WorkflowBufferFactory;
 import io.serverlessworkflow.impl.marshaller.WorkflowOutputBuffer;
-import io.serverlessworkflow.impl.persistence.bigmap.MarshallingUtils.TaskStatus;
 import java.io.ByteArrayOutputStream;
 
-public class BytesBigMapPersistenceWriter
-    extends BigMapIdPersistenceWriter<byte[], byte[], byte[]> {
+public class BytesMapInstanceWriter extends BigMapIdInstanceWriter<byte[], byte[], byte[]> {
 
   private final WorkflowBufferFactory factory;
 
-  public BytesBigMapPersistenceWriter(
-      BigMapPersistenceStore<String, byte[], byte[], byte[]> store, WorkflowBufferFactory factory) {
+  public BytesMapInstanceWriter(
+      BigMapInstanceStore<String, byte[], byte[], byte[]> store, WorkflowBufferFactory factory) {
     super(store);
     this.factory = factory;
   }
@@ -58,10 +56,6 @@ public class BytesBigMapPersistenceWriter
     }
 
     return bytes.toByteArray();
-  }
-
-  protected void writeTaskStatus(WorkflowOutputBuffer buffer, TaskStatus taskStatus) {
-    buffer.writeByte((byte) taskStatus.ordinal());
   }
 
   @Override

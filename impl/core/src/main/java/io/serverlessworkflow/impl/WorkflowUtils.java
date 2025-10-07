@@ -144,10 +144,12 @@ public class WorkflowUtils {
   }
 
   public static void safeClose(AutoCloseable closeable) {
-    try {
-      closeable.close();
-    } catch (Exception ex) {
-      logger.warn("Error closing resource {}", closeable.getClass().getName(), ex);
+    if (closeable != null) {
+      try {
+        closeable.close();
+      } catch (Exception ex) {
+        logger.warn("Error closing resource {}", closeable.getClass().getName(), ex);
+      }
     }
   }
 }

@@ -15,20 +15,30 @@
  */
 package io.serverlessworkflow.impl.persistence;
 
-import io.serverlessworkflow.impl.WorkflowDefinition;
-import io.serverlessworkflow.impl.WorkflowInstance;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Optional;
+import static io.serverlessworkflow.impl.WorkflowUtils.safeClose;
 
-public interface WorkflowPersistenceRestorer extends AutoCloseable {
-  Map<String, WorkflowInstance> restoreAll(WorkflowDefinition definition);
+public abstract class PersistenceInstanceHandlers implements AutoCloseable {
 
-  Map<String, WorkflowInstance> restore(
-      WorkflowDefinition definition, Collection<String> instanceIds);
+  protected final PersistenceInstanceWriter writer;
+  protected final PersistenceInstanceReader reader;
 
-  Optional<WorkflowInstance> restore(WorkflowDefinition definition, String instanceId);
+  protected PersistenceInstanceHandlers(
+      PersistenceInstanceWriter writer, PersistenceInstanceReader reader) {
+    this.writer = writer;
+    this.reader = reader;
+  }
+
+  public PersistenceInstanceWriter writer() {
+    return writer;
+  }
+
+  public PersistenceInstanceReader reader() {
+    return reader;
+  }
 
   @Override
-  default void close() {}
+  public void close() {
+    safeClose(writer);
+    safeClose(reader);
+  }
 }

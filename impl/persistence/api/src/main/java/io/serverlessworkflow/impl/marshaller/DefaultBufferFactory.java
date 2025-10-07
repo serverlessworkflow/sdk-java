@@ -24,14 +24,19 @@ public class DefaultBufferFactory implements WorkflowBufferFactory {
 
   private final Collection<CustomObjectMarshaller> marshallers;
 
-  public static DefaultBufferFactory factory() {
-    return new DefaultBufferFactory(
-        ServiceLoader.load(CustomObjectMarshaller.class).stream()
-            .map(ServiceLoader.Provider::get)
-            .toList());
+  private static class DefaultBufferFactoryHolder {
+    private static DefaultBufferFactory instance =
+        new DefaultBufferFactory(
+            ServiceLoader.load(CustomObjectMarshaller.class).stream()
+                .map(ServiceLoader.Provider::get)
+                .toList());
   }
 
-  public DefaultBufferFactory(Collection<CustomObjectMarshaller> marshallers) {
+  public static DefaultBufferFactory factory() {
+    return DefaultBufferFactoryHolder.instance;
+  }
+
+  protected DefaultBufferFactory(Collection<CustomObjectMarshaller> marshallers) {
     this.marshallers = marshallers;
   }
 

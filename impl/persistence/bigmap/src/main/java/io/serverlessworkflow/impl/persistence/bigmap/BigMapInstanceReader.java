@@ -18,26 +18,26 @@ package io.serverlessworkflow.impl.persistence.bigmap;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowInstance;
 import io.serverlessworkflow.impl.WorkflowStatus;
+import io.serverlessworkflow.impl.persistence.PersistenceInstanceReader;
 import io.serverlessworkflow.impl.persistence.PersistenceTaskInfo;
 import io.serverlessworkflow.impl.persistence.PersistenceWorkflowInfo;
 import io.serverlessworkflow.impl.persistence.WorkflowPersistenceInstance;
-import io.serverlessworkflow.impl.persistence.WorkflowPersistenceRestorer;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public abstract class BigMapPersistenceRestorer<V, T, S> implements WorkflowPersistenceRestorer {
+public abstract class BigMapInstanceReader<V, T, S> implements PersistenceInstanceReader {
 
-  private final BigMapPersistenceStore<String, V, T, S> store;
+  private final BigMapInstanceStore<String, V, T, S> store;
 
-  protected BigMapPersistenceRestorer(BigMapPersistenceStore<String, V, T, S> store) {
+  protected BigMapInstanceReader(BigMapInstanceStore<String, V, T, S> store) {
     this.store = store;
   }
 
   @Override
-  public Map<String, WorkflowInstance> restoreAll(WorkflowDefinition definition) {
+  public Map<String, WorkflowInstance> readAll(WorkflowDefinition definition) {
     Map<String, V> instances = store.instanceData(definition);
     Map<String, S> status = store.status(definition);
     return instances.entrySet().stream()
@@ -53,16 +53,16 @@ public abstract class BigMapPersistenceRestorer<V, T, S> implements WorkflowPers
   }
 
   @Override
-  public Map<String, WorkflowInstance> restore(
+  public Map<String, WorkflowInstance> read(
       WorkflowDefinition definition, Collection<String> instanceIds) {
     return instanceIds.stream()
-        .map(id -> restore(definition, id))
+        .map(id -> read(definition, id))
         .flatMap(Optional::stream)
         .collect(Collectors.toMap(WorkflowInstance::id, id -> id));
   }
 
   @Override
-  public Optional<WorkflowInstance> restore(WorkflowDefinition definition, String instanceId) {
+  public Optional<WorkflowInstance> read(WorkflowDefinition definition, String instanceId) {
     Map<String, V> instances = store.instanceData(definition);
     return instances.containsKey(instanceId)
         ? Optional.empty()

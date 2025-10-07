@@ -18,7 +18,7 @@ package io.serverlessworkflow.impl.persistence.bigmap;
 import io.serverlessworkflow.impl.WorkflowDefinitionData;
 import java.util.Map;
 
-public interface BigMapPersistenceStore<K, V, T, S> extends AutoCloseable {
+public interface BigMapInstanceStore<K, V, T, S> extends AutoCloseable {
 
   Map<K, V> instanceData(WorkflowDefinitionData definition);
 

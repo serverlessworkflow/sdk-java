@@ -19,20 +19,30 @@ import static io.serverlessworkflow.api.WorkflowReader.readWorkflowFromClasspath
 
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowDefinition;
-import io.serverlessworkflow.impl.persistence.bigmap.BytesBigMapApplicationBuilder;
+import io.serverlessworkflow.impl.persistence.PersistenceApplicationBuilder;
+import io.serverlessworkflow.impl.persistence.PersistenceInstanceHandlers;
+import io.serverlessworkflow.impl.persistence.bigmap.BytesMapPersistenceInstanceHandlers;
 import io.serverlessworkflow.impl.persistence.mvstore.MVStorePersistenceStore;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
 
 public class DBGenerator {
 
   public static void main(String[] args) throws IOException {
-    try (MVStorePersistenceStore store = new MVStorePersistenceStore("test.db");
+    Files.deleteIfExists(Path.of("test.db"));
+    try (PersistenceInstanceHandlers factories =
+            BytesMapPersistenceInstanceHandlers.builder(new MVStorePersistenceStore("test.db"))
+                .build();
         WorkflowApplication application =
-            BytesBigMapApplicationBuilder.builder(WorkflowApplication.builder(), store).build()) {
+            PersistenceApplicationBuilder.builder(
+                    WorkflowApplication.builder().withListener(new TraceExecutionListener()),
+                    factories.writer())
+                .build()) {
       WorkflowDefinition definition =
           application.workflowDefinition(
-              readWorkflowFromClasspath("workflows-samples/listen-to-any.yaml"));
+              readWorkflowFromClasspath("workflows-samples/set-listen-to-any.yaml"));
       definition.instance(Map.of()).start();
     }
   }

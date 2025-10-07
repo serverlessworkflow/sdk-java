@@ -213,6 +213,10 @@ As shown in previous examples, to start a new workflow instance, first a [Workfl
 
 Once started, and before it completes, a workflow instance execution can be suspended or cancelled. Once cancelled, a workflow instance is done, while a suspended one might be resumed. 
 
+## Persistence 
+
+Workflow progress might be recorded into DB. See [details](persistence/README.md)
+
 ## Fluent Java DSL
 
 Prefer building workflows programmatically with type-safe builders and recipes?

@@ -22,37 +22,59 @@ import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowInstance;
 import io.serverlessworkflow.impl.WorkflowStatus;
-import io.serverlessworkflow.impl.marshaller.DefaultBufferFactory;
-import io.serverlessworkflow.impl.marshaller.WorkflowBufferFactory;
-import io.serverlessworkflow.impl.persistence.WorkflowPersistenceRestorer;
-import io.serverlessworkflow.impl.persistence.bigmap.BytesBigMapApplicationBuilder;
-import io.serverlessworkflow.impl.persistence.bigmap.BytesBigMapPersistenceRestorer;
+import io.serverlessworkflow.impl.persistence.PersistenceApplicationBuilder;
+import io.serverlessworkflow.impl.persistence.PersistenceInstanceHandlers;
+import io.serverlessworkflow.impl.persistence.bigmap.BytesMapPersistenceInstanceHandlers;
 import io.serverlessworkflow.impl.persistence.mvstore.MVStorePersistenceStore;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 public class MvStorePersistenceTest {
 
   @Test
-  public void testRestoreWaitingInstance() throws IOException {
-    WorkflowBufferFactory bufferFactory = DefaultBufferFactory.factory();
-    try (MVStorePersistenceStore store = new MVStorePersistenceStore("test.db");
-        WorkflowApplication application =
-            BytesBigMapApplicationBuilder.builder(WorkflowApplication.builder(), store)
-                .withFactory(bufferFactory)
-                .build();
-        WorkflowPersistenceRestorer restorer =
-            new BytesBigMapPersistenceRestorer(store, bufferFactory); ) {
+  void testWaitingInstance() throws IOException {
+    TaskCounterPerInstanceListener taskCounter = new TaskCounterPerInstanceListener();
+    try (WorkflowApplication application =
+        WorkflowApplication.builder().withListener(taskCounter).build()) {
       WorkflowDefinition definition =
           application.workflowDefinition(
-              readWorkflowFromClasspath("workflows-samples/listen-to-any.yaml"));
-      Collection<WorkflowInstance> instances = restorer.restoreAll(definition).values();
+              readWorkflowFromClasspath("workflows-samples/set-listen-to-any.yaml"));
+
+      WorkflowInstance instance = definition.instance(Map.of());
+      instance.start();
+      assertThat(taskCounter.taskCounter(instance.id()).orElseThrow().completed()).isEqualTo(1);
+    }
+  }
+
+  @Test
+  void testRestoreWaitingInstance() throws IOException {
+    TaskCounterPerInstanceListener taskCounter = new TaskCounterPerInstanceListener();
+    try (PersistenceInstanceHandlers handlers =
+            BytesMapPersistenceInstanceHandlers.builder(new MVStorePersistenceStore("test.db"))
+                .build();
+        WorkflowApplication application =
+            PersistenceApplicationBuilder.builder(
+                    WorkflowApplication.builder()
+                        .withListener(taskCounter)
+                        .withListener(new TraceExecutionListener()),
+                    handlers.writer())
+                .build(); ) {
+      WorkflowDefinition definition =
+          application.workflowDefinition(
+              readWorkflowFromClasspath("workflows-samples/set-listen-to-any.yaml"));
+      Collection<WorkflowInstance> instances = handlers.reader().readAll(definition).values();
       assertThat(instances).hasSize(1);
       instances.forEach(WorkflowInstance::start);
       assertThat(instances)
           .singleElement()
-          .satisfies((instance -> assertThat(instance.status()).isEqualTo(WorkflowStatus.WAITING)));
+          .satisfies(
+              instance -> {
+                assertThat(instance.status()).isEqualTo(WorkflowStatus.WAITING);
+                assertThat(taskCounter.taskCounter(instance.id()).orElseThrow().completed())
+                    .isEqualTo(0);
+              });
     }
   }
 }

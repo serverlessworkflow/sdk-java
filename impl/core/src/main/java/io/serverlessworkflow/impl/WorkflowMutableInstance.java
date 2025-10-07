@@ -62,7 +62,6 @@ public class WorkflowMutableInstance implements WorkflowInstance {
     return startExecution(
         () -> {
           startedAt = Instant.now();
-          status.set(WorkflowStatus.RUNNING);
           publishEvent(
               workflowContext, l -> l.onWorkflowStarted(new WorkflowStartedEvent(workflowContext)));
         });
@@ -73,6 +72,7 @@ public class WorkflowMutableInstance implements WorkflowInstance {
     if (future != null) {
       return future;
     }
+    status.set(WorkflowStatus.RUNNING);
     runnable.run();
     future =
         TaskExecutorHelper.processTaskList(

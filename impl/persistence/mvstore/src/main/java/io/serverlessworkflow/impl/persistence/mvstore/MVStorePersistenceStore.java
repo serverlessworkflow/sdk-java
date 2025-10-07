@@ -18,12 +18,12 @@ package io.serverlessworkflow.impl.persistence.mvstore;
 import io.serverlessworkflow.api.types.Document;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.WorkflowDefinitionData;
-import io.serverlessworkflow.impl.persistence.bigmap.BigMapPersistenceStore;
+import io.serverlessworkflow.impl.persistence.bigmap.BigMapInstanceStore;
 import java.util.Map;
 import org.h2.mvstore.MVStore;
 
 public class MVStorePersistenceStore
-    implements BigMapPersistenceStore<String, byte[], byte[], byte[]> {
+    implements BigMapInstanceStore<String, byte[], byte[], byte[]> {
   private final MVStore mvStore;
 
   protected static final String ID_SEPARATOR = "-";

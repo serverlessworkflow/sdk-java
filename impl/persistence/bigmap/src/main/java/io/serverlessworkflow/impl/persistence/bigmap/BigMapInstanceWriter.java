@@ -20,13 +20,13 @@ import io.serverlessworkflow.impl.TaskContextData;
 import io.serverlessworkflow.impl.WorkflowContextData;
 import io.serverlessworkflow.impl.WorkflowInstanceData;
 import io.serverlessworkflow.impl.WorkflowStatus;
-import io.serverlessworkflow.impl.persistence.WorkflowPersistenceWriter;
+import io.serverlessworkflow.impl.persistence.PersistenceInstanceWriter;
 
-public abstract class BigMapPersistenceWriter<K, V, T, S> implements WorkflowPersistenceWriter {
+public abstract class BigMapInstanceWriter<K, V, T, S> implements PersistenceInstanceWriter {
 
-  private BigMapPersistenceStore<K, V, T, S> store;
+  private BigMapInstanceStore<K, V, T, S> store;
 
-  protected BigMapPersistenceWriter(BigMapPersistenceStore<K, V, T, S> store) {
+  protected BigMapInstanceWriter(BigMapInstanceStore<K, V, T, S> store) {
     this.store = store;
   }
 
