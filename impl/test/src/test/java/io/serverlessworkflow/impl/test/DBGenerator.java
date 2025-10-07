@@ -19,6 +19,7 @@ import static io.serverlessworkflow.api.WorkflowReader.readWorkflowFromClasspath
 
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowDefinition;
+import io.serverlessworkflow.impl.WorkflowInstance;
 import io.serverlessworkflow.impl.persistence.PersistenceApplicationBuilder;
 import io.serverlessworkflow.impl.persistence.PersistenceInstanceHandlers;
 import io.serverlessworkflow.impl.persistence.bigmap.BytesMapPersistenceInstanceHandlers;
@@ -31,9 +32,14 @@ import java.util.Map;
 public class DBGenerator {
 
   public static void main(String[] args) throws IOException {
-    Files.deleteIfExists(Path.of("test.db"));
+    runInstance("db-samples/running.db", false);
+    runInstance("db-samples/suspended.db", true);
+  }
+
+  private static void runInstance(String dbName, boolean suspend) throws IOException {
+    Files.deleteIfExists(Path.of(dbName));
     try (PersistenceInstanceHandlers factories =
-            BytesMapPersistenceInstanceHandlers.builder(new MVStorePersistenceStore("test.db"))
+            BytesMapPersistenceInstanceHandlers.builder(new MVStorePersistenceStore(dbName))
                 .build();
         WorkflowApplication application =
             PersistenceApplicationBuilder.builder(
@@ -43,7 +49,11 @@ public class DBGenerator {
       WorkflowDefinition definition =
           application.workflowDefinition(
               readWorkflowFromClasspath("workflows-samples/set-listen-to-any.yaml"));
-      definition.instance(Map.of()).start();
+      WorkflowInstance instance = definition.instance(Map.of());
+      instance.start();
+      if (suspend) {
+        instance.suspend();
+      }
     }
   }
 }

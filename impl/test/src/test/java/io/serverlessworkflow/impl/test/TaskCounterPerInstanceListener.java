@@ -20,7 +20,6 @@ import io.serverlessworkflow.impl.lifecycle.TaskStartedEvent;
 import io.serverlessworkflow.impl.lifecycle.WorkflowEvent;
 import io.serverlessworkflow.impl.lifecycle.WorkflowExecutionListener;
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class TaskCounterPerInstanceListener implements WorkflowExecutionListener {
@@ -53,12 +52,11 @@ public class TaskCounterPerInstanceListener implements WorkflowExecutionListener
   }
 
   private TaskCounter taskCounter(WorkflowEvent ev) {
-    return taskCounter.computeIfAbsent(
-        ev.workflowContext().instanceData().id(), k -> new TaskCounter());
+    return taskCounter(ev.workflowContext().instanceData().id());
   }
 
-  public Optional<TaskCounter> taskCounter(String instanceId) {
-    return Optional.ofNullable(taskCounter.get(instanceId));
+  public TaskCounter taskCounter(String instanceId) {
+    return taskCounter.computeIfAbsent(instanceId, k -> new TaskCounter());
   }
 
   public void onTaskCompleted(TaskCompletedEvent ev) {

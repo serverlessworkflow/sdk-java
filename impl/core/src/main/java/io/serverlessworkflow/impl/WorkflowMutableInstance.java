@@ -147,17 +147,21 @@ public class WorkflowMutableInstance implements WorkflowInstance {
 
   @Override
   public WorkflowModel output() {
-    return futureRef.get().join();
+    CompletableFuture<WorkflowModel> future = futureRef.get();
+    return future != null ? future.join() : null;
   }
 
   @Override
   public <T> T outputAs(Class<T> clazz) {
-    return output()
-        .as(clazz)
-        .orElseThrow(
-            () ->
-                new IllegalArgumentException(
-                    "Output " + output() + " cannot be converted to class " + clazz));
+    WorkflowModel output = output();
+    return output != null
+        ? output
+            .as(clazz)
+            .orElseThrow(
+                () ->
+                    new IllegalArgumentException(
+                        "Output " + output + " cannot be converted to class " + clazz))
+        : null;
   }
 
   public void status(WorkflowStatus state) {
@@ -182,8 +186,7 @@ public class WorkflowMutableInstance implements WorkflowInstance {
     try {
       statusLock.lock();
       if (TaskExecutorHelper.isActive(status.get()) && suspended == null) {
-        suspended = new ConcurrentHashMap<>();
-        status.set(WorkflowStatus.SUSPENDED);
+        internalSuspend();
         publishEvent(
             workflowContext,
             l -> l.onWorkflowSuspended(new WorkflowSuspendedEvent(workflowContext)));
@@ -194,6 +197,11 @@ public class WorkflowMutableInstance implements WorkflowInstance {
     } finally {
       statusLock.unlock();
     }
+  }
+
+  protected final void internalSuspend() {
+    suspended = new ConcurrentHashMap<>();
+    status.set(WorkflowStatus.SUSPENDED);
   }
 
   @Override

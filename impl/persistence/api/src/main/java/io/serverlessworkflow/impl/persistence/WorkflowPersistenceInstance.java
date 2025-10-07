@@ -20,6 +20,7 @@ import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowMutableInstance;
+import io.serverlessworkflow.impl.WorkflowStatus;
 import io.serverlessworkflow.impl.executors.TransitionInfo;
 import java.util.concurrent.CompletableFuture;
 
@@ -37,6 +38,9 @@ public class WorkflowPersistenceInstance extends WorkflowMutableInstance {
     return startExecution(
         () -> {
           startedAt = info.startedAt();
+          if (info.status() == WorkflowStatus.SUSPENDED) {
+            internalSuspend();
+          }
         });
   }
 

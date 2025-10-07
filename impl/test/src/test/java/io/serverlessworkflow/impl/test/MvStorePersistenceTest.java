@@ -44,15 +44,24 @@ public class MvStorePersistenceTest {
 
       WorkflowInstance instance = definition.instance(Map.of());
       instance.start();
-      assertThat(taskCounter.taskCounter(instance.id()).orElseThrow().completed()).isEqualTo(1);
+      assertThat(taskCounter.taskCounter(instance.id()).completed()).isEqualTo(1);
     }
   }
 
   @Test
   void testRestoreWaitingInstance() throws IOException {
+    runIt("db-samples/running.db", WorkflowStatus.WAITING);
+  }
+
+  @Test
+  void testRestoreSuspendedInstance() throws IOException {
+    runIt("db-samples/suspended.db", WorkflowStatus.SUSPENDED);
+  }
+
+  private void runIt(String dbName, WorkflowStatus expectedStatus) throws IOException {
     TaskCounterPerInstanceListener taskCounter = new TaskCounterPerInstanceListener();
     try (PersistenceInstanceHandlers handlers =
-            BytesMapPersistenceInstanceHandlers.builder(new MVStorePersistenceStore("test.db"))
+            BytesMapPersistenceInstanceHandlers.builder(new MVStorePersistenceStore(dbName))
                 .build();
         WorkflowApplication application =
             PersistenceApplicationBuilder.builder(
@@ -71,9 +80,8 @@ public class MvStorePersistenceTest {
           .singleElement()
           .satisfies(
               instance -> {
-                assertThat(instance.status()).isEqualTo(WorkflowStatus.WAITING);
-                assertThat(taskCounter.taskCounter(instance.id()).orElseThrow().completed())
-                    .isEqualTo(0);
+                assertThat(instance.status()).isEqualTo(expectedStatus);
+                assertThat(taskCounter.taskCounter(instance.id()).completed()).isEqualTo(0);
               });
     }
   }
