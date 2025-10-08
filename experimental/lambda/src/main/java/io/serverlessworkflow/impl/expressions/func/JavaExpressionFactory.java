@@ -18,8 +18,12 @@ package io.serverlessworkflow.impl.expressions.func;
 import io.cloudevents.CloudEventData;
 import io.serverlessworkflow.api.types.TaskBase;
 import io.serverlessworkflow.api.types.TaskMetadata;
+import io.serverlessworkflow.api.types.func.JavaContextFunction;
+import io.serverlessworkflow.api.types.func.JavaFilterFunction;
 import io.serverlessworkflow.api.types.func.TaskMetadataKeys;
 import io.serverlessworkflow.api.types.func.TypedFunction;
+import io.serverlessworkflow.api.types.func.TypedJavaContextFunction;
+import io.serverlessworkflow.api.types.func.TypedJavaFilterFunction;
 import io.serverlessworkflow.api.types.func.TypedPredicate;
 import io.serverlessworkflow.impl.WorkflowModelFactory;
 import io.serverlessworkflow.impl.WorkflowPredicate;
@@ -44,6 +48,14 @@ public class JavaExpressionFactory extends AbstractExpressionFactory {
       return (w, t, n) -> func.apply(n.asJavaObject());
     } else if (value instanceof TypedFunction func) {
       return (w, t, n) -> func.function().apply(n.as(func.argClass()).orElseThrow());
+    } else if (value instanceof JavaFilterFunction func) {
+      return (w, t, n) -> func.apply(n.asJavaObject(), w, t);
+    } else if (value instanceof TypedJavaFilterFunction func) {
+      return (w, t, n) -> func.function().apply(n.as(func.argClass()).orElseThrow(), w, t);
+    } else if (value instanceof JavaContextFunction func) {
+      return (w, t, n) -> func.apply(n.asJavaObject(), w);
+    } else if (value instanceof TypedJavaContextFunction func) {
+      return (w, t, n) -> func.function().apply(n.as(func.argClass()).orElseThrow(), w);
     } else {
       return (w, t, n) -> value;
     }

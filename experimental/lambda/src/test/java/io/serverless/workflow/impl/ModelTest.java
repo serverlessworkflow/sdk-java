@@ -30,6 +30,7 @@ import io.serverlessworkflow.api.types.WaitTask;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.api.types.func.OutputAsFunction;
 import io.serverlessworkflow.impl.WorkflowApplication;
+import io.serverlessworkflow.impl.WorkflowInstance;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -171,6 +172,64 @@ class ModelTest {
                   .asText()
                   .orElseThrow())
           .isEqualTo("Francisco Javierito");
+    }
+  }
+
+  @Test
+  void testPOJOStringExpressionWithContext() throws InterruptedException, ExecutionException {
+    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
+      Workflow workflow =
+          new Workflow()
+              .withDocument(
+                  new Document().withNamespace("test").withName("testPojo").withVersion("1.0"))
+              .withDo(
+                  List.of(
+                      new TaskItem(
+                          "doNothing",
+                          new Task()
+                              .withWaitTask(
+                                  new WaitTask()
+                                      .withWait(
+                                          new TimeoutAfter()
+                                              .withDurationInline(
+                                                  new DurationInline().withMilliseconds(10)))))))
+              .withOutput(
+                  new Output()
+                      .withAs(new OutputAsFunction().withFunction(JavaFunctions::getContextName)));
+      WorkflowInstance instance =
+          app.workflowDefinition(workflow).instance(new Person("Francisco", 33));
+      assertThat(instance.start().get().asText().orElseThrow())
+          .isEqualTo("Francisco_" + instance.id());
+    }
+  }
+
+  @Test
+  void testPOJOStringExpressionWithFilter() throws InterruptedException, ExecutionException {
+    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
+      Workflow workflow =
+          new Workflow()
+              .withDocument(
+                  new Document().withNamespace("test").withName("testPojo").withVersion("1.0"))
+              .withDo(
+                  List.of(
+                      new TaskItem(
+                          "doNothing",
+                          new Task()
+                              .withWaitTask(
+                                  new WaitTask()
+                                      .withOutput(
+                                          new Output()
+                                              .withAs(
+                                                  new OutputAsFunction()
+                                                      .withFunction(JavaFunctions::getFilterName)))
+                                      .withWait(
+                                          new TimeoutAfter()
+                                              .withDurationInline(
+                                                  new DurationInline().withMilliseconds(10)))))));
+      WorkflowInstance instance =
+          app.workflowDefinition(workflow).instance(new Person("Francisco", 33));
+      assertThat(instance.start().get().asText().orElseThrow())
+          .isEqualTo("Francisco_" + instance.id() + "_doNothing");
     }
   }
 }
