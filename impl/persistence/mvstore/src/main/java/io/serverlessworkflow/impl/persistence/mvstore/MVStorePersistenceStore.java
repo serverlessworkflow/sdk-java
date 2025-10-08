@@ -15,61 +15,26 @@
  */
 package io.serverlessworkflow.impl.persistence.mvstore;
 
-import io.serverlessworkflow.api.types.Document;
-import io.serverlessworkflow.api.types.Workflow;
-import io.serverlessworkflow.impl.WorkflowDefinitionData;
 import io.serverlessworkflow.impl.persistence.bigmap.BigMapInstanceStore;
-import java.util.Map;
+import io.serverlessworkflow.impl.persistence.bigmap.BigMapInstanceTransaction;
 import org.h2.mvstore.MVStore;
+import org.h2.mvstore.tx.TransactionStore;
 
 public class MVStorePersistenceStore
     implements BigMapInstanceStore<String, byte[], byte[], byte[]> {
-  private final MVStore mvStore;
-
-  protected static final String ID_SEPARATOR = "-";
+  private final TransactionStore mvStore;
 
   public MVStorePersistenceStore(String dbName) {
-    this.mvStore = MVStore.open(dbName);
-  }
-
-  protected static String identifier(Workflow workflow, String sep) {
-    Document document = workflow.getDocument();
-    return document.getNamespace() + sep + document.getName() + sep + document.getVersion();
+    this.mvStore = new TransactionStore(MVStore.open(dbName));
   }
 
   @Override
   public void close() {
-    if (!mvStore.isClosed()) {
-      mvStore.close();
-    }
+    mvStore.close();
   }
 
   @Override
-  public Map<String, byte[]> instanceData(WorkflowDefinitionData workflowContext) {
-    return openMap(workflowContext, "instances");
-  }
-
-  @Override
-  public Map<String, byte[]> tasks(String instanceId) {
-    return mvStore.openMap(mapTaskName(instanceId));
-  }
-
-  @Override
-  public Map<String, byte[]> status(WorkflowDefinitionData workflowContext) {
-    return openMap(workflowContext, "status");
-  }
-
-  private Map<String, byte[]> openMap(WorkflowDefinitionData workflowDefinition, String suffix) {
-    return mvStore.openMap(
-        identifier(workflowDefinition.workflow(), ID_SEPARATOR) + ID_SEPARATOR + suffix);
-  }
-
-  private String mapTaskName(String instanceId) {
-    return instanceId + ID_SEPARATOR + "tasks";
-  }
-
-  @Override
-  public void cleanupTasks(String instanceId) {
-    mvStore.removeMap(mapTaskName(instanceId));
+  public BigMapInstanceTransaction<String, byte[], byte[], byte[]> begin() {
+    return new MVStoreTransaction(mvStore.begin());
   }
 }

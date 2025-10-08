@@ -26,6 +26,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public abstract class BigMapInstanceReader<V, T, S> implements PersistenceInstanceReader {
@@ -36,43 +37,75 @@ public abstract class BigMapInstanceReader<V, T, S> implements PersistenceInstan
     this.store = store;
   }
 
+  private <Result> Result doTransaction(
+      Function<BigMapInstanceTransaction<String, V, T, S>, Result> operations) {
+    BigMapInstanceTransaction<String, V, T, S> transaction = store.begin();
+    try {
+      Result result = operations.apply(transaction);
+      transaction.commit();
+      return result;
+    } catch (Exception ex) {
+      transaction.rollback();
+      throw ex;
+    }
+  }
+
   @Override
   public Map<String, WorkflowInstance> readAll(WorkflowDefinition definition) {
-    Map<String, V> instances = store.instanceData(definition);
-    Map<String, S> status = store.status(definition);
-    return instances.entrySet().stream()
-        .map(
-            e ->
-                restore(
-                    definition,
-                    e.getKey(),
-                    e.getValue(),
-                    store.tasks(e.getKey()),
-                    status.get(e.getKey())))
-        .collect(Collectors.toMap(WorkflowInstance::id, i -> i));
+    return doTransaction(
+        t -> {
+          Map<String, V> instances = t.instanceData(definition);
+          Map<String, S> status = t.status(definition);
+          return instances.entrySet().stream()
+              .map(
+                  e ->
+                      restore(
+                          definition,
+                          e.getKey(),
+                          e.getValue(),
+                          t.tasks(e.getKey()),
+                          status.get(e.getKey())))
+              .collect(Collectors.toMap(WorkflowInstance::id, i -> i));
+        });
   }
 
   @Override
   public Map<String, WorkflowInstance> read(
       WorkflowDefinition definition, Collection<String> instanceIds) {
-    return instanceIds.stream()
-        .map(id -> read(definition, id))
-        .flatMap(Optional::stream)
-        .collect(Collectors.toMap(WorkflowInstance::id, id -> id));
+    return doTransaction(
+        t -> {
+          Map<String, V> instances = t.instanceData(definition);
+          Map<String, S> status = t.status(definition);
+          return instanceIds.stream()
+              .map(id -> read(instances, status, t.tasks(id), definition, id))
+              .flatMap(Optional::stream)
+              .collect(Collectors.toMap(WorkflowInstance::id, id -> id));
+        });
   }
 
   @Override
   public Optional<WorkflowInstance> read(WorkflowDefinition definition, String instanceId) {
-    Map<String, V> instances = store.instanceData(definition);
+    return doTransaction(
+        t ->
+            read(
+                t.instanceData(definition),
+                t.status(definition),
+                t.tasks(instanceId),
+                definition,
+                instanceId));
+  }
+
+  private Optional<WorkflowInstance> read(
+      Map<String, V> instances,
+      Map<String, S> status,
+      Map<String, T> tasks,
+      WorkflowDefinition definition,
+      String instanceId) {
     return instances.containsKey(instanceId)
         ? Optional.empty()
         : Optional.of(
             restore(
-                definition,
-                instanceId,
-                instances.get(instanceId),
-                store.tasks(instanceId),
-                store.status(definition).get(instanceId)));
+                definition, instanceId, instances.get(instanceId), tasks, status.get(instanceId)));
   }
 
   public void close() {}

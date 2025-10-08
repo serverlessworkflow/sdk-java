@@ -21,6 +21,7 @@ import io.serverlessworkflow.impl.WorkflowContextData;
 import io.serverlessworkflow.impl.WorkflowInstanceData;
 import io.serverlessworkflow.impl.WorkflowStatus;
 import io.serverlessworkflow.impl.persistence.PersistenceInstanceWriter;
+import java.util.function.Consumer;
 
 public abstract class BigMapInstanceWriter<K, V, T, S> implements PersistenceInstanceWriter {
 
@@ -30,11 +31,23 @@ public abstract class BigMapInstanceWriter<K, V, T, S> implements PersistenceIns
     this.store = store;
   }
 
+  private void doTransaction(Consumer<BigMapInstanceTransaction<K, V, T, S>> operations) {
+    BigMapInstanceTransaction<K, V, T, S> transaction = store.begin();
+    try {
+      operations.accept(transaction);
+      transaction.commit();
+    } catch (Exception ex) {
+      transaction.rollback();
+      throw ex;
+    }
+  }
+
   @Override
   public void started(WorkflowContextData workflowContext) {
-    store
-        .instanceData(workflowContext.definition())
-        .put(key(workflowContext), marshallInstance(workflowContext.instanceData()));
+    doTransaction(
+        t ->
+            t.instanceData(workflowContext.definition())
+                .put(key(workflowContext), marshallInstance(workflowContext.instanceData())));
   }
 
   @Override
@@ -57,33 +70,35 @@ public abstract class BigMapInstanceWriter<K, V, T, S> implements PersistenceIns
 
   @Override
   public void taskCompleted(WorkflowContextData workflowContext, TaskContextData taskContext) {
-    K key = key(workflowContext);
-    store
-        .tasks(key)
-        .put(
-            taskContext.position().jsonPointer(),
-            marshallTaskCompleted(workflowContext, (TaskContext) taskContext));
+    doTransaction(
+        t ->
+            t.tasks(key(workflowContext))
+                .put(
+                    taskContext.position().jsonPointer(),
+                    marshallTaskCompleted(workflowContext, (TaskContext) taskContext)));
   }
 
   @Override
   public void suspended(WorkflowContextData workflowContext) {
-    store
-        .status(workflowContext.definition())
-        .put(key(workflowContext), marshallStatus(WorkflowStatus.SUSPENDED));
+    doTransaction(
+        t ->
+            t.status(workflowContext.definition())
+                .put(key(workflowContext), marshallStatus(WorkflowStatus.SUSPENDED)));
   }
 
   @Override
   public void resumed(WorkflowContextData workflowContext) {
-    store
-        .status(workflowContext.definition())
-        .put(key(workflowContext), marshallStatus(WorkflowStatus.RUNNING));
+    doTransaction(t -> t.status(workflowContext.definition()).remove(key(workflowContext)));
   }
 
   protected void removeProcessInstance(WorkflowContextData workflowContext) {
-    K key = key(workflowContext);
-    store.instanceData(workflowContext.definition()).remove(key);
-    store.status(workflowContext.definition()).remove(key);
-    store.cleanupTasks(key);
+    doTransaction(
+        t -> {
+          K key = key(workflowContext);
+          t.instanceData(workflowContext.definition()).remove(key);
+          t.status(workflowContext.definition()).remove(key);
+          t.cleanupTasks(key);
+        });
   }
 
   protected abstract K key(WorkflowContextData workflowContext);

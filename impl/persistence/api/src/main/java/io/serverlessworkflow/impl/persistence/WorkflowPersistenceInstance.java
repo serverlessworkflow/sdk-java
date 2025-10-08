@@ -46,7 +46,7 @@ public class WorkflowPersistenceInstance extends WorkflowMutableInstance {
 
   @Override
   public void restoreContext(WorkflowContext workflow, TaskContext context) {
-    PersistenceTaskInfo taskInfo = info.tasks().get(context.position().jsonPointer());
+    PersistenceTaskInfo taskInfo = info.tasks().remove(context.position().jsonPointer());
     if (taskInfo != null) {
       context.output(taskInfo.model());
       context.completedAt(taskInfo.instant());
