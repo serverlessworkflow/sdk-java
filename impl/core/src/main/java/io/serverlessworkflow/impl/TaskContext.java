@@ -37,6 +37,7 @@ public class TaskContext implements TaskContextData {
   private WorkflowModel rawOutput;
   private Instant completedAt;
   private TransitionInfo transition;
+  private boolean completed;
 
   public TaskContext(
       WorkflowModel input,
@@ -109,6 +110,7 @@ public class TaskContext implements TaskContextData {
 
   public TaskContext output(WorkflowModel output) {
     this.output = output;
+    this.completed = true;
     return this;
   }
 
@@ -157,6 +159,10 @@ public class TaskContext implements TaskContextData {
   public TaskContext transition(TransitionInfo transition) {
     this.transition = transition;
     return this;
+  }
+
+  public boolean isCompleted() {
+    return completed;
   }
 
   @Override

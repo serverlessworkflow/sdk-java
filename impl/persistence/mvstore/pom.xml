@@ -1,0 +1,23 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>io.serverlessworkflow</groupId>
+        <artifactId>serverlessworkflow-persistence</artifactId>
+        <version>8.0.0-SNAPSHOT</version>
+    </parent>
+    <properties>
+       <version.com.h2database>1.4.199</version.com.h2database>
+    </properties>
+    <artifactId>serverlessworkflow-persistence-mvstore</artifactId>
+    <name>Serverless Workflow :: Impl :: Persistence:: MVStore</name>
+    <dependencies>
+        <dependency>
+          <groupId>com.h2database</groupId>
+          <artifactId>h2-mvstore</artifactId>
+         </dependency>
+        <dependency>
+          <groupId>io.serverlessworkflow</groupId>
+          <artifactId>serverlessworkflow-persistence-big-map</artifactId>
+        </dependency>
+    </dependencies>
+</project>

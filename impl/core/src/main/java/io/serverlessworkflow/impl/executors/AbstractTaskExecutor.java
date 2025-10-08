@@ -78,11 +78,13 @@ public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskEx
     protected final WorkflowApplication application;
     protected final Workflow workflow;
     protected final ResourceLoader resourceLoader;
+    private final WorkflowDefinition definition;
 
     private V instance;
 
     protected AbstractTaskExecutorBuilder(
         WorkflowMutablePosition position, T task, WorkflowDefinition definition) {
+      this.definition = definition;
       this.workflow = definition.workflow();
       this.taskName = position.last().toString();
       this.position = position;
@@ -147,6 +149,7 @@ public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskEx
       if (instance == null) {
         instance = buildInstance();
         buildTransition(instance);
+        definition.addTaskExecutor(position, instance);
       }
       return instance;
     }
@@ -189,11 +192,13 @@ public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskEx
   public CompletableFuture<TaskContext> apply(
       WorkflowContext workflowContext, Optional<TaskContext> parentContext, WorkflowModel input) {
     TaskContext taskContext = new TaskContext(input, position, parentContext, taskName, task);
+    workflowContext.instance().restoreContext(workflowContext, taskContext);
     CompletableFuture<TaskContext> completable = CompletableFuture.completedFuture(taskContext);
     if (!TaskExecutorHelper.isActive(workflowContext)) {
       return completable;
-    }
-    if (ifFilter.map(f -> f.test(workflowContext, taskContext, input)).orElse(true)) {
+    } else if (taskContext.isCompleted()) {
+      return executeNext(completable, workflowContext);
+    } else if (ifFilter.map(f -> f.test(workflowContext, taskContext, input)).orElse(true)) {
       return executeNext(
           completable
               .thenCompose(workflowContext.instance()::suspendedCheck)
@@ -254,6 +259,10 @@ public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskEx
           workflowContext,
           l -> l.onTaskFailed(new TaskFailedEvent(workflowContext, taskContext, e)));
     }
+  }
+
+  public WorkflowPosition position() {
+    return position;
   }
 
   protected abstract TransitionInfo getSkipTransition();

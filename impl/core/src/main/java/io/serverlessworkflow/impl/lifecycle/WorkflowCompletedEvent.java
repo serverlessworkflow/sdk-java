@@ -16,10 +16,18 @@
 package io.serverlessworkflow.impl.lifecycle;
 
 import io.serverlessworkflow.impl.WorkflowContextData;
+import io.serverlessworkflow.impl.WorkflowModel;
 
 public class WorkflowCompletedEvent extends WorkflowEvent {
 
-  public WorkflowCompletedEvent(WorkflowContextData workflow) {
+  private WorkflowModel output;
+
+  public WorkflowCompletedEvent(WorkflowContextData workflow, WorkflowModel output) {
     super(workflow);
+    this.output = output;
+  }
+
+  public WorkflowModel output() {
+    return output;
   }
 }

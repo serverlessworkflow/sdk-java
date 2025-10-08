@@ -1,0 +1,13 @@
+document:
+  dsl: '1.0.0-alpha5'
+  namespace: test
+  name: set-listen-to-any
+  version: '0.1.0'
+do:
+  - doSomethingBeforeEvent:
+      set: 
+        name: javierito
+  - callDoctor:
+      listen:
+        to:
+          any: []

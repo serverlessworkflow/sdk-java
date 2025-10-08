@@ -28,10 +28,14 @@ import io.serverlessworkflow.impl.schema.SchemaValidatorFactory;
 import java.net.URI;
 import java.util.Map;
 import java.util.Optional;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class WorkflowUtils {
 
   private WorkflowUtils() {}
+
+  private static final Logger logger = LoggerFactory.getLogger(WorkflowUtils.class);
 
   public static Optional<SchemaValidator> getSchemaValidator(
       SchemaValidatorFactory validatorFactory, ResourceLoader resourceLoader, SchemaUnion schema) {
@@ -137,5 +141,15 @@ public class WorkflowUtils {
   public static String toString(UriTemplate template) {
     URI uri = template.getLiteralUri();
     return uri != null ? uri.toString() : template.getLiteralUriTemplate();
+  }
+
+  public static void safeClose(AutoCloseable closeable) {
+    if (closeable != null) {
+      try {
+        closeable.close();
+      } catch (Exception ex) {
+        logger.warn("Error closing resource {}", closeable.getClass().getName(), ex);
+      }
+    }
   }
 }
