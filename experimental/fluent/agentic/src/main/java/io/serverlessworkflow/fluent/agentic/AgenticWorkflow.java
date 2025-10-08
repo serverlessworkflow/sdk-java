@@ -29,21 +29,21 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public class AgenticServices<T> {
+public class AgenticWorkflow<T> {
 
   private final Class<T> agent;
 
   private AgentWorkflowBuilder builder;
 
-  private AgenticServices(Class<T> agent) {
+  private AgenticWorkflow(Class<T> agent) {
     this.agent = agent;
   }
 
-  public static <T> AgenticServices<T> of(Class<T> agent) {
-    return new AgenticServices<>(agent);
+  public static <T> AgenticWorkflow<T> of(Class<T> agent) {
+    return new AgenticWorkflow<>(agent);
   }
 
-  public AgenticServices<T> flow(AgentWorkflowBuilder builder) {
+  public AgenticWorkflow<T> flow(AgentWorkflowBuilder builder) {
     this.builder = builder;
     return this;
   }

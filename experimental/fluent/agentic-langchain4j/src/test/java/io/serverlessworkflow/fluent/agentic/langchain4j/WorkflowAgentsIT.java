@@ -36,10 +36,11 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
+import dev.langchain4j.agentic.AgenticServices;
 import dev.langchain4j.agentic.UntypedAgent;
 import dev.langchain4j.agentic.scope.AgenticScope;
 import dev.langchain4j.agentic.workflow.WorkflowAgentsBuilder;
-import io.serverlessworkflow.fluent.agentic.AgenticServices;
+import io.serverlessworkflow.fluent.agentic.AgenticWorkflow;
 import io.serverlessworkflow.fluent.agentic.AgentsUtils;
 import java.util.List;
 import java.util.Map;
@@ -56,21 +57,21 @@ public class WorkflowAgentsIT {
 
     CreativeWriter creativeWriter =
         spy(
-            dev.langchain4j.agentic.AgenticServices.agentBuilder(CreativeWriter.class)
+            AgenticServices.agentBuilder(CreativeWriter.class)
                 .chatModel(BASE_MODEL)
                 .outputName("story")
                 .build());
 
     AudienceEditor audienceEditor =
         spy(
-            dev.langchain4j.agentic.AgenticServices.agentBuilder(AudienceEditor.class)
+            AgenticServices.agentBuilder(AudienceEditor.class)
                 .chatModel(BASE_MODEL)
                 .outputName("story")
                 .build());
 
     StyleEditor styleEditor =
         spy(
-            dev.langchain4j.agentic.AgenticServices.agentBuilder(StyleEditor.class)
+            AgenticServices.agentBuilder(StyleEditor.class)
                 .chatModel(BASE_MODEL)
                 .outputName("story")
                 .build());
@@ -103,7 +104,7 @@ public class WorkflowAgentsIT {
     var styleEditor = newStyleEditor();
 
     AgentsUtils.NovelCreator novelCreator =
-        io.serverlessworkflow.fluent.agentic.AgenticServices.of(AgentsUtils.NovelCreator.class)
+        AgenticWorkflow.of(AgentsUtils.NovelCreator.class)
             .flow(workflow("seqFlow").sequence(creativeWriter, audienceEditor, styleEditor))
             .build();
 
@@ -118,7 +119,7 @@ public class WorkflowAgentsIT {
     var styleEditor = newStyleEditor();
 
     AgentsUtils.NovelCreator novelCreator =
-        io.serverlessworkflow.fluent.agentic.AgenticServices.of(AgentsUtils.NovelCreator.class)
+        AgenticWorkflow.of(AgentsUtils.NovelCreator.class)
             .flow(workflow("seqFlow").agent(creativeWriter).sequence(audienceEditor, styleEditor))
             .build();
 
@@ -134,7 +135,7 @@ public class WorkflowAgentsIT {
     var summaryStory = newSummaryStory();
 
     AgentsUtils.NovelCreator novelCreator =
-        io.serverlessworkflow.fluent.agentic.AgenticServices.of(AgentsUtils.NovelCreator.class)
+        AgenticWorkflow.of(AgentsUtils.NovelCreator.class)
             .flow(
                 workflow("seqFlow")
                     .agent(creativeWriter)
@@ -163,7 +164,7 @@ public class WorkflowAgentsIT {
         };
 
     EveningPlannerAgent eveningPlannerAgent =
-        AgenticServices.of(EveningPlannerAgent.class)
+        AgenticWorkflow.of(EveningPlannerAgent.class)
             .flow(workflow("parallelFlow").parallel(foodExpert, movieExpert).outputAs(planEvening))
             .build();
     List<EveningPlan> result = eveningPlannerAgent.plan("romantic");
@@ -179,7 +180,7 @@ public class WorkflowAgentsIT {
     Predicate<AgenticScope> until = s -> s.readState("score", 0.0) >= 0.8;
 
     StyledWriter styledWriter =
-        AgenticServices.of(StyledWriter.class)
+        AgenticWorkflow.of(StyledWriter.class)
             .flow(workflow("loopFlow").agent(creativeWriter).loop(until, scorer, editor))
             .build();
 
@@ -203,7 +204,7 @@ public class WorkflowAgentsIT {
         };
 
     String result =
-        AgenticServices.of(Agents.HoroscopeAgent.class)
+        AgenticWorkflow.of(Agents.HoroscopeAgent.class)
             .flow(
                 workflow("humanInTheLoop")
                     .inputFrom(askSign)
