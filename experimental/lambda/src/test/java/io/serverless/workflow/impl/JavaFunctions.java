@@ -15,6 +15,8 @@
  */
 package io.serverless.workflow.impl;
 
+import io.serverlessworkflow.impl.TaskContextData;
+import io.serverlessworkflow.impl.WorkflowContextData;
 import java.util.Map;
 
 public class JavaFunctions {
@@ -25,6 +27,15 @@ public class JavaFunctions {
 
   static String getName(Person person) {
     return person.name() + " Javierito";
+  }
+
+  static String getFilterName(
+      Person person, WorkflowContextData workflowContext, TaskContextData taskContext) {
+    return person.name() + "_" + workflowContext.instanceData().id() + "_" + taskContext.taskName();
+  }
+
+  static String getContextName(Person person, WorkflowContextData workflowContext) {
+    return person.name() + "_" + workflowContext.instanceData().id();
   }
 
   static Map<String, Object> addJavierito(Map<String, Object> map) {
