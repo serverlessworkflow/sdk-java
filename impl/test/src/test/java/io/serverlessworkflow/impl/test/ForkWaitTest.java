@@ -17,6 +17,7 @@ package io.serverlessworkflow.impl.test;
 
 import static io.serverlessworkflow.api.WorkflowReader.readWorkflowFromClasspath;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.WorkflowApplication;
@@ -24,6 +25,7 @@ import io.serverlessworkflow.impl.WorkflowInstance;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowStatus;
 import java.io.IOException;
+import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -61,11 +63,12 @@ class ForkWaitTest {
     Workflow workflow = readWorkflowFromClasspath("workflows-samples/fork-wait.yaml");
     WorkflowInstance instance = appl.workflowDefinition(workflow).instance(Map.of());
     CompletableFuture<WorkflowModel> future = instance.start();
-    Thread.sleep(50);
-    assertThat(instance.status()).isEqualTo(WorkflowStatus.WAITING);
+    await()
+        .pollDelay(Duration.ofMillis(5))
+        .atMost(Duration.ofMillis(100))
+        .until(() -> instance.status() == WorkflowStatus.WAITING);
     instance.suspend();
     assertThat(instance.status()).isEqualTo(WorkflowStatus.SUSPENDED);
-    Thread.sleep(200);
     instance.resume();
     WorkflowModel model = future.join();
     assertThat(instance.status()).isEqualTo(WorkflowStatus.COMPLETED);
