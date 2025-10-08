@@ -293,6 +293,16 @@ public interface Agents {
     double scoreStyle(@V("story") String story, @V("style") String style);
   }
 
+  interface SummaryStory {
+
+    @UserMessage(
+        """
+               Return only the summary text and nothing else.
+            """)
+    @Agent("Edits a story to better fit a given audience")
+    String summaryStory(@V("story") String story);
+  }
+
   interface FoodExpert {
 
     @UserMessage(
@@ -318,6 +328,12 @@ public interface Agents {
         """)
     @Agent("An astrologist that generates horoscopes based on the user's name and zodiac sign.")
     String horoscope(@V("name") String name, @V("sign") String sign);
+  }
+
+  interface HoroscopeAgent {
+
+    @Agent
+    String invoke(@V("name") String name);
   }
 
   enum RequestCategory {
