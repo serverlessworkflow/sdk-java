@@ -18,12 +18,12 @@ package io.serverlessworkflow.fluent.func;
 import io.serverlessworkflow.api.types.func.CallJava;
 import io.serverlessworkflow.api.types.func.CallTaskJava;
 import io.serverlessworkflow.fluent.func.spi.ConditionalTaskBuilder;
-import io.serverlessworkflow.fluent.func.spi.FuncTransformations;
+import io.serverlessworkflow.fluent.func.spi.FuncTaskTransformations;
 import io.serverlessworkflow.fluent.spec.TaskBaseBuilder;
 import java.util.function.Function;
 
 public class FuncCallTaskBuilder extends TaskBaseBuilder<FuncCallTaskBuilder>
-    implements FuncTransformations<FuncCallTaskBuilder>,
+    implements FuncTaskTransformations<FuncCallTaskBuilder>,
         ConditionalTaskBuilder<FuncCallTaskBuilder> {
 
   private CallTaskJava callTaskJava;

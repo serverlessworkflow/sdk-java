@@ -18,8 +18,6 @@ package io.serverlessworkflow.fluent.agentic;
 import static io.serverlessworkflow.fluent.agentic.dsl.AgenticDSL.cases;
 import static io.serverlessworkflow.fluent.agentic.dsl.AgenticDSL.event;
 import static io.serverlessworkflow.fluent.agentic.dsl.AgenticDSL.fn;
-import static io.serverlessworkflow.fluent.agentic.dsl.AgenticDSL.on;
-import static io.serverlessworkflow.fluent.agentic.dsl.AgenticDSL.onDefault;
 import static io.serverlessworkflow.fluent.agentic.dsl.AgenticDSL.toAny;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.fail;
@@ -30,6 +28,7 @@ import io.cloudevents.core.data.PojoCloudEventData;
 import io.serverlessworkflow.api.types.EventFilter;
 import io.serverlessworkflow.api.types.EventProperties;
 import io.serverlessworkflow.api.types.Workflow;
+import io.serverlessworkflow.fluent.agentic.dsl.AgenticDSL;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowStatus;
 import io.serverlessworkflow.impl.jackson.JsonUtils;
@@ -68,11 +67,11 @@ public class EmailDrafterIT {
                         .switchCase(
                             "needsHumanReview?",
                             cases(
-                                on(
+                                AgenticDSL.caseOf(
                                         d -> !EmailPolicies.Decision.AUTO_SEND.equals(d.decision()),
                                         PolicyDecision.class)
                                     .then("requestReview"),
-                                onDefault("emailFinished")))
+                                AgenticDSL.caseDefault("emailFinished")))
                         .emit(
                             "requestReview",
                             event(

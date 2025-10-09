@@ -22,11 +22,11 @@ import io.serverlessworkflow.api.types.Input;
 import io.serverlessworkflow.api.types.Output;
 import io.serverlessworkflow.api.types.TaskBase;
 import io.serverlessworkflow.fluent.spec.spi.OutputFluent;
-import io.serverlessworkflow.fluent.spec.spi.TransformationHandlers;
+import io.serverlessworkflow.fluent.spec.spi.TaskTransformationHandlers;
 import java.util.function.Consumer;
 
 public abstract class TaskBaseBuilder<T extends TaskBaseBuilder<T>>
-    implements TransformationHandlers, OutputFluent<T> {
+    implements TaskTransformationHandlers, OutputFluent<T> {
   private TaskBase task;
 
   protected TaskBaseBuilder() {}
@@ -80,7 +80,7 @@ public abstract class TaskBaseBuilder<T extends TaskBaseBuilder<T>>
     return self();
   }
 
-  public T exportAs(Object exportAs) {
+  public T exportAs(String exportAs) {
     this.task.setExport(new ExportBuilder().as(exportAs).build());
     return self();
   }

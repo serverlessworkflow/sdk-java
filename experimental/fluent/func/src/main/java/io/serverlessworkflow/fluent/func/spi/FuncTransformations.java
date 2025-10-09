@@ -15,11 +15,11 @@
  */
 package io.serverlessworkflow.fluent.func.spi;
 
-import io.serverlessworkflow.api.types.Export;
 import io.serverlessworkflow.api.types.Input;
 import io.serverlessworkflow.api.types.Output;
-import io.serverlessworkflow.api.types.func.ExportAsFunction;
 import io.serverlessworkflow.api.types.func.InputFromFunction;
+import io.serverlessworkflow.api.types.func.JavaContextFunction;
+import io.serverlessworkflow.api.types.func.JavaFilterFunction;
 import io.serverlessworkflow.api.types.func.OutputAsFunction;
 import io.serverlessworkflow.fluent.spec.spi.TransformationHandlers;
 import java.util.function.Function;
@@ -27,32 +27,74 @@ import java.util.function.Function;
 public interface FuncTransformations<SELF extends FuncTransformations<SELF>>
     extends TransformationHandlers {
 
-  default <T, V> SELF exportAsFn(Function<T, V> function) {
-    setExport(new Export().withAs(new ExportAsFunction().withFunction(function)));
-    return (SELF) this;
-  }
-
-  default <T, V> SELF exportAsFn(Function<T, V> function, Class<T> argClass) {
-    setExport(new Export().withAs(new ExportAsFunction().withFunction(function, argClass)));
-    return (SELF) this;
-  }
-
+  @SuppressWarnings("unchecked")
   default <T, V> SELF inputFrom(Function<T, V> function) {
     setInput(new Input().withFrom(new InputFromFunction().withFunction(function)));
     return (SELF) this;
   }
 
+  @SuppressWarnings("unchecked")
   default <T, V> SELF inputFrom(Function<T, V> function, Class<T> argClass) {
     setInput(new Input().withFrom(new InputFromFunction().withFunction(function, argClass)));
     return (SELF) this;
   }
 
+  @SuppressWarnings("unchecked")
+  default <T, V> SELF inputFrom(JavaFilterFunction<T, V> function) {
+    setInput(new Input().withFrom(new InputFromFunction().withFunction(function)));
+    return (SELF) this;
+  }
+
+  @SuppressWarnings("unchecked")
+  default <T, V> SELF inputFrom(JavaFilterFunction<T, V> function, Class<T> argClass) {
+    setInput(new Input().withFrom(new InputFromFunction().withFunction(function, argClass)));
+    return (SELF) this;
+  }
+
+  @SuppressWarnings("unchecked")
+  default <T, V> SELF inputFrom(JavaContextFunction<T, V> function) {
+    setInput(new Input().withFrom(new InputFromFunction().withFunction(function)));
+    return (SELF) this;
+  }
+
+  @SuppressWarnings("unchecked")
+  default <T, V> SELF inputFrom(JavaContextFunction<T, V> function, Class<T> argClass) {
+    setInput(new Input().withFrom(new InputFromFunction().withFunction(function, argClass)));
+    return (SELF) this;
+  }
+
+  @SuppressWarnings("unchecked")
   default <T, V> SELF outputAs(Function<T, V> function) {
     setOutput(new Output().withAs(new OutputAsFunction().withFunction(function)));
     return (SELF) this;
   }
 
+  @SuppressWarnings("unchecked")
   default <T, V> SELF outputAs(Function<T, V> function, Class<T> argClass) {
+    setOutput(new Output().withAs(new OutputAsFunction().withFunction(function, argClass)));
+    return (SELF) this;
+  }
+
+  @SuppressWarnings("unchecked")
+  default <T, V> SELF outputAs(JavaFilterFunction<T, V> function) {
+    setOutput(new Output().withAs(new OutputAsFunction().withFunction(function)));
+    return (SELF) this;
+  }
+
+  @SuppressWarnings("unchecked")
+  default <T, V> SELF outputAs(JavaFilterFunction<T, V> function, Class<T> argClass) {
+    setOutput(new Output().withAs(new OutputAsFunction().withFunction(function, argClass)));
+    return (SELF) this;
+  }
+
+  @SuppressWarnings("unchecked")
+  default <T, V> SELF outputAs(JavaContextFunction<T, V> function) {
+    setOutput(new Output().withAs(new OutputAsFunction().withFunction(function)));
+    return (SELF) this;
+  }
+
+  @SuppressWarnings("unchecked")
+  default <T, V> SELF outputAs(JavaContextFunction<T, V> function, Class<T> argClass) {
     setOutput(new Output().withAs(new OutputAsFunction().withFunction(function, argClass)));
     return (SELF) this;
   }

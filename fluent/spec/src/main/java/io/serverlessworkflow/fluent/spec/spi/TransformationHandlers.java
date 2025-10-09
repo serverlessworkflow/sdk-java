@@ -15,15 +15,11 @@
  */
 package io.serverlessworkflow.fluent.spec.spi;
 
-import io.serverlessworkflow.api.types.Export;
 import io.serverlessworkflow.api.types.Input;
 import io.serverlessworkflow.api.types.Output;
 
 public interface TransformationHandlers {
-
   void setOutput(final Output output);
-
-  void setExport(final Export export);
 
   void setInput(final Input input);
 }

@@ -46,7 +46,7 @@ public class FuncTaskItemListBuilder extends BaseTaskItemListBuilder<FuncTaskIte
 
   @Override
   public FuncTaskItemListBuilder callFn(String name, Consumer<FuncCallTaskBuilder> consumer) {
-    this.requireNameAndConfig(name, consumer);
+    name = this.defaultNameAndRequireConfig(name, consumer);
     final FuncCallTaskBuilder callTaskJavaBuilder = new FuncCallTaskBuilder();
     consumer.accept(callTaskJavaBuilder);
     return addTaskItem(new TaskItem(name, new Task().withCallTask(callTaskJavaBuilder.build())));
@@ -59,7 +59,7 @@ public class FuncTaskItemListBuilder extends BaseTaskItemListBuilder<FuncTaskIte
 
   @Override
   public FuncTaskItemListBuilder set(String name, Consumer<FuncSetTaskBuilder> itemsConfigurer) {
-    this.requireNameAndConfig(name, itemsConfigurer);
+    name = this.defaultNameAndRequireConfig(name, itemsConfigurer);
     final FuncSetTaskBuilder funcSetTaskBuilder = new FuncSetTaskBuilder();
     itemsConfigurer.accept(funcSetTaskBuilder);
     return this.addTaskItem(new TaskItem(name, new Task().withSetTask(funcSetTaskBuilder.build())));
@@ -72,7 +72,7 @@ public class FuncTaskItemListBuilder extends BaseTaskItemListBuilder<FuncTaskIte
 
   @Override
   public FuncTaskItemListBuilder emit(String name, Consumer<FuncEmitTaskBuilder> itemsConfigurer) {
-    this.requireNameAndConfig(name, itemsConfigurer);
+    name = this.defaultNameAndRequireConfig(name, itemsConfigurer);
     final FuncEmitTaskBuilder emitTaskJavaBuilder = new FuncEmitTaskBuilder();
     itemsConfigurer.accept(emitTaskJavaBuilder);
     return this.addTaskItem(
@@ -82,7 +82,7 @@ public class FuncTaskItemListBuilder extends BaseTaskItemListBuilder<FuncTaskIte
   @Override
   public FuncTaskItemListBuilder listen(
       String name, Consumer<FuncListenTaskBuilder> itemsConfigurer) {
-    this.requireNameAndConfig(name, itemsConfigurer);
+    name = this.defaultNameAndRequireConfig(name, itemsConfigurer);
     final FuncListenTaskBuilder listenTaskJavaBuilder = new FuncListenTaskBuilder();
     itemsConfigurer.accept(listenTaskJavaBuilder);
     return this.addTaskItem(
@@ -92,7 +92,7 @@ public class FuncTaskItemListBuilder extends BaseTaskItemListBuilder<FuncTaskIte
   @Override
   public FuncTaskItemListBuilder forEach(
       String name, Consumer<FuncForTaskBuilder> itemsConfigurer) {
-    this.requireNameAndConfig(name, itemsConfigurer);
+    name = this.defaultNameAndRequireConfig(name, itemsConfigurer);
     final FuncForTaskBuilder forTaskJavaBuilder = new FuncForTaskBuilder();
     itemsConfigurer.accept(forTaskJavaBuilder);
     return this.addTaskItem(new TaskItem(name, new Task().withForTask(forTaskJavaBuilder.build())));
@@ -101,7 +101,7 @@ public class FuncTaskItemListBuilder extends BaseTaskItemListBuilder<FuncTaskIte
   @Override
   public FuncTaskItemListBuilder switchCase(
       String name, Consumer<FuncSwitchTaskBuilder> itemsConfigurer) {
-    this.requireNameAndConfig(name, itemsConfigurer);
+    name = this.defaultNameAndRequireConfig(name, itemsConfigurer);
     final FuncSwitchTaskBuilder funcSwitchTaskBuilder = new FuncSwitchTaskBuilder();
     itemsConfigurer.accept(funcSwitchTaskBuilder);
     return this.addTaskItem(
@@ -110,7 +110,7 @@ public class FuncTaskItemListBuilder extends BaseTaskItemListBuilder<FuncTaskIte
 
   @Override
   public FuncTaskItemListBuilder fork(String name, Consumer<FuncForkTaskBuilder> itemsConfigurer) {
-    this.requireNameAndConfig(name, itemsConfigurer);
+    name = this.defaultNameAndRequireConfig(name, itemsConfigurer);
     final FuncForkTaskBuilder forkTaskJavaBuilder = new FuncForkTaskBuilder();
     itemsConfigurer.accept(forkTaskJavaBuilder);
     return this.addTaskItem(

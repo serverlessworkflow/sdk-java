@@ -16,6 +16,8 @@
 package io.serverlessworkflow.fluent.spec;
 
 import io.serverlessworkflow.api.types.DoTask;
+import java.util.Objects;
+import java.util.function.Consumer;
 
 public abstract class BaseDoTaskBuilder<
         SELF extends BaseDoTaskBuilder<SELF, LIST>, LIST extends BaseTaskItemListBuilder<LIST>>
@@ -37,6 +39,13 @@ public abstract class BaseDoTaskBuilder<
   @SuppressWarnings("unchecked")
   protected final LIST listBuilder() {
     return (LIST) itemsListBuilder;
+  }
+
+  @SuppressWarnings("unchecked")
+  public SELF tasks(Consumer<LIST> itemsConfigurer) {
+    Objects.requireNonNull(itemsConfigurer, "itemsConfigurer is required");
+    itemsConfigurer.accept(this.listBuilder());
+    return (SELF) this;
   }
 
   public DoTask build() {

@@ -15,57 +15,53 @@
  */
 package io.serverlessworkflow.fluent.spec.dsl;
 
+import io.serverlessworkflow.fluent.spec.AbstractEventConsumptionStrategyBuilder;
+import io.serverlessworkflow.fluent.spec.AbstractEventFilterBuilder;
+import io.serverlessworkflow.fluent.spec.AbstractListenTaskBuilder;
 import io.serverlessworkflow.fluent.spec.EventFilterBuilder;
 import io.serverlessworkflow.fluent.spec.ListenTaskBuilder;
 import io.serverlessworkflow.fluent.spec.ListenToBuilder;
 import io.serverlessworkflow.fluent.spec.configurers.EventConfigurer;
-import io.serverlessworkflow.fluent.spec.configurers.ListenConfigurer;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-public final class ListenSpec implements ListenConfigurer {
+public final class ListenSpec
+    extends BaseListenSpec<
+        ListenSpec, ListenTaskBuilder, ListenToBuilder, EventFilterBuilder, EventConfigurer>
+    implements io.serverlessworkflow.fluent.spec.configurers.ListenConfigurer {
 
-  private Consumer<ListenToBuilder> strategyStep;
-  private Consumer<ListenToBuilder> untilStep;
+  public ListenSpec() {
+    super(
+        // toInvoker
+        AbstractListenTaskBuilder::to,
+        // withApplier
+        AbstractEventFilterBuilder::with,
+        // allApplier
+        (tb, filters) -> tb.all(castFilters(filters)),
+        // anyApplier
+        (tb, filters) -> tb.any(castFilters(filters)),
+        // oneApplier
+        AbstractEventConsumptionStrategyBuilder::one);
+  }
 
   @SuppressWarnings("unchecked")
-  private static Consumer<EventFilterBuilder>[] asFilters(EventConfigurer[] events) {
-    Consumer<EventFilterBuilder>[] filters = new Consumer[events.length];
-    for (int i = 0; i < events.length; i++) {
-      EventConfigurer ev = Objects.requireNonNull(events[i], "events[" + i + "]");
-      filters[i] = f -> f.with(ev);
-    }
-    return filters;
+  private static Consumer<EventFilterBuilder>[] castFilters(Consumer<?>[] arr) {
+    return (Consumer<EventFilterBuilder>[]) arr;
   }
 
-  public ListenSpec all(EventConfigurer... events) {
-    strategyStep = t -> t.all(asFilters(events));
-    return this;
-  }
-
-  public ListenSpec one(EventConfigurer e) {
-    strategyStep = t -> t.one(f -> f.with(e));
-    return this;
-  }
-
-  public ListenSpec any(EventConfigurer... events) {
-    strategyStep = t -> t.any(asFilters(events));
+  @Override
+  protected ListenSpec self() {
     return this;
   }
 
   public ListenSpec until(String expression) {
-    untilStep = t -> t.until(expression);
-    return this;
+    Objects.requireNonNull(expression, "expression");
+    this.setUntilStep(u -> u.until(expression));
+    return self();
   }
 
   @Override
   public void accept(ListenTaskBuilder listenTaskBuilder) {
-    listenTaskBuilder.to(
-        t -> {
-          strategyStep.accept(t);
-          if (untilStep != null) {
-            untilStep.accept(t);
-          }
-        });
+    acceptInto(listenTaskBuilder);
   }
 }

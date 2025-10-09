@@ -25,5 +25,5 @@ public interface OutputFluent<SELF> {
 
   SELF export(Consumer<ExportBuilder> exportConsumer);
 
-  SELF exportAs(Object exportAs);
+  SELF exportAs(String exportAs);
 }

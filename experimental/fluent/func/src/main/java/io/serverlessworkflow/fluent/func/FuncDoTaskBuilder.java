@@ -17,12 +17,12 @@ package io.serverlessworkflow.fluent.func;
 
 import io.serverlessworkflow.fluent.func.spi.ConditionalTaskBuilder;
 import io.serverlessworkflow.fluent.func.spi.FuncDoFluent;
-import io.serverlessworkflow.fluent.func.spi.FuncTransformations;
+import io.serverlessworkflow.fluent.func.spi.FuncTaskTransformations;
 import io.serverlessworkflow.fluent.spec.BaseDoTaskBuilder;
 import java.util.function.Consumer;
 
 public class FuncDoTaskBuilder extends BaseDoTaskBuilder<FuncDoTaskBuilder, FuncTaskItemListBuilder>
-    implements FuncTransformations<FuncDoTaskBuilder>,
+    implements FuncTaskTransformations<FuncDoTaskBuilder>,
         ConditionalTaskBuilder<FuncDoTaskBuilder>,
         FuncDoFluent<FuncDoTaskBuilder> {
 
