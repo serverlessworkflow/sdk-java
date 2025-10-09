@@ -54,7 +54,7 @@ public class ListenToBuilder
   }
 
   @Override
-  protected void setUntil(Until until) {
+  protected void setUntilForAny(Until until) {
     this.listenTo.getAnyEventConsumptionStrategy().setUntil(until);
   }
 }

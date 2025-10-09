@@ -13,10 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.fluent.agentic.configurer;
+package io.serverlessworkflow.fluent.agentic.dsl;
 
 import io.serverlessworkflow.fluent.agentic.AgentListenTaskBuilder;
-import java.util.function.Consumer;
+import io.serverlessworkflow.fluent.agentic.configurers.AgentListenConfigurer;
+import io.serverlessworkflow.fluent.func.dsl.BaseFuncListenSpec;
+import io.serverlessworkflow.fluent.spec.AbstractListenTaskBuilder;
 
-@FunctionalInterface
-public interface ListenConfigurer extends Consumer<AgentListenTaskBuilder> {}
+public final class AgentListenSpec
+    extends BaseFuncListenSpec<AgentListenSpec, AgentListenTaskBuilder>
+    implements AgentListenConfigurer {
+
+  public AgentListenSpec() {
+    super(AbstractListenTaskBuilder::to);
+  }
+
+  @Override
+  protected AgentListenSpec self() {
+    return this;
+  }
+
+  @Override
+  public void accept(AgentListenTaskBuilder agentListenTaskBuilder) {
+    acceptInto(agentListenTaskBuilder);
+  }
+}

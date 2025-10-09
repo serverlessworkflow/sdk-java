@@ -13,11 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.fluent.agentic.configurer;
+package io.serverlessworkflow.fluent.func.dsl;
 
-import io.serverlessworkflow.fluent.func.FuncSwitchTaskBuilder;
-import java.util.function.Consumer;
+import io.serverlessworkflow.fluent.func.FuncEmitTaskBuilder;
+import io.serverlessworkflow.fluent.func.configurers.FuncEmitConfigurer;
 
-@FunctionalInterface
-public interface SwitchCaseConfigurer
-    extends Consumer<FuncSwitchTaskBuilder.SwitchCasePredicateBuilder> {}
+public class FuncEmitSpec extends FuncEventFilterSpec<FuncEmitSpec> implements FuncEmitConfigurer {
+
+  @Override
+  public void accept(FuncEmitTaskBuilder funcEmitTaskBuilder) {
+    funcEmitTaskBuilder.event(e -> getSteps().forEach(step -> step.accept(e)));
+  }
+
+  @Override
+  protected FuncEmitSpec self() {
+    return this;
+  }
+}
