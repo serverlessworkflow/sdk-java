@@ -15,12 +15,11 @@
  */
 package io.serverlessworkflow.impl.executors.openapi;
 
+import static io.serverlessworkflow.impl.executors.http.HttpExecutor.getTargetSupplier;
+
 import io.serverlessworkflow.api.types.CallHTTP;
 import io.serverlessworkflow.api.types.CallOpenAPI;
-import io.serverlessworkflow.api.types.Endpoint;
-import io.serverlessworkflow.api.types.EndpointUri;
 import io.serverlessworkflow.api.types.TaskBase;
-import io.serverlessworkflow.api.types.UriTemplate;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
@@ -30,11 +29,8 @@ import io.serverlessworkflow.impl.WorkflowException;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.executors.CallableTask;
 import io.serverlessworkflow.impl.executors.http.HttpExecutor;
-import io.serverlessworkflow.impl.expressions.ExpressionDescriptor;
-import io.serverlessworkflow.impl.expressions.ExpressionFactory;
+import io.serverlessworkflow.impl.executors.http.TargetSupplier;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
-import jakarta.ws.rs.core.UriBuilder;
-import java.net.URI;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -56,36 +52,17 @@ public class OpenAPIExecutor implements CallableTask<CallOpenAPI> {
   @Override
   public CompletableFuture<WorkflowModel> apply(
       WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel input) {
-    String operationId = task.getWith().getOperationId();
-    URI openAPIEndpoint = targetSupplier.apply(workflowContext, taskContext, input);
-    OpenAPIProcessor processor = new OpenAPIProcessor(operationId, openAPIEndpoint);
-    OperationDefinition operation = processor.parse();
 
-    OperationPathResolver pathResolver =
-        new OperationPathResolver(
-            operation.getPath(),
-            application,
-            task.getWith().getParameters().getAdditionalProperties());
+    OperationDefinitionSupplier operationDefinitionSupplier =
+        new OperationDefinitionSupplier(application, task);
+
+    OperationDefinition operation =
+        operationDefinitionSupplier.get(workflowContext, taskContext, input);
 
     return CompletableFuture.supplyAsync(
         () -> {
           HttpCallAdapter httpCallAdapter =
-              new HttpCallAdapter()
-                  .auth(task.getWith().getAuthentication())
-                  .body(operation.getBody())
-                  .contentType(operation.getContentType())
-                  .headers(
-                      operation.getParameters().stream()
-                          .filter(p -> "header".equals(p.getIn()))
-                          .collect(Collectors.toUnmodifiableSet()))
-                  .method(operation.getMethod())
-                  .query(
-                      operation.getParameters().stream()
-                          .filter(p -> "query".equals(p.getIn()))
-                          .collect(Collectors.toUnmodifiableSet()))
-                  .redirect(task.getWith().isRedirect())
-                  .target(pathResolver.resolve(workflowContext, taskContext, input))
-                  .workflowParams(task.getWith().getParameters().getAdditionalProperties());
+              getHttpCallAdapter(operation, workflowContext, taskContext, input);
 
           WorkflowException workflowException = null;
 
@@ -120,35 +97,32 @@ public class OpenAPIExecutor implements CallableTask<CallOpenAPI> {
             task.getWith().getDocument().getEndpoint(), application.expressionFactory());
   }
 
-  private TargetSupplier getTargetSupplier(Endpoint endpoint, ExpressionFactory expressionFactory) {
-    if (endpoint.getEndpointConfiguration() != null) {
-      EndpointUri uri = endpoint.getEndpointConfiguration().getUri();
-      if (uri.getLiteralEndpointURI() != null) {
-        return getURISupplier(uri.getLiteralEndpointURI());
-      } else if (uri.getExpressionEndpointURI() != null) {
-        return new ExpressionURISupplier(
-            expressionFactory.resolveString(
-                ExpressionDescriptor.from(uri.getExpressionEndpointURI())));
-      }
-    } else if (endpoint.getRuntimeExpression() != null) {
-      return new ExpressionURISupplier(
-          expressionFactory.resolveString(
-              ExpressionDescriptor.from(endpoint.getRuntimeExpression())));
-    } else if (endpoint.getUriTemplate() != null) {
-      return getURISupplier(endpoint.getUriTemplate());
-    }
-    throw new IllegalArgumentException("Invalid endpoint definition " + endpoint);
-  }
+  private HttpCallAdapter getHttpCallAdapter(
+      OperationDefinition operation,
+      WorkflowContext workflowContext,
+      TaskContext taskContext,
+      WorkflowModel input) {
+    OperationPathResolver pathResolver =
+        new OperationPathResolver(
+            operation.getPath(),
+            application,
+            task.getWith().getParameters().getAdditionalProperties());
 
-  private TargetSupplier getURISupplier(UriTemplate template) {
-    if (template.getLiteralUri() != null) {
-      return (w, t, n) -> template.getLiteralUri();
-    } else if (template.getLiteralUriTemplate() != null) {
-      return (w, t, n) ->
-          UriBuilder.fromUri(template.getLiteralUriTemplate())
-              .resolveTemplates(n.asMap().orElseThrow(), false)
-              .build();
-    }
-    throw new IllegalArgumentException("Invalid uri template definition " + template);
+    return new HttpCallAdapter()
+        .auth(task.getWith().getAuthentication())
+        .body(operation.getBody())
+        .contentType(operation.getContentType())
+        .headers(
+            operation.getParameters().stream()
+                .filter(p -> "header".equals(p.getIn()))
+                .collect(Collectors.toUnmodifiableSet()))
+        .method(operation.getMethod())
+        .query(
+            operation.getParameters().stream()
+                .filter(p -> "query".equals(p.getIn()))
+                .collect(Collectors.toUnmodifiableSet()))
+        .redirect(task.getWith().isRedirect())
+        .target(pathResolver.resolve(workflowContext, taskContext, input))
+        .workflowParams(task.getWith().getParameters().getAdditionalProperties());
   }
 }

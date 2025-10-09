@@ -13,23 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.executors.openapi;
+package io.serverlessworkflow.impl.executors.http;
+
+import static io.serverlessworkflow.impl.executors.http.HttpExecutor.client;
 
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
-import java.net.URI;
+import jakarta.ws.rs.client.WebTarget;
 
-class ExpressionURISupplier implements TargetSupplier {
-  private WorkflowValueResolver<String> resolver;
+public class ExpressionURISupplier implements TargetSupplier {
+  private WorkflowValueResolver<String> expr;
 
-  ExpressionURISupplier(WorkflowValueResolver<String> resolver) {
-    this.resolver = resolver;
+  public ExpressionURISupplier(WorkflowValueResolver<String> expr) {
+    this.expr = expr;
   }
 
   @Override
-  public URI apply(WorkflowContext workflow, TaskContext task, WorkflowModel node) {
-    return URI.create(resolver.apply(workflow, task, node));
+  public WebTarget apply(WorkflowContext workflow, TaskContext task, WorkflowModel node) {
+    return client.target(expr.apply(workflow, task, node));
   }
 }

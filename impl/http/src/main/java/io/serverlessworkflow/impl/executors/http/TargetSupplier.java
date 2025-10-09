@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.executors.openapi;
+package io.serverlessworkflow.impl.executors.http;
 
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
-import java.net.URI;
+import jakarta.ws.rs.client.WebTarget;
 
-interface TargetSupplier {
-  URI apply(WorkflowContext workflow, TaskContext taskContext, WorkflowModel input);
+public interface TargetSupplier {
+  WebTarget apply(WorkflowContext workflow, TaskContext task, WorkflowModel node);
 }
