@@ -20,7 +20,9 @@ import io.serverlessworkflow.api.types.AnyEventConsumptionStrategy;
 import io.serverlessworkflow.api.types.ListenTo;
 import io.serverlessworkflow.api.types.OneEventConsumptionStrategy;
 import io.serverlessworkflow.api.types.Until;
+import io.serverlessworkflow.api.types.func.UntilPredicate;
 import io.serverlessworkflow.fluent.spec.AbstractEventConsumptionStrategyBuilder;
+import java.util.function.Predicate;
 
 public class FuncListenToBuilder
     extends AbstractEventConsumptionStrategyBuilder<
@@ -56,7 +58,12 @@ public class FuncListenToBuilder
   }
 
   @Override
-  protected void setUntil(Until until) {
+  protected void setUntilForAny(Until until) {
     this.listenTo.getAnyEventConsumptionStrategy().setUntil(until);
+  }
+
+  public <T> FuncListenToBuilder until(Predicate<T> predicate, Class<T> predClass) {
+    this.setUntil(new UntilPredicate().withPredicate(predicate, predClass));
+    return this;
   }
 }
