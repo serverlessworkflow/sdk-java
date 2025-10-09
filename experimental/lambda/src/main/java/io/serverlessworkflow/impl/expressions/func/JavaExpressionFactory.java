@@ -25,7 +25,6 @@ import io.serverlessworkflow.api.types.func.TypedFunction;
 import io.serverlessworkflow.api.types.func.TypedJavaContextFunction;
 import io.serverlessworkflow.api.types.func.TypedJavaFilterFunction;
 import io.serverlessworkflow.api.types.func.TypedPredicate;
-import io.serverlessworkflow.impl.WorkflowModelFactory;
 import io.serverlessworkflow.impl.WorkflowPredicate;
 import io.serverlessworkflow.impl.expressions.AbstractExpressionFactory;
 import io.serverlessworkflow.impl.expressions.ExpressionDescriptor;
@@ -38,8 +37,6 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 public class JavaExpressionFactory extends AbstractExpressionFactory {
-
-  private final WorkflowModelFactory modelFactory = new JavaModelFactory();
 
   @Override
   public ObjectExpression buildExpression(ExpressionDescriptor descriptor) {
@@ -58,6 +55,26 @@ public class JavaExpressionFactory extends AbstractExpressionFactory {
       return (w, t, n) -> func.function().apply(n.as(func.argClass()).orElseThrow(), w);
     } else {
       return (w, t, n) -> value;
+    }
+  }
+
+  @Override
+  public int priority(ExpressionDescriptor descriptor) {
+    Object value = descriptor.asObject();
+    if (value instanceof Function
+        || value instanceof TypedFunction
+        || value instanceof JavaFilterFunction
+        || value instanceof TypedJavaFilterFunction
+        || value instanceof JavaContextFunction
+        || value instanceof TypedJavaContextFunction
+        || value instanceof Predicate
+        || value instanceof TypedPredicate
+        || value instanceof Boolean) {
+      return DEFAULT_PRIORITY - 500;
+    } else if (descriptor.asString() == null) {
+      return MIN_PRIORITY;
+    } else {
+      return DEFAULT_PRIORITY + 500;
     }
   }
 
@@ -82,12 +99,7 @@ public class JavaExpressionFactory extends AbstractExpressionFactory {
         return Optional.of(fromPredicate(pred));
       }
     }
-    return super.buildIfFilter(task);
-  }
-
-  @Override
-  public WorkflowModelFactory modelFactory() {
-    return modelFactory;
+    return Optional.empty();
   }
 
   @Override

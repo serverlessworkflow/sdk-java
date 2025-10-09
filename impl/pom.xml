@@ -58,6 +58,11 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
+                <groupId>io.serverlessworkflow</groupId>
+                <artifactId>serverlessworkflow-impl-jq</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>net.thisptr</groupId>
                 <artifactId>jackson-jq</artifactId>
                 <version>${version.net.thisptr}</version>
@@ -98,5 +103,6 @@
         <module>jwt-impl</module>
         <module>persistence</module>
         <module>test</module>
+        <module>jq</module>
     </modules>
 </project>

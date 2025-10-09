@@ -15,12 +15,14 @@
  */
 package io.serverlessworkflow.impl.expressions;
 
+import io.serverlessworkflow.api.types.TaskBase;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowPredicate;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
 
 public abstract class ObjectExpressionFactory extends AbstractExpressionFactory {
 
@@ -47,6 +49,15 @@ public abstract class ObjectExpressionFactory extends AbstractExpressionFactory 
     } else {
       return obj;
     }
+  }
+
+  @Override
+  public int priority(ExpressionDescriptor desc) {
+    return (desc.asString() == null
+            && !(desc.asObject() instanceof Map)
+            && !(desc.asObject() instanceof Collection))
+        ? MIN_PRIORITY
+        : super.priority(desc);
   }
 
   private Object evaluateExpressionObject(
@@ -102,5 +113,12 @@ public abstract class ObjectExpressionFactory extends AbstractExpressionFactory 
   private Collection<Object> evaluateExpressionCollection(
       Collection<Object> col, WorkflowContext workflow, TaskContext task, WorkflowModel n) {
     return new ProxyCollection(col, o -> evaluateExpressionObject(o, workflow, task, n));
+  }
+
+  @Override
+  public Optional<WorkflowPredicate> buildIfFilter(TaskBase task) {
+    return task.getIf() != null
+        ? Optional.of(buildPredicate(ExpressionDescriptor.from(task.getIf())))
+        : Optional.empty();
   }
 }

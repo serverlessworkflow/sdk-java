@@ -35,6 +35,7 @@ import io.serverlessworkflow.impl.schema.SchemaValidatorFactory;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.ServiceLoader.Provider;
@@ -57,10 +58,11 @@ public class WorkflowApplication implements AutoCloseable {
   private final EventConsumer<?, ?> eventConsumer;
   private final Collection<EventPublisher> eventPublishers;
   private final boolean lifeCycleCEPublishingEnabled;
+  private final WorkflowModelFactory modelFactory;
 
   private WorkflowApplication(Builder builder) {
     this.taskFactory = builder.taskFactory;
-    this.exprFactory = builder.exprFactory;
+    this.exprFactory = new CompositeExpressionFactory(builder.exprFactories);
     this.resourceLoaderFactory = builder.resourceLoaderFactory;
     this.schemaValidatorFactory = builder.schemaValidatorFactory;
     this.positionFactory = builder.positionFactory;
@@ -72,6 +74,7 @@ public class WorkflowApplication implements AutoCloseable {
     this.eventConsumer = builder.eventConsumer;
     this.eventPublishers = builder.eventPublishers;
     this.lifeCycleCEPublishingEnabled = builder.lifeCycleCEPublishingEnabled;
+    this.modelFactory = builder.modelFactory;
   }
 
   public TaskExecutorFactory taskFactory() {
@@ -130,7 +133,7 @@ public class WorkflowApplication implements AutoCloseable {
     }
 
     private TaskExecutorFactory taskFactory;
-    private ExpressionFactory exprFactory;
+    private Collection<ExpressionFactory> exprFactories = new HashSet<>();
     private Collection<WorkflowExecutionListener> listeners =
         ServiceLoader.load(WorkflowExecutionListener.class).stream()
             .map(Provider::get)
@@ -145,6 +148,7 @@ public class WorkflowApplication implements AutoCloseable {
     private RuntimeDescriptorFactory descriptorFactory =
         () -> new RuntimeDescriptor("reference impl", "1.0.0_alpha", Collections.emptyMap());
     private boolean lifeCycleCEPublishingEnabled = true;
+    private WorkflowModelFactory modelFactory;
 
     private Builder() {}
 
@@ -159,7 +163,7 @@ public class WorkflowApplication implements AutoCloseable {
     }
 
     public Builder withExpressionFactory(ExpressionFactory factory) {
-      this.exprFactory = factory;
+      this.exprFactories.add(factory);
       return this;
     }
 
@@ -208,13 +212,22 @@ public class WorkflowApplication implements AutoCloseable {
       return this;
     }
 
+    public Builder withModelFactory(WorkflowModelFactory modelFactory) {
+      this.modelFactory = modelFactory;
+      return this;
+    }
+
     public WorkflowApplication build() {
-      if (exprFactory == null) {
-        exprFactory =
-            ServiceLoader.load(ExpressionFactory.class)
+      if (modelFactory == null) {
+        modelFactory =
+            ServiceLoader.load(WorkflowModelFactory.class)
                 .findFirst()
-                .orElseThrow(() -> new IllegalStateException("Expression factory is required"));
+                .orElseThrow(
+                    () ->
+                        new IllegalStateException(
+                            "WorkflowModelFactory instance has to be set in WorkflowApplication or present in the classpath"));
       }
+      ServiceLoader.load(ExpressionFactory.class).forEach(exprFactories::add);
       if (schemaValidatorFactory == null) {
         schemaValidatorFactory =
             ServiceLoader.load(SchemaValidatorFactory.class)
@@ -281,7 +294,7 @@ public class WorkflowApplication implements AutoCloseable {
   }
 
   public WorkflowModelFactory modelFactory() {
-    return exprFactory.modelFactory();
+    return modelFactory;
   }
 
   public RuntimeDescriptorFactory runtimeDescriptorFactory() {

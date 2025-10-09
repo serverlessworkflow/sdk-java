@@ -17,7 +17,6 @@ package io.serverlessworkflow.impl.expressions;
 
 import io.cloudevents.CloudEventData;
 import io.serverlessworkflow.api.types.TaskBase;
-import io.serverlessworkflow.impl.ServicePriority;
 import io.serverlessworkflow.impl.WorkflowFilter;
 import io.serverlessworkflow.impl.WorkflowModelFactory;
 import io.serverlessworkflow.impl.WorkflowPredicate;
@@ -27,7 +26,15 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 
-public interface ExpressionFactory extends ServicePriority {
+public interface ExpressionFactory {
+
+  static final int DEFAULT_PRIORITY = 1000;
+  static final int MIN_PRIORITY = Integer.MAX_VALUE;
+  static final int MAX_PRIORITY = Integer.MIN_VALUE;
+
+  default int priority(ExpressionDescriptor desc) {
+    return DEFAULT_PRIORITY;
+  }
 
   WorkflowValueResolver<String> resolveString(ExpressionDescriptor desc);
 
@@ -39,15 +46,9 @@ public interface ExpressionFactory extends ServicePriority {
 
   WorkflowValueResolver<Collection<?>> resolveCollection(ExpressionDescriptor desc);
 
-  WorkflowFilter buildFilter(ExpressionDescriptor desc);
+  WorkflowFilter buildFilter(ExpressionDescriptor desc, WorkflowModelFactory modelFactory);
 
   WorkflowPredicate buildPredicate(ExpressionDescriptor desc);
 
-  WorkflowModelFactory modelFactory();
-
-  default Optional<WorkflowPredicate> buildIfFilter(TaskBase task) {
-    return task.getIf() != null
-        ? Optional.of(buildPredicate(ExpressionDescriptor.from(task.getIf())))
-        : Optional.empty();
-  }
+  Optional<WorkflowPredicate> buildIfFilter(TaskBase task);
 }

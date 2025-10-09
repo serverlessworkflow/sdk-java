@@ -97,7 +97,8 @@ public class WorkflowUtils {
 
   public static WorkflowFilter buildWorkflowFilter(
       WorkflowApplication app, String str, Object object) {
-    return app.expressionFactory().buildFilter(new ExpressionDescriptor(str, object));
+    return app.expressionFactory()
+        .buildFilter(new ExpressionDescriptor(str, object), app.modelFactory());
   }
 
   public static WorkflowValueResolver<String> buildStringResolver(
@@ -116,7 +117,7 @@ public class WorkflowUtils {
   }
 
   public static WorkflowFilter buildWorkflowFilter(WorkflowApplication app, String str) {
-    return app.expressionFactory().buildFilter(ExpressionDescriptor.from(str));
+    return app.expressionFactory().buildFilter(ExpressionDescriptor.from(str), app.modelFactory());
   }
 
   public static WorkflowPredicate buildPredicate(WorkflowApplication app, String str) {

@@ -15,9 +15,20 @@
             <artifactId>serverlessworkflow-impl-core</artifactId>
             <version>${project.version}</version>
         </dependency>
+         <dependency>
+            <groupId>io.serverlessworkflow</groupId>
+            <artifactId>serverlessworkflow-impl-jq</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>io.serverlessworkflow</groupId>
             <artifactId>serverlessworkflow-experimental-lambda</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.serverlessworkflow</groupId>
+            <artifactId>serverlessworkflow-experimental-model</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -38,5 +49,6 @@
     <module>agentic</module>
     <module>lambda-fluent</module>
     <module>fluent</module>
+    <module>model</module>
   </modules>
 </project>

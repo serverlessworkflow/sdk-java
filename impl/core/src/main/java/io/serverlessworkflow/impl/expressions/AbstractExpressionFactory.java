@@ -17,6 +17,7 @@ package io.serverlessworkflow.impl.expressions;
 
 import io.cloudevents.CloudEventData;
 import io.serverlessworkflow.impl.WorkflowFilter;
+import io.serverlessworkflow.impl.WorkflowModelFactory;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
 import java.time.OffsetDateTime;
 import java.util.Collection;
@@ -52,12 +53,12 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
   }
 
   @Override
-  public WorkflowFilter buildFilter(ExpressionDescriptor desc) {
+  public WorkflowFilter buildFilter(ExpressionDescriptor desc, WorkflowModelFactory modelFactory) {
     if (desc.asObject() instanceof WorkflowFilter filter) {
       return filter;
     }
     ObjectExpression expr = buildExpression(desc);
-    return (w, t, m) -> modelFactory().fromAny(m, expr.eval(w, t, m));
+    return (w, t, m) -> modelFactory.fromAny(m, expr.eval(w, t, m));
   }
 
   protected abstract ObjectExpression buildExpression(ExpressionDescriptor desc);
@@ -71,4 +72,9 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
   protected abstract Map<String, Object> toMap(Object obj);
 
   protected abstract Collection<?> toCollection(Object obj);
+
+  // this prevents two objects of the same class to be added to ExpressionFactory list
+  public boolean equals(Object obj) {
+    return obj != null && obj.getClass().equals(this.getClass());
+  }
 }
