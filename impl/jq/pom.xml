@@ -5,24 +5,28 @@
     <artifactId>serverlessworkflow-impl</artifactId>
     <version>8.0.0-SNAPSHOT</version>
   </parent>
-  <artifactId>serverlessworkflow-impl-jackson</artifactId>
-  <name> Serverless Workflow :: Impl :: Jackson  </name>
- <dependencies>
+  <artifactId>serverlessworkflow-impl-jq</artifactId>
+  <name> Serverless Workflow :: Impl :: JQ  </name>
+  <dependencies>
         <dependency>
-            <groupId>io.serverlessworkflow</groupId>
-            <artifactId>serverlessworkflow-impl-core</artifactId>
+            <groupId>net.thisptr</groupId>
+            <artifactId>jackson-jq</artifactId>
         </dependency>
         <dependency>
             <groupId>io.serverlessworkflow</groupId>
-            <artifactId>serverlessworkflow-api</artifactId>
+            <artifactId>serverlessworkflow-impl-jackson</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.cloudevents</groupId>
-            <artifactId>cloudevents-json-jackson</artifactId>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
         </dependency>
         <dependency>
-            <groupId>com.networknt</groupId>
-            <artifactId>json-schema-validator</artifactId>
+            <groupId>org.assertj</groupId>
+            <artifactId>assertj-core</artifactId>
         </dependency>
-    </dependencies>
+        <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-core</artifactId>
+        </dependency>
+  </dependencies>
 </project>

@@ -13,6 +13,10 @@
             <artifactId>serverlessworkflow-experimental-lambda</artifactId>
         </dependency>
          <dependency>
+            <groupId>io.serverlessworkflow</groupId>
+            <artifactId>serverlessworkflow-experimental-model</artifactId>
+        </dependency>
+         <dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-agentic</artifactId>
         </dependency>

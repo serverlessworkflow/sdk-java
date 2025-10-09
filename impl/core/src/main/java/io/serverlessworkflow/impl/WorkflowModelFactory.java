@@ -20,7 +20,7 @@ import io.cloudevents.CloudEventData;
 import java.time.OffsetDateTime;
 import java.util.Map;
 
-public interface WorkflowModelFactory {
+public interface WorkflowModelFactory extends ServicePriority {
 
   WorkflowModel combine(Map<String, WorkflowModel> workflowVariables);
 

@@ -16,11 +16,11 @@
 package io.serverlessworkflow.impl.marshaller.jackson;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import io.serverlessworkflow.impl.expressions.jq.JacksonModel;
 import io.serverlessworkflow.impl.jackson.JsonUtils;
 import io.serverlessworkflow.impl.marshaller.CustomObjectMarshaller;
 import io.serverlessworkflow.impl.marshaller.WorkflowInputBuffer;
 import io.serverlessworkflow.impl.marshaller.WorkflowOutputBuffer;
+import io.serverlessworkflow.impl.model.jackson.JacksonModel;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 
