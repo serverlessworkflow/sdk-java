@@ -22,12 +22,12 @@ import io.serverlessworkflow.api.types.DurationInline;
 import io.serverlessworkflow.api.types.Output;
 import io.serverlessworkflow.api.types.Set;
 import io.serverlessworkflow.api.types.SetTask;
-import io.serverlessworkflow.api.types.SetTaskConfiguration;
 import io.serverlessworkflow.api.types.Task;
 import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.api.types.TimeoutAfter;
 import io.serverlessworkflow.api.types.WaitTask;
 import io.serverlessworkflow.api.types.Workflow;
+import io.serverlessworkflow.api.types.func.MapSetTaskConfiguration;
 import io.serverlessworkflow.api.types.func.OutputAsFunction;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowInstance;
@@ -89,8 +89,8 @@ class ModelTest {
                                       .withSet(
                                           new Set()
                                               .withSetTaskConfiguration(
-                                                  new SetTaskConfiguration()
-                                                      .withAdditionalProperty("name", "Francisco")))
+                                                  new MapSetTaskConfiguration(
+                                                      Map.of("name", "Francisco"))))
                                       .withOutput(
                                           new Output()
                                               .withAs(
