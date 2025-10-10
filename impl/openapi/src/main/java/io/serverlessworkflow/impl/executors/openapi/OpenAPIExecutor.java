@@ -41,8 +41,8 @@ public class OpenAPIExecutor implements CallableTask<CallOpenAPI> {
   private WorkflowDefinition definition;
   private WorkflowApplication application;
   private TargetSupplier targetSupplier;
-
   private ResourceLoader resourceLoader;
+  private OperationDefinitionSupplier operationDefinitionSupplier;
 
   @Override
   public boolean accept(Class<? extends TaskBase> clazz) {
@@ -52,9 +52,6 @@ public class OpenAPIExecutor implements CallableTask<CallOpenAPI> {
   @Override
   public CompletableFuture<WorkflowModel> apply(
       WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel input) {
-
-    OperationDefinitionSupplier operationDefinitionSupplier =
-        new OperationDefinitionSupplier(application, task);
 
     OperationDefinition operation =
         operationDefinitionSupplier.get(workflowContext, taskContext, input);
@@ -91,7 +88,7 @@ public class OpenAPIExecutor implements CallableTask<CallOpenAPI> {
     this.workflow = definition.workflow();
     this.application = definition.application();
     this.resourceLoader = definition.resourceLoader();
-
+    this.operationDefinitionSupplier = new OperationDefinitionSupplier(application, task);
     this.targetSupplier =
         getTargetSupplier(
             task.getWith().getDocument().getEndpoint(), application.expressionFactory());
