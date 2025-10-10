@@ -18,11 +18,16 @@ package io.serverlessworkflow.impl;
 import static io.serverlessworkflow.impl.WorkflowUtils.*;
 
 import io.serverlessworkflow.api.types.Input;
+import io.serverlessworkflow.api.types.ListenTo;
 import io.serverlessworkflow.api.types.Output;
+import io.serverlessworkflow.api.types.Schedule;
 import io.serverlessworkflow.api.types.Workflow;
+import io.serverlessworkflow.impl.events.EventRegistrationBuilderInfo;
+import io.serverlessworkflow.impl.events.EventRegistrationInfo;
 import io.serverlessworkflow.impl.executors.TaskExecutor;
 import io.serverlessworkflow.impl.executors.TaskExecutorHelper;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
+import io.serverlessworkflow.impl.scheduler.ScheduledEventConsumer;
 import io.serverlessworkflow.impl.schema.SchemaValidator;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -36,6 +41,7 @@ public class WorkflowDefinition implements AutoCloseable, WorkflowDefinitionData
   private Optional<SchemaValidator> outputSchemaValidator = Optional.empty();
   private Optional<WorkflowFilter> inputFilter = Optional.empty();
   private Optional<WorkflowFilter> outputFilter = Optional.empty();
+  private EventRegistrationInfo registrationInfo;
   private final WorkflowApplication application;
   private final TaskExecutor<?> taskExecutor;
   private final ResourceLoader resourceLoader;
@@ -46,14 +52,16 @@ public class WorkflowDefinition implements AutoCloseable, WorkflowDefinitionData
     this.workflow = workflow;
     this.application = application;
     this.resourceLoader = resourceLoader;
-    if (workflow.getInput() != null) {
-      Input input = workflow.getInput();
+
+    Input input = workflow.getInput();
+    if (input != null) {
       this.inputSchemaValidator =
           getSchemaValidator(application.validatorFactory(), resourceLoader, input.getSchema());
       this.inputFilter = buildWorkflowFilter(application, input.getFrom());
     }
-    if (workflow.getOutput() != null) {
-      Output output = workflow.getOutput();
+
+    Output output = workflow.getOutput();
+    if (output != null) {
       this.outputSchemaValidator =
           getSchemaValidator(application.validatorFactory(), resourceLoader, output.getSchema());
       this.outputFilter = buildWorkflowFilter(application, output.getAs());
@@ -68,8 +76,37 @@ public class WorkflowDefinition implements AutoCloseable, WorkflowDefinitionData
   }
 
   static WorkflowDefinition of(WorkflowApplication application, Workflow workflow, Path path) {
-    return new WorkflowDefinition(
-        application, workflow, application.resourceLoaderFactory().getResourceLoader(path));
+    WorkflowDefinition definition =
+        new WorkflowDefinition(
+            application, workflow, application.resourceLoaderFactory().getResourceLoader(path));
+    Schedule schedule = workflow.getSchedule();
+    if (schedule != null) {
+      ListenTo to = schedule.getOn();
+      if (to != null) {
+        definition.register(
+            application.scheduler().eventConsumer(definition, application.modelFactory()::from),
+            EventRegistrationBuilderInfo.from(application, to, x -> null));
+      }
+    }
+    return definition;
+  }
+
+  private void register(ScheduledEventConsumer consumer, EventRegistrationBuilderInfo builderInfo) {
+    WorkflowModelCollection model = application.modelFactory().createCollection();
+    registrationInfo =
+        EventRegistrationInfo.<WorkflowModel>build(
+            builderInfo.registrations(),
+            (ce, f) -> consumer.accept(ce, f, model),
+            application.eventConsumer());
+    registrationInfo
+        .completableFuture()
+        .thenAccept(
+            x -> {
+              EventRegistrationInfo prevRegistrationInfo = registrationInfo;
+              register(consumer, builderInfo);
+              consumer.start(model);
+              prevRegistrationInfo.registrations().forEach(application.eventConsumer()::unregister);
+            });
   }
 
   public WorkflowInstance instance(Object input) {
@@ -121,5 +158,9 @@ public class WorkflowDefinition implements AutoCloseable, WorkflowDefinitionData
   }
 
   @Override
-  public void close() {}
+  public void close() {
+    if (registrationInfo != null) {
+      registrationInfo.registrations().forEach(application.eventConsumer()::unregister);
+    }
+  }
 }
