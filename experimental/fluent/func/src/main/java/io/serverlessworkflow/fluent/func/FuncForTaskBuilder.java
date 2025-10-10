@@ -25,7 +25,7 @@ import io.serverlessworkflow.api.types.func.LoopFunction;
 import io.serverlessworkflow.api.types.func.LoopPredicate;
 import io.serverlessworkflow.api.types.func.LoopPredicateIndex;
 import io.serverlessworkflow.fluent.func.spi.ConditionalTaskBuilder;
-import io.serverlessworkflow.fluent.func.spi.FuncTransformations;
+import io.serverlessworkflow.fluent.func.spi.FuncTaskTransformations;
 import io.serverlessworkflow.fluent.spec.TaskBaseBuilder;
 import io.serverlessworkflow.fluent.spec.spi.ForEachTaskFluent;
 import java.util.ArrayList;
@@ -36,7 +36,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class FuncForTaskBuilder extends TaskBaseBuilder<FuncForTaskBuilder>
-    implements FuncTransformations<FuncForTaskBuilder>,
+    implements FuncTaskTransformations<FuncForTaskBuilder>,
         ConditionalTaskBuilder<FuncForTaskBuilder>,
         ForEachTaskFluent<FuncForTaskBuilder, FuncTaskItemListBuilder> {
 

@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.fluent.agentic.dsl;
+package io.serverlessworkflow.fluent.func.dsl;
 
-import io.serverlessworkflow.fluent.agentic.configurer.SwitchCaseConfigurer;
 import io.serverlessworkflow.fluent.func.FuncSwitchTaskBuilder;
+import io.serverlessworkflow.fluent.func.configurers.SwitchCaseConfigurer;
 import java.util.function.Predicate;
 
 public class SwitchCaseSpec<T> implements SwitchCaseConfigurer {

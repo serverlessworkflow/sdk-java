@@ -67,7 +67,7 @@ public class SubscriptionIteratorBuilder<T extends BaseTaskItemListBuilder<T>>
   }
 
   @Override
-  public SubscriptionIteratorBuilder<T> exportAs(Object exportAs) {
+  public SubscriptionIteratorBuilder<T> exportAs(String exportAs) {
     this.subscriptionIterator.setExport(new ExportBuilder().as(exportAs).build());
     return this;
   }

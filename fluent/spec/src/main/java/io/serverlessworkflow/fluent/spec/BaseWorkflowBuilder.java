@@ -16,14 +16,12 @@
 package io.serverlessworkflow.fluent.spec;
 
 import io.serverlessworkflow.api.types.Document;
-import io.serverlessworkflow.api.types.Export;
 import io.serverlessworkflow.api.types.Input;
 import io.serverlessworkflow.api.types.Output;
 import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.fluent.spec.spi.TransformationHandlers;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -64,13 +62,6 @@ public abstract class BaseWorkflowBuilder<
   }
 
   @Override
-  public void setExport(Export export) {
-    // TODO: build another interface with only Output and Input
-    throw new UnsupportedOperationException(
-        "export() is not supported on the workflow root; only tasks may export");
-  }
-
-  @Override
   public void setInput(Input input) {
     this.workflow.setInput(input);
   }
@@ -89,15 +80,36 @@ public abstract class BaseWorkflowBuilder<
   }
 
   public SELF tasks(Consumer<DBuilder> doTaskConsumer) {
-    final DBuilder doTaskBuilder = newDo();
-    doTaskConsumer.accept(doTaskBuilder);
-    if (this.workflow.getDo() == null) {
-      this.workflow.setDo(doTaskBuilder.build().getDo());
-    } else {
-      List<TaskItem> existingTasks = new ArrayList<>(this.workflow.getDo());
-      existingTasks.addAll(doTaskBuilder.build().getDo());
-      this.workflow.setDo(Collections.unmodifiableList(existingTasks));
-    }
+    return appendDo(doTaskConsumer);
+  }
+
+  @SafeVarargs
+  public final SELF tasks(Consumer<IListBuilder>... tasks) {
+    // Snapshot and adapt IListBuilder-consumers into a single DBuilder-consumer
+    final Consumer<DBuilder> configurer =
+        db -> {
+          if (tasks == null || tasks.length == 0) return;
+          for (Consumer<IListBuilder> c : List.of(tasks.clone())) {
+            if (c != null) db.tasks(c);
+          }
+        };
+    return appendDo(configurer);
+  }
+
+  private SELF appendDo(Consumer<DBuilder> configurer) {
+    if (configurer == null) return self();
+
+    final DBuilder doBuilder = newDo();
+    configurer.accept(doBuilder);
+
+    final List<TaskItem> newItems = doBuilder.build().getDo();
+    if (newItems == null || newItems.isEmpty()) return self();
+
+    final List<TaskItem> merged =
+        new ArrayList<>(this.workflow.getDo() != null ? this.workflow.getDo() : List.of());
+    merged.addAll(newItems);
+
+    this.workflow.setDo(List.copyOf(merged));
     return self();
   }
 

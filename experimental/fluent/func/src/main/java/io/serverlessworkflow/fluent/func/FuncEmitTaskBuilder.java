@@ -16,13 +16,13 @@
 package io.serverlessworkflow.fluent.func;
 
 import io.serverlessworkflow.fluent.func.spi.ConditionalTaskBuilder;
-import io.serverlessworkflow.fluent.func.spi.FuncTransformations;
+import io.serverlessworkflow.fluent.func.spi.FuncTaskTransformations;
 import io.serverlessworkflow.fluent.spec.AbstractEmitTaskBuilder;
 
 public class FuncEmitTaskBuilder
     extends AbstractEmitTaskBuilder<FuncEmitTaskBuilder, FuncEventPropertiesBuilder>
     implements ConditionalTaskBuilder<FuncEmitTaskBuilder>,
-        FuncTransformations<FuncEmitTaskBuilder> {
+        FuncTaskTransformations<FuncEmitTaskBuilder> {
   FuncEmitTaskBuilder() {
     super();
   }
