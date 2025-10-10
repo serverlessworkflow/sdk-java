@@ -29,6 +29,31 @@
             </dependency>
             <dependency>
                 <groupId>io.serverlessworkflow</groupId>
+                <artifactId>serverlessworkflow-impl-json</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.serverlessworkflow</groupId>
+                <artifactId>serverlessworkflow-impl-jq</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.serverlessworkflow</groupId>
+                <artifactId>serverlessworkflow-impl-model</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+             <dependency>
+                <groupId>io.serverlessworkflow</groupId>
+                <artifactId>serverlessworkflow-impl-validation</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+             <dependency>
+                <groupId>io.serverlessworkflow</groupId>
+                <artifactId>serverlessworkflow-impl-lifecycle-events</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.serverlessworkflow</groupId>
                 <artifactId>serverlessworkflow-persistence-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -55,11 +80,6 @@
             <dependency>
                 <groupId>io.serverlessworkflow</groupId>
                 <artifactId>serverlessworkflow-impl-jackson</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.serverlessworkflow</groupId>
-                <artifactId>serverlessworkflow-impl-jq</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -104,5 +124,9 @@
         <module>persistence</module>
         <module>test</module>
         <module>jq</module>
+        <module>json-utils</module>
+        <module>model</module>
+        <module>lifecycleevent</module>
+        <module>validation</module>
     </modules>
 </project>

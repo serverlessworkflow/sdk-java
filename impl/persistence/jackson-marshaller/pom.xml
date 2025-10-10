@@ -14,7 +14,7 @@
         </dependency>
         <dependency>
             <groupId>io.serverlessworkflow</groupId>
-            <artifactId>serverlessworkflow-impl-jackson</artifactId>
+            <artifactId>serverlessworkflow-impl-model</artifactId>
         </dependency>
     </dependencies>
 </project>

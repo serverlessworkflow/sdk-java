@@ -70,17 +70,26 @@ This reference implementation can run workflows consisting of:
 
 This SDK is modular by design—pull in only what you need:
 
-* **`serverlessworkflow-impl-core`**
+* **serverlessworkflow-impl-core**
   Workflow engine & core interfaces. Depends on generated types and CloudEvents SDK.
 
-* **`serverlessworkflow-impl-jackson`**
-  Adds Jackson integration, JQ expressions, JSON Schema validation, and CloudEvents (de)serialization.
+* **serverlessworkflow-impl-jackson**
   👉 **Most users add this one.**
-
-* **`serverlessworkflow-impl-http`**
+  
+  Adds Jackson integration, JQ expressions, JSON Schema validation, and CloudEvents (de)serialization.
+  
+  Internally, this module is an aggregation of smaller modules to allow part replacement if needed:
+    * **serverlessworkflow-impl-jq** JQ expression implementation
+    * **serverlessworkflow-impl-model** Jackson model implementation
+    * **serverlessworkflow-impl-validation** Schema validation implementation
+    * **serverlessworkflow-impl-lifecycle-events** Enable publication of lifecycle events as Json cloud events. 
+    * **serverlessworkflow-impl-json** Json common utilities shared by all modules in this list
+    
+    
+* **serverlessworkflow-impl-http**
   HTTP `Call` task handler.
 
-* **`serverlessworkflow-impl-jackson-jwt`**
+* **serverlessworkflow-impl-jackson-jwt**
   OAuth2/OIDC helpers for HTTP calls.
 
 There are also companion modules/docs for:
