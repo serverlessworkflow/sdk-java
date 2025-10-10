@@ -1,0 +1,423 @@
+openapi: 3.0.3
+info:
+  title: User Management API
+  description: API for managing users in the Imperium
+  version: 1.0.0
+  contact:
+    name: Administratum Support
+    email: support@imperium.example.com
+
+servers:
+  - url: http://127.0.0.1:8886/api/v1
+    description: Segmentum Solar Production Server
+
+paths:
+  /users/{userId}:
+    get:
+      summary: Get user information
+      description: Returns detailed information about a user by their ID
+      operationId: getUserById
+      tags:
+        - Users
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          description: Unique user identifier
+          schema:
+            type: integer
+            format: int64
+            minimum: 1
+          example: 40099
+        - name: fields
+          in: query
+          required: true
+          description: List of fields to include in the response
+          schema:
+            type: array
+            items:
+              type: string
+              enum: [id, name, email, phone, address, created_at, updated_at]
+            minItems: 1
+          style: form
+          explode: false
+          example: ["id", "name", "email"]
+        - name: include_deleted
+          in: query
+          required: false
+          description: Whether to include purged users in the result
+          schema:
+            type: boolean
+            default: false
+          example: false
+        - name: format
+          in: query
+          required: false
+          description: Format of the returned data
+          schema:
+            type: string
+            enum: [full, summary, minimal]
+            default: full
+          example: full
+        - name: lang
+          in: query
+          required: false
+          description: Response localization language
+          schema:
+            type: string
+            pattern: '^[a-z]{2}(-[A-Z]{2})?$'
+            default: gothic
+          example: gothic
+        - name: limit
+          in: query
+          required: false
+          description: Maximum number of related records
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+          example: 20
+      responses:
+        '200':
+          description: Successful response with user information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/User'
+                  meta:
+                    type: object
+                    properties:
+                      request_id:
+                        type: string
+                        example: "req_terra123def456"
+                      timestamp:
+                        type: string
+                        format: date-time
+                        example: "999.M41-01-20T12:00:00Z"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /users:
+    post:
+      summary: Create a new user
+      description: Creates a user record based on provided data
+      operationId: createUser
+      tags:
+        - Users
+      requestBody:
+        required: true
+        description: JSON object with new user data
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewUser'
+            example:
+              name: "Severus Calix"
+              email: "severus.calix@hive-terra.example.com"
+              phone: "+41-999-123-4567"
+              address:
+                city: "Hive Terra"
+                street: "Sector Primus, Spire 1"
+                postal_code: "HX-009"
+      responses:
+        '201':
+          description: User successfully created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /projects:
+    post:
+      summary: Create a new project
+      description: Creates a project; supports query flags for validation and notifications mode
+      operationId: addProject
+      tags: [Projects]
+
+      parameters:
+        - name: validateOnly
+          in: query
+          required: false
+          description: If true — perform validation only without saving
+          schema: { type: boolean, default: false }
+          example: false
+        - name: notifyMembers
+          in: query
+          required: false
+          description: Whether to send notifications to members after creation
+          schema: { type: boolean, default: true }
+          example: true
+        - name: lang
+          in: query
+          required: false
+          description: Locale for notification/message texts
+          schema:
+            type: string
+            pattern: '^[a-z]{2}(-[A-Z]{2})?$'
+            default: gothic
+          example: gothic
+
+        - name: Authorization
+          in: header
+          required: true
+          description: Bearer authorization token
+          schema:
+            type: string
+            example: "Bearer eyJhbnNpc2l0b3IuYm9sdXMubWFnbnVz..."
+        - name: X-Request-ID
+          in: header
+          required: false
+          description: Unique request identifier for tracing
+          schema:
+            type: string
+            example: "req_proj_terra123"
+        - name: X-Api-Version
+          in: header
+          required: false
+          description: Explicit API version indication
+          schema:
+            type: string
+            example: "1.0"
+
+      requestBody:
+        required: true
+        description: JSON object with new project data
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name:
+                  type: string
+                  example: "Cathedral Archive"
+                code:
+                  type: string
+                  example: "archive-999"
+                description:
+                  type: string
+                  example: "Data-vault for the Ordo Hereticus"
+                ownerId:
+                  type: integer
+                  format: int64
+                  example: 88888
+                members:
+                  type: array
+                  items:
+                    type: integer
+                    format: int64
+                  example: [11111, 22222]
+            example:
+              name: "Cathedral Archive"
+              code: "archive-999"
+              description: "Data-vault for the Ordo Hereticus"
+              ownerId: 88888
+              members: [11111, 22222]
+
+      responses:
+        '201':
+          description: Project successfully created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, example: true }
+                  data:
+                    type: object
+                    required: [id, name]
+                    properties:
+                      id: { type: integer, format: int64, example: 99901 }
+                      name: { type: string, example: "Cathedral Archive" }
+                      code: { type: string, example: "archive-999" }
+                      ownerId: { type: integer, format: int64, example: 88888 }
+                      members:
+                        type: array
+                        items: { type: integer, format: int64 }
+                        example: [11111, 22222]
+                      created_at: { type: string, format: date-time, example: "999.M41-09-18T12:00:00Z" }
+                  meta:
+                    type: object
+                    properties:
+                      request_id: { type: string, example: "req_proj_terra123" }
+                      timestamp:  { type: string, format: date-time, example: "999.M41-09-18T12:00:00Z" }
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, example: false }
+                  error:
+                    type: object
+                    properties:
+                      code: { type: string, example: "INVALID_PARAMETERS" }
+                      message: { type: string, example: "The field name is required" }
+                      details:
+                        type: array
+                        items: { type: string }
+                        example: ["name: must not be blank"]
+        '409':
+          description: Conflict — a project with the same code already exists
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, example: false }
+                  error:
+                    type: object
+                    properties:
+                      code: { type: string, example: "PROJECT_CONFLICT" }
+                      message: { type: string, example: "Project with code 'archive-999' already exists" }
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, example: false }
+                  error:
+                    type: object
+                    properties:
+                      code: { type: string, example: "INTERNAL_SERVER_ERROR" }
+                      message: { type: string, example: "An internal server error occurred" }
+                      request_id: { type: string, example: "req_err_proj_001" }
+
+components:
+  schemas:
+    User:
+      type: object
+      required: [id, name, email]
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Unique user identifier
+          example: 40099
+        name:
+          type: string
+          description: Full user name
+          example: "Severus Calix"
+        email:
+          type: string
+          format: email
+          example: "severus.calix@hive-terra.example.com"
+        phone:
+          type: string
+          example: "+41-999-123-4567"
+        address:
+          type: object
+          properties:
+            city:
+              type: string
+              example: "Hive Terra"
+            street:
+              type: string
+              example: "Sector Primus, Spire 1"
+            postal_code:
+              type: string
+              example: "HX-009"
+        created_at:
+          type: string
+          format: date-time
+          example: "999.M41-01-15T10:30:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "999.M41-12-20T14:45:30Z"
+
+    NewUser:
+      type: object
+      required: [name, email]
+      properties:
+        name:
+          type: string
+          example: "Severus Calix"
+        email:
+          type: string
+          format: email
+          example: "severus.calix@hive-terra.example.com"
+        phone:
+          type: string
+          example: "+41-999-123-4567"
+        address:
+          type: object
+          properties:
+            city:
+              type: string
+              example: "Hive Terra"
+            street:
+              type: string
+              example: "Sector Primus, Spire 1"
+            postal_code:
+              type: string
+              example: "HX-009"
+
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: array
+              items:
+                type: string
+
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            success: false
+            error:
+              code: "INVALID_PARAMETERS"
+              message: "Invalid user data"
+              details:
+                - "Email has an incorrect format"

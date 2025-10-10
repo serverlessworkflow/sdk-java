@@ -1,0 +1,22 @@
+document:
+  dsl: '1.0.1'
+  namespace: test
+  name: openapi-example
+  version: '0.1.0'
+do:
+  - getUser:
+      call: openapi
+      with:
+        document:
+          endpoint: http://127.0.0.1:8887/schema.yaml
+        operationId: getUserById
+        parameters:
+          userId: ${ .userId }
+          fields:
+            - ${ .id }
+            - ${ .name }
+            - ${ .email }
+          include_deleted: ${ .include_deleted }
+          format: ${ .format }
+          lang: ${ .lang }
+          limit: ${ .limit }
