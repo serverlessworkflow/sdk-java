@@ -136,12 +136,7 @@ public class JsonUtils {
   public static JsonNode modelToJson(WorkflowModel model) {
     return model == null
         ? NullNode.instance
-        : model
-            .as(JsonNode.class)
-            .orElseThrow(
-                () ->
-                    new IllegalArgumentException(
-                        "Unable to convert model " + model + " to JsonNode"));
+        : model.as(JsonNode.class).orElseGet(() -> JsonUtils.fromValue(model.asJavaObject()));
   }
 
   public static Object toJavaValue(Object object) {
