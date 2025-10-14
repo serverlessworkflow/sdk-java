@@ -21,13 +21,13 @@ import io.serverlessworkflow.api.types.SetTaskConfiguration;
 
 public class SetTaskBuilder extends TaskBaseBuilder<SetTaskBuilder> {
 
-  private final SetTask setTask;
+  private final SetTask task;
   private final SetTaskConfiguration setTaskConfiguration;
 
   public SetTaskBuilder() {
-    this.setTask = new SetTask();
+    this.task = new SetTask();
     this.setTaskConfiguration = new SetTaskConfiguration();
-    this.setTask(setTask);
+    this.setTask(task);
   }
 
   @Override
@@ -36,7 +36,7 @@ public class SetTaskBuilder extends TaskBaseBuilder<SetTaskBuilder> {
   }
 
   public SetTaskBuilder expr(String expression) {
-    this.setTask.setSet(new Set().withString(expression));
+    this.task.setSet(new Set().withString(expression));
     return this;
   }
 
@@ -46,10 +46,10 @@ public class SetTaskBuilder extends TaskBaseBuilder<SetTaskBuilder> {
   }
 
   public SetTask build() {
-    if (this.setTask.getSet() == null) {
-      this.setTask.setSet(new Set().withSetTaskConfiguration(setTaskConfiguration));
+    if (this.task.getSet() == null) {
+      this.task.setSet(new Set().withSetTaskConfiguration(setTaskConfiguration));
     }
 
-    return setTask;
+    return task;
   }
 }
