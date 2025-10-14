@@ -16,6 +16,7 @@
 package io.serverlessworkflow.impl;
 
 import static io.serverlessworkflow.impl.WorkflowUtils.*;
+import static io.serverlessworkflow.impl.WorkflowUtils.safeClose;
 
 import io.serverlessworkflow.api.types.Input;
 import io.serverlessworkflow.api.types.ListenTo;
@@ -23,7 +24,6 @@ import io.serverlessworkflow.api.types.Output;
 import io.serverlessworkflow.api.types.Schedule;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.events.EventRegistrationBuilderInfo;
-import io.serverlessworkflow.impl.events.EventRegistrationInfo;
 import io.serverlessworkflow.impl.executors.TaskExecutor;
 import io.serverlessworkflow.impl.executors.TaskExecutorHelper;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
@@ -41,11 +41,11 @@ public class WorkflowDefinition implements AutoCloseable, WorkflowDefinitionData
   private Optional<SchemaValidator> outputSchemaValidator = Optional.empty();
   private Optional<WorkflowFilter> inputFilter = Optional.empty();
   private Optional<WorkflowFilter> outputFilter = Optional.empty();
-  private EventRegistrationInfo registrationInfo;
   private final WorkflowApplication application;
   private final TaskExecutor<?> taskExecutor;
   private final ResourceLoader resourceLoader;
   private final Map<String, TaskExecutor<?>> executors = new HashMap<>();
+  private ScheduledEventConsumer scheculedConsumer;
 
   private WorkflowDefinition(
       WorkflowApplication application, Workflow workflow, ResourceLoader resourceLoader) {
@@ -83,30 +83,16 @@ public class WorkflowDefinition implements AutoCloseable, WorkflowDefinitionData
     if (schedule != null) {
       ListenTo to = schedule.getOn();
       if (to != null) {
-        definition.register(
-            application.scheduler().eventConsumer(definition, application.modelFactory()::from),
-            EventRegistrationBuilderInfo.from(application, to, x -> null));
+        definition.scheculedConsumer =
+            application
+                .scheduler()
+                .eventConsumer(
+                    definition,
+                    application.modelFactory()::from,
+                    EventRegistrationBuilderInfo.from(application, to, x -> null));
       }
     }
     return definition;
-  }
-
-  private void register(ScheduledEventConsumer consumer, EventRegistrationBuilderInfo builderInfo) {
-    WorkflowModelCollection model = application.modelFactory().createCollection();
-    registrationInfo =
-        EventRegistrationInfo.<WorkflowModel>build(
-            builderInfo.registrations(),
-            (ce, f) -> consumer.accept(ce, f, model),
-            application.eventConsumer());
-    registrationInfo
-        .completableFuture()
-        .thenAccept(
-            x -> {
-              EventRegistrationInfo prevRegistrationInfo = registrationInfo;
-              register(consumer, builderInfo);
-              consumer.start(model);
-              prevRegistrationInfo.registrations().forEach(application.eventConsumer()::unregister);
-            });
   }
 
   public WorkflowInstance instance(Object input) {
@@ -159,8 +145,6 @@ public class WorkflowDefinition implements AutoCloseable, WorkflowDefinitionData
 
   @Override
   public void close() {
-    if (registrationInfo != null) {
-      registrationInfo.registrations().forEach(application.eventConsumer()::unregister);
-    }
+    safeClose(scheculedConsumer);
   }
 }

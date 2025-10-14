@@ -20,28 +20,38 @@ import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowInstance;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowScheduler;
+import io.serverlessworkflow.impl.events.EventRegistrationBuilderInfo;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 public class DefaultWorkflowScheduler implements WorkflowScheduler {
 
-  private Collection<WorkflowInstance> instances = new ArrayList<>();
+  private Map<WorkflowDefinition, Collection<WorkflowInstance>> instances =
+      new ConcurrentHashMap<>();
 
   @Override
-  public Collection<WorkflowInstance> scheduledInstances() {
-    return Collections.unmodifiableCollection(instances);
+  public Collection<WorkflowInstance> scheduledInstances(WorkflowDefinition definition) {
+    return Collections.unmodifiableCollection(theInstances(definition));
   }
 
   @Override
   public ScheduledEventConsumer eventConsumer(
-      WorkflowDefinition definition, Function<CloudEvent, WorkflowModel> converter) {
-    return new ScheduledEventConsumer(definition, converter) {
+      WorkflowDefinition definition,
+      Function<CloudEvent, WorkflowModel> converter,
+      EventRegistrationBuilderInfo builderInfo) {
+    return new ScheduledEventConsumer(definition, converter, builderInfo) {
       @Override
       protected void addScheduledInstance(WorkflowInstance instance) {
-        instances.add(instance);
+        theInstances(definition).add(instance);
       }
     };
+  }
+
+  private Collection<WorkflowInstance> theInstances(WorkflowDefinition definition) {
+    return instances.computeIfAbsent(definition, def -> new ArrayList<>());
   }
 }

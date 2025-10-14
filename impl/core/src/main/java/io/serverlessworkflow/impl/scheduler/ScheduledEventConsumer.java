@@ -20,31 +20,106 @@ import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowInstance;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowModelCollection;
-import java.util.concurrent.CompletableFuture;
+import io.serverlessworkflow.impl.events.EventConsumer;
+import io.serverlessworkflow.impl.events.EventRegistration;
+import io.serverlessworkflow.impl.events.EventRegistrationBuilder;
+import io.serverlessworkflow.impl.events.EventRegistrationBuilderInfo;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
-public abstract class ScheduledEventConsumer {
+public abstract class ScheduledEventConsumer implements AutoCloseable {
 
   private final Function<CloudEvent, WorkflowModel> converter;
   private final WorkflowDefinition definition;
+  private final EventRegistrationBuilderInfo builderInfo;
+  private final EventConsumer eventConsumer;
+  private Map<EventRegistrationBuilder, List<CloudEvent>> correlatedEvents;
+  private Collection<EventRegistration> registrations = new ArrayList<>();
 
   protected ScheduledEventConsumer(
-      WorkflowDefinition definition, Function<CloudEvent, WorkflowModel> converter) {
+      WorkflowDefinition definition,
+      Function<CloudEvent, WorkflowModel> converter,
+      EventRegistrationBuilderInfo builderInfo) {
     this.definition = definition;
     this.converter = converter;
+    this.builderInfo = builderInfo;
+    this.eventConsumer = definition.application().eventConsumer();
+    if (builderInfo.registrations().isAnd()
+        && builderInfo.registrations().registrations().size() > 1) {
+      this.correlatedEvents = new HashMap<>();
+      builderInfo
+          .registrations()
+          .registrations()
+          .forEach(
+              reg -> {
+                correlatedEvents.put(reg, new ArrayList<>());
+                registrations.add(
+                    eventConsumer.register(reg, ce -> consumeEvent(reg, (CloudEvent) ce)));
+              });
+    } else {
+      builderInfo
+          .registrations()
+          .registrations()
+          .forEach(
+              reg -> registrations.add(eventConsumer.register(reg, ce -> start((CloudEvent) ce))));
+    }
   }
 
-  public void accept(
-      CloudEvent t, CompletableFuture<WorkflowModel> u, WorkflowModelCollection col) {
-    WorkflowModel model = converter.apply(t);
-    col.add(model);
-    u.complete(model);
+  private void consumeEvent(EventRegistrationBuilder reg, CloudEvent ce) {
+    Collection<Collection<CloudEvent>> collections = new ArrayList<>();
+    // to minimize the critical section, conversion is done later, here we are
+    // performing
+    // just collection, if any
+    synchronized (correlatedEvents) {
+      correlatedEvents.get(reg).add((CloudEvent) ce);
+      while (satisfyCondition()) {
+        Collection<CloudEvent> collection = new ArrayList<>();
+        for (List<CloudEvent> values : correlatedEvents.values()) {
+          collection.add(values.remove(0));
+        }
+        collections.add(collection);
+      }
+    }
+    // convert and start outside synchronized
+    collections.forEach(this::start);
   }
 
-  public void start(Object model) {
+  private boolean satisfyCondition() {
+    for (List<CloudEvent> values : correlatedEvents.values()) {
+      if (values.isEmpty()) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  protected void start(CloudEvent ce) {
+    WorkflowModelCollection model = definition.application().modelFactory().createCollection();
+    model.add(converter.apply(ce));
+    start(model);
+  }
+
+  protected void start(Collection<CloudEvent> ces) {
+    WorkflowModelCollection model = definition.application().modelFactory().createCollection();
+    ces.forEach(ce -> model.add(converter.apply(ce)));
+    start(model);
+  }
+
+  private void start(WorkflowModel model) {
     WorkflowInstance instance = definition.instance(model);
     addScheduledInstance(instance);
     instance.start();
+  }
+
+  public void close() {
+    if (correlatedEvents != null) {
+      correlatedEvents.clear();
+    }
+    registrations.forEach(eventConsumer::unregister);
   }
 
   protected abstract void addScheduledInstance(WorkflowInstance instace);

@@ -1,6 +1,6 @@
 document:
   dsl: '1.0.1'
-  namespace: examples
+  namespace: test
   name: event-driven-schedule
   version: '0.1.0'
 schedule:

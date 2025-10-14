@@ -37,12 +37,12 @@ public class TraceExecutionListener implements WorkflowExecutionListener {
   private static final Logger logger = LoggerFactory.getLogger(TraceExecutionListener.class);
 
   public void onWorkflowStarted(WorkflowStartedEvent ev) {
-
     logger.info(
-        "Workflow definition {} with id {} started at {}",
+        "Workflow definition {} with id {} started at {} with data {}",
         ev.workflowContext().definition().workflow().getDocument().getName(),
         ev.workflowContext().instanceData().id(),
-        ev.eventDate());
+        ev.eventDate(),
+        ev.workflowContext().instanceData().input());
   }
 
   public void onWorkflowResumed(WorkflowResumedEvent ev) {
