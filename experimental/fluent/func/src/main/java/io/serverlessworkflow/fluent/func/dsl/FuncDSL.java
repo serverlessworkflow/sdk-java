@@ -18,7 +18,6 @@ package io.serverlessworkflow.fluent.func.dsl;
 import io.cloudevents.CloudEventData;
 import io.serverlessworkflow.api.types.FlowDirectiveEnum;
 import io.serverlessworkflow.fluent.func.FuncCallTaskBuilder;
-import io.serverlessworkflow.fluent.func.FuncDoTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncEmitTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncSwitchTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncTaskItemListBuilder;
@@ -28,6 +27,7 @@ import io.serverlessworkflow.fluent.func.configurers.SwitchCaseConfigurer;
 import io.serverlessworkflow.fluent.func.dsl.internal.CommonFuncOps;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -99,24 +99,43 @@ public final class FuncDSL {
     return OPS.event(type, function, clazz);
   }
 
+  /** Emit a JSON CloudEvent (PojoCloudEventData) from a POJO payload. */
+  public static <T> Consumer<FuncEmitTaskBuilder> eventJson(String type, Class<T> clazz) {
+    return b -> new FuncEmitSpec().type(type).jsonData(clazz).accept(b);
+  }
+
+  public static <T> Consumer<FuncEmitTaskBuilder> eventBytes(
+      String type, Function<T, byte[]> serializer, Class<T> clazz) {
+    return b -> new FuncEmitSpec().type(type).bytesData(serializer, clazz).accept(b);
+  }
+
+  public static Consumer<FuncEmitTaskBuilder> eventBytesUtf8(String type) {
+    return b -> new FuncEmitSpec().type(type).bytesDataUtf8().accept(b);
+  }
+
   public static FuncPredicateEventConfigurer event(String type) {
     return OPS.event(type);
   }
 
-  public static <T, R> FuncTaskConfigurer function(Function<T, R> fn) {
-    Class<T> clazz = ReflectionUtils.inferInputType(fn);
-    return list -> list.callFn(f -> f.function(fn, clazz));
+  public static <T, R> FuncCallStep<T, R> function(Function<T, R> fn, Class<T> clazz) {
+    return new FuncCallStep<>(fn, clazz);
   }
 
-  public static <T, R> FuncTaskConfigurer function(Function<T, R> fn, Class<T> clazz) {
-    return list -> list.callFn(f -> f.function(fn, clazz));
+  public static <T, R> FuncCallStep<T, R> function(Function<T, R> fn) {
+    Class<T> clazz = ReflectionUtils.inferInputType(fn);
+    return new FuncCallStep<>(fn, clazz);
+  }
+
+  public static <T, R> FuncCallStep<T, R> function(String name, Function<T, R> fn) {
+    Class<T> clazz = ReflectionUtils.inferInputType(fn);
+    return new FuncCallStep<>(name, fn, clazz);
+  }
+
+  public static <T, R> FuncCallStep<T, R> function(String name, Function<T, R> fn, Class<T> clazz) {
+    return new FuncCallStep<>(name, fn, clazz);
   }
 
   // ------------------  tasks ---------------- //
-  public static Consumer<FuncDoTaskBuilder> doTasks(FuncTaskConfigurer... steps) {
-    final Consumer<FuncTaskItemListBuilder> tasks = tasks(steps);
-    return d -> d.tasks(tasks);
-  }
 
   public static Consumer<FuncTaskItemListBuilder> tasks(FuncTaskConfigurer... steps) {
     Objects.requireNonNull(steps, "Steps in a tasks are required");
@@ -124,25 +143,46 @@ public final class FuncDSL {
     return list -> snapshot.forEach(s -> s.accept(list));
   }
 
-  public static FuncTaskConfigurer emit(Consumer<FuncEmitTaskBuilder> emitTask) {
-    return list -> list.emit(emitTask);
+  public static EmitStep emit(Consumer<FuncEmitTaskBuilder> cfg) {
+    return new EmitStep(null, cfg);
   }
 
-  public static <T> FuncTaskConfigurer emit(String type, Function<T, CloudEventData> fn) {
-    return list -> list.emit(event(type, fn));
+  public static EmitStep emit(String name, Consumer<FuncEmitTaskBuilder> cfg) {
+    return new EmitStep(name, cfg);
   }
 
-  public static <T> FuncTaskConfigurer emit(
-      String name, String type, Function<T, CloudEventData> fn) {
-    return list -> list.emit(name, event(type, fn));
+  public static <T> EmitStep emit(String type, Function<T, CloudEventData> fn) {
+    // `event(type, fn)` is your Consumer<FuncEmitTaskBuilder> for EMIT
+    return new EmitStep(null, event(type, fn));
   }
 
-  public static FuncTaskConfigurer listen(FuncListenSpec listen) {
-    return list -> list.listen(listen);
+  public static <T> EmitStep emit(String name, String type, Function<T, CloudEventData> fn) {
+    return new EmitStep(name, event(type, fn));
   }
 
-  public static FuncTaskConfigurer listen(String name, FuncListenSpec listen) {
-    return list -> list.listen(name, listen);
+  public static <T> EmitStep emit(
+      String name, String type, Function<T, byte[]> serializer, Class<T> clazz) {
+    return new EmitStep(name, eventBytes(type, serializer, clazz));
+  }
+
+  public static <T> EmitStep emit(String type, Function<T, byte[]> serializer, Class<T> clazz) {
+    return new EmitStep(null, eventBytes(type, serializer, clazz));
+  }
+
+  public static <T> EmitStep emitJson(String type, Class<T> clazz) {
+    return new EmitStep(null, eventJson(type, clazz));
+  }
+
+  public static <T> EmitStep emitJson(String name, String type, Class<T> clazz) {
+    return new EmitStep(name, eventJson(type, clazz));
+  }
+
+  public static ListenStep listen(FuncListenSpec spec) {
+    return new ListenStep(null, spec);
+  }
+
+  public static ListenStep listen(String name, FuncListenSpec spec) {
+    return new ListenStep(name, spec);
   }
 
   public static FuncTaskConfigurer switchCase(
@@ -176,6 +216,12 @@ public final class FuncDSL {
         list.switchCase(FuncDSL.cases(caseOf(pred).then(thenTask), caseDefault(otherwise)));
   }
 
+  public static <T> FuncTaskConfigurer switchWhenOrElse(
+      Predicate<T> pred, String thenTask, String otherwiseTask) {
+    return list ->
+        list.switchCase(FuncDSL.cases(caseOf(pred).then(thenTask), caseDefault(otherwiseTask)));
+  }
+
   public static <T> FuncTaskConfigurer forEach(
       Function<T, Collection<?>> collection, Consumer<FuncTaskItemListBuilder> body) {
     return list -> list.forEach(j -> j.collection(collection).tasks(body));
@@ -191,5 +237,13 @@ public final class FuncDSL {
   public static <T> FuncTaskConfigurer forEach(
       List<T> collection, Consumer<FuncTaskItemListBuilder> body) {
     return list -> list.forEach(j -> j.collection(ctx -> collection).tasks(body));
+  }
+
+  public static FuncTaskConfigurer set(String expr) {
+    return list -> list.set(expr);
+  }
+
+  public static FuncTaskConfigurer set(Map<String, Object> map) {
+    return list -> list.set(s -> s.expr(map));
   }
 }

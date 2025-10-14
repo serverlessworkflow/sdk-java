@@ -58,9 +58,19 @@ public abstract class EventFilterSpec<SELF, E extends AbstractEventPropertiesBui
     return self();
   }
 
+  public SELF contentType(String ct) {
+    steps.add(e -> e.dataContentType(ct));
+    return self();
+  }
+
   /** Sets the CloudEvent dataContentType to `application/json` */
   public SELF JSON() {
     steps.add(e -> e.dataContentType("application/json"));
+    return self();
+  }
+
+  public SELF OCTET_STREAM() {
+    steps.add(e -> e.dataContentType("application/octet-stream"));
     return self();
   }
 

@@ -24,11 +24,13 @@ public interface ConditionalTaskBuilder<SELF> {
 
   TaskBase getTask();
 
+  @SuppressWarnings("unchecked")
   default SELF when(Predicate<?> predicate) {
     ConditionalTaskBuilderHelper.setMetadata(getTask(), predicate);
     return (SELF) this;
   }
 
+  @SuppressWarnings("unchecked")
   default <T> SELF when(Predicate<T> predicate, Class<T> argClass) {
     Objects.requireNonNull(argClass);
     ConditionalTaskBuilderHelper.setMetadata(getTask(), new TypedPredicate<>(predicate, argClass));
