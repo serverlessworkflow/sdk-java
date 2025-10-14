@@ -16,6 +16,7 @@
 package io.serverlessworkflow.fluent.spec.dsl;
 
 import io.serverlessworkflow.api.types.OAuth2AuthenticationData;
+import io.serverlessworkflow.fluent.spec.DoTaskBuilder;
 import io.serverlessworkflow.fluent.spec.EmitTaskBuilder;
 import io.serverlessworkflow.fluent.spec.ForkTaskBuilder;
 import io.serverlessworkflow.fluent.spec.TaskItemListBuilder;
@@ -236,7 +237,15 @@ public final class DSL {
   }
 
   // ----- Tasks that requires tasks list --//
-  public static Consumer<TaskItemListBuilder> tasks(TasksConfigurer... steps) {
+
+  /** Main task list to be used in `workflow().tasks()` consumer. */
+  public static Consumer<DoTaskBuilder> doTasks(TasksConfigurer... steps) {
+    final Consumer<TaskItemListBuilder> tasks = tasks(steps);
+    return d -> d.tasks(tasks);
+  }
+
+  /** Task list for tasks that requires it such as `for`, `try`, and so on. */
+  public static TasksConfigurer tasks(TasksConfigurer... steps) {
     Objects.requireNonNull(steps, "Steps in a tasks are required");
     final List<TasksConfigurer> snapshot = List.of(steps.clone());
     return list -> snapshot.forEach(s -> s.accept(list));

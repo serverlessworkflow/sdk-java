@@ -13,20 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.fluent.spec.dsl;
+package io.serverlessworkflow.fluent.func.configurers;
 
-import io.serverlessworkflow.fluent.spec.EventPropertiesBuilder;
-import io.serverlessworkflow.fluent.spec.configurers.EventConfigurer;
+import io.serverlessworkflow.fluent.func.FuncPredicateEventPropertiesBuilder;
+import java.util.function.Consumer;
 
-public final class EventSpec extends ExprEventFilterSpec<EventSpec> implements EventConfigurer {
-
-  @Override
-  protected EventSpec self() {
-    return this;
-  }
-
-  @Override
-  public void accept(EventPropertiesBuilder eventPropertiesBuilder) {
-    getSteps().forEach(step -> step.accept(eventPropertiesBuilder));
-  }
-}
+@FunctionalInterface
+public interface FuncPredicateEventConfigurer
+    extends Consumer<FuncPredicateEventPropertiesBuilder> {}

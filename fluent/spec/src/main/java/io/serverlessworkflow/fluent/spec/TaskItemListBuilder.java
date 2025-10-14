@@ -45,7 +45,7 @@ public class TaskItemListBuilder extends BaseTaskItemListBuilder<TaskItemListBui
 
   @Override
   public TaskItemListBuilder set(String name, Consumer<SetTaskBuilder> itemsConfigurer) {
-    requireNameAndConfig(name, itemsConfigurer);
+    name = defaultNameAndRequireConfig(name, itemsConfigurer);
     final SetTaskBuilder setBuilder = new SetTaskBuilder();
     itemsConfigurer.accept(setBuilder);
     return addTaskItem(new TaskItem(name, new Task().withSetTask(setBuilder.build())));
@@ -59,7 +59,7 @@ public class TaskItemListBuilder extends BaseTaskItemListBuilder<TaskItemListBui
   @Override
   public TaskItemListBuilder forEach(
       String name, Consumer<ForEachTaskBuilder<TaskItemListBuilder>> itemsConfigurer) {
-    requireNameAndConfig(name, itemsConfigurer);
+    name = defaultNameAndRequireConfig(name, itemsConfigurer);
     final ForEachTaskBuilder<TaskItemListBuilder> forBuilder =
         new ForEachTaskBuilder<>(newItemListBuilder());
     itemsConfigurer.accept(forBuilder);
@@ -68,7 +68,7 @@ public class TaskItemListBuilder extends BaseTaskItemListBuilder<TaskItemListBui
 
   @Override
   public TaskItemListBuilder switchCase(String name, Consumer<SwitchTaskBuilder> itemsConfigurer) {
-    requireNameAndConfig(name, itemsConfigurer);
+    name = defaultNameAndRequireConfig(name, itemsConfigurer);
     final SwitchTaskBuilder switchBuilder = new SwitchTaskBuilder();
     itemsConfigurer.accept(switchBuilder);
     return addTaskItem(new TaskItem(name, new Task().withSwitchTask(switchBuilder.build())));
@@ -76,7 +76,7 @@ public class TaskItemListBuilder extends BaseTaskItemListBuilder<TaskItemListBui
 
   @Override
   public TaskItemListBuilder raise(String name, Consumer<RaiseTaskBuilder> itemsConfigurer) {
-    requireNameAndConfig(name, itemsConfigurer);
+    name = defaultNameAndRequireConfig(name, itemsConfigurer);
     final RaiseTaskBuilder raiseBuilder = new RaiseTaskBuilder();
     itemsConfigurer.accept(raiseBuilder);
     return addTaskItem(new TaskItem(name, new Task().withRaiseTask(raiseBuilder.build())));
@@ -84,7 +84,7 @@ public class TaskItemListBuilder extends BaseTaskItemListBuilder<TaskItemListBui
 
   @Override
   public TaskItemListBuilder fork(String name, Consumer<ForkTaskBuilder> itemsConfigurer) {
-    requireNameAndConfig(name, itemsConfigurer);
+    name = defaultNameAndRequireConfig(name, itemsConfigurer);
     final ForkTaskBuilder forkBuilder = new ForkTaskBuilder();
     itemsConfigurer.accept(forkBuilder);
     return addTaskItem(new TaskItem(name, new Task().withForkTask(forkBuilder.build())));
@@ -92,7 +92,7 @@ public class TaskItemListBuilder extends BaseTaskItemListBuilder<TaskItemListBui
 
   @Override
   public TaskItemListBuilder listen(String name, Consumer<ListenTaskBuilder> itemsConfigurer) {
-    requireNameAndConfig(name, itemsConfigurer);
+    name = defaultNameAndRequireConfig(name, itemsConfigurer);
     final ListenTaskBuilder listenBuilder = new ListenTaskBuilder();
     itemsConfigurer.accept(listenBuilder);
     return addTaskItem(new TaskItem(name, new Task().withListenTask(listenBuilder.build())));
@@ -100,7 +100,7 @@ public class TaskItemListBuilder extends BaseTaskItemListBuilder<TaskItemListBui
 
   @Override
   public TaskItemListBuilder emit(String name, Consumer<EmitTaskBuilder> itemsConfigurer) {
-    requireNameAndConfig(name, itemsConfigurer);
+    name = defaultNameAndRequireConfig(name, itemsConfigurer);
     final EmitTaskBuilder emitBuilder = new EmitTaskBuilder();
     itemsConfigurer.accept(emitBuilder);
     return addTaskItem(new TaskItem(name, new Task().withEmitTask(emitBuilder.build())));
@@ -109,7 +109,7 @@ public class TaskItemListBuilder extends BaseTaskItemListBuilder<TaskItemListBui
   @Override
   public TaskItemListBuilder tryCatch(
       String name, Consumer<TryTaskBuilder<TaskItemListBuilder>> itemsConfigurer) {
-    requireNameAndConfig(name, itemsConfigurer);
+    name = defaultNameAndRequireConfig(name, itemsConfigurer);
     final TryTaskBuilder<TaskItemListBuilder> tryBuilder =
         new TryTaskBuilder<>(this.newItemListBuilder());
     itemsConfigurer.accept(tryBuilder);
@@ -118,7 +118,7 @@ public class TaskItemListBuilder extends BaseTaskItemListBuilder<TaskItemListBui
 
   @Override
   public TaskItemListBuilder callHTTP(String name, Consumer<CallHTTPTaskBuilder> itemsConfigurer) {
-    requireNameAndConfig(name, itemsConfigurer);
+    name = defaultNameAndRequireConfig(name, itemsConfigurer);
     final CallHTTPTaskBuilder callHTTPBuilder = new CallHTTPTaskBuilder();
     itemsConfigurer.accept(callHTTPBuilder);
     return addTaskItem(

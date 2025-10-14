@@ -55,7 +55,7 @@ public class EventConsumptionStrategyBuilder
   }
 
   @Override
-  protected void setUntil(Until until) {
+  protected void setUntilForAny(Until until) {
     this.eventConsumptionStrategy.getAnyEventConsumptionStrategy().setUntil(until);
   }
 }

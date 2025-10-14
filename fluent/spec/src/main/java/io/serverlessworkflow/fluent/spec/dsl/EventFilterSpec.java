@@ -15,20 +15,31 @@
  */
 package io.serverlessworkflow.fluent.spec.dsl;
 
-import io.serverlessworkflow.fluent.spec.configurers.EventConfigurer;
+import io.serverlessworkflow.fluent.spec.AbstractEventPropertiesBuilder;
 import java.net.URI;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
+import java.util.function.Consumer;
 
-public abstract class EventFilterSpec<SELF> {
+public abstract class EventFilterSpec<SELF, E extends AbstractEventPropertiesBuilder<?>> {
 
-  protected final List<EventConfigurer> steps = new ArrayList<>();
+  private final List<Consumer<E>> steps;
+
+  protected EventFilterSpec(List<Consumer<E>> steps) {
+    this.steps = steps;
+  }
 
   protected abstract SELF self();
+
+  protected void addStep(Consumer<E> step) {
+    steps.add(step);
+  }
+
+  protected List<Consumer<E>> getSteps() {
+    return steps;
+  }
 
   public SELF type(String eventType) {
     steps.add(e -> e.type(eventType));
@@ -47,22 +58,20 @@ public abstract class EventFilterSpec<SELF> {
     return self();
   }
 
+  public SELF contentType(String ct) {
+    steps.add(e -> e.dataContentType(ct));
+    return self();
+  }
+
   /** Sets the CloudEvent dataContentType to `application/json` */
   public SELF JSON() {
     steps.add(e -> e.dataContentType("application/json"));
     return self();
   }
 
-  /** Sets the event data and the contentType to `application/json` */
-  public SELF jsonData(String expr) {
-    steps.add(e -> e.data(expr));
-    return JSON();
-  }
-
-  /** Sets the event data and the contentType to `application/json` */
-  public SELF jsonData(Map<String, Object> data) {
-    steps.add(e -> e.data(data));
-    return JSON();
+  public SELF OCTET_STREAM() {
+    steps.add(e -> e.dataContentType("application/octet-stream"));
+    return self();
   }
 
   public SELF source(String source) {

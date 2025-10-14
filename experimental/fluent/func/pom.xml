@@ -23,6 +23,10 @@
         </dependency>
         <dependency>
             <groupId>io.serverlessworkflow</groupId>
+            <artifactId>serverlessworkflow-impl-json</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.serverlessworkflow</groupId>
             <artifactId>serverlessworkflow-fluent-spec</artifactId>
         </dependency>
         <dependency>

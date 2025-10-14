@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.function.Consumer;
 
 /**
@@ -58,9 +59,12 @@ public abstract class BaseTaskItemListBuilder<SELF extends BaseTaskItemListBuild
     return self();
   }
 
-  protected final void requireNameAndConfig(String name, Consumer<?> cfg) {
-    Objects.requireNonNull(name, "Task name must not be null");
+  protected final String defaultNameAndRequireConfig(String name, Consumer<?> cfg) {
+    if (name == null || name.isBlank()) {
+      name = UUID.randomUUID().toString();
+    }
     Objects.requireNonNull(cfg, "Configurer must not be null");
+    return name;
   }
 
   /**
