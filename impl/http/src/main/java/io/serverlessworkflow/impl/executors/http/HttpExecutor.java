@@ -47,7 +47,7 @@ import java.util.function.Supplier;
 
 public class HttpExecutor implements CallableTask<CallHTTP> {
 
-  public static final Client client = ClientBuilder.newClient();
+  private static final Client client = ClientBuilder.newClient();
 
   private TargetSupplier targetSupplier;
   private Optional<WorkflowValueResolver<Map<String, Object>>> headersMap;

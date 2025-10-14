@@ -24,9 +24,6 @@ import io.serverlessworkflow.api.types.HTTPQuery;
 import io.serverlessworkflow.api.types.Headers;
 import io.serverlessworkflow.api.types.Query;
 import io.serverlessworkflow.api.types.ReferenceableAuthenticationPolicy;
-import io.serverlessworkflow.api.types.TaskTimeout;
-import io.serverlessworkflow.api.types.Timeout;
-import io.serverlessworkflow.api.types.TimeoutAfter;
 import io.serverlessworkflow.api.types.UriTemplate;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.parameters.Parameter;
@@ -84,14 +81,6 @@ class HttpCallAdapter {
     addBody(httpArgs);
 
     addTarget(endpoint);
-
-    TaskTimeout taskTimeout = new TaskTimeout();
-    Timeout timeout = new Timeout();
-    taskTimeout.withTaskTimeoutDefinition(timeout);
-    TimeoutAfter timeoutAfter = new TimeoutAfter();
-    timeout.setAfter(timeoutAfter);
-    timeoutAfter.withDurationExpression("PT30S");
-    callHTTP.setTimeout(taskTimeout);
 
     return callHTTP;
   }

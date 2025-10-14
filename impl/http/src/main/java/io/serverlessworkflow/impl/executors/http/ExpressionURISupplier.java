@@ -15,8 +15,7 @@
  */
 package io.serverlessworkflow.impl.executors.http;
 
-import static io.serverlessworkflow.impl.executors.http.HttpExecutor.client;
-
+import io.serverlessworkflow.api.types.UriTemplate;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
@@ -32,6 +31,8 @@ public class ExpressionURISupplier implements TargetSupplier {
 
   @Override
   public WebTarget apply(WorkflowContext workflow, TaskContext task, WorkflowModel node) {
-    return client.target(expr.apply(workflow, task, node));
+    return HttpExecutor.getURISupplier(
+            new UriTemplate().withLiteralUriTemplate(expr.apply(workflow, task, node)))
+        .apply(workflow, task, node);
   }
 }
