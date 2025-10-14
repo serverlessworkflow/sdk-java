@@ -30,6 +30,7 @@ import io.serverlessworkflow.impl.lifecycle.WorkflowExecutionListener;
 import io.serverlessworkflow.impl.resources.DefaultResourceLoaderFactory;
 import io.serverlessworkflow.impl.resources.ResourceLoaderFactory;
 import io.serverlessworkflow.impl.resources.StaticResource;
+import io.serverlessworkflow.impl.scheduler.DefaultWorkflowScheduler;
 import io.serverlessworkflow.impl.schema.SchemaValidator;
 import io.serverlessworkflow.impl.schema.SchemaValidatorFactory;
 import java.util.ArrayList;
@@ -59,6 +60,7 @@ public class WorkflowApplication implements AutoCloseable {
   private final Collection<EventPublisher> eventPublishers;
   private final boolean lifeCycleCEPublishingEnabled;
   private final WorkflowModelFactory modelFactory;
+  private final WorkflowScheduler scheduler;
 
   private WorkflowApplication(Builder builder) {
     this.taskFactory = builder.taskFactory;
@@ -75,6 +77,7 @@ public class WorkflowApplication implements AutoCloseable {
     this.eventPublishers = builder.eventPublishers;
     this.lifeCycleCEPublishingEnabled = builder.lifeCycleCEPublishingEnabled;
     this.modelFactory = builder.modelFactory;
+    this.scheduler = builder.scheduler;
   }
 
   public TaskExecutorFactory taskFactory() {
@@ -142,6 +145,7 @@ public class WorkflowApplication implements AutoCloseable {
     private SchemaValidatorFactory schemaValidatorFactory;
     private WorkflowPositionFactory positionFactory = () -> new QueueWorkflowPosition();
     private WorkflowInstanceIdFactory idFactory;
+    private WorkflowScheduler scheduler;
     private ExecutorServiceFactory executorFactory = new DefaultExecutorServiceFactory();
     private EventConsumer<?, ?> eventConsumer;
     private Collection<EventPublisher> eventPublishers = new ArrayList<>();
@@ -164,6 +168,11 @@ public class WorkflowApplication implements AutoCloseable {
 
     public Builder withExpressionFactory(ExpressionFactory factory) {
       this.exprFactories.add(factory);
+      return this;
+    }
+
+    public Builder withScheduler(WorkflowScheduler scheduler) {
+      this.scheduler = scheduler;
       return this;
     }
 
@@ -257,6 +266,9 @@ public class WorkflowApplication implements AutoCloseable {
       if (idFactory == null) {
         idFactory = new MonotonicUlidWorkflowInstanceIdFactory();
       }
+      if (scheduler == null) {
+        scheduler = new DefaultWorkflowScheduler();
+      }
       return new WorkflowApplication(this);
     }
   }
@@ -312,5 +324,9 @@ public class WorkflowApplication implements AutoCloseable {
 
   public boolean isLifeCycleCEPublishingEnabled() {
     return lifeCycleCEPublishingEnabled;
+  }
+
+  public WorkflowScheduler scheduler() {
+    return scheduler;
   }
 }

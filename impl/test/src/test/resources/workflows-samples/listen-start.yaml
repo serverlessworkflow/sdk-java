@@ -1,0 +1,15 @@
+document:
+  dsl: '1.0.1'
+  namespace: test
+  name: event-driven-schedule
+  version: '0.1.0'
+schedule:
+  on:
+    one:
+      with:
+        type: com.example.hospital.events.patients.recover
+do: 
+  - recovered:
+      set:
+        recovered: ${ $workflow.input[0].data.name}
+        

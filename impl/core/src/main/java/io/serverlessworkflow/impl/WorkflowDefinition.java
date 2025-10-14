@@ -16,13 +16,18 @@
 package io.serverlessworkflow.impl;
 
 import static io.serverlessworkflow.impl.WorkflowUtils.*;
+import static io.serverlessworkflow.impl.WorkflowUtils.safeClose;
 
 import io.serverlessworkflow.api.types.Input;
+import io.serverlessworkflow.api.types.ListenTo;
 import io.serverlessworkflow.api.types.Output;
+import io.serverlessworkflow.api.types.Schedule;
 import io.serverlessworkflow.api.types.Workflow;
+import io.serverlessworkflow.impl.events.EventRegistrationBuilderInfo;
 import io.serverlessworkflow.impl.executors.TaskExecutor;
 import io.serverlessworkflow.impl.executors.TaskExecutorHelper;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
+import io.serverlessworkflow.impl.scheduler.ScheduledEventConsumer;
 import io.serverlessworkflow.impl.schema.SchemaValidator;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -40,20 +45,23 @@ public class WorkflowDefinition implements AutoCloseable, WorkflowDefinitionData
   private final TaskExecutor<?> taskExecutor;
   private final ResourceLoader resourceLoader;
   private final Map<String, TaskExecutor<?>> executors = new HashMap<>();
+  private ScheduledEventConsumer scheculedConsumer;
 
   private WorkflowDefinition(
       WorkflowApplication application, Workflow workflow, ResourceLoader resourceLoader) {
     this.workflow = workflow;
     this.application = application;
     this.resourceLoader = resourceLoader;
-    if (workflow.getInput() != null) {
-      Input input = workflow.getInput();
+
+    Input input = workflow.getInput();
+    if (input != null) {
       this.inputSchemaValidator =
           getSchemaValidator(application.validatorFactory(), resourceLoader, input.getSchema());
       this.inputFilter = buildWorkflowFilter(application, input.getFrom());
     }
-    if (workflow.getOutput() != null) {
-      Output output = workflow.getOutput();
+
+    Output output = workflow.getOutput();
+    if (output != null) {
       this.outputSchemaValidator =
           getSchemaValidator(application.validatorFactory(), resourceLoader, output.getSchema());
       this.outputFilter = buildWorkflowFilter(application, output.getAs());
@@ -68,8 +76,23 @@ public class WorkflowDefinition implements AutoCloseable, WorkflowDefinitionData
   }
 
   static WorkflowDefinition of(WorkflowApplication application, Workflow workflow, Path path) {
-    return new WorkflowDefinition(
-        application, workflow, application.resourceLoaderFactory().getResourceLoader(path));
+    WorkflowDefinition definition =
+        new WorkflowDefinition(
+            application, workflow, application.resourceLoaderFactory().getResourceLoader(path));
+    Schedule schedule = workflow.getSchedule();
+    if (schedule != null) {
+      ListenTo to = schedule.getOn();
+      if (to != null) {
+        definition.scheculedConsumer =
+            application
+                .scheduler()
+                .eventConsumer(
+                    definition,
+                    application.modelFactory()::from,
+                    EventRegistrationBuilderInfo.from(application, to, x -> null));
+      }
+    }
+    return definition;
   }
 
   public WorkflowInstance instance(Object input) {
@@ -121,5 +144,7 @@ public class WorkflowDefinition implements AutoCloseable, WorkflowDefinitionData
   }
 
   @Override
-  public void close() {}
+  public void close() {
+    safeClose(scheculedConsumer);
+  }
 }
