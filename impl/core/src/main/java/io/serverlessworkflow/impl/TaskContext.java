@@ -37,7 +37,7 @@ public class TaskContext implements TaskContextData {
   private WorkflowModel rawOutput;
   private Instant completedAt;
   private TransitionInfo transition;
-  private boolean completed;
+  private short retryAttempt;
 
   public TaskContext(
       WorkflowModel input,
@@ -67,6 +67,7 @@ public class TaskContext implements TaskContextData {
     this.input = input;
     this.output = output;
     this.rawOutput = rawOutput;
+    this.retryAttempt = parentContext.map(TaskContext::retryAttempt).orElse((short) 0);
     this.contextVariables =
         parentContext.map(p -> new HashMap<>(p.contextVariables)).orElseGet(HashMap::new);
   }
@@ -110,7 +111,6 @@ public class TaskContext implements TaskContextData {
 
   public TaskContext output(WorkflowModel output) {
     this.output = output;
-    this.completed = true;
     return this;
   }
 
@@ -162,7 +162,19 @@ public class TaskContext implements TaskContextData {
   }
 
   public boolean isCompleted() {
-    return completed;
+    return completedAt != null;
+  }
+
+  public short retryAttempt() {
+    return retryAttempt;
+  }
+
+  public void retryAttempt(short retryAttempt) {
+    this.retryAttempt = retryAttempt;
+  }
+
+  public boolean isRetrying() {
+    return retryAttempt > 0;
   }
 
   @Override
@@ -175,6 +187,8 @@ public class TaskContext implements TaskContextData {
         + taskName
         + ", completedAt="
         + completedAt
+        + ", retryAttempt="
+        + retryAttempt
         + "]";
   }
 }

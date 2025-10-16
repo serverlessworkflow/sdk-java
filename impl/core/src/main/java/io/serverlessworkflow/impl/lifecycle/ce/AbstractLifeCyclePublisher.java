@@ -31,6 +31,7 @@ import io.serverlessworkflow.impl.lifecycle.TaskCompletedEvent;
 import io.serverlessworkflow.impl.lifecycle.TaskEvent;
 import io.serverlessworkflow.impl.lifecycle.TaskFailedEvent;
 import io.serverlessworkflow.impl.lifecycle.TaskResumedEvent;
+import io.serverlessworkflow.impl.lifecycle.TaskRetriedEvent;
 import io.serverlessworkflow.impl.lifecycle.TaskStartedEvent;
 import io.serverlessworkflow.impl.lifecycle.TaskSuspendedEvent;
 import io.serverlessworkflow.impl.lifecycle.WorkflowCancelledEvent;
@@ -54,6 +55,7 @@ public abstract class AbstractLifeCyclePublisher implements WorkflowExecutionLis
   private static final String TASK_RESUMED = "io.serverlessworkflow.task.resumed.v1";
   private static final String TASK_FAULTED = "io.serverlessworkflow.task.faulted.v1";
   private static final String TASK_CANCELLED = "io.serverlessworkflow.task.cancelled.v1";
+  private static final String TASK_RETRIED = "io.serverlessworkflow.task.retried.v1";
 
   private static final String WORKFLOW_STARTED = "io.serverlessworkflow.workflow.started.v1";
   private static final String WORKFLOW_COMPLETED = "io.serverlessworkflow.workflow.completed.v1";
@@ -70,6 +72,7 @@ public abstract class AbstractLifeCyclePublisher implements WorkflowExecutionLis
         TASK_RESUMED,
         TASK_FAULTED,
         TASK_CANCELLED,
+        TASK_RETRIED,
         WORKFLOW_STARTED,
         WORKFLOW_COMPLETED,
         WORKFLOW_SUSPENDED,
@@ -87,6 +90,20 @@ public abstract class AbstractLifeCyclePublisher implements WorkflowExecutionLis
                 .withData(
                     cloudEventData(
                         new TaskStartedCEData(id(ev), pos(ev), ref(ev), ev.eventDate()),
+                        this::convert))
+                .withType(TASK_STARTED)
+                .build());
+  }
+
+  @Override
+  public void onTaskRetried(TaskRetriedEvent event) {
+    publish(
+        event,
+        ev ->
+            builder()
+                .withData(
+                    cloudEventData(
+                        new TaskRetriedCEData(id(ev), pos(ev), ref(ev), ev.eventDate()),
                         this::convert))
                 .withType(TASK_STARTED)
                 .build());
@@ -275,6 +292,10 @@ public abstract class AbstractLifeCyclePublisher implements WorkflowExecutionLis
   }
 
   protected byte[] convert(WorkflowResumedCEData data) {
+    return convertToBytes(data);
+  }
+
+  protected byte[] convert(TaskRetriedCEData data) {
     return convertToBytes(data);
   }
 

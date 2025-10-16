@@ -17,6 +17,9 @@ package io.serverlessworkflow.impl.executors;
 
 import io.serverlessworkflow.api.types.CatchErrors;
 import io.serverlessworkflow.api.types.ErrorFilter;
+import io.serverlessworkflow.api.types.Retry;
+import io.serverlessworkflow.api.types.RetryBackoff;
+import io.serverlessworkflow.api.types.RetryPolicy;
 import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.api.types.TryTask;
 import io.serverlessworkflow.api.types.TryTaskCatch;
@@ -29,6 +32,12 @@ import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.WorkflowPredicate;
 import io.serverlessworkflow.impl.WorkflowUtils;
+import io.serverlessworkflow.impl.executors.retry.ConstantRetryIntervalFunction;
+import io.serverlessworkflow.impl.executors.retry.DefaultRetryExecutor;
+import io.serverlessworkflow.impl.executors.retry.ExponentialRetryIntervalFunction;
+import io.serverlessworkflow.impl.executors.retry.LinearRetryIntervalFunction;
+import io.serverlessworkflow.impl.executors.retry.RetryExecutor;
+import io.serverlessworkflow.impl.executors.retry.RetryIntervalFunction;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -42,6 +51,7 @@ public class TryExecutor extends RegularTaskExecutor<TryTask> {
   private final Optional<Predicate<WorkflowError>> errorFilter;
   private final TaskExecutor<?> taskExecutor;
   private final Optional<TaskExecutor<?>> catchTaskExecutor;
+  private final Optional<RetryExecutor> retryIntervalExecutor;
 
   public static class TryExecutorBuilder extends RegularTaskExecutorBuilder<TryTask> {
 
@@ -50,6 +60,7 @@ public class TryExecutor extends RegularTaskExecutor<TryTask> {
     private final Optional<Predicate<WorkflowError>> errorFilter;
     private final TaskExecutor<?> taskExecutor;
     private final Optional<TaskExecutor<?>> catchTaskExecutor;
+    private final Optional<RetryExecutor> retryIntervalExecutor;
 
     protected TryExecutorBuilder(
         WorkflowMutablePosition position, TryTask task, WorkflowDefinition definition) {
@@ -60,13 +71,63 @@ public class TryExecutor extends RegularTaskExecutor<TryTask> {
       this.exceptFilter = WorkflowUtils.optionalPredicate(application, catchInfo.getExceptWhen());
       this.taskExecutor =
           TaskExecutorHelper.createExecutorList(position, task.getTry(), definition);
-      List<TaskItem> catchTask = task.getCatch().getDo();
-      this.catchTaskExecutor =
-          catchTask != null && !catchTask.isEmpty()
-              ? Optional.of(
-                  TaskExecutorHelper.createExecutorList(
-                      position, task.getCatch().getDo(), definition))
-              : Optional.empty();
+      TryTaskCatch catchTask = task.getCatch();
+      if (catchTask != null) {
+        List<TaskItem> catchTaskDo = catchTask.getDo();
+
+        this.catchTaskExecutor =
+            catchTaskDo != null && !catchTaskDo.isEmpty()
+                ? Optional.of(
+                    TaskExecutorHelper.createExecutorList(position, catchTaskDo, definition))
+                : Optional.empty();
+
+        Retry retry = catchTask.getRetry();
+        this.retryIntervalExecutor = retry != null ? buildRetryInterval(retry) : Optional.empty();
+      } else {
+        this.catchTaskExecutor = Optional.empty();
+        this.retryIntervalExecutor = Optional.empty();
+      }
+    }
+
+    private Optional<RetryExecutor> buildRetryInterval(Retry retry) {
+      RetryPolicy retryPolicy = null;
+      if (retry.getRetryPolicyDefinition() != null) {
+        retryPolicy = retry.getRetryPolicyDefinition();
+      } else if (retry.getRetryPolicyReference() != null) {
+        retryPolicy =
+            workflow
+                .getUse()
+                .getRetries()
+                .getAdditionalProperties()
+                .get(retry.getRetryPolicyReference());
+        if (retryPolicy == null) {
+          throw new IllegalStateException("Retry policy " + retryPolicy + " was not found");
+        }
+      }
+      return retryPolicy != null ? Optional.of(buildRetryExecutor(retryPolicy)) : Optional.empty();
+    }
+
+    protected RetryExecutor buildRetryExecutor(RetryPolicy retryPolicy) {
+      return new DefaultRetryExecutor(
+          retryPolicy.getLimit().getAttempt().getCount(),
+          buildIntervalFunction(retryPolicy),
+          WorkflowUtils.optionalPredicate(application, retryPolicy.getWhen()),
+          WorkflowUtils.optionalPredicate(application, retryPolicy.getExceptWhen()));
+    }
+
+    private RetryIntervalFunction buildIntervalFunction(RetryPolicy retryPolicy) {
+      RetryBackoff backoff = retryPolicy.getBackoff();
+      if (backoff.getConstantBackoff() != null) {
+        return new ConstantRetryIntervalFunction(
+            application, retryPolicy.getDelay(), retryPolicy.getJitter());
+      } else if (backoff.getLinearBackoff() != null) {
+        return new LinearRetryIntervalFunction(
+            application, retryPolicy.getDelay(), retryPolicy.getJitter());
+      } else if (backoff.getExponentialBackOff() != null) {
+        return new ExponentialRetryIntervalFunction(
+            application, retryPolicy.getDelay(), retryPolicy.getJitter());
+      }
+      throw new IllegalStateException("A backoff strategy should be set");
     }
 
     @Override
@@ -82,13 +143,19 @@ public class TryExecutor extends RegularTaskExecutor<TryTask> {
     this.exceptFilter = builder.exceptFilter;
     this.taskExecutor = builder.taskExecutor;
     this.catchTaskExecutor = builder.catchTaskExecutor;
+    this.retryIntervalExecutor = builder.retryIntervalExecutor;
   }
 
   @Override
   protected CompletableFuture<WorkflowModel> internalExecute(
       WorkflowContext workflow, TaskContext taskContext) {
+    return doIt(workflow, taskContext, taskContext.input());
+  }
+
+  private CompletableFuture<WorkflowModel> doIt(
+      WorkflowContext workflow, TaskContext taskContext, WorkflowModel model) {
     return TaskExecutorHelper.processTaskList(
-            taskExecutor, workflow, Optional.of(taskContext), taskContext.input())
+            taskExecutor, workflow, Optional.of(taskContext), model)
         .exceptionallyCompose(e -> handleException(e, workflow, taskContext));
   }
 
@@ -99,17 +166,27 @@ public class TryExecutor extends RegularTaskExecutor<TryTask> {
     }
     if (e instanceof WorkflowException) {
       WorkflowException exception = (WorkflowException) e;
+      CompletableFuture<WorkflowModel> completable =
+          CompletableFuture.completedFuture(taskContext.rawOutput());
       if (errorFilter.map(f -> f.test(exception.getWorkflowError())).orElse(true)
-          && whenFilter.map(w -> w.test(workflow, taskContext, taskContext.input())).orElse(true)
-          && exceptFilter
-              .map(w -> !w.test(workflow, taskContext, taskContext.input()))
-              .orElse(true)) {
+          && WorkflowUtils.whenExceptTest(
+              whenFilter, exceptFilter, workflow, taskContext, taskContext.rawOutput())) {
         if (catchTaskExecutor.isPresent()) {
-          return TaskExecutorHelper.processTaskList(
-              catchTaskExecutor.get(), workflow, Optional.of(taskContext), taskContext.input());
+          completable =
+              completable.thenCompose(
+                  model ->
+                      TaskExecutorHelper.processTaskList(
+                          catchTaskExecutor.get(), workflow, Optional.of(taskContext), model));
+        }
+        if (retryIntervalExecutor.isPresent()) {
+          completable =
+              completable
+                  .thenCompose(
+                      model -> retryIntervalExecutor.get().retry(workflow, taskContext, model))
+                  .thenCompose(model -> doIt(workflow, taskContext, model));
         }
       }
-      return CompletableFuture.completedFuture(taskContext.rawOutput());
+      return completable;
     } else {
       if (e instanceof RuntimeException) {
         throw (RuntimeException) e;

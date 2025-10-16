@@ -38,6 +38,7 @@ import io.serverlessworkflow.impl.WorkflowStatus;
 import io.serverlessworkflow.impl.lifecycle.TaskCancelledEvent;
 import io.serverlessworkflow.impl.lifecycle.TaskCompletedEvent;
 import io.serverlessworkflow.impl.lifecycle.TaskFailedEvent;
+import io.serverlessworkflow.impl.lifecycle.TaskRetriedEvent;
 import io.serverlessworkflow.impl.lifecycle.TaskStartedEvent;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
 import io.serverlessworkflow.impl.schema.SchemaValidator;
@@ -204,9 +205,15 @@ public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskEx
               .thenCompose(workflowContext.instance()::suspendedCheck)
               .thenApply(
                   t -> {
-                    publishEvent(
-                        workflowContext,
-                        l -> l.onTaskStarted(new TaskStartedEvent(workflowContext, taskContext)));
+                    if (t.isRetrying()) {
+                      publishEvent(
+                          workflowContext,
+                          l -> l.onTaskRetried(new TaskRetriedEvent(workflowContext, taskContext)));
+                    } else {
+                      publishEvent(
+                          workflowContext,
+                          l -> l.onTaskStarted(new TaskStartedEvent(workflowContext, taskContext)));
+                    }
                     inputSchemaValidator.ifPresent(s -> s.validate(t.rawInput()));
                     inputProcessor.ifPresent(
                         p -> taskContext.input(p.apply(workflowContext, t, t.rawInput())));

@@ -15,10 +15,12 @@
  */
 package io.serverlessworkflow.impl;
 
+import io.serverlessworkflow.api.types.DurationInline;
 import io.serverlessworkflow.api.types.ExportAs;
 import io.serverlessworkflow.api.types.InputFrom;
 import io.serverlessworkflow.api.types.OutputAs;
 import io.serverlessworkflow.api.types.SchemaUnion;
+import io.serverlessworkflow.api.types.TimeoutAfter;
 import io.serverlessworkflow.api.types.UriTemplate;
 import io.serverlessworkflow.impl.expressions.ExpressionDescriptor;
 import io.serverlessworkflow.impl.expressions.ExpressionUtils;
@@ -26,6 +28,7 @@ import io.serverlessworkflow.impl.resources.ResourceLoader;
 import io.serverlessworkflow.impl.schema.SchemaValidator;
 import io.serverlessworkflow.impl.schema.SchemaValidatorFactory;
 import java.net.URI;
+import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
 import org.slf4j.Logger;
@@ -151,6 +154,39 @@ public class WorkflowUtils {
       } catch (Exception ex) {
         logger.warn("Error closing resource {}", closeable.getClass().getName(), ex);
       }
+    }
+  }
+
+  public static boolean whenExceptTest(
+      Optional<WorkflowPredicate> whenFilter,
+      Optional<WorkflowPredicate> exceptFilter,
+      WorkflowContext workflow,
+      TaskContext taskContext,
+      WorkflowModel model) {
+    return whenFilter.map(w -> w.test(workflow, taskContext, model)).orElse(true)
+        && exceptFilter.map(w -> !w.test(workflow, taskContext, model)).orElse(true);
+  }
+
+  public static WorkflowValueResolver<Duration> fromTimeoutAfter(
+      WorkflowApplication application, TimeoutAfter timeout) {
+    if (timeout.getDurationExpression() != null) {
+      return (w, f, t) ->
+          Duration.parse(
+              application
+                  .expressionFactory()
+                  .resolveString(ExpressionDescriptor.from(timeout.getDurationExpression()))
+                  .apply(w, f, t));
+    } else if (timeout.getDurationInline() != null) {
+      DurationInline inlineDuration = timeout.getDurationInline();
+      return (w, t, f) ->
+          Duration.ofDays(inlineDuration.getDays())
+              .plus(
+                  Duration.ofHours(inlineDuration.getHours())
+                      .plus(Duration.ofMinutes(inlineDuration.getMinutes()))
+                      .plus(Duration.ofSeconds(inlineDuration.getSeconds()))
+                      .plus(Duration.ofMillis(inlineDuration.getMilliseconds())));
+    } else {
+      return (w, t, f) -> Duration.ZERO;
     }
   }
 }

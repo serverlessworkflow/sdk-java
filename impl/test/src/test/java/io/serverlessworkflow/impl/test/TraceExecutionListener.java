@@ -69,7 +69,14 @@ public class TraceExecutionListener implements WorkflowExecutionListener {
         ev.eventDate());
   }
 
-  public void onWorkflowFailed(WorkflowFailedEvent ev) {}
+  public void onWorkflowFailed(WorkflowFailedEvent ev) {
+    logger.info(
+        "Workflow definition {} with id {} failed at {}",
+        ev.workflowContext().definition().workflow().getDocument().getName(),
+        ev.workflowContext().instanceData().id(),
+        ev.eventDate(),
+        ev.cause());
+  }
 
   public void onWorkflowCancelled(WorkflowCancelledEvent ev) {}
 
@@ -89,7 +96,14 @@ public class TraceExecutionListener implements WorkflowExecutionListener {
         ev.taskContext().output().asJavaObject());
   }
 
-  public void onTaskFailed(TaskFailedEvent ev) {}
+  public void onTaskFailed(TaskFailedEvent ev) {
+    logger.info(
+        "Task {} failed at {}",
+        ev.taskContext().taskName(),
+        ev.eventDate(),
+        ev.taskContext().output().asJavaObject(),
+        ev.cause());
+  }
 
   public void onTaskCancelled(TaskCancelledEvent ev) {}
 
@@ -97,5 +111,11 @@ public class TraceExecutionListener implements WorkflowExecutionListener {
 
   public void onTaskResumed(TaskResumedEvent ev) {}
 
-  public void onTaskRetried(TaskRetriedEvent ev) {}
+  public void onTaskRetried(TaskRetriedEvent ev) {
+    logger.info(
+        "Task {} retried at {}, position {}",
+        ev.taskContext().taskName(),
+        ev.eventDate(),
+        ev.taskContext().position());
+  }
 }
