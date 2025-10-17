@@ -40,7 +40,8 @@ public class BytesMapInstanceWriter extends BigMapIdInstanceWriter<byte[], byte[
   protected byte[] marshallTaskCompleted(WorkflowContextData contextData, TaskContext taskContext) {
     ByteArrayOutputStream bytes = new ByteArrayOutputStream();
     try (WorkflowOutputBuffer writer = factory.output(bytes)) {
-      writer.writeByte(MarshallingUtils.VERSION_0);
+      writer.writeByte(MarshallingUtils.VERSION_1);
+      writer.writeEnum(TaskStatus.COMPLETED);
       writer.writeInstant(taskContext.completedAt());
       writeModel(writer, taskContext.output());
       writeModel(writer, contextData.context());
@@ -81,5 +82,17 @@ public class BytesMapInstanceWriter extends BigMapIdInstanceWriter<byte[], byte[
 
   protected void writeModel(WorkflowOutputBuffer writer, WorkflowModel model) {
     writer.writeObject(model);
+  }
+
+  @Override
+  protected byte[] marshallTaskRetried(
+      WorkflowContextData workflowContext, TaskContext taskContext) {
+    ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+    try (WorkflowOutputBuffer writer = factory.output(bytes)) {
+      writer.writeByte(MarshallingUtils.VERSION_1);
+      writer.writeEnum(TaskStatus.RETRIED);
+      writer.writeShort(taskContext.retryAttempt());
+    }
+    return bytes.toByteArray();
   }
 }

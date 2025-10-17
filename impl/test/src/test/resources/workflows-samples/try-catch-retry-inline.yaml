@@ -15,10 +15,9 @@ do:
         errors:
           with:
             type: https://serverlessworkflow.io/spec/1.0.0/errors/communication
-            status: 503
+            status: 404
         retry:
-          delay:
-            milliseconds: 10
+          delay: "PT0.01S"
           backoff:
             exponential: {}
           limit:

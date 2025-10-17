@@ -32,8 +32,8 @@ import java.util.Map;
 public class DBGenerator {
 
   public static void main(String[] args) throws IOException {
-    runInstance("db-samples/running.db", false);
-    runInstance("db-samples/suspended.db", true);
+    runInstance("db-samples/running_v1.db", false);
+    runInstance("db-samples/suspended_v1.db", true);
   }
 
   private static void runInstance(String dbName, boolean suspend) throws IOException {

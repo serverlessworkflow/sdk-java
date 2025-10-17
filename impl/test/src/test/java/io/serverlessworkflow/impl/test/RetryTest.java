@@ -69,8 +69,8 @@ public class RetryTest {
       })
   void testRetry(String path) throws IOException {
     final JsonNode result = JsonUtils.mapper().createObjectNode().put("name", "Javierito");
-    apiServer.enqueue(new MockResponse().setResponseCode(503));
-    apiServer.enqueue(new MockResponse().setResponseCode(503));
+    apiServer.enqueue(new MockResponse().setResponseCode(404));
+    apiServer.enqueue(new MockResponse().setResponseCode(404));
     apiServer.enqueue(
         new MockResponse()
             .setResponseCode(200)
@@ -79,7 +79,7 @@ public class RetryTest {
     CompletableFuture<WorkflowModel> future =
         app.workflowDefinition(readWorkflowFromClasspath(path)).instance(Map.of()).start();
     Awaitility.await()
-        .atMost(Duration.ofSeconds(6))
+        .atMost(Duration.ofSeconds(1))
         .until(() -> future.join().as(JsonNode.class).orElseThrow().equals(result));
   }
 }

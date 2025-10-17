@@ -71,13 +71,23 @@ public class MvStorePersistenceTest {
   }
 
   @Test
-  void testRestoreWaitingInstance() throws IOException {
+  void testRestoreWaitingInstanceV0() throws IOException {
     runIt("db-samples/running.db", WorkflowStatus.WAITING);
   }
 
   @Test
-  void testRestoreSuspendedInstance() throws IOException {
+  void testRestoreSuspendedInstanceV0() throws IOException {
     runIt("db-samples/suspended.db", WorkflowStatus.SUSPENDED);
+  }
+
+  @Test
+  void testRestoreWaitingInstanceV1() throws IOException {
+    runIt("db-samples/running_v1.db", WorkflowStatus.WAITING);
+  }
+
+  @Test
+  void testRestoreSuspendedInstanceV1() throws IOException {
+    runIt("db-samples/suspended_v1.db", WorkflowStatus.SUSPENDED);
   }
 
   private void runIt(String dbName, WorkflowStatus expectedStatus) throws IOException {

@@ -69,6 +69,16 @@ public abstract class BigMapInstanceWriter<K, V, T, S> implements PersistenceIns
   public void taskStarted(WorkflowContextData workflowContext, TaskContextData taskContext) {}
 
   @Override
+  public void taskRetried(WorkflowContextData workflowContext, TaskContextData taskContext) {
+    doTransaction(
+        t ->
+            t.tasks(key(workflowContext))
+                .put(
+                    taskContext.position().jsonPointer(),
+                    marshallTaskRetried(workflowContext, (TaskContext) taskContext)));
+  }
+
+  @Override
   public void taskCompleted(WorkflowContextData workflowContext, TaskContextData taskContext) {
     doTransaction(
         t ->
@@ -106,6 +116,9 @@ public abstract class BigMapInstanceWriter<K, V, T, S> implements PersistenceIns
   protected abstract V marshallInstance(WorkflowInstanceData instance);
 
   protected abstract T marshallTaskCompleted(
+      WorkflowContextData workflowContext, TaskContext taskContext);
+
+  protected abstract T marshallTaskRetried(
       WorkflowContextData workflowContext, TaskContext taskContext);
 
   protected abstract S marshallStatus(WorkflowStatus status);

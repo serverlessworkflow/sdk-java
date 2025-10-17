@@ -20,11 +20,11 @@ do:
             call: http
             with:
               method: get
-              endpoint: https://petstore.swagger.io/v2/pet/{petId}
+              endpoint: http://localhost:9797
       catch:
         errors:
           with:
             type: https://serverlessworkflow.io/spec/1.0.0/errors/communication
-            status: 503
+            status: 404
         retry: default
           

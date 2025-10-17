@@ -15,10 +15,7 @@
  */
 package io.serverlessworkflow.impl.persistence.bigmap;
 
-class MarshallingUtils {
-
-  private MarshallingUtils() {}
-
-  public static final byte VERSION_0 = 0;
-  public static final byte VERSION_1 = 1;
+enum TaskStatus {
+  COMPLETED,
+  RETRIED
 }
