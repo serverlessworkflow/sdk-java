@@ -57,11 +57,6 @@ public class HttpExecutor implements CallableTask<CallHTTP> {
   private HttpModelConverter converter = new HttpModelConverter() {};
 
   @FunctionalInterface
-  private interface TargetSupplier {
-    WebTarget apply(WorkflowContext workflow, TaskContext task, WorkflowModel node);
-  }
-
-  @FunctionalInterface
   private interface RequestSupplier {
     WorkflowModel apply(
         Builder request, WorkflowContext workflow, TaskContext task, WorkflowModel node);
@@ -172,7 +167,7 @@ public class HttpExecutor implements CallableTask<CallHTTP> {
     return clazz.equals(CallHTTP.class);
   }
 
-  private static TargetSupplier getTargetSupplier(
+  public static TargetSupplier getTargetSupplier(
       Endpoint endpoint, ExpressionFactory expressionFactory) {
     if (endpoint.getEndpointConfiguration() != null) {
       EndpointUri uri = endpoint.getEndpointConfiguration().getUri();
@@ -193,7 +188,7 @@ public class HttpExecutor implements CallableTask<CallHTTP> {
     throw new IllegalArgumentException("Invalid endpoint definition " + endpoint);
   }
 
-  private static TargetSupplier getURISupplier(UriTemplate template) {
+  public static TargetSupplier getURISupplier(UriTemplate template) {
     if (template.getLiteralUri() != null) {
       return (w, t, n) -> client.target(template.getLiteralUri());
     } else if (template.getLiteralUriTemplate() != null) {
@@ -201,18 +196,5 @@ public class HttpExecutor implements CallableTask<CallHTTP> {
           client.target(template.getLiteralUriTemplate()).resolveTemplates(n.asMap().orElseThrow());
     }
     throw new IllegalArgumentException("Invalid uritemplate definition " + template);
-  }
-
-  private static class ExpressionURISupplier implements TargetSupplier {
-    private WorkflowValueResolver<String> expr;
-
-    public ExpressionURISupplier(WorkflowValueResolver<String> expr) {
-      this.expr = expr;
-    }
-
-    @Override
-    public WebTarget apply(WorkflowContext workflow, TaskContext task, WorkflowModel node) {
-      return client.target(expr.apply(workflow, task, node));
-    }
   }
 }
