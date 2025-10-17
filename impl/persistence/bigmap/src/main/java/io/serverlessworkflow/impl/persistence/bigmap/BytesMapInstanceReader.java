@@ -23,7 +23,6 @@ import io.serverlessworkflow.impl.persistence.CompletedTaskInfo;
 import io.serverlessworkflow.impl.persistence.PersistenceTaskInfo;
 import io.serverlessworkflow.impl.persistence.RetriedTaskInfo;
 import java.io.ByteArrayInputStream;
-import java.time.Instant;
 
 public class BytesMapInstanceReader extends BigMapInstanceReader<byte[], byte[], byte[]> {
 
@@ -61,17 +60,12 @@ public class BytesMapInstanceReader extends BigMapInstanceReader<byte[], byte[],
   }
 
   private PersistenceTaskInfo readVersion0(WorkflowInputBuffer buffer) {
-    Instant date = buffer.readInstant();
-    WorkflowModel model = (WorkflowModel) buffer.readObject();
-    WorkflowModel context = (WorkflowModel) buffer.readObject();
-    Boolean isEndNode = null;
-    String nextPosition = null;
-    isEndNode = buffer.readBoolean();
-    boolean hasNext = buffer.readBoolean();
-    if (hasNext) {
-      nextPosition = buffer.readString();
-    }
-    return new CompletedTaskInfo(date, model, context, isEndNode, nextPosition);
+    return new CompletedTaskInfo(
+        buffer.readInstant(),
+        (WorkflowModel) buffer.readObject(),
+        (WorkflowModel) buffer.readObject(),
+        buffer.readBoolean(),
+        buffer.readBoolean() ? buffer.readString() : null);
   }
 
   @Override
