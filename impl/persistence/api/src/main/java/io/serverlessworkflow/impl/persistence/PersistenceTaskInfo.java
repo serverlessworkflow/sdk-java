@@ -15,12 +15,4 @@
  */
 package io.serverlessworkflow.impl.persistence;
 
-import io.serverlessworkflow.impl.WorkflowModel;
-import java.time.Instant;
-
-public record PersistenceTaskInfo(
-    Instant instant,
-    WorkflowModel model,
-    WorkflowModel context,
-    Boolean isEndNode,
-    String nextPosition) {}
+public interface PersistenceTaskInfo {}

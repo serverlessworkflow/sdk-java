@@ -16,6 +16,7 @@
 package io.serverlessworkflow.impl.test;
 
 import io.serverlessworkflow.impl.lifecycle.TaskCompletedEvent;
+import io.serverlessworkflow.impl.lifecycle.TaskRetriedEvent;
 import io.serverlessworkflow.impl.lifecycle.TaskStartedEvent;
 import io.serverlessworkflow.impl.lifecycle.WorkflowEvent;
 import io.serverlessworkflow.impl.lifecycle.WorkflowExecutionListener;
@@ -27,6 +28,7 @@ public class TaskCounterPerInstanceListener implements WorkflowExecutionListener
   public static class TaskCounter {
     private int started;
     private int completed;
+    private int retried;
 
     public void incStarted() {
       started++;
@@ -36,12 +38,20 @@ public class TaskCounterPerInstanceListener implements WorkflowExecutionListener
       completed++;
     }
 
+    public void incRetried() {
+      retried++;
+    }
+
     public int started() {
       return started;
     }
 
     public int completed() {
       return completed;
+    }
+
+    public int retried() {
+      return retried;
     }
   }
 
@@ -61,5 +71,9 @@ public class TaskCounterPerInstanceListener implements WorkflowExecutionListener
 
   public void onTaskCompleted(TaskCompletedEvent ev) {
     taskCounter(ev).incCompleted();
+  }
+
+  public void onTaskRetried(TaskRetriedEvent ev) {
+    taskCounter(ev).incRetried();
   }
 }

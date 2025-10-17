@@ -13,12 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.persistence.bigmap;
+package io.serverlessworkflow.impl.executors.retry;
 
-class MarshallingUtils {
+import io.serverlessworkflow.impl.TaskContext;
+import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.WorkflowModel;
+import java.time.Duration;
 
-  private MarshallingUtils() {}
-
-  public static final byte VERSION_0 = 0;
-  public static final byte VERSION_1 = 1;
+public interface RetryIntervalFunction {
+  Duration apply(
+      WorkflowContext workflowContext,
+      TaskContext taskContext,
+      WorkflowModel model,
+      short numAttempts);
 }

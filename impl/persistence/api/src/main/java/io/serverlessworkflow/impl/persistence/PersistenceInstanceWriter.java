@@ -32,6 +32,8 @@ public interface PersistenceInstanceWriter extends AutoCloseable {
 
   void resumed(WorkflowContextData workflowContext);
 
+  void taskRetried(WorkflowContextData workflowContext, TaskContextData taskContext);
+
   void taskStarted(WorkflowContextData workflowContext, TaskContextData taskContext);
 
   void taskCompleted(WorkflowContextData workflowContext, TaskContextData taskContext);

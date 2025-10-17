@@ -13,12 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.persistence.bigmap;
+package io.serverlessworkflow.impl.persistence;
 
-class MarshallingUtils {
+import io.serverlessworkflow.impl.WorkflowModel;
+import java.time.Instant;
 
-  private MarshallingUtils() {}
-
-  public static final byte VERSION_0 = 0;
-  public static final byte VERSION_1 = 1;
-}
+public record CompletedTaskInfo(
+    Instant instant,
+    WorkflowModel model,
+    WorkflowModel context,
+    Boolean isEndNode,
+    String nextPosition)
+    implements PersistenceTaskInfo {}

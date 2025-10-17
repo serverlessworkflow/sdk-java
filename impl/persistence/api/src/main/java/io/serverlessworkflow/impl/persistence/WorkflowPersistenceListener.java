@@ -18,6 +18,7 @@ package io.serverlessworkflow.impl.persistence;
 import static io.serverlessworkflow.impl.WorkflowUtils.safeClose;
 
 import io.serverlessworkflow.impl.lifecycle.TaskCompletedEvent;
+import io.serverlessworkflow.impl.lifecycle.TaskRetriedEvent;
 import io.serverlessworkflow.impl.lifecycle.TaskStartedEvent;
 import io.serverlessworkflow.impl.lifecycle.WorkflowCancelledEvent;
 import io.serverlessworkflow.impl.lifecycle.WorkflowCompletedEvent;
@@ -73,6 +74,11 @@ public class WorkflowPersistenceListener implements WorkflowExecutionListener {
   @Override
   public void onTaskCompleted(TaskCompletedEvent ev) {
     persistenceWriter.taskCompleted(ev.workflowContext(), ev.taskContext());
+  }
+
+  @Override
+  public void onTaskRetried(TaskRetriedEvent ev) {
+    persistenceWriter.taskRetried(ev.workflowContext(), ev.taskContext());
   }
 
   public void close() {

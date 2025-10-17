@@ -13,12 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.persistence.bigmap;
+package io.serverlessworkflow.impl.executors.retry;
 
-class MarshallingUtils {
+import io.serverlessworkflow.api.types.RetryPolicyJitter;
+import io.serverlessworkflow.api.types.TimeoutAfter;
+import io.serverlessworkflow.impl.WorkflowApplication;
+import java.time.Duration;
 
-  private MarshallingUtils() {}
+public class ExponentialRetryIntervalFunction extends AbstractRetryIntervalFunction {
 
-  public static final byte VERSION_0 = 0;
-  public static final byte VERSION_1 = 1;
+  public ExponentialRetryIntervalFunction(
+      WorkflowApplication appl, TimeoutAfter delay, RetryPolicyJitter jitter) {
+    super(appl, delay, jitter);
+  }
+
+  @Override
+  protected Duration calcDelay(Duration delay, short numAttempts) {
+    return delay.multipliedBy(1 << numAttempts);
+  }
 }

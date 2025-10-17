@@ -1,0 +1,25 @@
+document:
+  dsl: '1.0.0'
+  namespace: default
+  name: try-catch-retry
+  version: '0.1.0'
+do:
+  - tryGetPet:
+      try:
+        - getPet:
+            call: http
+            with:
+              method: get
+              endpoint: http://localhost:9797
+      catch:
+        errors:
+          with:
+            type: https://serverlessworkflow.io/spec/1.0.0/errors/communication
+            status: 404
+        retry:
+          delay: "PT0.01S"
+          backoff:
+            exponential: {}
+          limit:
+            attempt:
+              count: 5
