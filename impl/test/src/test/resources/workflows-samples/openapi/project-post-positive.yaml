@@ -1,0 +1,24 @@
+document:
+  dsl: '1.0.1'
+  namespace: test
+  name: openapi-example
+  version: '0.1.0'
+do:
+  - addProject:
+      call: openapi
+      with:
+        document:
+          endpoint: http://127.0.0.1:8887/schema.yaml
+        operationId: addProject
+        parameters:
+          name: "New CRM"
+          code: "crm-20251111"
+          description: "Internal CRM for sales department"
+          ownerId: 12345
+          members:
+            - 12345
+            - 67890
+          validateOnly: false
+          notifyMembers: true
+          lang: en
+          Authorization: "Bearer eyJhbnNpc2l0b3IuYm9sdXMubWFnbnVz"
