@@ -19,16 +19,17 @@ import io.serverlessworkflow.api.types.AuthenticationPolicy;
 import io.serverlessworkflow.api.types.OAuth2AuthenticationData;
 import io.serverlessworkflow.api.types.OAuth2AuthenticationDataClient;
 import io.serverlessworkflow.api.types.OAuth2AuthenticationPropertiesEndpoints;
+import io.serverlessworkflow.api.types.OAuth2ConnectAuthenticationProperties;
 import io.serverlessworkflow.api.types.OAuth2TokenDefinition;
 import io.serverlessworkflow.api.types.OAuth2TokenRequest;
 import java.util.List;
 import java.util.function.Consumer;
 
 public abstract class OIDCBuilder<T extends AuthenticationPolicy> {
-  private final OAuth2AuthenticationData authenticationData;
+  protected final OAuth2ConnectAuthenticationProperties authenticationData;
 
   OIDCBuilder() {
-    this.authenticationData = new OAuth2AuthenticationData();
+    this.authenticationData = new OAuth2ConnectAuthenticationProperties();
     this.authenticationData.setRequest(new OAuth2TokenRequest());
   }
 

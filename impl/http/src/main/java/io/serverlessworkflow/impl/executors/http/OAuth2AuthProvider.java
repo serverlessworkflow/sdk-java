@@ -16,7 +16,7 @@
 package io.serverlessworkflow.impl.executors.http;
 
 import io.serverlessworkflow.api.types.OAuth2AuthenticationPolicy;
-import io.serverlessworkflow.api.types.Oauth2;
+import io.serverlessworkflow.api.types.OAuth2AuthenticationPolicyConfiguration;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
@@ -36,9 +36,10 @@ public class OAuth2AuthProvider implements AuthProvider {
 
   public OAuth2AuthProvider(
       WorkflowApplication application, Workflow workflow, OAuth2AuthenticationPolicy authPolicy) {
-    Oauth2 oauth2 = authPolicy.getOauth2();
+    OAuth2AuthenticationPolicyConfiguration oauth2 = authPolicy.getOauth2();
     if (oauth2.getOAuth2ConnectAuthenticationProperties() != null) {
-      this.requestBuilder = new OAuthRequestBuilder(application, oauth2);
+      this.requestBuilder =
+          new OAuthRequestBuilder(application, oauth2.getOAuth2ConnectAuthenticationProperties());
     } else if (oauth2.getOAuth2AuthenticationPolicySecret() != null) {
       throw new UnsupportedOperationException("Secrets are still not supported");
     }
