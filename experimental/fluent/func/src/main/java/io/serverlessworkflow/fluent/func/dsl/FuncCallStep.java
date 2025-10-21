@@ -15,42 +15,61 @@
  */
 package io.serverlessworkflow.fluent.func.dsl;
 
+import io.serverlessworkflow.api.types.func.JavaContextFunction;
 import io.serverlessworkflow.fluent.func.FuncCallTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncTaskItemListBuilder;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-// FuncCallStep
 public final class FuncCallStep<T, R> extends Step<FuncCallStep<T, R>, FuncCallTaskBuilder> {
-  private final String name; // may be null
+
+  private final String name;
   private final Function<T, R> fn;
+  private final JavaContextFunction<T, R> ctxFn;
   private final Class<T> argClass;
 
+  /** Function<T,R> variant (unnamed). */
   FuncCallStep(Function<T, R> fn, Class<T> argClass) {
     this(null, fn, argClass);
   }
 
+  /** Function<T,R> variant (named). */
   FuncCallStep(String name, Function<T, R> fn, Class<T> argClass) {
     this.name = name;
     this.fn = fn;
+    this.ctxFn = null;
+    this.argClass = argClass;
+  }
+
+  /** JavaContextFunction<T,R> variant (unnamed). */
+  FuncCallStep(JavaContextFunction<T, R> ctxFn, Class<T> argClass) {
+    this(null, ctxFn, argClass);
+  }
+
+  /** JavaContextFunction<T,R> variant (named). */
+  FuncCallStep(String name, JavaContextFunction<T, R> ctxFn, Class<T> argClass) {
+    this.name = name;
+    this.fn = null;
+    this.ctxFn = ctxFn;
     this.argClass = argClass;
   }
 
   @Override
   protected void configure(FuncTaskItemListBuilder list, Consumer<FuncCallTaskBuilder> post) {
+    final Consumer<FuncCallTaskBuilder> apply =
+        cb -> {
+          if (ctxFn != null) {
+            cb.function(ctxFn, argClass);
+          } else {
+            cb.function(fn, argClass);
+          }
+          post.accept(cb);
+        };
+
     if (name == null) {
-      list.callFn(
-          cb -> {
-            cb.function(fn, argClass);
-            post.accept(cb);
-          });
+      list.callFn(apply);
     } else {
-      list.callFn(
-          name,
-          cb -> {
-            cb.function(fn, argClass);
-            post.accept(cb);
-          });
+      list.callFn(name, apply);
     }
   }
 }

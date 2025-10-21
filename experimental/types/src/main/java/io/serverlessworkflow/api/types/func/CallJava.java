@@ -25,7 +25,11 @@ public abstract class CallJava extends TaskBase {
   private static final long serialVersionUID = 1L;
 
   public static <T> CallJava consumer(Consumer<T> consumer) {
-    return new CallJavaConsumer<>(consumer);
+    return new CallJavaConsumer<>(consumer, Optional.empty());
+  }
+
+  public static <T> CallJava consumer(Consumer<T> consumer, Class<T> inputClass) {
+    return new CallJavaConsumer<>(consumer, Optional.ofNullable(inputClass));
   }
 
   public static <T, V> CallJavaFunction<T, V> function(Function<T, V> function) {
@@ -46,17 +50,26 @@ public abstract class CallJava extends TaskBase {
     return new CallJavaLoopFunction<>(function, varName);
   }
 
+  public static <V, T> CallJava function(JavaContextFunction<T, V> function, Class<T> inputClass) {
+    return new CallJavaContextFunction<>(function, Optional.ofNullable(inputClass));
+  }
+
   public static class CallJavaConsumer<T> extends CallJava {
-
     private static final long serialVersionUID = 1L;
-    private Consumer<T> consumer;
+    private final Consumer<T> consumer;
+    private final Optional<Class<T>> inputClass;
 
-    public CallJavaConsumer(Consumer<T> consumer) {
+    public CallJavaConsumer(Consumer<T> consumer, Optional<Class<T>> inputClass) {
       this.consumer = consumer;
+      this.inputClass = inputClass;
     }
 
     public Consumer<T> consumer() {
       return consumer;
+    }
+
+    public Optional<Class<T>> inputClass() {
+      return inputClass;
     }
   }
 
@@ -72,6 +85,26 @@ public abstract class CallJava extends TaskBase {
     }
 
     public Function<T, V> function() {
+      return function;
+    }
+
+    public Optional<Class<T>> inputClass() {
+      return inputClass;
+    }
+  }
+
+  public static class CallJavaContextFunction<T, V> extends CallJava {
+    private static final long serialVersionUID = 1L;
+    private JavaContextFunction<T, V> function;
+    private Optional<Class<T>> inputClass;
+
+    public CallJavaContextFunction(
+        JavaContextFunction<T, V> function, Optional<Class<T>> inputClass) {
+      this.function = function;
+      this.inputClass = inputClass;
+    }
+
+    public JavaContextFunction<T, V> function() {
       return function;
     }
 

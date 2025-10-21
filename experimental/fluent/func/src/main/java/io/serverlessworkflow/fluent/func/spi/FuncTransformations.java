@@ -16,7 +16,9 @@
 package io.serverlessworkflow.fluent.func.spi;
 
 import io.serverlessworkflow.api.types.Input;
+import io.serverlessworkflow.api.types.InputFrom;
 import io.serverlessworkflow.api.types.Output;
+import io.serverlessworkflow.api.types.OutputAs;
 import io.serverlessworkflow.api.types.func.InputFromFunction;
 import io.serverlessworkflow.api.types.func.JavaContextFunction;
 import io.serverlessworkflow.api.types.func.JavaFilterFunction;
@@ -64,6 +66,12 @@ public interface FuncTransformations<SELF extends FuncTransformations<SELF>>
   }
 
   @SuppressWarnings("unchecked")
+  default SELF inputFrom(String jqExpression) {
+    setInput(new Input().withFrom(new InputFrom().withString(jqExpression)));
+    return (SELF) this;
+  }
+
+  @SuppressWarnings("unchecked")
   default <T, V> SELF outputAs(Function<T, V> function) {
     setOutput(new Output().withAs(new OutputAsFunction().withFunction(function)));
     return (SELF) this;
@@ -96,6 +104,12 @@ public interface FuncTransformations<SELF extends FuncTransformations<SELF>>
   @SuppressWarnings("unchecked")
   default <T, V> SELF outputAs(JavaContextFunction<T, V> function, Class<T> argClass) {
     setOutput(new Output().withAs(new OutputAsFunction().withFunction(function, argClass)));
+    return (SELF) this;
+  }
+
+  @SuppressWarnings("unchecked")
+  default SELF outputAs(String jqExpression) {
+    setOutput(new Output().withAs(new OutputAs().withString(jqExpression)));
     return (SELF) this;
   }
 }

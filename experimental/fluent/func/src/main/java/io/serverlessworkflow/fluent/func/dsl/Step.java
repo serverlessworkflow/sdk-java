@@ -21,13 +21,17 @@ import io.serverlessworkflow.fluent.func.FuncTaskItemListBuilder;
 import io.serverlessworkflow.fluent.func.configurers.FuncTaskConfigurer;
 import io.serverlessworkflow.fluent.func.spi.ConditionalTaskBuilder;
 import io.serverlessworkflow.fluent.func.spi.FuncTaskTransformations;
+import io.serverlessworkflow.fluent.spec.TaskBaseBuilder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-/** A deferred configurer that can chain when/inputFrom/outputAs/exportAs and apply them later. */
+/**
+ * A deferred configurer that can chain when/inputFrom/outputAs/exportAs and apply them later to the
+ * concrete task builder (e.g., Call/Emit/Listen builder).
+ */
 abstract class Step<SELF extends Step<SELF, B>, B> implements FuncTaskConfigurer {
 
   private final List<Consumer<B>> postConfigurers = new ArrayList<>();
@@ -37,135 +41,177 @@ abstract class Step<SELF extends Step<SELF, B>, B> implements FuncTaskConfigurer
     return (SELF) this;
   }
 
-  // ---------- ConditionalTaskBuilder passthroughs ----------
+  // ---------------------------------------------------------------------------
+  // ConditionalTaskBuilder passthroughs (if/when)
+  // ---------------------------------------------------------------------------
 
-  /** Queue a ConditionalTaskBuilder#when(Predicate) to be applied on the concrete builder. */
+  /** Queue a {@code when(predicate)} to be applied on the concrete builder. */
   public SELF when(Predicate<?> predicate) {
     postConfigurers.add(b -> ((ConditionalTaskBuilder<?>) b).when(predicate));
     return self();
   }
 
-  /** Queue a ConditionalTaskBuilder#when(Predicate, Class) to be applied later. */
+  /** Queue a {@code when(predicate, argClass)} to be applied on the concrete builder. */
   public <T> SELF when(Predicate<T> predicate, Class<T> argClass) {
     postConfigurers.add(b -> ((ConditionalTaskBuilder<?>) b).when(predicate, argClass));
     return self();
   }
 
-  // ---------- FuncTaskTransformations passthroughs: exportAs ----------
+  public SELF when(String jqExpr) {
+    postConfigurers.add(b -> ((TaskBaseBuilder<?>) b).when(jqExpr));
+    return self();
+  }
 
-  /** Queue a FuncTaskTransformations#exportAs(Function) to be applied later. */
+  // ---------------------------------------------------------------------------
+  // FuncTaskTransformations passthroughs: EXPORT (fn/context/filter + JQ)
+  // ---------------------------------------------------------------------------
+
+  /** Queue {@code exportAs(fn)} to be applied later. */
   public <T, V> SELF exportAs(Function<T, V> function) {
     postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).exportAs(function));
     return self();
   }
 
-  /** Queue a FuncTaskTransformations#exportAs(Function, Class) to be applied later. */
+  /** Queue {@code exportAs(fn, argClass)} to be applied later. */
   public <T, V> SELF exportAs(Function<T, V> function, Class<T> argClass) {
     postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).exportAs(function, argClass));
     return self();
   }
 
-  /** Queue a FuncTaskTransformations#exportAs(JavaFilterFunction) to be applied later. */
+  /** Queue {@code exportAs(filterFn)} to be applied later. */
   public <T, V> SELF exportAs(JavaFilterFunction<T, V> function) {
     postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).exportAs(function));
     return self();
   }
 
-  /** Queue a FuncTaskTransformations#exportAs(JavaFilterFunction, Class) to be applied later. */
+  /** Queue {@code exportAs(filterFn, argClass)} to be applied later. */
   public <T, V> SELF exportAs(JavaFilterFunction<T, V> function, Class<T> argClass) {
     postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).exportAs(function, argClass));
     return self();
   }
 
-  /** Queue a FuncTaskTransformations#exportAs(JavaContextFunction) to be applied later. */
+  /** Queue {@code exportAs(ctxFn)} to be applied later. */
   public <T, V> SELF exportAs(JavaContextFunction<T, V> function) {
     postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).exportAs(function));
     return self();
   }
 
-  /** Queue a FuncTaskTransformations#exportAs(JavaContextFunction, Class) to be applied later. */
+  /** Queue {@code exportAs(ctxFn, argClass)} to be applied later. */
   public <T, V> SELF exportAs(JavaContextFunction<T, V> function, Class<T> argClass) {
     postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).exportAs(function, argClass));
     return self();
   }
 
-  // ---------- FuncTaskTransformations passthroughs: outputAs ----------
+  /**
+   * Queue {@code exportAs(jqExpression)} (JQ string) to be applied later. Example: {@code
+   * exportAs(FuncDSL.selectFirstStringify())}
+   */
+  public SELF exportAs(String jqExpression) {
+    postConfigurers.add(b -> ((TaskBaseBuilder<?>) b).exportAs(jqExpression));
+    return self();
+  }
 
-  /** Queue a FuncTaskTransformations#outputAs(Function) to be applied later. */
+  // ---------------------------------------------------------------------------
+  // FuncTaskTransformations passthroughs: OUTPUT (fn/context/filter + JQ)
+  // ---------------------------------------------------------------------------
+
+  /** Queue {@code outputAs(fn)} to be applied later. */
   public <T, V> SELF outputAs(Function<T, V> function) {
     postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).outputAs(function));
     return self();
   }
 
-  /** Queue a FuncTaskTransformations#outputAs(Function, Class) to be applied later. */
+  /** Queue {@code outputAs(fn, argClass)} to be applied later. */
   public <T, V> SELF outputAs(Function<T, V> function, Class<T> argClass) {
     postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).outputAs(function, argClass));
     return self();
   }
 
-  /** Queue a FuncTaskTransformations#outputAs(JavaFilterFunction) to be applied later. */
+  /** Queue {@code outputAs(filterFn)} to be applied later. */
   public <T, V> SELF outputAs(JavaFilterFunction<T, V> function) {
     postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).outputAs(function));
     return self();
   }
 
-  /** Queue a FuncTaskTransformations#outputAs(JavaFilterFunction, Class) to be applied later. */
+  /** Queue {@code outputAs(filterFn, argClass)} to be applied later. */
   public <T, V> SELF outputAs(JavaFilterFunction<T, V> function, Class<T> argClass) {
     postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).outputAs(function, argClass));
     return self();
   }
 
-  /** Queue a FuncTaskTransformations#outputAs(JavaContextFunction) to be applied later. */
+  /** Queue {@code outputAs(ctxFn)} to be applied later. */
   public <T, V> SELF outputAs(JavaContextFunction<T, V> function) {
     postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).outputAs(function));
     return self();
   }
 
-  /** Queue a FuncTaskTransformations#outputAs(JavaContextFunction, Class) to be applied later. */
+  /** Queue {@code outputAs(ctxFn, argClass)} to be applied later. */
   public <T, V> SELF outputAs(JavaContextFunction<T, V> function, Class<T> argClass) {
     postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).outputAs(function, argClass));
     return self();
   }
 
-  // ---------- FuncTaskTransformations passthroughs: inputFrom ----------
+  /**
+   * Queue {@code outputAs(jqExpression)} (JQ string) to be applied later. Example: {@code
+   * outputAs(FuncDSL.selectFirstStringify())}
+   */
+  public SELF outputAs(String jqExpression) {
+    postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).outputAs(jqExpression));
+    return self();
+  }
 
-  /** Queue a FuncTaskTransformations#inputFrom(Function) to be applied later. */
+  // ---------------------------------------------------------------------------
+  // FuncTaskTransformations passthroughs: INPUT (fn/context/filter + JQ)
+  // ---------------------------------------------------------------------------
+
+  /** Queue {@code inputFrom(fn)} to be applied later. */
   public <T, V> SELF inputFrom(Function<T, V> function) {
     postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).inputFrom(function));
     return self();
   }
 
-  /** Queue a FuncTaskTransformations#inputFrom(Function, Class) to be applied later. */
+  /** Queue {@code inputFrom(fn, argClass)} to be applied later. */
   public <T, V> SELF inputFrom(Function<T, V> function, Class<T> argClass) {
     postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).inputFrom(function, argClass));
     return self();
   }
 
-  /** Queue a FuncTaskTransformations#inputFrom(JavaFilterFunction) to be applied later. */
+  /** Queue {@code inputFrom(filterFn)} to be applied later. */
   public <T, V> SELF inputFrom(JavaFilterFunction<T, V> function) {
     postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).inputFrom(function));
     return self();
   }
 
-  /** Queue a FuncTaskTransformations#inputFrom(JavaFilterFunction, Class) to be applied later. */
+  /** Queue {@code inputFrom(filterFn, argClass)} to be applied later. */
   public <T, V> SELF inputFrom(JavaFilterFunction<T, V> function, Class<T> argClass) {
     postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).inputFrom(function, argClass));
     return self();
   }
 
-  /** Queue a FuncTaskTransformations#inputFrom(JavaContextFunction) to be applied later. */
+  /** Queue {@code inputFrom(ctxFn)} to be applied later. */
   public <T, V> SELF inputFrom(JavaContextFunction<T, V> function) {
     postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).inputFrom(function));
     return self();
   }
 
-  /** Queue a FuncTaskTransformations#inputFrom(JavaContextFunction, Class) to be applied later. */
+  /** Queue {@code inputFrom(ctxFn, argClass)} to be applied later. */
   public <T, V> SELF inputFrom(JavaContextFunction<T, V> function, Class<T> argClass) {
     postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).inputFrom(function, argClass));
     return self();
   }
 
-  // ---------- wiring into the underlying list/builder ----------
+  /**
+   * Queue {@code inputFrom(jqExpression)} (JQ string) to be applied later. Example: {@code
+   * inputFrom(".payload")}
+   */
+  public SELF inputFrom(String jqExpression) {
+    postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).inputFrom(jqExpression));
+    return self();
+  }
+
+  // ---------------------------------------------------------------------------
+  // wiring into the underlying list/builder
+  // ---------------------------------------------------------------------------
 
   @Override
   public final void accept(FuncTaskItemListBuilder list) {

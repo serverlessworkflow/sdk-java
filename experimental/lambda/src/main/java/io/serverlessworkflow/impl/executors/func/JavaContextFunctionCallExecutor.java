@@ -17,36 +17,41 @@ package io.serverlessworkflow.impl.executors.func;
 
 import io.serverlessworkflow.api.types.TaskBase;
 import io.serverlessworkflow.api.types.func.CallJava;
+import io.serverlessworkflow.api.types.func.JavaContextFunction;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowModel;
+import io.serverlessworkflow.impl.WorkflowModelFactory;
 import io.serverlessworkflow.impl.executors.CallableTask;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
 
-public class JavaConsumerCallExecutor<T> implements CallableTask<CallJava.CallJavaConsumer<T>> {
+public class JavaContextFunctionCallExecutor<T, V>
+    implements CallableTask<CallJava.CallJavaContextFunction<T, V>> {
 
-  private Consumer<T> consumer;
+  private JavaContextFunction<T, V> function;
   private Optional<Class<T>> inputClass = Optional.empty();
 
-  public void init(CallJava.CallJavaConsumer<T> task, WorkflowDefinition definition) {
-    consumer = task.consumer();
-    inputClass = task.inputClass();
+  @Override
+  public void init(CallJava.CallJavaContextFunction<T, V> task, WorkflowDefinition definition) {
+    this.function = task.function();
+    this.inputClass = task.inputClass();
   }
 
   @Override
   public CompletableFuture<WorkflowModel> apply(
       WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel input) {
-    T typed = JavaFuncUtils.convertT(input, inputClass);
-    consumer.accept(typed);
 
-    return CompletableFuture.completedFuture(input);
+    WorkflowModelFactory mf = workflowContext.definition().application().modelFactory();
+    T typedIn = JavaFuncUtils.convertT(input, inputClass);
+
+    V out = function.apply(typedIn, workflowContext);
+    return CompletableFuture.completedFuture(mf.fromAny(input, out));
   }
 
   @Override
   public boolean accept(Class<? extends TaskBase> clazz) {
-    return CallJava.CallJavaConsumer.class.isAssignableFrom(clazz);
+    return CallJava.CallJavaContextFunction.class.isAssignableFrom(clazz);
   }
 }

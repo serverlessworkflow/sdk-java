@@ -17,9 +17,11 @@ package io.serverlessworkflow.fluent.func;
 
 import io.serverlessworkflow.api.types.func.CallJava;
 import io.serverlessworkflow.api.types.func.CallTaskJava;
+import io.serverlessworkflow.api.types.func.JavaContextFunction;
 import io.serverlessworkflow.fluent.func.spi.ConditionalTaskBuilder;
 import io.serverlessworkflow.fluent.func.spi.FuncTaskTransformations;
 import io.serverlessworkflow.fluent.spec.TaskBaseBuilder;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class FuncCallTaskBuilder extends TaskBaseBuilder<FuncCallTaskBuilder>
@@ -44,6 +46,31 @@ public class FuncCallTaskBuilder extends TaskBaseBuilder<FuncCallTaskBuilder>
 
   public <T, V> FuncCallTaskBuilder function(Function<T, V> function, Class<T> argClass) {
     this.callTaskJava = new CallTaskJava(CallJava.function(function, argClass));
+    super.setTask(this.callTaskJava.getCallJava());
+    return this;
+  }
+
+  public <T, V> FuncCallTaskBuilder function(JavaContextFunction<T, V> function) {
+    return function(function, null);
+  }
+
+  public <T, V> FuncCallTaskBuilder function(
+      JavaContextFunction<T, V> function, Class<T> argClass) {
+    this.callTaskJava = new CallTaskJava(CallJava.function(function, argClass));
+    super.setTask(this.callTaskJava.getCallJava());
+    return this;
+  }
+
+  /** Accept a side-effect Consumer; engine should pass input through unchanged. */
+  public <T> FuncCallTaskBuilder consumer(Consumer<T> consumer) {
+    this.callTaskJava = new CallTaskJava(CallJava.consumer(consumer));
+    super.setTask(this.callTaskJava.getCallJava());
+    return this;
+  }
+
+  /** Accept a Consumer with explicit input type hint. */
+  public <T> FuncCallTaskBuilder consumer(Consumer<T> consumer, Class<T> argClass) {
+    this.callTaskJava = new CallTaskJava(CallJava.consumer(consumer, argClass));
     super.setTask(this.callTaskJava.getCallJava());
     return this;
   }
