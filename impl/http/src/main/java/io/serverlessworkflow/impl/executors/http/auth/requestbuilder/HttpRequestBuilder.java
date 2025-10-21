@@ -15,11 +15,11 @@
  */
 package io.serverlessworkflow.impl.executors.http.auth.requestbuilder;
 
-import static io.serverlessworkflow.api.types.OAuth2TokenRequest.Oauth2TokenRequestEncoding;
 import static io.serverlessworkflow.api.types.OAuth2TokenRequest.Oauth2TokenRequestEncoding.APPLICATION_X_WWW_FORM_URLENCODED;
 
 import io.serverlessworkflow.api.types.OAuth2AuthenticationData;
 import io.serverlessworkflow.api.types.OAuth2TokenRequest;
+import io.serverlessworkflow.api.types.OAuth2TokenRequest.Oauth2TokenRequestEncoding;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;

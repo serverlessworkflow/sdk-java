@@ -15,7 +15,9 @@
  */
 package io.serverlessworkflow.impl.http.jwt;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.serverlessworkflow.impl.executors.http.auth.jwt.JWT;
 import io.serverlessworkflow.impl.executors.http.oauth.jackson.JacksonJWTConverter;

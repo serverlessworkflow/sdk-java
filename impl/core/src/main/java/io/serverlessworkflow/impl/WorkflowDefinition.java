@@ -15,7 +15,8 @@
  */
 package io.serverlessworkflow.impl;
 
-import static io.serverlessworkflow.impl.WorkflowUtils.*;
+import static io.serverlessworkflow.impl.WorkflowUtils.buildWorkflowFilter;
+import static io.serverlessworkflow.impl.WorkflowUtils.getSchemaValidator;
 import static io.serverlessworkflow.impl.WorkflowUtils.safeClose;
 
 import io.serverlessworkflow.api.types.Input;

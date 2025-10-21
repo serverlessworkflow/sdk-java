@@ -22,7 +22,6 @@ import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowMutablePosition;
-import io.serverlessworkflow.impl.executors.RegularTaskExecutor.RegularTaskExecutorBuilder;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
