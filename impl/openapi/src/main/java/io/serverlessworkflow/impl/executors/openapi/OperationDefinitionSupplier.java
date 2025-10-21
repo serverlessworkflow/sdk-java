@@ -17,7 +17,7 @@ package io.serverlessworkflow.impl.executors.openapi;
 
 import static io.serverlessworkflow.impl.executors.http.HttpExecutor.getTargetSupplier;
 
-import io.serverlessworkflow.api.types.CallOpenAPI;
+import io.serverlessworkflow.api.types.OpenAPIArguments;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
@@ -28,20 +28,19 @@ import jakarta.ws.rs.client.WebTarget;
 class OperationDefinitionSupplier {
 
   private final WorkflowApplication application;
-  private final CallOpenAPI task;
+  private final OpenAPIArguments with;
 
-  OperationDefinitionSupplier(WorkflowApplication application, CallOpenAPI task) {
-    this.task = task;
+  OperationDefinitionSupplier(WorkflowApplication application, OpenAPIArguments with) {
+    this.with = with;
     this.application = application;
   }
 
   OperationDefinition get(
       WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel input) {
     TargetSupplier targetSupplier =
-        getTargetSupplier(
-            task.getWith().getDocument().getEndpoint(), application.expressionFactory());
+        getTargetSupplier(with.getDocument().getEndpoint(), application.expressionFactory());
 
-    String operationId = task.getWith().getOperationId();
+    String operationId = with.getOperationId();
     WebTarget webTarget = targetSupplier.apply(workflowContext, taskContext, input);
     OpenAPIProcessor processor = new OpenAPIProcessor(operationId, webTarget.getUri());
     return processor.parse();
