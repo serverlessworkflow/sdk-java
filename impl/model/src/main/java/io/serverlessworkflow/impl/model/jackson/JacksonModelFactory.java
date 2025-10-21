@@ -15,6 +15,7 @@
  */
 package io.serverlessworkflow.impl.model.jackson;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.DoubleNode;
 import com.fasterxml.jackson.databind.node.FloatNode;
@@ -86,7 +87,11 @@ public class JacksonModelFactory implements WorkflowModelFactory {
 
   @Override
   public WorkflowModel from(String value) {
-    return new JacksonModel(new TextNode(value));
+    try {
+      return new JacksonModel(JsonUtils.mapper().readTree(value));
+    } catch (JsonProcessingException ex) {
+      return new JacksonModel(new TextNode(value));
+    }
   }
 
   @Override
