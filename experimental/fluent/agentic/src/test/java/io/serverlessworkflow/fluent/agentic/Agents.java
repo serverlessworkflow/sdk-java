@@ -18,6 +18,7 @@ package io.serverlessworkflow.fluent.agentic;
 import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.agentic.Agent;
 import dev.langchain4j.agentic.internal.AgentSpecification;
+import dev.langchain4j.agentic.scope.AgenticScopeAccess;
 import dev.langchain4j.service.SystemMessage;
 import dev.langchain4j.service.UserMessage;
 import dev.langchain4j.service.V;
@@ -293,6 +294,12 @@ public interface Agents {
     double scoreStyle(@V("story") String story, @V("style") String style);
   }
 
+  interface StyledWriter extends AgenticScopeAccess {
+
+    @Agent
+    String writeStoryWithStyle(@V("topic") String topic, @V("style") String style);
+  }
+
   interface SummaryStory {
 
     @UserMessage(
@@ -391,4 +398,13 @@ public interface Agents {
     @Tool("A technical expert")
     String technicalRequest(String request);
   }
+
+  record EveningPlan(String movie, String meal) {}
+
+  interface EveningPlannerAgent {
+
+    @Agent
+    List<EveningPlan> plan(@V("mood") String mood);
+  }
+
 }

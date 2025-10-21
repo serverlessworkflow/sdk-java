@@ -91,13 +91,13 @@ String story = (String) novelCreator.invoke(input);
 
 <td style="vertical-align:top;">
 <pre style="background:none; margin:0; padding:0; font-family:monospace; line-height:1.4;">
-<code class="language-java" style="background:none;white-space:pre;">Workflow wf = workflow("seqFlow")
-    .sequence(creativeWriter, audienceEditor, styleEditor)
-    .build();
+<code class="language-java" style="background:none;white-space:pre;">AgentsUtils.NovelCreator novelCreator = AgenticWorkflow.of(NovelCreator.class)
+            .flow(workflow("seqFlow")
+            .sequence(creativeWriter, audienceEditor, styleEditor))
+            .build();
 &nbsp;
 &nbsp;
-
-String result = app.workflowDefinition(wf).instance(input).start().get().asText().orElseThrow();
+String story = novelCreator.createNovel("dragons and wizards", "young adults", "fantasy");
 
 </code>
 </pre>
@@ -164,14 +164,18 @@ StyleScorer styleScorer = AgenticServices
   <tr>
     <td style="vertical-align:top;">
 <pre style="background:none; margin:0; padding:0; font-family:monospace; line-height:1.4;">
-<code class="language-java" style="background:none;white-space:pre;">
-&nbsp;
-&nbsp;
+<code class="language-java" style="background:none;white-space:pre;">UntypedAgent styleReviewLoop = AgenticServices
+        .loopBuilder()
+        .subAgents(styleScorer, styleEditor)
+        .maxIterations(5)
+        .exitCondition(agenticScope -> agenticScope.readState("score", 0.0) >= 0.8)
+        .build();
+
 StyledWriter styledWriter = AgenticServices
-    .sequenceBuilder(StyledWriter.class)
-    .subAgents(creativeWriter, styleReviewLoop)
-    .outputName("story")
-    .build();
+        .sequenceBuilder(StyledWriter.class)
+        .subAgents(creativeWriter, styleReviewLoop)
+        .outputName("story")
+        .build();
 
 String story = styledWriter.writeStoryWithStyle("dragons and wizards", "comedy");
 
@@ -181,16 +185,20 @@ String story = styledWriter.writeStoryWithStyle("dragons and wizards", "comedy")
 
 <td style="vertical-align:top;">
 <pre style="background:none; margin:0; padding:0; font-family:monospace; line-height:1.4;">
-<code class="language-java" style="background:none;white-space:pre;">Map&lt;String, Object> input =  Map.of("story", "dragons and wizards","style", "comedy");
-Predicate<AgenticScope> until = s -> s.readState("score", 0).doubleValue() >= 0.8;
+<code class="language-java" style="background:none;white-space:pre;">Predicate<AgenticScope> until = s -> s.readState("score", 0.0) >= 0.8;
 
-Workflow wf = workflow("retryFlow")
-    .loop(until, scorer, editor)
-    .build();
+StyledWriter styledWriter = AgenticWorkflow.of(StyledWriter.class)
+            .flow(workflow("loopFlow")
+            .agent(creativeWriter)
+            .loop(until, styleScorer, styleEditor))
+            .build();
 &nbsp;
 &nbsp;
 &nbsp;
-String result = app.workflowDefinition(wf).instance(input).start().get().asText().orElseThrow();
+&nbsp;
+&nbsp;
+
+String story = styledWriter.writeStoryWithStyle("dragons and wizards", "comedy");
 
 </code>
 </pre>
@@ -251,8 +259,7 @@ MovieExpert movieExpert = AgenticServices
   <tr>
     <td style="vertical-align:top;">
 <pre style="background:none; margin:0; padding:0; font-family:monospace; line-height:1.4;">
-<code class="language-java" style="background:none;white-space:pre;">
-EveningPlannerAgent eveningPlannerAgent = AgenticServices
+<code class="language-java" style="background:none;white-space:pre;">EveningPlannerAgent eveningPlannerAgent = AgenticServices
     .parallelBuilder(EveningPlannerAgent.class)
     .subAgents(foodExpert, movieExpert)
     .executor(Executors.newFixedThreadPool(2))
@@ -279,28 +286,26 @@ List<EveningPlan> plans = eveningPlannerAgent.plan("romantic");
 
 <td style="vertical-align:top;">
 <pre style="background:none; margin:0; padding:0; font-family:monospace; line-height:1.4;">
-<code class="language-java" style="background:none;white-space:pre;">
-Workflow wf = workflow("forkFlow")
-    .parallel(foodExpert, movieExpert)
-    .build();
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
-&nbsp;
-Map&lt;String, Object> input = Map.of("mood", "I am hungry and bored");
+<code class="language-java" style="background:none;white-space:pre;">Function&lt;AgenticScope, List<EveningPlan>> planEvening = input -> {
+  List<String> movies = (List<String>) input.readState("movies");
+  List<String> meals = (List<String>)  input.readState("meals");
+  int max = Math.min(movies.size(), meals.size());
+  return IntStream.range(0, max)
+     .mapToObj(i -> new EveningPlan(movies.get(i), meals.get(i)))
+     .toList();
+};
 
-Map<String, Object> result = app.workflowDefinition(wf).instance(input).start().get().asMap().orElseThrow();
-
+EveningPlannerAgent eveningPlannerAgent = AgenticWorkflow.of(EveningPlannerAgent.class)
+            .flow(workflow("parallelFlow")
+            .parallel(foodExpert, movieExpert)
+            .outputAs(planEvening))
+            .build();
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+List<EveningPlan> result = eveningPlannerAgent.plan("romantic");
 </code>
 </pre>
 </td>
@@ -313,15 +318,6 @@ Map<String, Object> result = app.workflowDefinition(wf).instance(input).start().
 <details><summary>Click to expand</summary>
 
 ```java
-public record HumanInTheLoop(Consumer<String> requestWriter, Supplier<String> responseReader) {
-
-    @Agent("An agent that asks the user for missing information")
-    public String askUser(String request) {
-        requestWriter.accept(request);
-        return responseReader.get();
-    }
-}
-
 public interface AstrologyAgent {
   @SystemMessage("""
           You are an astrologist that generates horoscopes based on the user's name and zodiac sign.
@@ -337,17 +333,6 @@ AstrologyAgent astrologyAgent = AgenticServices
         .agentBuilder(AstrologyAgent.class)
         .chatModel(BASE_MODEL)
         .build();
-
-HumanInTheLoop humanInTheLoop = AgenticServices
-        .humanInTheLoopBuilder()
-        .description("An agent that asks the zodiac sign of the user")
-        .outputName("sign")
-        .requestWriter(request -> {
-          System.out.println(request);
-          System.out.print("> ");
-        })
-        .responseReader(() -> System.console().readLine())
-        .build();
 ```
 </details>
 
@@ -359,7 +344,23 @@ HumanInTheLoop humanInTheLoop = AgenticServices
   <tr>
     <td style="vertical-align:top;">
 <pre style="background:none; margin:0; padding:0; font-family:monospace; line-height:1.4;">
-<code class="language-java" style="background:none;white-space:pre;">
+<code class="language-java" style="background:none;white-space:pre;">public record HumanInTheLoop(Consumer<String> requestWriter, Supplier<String> responseReader) {
+@Agent("An agent that asks the user for missing information")
+    public String askUser(String request) {
+        requestWriter.accept(request);
+        return responseReader.get();
+    }
+}
+
+HumanInTheLoop humanInTheLoop = AgenticServices.humanInTheLoopBuilder()
+  .description("An agent that asks the zodiac sign of the user")
+  .outputName("sign")
+  .requestWriter(request -> {
+     System.out.println(request);
+     System.out.print("> ");
+  }).responseReader(() -> System.console().readLine())
+  .build();
+
 SupervisorAgent horoscopeAgent = AgenticServices
         .supervisorBuilder()
         .chatModel(PLANNER_MODEL)
@@ -374,15 +375,30 @@ horoscopeAgent.invoke("My name is Mario. What is my horoscope?")
 
 <td style="vertical-align:top;">
 <pre style="background:none; margin:0; padding:0; font-family:monospace; line-height:1.4;">
-<code class="language-java" style="background:none;white-space:pre;">
-Workflow wf = workflow("seqFlow")
-    .sequence(astrologyAgent, humanInTheLoop)
-    .build();
+<code class="language-java" style="background:none;white-space:pre;">var askSign = new Function&lt;AgenticScope, AgenticScope>() {
+  @Override
+  public AgenticScope apply(AgenticScope holder) {
+    System.out.println("What's your star sign?");
+    // var sign = System.console().readLine();
+    holder.writeState("sign", "piscis");
+    return holder;
+  }
+};
 
 &nbsp;
 &nbsp;
-String result = app.workflowDefinition(wf).instance("My name is Mario. What is my horoscope?").start().get().asMap().orElseThrow();
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
+&nbsp;
 
+String result = AgenticWorkflow.of(HoroscopeAgent.class)
+  .flow(workflow("humanInTheLoop")
+  .inputFrom(askSign)
+  .agent(astrologyAgent))
+  .build()
+  .invoke("My name is Mario. What is my horoscope?");
 </code>
 </pre>
 </td>
