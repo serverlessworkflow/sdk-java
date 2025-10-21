@@ -55,7 +55,7 @@ public class JacksonModel implements WorkflowModel {
 
   @Override
   public Optional<String> asText() {
-    return node.isTextual() ? Optional.of(node.asText()) : Optional.empty();
+    return node.isTextual() ? Optional.of(node.asText()) : Optional.of(node.toString());
   }
 
   @Override
