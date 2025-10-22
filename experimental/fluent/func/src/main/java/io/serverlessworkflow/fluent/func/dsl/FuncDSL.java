@@ -623,11 +623,13 @@ public final class FuncDSL {
    *
    * @param pred predicate
    * @param thenTask task name when predicate is true
+   * @param predClass predicate class
    * @param <T> predicate input type
    * @return list configurer
    */
-  public static <T> FuncTaskConfigurer switchWhen(Predicate<T> pred, String thenTask) {
-    return list -> list.switchCase(cases(caseOf(pred).then(thenTask)));
+  public static <T> FuncTaskConfigurer switchWhen(
+      Predicate<T> pred, String thenTask, Class<T> predClass) {
+    return list -> list.switchCase(cases(caseOf(pred, predClass).then(thenTask)));
   }
 
   public static FuncTaskConfigurer switchWhen(String jqExpression, String thenTask) {
@@ -640,13 +642,15 @@ public final class FuncDSL {
    * @param pred predicate
    * @param thenTask task name when predicate is true
    * @param otherwise default flow directive when predicate is false
+   * @param predClass predicate class
    * @param <T> predicate input type
    * @return list configurer
    */
   public static <T> FuncTaskConfigurer switchWhenOrElse(
-      Predicate<T> pred, String thenTask, FlowDirectiveEnum otherwise) {
+      Predicate<T> pred, String thenTask, FlowDirectiveEnum otherwise, Class<T> predClass) {
     return list ->
-        list.switchCase(FuncDSL.cases(caseOf(pred).then(thenTask), caseDefault(otherwise)));
+        list.switchCase(
+            FuncDSL.cases(caseOf(pred, predClass).then(thenTask), caseDefault(otherwise)));
   }
 
   /**
@@ -655,12 +659,14 @@ public final class FuncDSL {
    * @param pred predicate
    * @param thenTask task name when predicate is true
    * @param otherwiseTask task name when predicate is false
+   * @param predClass predicate class
    * @param <T> predicate input type
    * @return list configurer
    */
   public static <T> FuncTaskConfigurer switchWhenOrElse(
-      Predicate<T> pred, String thenTask, String otherwiseTask) {
-    return list -> list.switchCase(cases(caseOf(pred).then(thenTask), caseDefault(otherwiseTask)));
+      Predicate<T> pred, String thenTask, String otherwiseTask, Class<T> predClass) {
+    return list ->
+        list.switchCase(cases(caseOf(pred, predClass).then(thenTask), caseDefault(otherwiseTask)));
   }
 
   /**
@@ -764,36 +770,5 @@ public final class FuncDSL {
    */
   public static FuncTaskConfigurer set(Map<String, Object> map) {
     return list -> list.set(s -> s.expr(map));
-  }
-
-  // ----- JQ helpers for outputAs / inputFrom ----- //
-
-  /**
-   * JQ: pick the first element if the value is an array, otherwise return the value as-is. Does not
-   * stringify. Useful when downstream expects non-string JSON.
-   *
-   * <pre>(first(.[]? // empty) // .)</pre>
-   */
-  public static String selectFirst() {
-    return "(first(.[]? // empty) // .)";
-  }
-
-  /**
-   * JQ: stringify the value only if it is not already a string.
-   *
-   * <pre>(if type==\"string\" then . else tostring end)</pre>
-   */
-  public static String stringifyIfNeeded() {
-    return "(if type==\"string\" then . else tostring end)";
-  }
-
-  /**
-   * JQ: common “normalize to string”: - if array -> take first element - if null/empty -> coerce to
-   * empty string - if not a string -> tostring
-   *
-   * <pre>(first(.[]? // empty) // . // \"\") | (if type==\"string\" then . else tostring end)</pre>
-   */
-  public static String selectFirstStringify() {
-    return "(first(.[]? // empty) // . // \"\") | (if type==\"string\" then . else tostring end)";
   }
 }

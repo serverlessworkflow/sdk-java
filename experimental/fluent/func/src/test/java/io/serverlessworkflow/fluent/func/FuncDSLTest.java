@@ -19,7 +19,6 @@ import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.emit;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.event;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.function;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.listen;
-import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.toAny;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.toOne;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -175,24 +174,6 @@ class FuncDSLTest {
     assertNotNull(
         ((CallJava) t0.getCallTask().get()).getExport(), "function step should carry export");
     assertNotNull(t2.getListenTask().getExport(), "listen step should carry export");
-  }
-
-  @Test
-  void step_chaining_with_jq_and_java_mix() {
-    Workflow wf =
-        FuncWorkflowBuilder.workflow("mix")
-            .tasks(
-                listen("L", toAny("a", "b"))
-                    .inputFrom(FuncDSL.selectFirst())
-                    .outputAs(FuncDSL.stringifyIfNeeded())
-                    .when(". != null"))
-            .build();
-
-    Task t = wf.getDo().get(0).getTask();
-    assertNotNull(t.getListenTask());
-    assertEquals(". != null", t.getListenTask().getIf());
-    assertNotNull(t.getListenTask().getInput());
-    assertNotNull(t.getListenTask().getOutput());
   }
 
   @Test
