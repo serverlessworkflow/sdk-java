@@ -36,6 +36,13 @@ public class JacksonModelTest {
     factory = new JacksonModelFactory();
   }
 
+  private static record MyPerson(String name, int jobs, boolean male) {}
+
+  @Test
+  void testObjectFromPojo() {
+    testObjectNode(factory.fromAny(new MyPerson("Javierito", 3, true)));
+  }
+
   @Test
   void testObjectFromNode() {
     testObjectNode(
@@ -75,6 +82,8 @@ public class JacksonModelTest {
     assertThat(model.as(Map.class)).isEqualTo(model.asMap());
     assertThat(model.as(Map.class).orElseThrow())
         .isEqualTo(Map.of("name", "Javierito", "jobs", 3, "male", true));
+    assertThat(model.as(MyPerson.class).orElseThrow())
+        .isEqualTo(new MyPerson("Javierito", 3, true));
   }
 
   @Test
