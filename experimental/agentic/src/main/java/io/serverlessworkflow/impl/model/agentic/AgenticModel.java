@@ -46,18 +46,14 @@ class AgenticModel extends JavaModel {
   }
 
   @Override
-  public <T> Optional<T> as(Class<T> clazz) {
-    if (AgenticScope.class.isAssignableFrom(clazz)) {
-      return Optional.of(clazz.cast(this.agenticScope));
-    } else if (Map.class.isAssignableFrom(clazz)) {
-      return asMap().map(clazz::cast);
-    } else {
-      return super.as(clazz);
-    }
+  public Object asJavaObject() {
+    return agenticScope;
   }
 
   @Override
-  public Object asJavaObject() {
-    return agenticScope;
+  protected <T> Optional<T> convert(Class<T> clazz) {
+    return AgenticScope.class.isAssignableFrom(clazz)
+        ? Optional.of(clazz.cast(this.agenticScope))
+        : super.convert(clazz);
   }
 }
