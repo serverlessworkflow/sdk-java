@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.BooleanNode;
 import com.fasterxml.jackson.databind.node.NullNode;
+import io.serverlessworkflow.impl.AbstractWorkflowModel;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.jackson.JsonUtils;
 import java.time.OffsetDateTime;
@@ -31,7 +32,7 @@ import java.util.Optional;
 
 @JsonSerialize(using = JacksonModelSerializer.class)
 @JsonDeserialize(using = JacksonModelDeserializer.class)
-public class JacksonModel implements WorkflowModel {
+public class JacksonModel extends AbstractWorkflowModel {
 
   protected JsonNode node;
 
@@ -69,13 +70,6 @@ public class JacksonModel implements WorkflowModel {
   }
 
   @Override
-  public <T> Optional<T> as(Class<T> clazz) {
-    return clazz.isAssignableFrom(node.getClass())
-        ? Optional.of(clazz.cast(node))
-        : Optional.of(JsonUtils.convertValue(node, clazz));
-  }
-
-  @Override
   public String toString() {
     return node.toPrettyString();
   }
@@ -84,7 +78,7 @@ public class JacksonModel implements WorkflowModel {
   public Optional<Map<String, Object>> asMap() {
     // TODO use generic to avoid warning
     return node.isObject()
-        ? Optional.of(JsonUtils.convertValue(node, Map.class))
+        ? Optional.of(JsonUtils.mapper().convertValue(node, Map.class))
         : Optional.empty();
   }
 
@@ -96,5 +90,12 @@ public class JacksonModel implements WorkflowModel {
   @Override
   public Class<?> objectClass() {
     return node.getClass();
+  }
+
+  @Override
+  protected <T> Optional<T> convert(Class<T> clazz) {
+    return clazz.isAssignableFrom(node.getClass())
+        ? Optional.of(clazz.cast(node))
+        : Optional.of(JsonUtils.mapper().convertValue(node, clazz));
   }
 }

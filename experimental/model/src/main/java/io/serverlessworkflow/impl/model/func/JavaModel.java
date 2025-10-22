@@ -15,6 +15,7 @@
  */
 package io.serverlessworkflow.impl.model.func;
 
+import io.serverlessworkflow.impl.AbstractWorkflowModel;
 import io.serverlessworkflow.impl.WorkflowModel;
 import java.time.OffsetDateTime;
 import java.util.Collection;
@@ -24,7 +25,7 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class JavaModel implements WorkflowModel {
+public class JavaModel extends AbstractWorkflowModel {
 
   protected Object object;
 
@@ -65,7 +66,6 @@ public class JavaModel implements WorkflowModel {
 
   @Override
   public Optional<Map<String, Object>> asMap() {
-
     return object instanceof Map ? Optional.of((Map<String, Object>) object) : Optional.empty();
   }
 
@@ -94,10 +94,7 @@ public class JavaModel implements WorkflowModel {
   }
 
   @Override
-  public <T> Optional<T> as(Class<T> clazz) {
-    if (WorkflowModel.class.isAssignableFrom(clazz)) {
-      return Optional.of(clazz.cast(this));
-    }
+  protected <T> Optional<T> convert(Class<T> clazz) {
     return object != null && clazz.isAssignableFrom(object.getClass())
         ? Optional.of(clazz.cast(object))
         : Optional.empty();
