@@ -27,6 +27,7 @@ import io.serverlessworkflow.impl.executors.ForExecutor.ForExecutorBuilder;
 import io.serverlessworkflow.impl.executors.ForkExecutor.ForkExecutorBuilder;
 import io.serverlessworkflow.impl.executors.ListenExecutor.ListenExecutorBuilder;
 import io.serverlessworkflow.impl.executors.RaiseExecutor.RaiseExecutorBuilder;
+import io.serverlessworkflow.impl.executors.RunTaskExecutor.RunTaskExecutorBuilder;
 import io.serverlessworkflow.impl.executors.SetExecutor.SetExecutorBuilder;
 import io.serverlessworkflow.impl.executors.SwitchExecutor.SwitchExecutorBuilder;
 import io.serverlessworkflow.impl.executors.TryExecutor.TryExecutorBuilder;
@@ -76,6 +77,8 @@ public class DefaultTaskExecutorFactory implements TaskExecutorFactory {
       return new ListenExecutorBuilder(position, task.getListenTask(), definition);
     } else if (task.getEmitTask() != null) {
       return new EmitExecutorBuilder(position, task.getEmitTask(), definition);
+    } else if (task.getRunTask() != null) {
+      return new RunTaskExecutorBuilder(position, task.getRunTask(), definition);
     }
     throw new UnsupportedOperationException(task.get().getClass().getName() + " not supported yet");
   }
