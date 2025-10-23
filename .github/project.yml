@@ -1,4 +1,4 @@
-# Rerun #4 release process
+# Rerun #1 release 7.3.0.Final process
 release:
   current-version: 7.3.0.Final
   next-version: 8.0.0-SNAPSHOT
