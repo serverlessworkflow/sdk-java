@@ -1,0 +1,15 @@
+document:
+  dsl: '1.0.1'
+  namespace: test
+  name: run-shell-example
+  version: '0.1.0'
+do:
+  - runShell:
+      run:
+        shell:
+          command: echo "hello world" > /tmp/hello.txt && cat /tmp/hello.txt
+          environment:
+            FIRST_NAME: John
+            LAST_NAME: ${.lastName}
+        return: all
+
