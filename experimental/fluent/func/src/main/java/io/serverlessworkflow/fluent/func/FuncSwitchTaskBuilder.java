@@ -22,7 +22,7 @@ import io.serverlessworkflow.api.types.SwitchItem;
 import io.serverlessworkflow.api.types.SwitchTask;
 import io.serverlessworkflow.api.types.func.SwitchCaseFunction;
 import io.serverlessworkflow.fluent.func.spi.ConditionalTaskBuilder;
-import io.serverlessworkflow.fluent.func.spi.FuncTransformations;
+import io.serverlessworkflow.fluent.func.spi.FuncTaskTransformations;
 import io.serverlessworkflow.fluent.spec.TaskBaseBuilder;
 import io.serverlessworkflow.fluent.spec.spi.SwitchTaskFluent;
 import java.util.ArrayList;
@@ -33,7 +33,7 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 public class FuncSwitchTaskBuilder extends TaskBaseBuilder<FuncSwitchTaskBuilder>
-    implements FuncTransformations<FuncSwitchTaskBuilder>,
+    implements FuncTaskTransformations<FuncSwitchTaskBuilder>,
         ConditionalTaskBuilder<FuncSwitchTaskBuilder>,
         SwitchTaskFluent<FuncSwitchTaskBuilder> {
 

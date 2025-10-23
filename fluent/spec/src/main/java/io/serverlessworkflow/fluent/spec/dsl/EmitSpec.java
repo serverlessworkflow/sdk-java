@@ -17,9 +17,8 @@ package io.serverlessworkflow.fluent.spec.dsl;
 
 import io.serverlessworkflow.fluent.spec.EmitTaskBuilder;
 import io.serverlessworkflow.fluent.spec.configurers.EmitConfigurer;
-import io.serverlessworkflow.fluent.spec.configurers.EventConfigurer;
 
-public final class EmitSpec extends EventFilterSpec<EmitSpec> implements EmitConfigurer {
+public final class EmitSpec extends ExprEventFilterSpec<EmitSpec> implements EmitConfigurer {
 
   @Override
   protected EmitSpec self() {
@@ -28,11 +27,6 @@ public final class EmitSpec extends EventFilterSpec<EmitSpec> implements EmitCon
 
   @Override
   public void accept(EmitTaskBuilder emitTaskBuilder) {
-    emitTaskBuilder.event(
-        e -> {
-          for (EventConfigurer step : steps) {
-            step.accept(e);
-          }
-        });
+    emitTaskBuilder.event(e -> getSteps().forEach(step -> step.accept(e)));
   }
 }

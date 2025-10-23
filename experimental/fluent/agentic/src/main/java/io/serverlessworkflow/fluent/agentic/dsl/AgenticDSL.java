@@ -19,12 +19,15 @@ import dev.langchain4j.agentic.scope.AgenticScope;
 import io.cloudevents.CloudEventData;
 import io.serverlessworkflow.api.types.FlowDirectiveEnum;
 import io.serverlessworkflow.fluent.agentic.AgentDoTaskBuilder;
-import io.serverlessworkflow.fluent.agentic.configurer.AgentTaskConfigurer;
-import io.serverlessworkflow.fluent.agentic.configurer.FuncPredicateEventConfigurer;
-import io.serverlessworkflow.fluent.agentic.configurer.SwitchCaseConfigurer;
+import io.serverlessworkflow.fluent.agentic.configurers.AgentTaskConfigurer;
 import io.serverlessworkflow.fluent.func.FuncCallTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncEmitTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncSwitchTaskBuilder;
+import io.serverlessworkflow.fluent.func.configurers.FuncPredicateEventConfigurer;
+import io.serverlessworkflow.fluent.func.configurers.SwitchCaseConfigurer;
+import io.serverlessworkflow.fluent.func.dsl.ReflectionUtils;
+import io.serverlessworkflow.fluent.func.dsl.SwitchCaseSpec;
+import io.serverlessworkflow.fluent.func.dsl.internal.CommonFuncOps;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -33,79 +36,75 @@ import java.util.function.Predicate;
 
 public final class AgenticDSL {
 
+  private static final CommonFuncOps OPS = new CommonFuncOps() {};
+
   private AgenticDSL() {}
 
   public static <T, V> Consumer<FuncCallTaskBuilder> fn(
       Function<T, V> function, Class<T> argClass) {
-    return f -> f.function(function, argClass);
+    return OPS.fn(function, argClass);
   }
 
   public static <T, V> Consumer<FuncCallTaskBuilder> fn(Function<T, V> function) {
-    return f -> f.function(function);
+    return OPS.fn(function);
   }
 
   public static Consumer<FuncSwitchTaskBuilder> cases(SwitchCaseConfigurer... cases) {
-    return s -> {
-      for (SwitchCaseConfigurer c : cases) {
-        s.onPredicate(c);
-      }
-    };
+    return OPS.cases(cases);
   }
 
-  public static <T> SwitchCaseSpec<T> on(Predicate<T> when, Class<T> whenClass) {
-    return new SwitchCaseSpec<T>().when(when, whenClass);
+  public static <T> SwitchCaseSpec<T> caseOf(Predicate<T> when, Class<T> whenClass) {
+    return OPS.caseOf(when, whenClass);
   }
 
-  public static <T> SwitchCaseSpec<T> on(Predicate<T> when) {
-    return new SwitchCaseSpec<T>().when(when);
+  public static <T> SwitchCaseSpec<T> caseOf(Predicate<T> when) {
+    return OPS.caseOf(when);
   }
 
-  public static SwitchCaseConfigurer onDefault(String task) {
-    return s -> s.then(task);
+  public static SwitchCaseConfigurer caseDefault(String task) {
+    return OPS.caseDefault(task);
   }
 
-  public static SwitchCaseConfigurer onDefault(FlowDirectiveEnum directive) {
-    return s -> s.then(directive);
+  public static SwitchCaseConfigurer caseDefault(FlowDirectiveEnum directive) {
+    return OPS.caseDefault(directive);
   }
 
-  public static ListenSpec to() {
-    return new ListenSpec();
+  public static AgentListenSpec to() {
+    return new AgentListenSpec();
   }
 
-  public static ListenSpec toOne(String type) {
-    return new ListenSpec().one(e -> e.type(type));
+  public static AgentListenSpec toOne(String type) {
+    return new AgentListenSpec().one(e -> e.type(type));
   }
 
-  public static ListenSpec toAll(String... types) {
+  public static AgentListenSpec toAll(String... types) {
     FuncPredicateEventConfigurer[] events = new FuncPredicateEventConfigurer[types.length];
     for (int i = 0; i < types.length; i++) {
       events[i] = event(types[i]);
     }
-    return new ListenSpec().all(events);
+    return new AgentListenSpec().all(events);
   }
 
-  public static ListenSpec toAny(String... types) {
+  public static AgentListenSpec toAny(String... types) {
     FuncPredicateEventConfigurer[] events = new FuncPredicateEventConfigurer[types.length];
     for (int i = 0; i < types.length; i++) {
       events[i] = event(types[i]);
     }
-    return new ListenSpec().any(events);
+    return new AgentListenSpec().any(events);
   }
 
   public static FuncPredicateEventConfigurer event(String type) {
-    return e -> e.type(type);
+    return OPS.event(type);
   }
-
-  // TODO: expand the `event` static ref with more attributes based on community feedback
 
   public static <T> Consumer<FuncEmitTaskBuilder> event(
       String type, Function<T, CloudEventData> function) {
-    return event -> event.event(e -> e.type(type).data(function));
+    return OPS.event(type, function);
   }
 
   public static <T> Consumer<FuncEmitTaskBuilder> event(
       String type, Function<T, CloudEventData> function, Class<T> clazz) {
-    return event -> event.event(e -> e.type(type).data(function, clazz));
+    return OPS.event(type, function, clazz);
   }
 
   // -------- Agentic Workflow Patterns -------- //
@@ -148,7 +147,8 @@ public final class AgenticDSL {
   }
 
   public static <T, V> AgentTaskConfigurer function(Function<T, V> function) {
-    return list -> list.callFn(fn(function));
+    Class<T> clazz = ReflectionUtils.inferInputType(function);
+    return list -> list.callFn(fn(function, clazz));
   }
 
   public static AgentTaskConfigurer agent(Object agent) {

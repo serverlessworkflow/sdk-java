@@ -22,21 +22,25 @@ import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.executors.CallableTask;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
-public class JavaConsumerCallExecutor implements CallableTask<CallJava.CallJavaConsumer> {
+public class JavaConsumerCallExecutor<T> implements CallableTask<CallJava.CallJavaConsumer<T>> {
 
-  private Consumer consumer;
+  private Consumer<T> consumer;
+  private Optional<Class<T>> inputClass = Optional.empty();
 
-  public void init(CallJava.CallJavaConsumer task, WorkflowDefinition definition) {
+  public void init(CallJava.CallJavaConsumer<T> task, WorkflowDefinition definition) {
     consumer = task.consumer();
+    inputClass = task.inputClass();
   }
 
   @Override
   public CompletableFuture<WorkflowModel> apply(
       WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel input) {
-    consumer.accept(input.asJavaObject());
+    T typed = JavaFuncUtils.convertT(input, inputClass);
+    consumer.accept(typed);
     return CompletableFuture.completedFuture(input);
   }
 

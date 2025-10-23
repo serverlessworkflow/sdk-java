@@ -13,11 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.fluent.agentic.configurer;
+package io.serverlessworkflow.fluent.func.configurers;
 
-import io.serverlessworkflow.fluent.func.FuncPredicateEventPropertiesBuilder;
+import io.serverlessworkflow.fluent.func.FuncEmitTaskBuilder;
 import java.util.function.Consumer;
 
 @FunctionalInterface
-public interface FuncPredicateEventConfigurer
-    extends Consumer<FuncPredicateEventPropertiesBuilder> {}
+public interface FuncEmitConfigurer extends Consumer<FuncEmitTaskBuilder> {}

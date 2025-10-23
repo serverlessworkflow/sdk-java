@@ -18,7 +18,7 @@ package io.serverlessworkflow.fluent.spec.dsl;
 import io.serverlessworkflow.fluent.spec.EventPropertiesBuilder;
 import io.serverlessworkflow.fluent.spec.configurers.EventConfigurer;
 
-public final class EventSpec extends EventFilterSpec<EventSpec> implements EventConfigurer {
+public final class EventSpec extends ExprEventFilterSpec<EventSpec> implements EventConfigurer {
 
   @Override
   protected EventSpec self() {
@@ -27,6 +27,6 @@ public final class EventSpec extends EventFilterSpec<EventSpec> implements Event
 
   @Override
   public void accept(EventPropertiesBuilder eventPropertiesBuilder) {
-    steps.forEach(step -> step.accept(eventPropertiesBuilder));
+    getSteps().forEach(step -> step.accept(eventPropertiesBuilder));
   }
 }

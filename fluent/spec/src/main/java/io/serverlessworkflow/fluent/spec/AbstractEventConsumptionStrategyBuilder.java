@@ -134,12 +134,16 @@ public abstract class AbstractEventConsumptionStrategyBuilder<
     }
 
     if (anySet) {
-      this.setUntil(until);
+      this.setUntilForAny(until);
     }
     return this.getEventConsumptionStrategy();
   }
 
   protected abstract T getEventConsumptionStrategy();
 
-  protected abstract void setUntil(Until until);
+  protected abstract void setUntilForAny(Until until);
+
+  protected void setUntil(Until until) {
+    this.until = until;
+  }
 }
