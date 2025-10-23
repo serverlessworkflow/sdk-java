@@ -16,14 +16,12 @@
 package io.serverlessworkflow.impl.executors.http.auth.requestbuilder;
 
 import io.serverlessworkflow.api.types.OAuth2AuthenticationPropertiesEndpoints;
-import io.serverlessworkflow.api.types.Oauth2;
+import io.serverlessworkflow.api.types.OAuth2ConnectAuthenticationProperties;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import java.net.URI;
 import java.util.Map;
 
 public class OAuthRequestBuilder extends AbstractAuthRequestBuilder {
-
-  private final Oauth2 oauth2;
 
   private final Map<String, String> defaults =
       Map.of(
@@ -31,20 +29,16 @@ public class OAuthRequestBuilder extends AbstractAuthRequestBuilder {
           "endpoints.revocation", "oauth2/revoke",
           "endpoints.introspection", "oauth2/introspect");
 
-  public OAuthRequestBuilder(WorkflowApplication application, Oauth2 oauth2) {
-    super(
-        oauth2.getOAuth2ConnectAuthenticationProperties().getOAuth2AuthenticationData(),
-        application);
-    this.oauth2 = oauth2;
+  public OAuthRequestBuilder(
+      WorkflowApplication application,
+      OAuth2ConnectAuthenticationProperties oAuth2ConnectAuthenticationProperties) {
+    super(oAuth2ConnectAuthenticationProperties, application);
   }
 
   @Override
   protected void authenticationURI(HttpRequestBuilder requestBuilder) {
     OAuth2AuthenticationPropertiesEndpoints endpoints =
-        oauth2
-            .getOAuth2ConnectAuthenticationProperties()
-            .getOAuth2ConnectAuthenticationProperties()
-            .getEndpoints();
+        ((OAuth2ConnectAuthenticationProperties) authenticationData).getEndpoints();
 
     String baseUri =
         authenticationData.getAuthority().getLiteralUri().toString().replaceAll("/$", "");

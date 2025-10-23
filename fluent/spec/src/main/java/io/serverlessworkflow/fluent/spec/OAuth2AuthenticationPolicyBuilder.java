@@ -17,18 +17,13 @@ package io.serverlessworkflow.fluent.spec;
 
 import io.serverlessworkflow.api.types.OAuth2AuthenticationPolicy;
 import io.serverlessworkflow.api.types.OAuth2AuthenticationPolicyConfiguration;
-import io.serverlessworkflow.api.types.OAuth2ConnectAuthenticationProperties;
-import io.serverlessworkflow.api.types.Oauth2;
 import java.util.function.Consumer;
 
 public final class OAuth2AuthenticationPolicyBuilder
     extends OIDCBuilder<OAuth2AuthenticationPolicy> {
 
-  private final OAuth2ConnectAuthenticationProperties properties;
-
   OAuth2AuthenticationPolicyBuilder() {
     super();
-    this.properties = new OAuth2ConnectAuthenticationProperties();
   }
 
   public OAuth2AuthenticationPolicyBuilder endpoints(
@@ -36,22 +31,16 @@ public final class OAuth2AuthenticationPolicyBuilder
     final OAuth2AuthenticationPropertiesEndpointsBuilder builder =
         new OAuth2AuthenticationPropertiesEndpointsBuilder();
     endpointsConsumer.accept(builder);
-    this.properties.setEndpoints(builder.build());
+    this.authenticationData.setEndpoints(builder.build());
     return this;
   }
 
   public OAuth2AuthenticationPolicy build() {
     final OAuth2AuthenticationPolicyConfiguration configuration =
         new OAuth2AuthenticationPolicyConfiguration();
-    configuration.setOAuth2AuthenticationData(this.getAuthenticationData());
-    configuration.setOAuth2ConnectAuthenticationProperties(this.properties);
-
-    final Oauth2 oauth2 = new Oauth2();
-    oauth2.setOAuth2ConnectAuthenticationProperties(configuration);
-
+    configuration.setOAuth2ConnectAuthenticationProperties(this.authenticationData);
     final OAuth2AuthenticationPolicy policy = new OAuth2AuthenticationPolicy();
-    policy.setOauth2(oauth2);
-
+    policy.setOauth2(configuration);
     return policy;
   }
 }

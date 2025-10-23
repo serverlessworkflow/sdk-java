@@ -23,11 +23,10 @@ import io.serverlessworkflow.api.types.CallFunction;
 import io.serverlessworkflow.api.types.CallHTTP;
 import io.serverlessworkflow.api.types.CallTask;
 import io.serverlessworkflow.api.types.HTTPArguments;
-import io.serverlessworkflow.api.types.OAuth2AuthenticationData;
 import io.serverlessworkflow.api.types.OAuth2AuthenticationData.OAuth2AuthenticationDataGrant;
 import io.serverlessworkflow.api.types.OAuth2AuthenticationPolicy;
-import io.serverlessworkflow.api.types.OAuth2AuthenticationPolicyConfiguration;
 import io.serverlessworkflow.api.types.OAuth2AuthenticationPropertiesEndpoints;
+import io.serverlessworkflow.api.types.OAuth2ConnectAuthenticationProperties;
 import io.serverlessworkflow.api.types.Task;
 import io.serverlessworkflow.api.types.Workflow;
 import java.io.IOException;
@@ -99,20 +98,18 @@ public class ApiTest {
             .getAuthenticationPolicy()
             .getOAuth2AuthenticationPolicy();
     assertThat(oauthPolicy).isNotNull();
-    OAuth2AuthenticationPolicyConfiguration oauth2Props =
+    OAuth2ConnectAuthenticationProperties oauth2Props =
         oauthPolicy.getOauth2().getOAuth2ConnectAuthenticationProperties();
     assertThat(oauth2Props).isNotNull();
-    OAuth2AuthenticationPropertiesEndpoints endpoints =
-        oauth2Props.getOAuth2ConnectAuthenticationProperties().getEndpoints();
+    OAuth2AuthenticationPropertiesEndpoints endpoints = oauth2Props.getEndpoints();
     assertThat(endpoints.getToken()).isEqualTo("/auth/token");
     assertThat(endpoints.getIntrospection()).isEqualTo("/auth/introspect");
 
-    OAuth2AuthenticationData oauth2Data = oauth2Props.getOAuth2AuthenticationData();
-    assertThat(oauth2Data.getAuthority().getLiteralUri())
+    assertThat(oauth2Props.getAuthority().getLiteralUri())
         .isEqualTo(URI.create("http://keycloak/realms/fake-authority"));
-    assertThat(oauth2Data.getGrant()).isEqualTo(OAuth2AuthenticationDataGrant.CLIENT_CREDENTIALS);
-    assertThat(oauth2Data.getClient().getId()).isEqualTo("workflow-runtime-id");
-    assertThat(oauth2Data.getClient().getSecret()).isEqualTo("workflow-runtime-secret");
+    assertThat(oauth2Props.getGrant()).isEqualTo(OAuth2AuthenticationDataGrant.CLIENT_CREDENTIALS);
+    assertThat(oauth2Props.getClient().getId()).isEqualTo("workflow-runtime-id");
+    assertThat(oauth2Props.getClient().getSecret()).isEqualTo("workflow-runtime-secret");
   }
 
   @Test

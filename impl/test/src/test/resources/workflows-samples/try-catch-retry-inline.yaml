@@ -17,7 +17,7 @@ do:
             type: https://serverlessworkflow.io/spec/1.0.0/errors/communication
             status: 404
         retry:
-          delay: "PT0.01S"
+          delay: ${"PT\(.delay)S"}
           backoff:
             exponential: {}
           limit:

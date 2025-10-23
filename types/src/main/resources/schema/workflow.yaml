@@ -312,10 +312,10 @@ $defs:
                       type: string
                       title: WithGRPCServiceHost
                       description: The hostname of the GRPC service to call.
-                      pattern: ^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?$
+                      pattern: ^[a-zA-Z0-9](?:[a-zA-Z0-9-.]{0,61}[a-zA-Z0-9])?$
                     port:
                       type: integer
-                      title: WithGRPCServicePost
+                      title: WithGRPCServicePort
                       description: The port number of the GRPC service to call.
                       minimum: 0
                       maximum: 65535
@@ -434,6 +434,45 @@ $defs:
                   description: Specifies whether redirection status codes (`300–399`) should be treated as errors.
               required: [ document, operationId ]
               unevaluatedProperties: false
+      - title: CallA2A
+        description: Defines the A2A call to perform.
+        type: object
+        unevaluatedProperties: false
+        required: [ call, with ]
+        allOf:
+        - $ref: '#/$defs/taskBase'
+        - properties:
+            call:
+              type: string
+              const: a2a
+            with:
+              type: object
+              title: A2AArguments
+              description: The A2A call arguments.
+              properties:
+                agentCard:
+                  $ref: '#/$defs/externalResource'
+                  title: WithA2AAgentCard
+                  description: The Agent Card that defines the agent to call.
+                server:
+                  title: A2AServer
+                  description: The server endpoint to send the request to.
+                  $ref: '#/$defs/endpoint'
+                method:
+                  type: string
+                  title: WithA2AMethod
+                  description: The A2A method to send.
+                  enum: [ 'message/send', 'message/stream', 'tasks/get', 'tasks/list', 'tasks/cancel', 'tasks/resubscribe', 'tasks/pushNotificationConfig/set', 'tasks/pushNotificationConfig/get', 'tasks/pushNotificationConfig/list', 'tasks/pushNotificationConfig/delete', 'agent/getAuthenticatedExtendedCard' ]
+                parameters:
+                  oneOf:
+                    - type: object
+                      minProperties: 1
+                      additionalProperties: true
+                    - type: string
+                  title: WithA2AParameters
+                  description: The parameters object to send with the A2A method.
+              required: [ method ]
+              unevaluatedProperties: false
       - title: CallFunction
         description: Defines the function call to perform.
         type: object
@@ -445,7 +484,7 @@ $defs:
             call:
               type: string
               not:
-                enum: ["asyncapi", "grpc", "http", "openapi"]
+                enum: ["asyncapi", "grpc", "http", "openapi", "a2a"]
               description: The name of the function to call.
             with:
               type: object
@@ -1001,37 +1040,35 @@ $defs:
           description: The configuration of the OAuth2 authentication policy.
           unevaluatedProperties: false
           oneOf:
-            - type: object
+            - $ref: '#/$defs/oauth2AuthenticationProperties'
+              type: object
               title: OAuth2ConnectAuthenticationProperties
               description: The inline configuration of the OAuth2 authentication policy.
               unevaluatedProperties: false
-              allOf:
-                - $ref: '#/$defs/oauth2AuthenticationProperties'
-                - type: object
+              properties:
+                endpoints:
+                  type: object
+                  title: OAuth2AuthenticationPropertiesEndpoints
+                  description: The endpoint configurations for OAuth2.
                   properties:
-                    endpoints:
-                      type: object
-                      title: OAuth2AuthenticationPropertiesEndpoints
-                      description: The endpoint configurations for OAuth2.
-                      properties:
-                        token:
-                          type: string
-                          format: uri-template
-                          default: /oauth2/token
-                          title: OAuth2TokenEndpoint
-                          description: The relative path to the token endpoint. Defaults to `/oauth2/token`.
-                        revocation:
-                          type: string
-                          format: uri-template
-                          default: /oauth2/revoke
-                          title: OAuth2RevocationEndpoint
-                          description: The relative path to the revocation endpoint. Defaults to `/oauth2/revoke`.
-                        introspection:
-                          type: string
-                          format: uri-template
-                          default: /oauth2/introspect
-                          title: OAuth2IntrospectionEndpoint
-                          description: The relative path to the introspection endpoint. Defaults to `/oauth2/introspect`.
+                    token:
+                      type: string
+                      format: uri-template
+                      default: /oauth2/token
+                      title: OAuth2TokenEndpoint
+                      description: The relative path to the token endpoint. Defaults to `/oauth2/token`.
+                    revocation:
+                      type: string
+                      format: uri-template
+                      default: /oauth2/revoke
+                      title: OAuth2RevocationEndpoint
+                      description: The relative path to the revocation endpoint. Defaults to `/oauth2/revoke`.
+                    introspection:
+                      type: string
+                      format: uri-template
+                      default: /oauth2/introspect
+                      title: OAuth2IntrospectionEndpoint
+                      description: The relative path to the introspection endpoint. Defaults to `/oauth2/introspect`.
             - $ref: '#/$defs/secretBasedAuthenticationPolicy'
               title: OAuth2AuthenticationPolicySecret
               description: Secret based configuration of the OAuth2 authentication policy.
@@ -1178,10 +1215,13 @@ $defs:
             description: Number of milliseconds, if any.
         title: DurationInline
         description: The inline definition of a duration.
+      - $ref: '#/$defs/runtimeExpression'
+        title: DurationExpression
+        description: Runtime expression that generates an ISO 8601 
       - type: string
         pattern: '^P(?!$)(\d+(?:\.\d+)?Y)?(\d+(?:\.\d+)?M)?(\d+(?:\.\d+)?W)?(\d+(?:\.\d+)?D)?(T(?=\d)(\d+(?:\.\d+)?H)?(\d+(?:\.\d+)?M)?(\d+(?:\.\d+)?S)?)?$'
-        title: DurationExpression
-        description: The ISO 8601 expression of a duration.
+        title: DurationLiteral
+        description: The Literal ISO 8601 representation of a duration. 
   error:
     type: object
     title: Error
@@ -1697,23 +1737,20 @@ $defs:
         type: object
         title: AsyncApiMessagePayload
         description: The message's payload, if any.
-        additionalProperties: true
       headers:
         type: object
         title: AsyncApiMessageHeaders
         description: The message's headers, if any.
-        additionalProperties: true
   asyncApiInboundMessage:
-    type: object
     title: AsyncApiInboundMessage
     description: Represents a message counsumed by an AsyncAPI subscription.
     allOf:
-      - $ref: '#/$defs/asyncApiOutboundMessage'
-    properties:
-      correlationId:
-        type: string
-        title: AsyncApiMessageCorrelationId
-        description: The message's correlation id, if any.
+    - $ref: '#/$defs/asyncApiOutboundMessage'
+    - properties:
+        correlationId:
+          type: string
+          title: AsyncApiMessageCorrelationId
+          description: The message's correlation id, if any.
   asyncApiSubscription:
     type: object
     title: AsyncApiSubscription

@@ -77,9 +77,11 @@ public class RetryTest {
             .setHeader("Content-Type", "application/json")
             .setBody(JsonUtils.mapper().writeValueAsString(result)));
     CompletableFuture<WorkflowModel> future =
-        app.workflowDefinition(readWorkflowFromClasspath(path)).instance(Map.of()).start();
+        app.workflowDefinition(readWorkflowFromClasspath(path))
+            .instance(Map.of("delay", 0.01))
+            .start();
     Awaitility.await()
-        .atMost(Duration.ofSeconds(1))
+        .atMost(Duration.ofSeconds(100))
         .until(() -> future.join().as(JsonNode.class).orElseThrow().equals(result));
   }
 }

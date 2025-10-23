@@ -170,17 +170,15 @@ public class WorkflowUtils {
   public static WorkflowValueResolver<Duration> fromTimeoutAfter(
       WorkflowApplication application, TimeoutAfter timeout) {
     if (timeout.getDurationExpression() != null) {
-      if (ExpressionUtils.isExpr(timeout.getDurationExpression())) {
-        return (w, f, t) ->
-            Duration.parse(
-                application
-                    .expressionFactory()
-                    .resolveString(ExpressionDescriptor.from(timeout.getDurationExpression()))
-                    .apply(w, f, t));
-      } else {
-        Duration duration = Duration.parse(timeout.getDurationExpression());
-        return (w, f, t) -> duration;
-      }
+      return (w, f, t) ->
+          Duration.parse(
+              application
+                  .expressionFactory()
+                  .resolveString(ExpressionDescriptor.from(timeout.getDurationExpression()))
+                  .apply(w, f, t));
+    } else if (timeout.getDurationLiteral() != null) {
+      Duration duration = Duration.parse(timeout.getDurationLiteral());
+      return (w, f, t) -> duration;
     } else if (timeout.getDurationInline() != null) {
       DurationInline inlineDuration = timeout.getDurationInline();
       return (w, t, f) ->
