@@ -41,7 +41,6 @@ public class JavaConsumerCallExecutor<T> implements CallableTask<CallJava.CallJa
       WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel input) {
     T typed = JavaFuncUtils.convertT(input, inputClass);
     consumer.accept(typed);
-
     return CompletableFuture.completedFuture(input);
   }
 

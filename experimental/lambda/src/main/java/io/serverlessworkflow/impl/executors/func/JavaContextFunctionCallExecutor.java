@@ -42,10 +42,8 @@ public class JavaContextFunctionCallExecutor<T, V>
   @Override
   public CompletableFuture<WorkflowModel> apply(
       WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel input) {
-
     WorkflowModelFactory mf = workflowContext.definition().application().modelFactory();
     T typedIn = JavaFuncUtils.convertT(input, inputClass);
-
     V out = function.apply(typedIn, workflowContext);
     return CompletableFuture.completedFuture(mf.fromAny(input, out));
   }
