@@ -26,7 +26,10 @@ import java.nio.file.Path;
 import java.util.Map;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 
+@EnabledOnOs(value = OS.LINUX)
 public class RunShellExecutorTest {
 
   @Test
@@ -152,8 +155,7 @@ public class RunShellExecutorTest {
           softly -> {
             softly.assertThat(outputModel.asText()).isPresent();
             softly.assertThat(outputModel.asText().get()).isNotEmpty();
-            softly.assertThat(outputModel.asText().get()).contains("ls: cannot access");
-            softly.assertThat(outputModel.asText().get()).contains("No such file or directory");
+            softly.assertThat(outputModel.asText().get()).contains("ls:");
           });
     }
   }

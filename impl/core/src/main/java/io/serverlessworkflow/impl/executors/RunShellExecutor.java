@@ -53,8 +53,8 @@ public class RunShellExecutor implements RunnableTask<RunShell> {
   public CompletableFuture<WorkflowModel> apply(
       WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel input) {
     ProcessBuilder processBuilder = this.processBuilderSupplier.apply(workflowContext, taskContext);
-    return CompletableFuture.completedFuture(
-        this.shellResultSupplier.apply(taskContext, input, processBuilder));
+    return CompletableFuture.supplyAsync(
+        () -> this.shellResultSupplier.apply(taskContext, input, processBuilder));
   }
 
   @Override
@@ -69,48 +69,44 @@ public class RunShellExecutor implements RunnableTask<RunShell> {
         (workflowContext, taskContext) -> {
           WorkflowApplication application = definition.application();
 
-          String command =
-              ExpressionUtils.isExpr(shellCommand)
-                  ? WorkflowUtils.buildStringResolver(
-                          application, shellCommand, taskContext.input().asJavaObject())
-                      .apply(workflowContext, taskContext, taskContext.input())
-                  : shellCommand;
-
-          StringBuilder commandBuilder = new StringBuilder(command);
+          StringBuilder commandBuilder =
+              new StringBuilder(
+                  ExpressionUtils.isExpr(shellCommand)
+                      ? WorkflowUtils.buildStringResolver(
+                              application, shellCommand, taskContext.input().asJavaObject())
+                          .apply(workflowContext, taskContext, taskContext.input())
+                      : shellCommand);
 
           if (shell.getArguments() != null
               && shell.getArguments().getAdditionalProperties() != null) {
             for (Map.Entry<String, Object> entry :
                 shell.getArguments().getAdditionalProperties().entrySet()) {
+              commandBuilder
+                  .append(" ")
+                  .append(
+                      ExpressionUtils.isExpr(entry.getKey())
+                          ? WorkflowUtils.buildStringResolver(
+                                  application, entry.getKey(), taskContext.input().asJavaObject())
+                              .apply(workflowContext, taskContext, taskContext.input())
+                          : entry.getKey());
+              if (entry.getValue() != null) {
 
-              String argKey =
-                  ExpressionUtils.isExpr(entry.getKey())
-                      ? WorkflowUtils.buildStringResolver(
-                              application, entry.getKey(), taskContext.input().asJavaObject())
-                          .apply(workflowContext, taskContext, taskContext.input())
-                      : entry.getKey();
-
-              if (entry.getValue() == null) {
-                commandBuilder.append(" ").append(argKey);
-                continue;
+                commandBuilder
+                    .append("=")
+                    .append(
+                        ExpressionUtils.isExpr(entry.getValue())
+                            ? WorkflowUtils.buildStringResolver(
+                                    application,
+                                    entry.getValue().toString(),
+                                    taskContext.input().asJavaObject())
+                                .apply(workflowContext, taskContext, taskContext.input())
+                            : entry.getValue().toString());
               }
-
-              String argValue =
-                  ExpressionUtils.isExpr(entry.getValue())
-                      ? WorkflowUtils.buildStringResolver(
-                              application,
-                              entry.getValue().toString(),
-                              taskContext.input().asJavaObject())
-                          .apply(workflowContext, taskContext, taskContext.input())
-                      : entry.getValue().toString();
-
-              commandBuilder.append(" ").append(argKey).append("=").append(argValue);
             }
           }
 
           // TODO: support Windows cmd.exe
           ProcessBuilder builder = new ProcessBuilder("sh", "-c", commandBuilder.toString());
-
           if (shell.getEnvironment() != null
               && shell.getEnvironment().getAdditionalProperties() != null) {
             for (Map.Entry<String, Object> entry :
@@ -128,7 +124,6 @@ public class RunShellExecutor implements RunnableTask<RunShell> {
               builder.environment().put(entry.getKey(), value);
             }
           }
-
           return builder;
         };
 
@@ -136,13 +131,9 @@ public class RunShellExecutor implements RunnableTask<RunShell> {
         (taskContext, input, processBuilder) -> {
           try {
             Process process = processBuilder.start();
-
-            if (taskConfiguration.isAwait()) {
-              return buildResultFromProcess(taskConfiguration, definition, process);
-            } else {
-              return input;
-            }
-
+            return taskConfiguration.isAwait()
+                ? buildResultFromProcess(taskConfiguration, definition, process)
+                : input;
           } catch (IOException | InterruptedException e) {
             throw new WorkflowException(WorkflowError.runtime(taskContext, e).build(), e);
           }
@@ -156,17 +147,12 @@ public class RunShellExecutor implements RunnableTask<RunShell> {
   private WorkflowModel buildResultFromProcess(
       RunShell taskConfiguration, WorkflowDefinition definition, Process process)
       throws IOException, InterruptedException {
-
     int exitCode = process.waitFor();
-
     String stdout = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
     String stderr = new String(process.getErrorStream().readAllBytes(), StandardCharsets.UTF_8);
 
-    RunTaskConfiguration.ProcessReturnType returnType = taskConfiguration.getReturn();
-
     WorkflowModelFactory modelFactory = definition.application().modelFactory();
-
-    return switch (returnType) {
+    return switch (taskConfiguration.getReturn()) {
       case ALL -> modelFactory.fromAny(new ProcessResult(exitCode, stdout.trim(), stderr.trim()));
       case NONE -> modelFactory.fromNull();
       case CODE -> modelFactory.from(exitCode);
