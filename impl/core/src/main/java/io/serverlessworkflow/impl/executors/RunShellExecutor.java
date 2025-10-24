@@ -187,17 +187,17 @@ public class RunShellExecutor implements RunnableTask<RunShell> {
     };
   }
 
-    private static Supplier<String> inputStreamStringSupplier(InputStream process) {
-        return () -> {
-            try {
-                return readInputStream(process);
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
-        };
-    }
+  private static Supplier<String> inputStreamStringSupplier(InputStream process) {
+    return () -> {
+      try {
+        return readInputStream(process);
+      } catch (IOException e) {
+        throw new UncheckedIOException(e);
+      }
+    };
+  }
 
-    @Override
+  @Override
   public boolean accept(Class<? extends RunTaskConfiguration> clazz) {
     return RunShell.class.equals(clazz);
   }
