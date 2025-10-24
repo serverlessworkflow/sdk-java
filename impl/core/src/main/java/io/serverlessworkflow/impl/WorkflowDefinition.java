@@ -79,7 +79,9 @@ public class WorkflowDefinition implements AutoCloseable, WorkflowDefinitionData
   static WorkflowDefinition of(WorkflowApplication application, Workflow workflow, Path path) {
     WorkflowDefinition definition =
         new WorkflowDefinition(
-            application, workflow, application.resourceLoaderFactory().getResourceLoader(path));
+            application,
+            workflow,
+            application.resourceLoaderFactory().getResourceLoader(application, path));
     Schedule schedule = workflow.getSchedule();
     if (schedule != null) {
       ListenTo to = schedule.getOn();

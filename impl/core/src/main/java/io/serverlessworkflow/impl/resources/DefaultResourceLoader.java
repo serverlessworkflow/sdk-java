@@ -19,48 +19,67 @@ import io.serverlessworkflow.api.types.Endpoint;
 import io.serverlessworkflow.api.types.EndpointUri;
 import io.serverlessworkflow.api.types.ExternalResource;
 import io.serverlessworkflow.api.types.UriTemplate;
+import io.serverlessworkflow.impl.TaskContext;
+import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
-import io.serverlessworkflow.impl.expressions.ExpressionFactory;
+import io.serverlessworkflow.impl.WorkflowModel;
+import io.serverlessworkflow.impl.WorkflowValueResolver;
+import io.serverlessworkflow.impl.expressions.ExpressionDescriptor;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.nio.file.Path;
+import java.time.Instant;
+import java.util.Map;
 import java.util.Optional;
+import java.util.ServiceLoader;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Function;
 
 public class DefaultResourceLoader implements ResourceLoader {
 
   private final Optional<Path> workflowPath;
+  private final WorkflowApplication application;
 
-  protected DefaultResourceLoader(Path workflowPath) {
+  private final AtomicReference<URITemplateResolver> templateResolver =
+      new AtomicReference<URITemplateResolver>();
+
+  private Map<ExternalResourceHandler, CachedResource> resourceCache = new LRUCache<>(100);
+  private Lock cacheLock = new ReentrantLock();
+
+  protected DefaultResourceLoader(WorkflowApplication application, Path workflowPath) {
+    this.application = application;
     this.workflowPath = Optional.ofNullable(workflowPath);
   }
 
-  @Override
-  public StaticResource loadStatic(ExternalResource resource) {
-    return processEndpoint(resource.getEndpoint());
+  private URITemplateResolver templateResolver() {
+    URITemplateResolver result = templateResolver.get();
+    if (result == null) {
+      result =
+          ServiceLoader.load(URITemplateResolver.class)
+              .findFirst()
+              .orElseThrow(
+                  () ->
+                      new IllegalStateException(
+                          "Need an uri template resolver to resolve uri template"));
+      templateResolver.set(result);
+    }
+    return result;
   }
 
-  @Override
-  public DynamicResource loadDynamic(
-      WorkflowContext workflow, ExternalResource resource, ExpressionFactory factory) {
-    throw new UnsupportedOperationException("Dynamic loading of resources is not suppported");
-  }
-
-  private StaticResource buildFromString(String uri) {
-    return fileResource(uri);
-  }
-
-  private StaticResource fileResource(String pathStr) {
+  private ExternalResourceHandler fileResource(String pathStr) {
     Path path = Path.of(pathStr);
     if (path.isAbsolute()) {
       return new FileResource(path);
     } else {
       return workflowPath
-          .<StaticResource>map(p -> new FileResource(p.resolve(path)))
+          .<ExternalResourceHandler>map(p -> new FileResource(p.resolve(path)))
           .orElseGet(() -> new ClasspathResource(pathStr));
     }
   }
 
-  private StaticResource buildFromURI(URI uri) {
+  private ExternalResourceHandler buildFromURI(URI uri) {
     String scheme = uri.getScheme();
     if (scheme == null || scheme.equalsIgnoreCase("file")) {
       return fileResource(uri.getPath());
@@ -75,31 +94,79 @@ public class DefaultResourceLoader implements ResourceLoader {
     }
   }
 
-  private StaticResource processEndpoint(Endpoint endpoint) {
+  @Override
+  public <T> T load(
+      ExternalResource resource,
+      Function<ExternalResourceHandler, T> function,
+      WorkflowContext workflowContext,
+      TaskContext taskContext,
+      WorkflowModel model) {
+    ExternalResourceHandler resourceHandler =
+        buildFromURI(
+            uriSupplier(resource.getEndpoint())
+                .apply(
+                    workflowContext,
+                    taskContext,
+                    model == null ? application.modelFactory().fromNull() : model));
+    try {
+      CachedResource<T> cachedResource;
+      cacheLock.lock();
+      cachedResource = resourceCache.get(resourceHandler);
+      cacheLock.unlock();
+      if (cachedResource == null || resourceHandler.shouldReload(cachedResource.lastReload())) {
+        cachedResource = new CachedResource(Instant.now(), function.apply(resourceHandler));
+        cacheLock.lock();
+        resourceCache.put(resourceHandler, cachedResource);
+      }
+      return cachedResource.content();
+    } finally {
+      cacheLock.unlock();
+    }
+  }
+
+  @Override
+  public WorkflowValueResolver<URI> uriSupplier(Endpoint endpoint) {
     if (endpoint.getEndpointConfiguration() != null) {
       EndpointUri uri = endpoint.getEndpointConfiguration().getUri();
       if (uri.getLiteralEndpointURI() != null) {
-        return getURI(uri.getLiteralEndpointURI());
+        return getURISupplier(uri.getLiteralEndpointURI());
       } else if (uri.getExpressionEndpointURI() != null) {
-        throw new UnsupportedOperationException(
-            "Expression not supported for loading a static resource");
+        return new ExpressionURISupplier(
+            application
+                .expressionFactory()
+                .resolveString(ExpressionDescriptor.from(uri.getExpressionEndpointURI())));
       }
     } else if (endpoint.getRuntimeExpression() != null) {
-      throw new UnsupportedOperationException(
-          "Expression not supported for loading a static resource");
+      return new ExpressionURISupplier(
+          application
+              .expressionFactory()
+              .resolveString(ExpressionDescriptor.from(endpoint.getRuntimeExpression())));
     } else if (endpoint.getUriTemplate() != null) {
-      return getURI(endpoint.getUriTemplate());
+      return getURISupplier(endpoint.getUriTemplate());
     }
     throw new IllegalArgumentException("Invalid endpoint definition " + endpoint);
   }
 
-  private StaticResource getURI(UriTemplate template) {
+  private WorkflowValueResolver<URI> getURISupplier(UriTemplate template) {
     if (template.getLiteralUri() != null) {
-      return buildFromURI(template.getLiteralUri());
+      return (w, t, n) -> template.getLiteralUri();
     } else if (template.getLiteralUriTemplate() != null) {
-      return buildFromString(template.getLiteralUriTemplate());
-    } else {
-      throw new IllegalStateException("Invalid endpoint definition" + template);
+      return (w, t, n) ->
+          templateResolver().resolveTemplates(template.getLiteralUriTemplate(), w, t, n);
+    }
+    throw new IllegalArgumentException("Invalid uritemplate definition " + template);
+  }
+
+  private class ExpressionURISupplier implements WorkflowValueResolver<URI> {
+    private WorkflowValueResolver<String> expr;
+
+    public ExpressionURISupplier(WorkflowValueResolver<String> expr) {
+      this.expr = expr;
+    }
+
+    @Override
+    public URI apply(WorkflowContext workflow, TaskContext task, WorkflowModel node) {
+      return URI.create(expr.apply(workflow, task, node));
     }
   }
 }

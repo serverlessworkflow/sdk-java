@@ -28,8 +28,8 @@ import io.serverlessworkflow.impl.expressions.ExpressionFactory;
 import io.serverlessworkflow.impl.expressions.RuntimeDescriptor;
 import io.serverlessworkflow.impl.lifecycle.WorkflowExecutionListener;
 import io.serverlessworkflow.impl.resources.DefaultResourceLoaderFactory;
+import io.serverlessworkflow.impl.resources.ExternalResourceHandler;
 import io.serverlessworkflow.impl.resources.ResourceLoaderFactory;
-import io.serverlessworkflow.impl.resources.StaticResource;
 import io.serverlessworkflow.impl.scheduler.DefaultWorkflowScheduler;
 import io.serverlessworkflow.impl.schema.SchemaValidator;
 import io.serverlessworkflow.impl.schema.SchemaValidatorFactory;
@@ -124,7 +124,7 @@ public class WorkflowApplication implements AutoCloseable {
                 };
 
             @Override
-            public SchemaValidator getValidator(StaticResource resource) {
+            public SchemaValidator getValidator(ExternalResourceHandler resource) {
               return NoValidation;
             }
 

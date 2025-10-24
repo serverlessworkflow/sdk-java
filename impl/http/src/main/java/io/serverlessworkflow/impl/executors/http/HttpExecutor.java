@@ -19,10 +19,8 @@ import static io.serverlessworkflow.impl.WorkflowUtils.buildMapResolver;
 
 import io.serverlessworkflow.api.types.CallHTTP;
 import io.serverlessworkflow.api.types.Endpoint;
-import io.serverlessworkflow.api.types.EndpointUri;
 import io.serverlessworkflow.api.types.HTTPArguments;
 import io.serverlessworkflow.api.types.TaskBase;
-import io.serverlessworkflow.api.types.UriTemplate;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
@@ -32,8 +30,6 @@ import io.serverlessworkflow.impl.WorkflowException;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
 import io.serverlessworkflow.impl.executors.CallableTask;
-import io.serverlessworkflow.impl.expressions.ExpressionDescriptor;
-import io.serverlessworkflow.impl.expressions.ExpressionFactory;
 import jakarta.ws.rs.HttpMethod;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.client.Client;
@@ -74,8 +70,7 @@ public class HttpExecutor implements CallableTask<CallHTTP> {
             definition.workflow(),
             task.getWith().getEndpoint().getEndpointConfiguration());
 
-    this.targetSupplier =
-        getTargetSupplier(httpArgs.getEndpoint(), application.expressionFactory());
+    this.targetSupplier = getTargetSupplier(definition, httpArgs.getEndpoint());
     this.headersMap =
         httpArgs.getHeaders() != null
             ? Optional.of(
@@ -167,35 +162,14 @@ public class HttpExecutor implements CallableTask<CallHTTP> {
     return clazz.equals(CallHTTP.class);
   }
 
-  public static TargetSupplier getTargetSupplier(
-      Endpoint endpoint, ExpressionFactory expressionFactory) {
-    if (endpoint.getEndpointConfiguration() != null) {
-      EndpointUri uri = endpoint.getEndpointConfiguration().getUri();
-      if (uri.getLiteralEndpointURI() != null) {
-        return getURISupplier(uri.getLiteralEndpointURI());
-      } else if (uri.getExpressionEndpointURI() != null) {
-        return new ExpressionURISupplier(
-            expressionFactory.resolveString(
-                ExpressionDescriptor.from(uri.getExpressionEndpointURI())));
-      }
-    } else if (endpoint.getRuntimeExpression() != null) {
-      return new ExpressionURISupplier(
-          expressionFactory.resolveString(
-              ExpressionDescriptor.from(endpoint.getRuntimeExpression())));
-    } else if (endpoint.getUriTemplate() != null) {
-      return getURISupplier(endpoint.getUriTemplate());
-    }
-    throw new IllegalArgumentException("Invalid endpoint definition " + endpoint);
+  private static TargetSupplier getTargetSupplier(
+      WorkflowDefinition definition, Endpoint endpoint) {
+    return (w, t, n) ->
+        client.target(definition.resourceLoader().uriSupplier(endpoint).apply(w, t, n));
   }
 
-  public static TargetSupplier getURISupplier(UriTemplate template) {
-    if (template.getLiteralUri() != null) {
-      return (w, t, n) -> client.target(template.getLiteralUri());
-    } else if (template.getLiteralUriTemplate() != null) {
-      return (w, t, n) ->
-          client.target(template.getLiteralUriTemplate()).resolveTemplates(n.asMap().orElseThrow());
-    }
-    throw new IllegalArgumentException("Invalid uritemplate definition " + template);
+  private static interface TargetSupplier {
+    WebTarget apply(WorkflowContext workflow, TaskContext task, WorkflowModel node);
   }
 
   private static class ExpressionURISupplier implements TargetSupplier {

@@ -15,10 +15,6 @@
  */
 package io.serverlessworkflow.impl.resources;
 
-import java.io.InputStream;
+import java.time.Instant;
 
-public interface StaticResource {
-  InputStream open();
-
-  String name();
-}
+public record CachedResource<T>(Instant lastReload, T content) {}

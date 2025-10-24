@@ -29,6 +29,11 @@
             </dependency>
             <dependency>
                 <groupId>io.serverlessworkflow</groupId>
+                <artifactId>serverlessworkflow-impl-template-resolver</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.serverlessworkflow</groupId>
                 <artifactId>serverlessworkflow-impl-json</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -122,8 +127,9 @@
         </dependencies>
     </dependencyManagement>
     <modules>
-        <module>http</module>
         <module>core</module>
+        <module>template</module>
+        <module>http</module>
         <module>jackson</module>
         <module>jwt-impl</module>
         <module>persistence</module>

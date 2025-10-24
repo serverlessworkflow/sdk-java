@@ -20,7 +20,7 @@ import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.net.URL;
 
-public class HttpResource implements StaticResource {
+public class HttpResource implements ExternalResourceHandler {
 
   private URL url;
 

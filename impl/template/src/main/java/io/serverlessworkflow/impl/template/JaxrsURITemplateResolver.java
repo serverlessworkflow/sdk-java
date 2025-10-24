@@ -13,25 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.resources;
+package io.serverlessworkflow.impl.template;
 
-import io.serverlessworkflow.api.types.Endpoint;
-import io.serverlessworkflow.api.types.ExternalResource;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
-import io.serverlessworkflow.impl.WorkflowValueResolver;
+import io.serverlessworkflow.impl.resources.URITemplateResolver;
+import jakarta.ws.rs.core.UriBuilder;
 import java.net.URI;
-import java.util.function.Function;
+import java.util.Collections;
 
-public interface ResourceLoader {
-
-  WorkflowValueResolver<URI> uriSupplier(Endpoint endpoint);
-
-  <T> T load(
-      ExternalResource resource,
-      Function<ExternalResourceHandler, T> function,
-      WorkflowContext workflowContext,
-      TaskContext taskContext,
-      WorkflowModel model);
+public class JaxrsURITemplateResolver implements URITemplateResolver {
+  @Override
+  public URI resolveTemplates(
+      String uri, WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel model) {
+    return UriBuilder.fromPath(uri)
+        .resolveTemplates(model.asMap().orElse(Collections.emptyMap()))
+        .build();
+  }
 }

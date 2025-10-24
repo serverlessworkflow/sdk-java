@@ -8,13 +8,9 @@
     <artifactId>serverlessworkflow-impl-http</artifactId>
     <name>Serverless Workflow :: Impl :: HTTP</name>
     <dependencies>
-         <dependency>
-           <groupId>jakarta.ws.rs</groupId>
-           <artifactId>jakarta.ws.rs-api</artifactId>
-         </dependency>
-         <dependency>
-           <groupId>io.serverlessworkflow</groupId>
-           <artifactId>serverlessworkflow-impl-core</artifactId>
-        </dependency>
+      <dependency>
+        <groupId>io.serverlessworkflow</groupId>
+        <artifactId>serverlessworkflow-impl-template-resolver</artifactId>
+      </dependency>
     </dependencies>
 </project>

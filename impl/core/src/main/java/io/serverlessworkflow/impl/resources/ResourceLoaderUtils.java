@@ -13,13 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.executors.http;
+package io.serverlessworkflow.impl.resources;
 
-import io.serverlessworkflow.impl.TaskContext;
-import io.serverlessworkflow.impl.WorkflowContext;
-import io.serverlessworkflow.impl.WorkflowModel;
-import jakarta.ws.rs.client.WebTarget;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
 
-public interface TargetSupplier {
-  WebTarget apply(WorkflowContext workflow, TaskContext task, WorkflowModel node);
+public class ResourceLoaderUtils {
+
+  private ResourceLoaderUtils() {}
+
+  public static String readString(ExternalResourceHandler handler) {
+    try (InputStream in = handler.open()) {
+      return new String(in.readAllBytes());
+    } catch (IOException io) {
+      throw new UncheckedIOException(io);
+    }
+  }
 }

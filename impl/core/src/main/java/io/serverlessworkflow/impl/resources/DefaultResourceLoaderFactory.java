@@ -15,6 +15,7 @@
  */
 package io.serverlessworkflow.impl.resources;
 
+import io.serverlessworkflow.impl.WorkflowApplication;
 import java.nio.file.Path;
 
 public class DefaultResourceLoaderFactory implements ResourceLoaderFactory {
@@ -28,7 +29,7 @@ public class DefaultResourceLoaderFactory implements ResourceLoaderFactory {
   private DefaultResourceLoaderFactory() {}
 
   @Override
-  public ResourceLoader getResourceLoader(Path path) {
-    return new DefaultResourceLoader(path);
+  public ResourceLoader getResourceLoader(WorkflowApplication application, Path path) {
+    return new DefaultResourceLoader(application, path);
   }
 }
