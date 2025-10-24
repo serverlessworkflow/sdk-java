@@ -110,6 +110,7 @@ Links below.
 <dependency>
   <groupId>io.serverlessworkflow</groupId>
   <artifactId>serverlessworkflow-impl-jackson</artifactId>
+  <type>pom</type>
 </dependency>
 
 <!-- Add if you use HTTP Call tasks -->

@@ -20,6 +20,7 @@
         <dependency>
             <groupId>io.serverlessworkflow</groupId>
             <artifactId>serverlessworkflow-impl-jackson</artifactId>
+            <type>pom</type>
         </dependency>
         <dependency>
             <groupId>io.serverlessworkflow</groupId>
