@@ -1,1 +1,2 @@
 io.serverlessworkflow.impl.executors.RunWorkflowExecutor
+io.serverlessworkflow.impl.executors.RunShellExecutor
