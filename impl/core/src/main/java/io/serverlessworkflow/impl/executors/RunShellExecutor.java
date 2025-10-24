@@ -28,16 +28,10 @@ import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowModelFactory;
 import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.expressions.ExpressionUtils;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.StringWriter;
-import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Supplier;
 
 public class RunShellExecutor implements RunnableTask<RunShell> {
 
@@ -59,9 +53,8 @@ public class RunShellExecutor implements RunnableTask<RunShell> {
   public CompletableFuture<WorkflowModel> apply(
       WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel input) {
     ProcessBuilder processBuilder = this.processBuilderSupplier.apply(workflowContext, taskContext);
-    WorkflowModel workflowModel =
-        this.shellResultSupplier.apply(taskContext, input, processBuilder);
-    return CompletableFuture.completedFuture(workflowModel);
+    return CompletableFuture.completedFuture(
+        this.shellResultSupplier.apply(taskContext, input, processBuilder));
   }
 
   @Override
@@ -145,34 +138,29 @@ public class RunShellExecutor implements RunnableTask<RunShell> {
             Process process = processBuilder.start();
 
             if (taskConfiguration.isAwait()) {
-              return waitForResult(taskConfiguration, definition, process);
+              return buildResultFromProcess(taskConfiguration, definition, process);
             } else {
               return input;
             }
 
-          } catch (IOException | InterruptedException | UncheckedIOException e) {
+          } catch (IOException | InterruptedException e) {
             throw new WorkflowException(WorkflowError.runtime(taskContext, e).build(), e);
           }
         };
   }
 
-  private WorkflowModel waitForResult(
+  /**
+   * Builds the WorkflowModel result from the executed process. It waits for the process to finish
+   * and captures the exit code, stdout, and stderr based on the task configuration.
+   */
+  private WorkflowModel buildResultFromProcess(
       RunShell taskConfiguration, WorkflowDefinition definition, Process process)
       throws IOException, InterruptedException {
 
-    CompletableFuture<String> futureStdout =
-        CompletableFuture.supplyAsync(inputStreamStringSupplier(process.getInputStream()));
-    CompletableFuture<String> futureStderr =
-        CompletableFuture.supplyAsync(inputStreamStringSupplier(process.getErrorStream()));
-
     int exitCode = process.waitFor();
 
-    CompletableFuture<Void> allStd = CompletableFuture.allOf(futureStdout, futureStderr);
-
-    allStd.join();
-
-    String stdout = futureStdout.join();
-    String stderr = futureStderr.join();
+    String stdout = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+    String stderr = new String(process.getErrorStream().readAllBytes(), StandardCharsets.UTF_8);
 
     RunTaskConfiguration.ProcessReturnType returnType = taskConfiguration.getReturn();
 
@@ -187,38 +175,8 @@ public class RunShellExecutor implements RunnableTask<RunShell> {
     };
   }
 
-  private static Supplier<String> inputStreamStringSupplier(InputStream process) {
-    return () -> {
-      try {
-        return readInputStream(process);
-      } catch (IOException e) {
-        throw new UncheckedIOException(e);
-      }
-    };
-  }
-
   @Override
   public boolean accept(Class<? extends RunTaskConfiguration> clazz) {
     return RunShell.class.equals(clazz);
-  }
-
-  /**
-   * Reads an InputStream and returns its content as a String. It keeps the original content using
-   * UTF-8 encoding.
-   *
-   * @param inputStream {@link InputStream} to be read
-   * @return {@link String} with the content of the InputStream
-   */
-  private static String readInputStream(InputStream inputStream) throws IOException {
-    StringWriter writer = new StringWriter();
-    try (BufferedReader reader =
-        new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
-      char[] buffer = new char[1024];
-      int charsRead;
-      while ((charsRead = reader.read(buffer)) != -1) {
-        writer.write(buffer, 0, charsRead);
-      }
-    }
-    return writer.toString();
   }
 }

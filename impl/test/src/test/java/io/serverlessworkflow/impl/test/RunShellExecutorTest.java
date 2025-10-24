@@ -236,7 +236,7 @@ public class RunShellExecutorTest {
   void testEchoWithArgsKeyValueJq() throws IOException {
     Workflow workflow =
         WorkflowReader.readWorkflowFromClasspath(
-            "workflows-samples/run-shell/echo-with-args-key-value.yaml");
+            "workflows-samples/run-shell/echo-with-args-key-value-jq.yaml");
     try (WorkflowApplication appl = WorkflowApplication.builder().build()) {
       WorkflowModel model =
           appl.workflowDefinition(workflow)
