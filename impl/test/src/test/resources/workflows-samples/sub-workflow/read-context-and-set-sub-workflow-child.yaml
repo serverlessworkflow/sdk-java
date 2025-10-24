@@ -1,0 +1,14 @@
+document:
+  dsl: '1.0.0'
+  namespace: default
+  name: set-into-context
+  version: '1.0.0'
+
+do:
+  - updateUser:
+      set:
+        updated:
+          userId:    '${ .userId + "_tested" }'
+          username:  '${ .username + "_tested" }'
+          password:  '${ .password + "_tested" }'
+        detail: '${ "The workflow " + $workflow.definition.document.name + ":" + $workflow.definition.document.version + " updated user in context" }'

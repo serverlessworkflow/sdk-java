@@ -1,0 +1,11 @@
+document:
+  dsl: '1.0.0'
+  namespace: default
+  name: set-into-context
+  version: '1.0.0'
+
+do:
+  - updateUser:
+      set:
+        greeting: "helloWorld"
+        counter: 1
