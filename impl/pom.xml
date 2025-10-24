@@ -81,6 +81,7 @@
                 <groupId>io.serverlessworkflow</groupId>
                 <artifactId>serverlessworkflow-impl-jackson</artifactId>
                 <version>${project.version}</version>
+                <type>pom</type>
             </dependency>
             <dependency>
                 <groupId>io.serverlessworkflow</groupId>
@@ -128,11 +129,11 @@
         <module>jwt-impl</module>
         <module>persistence</module>
         <module>openapi</module>
-        <module>test</module>
         <module>jq</module>
         <module>json-utils</module>
         <module>model</module>
         <module>lifecycleevent</module>
         <module>validation</module>
+        <module>test</module>
     </modules>
 </project>
