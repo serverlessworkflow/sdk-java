@@ -33,9 +33,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
 
 public class RunShellExecutor implements RunnableTask<RunShell> {
 
@@ -148,7 +150,7 @@ public class RunShellExecutor implements RunnableTask<RunShell> {
               return input;
             }
 
-          } catch (IOException | InterruptedException e) {
+          } catch (IOException | InterruptedException | UncheckedIOException e) {
             throw new WorkflowException(WorkflowError.runtime(taskContext, e).build(), e);
           }
         };
@@ -159,9 +161,9 @@ public class RunShellExecutor implements RunnableTask<RunShell> {
       throws IOException, InterruptedException {
 
     CompletableFuture<String> futureStdout =
-        CompletableFuture.supplyAsync(() -> readInputStream(process.getInputStream()));
+        CompletableFuture.supplyAsync(inputStreamStringSupplier(process.getInputStream()));
     CompletableFuture<String> futureStderr =
-        CompletableFuture.supplyAsync(() -> readInputStream(process.getErrorStream()));
+        CompletableFuture.supplyAsync(inputStreamStringSupplier(process.getErrorStream()));
 
     int exitCode = process.waitFor();
 
@@ -185,7 +187,17 @@ public class RunShellExecutor implements RunnableTask<RunShell> {
     };
   }
 
-  @Override
+    private static Supplier<String> inputStreamStringSupplier(InputStream process) {
+        return () -> {
+            try {
+                return readInputStream(process);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        };
+    }
+
+    @Override
   public boolean accept(Class<? extends RunTaskConfiguration> clazz) {
     return RunShell.class.equals(clazz);
   }
@@ -197,7 +209,7 @@ public class RunShellExecutor implements RunnableTask<RunShell> {
    * @param inputStream {@link InputStream} to be read
    * @return {@link String} with the content of the InputStream
    */
-  public static String readInputStream(InputStream inputStream) {
+  private static String readInputStream(InputStream inputStream) throws IOException {
     StringWriter writer = new StringWriter();
     try (BufferedReader reader =
         new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
@@ -206,8 +218,6 @@ public class RunShellExecutor implements RunnableTask<RunShell> {
       while ((charsRead = reader.read(buffer)) != -1) {
         writer.write(buffer, 0, charsRead);
       }
-    } catch (IOException e) {
-      throw new RuntimeException(e);
     }
     return writer.toString();
   }
