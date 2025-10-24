@@ -81,7 +81,7 @@ public class RetryTest {
             .instance(Map.of("delay", 0.01))
             .start();
     Awaitility.await()
-        .atMost(Duration.ofSeconds(100))
+        .atMost(Duration.ofSeconds(1))
         .until(() -> future.join().as(JsonNode.class).orElseThrow().equals(result));
   }
 }

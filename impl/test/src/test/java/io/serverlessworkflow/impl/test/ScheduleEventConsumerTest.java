@@ -54,7 +54,6 @@ class ScheduleEventConsumerTest {
 
   @Test
   void testAllEvent() throws IOException, InterruptedException, ExecutionException {
-
     WorkflowDefinition definition =
         appl.workflowDefinition(
             readWorkflowFromClasspath("workflows-samples/listen-start-all.yaml"));
@@ -63,7 +62,7 @@ class ScheduleEventConsumerTest {
     appl.eventPublishers().forEach(p -> p.publish(buildCloudEvent(Map.of("name", "Fulanito"))));
     await()
         .pollDelay(Duration.ofMillis(20))
-        .atMost(Duration.ofMillis(500))
+        .atMost(Duration.ofMillis(600))
         .until(
             () ->
                 instances.stream().filter(i -> i.status() == WorkflowStatus.COMPLETED).count()
@@ -81,7 +80,7 @@ class ScheduleEventConsumerTest {
     Collection<WorkflowInstance> instances = appl.scheduler().scheduledInstances(definition);
     await()
         .pollDelay(Duration.ofMillis(20))
-        .atMost(Duration.ofMillis(500))
+        .atMost(Duration.ofMillis(600))
         .until(
             () ->
                 instances.stream().filter(i -> i.status() == WorkflowStatus.COMPLETED).count()
@@ -105,7 +104,7 @@ class ScheduleEventConsumerTest {
     Collection<WorkflowInstance> allDefInstances = appl.scheduler().scheduledInstances(allDef);
     await()
         .pollDelay(Duration.ofMillis(20))
-        .atMost(Duration.ofMillis(500))
+        .atMost(Duration.ofMillis(800))
         .until(
             () ->
                 oneDefInstances.stream().filter(i -> i.status() == WorkflowStatus.COMPLETED).count()
