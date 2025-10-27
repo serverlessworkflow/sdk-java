@@ -98,7 +98,7 @@
         <!-- Base langchain4j version -->
         <version.dev.langchain4j>1.8.0</version.dev.langchain4j>
         <!-- Swagger Parser -->
-        <version.io.swagger.parser.v3>2.1.33</version.io.swagger.parser.v3>
+        <version.io.swagger.parser.v3>2.1.35</version.io.swagger.parser.v3>
         <!-- Checkstyle props -->
         <checkstyle.failOnViolation>true</checkstyle.failOnViolation>
         <checkstyle.header.extensions>java</checkstyle.header.extensions>
