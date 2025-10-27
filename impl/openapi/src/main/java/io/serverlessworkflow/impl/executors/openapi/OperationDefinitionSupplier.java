@@ -27,20 +27,17 @@ import jakarta.ws.rs.client.WebTarget;
 
 class OperationDefinitionSupplier {
 
-  private final WorkflowApplication application;
-  private final OpenAPIArguments with;
+  private final String operationId;
+  private final TargetSupplier targetSupplier;
 
   OperationDefinitionSupplier(WorkflowApplication application, OpenAPIArguments with) {
-    this.with = with;
-    this.application = application;
+    this.operationId = with.getOperationId();
+    this.targetSupplier =
+        getTargetSupplier(with.getDocument().getEndpoint(), application.expressionFactory());
   }
 
   OperationDefinition get(
       WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel input) {
-    TargetSupplier targetSupplier =
-        getTargetSupplier(with.getDocument().getEndpoint(), application.expressionFactory());
-
-    String operationId = with.getOperationId();
     WebTarget webTarget = targetSupplier.apply(workflowContext, taskContext, input);
     OpenAPIProcessor processor = new OpenAPIProcessor(operationId, webTarget.getUri());
     return processor.parse();
