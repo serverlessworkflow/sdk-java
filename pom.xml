@@ -96,7 +96,7 @@
         <!-- Experimental modules from langchain4j -->
         <version.dev.langchain4j.beta>1.7.1-beta14</version.dev.langchain4j.beta>
         <!-- Base langchain4j version -->
-        <version.dev.langchain4j>1.7.1</version.dev.langchain4j>
+        <version.dev.langchain4j>1.8.0</version.dev.langchain4j>
         <!-- Swagger Parser -->
         <version.io.swagger.parser.v3>2.1.33</version.io.swagger.parser.v3>
         <!-- Checkstyle props -->
