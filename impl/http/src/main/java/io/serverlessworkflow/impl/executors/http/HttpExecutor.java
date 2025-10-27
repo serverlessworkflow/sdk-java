@@ -197,4 +197,17 @@ public class HttpExecutor implements CallableTask<CallHTTP> {
     }
     throw new IllegalArgumentException("Invalid uritemplate definition " + template);
   }
+
+  private static class ExpressionURISupplier implements TargetSupplier {
+    private WorkflowValueResolver<String> expr;
+
+    public ExpressionURISupplier(WorkflowValueResolver<String> expr) {
+      this.expr = expr;
+    }
+
+    @Override
+    public WebTarget apply(WorkflowContext workflow, TaskContext task, WorkflowModel node) {
+      return client.target(expr.apply(workflow, task, node));
+    }
+  }
 }
