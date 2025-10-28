@@ -14,6 +14,7 @@
         <version.jakarta.ws.rs>4.0.0</version.jakarta.ws.rs>
         <version.net.thisptr>1.6.0</version.net.thisptr>
         <version.org.glassfish.jersey>3.1.11</version.org.glassfish.jersey>
+        <version.docker.java>3.6.0</version.docker.java>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -93,6 +94,11 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
+                <groupId>io.serverlessworkflow</groupId>
+                <artifactId>serverlessworkflow-impl-container</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>net.thisptr</groupId>
                 <artifactId>jackson-jq</artifactId>
                 <version>${version.net.thisptr}</version>
@@ -124,6 +130,16 @@
                 <artifactId>h2-mvstore</artifactId>
                 <version>${version.com.h2database}</version>
              </dependency>
+            <dependency>
+                <groupId>com.github.docker-java</groupId>
+                <artifactId>docker-java-core</artifactId>
+                <version>${version.docker.java}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.docker-java</groupId>
+                <artifactId>docker-java-transport-httpclient5</artifactId>
+                <version>${version.docker.java}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
     <modules>
@@ -139,6 +155,7 @@
         <module>model</module>
         <module>lifecycleevent</module>
         <module>validation</module>
+        <module>container</module>
         <module>test</module>
     </modules>
 </project>
