@@ -15,8 +15,9 @@
  */
 package io.serverlessworkflow.impl.resources;
 
+import io.serverlessworkflow.impl.WorkflowApplication;
 import java.nio.file.Path;
 
 public interface ResourceLoaderFactory {
-  ResourceLoader getResourceLoader(Path path);
+  ResourceLoader getResourceLoader(WorkflowApplication application, Path path);
 }

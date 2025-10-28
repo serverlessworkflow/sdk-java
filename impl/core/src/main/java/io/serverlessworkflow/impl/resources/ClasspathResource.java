@@ -17,7 +17,7 @@ package io.serverlessworkflow.impl.resources;
 
 import java.io.InputStream;
 
-public class ClasspathResource implements StaticResource {
+public class ClasspathResource implements ExternalResourceHandler {
 
   private String path;
 

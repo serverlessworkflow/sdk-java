@@ -15,31 +15,34 @@
  */
 package io.serverlessworkflow.impl.executors.openapi;
 
-import static io.serverlessworkflow.impl.executors.http.HttpExecutor.getTargetSupplier;
-
+import io.serverlessworkflow.api.types.ExternalResource;
 import io.serverlessworkflow.api.types.OpenAPIArguments;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
-import io.serverlessworkflow.impl.executors.http.TargetSupplier;
-import jakarta.ws.rs.client.WebTarget;
+import io.serverlessworkflow.impl.resources.ResourceLoaderUtils;
 
 class OperationDefinitionSupplier {
 
-  private final String operationId;
-  private final TargetSupplier targetSupplier;
+  private final OpenAPIProcessor processor;
+  private final ExternalResource resource;
 
   OperationDefinitionSupplier(WorkflowApplication application, OpenAPIArguments with) {
-    this.operationId = with.getOperationId();
-    this.targetSupplier =
-        getTargetSupplier(with.getDocument().getEndpoint(), application.expressionFactory());
+    this.processor = new OpenAPIProcessor(with.getOperationId());
+    this.resource = with.getDocument();
   }
 
   OperationDefinition get(
       WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel input) {
-    WebTarget webTarget = targetSupplier.apply(workflowContext, taskContext, input);
-    OpenAPIProcessor processor = new OpenAPIProcessor(operationId, webTarget.getUri());
-    return processor.parse();
+    return workflowContext
+        .definition()
+        .resourceLoader()
+        .<OperationDefinition>load(
+            resource,
+            r -> processor.parse(ResourceLoaderUtils.readString(r)),
+            workflowContext,
+            taskContext,
+            input);
   }
 }

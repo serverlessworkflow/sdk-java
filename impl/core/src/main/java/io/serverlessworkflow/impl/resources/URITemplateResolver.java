@@ -18,9 +18,9 @@ package io.serverlessworkflow.impl.resources;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
-import java.io.InputStream;
-import java.util.Optional;
+import java.net.URI;
 
-public interface DynamicResource {
-  InputStream open(WorkflowContext workflow, Optional<TaskContext> task, WorkflowModel input);
+public interface URITemplateResolver {
+  URI resolveTemplates(
+      String uri, WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel model);
 }

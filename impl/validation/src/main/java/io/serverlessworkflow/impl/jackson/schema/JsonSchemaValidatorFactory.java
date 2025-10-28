@@ -19,7 +19,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.serverlessworkflow.api.WorkflowFormat;
 import io.serverlessworkflow.api.types.SchemaInline;
 import io.serverlessworkflow.impl.jackson.JsonUtils;
-import io.serverlessworkflow.impl.resources.StaticResource;
+import io.serverlessworkflow.impl.resources.ExternalResourceHandler;
 import io.serverlessworkflow.impl.schema.SchemaValidator;
 import io.serverlessworkflow.impl.schema.SchemaValidatorFactory;
 import java.io.IOException;
@@ -34,7 +34,7 @@ public class JsonSchemaValidatorFactory implements SchemaValidatorFactory {
   }
 
   @Override
-  public SchemaValidator getValidator(StaticResource resource) {
+  public SchemaValidator getValidator(ExternalResourceHandler resource) {
     ObjectMapper mapper = WorkflowFormat.fromFileName(resource.name()).mapper();
     try (InputStream in = resource.open()) {
       return new JsonSchemaValidator(mapper.readTree(in));

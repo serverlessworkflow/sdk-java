@@ -15,31 +15,16 @@
  */
 package io.serverlessworkflow.impl.resources;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.UncheckedIOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.time.Instant;
 
-class FileResource implements ExternalResourceHandler {
+public interface ExternalResourceHandler {
 
-  private Path path;
+  String name();
 
-  public FileResource(Path path) {
-    this.path = path;
-  }
+  InputStream open();
 
-  @Override
-  public InputStream open() {
-    try {
-      return Files.newInputStream(path);
-    } catch (IOException io) {
-      throw new UncheckedIOException(io);
-    }
-  }
-
-  @Override
-  public String name() {
-    return path.getFileName().toString();
+  default boolean shouldReload(Instant lasUpdate) {
+    return false;
   }
 }

@@ -17,10 +17,10 @@ package io.serverlessworkflow.impl.schema;
 
 import io.serverlessworkflow.api.types.SchemaInline;
 import io.serverlessworkflow.impl.ServicePriority;
-import io.serverlessworkflow.impl.resources.StaticResource;
+import io.serverlessworkflow.impl.resources.ExternalResourceHandler;
 
 public interface SchemaValidatorFactory extends ServicePriority {
   SchemaValidator getValidator(SchemaInline inline);
 
-  SchemaValidator getValidator(StaticResource resource);
+  SchemaValidator getValidator(ExternalResourceHandler resource);
 }

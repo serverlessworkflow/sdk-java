@@ -48,8 +48,12 @@ public class WorkflowUtils {
         return Optional.of(validatorFactory.getValidator(schema.getSchemaInline()));
       } else if (schema.getSchemaExternal() != null) {
         return Optional.of(
-            validatorFactory.getValidator(
-                resourceLoader.loadStatic(schema.getSchemaExternal().getResource())));
+            resourceLoader.load(
+                schema.getSchemaExternal().getResource(),
+                validatorFactory::getValidator,
+                null,
+                null,
+                null));
       }
     }
     return Optional.empty();

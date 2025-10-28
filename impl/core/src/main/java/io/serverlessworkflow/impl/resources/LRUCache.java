@@ -15,31 +15,20 @@
  */
 package io.serverlessworkflow.impl.resources;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.UncheckedIOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
-class FileResource implements ExternalResourceHandler {
+public class LRUCache<K, V> extends LinkedHashMap<K, V> {
 
-  private Path path;
+  private final int capacity;
 
-  public FileResource(Path path) {
-    this.path = path;
+  public LRUCache(int capacity) {
+    super(capacity, 0.75f, true);
+    this.capacity = capacity;
   }
 
   @Override
-  public InputStream open() {
-    try {
-      return Files.newInputStream(path);
-    } catch (IOException io) {
-      throw new UncheckedIOException(io);
-    }
-  }
-
-  @Override
-  public String name() {
-    return path.getFileName().toString();
+  protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
+    return size() > capacity;
   }
 }

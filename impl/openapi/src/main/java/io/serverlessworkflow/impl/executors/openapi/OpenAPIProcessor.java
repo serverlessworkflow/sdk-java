@@ -20,32 +20,25 @@ import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.PathItem;
 import io.swagger.v3.parser.OpenAPIV3Parser;
 import io.swagger.v3.parser.core.models.ParseOptions;
-import java.net.URI;
-import java.util.List;
 import java.util.Set;
 
 class OpenAPIProcessor {
 
   private final String operationId;
-  private final URI openAPIEndpoint;
 
-  OpenAPIProcessor(String operationId, URI openAPIEndpoint) {
+  OpenAPIProcessor(String operationId) {
     this.operationId = operationId;
-    this.openAPIEndpoint = openAPIEndpoint;
   }
 
-  OperationDefinition parse() {
+  public OperationDefinition parse(String content) {
     OpenAPIV3Parser parser = new OpenAPIV3Parser();
     ParseOptions opts = new ParseOptions();
     opts.setResolve(true);
     opts.setResolveFully(false);
-
-    var result = parser.readLocation(openAPIEndpoint.toString(), List.of(), opts);
-    var openapi = result.getOpenAPI();
-    return getOperation(openapi);
+    return getOperation(parser.readContents(content).getOpenAPI());
   }
 
-  OperationDefinition getOperation(OpenAPI openAPI) {
+  private OperationDefinition getOperation(OpenAPI openAPI) {
     if (openAPI == null || openAPI.getPaths() == null) {
       throw new IllegalArgumentException("Invalid OpenAPI document");
     }
