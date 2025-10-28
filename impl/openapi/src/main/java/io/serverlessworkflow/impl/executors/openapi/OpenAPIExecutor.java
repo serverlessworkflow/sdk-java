@@ -15,24 +15,32 @@
  */
 package io.serverlessworkflow.impl.executors.openapi;
 
-import io.serverlessworkflow.api.types.CallHTTP;
 import io.serverlessworkflow.api.types.CallOpenAPI;
+import io.serverlessworkflow.api.types.ExternalResource;
 import io.serverlessworkflow.api.types.OpenAPIArguments;
 import io.serverlessworkflow.api.types.TaskBase;
 import io.serverlessworkflow.impl.TaskContext;
+import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.executors.CallableTask;
 import io.serverlessworkflow.impl.executors.http.HttpExecutor;
+import io.serverlessworkflow.impl.executors.http.HttpExecutor.HttpExecutorBuilder;
+import io.serverlessworkflow.impl.resources.ResourceLoaderUtils;
+import io.swagger.v3.oas.models.parameters.Parameter;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
 public class OpenAPIExecutor implements CallableTask<CallOpenAPI> {
 
-  private OperationDefinitionSupplier operationDefinitionSupplier;
-  private OpenAPIArguments with;
+  private OpenAPIProcessor processor;
+  private ExternalResource resource;
+  private Map<String, Object> parameters;
+  private HttpExecutorBuilder builder;
 
   @Override
   public boolean accept(Class<? extends TaskBase> clazz) {
@@ -40,72 +48,80 @@ public class OpenAPIExecutor implements CallableTask<CallOpenAPI> {
   }
 
   @Override
+  public void init(CallOpenAPI task, WorkflowDefinition definition) {
+    OpenAPIArguments with = task.getWith();
+    this.processor = new OpenAPIProcessor(with.getOperationId());
+    this.resource = with.getDocument();
+    this.parameters = with.getParameters().getAdditionalProperties();
+    this.builder =
+        HttpExecutor.builder(definition)
+            .withAuth(with.getAuthentication())
+            .redirect(with.isRedirect());
+  }
+
+  @Override
   public CompletableFuture<WorkflowModel> apply(
       WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel input) {
+    Collection<HttpExecutor> executors =
+        workflowContext
+            .definition()
+            .resourceLoader()
+            .<Collection<HttpExecutor>>load(
+                resource,
+                r -> {
+                  OperationDefinition o = processor.parse(ResourceLoaderUtils.readString(r));
+                  fillHttpBuilder(workflowContext.definition().application(), o);
+                  return o.getServers().stream().map(s -> builder.build(s)).toList();
+                },
+                workflowContext,
+                taskContext,
+                input);
 
-    OperationDefinition operation =
-        operationDefinitionSupplier.get(workflowContext, taskContext, input);
-    HttpCallAdapter httpCallAdapter =
-        getHttpCallAdapter(operation, workflowContext, taskContext, input);
-
-    Iterator<String> iter = operation.getServers().iterator();
+    Iterator<HttpExecutor> iter = executors.iterator();
     if (!iter.hasNext()) {
       throw new IllegalArgumentException(
-          "List of servers is empty for operation " + operation.getOperation());
+          "List of servers is empty for schema " + resource.getName());
     }
     CompletableFuture<WorkflowModel> future =
-        executeServer(iter.next(), httpCallAdapter, workflowContext, taskContext, input);
+        iter.next().apply(workflowContext, taskContext, input);
     while (iter.hasNext()) {
-      future.exceptionallyCompose(
-          i -> executeServer(iter.next(), httpCallAdapter, workflowContext, taskContext, input));
+      future.exceptionallyCompose(i -> iter.next().apply(workflowContext, taskContext, input));
     }
     return future;
   }
 
-  private CompletableFuture<WorkflowModel> executeServer(
-      String server,
-      HttpCallAdapter callAdapter,
-      WorkflowContext workflowContext,
-      TaskContext taskContext,
-      WorkflowModel input) {
-    CallHTTP callHTTP = callAdapter.server(server).build();
-    HttpExecutor executor = new HttpExecutor();
-    executor.init(callHTTP, workflowContext.definition());
-    return executor.apply(workflowContext, taskContext, input);
+  private void fillHttpBuilder(WorkflowApplication application, OperationDefinition operation) {
+    Map<String, Object> headersMap = new HashMap<String, Object>();
+    Map<String, Object> queryMap = new HashMap<String, Object>();
+    Map<String, Object> pathParameters = new HashMap<String, Object>();
+
+    Map<String, Object> bodyParameters = new HashMap<>(parameters);
+    for (Parameter parameter : operation.getParameters()) {
+      switch (parameter.getIn()) {
+        case "header":
+          param(parameter.getName(), bodyParameters, headersMap);
+          break;
+        case "path":
+          param(parameter.getName(), bodyParameters, pathParameters);
+          break;
+        case "query":
+          param(parameter.getName(), bodyParameters, queryMap);
+          break;
+      }
+    }
+
+    builder
+        .withMethod(operation.getMethod())
+        .withPath(new OperationPathResolver(operation.getPath(), application, pathParameters))
+        .withBody(bodyParameters)
+        .withQueryMap(queryMap)
+        .withHeaders(headersMap);
   }
 
-  @Override
-  public void init(CallOpenAPI task, WorkflowDefinition definition) {
-    with = task.getWith();
-    operationDefinitionSupplier = new OperationDefinitionSupplier(definition.application(), with);
-  }
-
-  private HttpCallAdapter getHttpCallAdapter(
-      OperationDefinition operation,
-      WorkflowContext workflowContext,
-      TaskContext taskContext,
-      WorkflowModel input) {
-    OperationPathResolver pathResolver =
-        new OperationPathResolver(
-            operation.getPath(),
-            workflowContext.definition().application(),
-            with.getParameters().getAdditionalProperties());
-
-    return new HttpCallAdapter()
-        .auth(with.getAuthentication())
-        .body(operation.getBody())
-        .contentType(operation.getContentType())
-        .headers(
-            operation.getParameters().stream()
-                .filter(p -> "header".equals(p.getIn()))
-                .collect(Collectors.toUnmodifiableSet()))
-        .method(operation.getMethod())
-        .query(
-            operation.getParameters().stream()
-                .filter(p -> "query".equals(p.getIn()))
-                .collect(Collectors.toUnmodifiableSet()))
-        .redirect(with.isRedirect())
-        .target(pathResolver.resolve(workflowContext, taskContext, input))
-        .workflowParams(with.getParameters().getAdditionalProperties());
+  private void param(String name, Map<String, Object> origMap, Map<String, Object> collectorMap) {
+    Object value = origMap.remove(name);
+    if (value != null) {
+      collectorMap.put(name, value);
+    }
   }
 }

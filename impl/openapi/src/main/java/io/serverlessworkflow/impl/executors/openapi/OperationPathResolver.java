@@ -25,21 +25,17 @@ import jakarta.ws.rs.core.UriBuilder;
 import java.net.URI;
 import java.util.Map;
 
-class OperationPathResolver {
-
-  private final Map<String, Object> args;
+class OperationPathResolver implements WorkflowValueResolver<URI> {
   private final String path;
-  private WorkflowApplication application;
+  private final WorkflowValueResolver<Map<String, Object>> asMap;
 
   OperationPathResolver(String path, WorkflowApplication application, Map<String, Object> args) {
     this.path = path;
-    this.args = args;
-    this.application = application;
+    this.asMap = application.expressionFactory().resolveMap(ExpressionDescriptor.object(args));
   }
 
-  URI resolve(WorkflowContext workflow, TaskContext task, WorkflowModel model) {
-    WorkflowValueResolver<Map<String, Object>> asMap =
-        application.expressionFactory().resolveMap(ExpressionDescriptor.object(args));
+  @Override
+  public URI apply(WorkflowContext workflow, TaskContext task, WorkflowModel model) {
     return UriBuilder.fromUri(path)
         .resolveTemplates(asMap.apply(workflow, task, model), false)
         .build();
