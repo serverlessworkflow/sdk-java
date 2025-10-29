@@ -24,7 +24,7 @@ import io.serverlessworkflow.impl.WorkflowValueResolver;
 import java.net.URI;
 import java.util.function.Function;
 
-public interface ResourceLoader {
+public interface ResourceLoader extends AutoCloseable {
 
   WorkflowValueResolver<URI> uriSupplier(Endpoint endpoint);
 
