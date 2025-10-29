@@ -16,10 +16,10 @@
 package io.serverlessworkflow.impl.executors.http;
 
 import io.serverlessworkflow.api.types.AuthenticationPolicyUnion;
-import io.serverlessworkflow.api.types.EndpointConfiguration;
 import io.serverlessworkflow.api.types.ReferenceableAuthenticationPolicy;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.WorkflowApplication;
+import io.serverlessworkflow.impl.WorkflowDefinition;
 import java.util.Optional;
 
 class AuthProviderFactory {
@@ -29,18 +29,18 @@ class AuthProviderFactory {
   static final String AUTH_HEADER_NAME = "Authorization";
 
   public static Optional<AuthProvider> getAuth(
-      WorkflowApplication app, Workflow workflow, EndpointConfiguration endpointConfiguration) {
-    if (endpointConfiguration == null) {
-      return Optional.empty();
-    }
-    ReferenceableAuthenticationPolicy auth = endpointConfiguration.getAuthentication();
+      WorkflowDefinition definition, ReferenceableAuthenticationPolicy auth) {
     if (auth == null) {
       return Optional.empty();
     }
     if (auth.getAuthenticationPolicyReference() != null) {
-      return buildFromReference(app, workflow, auth.getAuthenticationPolicyReference().getUse());
+      return buildFromReference(
+          definition.application(),
+          definition.workflow(),
+          auth.getAuthenticationPolicyReference().getUse());
     } else if (auth.getAuthenticationPolicy() != null) {
-      return buildFromPolicy(app, workflow, auth.getAuthenticationPolicy());
+      return buildFromPolicy(
+          definition.application(), definition.workflow(), auth.getAuthenticationPolicy());
     }
     return Optional.empty();
   }
