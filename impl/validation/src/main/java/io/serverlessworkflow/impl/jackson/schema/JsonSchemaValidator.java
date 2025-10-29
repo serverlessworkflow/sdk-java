@@ -16,25 +16,26 @@
 package io.serverlessworkflow.impl.jackson.schema;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.networknt.schema.JsonSchema;
-import com.networknt.schema.JsonSchemaFactory;
-import com.networknt.schema.SpecVersion.VersionFlag;
-import com.networknt.schema.ValidationMessage;
+import com.networknt.schema.Error;
+import com.networknt.schema.Schema;
+import com.networknt.schema.SchemaRegistry;
+import com.networknt.schema.SpecificationVersion;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.schema.SchemaValidator;
-import java.util.Set;
+import java.util.Collection;
 
 public class JsonSchemaValidator implements SchemaValidator {
 
-  private final JsonSchema schemaObject;
+  private final Schema schemaObject;
 
   public JsonSchemaValidator(JsonNode jsonNode) {
-    this.schemaObject = JsonSchemaFactory.getInstance(VersionFlag.V7).getSchema(jsonNode);
+    this.schemaObject =
+        SchemaRegistry.withDefaultDialect(SpecificationVersion.DRAFT_7).getSchema(jsonNode);
   }
 
   @Override
   public void validate(WorkflowModel node) {
-    Set<ValidationMessage> report =
+    Collection<Error> report =
         schemaObject.validate(
             node.as(JsonNode.class)
                 .orElseThrow(
