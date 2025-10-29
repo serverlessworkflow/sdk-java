@@ -16,22 +16,21 @@
 package io.serverlessworkflow.api;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.networknt.schema.Error;
 import com.networknt.schema.InputFormat;
-import com.networknt.schema.JsonSchema;
-import com.networknt.schema.JsonSchemaFactory;
-import com.networknt.schema.SchemaValidatorsConfig;
-import com.networknt.schema.SpecVersion.VersionFlag;
-import com.networknt.schema.ValidationMessage;
+import com.networknt.schema.Schema;
+import com.networknt.schema.SchemaRegistry;
+import com.networknt.schema.SpecificationVersion;
 import io.serverlessworkflow.api.types.Workflow;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.io.UncheckedIOException;
-import java.util.Set;
+import java.util.Collection;
 import java.util.stream.Collectors;
 
 class ValidationReader implements WorkflowReaderOperations {
-  private final JsonSchema schemaObject;
+  private final Schema schemaObject;
 
   ValidationReader() {
     try (InputStream input =
@@ -39,8 +38,8 @@ class ValidationReader implements WorkflowReaderOperations {
             .getContextClassLoader()
             .getResourceAsStream("schema/workflow.yaml")) {
       this.schemaObject =
-          JsonSchemaFactory.getInstance(VersionFlag.V7)
-              .getSchema(input, InputFormat.YAML, SchemaValidatorsConfig.builder().build());
+          SchemaRegistry.withDefaultDialect(SpecificationVersion.DRAFT_7)
+              .getSchema(input, InputFormat.YAML);
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
@@ -67,12 +66,10 @@ class ValidationReader implements WorkflowReaderOperations {
   }
 
   private Workflow validate(JsonNode value, WorkflowFormat format) {
-    Set<ValidationMessage> validationErrors = schemaObject.validate(value);
+    Collection<Error> validationErrors = schemaObject.validate(value);
     if (!validationErrors.isEmpty()) {
       throw new IllegalArgumentException(
-          validationErrors.stream()
-              .map(ValidationMessage::toString)
-              .collect(Collectors.joining("\n")));
+          validationErrors.stream().map(Error::toString).collect(Collectors.joining("\n")));
     }
     return format.mapper().convertValue(value, Workflow.class);
   }
