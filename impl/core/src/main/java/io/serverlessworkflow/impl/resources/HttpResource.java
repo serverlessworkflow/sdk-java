@@ -18,7 +18,10 @@ package io.serverlessworkflow.impl.resources;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.net.HttpURLConnection;
 import java.net.URL;
+import java.time.Instant;
+import java.util.Objects;
 
 public class HttpResource implements ExternalResourceHandler {
 
@@ -39,5 +42,34 @@ public class HttpResource implements ExternalResourceHandler {
 
   public String name() {
     return url.getFile();
+  }
+
+  @Override
+  public boolean shouldReload(Instant lastUpdate) {
+    try {
+      long millis = lastUpdate.toEpochMilli();
+      HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+      connection.setUseCaches(true);
+      connection.setRequestMethod("HEAD");
+      connection.setIfModifiedSince(millis);
+      return connection.getResponseCode() != HttpURLConnection.HTTP_NOT_MODIFIED
+          && connection.getLastModified() > millis;
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(url);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) return true;
+    if (obj == null) return false;
+    if (getClass() != obj.getClass()) return false;
+    HttpResource other = (HttpResource) obj;
+    return Objects.equals(url, other.url);
   }
 }

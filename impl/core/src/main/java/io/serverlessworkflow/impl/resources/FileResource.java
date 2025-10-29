@@ -20,6 +20,9 @@ import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.time.Instant;
+import java.util.Objects;
 
 class FileResource implements ExternalResourceHandler {
 
@@ -41,5 +44,31 @@ class FileResource implements ExternalResourceHandler {
   @Override
   public String name() {
     return path.getFileName().toString();
+  }
+
+  @Override
+  public boolean shouldReload(Instant lastUpdate) {
+    try {
+      return Files.readAttributes(path, BasicFileAttributes.class)
+          .lastModifiedTime()
+          .toInstant()
+          .isAfter(lastUpdate);
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(path);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) return true;
+    if (obj == null) return false;
+    if (getClass() != obj.getClass()) return false;
+    FileResource other = (FileResource) obj;
+    return Objects.equals(path, other.path);
   }
 }

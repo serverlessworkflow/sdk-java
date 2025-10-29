@@ -24,7 +24,7 @@ public interface ExternalResourceHandler {
 
   InputStream open();
 
-  default boolean shouldReload(Instant lasUpdate) {
+  default boolean shouldReload(Instant lastUpdate) {
     return false;
   }
 }

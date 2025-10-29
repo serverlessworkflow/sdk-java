@@ -32,9 +32,8 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
 import java.util.ServiceLoader;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
 
 public class DefaultResourceLoader implements ResourceLoader {
@@ -45,8 +44,7 @@ public class DefaultResourceLoader implements ResourceLoader {
   private final AtomicReference<URITemplateResolver> templateResolver =
       new AtomicReference<URITemplateResolver>();
 
-  private Map<ExternalResourceHandler, CachedResource> resourceCache = new LRUCache<>(100);
-  private Lock cacheLock = new ReentrantLock();
+  private Map<ExternalResourceHandler, CachedResource> resourceCache = new ConcurrentHashMap<>();
 
   protected DefaultResourceLoader(WorkflowApplication application, Path workflowPath) {
     this.application = application;
@@ -108,20 +106,15 @@ public class DefaultResourceLoader implements ResourceLoader {
                     workflowContext,
                     taskContext,
                     model == null ? application.modelFactory().fromNull() : model));
-    try {
-      CachedResource<T> cachedResource;
-      cacheLock.lock();
-      cachedResource = resourceCache.get(resourceHandler);
-      cacheLock.unlock();
-      if (cachedResource == null || resourceHandler.shouldReload(cachedResource.lastReload())) {
-        cachedResource = new CachedResource(Instant.now(), function.apply(resourceHandler));
-        cacheLock.lock();
-        resourceCache.put(resourceHandler, cachedResource);
-      }
-      return cachedResource.content();
-    } finally {
-      cacheLock.unlock();
-    }
+    return (T)
+        resourceCache
+            .compute(
+                resourceHandler,
+                (k, v) ->
+                    v == null || k.shouldReload(v.lastReload())
+                        ? new CachedResource(Instant.now(), function.apply(k))
+                        : v)
+            .content();
   }
 
   @Override
@@ -168,5 +161,9 @@ public class DefaultResourceLoader implements ResourceLoader {
     public URI apply(WorkflowContext workflow, TaskContext task, WorkflowModel node) {
       return URI.create(expr.apply(workflow, task, node));
     }
+  }
+
+  public void close() {
+    resourceCache.clear();
   }
 }

@@ -16,6 +16,7 @@
 package io.serverlessworkflow.impl.resources;
 
 import java.io.InputStream;
+import java.util.Objects;
 
 public class ClasspathResource implements ExternalResourceHandler {
 
@@ -33,5 +34,19 @@ public class ClasspathResource implements ExternalResourceHandler {
   @Override
   public String name() {
     return path;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(path);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) return true;
+    if (obj == null) return false;
+    if (getClass() != obj.getClass()) return false;
+    ClasspathResource other = (ClasspathResource) obj;
+    return Objects.equals(path, other.path);
   }
 }

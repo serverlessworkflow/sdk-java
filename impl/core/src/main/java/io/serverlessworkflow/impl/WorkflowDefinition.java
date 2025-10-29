@@ -149,5 +149,6 @@ public class WorkflowDefinition implements AutoCloseable, WorkflowDefinitionData
   @Override
   public void close() {
     safeClose(scheculedConsumer);
+    safeClose(resourceLoader);
   }
 }

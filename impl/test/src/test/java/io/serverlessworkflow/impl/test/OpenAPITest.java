@@ -17,36 +17,38 @@ package io.serverlessworkflow.impl.test;
 
 import static io.serverlessworkflow.api.WorkflowReader.readWorkflowFromClasspath;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.WorkflowApplication;
+import io.serverlessworkflow.impl.WorkflowDefinition;
+import io.serverlessworkflow.impl.WorkflowException;
 import java.io.IOException;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.io.InputStream;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
-import okhttp3.OkHttpClient;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
+import okio.Buffer;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public class OpenAPITest {
 
-  private static final ObjectMapper MAPPER = new ObjectMapper();
+  private static WorkflowApplication app;
+  private static byte[] yaml;
 
   private MockWebServer authServer;
   private MockWebServer openApiServer;
   private MockWebServer restServer;
-
-  private OkHttpClient httpClient;
+  private Buffer yamlBuffer;
 
   private static String PROJECT_JSON_SUCCESS =
       """
@@ -94,6 +96,19 @@ public class OpenAPITest {
                   }
                   """;
 
+  @BeforeAll
+  static void init() throws IOException {
+    try (InputStream is = OpenAPITest.class.getResourceAsStream("/schema/openapi/openapi.yaml")) {
+      yaml = is.readAllBytes();
+    }
+    app = WorkflowApplication.builder().build();
+  }
+
+  @AfterAll
+  static void cleanup() {
+    app.close();
+  }
+
   @BeforeEach
   void setUp() throws IOException {
     authServer = new MockWebServer();
@@ -105,7 +120,8 @@ public class OpenAPITest {
     restServer = new MockWebServer();
     restServer.start(8886);
 
-    httpClient = new OkHttpClient();
+    yamlBuffer = new Buffer();
+    yamlBuffer.write(yaml);
   }
 
   @AfterEach
@@ -120,14 +136,9 @@ public class OpenAPITest {
     Workflow workflow =
         readWorkflowFromClasspath("workflows-samples/openapi/project-post-positive.yaml");
 
-    URL url = this.getClass().getResource("/schema/openapi/openapi.yaml");
-
-    Path workflowPath = Path.of(url.getPath());
-    String yaml = Files.readString(workflowPath, StandardCharsets.UTF_8);
-
     openApiServer.enqueue(
         new MockResponse()
-            .setBody(yaml)
+            .setBody(yamlBuffer)
             .setHeader("Content-Type", "application/yaml")
             .setResponseCode(200));
 
@@ -137,14 +148,8 @@ public class OpenAPITest {
             .setHeader("Content-Type", "application/json")
             .setResponseCode(201));
 
-    Map<String, Object> result;
-
-    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-      result =
-          app.workflowDefinition(workflow).instance(Map.of()).start().get().asMap().orElseThrow();
-    } catch (Exception e) {
-      throw new RuntimeException("Workflow execution failed", e);
-    }
+    Map<String, Object> result =
+        app.workflowDefinition(workflow).instance(Map.of()).start().get().asMap().orElseThrow();
 
     RecordedRequest restRequest = restServer.takeRequest();
     assertEquals("POST", restRequest.getMethod());
@@ -174,14 +179,9 @@ public class OpenAPITest {
     Workflow workflow =
         readWorkflowFromClasspath("workflows-samples/openapi/project-post-positive.yaml");
 
-    URL url = this.getClass().getResource("/schema/openapi/openapi.yaml");
-
-    Path workflowPath = Path.of(url.getPath());
-    String yaml = Files.readString(workflowPath, StandardCharsets.UTF_8);
-
     openApiServer.enqueue(
         new MockResponse()
-            .setBody(yaml)
+            .setBody(yamlBuffer)
             .setHeader("Content-Type", "application/yaml")
             .setResponseCode(200));
 
@@ -191,16 +191,19 @@ public class OpenAPITest {
             .setHeader("Content-Type", "application/json")
             .setResponseCode(409));
 
-    Map<String, Object> result;
-
-    Exception exception = null;
-
-    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-      result =
-          app.workflowDefinition(workflow).instance(Map.of()).start().get().asMap().orElseThrow();
-    } catch (Exception e) {
-      exception = e;
-    }
+    Exception exception =
+        assertThrows(
+            Exception.class,
+            () ->
+                app.workflowDefinition(workflow)
+                    .instance(Map.of())
+                    .start()
+                    .get()
+                    .asMap()
+                    .orElseThrow());
+    assertInstanceOf(WorkflowException.class, exception.getCause());
+    assertTrue(exception.getMessage().contains("status=409"));
+    assertTrue(exception.getMessage().contains("title=HTTP 409 Client Error"));
 
     RecordedRequest restRequest = restServer.takeRequest();
     assertEquals("POST", restRequest.getMethod());
@@ -210,26 +213,29 @@ public class OpenAPITest {
     assertTrue(restRequest.getPath().contains("lang=en"));
     assertEquals("application/json", restRequest.getHeader("Content-Type"));
     assertEquals("Bearer eyJhbnNpc2l0b3IuYm9sdXMubWFnbnVz", restRequest.getHeader("Authorization"));
-
-    assertNotNull(exception);
-    assertTrue(exception.getMessage().contains("status=409"));
-    assertTrue(exception.getMessage().contains("title=HTTP 409 Client Error"));
   }
 
   @Test
   public void testOpenAPIGetWithPositiveResponse() throws Exception {
+
     Workflow workflow =
         readWorkflowFromClasspath("workflows-samples/openapi/get-user-get-request.yaml");
 
-    URL url = this.getClass().getResource("/schema/openapi/openapi.yaml");
-
-    Path workflowPath = Path.of(url.getPath());
-    String yaml = Files.readString(workflowPath, StandardCharsets.UTF_8);
+    openApiServer.enqueue(
+        new MockResponse()
+            .setBody(yamlBuffer)
+            .setHeader("Content-Type", "application/yaml")
+            .setResponseCode(200));
 
     openApiServer.enqueue(
         new MockResponse()
-            .setBody(yaml)
-            .setHeader("Content-Type", "application/yaml")
+            .setHeader("last-modified", new Date().toGMTString())
+            .setResponseCode(304));
+
+    restServer.enqueue(
+        new MockResponse()
+            .setBody(PROJECT_GET_JSON_POSITIVE)
+            .setHeader("Content-Type", "application/json")
             .setResponseCode(200));
 
     restServer.enqueue(
@@ -238,14 +244,17 @@ public class OpenAPITest {
             .setHeader("Content-Type", "application/json")
             .setResponseCode(200));
 
-    Map<String, Object> result;
-    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-      result =
-          app.workflowDefinition(workflow).instance(Map.of()).start().get().asMap().orElseThrow();
-    } catch (Exception e) {
-      throw new RuntimeException("Workflow execution failed", e);
-    }
+    WorkflowDefinition definition = app.workflowDefinition(workflow);
+    assertData(definition.instance(Map.of()).start().get().asMap().orElseThrow());
+    RecordedRequest openAPIRequest = openApiServer.takeRequest();
+    assertEquals("GET", openAPIRequest.getMethod());
 
+    assertData(definition.instance(Map.of()).start().get().asMap().orElseThrow());
+    openAPIRequest = openApiServer.takeRequest();
+    assertEquals("HEAD", openAPIRequest.getMethod());
+  }
+
+  private void assertData(Map<String, Object> result) throws InterruptedException {
     RecordedRequest restRequest = restServer.takeRequest();
     assertEquals("GET", restRequest.getMethod());
     assertTrue(restRequest.getPath().startsWith("/users/40099?"));
@@ -262,14 +271,9 @@ public class OpenAPITest {
     Workflow workflow =
         readWorkflowFromClasspath("workflows-samples/openapi/get-user-get-request-vars.yaml");
 
-    URL url = this.getClass().getResource("/schema/openapi/openapi.yaml");
-
-    Path workflowPath = Path.of(url.getPath());
-    String yaml = Files.readString(workflowPath, StandardCharsets.UTF_8);
-
     openApiServer.enqueue(
         new MockResponse()
-            .setBody(yaml)
+            .setBody(yamlBuffer)
             .setHeader("Content-Type", "application/yaml")
             .setResponseCode(200));
 
@@ -279,7 +283,6 @@ public class OpenAPITest {
             .setHeader("Content-Type", "application/json")
             .setResponseCode(200));
 
-    Map<String, Object> result;
     Map<String, Object> params =
         Map.of(
             "userId",
@@ -299,12 +302,8 @@ public class OpenAPITest {
             "limit",
             20);
 
-    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-      result =
-          app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
-    } catch (Exception e) {
-      throw new RuntimeException("Workflow execution failed", e);
-    }
+    Map<String, Object> result =
+        app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
 
     RecordedRequest restRequest = restServer.takeRequest();
     assertEquals("GET", restRequest.getMethod());
