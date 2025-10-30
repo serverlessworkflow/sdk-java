@@ -38,6 +38,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.ServiceLoader;
 import java.util.ServiceLoader.Provider;
 import java.util.concurrent.ConcurrentHashMap;
@@ -61,6 +62,7 @@ public class WorkflowApplication implements AutoCloseable {
   private final boolean lifeCycleCEPublishingEnabled;
   private final WorkflowModelFactory modelFactory;
   private final WorkflowScheduler scheduler;
+  private final Map<String, WorkflowAdditionalObject<?>> additionalObjects;
 
   private WorkflowApplication(Builder builder) {
     this.taskFactory = builder.taskFactory;
@@ -78,6 +80,7 @@ public class WorkflowApplication implements AutoCloseable {
     this.lifeCycleCEPublishingEnabled = builder.lifeCycleCEPublishingEnabled;
     this.modelFactory = builder.modelFactory;
     this.scheduler = builder.scheduler;
+    this.additionalObjects = builder.additionalObjects;
   }
 
   public TaskExecutorFactory taskFactory() {
@@ -153,6 +156,7 @@ public class WorkflowApplication implements AutoCloseable {
         () -> new RuntimeDescriptor("reference impl", "1.0.0_alpha", Collections.emptyMap());
     private boolean lifeCycleCEPublishingEnabled = true;
     private WorkflowModelFactory modelFactory;
+    private Map<String, WorkflowAdditionalObject<?>> additionalObjects;
 
     private Builder() {}
 
@@ -221,6 +225,14 @@ public class WorkflowApplication implements AutoCloseable {
       return this;
     }
 
+    public <T> Builder withExtensionObject(String name, WorkflowAdditionalObject additionalObject) {
+      if (additionalObjects == null) {
+        additionalObjects = new ConcurrentHashMap<>();
+      }
+      additionalObjects.put(name, additionalObject);
+      return this;
+    }
+
     public Builder withModelFactory(WorkflowModelFactory modelFactory) {
       this.modelFactory = modelFactory;
       return this;
@@ -269,6 +281,10 @@ public class WorkflowApplication implements AutoCloseable {
       if (scheduler == null) {
         scheduler = new DefaultWorkflowScheduler();
       }
+      if (additionalObjects == null) {
+        additionalObjects = Collections.emptyMap();
+      }
+
       return new WorkflowApplication(this);
     }
   }
@@ -328,5 +344,11 @@ public class WorkflowApplication implements AutoCloseable {
 
   public WorkflowScheduler scheduler() {
     return scheduler;
+  }
+
+  public <T> Optional<T> additionalObject(
+      String name, WorkflowContext workflowContext, TaskContext taskContext) {
+    return Optional.ofNullable(additionalObjects.get(name))
+        .map(v -> (T) v.apply(workflowContext, taskContext));
   }
 }
