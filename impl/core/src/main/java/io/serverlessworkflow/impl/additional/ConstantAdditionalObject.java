@@ -13,7 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl;
+package io.serverlessworkflow.impl.additional;
+
+import io.serverlessworkflow.impl.TaskContext;
+import io.serverlessworkflow.impl.WorkflowContext;
 
 public class ConstantAdditionalObject<T> implements WorkflowAdditionalObject<T> {
 

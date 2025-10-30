@@ -19,6 +19,7 @@ import static io.serverlessworkflow.impl.WorkflowUtils.safeClose;
 
 import io.serverlessworkflow.api.types.SchemaInline;
 import io.serverlessworkflow.api.types.Workflow;
+import io.serverlessworkflow.impl.additional.WorkflowAdditionalObject;
 import io.serverlessworkflow.impl.events.EventConsumer;
 import io.serverlessworkflow.impl.events.EventPublisher;
 import io.serverlessworkflow.impl.events.InMemoryEvents;
@@ -225,7 +226,8 @@ public class WorkflowApplication implements AutoCloseable {
       return this;
     }
 
-    public <T> Builder withExtensionObject(String name, WorkflowAdditionalObject additionalObject) {
+    public <T> Builder withAdditionalObject(
+        String name, WorkflowAdditionalObject<T> additionalObject) {
       if (additionalObjects == null) {
         additionalObjects = new ConcurrentHashMap<>();
       }

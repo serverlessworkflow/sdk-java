@@ -13,8 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl;
+package io.serverlessworkflow.impl.additional;
 
-import java.util.function.BiFunction;
+import io.serverlessworkflow.impl.TaskContext;
+import io.serverlessworkflow.impl.WorkflowContext;
+import java.util.function.Supplier;
 
-public interface WorkflowAdditionalObject<T> extends BiFunction<WorkflowContext, TaskContext, T> {}
+public class SuppliedAdditionalObject<T> implements WorkflowAdditionalObject<T> {
+
+  private final Supplier<T> supplier;
+
+  public SuppliedAdditionalObject(Supplier<T> supplier) {
+    this.supplier = supplier;
+  }
+
+  @Override
+  public T apply(WorkflowContext t, TaskContext u) {
+    return supplier.get();
+  }
+}
