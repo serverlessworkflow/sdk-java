@@ -34,8 +34,6 @@ import io.serverlessworkflow.impl.executors.CallableTask;
 import io.serverlessworkflow.impl.expressions.ExpressionDescriptor;
 import jakarta.ws.rs.HttpMethod;
 import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.client.Client;
-import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.client.Invocation.Builder;
 import jakarta.ws.rs.client.WebTarget;
 import java.net.URI;
@@ -46,7 +44,6 @@ import java.util.function.Supplier;
 
 public class HttpExecutor implements CallableTask<CallHTTP> {
 
-  private static final Client client = ClientBuilder.newClient();
   // TODO allow changing default converter
   private static final HttpModelConverter defaultConverter = new HttpModelConverter() {};
 
@@ -262,13 +259,14 @@ public class HttpExecutor implements CallableTask<CallHTTP> {
   }
 
   private static TargetSupplier getTargetSupplier(WorkflowValueResolver<URI> uriSupplier) {
-    return (w, t, n) -> client.target(uriSupplier.apply(w, t, n));
+    return (w, t, n) -> HttpClientResolver.client(w, t).target(uriSupplier.apply(w, t, n));
   }
 
   private static TargetSupplier getTargetSupplier(
       WorkflowValueResolver<URI> uriSupplier, WorkflowValueResolver<URI> pathSupplier) {
     return (w, t, n) ->
-        client.target(uriSupplier.apply(w, t, n).resolve(pathSupplier.apply(w, t, n)));
+        HttpClientResolver.client(w, t)
+            .target(uriSupplier.apply(w, t, n).resolve(pathSupplier.apply(w, t, n)));
   }
 
   private static interface TargetSupplier {
