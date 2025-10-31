@@ -27,6 +27,10 @@ import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
+import org.junit.jupiter.api.parallel.ResourceLock;
+import org.junit.jupiter.api.parallel.Resources;
 
 public class SecretExpressionTest {
 
@@ -38,6 +42,8 @@ public class SecretExpressionTest {
   }
 
   @Test
+  @Execution(ExecutionMode.SAME_THREAD)
+  @ResourceLock(Resources.SYSTEM_PROPERTIES)
   void testDefault() {
     System.setProperty("whoissuperman", "ClarkKent");
     try (WorkflowApplication appl = WorkflowApplication.builder().build()) {
