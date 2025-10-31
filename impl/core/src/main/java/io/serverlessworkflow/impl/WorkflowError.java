@@ -28,6 +28,10 @@ public record WorkflowError(
     return error(Errors.AUTHORIZATION.toString(), Errors.AUTHORIZATION.status());
   }
 
+  public static Builder expression() {
+    return error("https://serverlessworkflow.io/spec/1.0.0/errors/expression", 400);
+  }
+
   public static Builder communication(int status, TaskContext context, Exception ex) {
     return communication(status, context, ex.getMessage());
   }

@@ -30,5 +30,7 @@ public interface WorkflowInstanceData {
 
   WorkflowModel output();
 
+  WorkflowModel context();
+
   <T> T outputAs(Class<T> clazz);
 }

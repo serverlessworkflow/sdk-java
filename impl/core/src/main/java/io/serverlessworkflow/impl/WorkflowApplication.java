@@ -21,6 +21,7 @@ import io.serverlessworkflow.api.types.SchemaInline;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.additional.WorkflowAdditionalObject;
 import io.serverlessworkflow.impl.config.ConfigManager;
+import io.serverlessworkflow.impl.config.ConfigSecretManager;
 import io.serverlessworkflow.impl.config.SecretManager;
 import io.serverlessworkflow.impl.config.SystemPropertyConfigManager;
 import io.serverlessworkflow.impl.events.EventConsumer;
@@ -316,7 +317,7 @@ public class WorkflowApplication implements AutoCloseable {
         secretManager =
             ServiceLoader.load(SecretManager.class)
                 .findFirst()
-                .orElseGet(() -> s -> configManager.config(s, String.class));
+                .orElseGet(() -> new ConfigSecretManager(configManager));
       }
       return new WorkflowApplication(this);
     }

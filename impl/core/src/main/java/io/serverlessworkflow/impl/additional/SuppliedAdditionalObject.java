@@ -15,8 +15,8 @@
  */
 package io.serverlessworkflow.impl.additional;
 
-import io.serverlessworkflow.impl.TaskContext;
-import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.TaskContextData;
+import io.serverlessworkflow.impl.WorkflowContextData;
 import java.util.function.Supplier;
 
 public class SuppliedAdditionalObject<T> implements WorkflowAdditionalObject<T> {
@@ -28,7 +28,7 @@ public class SuppliedAdditionalObject<T> implements WorkflowAdditionalObject<T> 
   }
 
   @Override
-  public T apply(WorkflowContext t, TaskContext u) {
+  public T apply(WorkflowContextData t, TaskContextData u) {
     return supplier.get();
   }
 }

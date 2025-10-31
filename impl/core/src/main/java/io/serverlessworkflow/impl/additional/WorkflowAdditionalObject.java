@@ -15,8 +15,9 @@
  */
 package io.serverlessworkflow.impl.additional;
 
-import io.serverlessworkflow.impl.TaskContext;
-import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.TaskContextData;
+import io.serverlessworkflow.impl.WorkflowContextData;
 import java.util.function.BiFunction;
 
-public interface WorkflowAdditionalObject<T> extends BiFunction<WorkflowContext, TaskContext, T> {}
+public interface WorkflowAdditionalObject<T>
+    extends BiFunction<WorkflowContextData, TaskContextData, T> {}

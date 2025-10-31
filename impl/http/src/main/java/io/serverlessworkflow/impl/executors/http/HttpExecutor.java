@@ -233,16 +233,13 @@ public class HttpExecutor implements CallableTask<CallHTTP> {
     queryMap.ifPresent(
         q -> q.apply(workflow, taskContext, input).forEach((k, v) -> supplier.addQuery(k, v)));
     Builder request = supplier.get().request();
-    authProvider.ifPresent(auth -> auth.build(request, workflow, taskContext, input));
     headersMap.ifPresent(
         h -> h.apply(workflow, taskContext, input).forEach((k, v) -> request.header(k, v)));
     return CompletableFuture.supplyAsync(
         () -> {
           try {
-            authProvider.ifPresent(auth -> auth.preRequest(request, workflow, taskContext, input));
-            WorkflowModel result = requestFunction.apply(request, workflow, taskContext, input);
-            authProvider.ifPresent(auth -> auth.postRequest(workflow, taskContext, input));
-            return result;
+            authProvider.ifPresent(auth -> auth.build(request, workflow, taskContext, input));
+            return requestFunction.apply(request, workflow, taskContext, input);
           } catch (WebApplicationException exception) {
             throw new WorkflowException(
                 WorkflowError.communication(

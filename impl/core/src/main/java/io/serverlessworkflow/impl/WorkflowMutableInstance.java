@@ -146,6 +146,11 @@ public class WorkflowMutableInstance implements WorkflowInstance {
   }
 
   @Override
+  public WorkflowModel context() {
+    return workflowContext.context();
+  }
+
+  @Override
   public WorkflowModel output() {
     CompletableFuture<WorkflowModel> future = futureRef.get();
     return future != null ? future.join() : null;
