@@ -21,9 +21,8 @@ import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
-import jakarta.ws.rs.client.Invocation.Builder;
 
-public class DigestAuthProvider implements AuthProvider {
+public class DigestAuthProvider extends AbstractAuthProvider {
 
   public DigestAuthProvider(
       WorkflowApplication app, Workflow workflow, DigestAuthenticationPolicy authPolicy) {
@@ -31,9 +30,8 @@ public class DigestAuthProvider implements AuthProvider {
   }
 
   @Override
-  public Builder build(
-      Builder builder, WorkflowContext workflow, TaskContext task, WorkflowModel model) {
-    // TODO Auto-generated method stub
-    return builder;
+  protected String authHeader(WorkflowContext workflow, TaskContext task, WorkflowModel model) {
+    // TODO implement it
+    return null;
   }
 }

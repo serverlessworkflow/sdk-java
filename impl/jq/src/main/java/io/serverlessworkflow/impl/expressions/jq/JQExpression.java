@@ -19,6 +19,7 @@ import static io.serverlessworkflow.impl.jackson.JsonUtils.modelToJson;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.TextNode;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowError;
@@ -29,6 +30,7 @@ import io.serverlessworkflow.impl.expressions.TaskDescriptor;
 import io.serverlessworkflow.impl.expressions.WorkflowDescriptor;
 import io.serverlessworkflow.impl.jackson.FunctionJsonNode;
 import io.serverlessworkflow.impl.jackson.JsonUtils;
+import java.util.Map;
 import java.util.function.Supplier;
 import net.thisptr.jackson.jq.Output;
 import net.thisptr.jackson.jq.Scope;
@@ -92,19 +94,23 @@ public class JQExpression implements ObjectExpression {
       childScope.setValue("output", modelToJson(task.output()));
       childScope.setValue("task", () -> JsonUtils.fromValue(TaskDescriptor.of(task)));
       task.variables().forEach((k, v) -> childScope.setValue(k, JsonUtils.fromValue(v)));
+      String auth = task.authorization();
+      if (auth != null) {
+        childScope.setValue("authorization", new TextNode(auth));
+      }
     }
     if (workflow != null) {
       childScope.setValue(
           "secret",
           new FunctionJsonNode(
-              k ->
-                  workflow
-                      .definition()
-                      .application()
-                      .secretManager()
-                      .secret(k)
-                      .orElseThrow(
-                          () -> new WorkflowException(WorkflowError.authorization().build()))));
+              k -> {
+                Map<String, String> secret =
+                    workflow.definition().application().secretManager().secret(k);
+                if (secret.isEmpty()) {
+                  throw new WorkflowException(WorkflowError.authorization().build());
+                }
+                return secret;
+              }));
       childScope.setValue("context", modelToJson(workflow.context()));
       childScope.setValue(
           "runtime",

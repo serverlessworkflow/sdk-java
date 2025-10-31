@@ -24,9 +24,8 @@ import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
-import jakarta.ws.rs.client.Invocation.Builder;
 
-class BearerAuthProvider implements AuthProvider {
+class BearerAuthProvider extends AbstractAuthProvider {
 
   private static final String BEARER_TOKEN = "Bearer %s";
 
@@ -41,16 +40,13 @@ class BearerAuthProvider implements AuthProvider {
       String token = config.getBearerAuthenticationProperties().getToken();
       tokenFilter = WorkflowUtils.buildStringFilter(app, token);
     } else if (config.getBearerAuthenticationPolicySecret() != null) {
-      throw new UnsupportedOperationException("Secrets are still not supported");
+      String secretName = checkSecret(workflow, config.getBearerAuthenticationPolicySecret());
+      tokenFilter = (w, t, m) -> find(w, secretName, "bearer");
     }
   }
 
   @Override
-  public Builder build(
-      Builder builder, WorkflowContext workflow, TaskContext task, WorkflowModel model) {
-    builder.header(
-        AuthProviderFactory.AUTH_HEADER_NAME,
-        String.format(BEARER_TOKEN, tokenFilter.apply(workflow, task, model)));
-    return builder;
+  protected String authHeader(WorkflowContext workflow, TaskContext task, WorkflowModel model) {
+    return String.format(BEARER_TOKEN, tokenFilter.apply(workflow, task, model));
   }
 }

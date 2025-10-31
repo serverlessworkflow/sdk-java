@@ -38,6 +38,7 @@ public class TaskContext implements TaskContextData {
   private Instant completedAt;
   private TransitionInfo transition;
   private short retryAttempt;
+  private String authorization;
 
   public TaskContext(
       WorkflowModel input,
@@ -91,6 +92,14 @@ public class TaskContext implements TaskContextData {
   @Override
   public WorkflowModel rawInput() {
     return rawInput;
+  }
+
+  public String authorization() {
+    return authorization;
+  }
+
+  public void authorization(String authorization) {
+    this.authorization = authorization;
   }
 
   @Override

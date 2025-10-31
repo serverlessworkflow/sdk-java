@@ -24,7 +24,6 @@ import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowException;
 import java.io.IOException;
 import java.util.Map;
-import java.util.Optional;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
@@ -45,7 +44,7 @@ public class SecretExpressionTest {
   @Execution(ExecutionMode.SAME_THREAD)
   @ResourceLock(Resources.SYSTEM_PROPERTIES)
   void testDefault() {
-    System.setProperty("whoissuperman", "ClarkKent");
+    System.setProperty("superman.name", "ClarkKent");
     try (WorkflowApplication appl = WorkflowApplication.builder().build()) {
       assertThat(
               appl.workflowDefinition(workflow)
@@ -57,7 +56,7 @@ public class SecretExpressionTest {
                   .get("superSecret"))
           .isEqualTo("ClarkKent");
     } finally {
-      System.clearProperty("whoissuperman");
+      System.clearProperty("superman.name");
     }
   }
 
@@ -79,7 +78,7 @@ public class SecretExpressionTest {
   @Test
   void testCustom() {
     try (WorkflowApplication appl =
-        WorkflowApplication.builder().withSecretManager(k -> Optional.of("ClarkKent")).build()) {
+        WorkflowApplication.builder().withSecretManager(k -> Map.of("name", "ClarkKent")).build()) {
       assertThat(
               appl.workflowDefinition(workflow)
                   .instance(Map.of())

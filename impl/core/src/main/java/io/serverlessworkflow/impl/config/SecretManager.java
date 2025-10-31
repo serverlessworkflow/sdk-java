@@ -16,9 +16,9 @@
 package io.serverlessworkflow.impl.config;
 
 import io.serverlessworkflow.impl.ServicePriority;
-import java.util.Optional;
+import java.util.Map;
 
 @FunctionalInterface
 public interface SecretManager extends ServicePriority {
-  Optional<String> secret(String secretName);
+  Map<String, String> secret(String secretName);
 }
