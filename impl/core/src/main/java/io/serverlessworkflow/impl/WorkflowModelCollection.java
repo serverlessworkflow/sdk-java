@@ -20,11 +20,8 @@ import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.BiConsumer;
 
 public interface WorkflowModelCollection extends WorkflowModel, Collection<WorkflowModel> {
-
-  default void forEach(BiConsumer<String, WorkflowModel> consumer) {}
 
   @Override
   default Collection<WorkflowModel> asCollection() {
