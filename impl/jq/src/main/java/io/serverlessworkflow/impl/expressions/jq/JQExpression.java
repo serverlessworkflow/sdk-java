@@ -21,10 +21,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.WorkflowError;
+import io.serverlessworkflow.impl.WorkflowException;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.expressions.ObjectExpression;
 import io.serverlessworkflow.impl.expressions.TaskDescriptor;
 import io.serverlessworkflow.impl.expressions.WorkflowDescriptor;
+import io.serverlessworkflow.impl.jackson.FunctionJsonNode;
 import io.serverlessworkflow.impl.jackson.JsonUtils;
 import java.util.function.Supplier;
 import net.thisptr.jackson.jq.Output;
@@ -91,6 +94,17 @@ public class JQExpression implements ObjectExpression {
       task.variables().forEach((k, v) -> childScope.setValue(k, JsonUtils.fromValue(v)));
     }
     if (workflow != null) {
+      childScope.setValue(
+          "secret",
+          new FunctionJsonNode(
+              k ->
+                  workflow
+                      .definition()
+                      .application()
+                      .secretManager()
+                      .secret(k)
+                      .orElseThrow(
+                          () -> new WorkflowException(WorkflowError.authorization().build()))));
       childScope.setValue("context", modelToJson(workflow.context()));
       childScope.setValue(
           "runtime",
