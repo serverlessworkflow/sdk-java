@@ -10,4 +10,6 @@ do:
   - callDoctor:
       listen:
         to:
-          any: []
+          any:
+            - with:
+                type: com.acme.any

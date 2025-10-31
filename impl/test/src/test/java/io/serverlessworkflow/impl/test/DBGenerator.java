@@ -16,10 +16,12 @@
 package io.serverlessworkflow.impl.test;
 
 import static io.serverlessworkflow.api.WorkflowReader.readWorkflowFromClasspath;
+import static org.awaitility.Awaitility.await;
 
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowInstance;
+import io.serverlessworkflow.impl.WorkflowStatus;
 import io.serverlessworkflow.impl.persistence.PersistenceApplicationBuilder;
 import io.serverlessworkflow.impl.persistence.PersistenceInstanceHandlers;
 import io.serverlessworkflow.impl.persistence.bigmap.BytesMapPersistenceInstanceHandlers;
@@ -27,16 +29,13 @@ import io.serverlessworkflow.impl.persistence.mvstore.MVStorePersistenceStore;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.Map;
 
-public class DBGenerator {
+public final class DBGenerator {
 
-  public static void main(String[] args) throws IOException {
-    runInstance("db-samples/running_v1.db", false);
-    runInstance("db-samples/suspended_v1.db", true);
-  }
-
-  private static void runInstance(String dbName, boolean suspend) throws IOException {
+  public static void generate(String dbName, boolean suspend)
+      throws IOException, InterruptedException {
     Files.deleteIfExists(Path.of(dbName));
     try (PersistenceInstanceHandlers factories =
             BytesMapPersistenceInstanceHandlers.builder(new MVStorePersistenceStore(dbName))
@@ -51,8 +50,16 @@ public class DBGenerator {
               readWorkflowFromClasspath("workflows-samples/set-listen-to-any.yaml"));
       WorkflowInstance instance = definition.instance(Map.of());
       instance.start();
+
+      await()
+          .atMost(Duration.ofSeconds(5))
+          .until(() -> instance.status() == WorkflowStatus.WAITING);
+
       if (suspend) {
         instance.suspend();
+        await()
+            .atMost(Duration.ofSeconds(5))
+            .until(() -> instance.status() == WorkflowStatus.SUSPENDED);
       }
     }
   }

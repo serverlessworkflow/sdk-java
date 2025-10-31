@@ -43,7 +43,6 @@
         <module>annotations</module>
         <module>generators</module>
         <module>serialization</module>
-        <module>examples</module>
         <module>experimental</module>
         <module>fluent</module>
         <module>mermaid</module>
@@ -585,7 +584,22 @@
 
     <profiles>
         <profile>
+            <id>examples</id>
+            <activation>
+                <property>
+                    <name>performRelease</name>
+                    <value>!true</value>
+                </property>
+            </activation>
+            <modules>
+                <module>examples</module>
+            </modules>
+        </profile>
+        <profile>
             <id>release</id>
+            <properties>
+                <performRelease>true</performRelease>
+            </properties>
             <build>
                 <plugins>
                     <plugin>
