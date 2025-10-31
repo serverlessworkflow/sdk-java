@@ -20,6 +20,9 @@ import static io.serverlessworkflow.impl.WorkflowUtils.safeClose;
 import io.serverlessworkflow.api.types.SchemaInline;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.additional.WorkflowAdditionalObject;
+import io.serverlessworkflow.impl.config.ConfigManager;
+import io.serverlessworkflow.impl.config.SecretManager;
+import io.serverlessworkflow.impl.config.SystemPropertyConfigManager;
 import io.serverlessworkflow.impl.events.EventConsumer;
 import io.serverlessworkflow.impl.events.EventPublisher;
 import io.serverlessworkflow.impl.events.InMemoryEvents;
@@ -37,6 +40,7 @@ import io.serverlessworkflow.impl.schema.SchemaValidatorFactory;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
@@ -64,6 +68,8 @@ public class WorkflowApplication implements AutoCloseable {
   private final WorkflowModelFactory modelFactory;
   private final WorkflowScheduler scheduler;
   private final Map<String, WorkflowAdditionalObject<?>> additionalObjects;
+  private final ConfigManager configManager;
+  private final SecretManager secretManager;
 
   private WorkflowApplication(Builder builder) {
     this.taskFactory = builder.taskFactory;
@@ -82,6 +88,8 @@ public class WorkflowApplication implements AutoCloseable {
     this.modelFactory = builder.modelFactory;
     this.scheduler = builder.scheduler;
     this.additionalObjects = builder.additionalObjects;
+    this.configManager = builder.configManager;
+    this.secretManager = builder.secretManager;
   }
 
   public TaskExecutorFactory taskFactory() {
@@ -158,6 +166,8 @@ public class WorkflowApplication implements AutoCloseable {
     private boolean lifeCycleCEPublishingEnabled = true;
     private WorkflowModelFactory modelFactory;
     private Map<String, WorkflowAdditionalObject<?>> additionalObjects;
+    private SecretManager secretManager;
+    private ConfigManager configManager;
 
     private Builder() {}
 
@@ -226,10 +236,20 @@ public class WorkflowApplication implements AutoCloseable {
       return this;
     }
 
+    public Builder withSecretManager(SecretManager secretManager) {
+      this.secretManager = secretManager;
+      return this;
+    }
+
+    public Builder withConfigManager(ConfigManager configManager) {
+      this.configManager = configManager;
+      return this;
+    }
+
     public <T> Builder withAdditionalObject(
         String name, WorkflowAdditionalObject<T> additionalObject) {
       if (additionalObjects == null) {
-        additionalObjects = new ConcurrentHashMap<>();
+        additionalObjects = new HashMap<>();
       }
       additionalObjects.put(name, additionalObject);
       return this;
@@ -286,7 +306,18 @@ public class WorkflowApplication implements AutoCloseable {
       if (additionalObjects == null) {
         additionalObjects = Collections.emptyMap();
       }
-
+      if (configManager == null) {
+        configManager =
+            ServiceLoader.load(ConfigManager.class)
+                .findFirst()
+                .orElseGet(() -> new SystemPropertyConfigManager());
+      }
+      if (secretManager == null) {
+        secretManager =
+            ServiceLoader.load(SecretManager.class)
+                .findFirst()
+                .orElseGet(() -> s -> configManager.config(s, String.class));
+      }
       return new WorkflowApplication(this);
     }
   }
@@ -346,6 +377,14 @@ public class WorkflowApplication implements AutoCloseable {
 
   public WorkflowScheduler scheduler() {
     return scheduler;
+  }
+
+  public ConfigManager configManager() {
+    return configManager;
+  }
+
+  public SecretManager secretManager() {
+    return secretManager;
   }
 
   public <T> Optional<T> additionalObject(
