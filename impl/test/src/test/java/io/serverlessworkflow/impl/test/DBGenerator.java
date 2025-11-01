@@ -34,8 +34,7 @@ import java.util.Map;
 
 public final class DBGenerator {
 
-  public static void generate(String dbName, boolean suspend)
-      throws IOException, InterruptedException {
+  public static void generate(String dbName, boolean suspend) throws IOException {
     Files.deleteIfExists(Path.of(dbName));
     try (PersistenceInstanceHandlers factories =
             BytesMapPersistenceInstanceHandlers.builder(new MVStorePersistenceStore(dbName))

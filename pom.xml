@@ -597,9 +597,6 @@
         </profile>
         <profile>
             <id>release</id>
-            <properties>
-                <performRelease>true</performRelease>
-            </properties>
             <build>
                 <plugins>
                     <plugin>
