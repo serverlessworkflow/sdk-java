@@ -27,31 +27,59 @@ import io.serverlessworkflow.impl.persistence.PersistenceInstanceHandlers;
 import io.serverlessworkflow.impl.persistence.bigmap.BytesMapPersistenceInstanceHandlers;
 import io.serverlessworkflow.impl.persistence.mvstore.MVStorePersistenceStore;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Map;
+import java.util.stream.Stream;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
-public class MvStorePersistenceTest {
+@Execution(ExecutionMode.SAME_THREAD)
+class MvStorePersistenceTest {
+
+  @TempDir static Path tmp;
+
+  static Path runningV1, suspendedV1, runningV0, suspendedV0;
+
+  @BeforeAll
+  static void prepareDbSamples() throws IOException, InterruptedException {
+    runningV1 = tmp.resolve("running_v1.db");
+    suspendedV1 = tmp.resolve("suspended_v1.db");
+    runningV0 = tmp.resolve("running.db");
+    suspendedV0 = tmp.resolve("suspended.db");
+
+    ForkedDbGen.run(runningV1, false);
+    ForkedDbGen.run(suspendedV1, true);
+    ForkedDbGen.run(runningV0, false);
+    ForkedDbGen.run(suspendedV0, true);
+  }
 
   @Test
   void testSimpleRun() throws IOException {
-    final String dbName = "db-samples/simple.db";
+    final Path dbPath = tmp.resolve("simple.db");
     try (PersistenceInstanceHandlers handlers =
-            BytesMapPersistenceInstanceHandlers.builder(new MVStorePersistenceStore(dbName))
+            BytesMapPersistenceInstanceHandlers.builder(
+                    new MVStorePersistenceStore(dbPath.toString()))
                 .build();
         WorkflowApplication application =
             PersistenceApplicationBuilder.builder(WorkflowApplication.builder(), handlers.writer())
-                .build(); ) {
+                .build()) {
+
       WorkflowDefinition definition =
           application.workflowDefinition(
               readWorkflowFromClasspath("workflows-samples/simple-expression.yaml"));
+
       assertThat(handlers.reader().readAll(definition).values()).isEmpty();
+
       definition.instance(Map.of()).start().join();
+
       assertThat(handlers.reader().readAll(definition).values()).isEmpty();
-    } finally {
-      Files.delete(Path.of(dbName));
     }
   }
 
@@ -60,40 +88,38 @@ public class MvStorePersistenceTest {
     TaskCounterPerInstanceListener taskCounter = new TaskCounterPerInstanceListener();
     try (WorkflowApplication application =
         WorkflowApplication.builder().withListener(taskCounter).build()) {
+
       WorkflowDefinition definition =
           application.workflowDefinition(
               readWorkflowFromClasspath("workflows-samples/set-listen-to-any.yaml"));
 
       WorkflowInstance instance = definition.instance(Map.of());
       instance.start();
+
       assertThat(taskCounter.taskCounter(instance.id()).completed()).isEqualTo(1);
     }
   }
 
-  @Test
-  void testRestoreWaitingInstanceV0() throws IOException {
-    runIt("db-samples/running.db", WorkflowStatus.WAITING);
+  @ParameterizedTest(name = "{index} ⇒ {0} should restore as {1}")
+  @MethodSource("dbSamples")
+  void testRestoreInstances(Path dbFile, WorkflowStatus expectedStatus) throws IOException {
+    runIt(dbFile, expectedStatus);
   }
 
-  @Test
-  void testRestoreSuspendedInstanceV0() throws IOException {
-    runIt("db-samples/suspended.db", WorkflowStatus.SUSPENDED);
+  private static Stream<Arguments> dbSamples() {
+    return Stream.of(
+        Arguments.of(runningV0, WorkflowStatus.WAITING),
+        Arguments.of(suspendedV0, WorkflowStatus.SUSPENDED),
+        Arguments.of(runningV1, WorkflowStatus.WAITING),
+        Arguments.of(suspendedV1, WorkflowStatus.SUSPENDED));
   }
 
-  @Test
-  void testRestoreWaitingInstanceV1() throws IOException {
-    runIt("db-samples/running_v1.db", WorkflowStatus.WAITING);
-  }
-
-  @Test
-  void testRestoreSuspendedInstanceV1() throws IOException {
-    runIt("db-samples/suspended_v1.db", WorkflowStatus.SUSPENDED);
-  }
-
-  private void runIt(String dbName, WorkflowStatus expectedStatus) throws IOException {
+  private void runIt(Path dbFile, WorkflowStatus expectedStatus) throws IOException {
     TaskCounterPerInstanceListener taskCounter = new TaskCounterPerInstanceListener();
+
     try (PersistenceInstanceHandlers handlers =
-            BytesMapPersistenceInstanceHandlers.builder(new MVStorePersistenceStore(dbName))
+            BytesMapPersistenceInstanceHandlers.builder(
+                    new MVStorePersistenceStore(dbFile.toString()))
                 .build();
         WorkflowApplication application =
             PersistenceApplicationBuilder.builder(
@@ -101,13 +127,18 @@ public class MvStorePersistenceTest {
                         .withListener(taskCounter)
                         .withListener(new TraceExecutionListener()),
                     handlers.writer())
-                .build(); ) {
+                .build()) {
+
       WorkflowDefinition definition =
           application.workflowDefinition(
               readWorkflowFromClasspath("workflows-samples/set-listen-to-any.yaml"));
+
       Collection<WorkflowInstance> instances = handlers.reader().readAll(definition).values();
+
       assertThat(instances).hasSize(1);
+
       instances.forEach(WorkflowInstance::start);
+
       assertThat(instances)
           .singleElement()
           .satisfies(
