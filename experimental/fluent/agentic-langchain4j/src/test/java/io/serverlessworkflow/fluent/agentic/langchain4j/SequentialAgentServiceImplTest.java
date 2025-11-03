@@ -64,7 +64,7 @@ class SequentialAgentServiceImplTest {
     String outputName = "myOutputName";
     SequentialAgentServiceImpl<DummyAgent> service =
         (SequentialAgentServiceImpl<DummyAgent>)
-            SequentialAgentServiceImpl.builder(DummyAgent.class).outputName(outputName);
+            SequentialAgentServiceImpl.builder(DummyAgent.class).outputKey(outputName);
 
     // when
     Workflow wf = service.getDefinition();

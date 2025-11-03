@@ -44,7 +44,7 @@ class AgentWorkflowBuilderTest {
     Agents.MovieExpert movieExpert =
         spy(
             AgenticServices.agentBuilder(Agents.MovieExpert.class)
-                .outputName("movies")
+                .outputKey("movies")
                 .chatModel(BASE_MODEL)
                 .build());
 

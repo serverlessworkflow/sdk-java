@@ -40,28 +40,28 @@ public class WorkflowAgentsIT {
         spy(
             AgenticServices.agentBuilder(CreativeWriter.class)
                 .chatModel(BASE_MODEL)
-                .outputName("story")
+                .outputKey("story")
                 .build());
 
     AudienceEditor audienceEditor =
         spy(
             AgenticServices.agentBuilder(AudienceEditor.class)
                 .chatModel(BASE_MODEL)
-                .outputName("story")
+                .outputKey("story")
                 .build());
 
     StyleEditor styleEditor =
         spy(
             AgenticServices.agentBuilder(StyleEditor.class)
                 .chatModel(BASE_MODEL)
-                .outputName("story")
+                .outputKey("story")
                 .build());
 
     UntypedAgent novelCreator =
         builder
             .sequenceBuilder()
             .subAgents(creativeWriter, audienceEditor, styleEditor)
-            .outputName("story")
+            .outputKey("story")
             .build();
 
     Map<String, Object> input =

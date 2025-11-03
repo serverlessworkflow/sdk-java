@@ -51,7 +51,7 @@ public class EmailDrafterIT {
     Agents.EmailDrafter emailDrafter =
         AgenticServices.agentBuilder(Agents.EmailDrafter.class)
             .chatModel(Models.BASE_MODEL)
-            .outputName("email_draft")
+            .outputKey("email_draft")
             .build();
 
     BlockingQueue<CloudEvent> finishedEvents = new LinkedBlockingQueue<>();

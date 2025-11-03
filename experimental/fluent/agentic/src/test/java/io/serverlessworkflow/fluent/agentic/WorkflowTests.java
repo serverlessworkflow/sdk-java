@@ -41,7 +41,7 @@ class WorkflowTests {
     final StorySeedAgent storySeedAgent = mock(StorySeedAgent.class);
 
     when(storySeedAgent.invoke(eq("A Great Story"))).thenReturn("storySeedAgent");
-    when(storySeedAgent.outputName()).thenReturn("premise");
+    when(storySeedAgent.outputKey()).thenReturn("premise");
     when(storySeedAgent.name()).thenReturn("storySeedAgent");
 
     Workflow workflow =
@@ -72,15 +72,15 @@ class WorkflowTests {
     final SceneAgent sceneAgent = mock(SceneAgent.class);
 
     when(storySeedAgent.invoke(eq("A Great Story"))).thenReturn("storySeedAgent");
-    when(storySeedAgent.outputName()).thenReturn("premise");
+    when(storySeedAgent.outputKey()).thenReturn("premise");
     when(storySeedAgent.name()).thenReturn("storySeedAgent");
 
     when(plotAgent.invoke(eq("storySeedAgent"))).thenReturn("plotAgent");
-    when(plotAgent.outputName()).thenReturn("plot");
+    when(plotAgent.outputKey()).thenReturn("plot");
     when(plotAgent.name()).thenReturn("plotAgent");
 
     when(sceneAgent.invoke(eq("plotAgent"))).thenReturn("sceneAgent");
-    when(sceneAgent.outputName()).thenReturn("story");
+    when(sceneAgent.outputKey()).thenReturn("story");
     when(sceneAgent.name()).thenReturn("sceneAgent");
 
     Workflow workflow =
@@ -115,15 +115,15 @@ class WorkflowTests {
     final SceneAgent sceneAgent = mock(SceneAgent.class);
 
     when(storySeedAgent.invoke(eq("A Great Story"))).thenReturn("storySeedAgent");
-    when(storySeedAgent.outputName()).thenReturn("premise");
+    when(storySeedAgent.outputKey()).thenReturn("premise");
     when(storySeedAgent.name()).thenReturn("storySeedAgent");
 
     when(plotAgent.invoke(eq("storySeedAgent"))).thenReturn("plotAgent");
-    when(plotAgent.outputName()).thenReturn("plot");
+    when(plotAgent.outputKey()).thenReturn("plot");
     when(plotAgent.name()).thenReturn("plotAgent");
 
     when(sceneAgent.invoke(eq("plotAgent"))).thenReturn("sceneAgent");
-    when(sceneAgent.outputName()).thenReturn("story");
+    when(sceneAgent.outputKey()).thenReturn("story");
     when(sceneAgent.name()).thenReturn("sceneAgent");
 
     Workflow workflow =
@@ -155,15 +155,15 @@ class WorkflowTests {
     final ConflictAgent conflict = mock(ConflictAgent.class);
 
     when(setting.invoke(eq("sci-fi"))).thenReturn("Fake conflict response");
-    when(setting.outputName()).thenReturn("setting");
+    when(setting.outputKey()).thenReturn("setting");
     when(setting.name()).thenReturn("setting");
 
     when(hero.invoke(eq("sci-fi"))).thenReturn("Fake hero response");
-    when(hero.outputName()).thenReturn("hero");
+    when(hero.outputKey()).thenReturn("hero");
     when(hero.name()).thenReturn("hero");
 
     when(conflict.invoke(eq("sci-fi"))).thenReturn("Fake setting response");
-    when(conflict.outputName()).thenReturn("conflict");
+    when(conflict.outputKey()).thenReturn("conflict");
     when(conflict.name()).thenReturn("conflict");
 
     Workflow workflow =
@@ -211,15 +211,15 @@ class WorkflowTests {
         List.of("Alien Technology Trait 1", "Alien Technology Trait 2", "Alien Technology Trait 3");
 
     when(factAgent.invoke(eq("alien"))).thenReturn("Some Fact about aliens");
-    when(factAgent.outputName()).thenReturn("fact");
+    when(factAgent.outputKey()).thenReturn("fact");
     when(factAgent.name()).thenReturn("fact");
 
     when(cultureAgent.invoke(eq("Some Fact about aliens"))).thenReturn(cultureTraits);
-    when(cultureAgent.outputName()).thenReturn("culture");
+    when(cultureAgent.outputKey()).thenReturn("culture");
     when(cultureAgent.name()).thenReturn("culture");
 
     when(technologyAgent.invoke(eq("Some Fact about aliens"))).thenReturn(technologyTraits);
-    when(technologyAgent.outputName()).thenReturn("technology");
+    when(technologyAgent.outputKey()).thenReturn("technology");
     when(technologyAgent.name()).thenReturn("technology");
     Workflow workflow =
         AgentWorkflowBuilder.workflow("alienCultureFlow")
@@ -266,13 +266,13 @@ class WorkflowTests {
             eq("London"),
             eq("Discuss project updates")))
         .thenReturn("Drafted meeting invitation for John Doe");
-    when(meetingInvitationDraft.outputName()).thenReturn("draft");
+    when(meetingInvitationDraft.outputKey()).thenReturn("draft");
     when(meetingInvitationDraft.name()).thenReturn("draft");
 
     final MeetingInvitationStyle meetingInvitationStyle = mock(MeetingInvitationStyle.class);
     when(meetingInvitationStyle.invoke(eq("Drafted meeting invitation for John Doe"), eq("formal")))
         .thenReturn("Styled meeting invitation for John Doe");
-    when(meetingInvitationStyle.outputName()).thenReturn("styled");
+    when(meetingInvitationStyle.outputKey()).thenReturn("styled");
     when(meetingInvitationStyle.name()).thenReturn("styled");
 
     AtomicReference<String> request = new AtomicReference<>();
@@ -281,8 +281,8 @@ class WorkflowTests {
         AgenticServices.humanInTheLoopBuilder()
             .description(
                 "What level of formality would you like? (please reply with “formal”, “casual”, or “friendly”)")
-            .inputName("style")
-            .outputName("style")
+            .inputKey("style")
+            .outputKey("style")
             .requestWriter(
                 q ->
                     request.set(

@@ -66,7 +66,7 @@ public abstract class AbstractAgentService<T, S> implements WorkflowDefinitionBu
   }
 
   @SuppressWarnings("unchecked")
-  public S outputName(String outputName) {
+  public S outputKey(String outputName) {
     Function<DefaultAgenticScope, Object> outputFunction = cog -> cog.readState(outputName);
     this.workflowBuilder.outputAs(outputFunction, DefaultAgenticScope.class);
     this.workflowBuilder.document(
