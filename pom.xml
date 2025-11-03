@@ -43,7 +43,6 @@
         <module>annotations</module>
         <module>generators</module>
         <module>serialization</module>
-        <module>examples</module>
         <module>experimental</module>
         <module>fluent</module>
         <module>mermaid</module>
@@ -559,13 +558,6 @@
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>exec-maven-plugin</artifactId>
                     <version>${version.org.codehaus.mojo}</version>
-                    <executions>
-                        <execution>
-                            <goals>
-                                <goal>java</goal>
-                            </goals>
-                        </execution>
-                    </executions>
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -584,6 +576,18 @@
     </pluginRepositories>
 
     <profiles>
+        <profile>
+            <id>examples</id>
+            <activation>
+                <property>
+                    <name>performRelease</name>
+                    <value>!true</value>
+                </property>
+            </activation>
+            <modules>
+                <module>examples</module>
+            </modules>
+        </profile>
         <profile>
             <id>release</id>
             <build>
