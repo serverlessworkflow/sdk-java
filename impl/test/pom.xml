@@ -117,7 +117,7 @@
                                     <goal>java</goal>
                                 </goals>
                                 <configuration>
-                                    <mainClass>io.serverlessworkflow.impl.test.DBGeneratorCli</mainClass>
+                                    <mainClass>io.serverlessworkflow.impl.test.DBGenerator</mainClass>
                                 </configuration>
                             </execution>
                         </executions>
