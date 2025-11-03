@@ -65,7 +65,7 @@ public class WorkflowInvocationHandler implements InvocationHandler, AgenticScop
     }
   }
 
-  private String outputName() {
+  private String outputKey() {
     Object outputName =
         this.workflow
             .getDocument()
@@ -81,12 +81,12 @@ public class WorkflowInvocationHandler implements InvocationHandler, AgenticScop
   @Override
   public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
     AgenticScopeRegistry registry = registry();
-    // outputName
+    // outputKey
     if (method.getDeclaringClass() == AgentSpecification.class) {
       return switch (method.getName()) {
         case "name" -> this.workflow.getDocument().getName();
         case "description" -> this.workflow.getDocument().getSummary();
-        case "outputName" -> outputName();
+        case "outputKey" -> outputKey();
         default ->
             throw new UnsupportedOperationException(
                 "Unknown method on AgentInstance class : " + method.getName());
@@ -135,7 +135,7 @@ public class WorkflowInvocationHandler implements InvocationHandler, AgenticScop
                   () ->
                       new IllegalArgumentException(
                           "Workflow hasn't returned a AgenticScope object."));
-      Object result = output.readState(outputName());
+      Object result = output.readState(outputKey());
 
       return method.getReturnType().equals(ResultWithAgenticScope.class)
           ? new ResultWithAgenticScope<>(output, result)

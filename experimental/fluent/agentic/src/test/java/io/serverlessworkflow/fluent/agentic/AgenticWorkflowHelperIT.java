@@ -191,7 +191,6 @@ public class AgenticWorkflowHelperIT {
     assertThat(result).containsKey("story");
   }
 
-  @SuppressWarnings("unchecked")
   @Test
   @DisplayName("Conditional agents via choice(...)")
   public void conditionalWorkflow() {

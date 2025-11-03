@@ -29,7 +29,7 @@ public final class AgentsUtils {
   public static Agents.MovieExpert newMovieExpert() {
     return spy(
         AgenticServices.agentBuilder(Agents.MovieExpert.class)
-            .outputName("movies")
+            .outputKey("movies")
             .chatModel(BASE_MODEL)
             .build());
   }
@@ -37,7 +37,7 @@ public final class AgentsUtils {
   public static Agents.MovieExpert newMovieExpert2() {
     return spy(
         AgenticServices.agentBuilder(Agents.MovieExpert.class)
-            .outputName("movies")
+            .outputKey("movies")
             .name("findMovie2")
             .chatModel(BASE_MODEL)
             .build());
@@ -46,7 +46,7 @@ public final class AgentsUtils {
   public static Agents.CreativeWriter newCreativeWriter() {
     return spy(
         AgenticServices.agentBuilder(Agents.CreativeWriter.class)
-            .outputName("story")
+            .outputKey("story")
             .chatModel(BASE_MODEL)
             .build());
   }
@@ -54,7 +54,7 @@ public final class AgentsUtils {
   public static Agents.AudienceEditor newAudienceEditor() {
     return spy(
         AgenticServices.agentBuilder(Agents.AudienceEditor.class)
-            .outputName("story")
+            .outputKey("story")
             .chatModel(BASE_MODEL)
             .build());
   }
@@ -62,7 +62,7 @@ public final class AgentsUtils {
   public static Agents.StyleEditor newStyleEditor() {
     return spy(
         AgenticServices.agentBuilder(Agents.StyleEditor.class)
-            .outputName("story")
+            .outputKey("story")
             .chatModel(BASE_MODEL)
             .build());
   }
@@ -70,7 +70,7 @@ public final class AgentsUtils {
   public static Agents.SummaryStory newSummaryStory() {
     return spy(
         AgenticServices.agentBuilder(Agents.SummaryStory.class)
-            .outputName("story")
+            .outputKey("story")
             .chatModel(BASE_MODEL)
             .build());
   }
@@ -78,7 +78,7 @@ public final class AgentsUtils {
   public static Agents.StyleScorer newStyleScorer() {
     return spy(
         AgenticServices.agentBuilder(Agents.StyleScorer.class)
-            .outputName("score")
+            .outputKey("score")
             .chatModel(BASE_MODEL)
             .build());
   }
@@ -87,7 +87,7 @@ public final class AgentsUtils {
     return spy(
         AgenticServices.agentBuilder(Agents.FoodExpert.class)
             .chatModel(BASE_MODEL)
-            .outputName("meals")
+            .outputKey("meals")
             .build());
   }
 
@@ -95,7 +95,7 @@ public final class AgentsUtils {
     return spy(
         AgenticServices.agentBuilder(Agents.AstrologyAgent.class)
             .chatModel(BASE_MODEL)
-            .outputName("horoscope")
+            .outputKey("horoscope")
             .build());
   }
 
@@ -103,7 +103,7 @@ public final class AgentsUtils {
     return spy(
         AgenticServices.agentBuilder(Agents.CategoryRouter.class)
             .chatModel(BASE_MODEL)
-            .outputName("category")
+            .outputKey("category")
             .build());
   }
 
@@ -111,7 +111,7 @@ public final class AgentsUtils {
     return spy(
         AgenticServices.agentBuilder(Agents.MedicalExpert.class)
             .chatModel(BASE_MODEL)
-            .outputName("response")
+            .outputKey("response")
             .build());
   }
 
@@ -119,7 +119,7 @@ public final class AgentsUtils {
     return spy(
         AgenticServices.agentBuilder(Agents.TechnicalExpert.class)
             .chatModel(BASE_MODEL)
-            .outputName("response")
+            .outputKey("response")
             .build());
   }
 
@@ -127,7 +127,7 @@ public final class AgentsUtils {
     return spy(
         AgenticServices.agentBuilder(Agents.LegalExpert.class)
             .chatModel(BASE_MODEL)
-            .outputName("response")
+            .outputKey("response")
             .build());
   }
 

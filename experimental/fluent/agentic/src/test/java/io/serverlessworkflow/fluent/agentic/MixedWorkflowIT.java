@@ -57,7 +57,7 @@ public class MixedWorkflowIT {
             AgenticServices.agentBuilder(Agents.ChatBot.class)
                 .chatModel(Models.BASE_MODEL)
                 .chatMemoryProvider(memoryId -> MessageWindowChatMemory.withMaxMessages(10))
-                .outputName("userInput")
+                .outputKey("userInput")
                 .build());
 
     final Workflow mixedWorkflow =

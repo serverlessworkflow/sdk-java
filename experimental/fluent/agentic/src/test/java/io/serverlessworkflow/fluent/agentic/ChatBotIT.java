@@ -52,7 +52,7 @@ public class ChatBotIT {
             AgenticServices.agentBuilder(Agents.ChatBot.class)
                 .chatModel(Models.BASE_MODEL)
                 .chatMemoryProvider(memoryId -> MessageWindowChatMemory.withMaxMessages(10))
-                .outputName("conversation")
+                .outputKey("conversation")
                 .build());
     BlockingQueue<CloudEvent> replyEvents = new LinkedBlockingQueue<>();
     BlockingQueue<CloudEvent> finishedEvents = new LinkedBlockingQueue<>();
