@@ -182,17 +182,17 @@ public class TryExecutor extends RegularTaskExecutor<TryTask> {
           completable =
               completable
                   .thenCompose(
-                      model -> retryIntervalExecutor.get().retry(workflow, taskContext, model))
+                      model ->
+                          retryIntervalExecutor
+                              .get()
+                              .retry(workflow, taskContext, model)
+                              .orElse(CompletableFuture.failedFuture(e)))
                   .thenCompose(model -> doIt(workflow, taskContext, model));
         }
       }
       return completable;
     } else {
-      if (e instanceof RuntimeException) {
-        throw (RuntimeException) e;
-      } else {
-        throw new RuntimeException(e);
-      }
+      return CompletableFuture.failedFuture(e);
     }
   }
 

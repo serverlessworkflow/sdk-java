@@ -18,9 +18,10 @@ package io.serverlessworkflow.impl.executors.retry;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public interface RetryExecutor {
-  CompletableFuture<WorkflowModel> retry(
+  Optional<CompletableFuture<WorkflowModel>> retry(
       WorkflowContext worfklowContext, TaskContext taskContext, WorkflowModel model);
 }
