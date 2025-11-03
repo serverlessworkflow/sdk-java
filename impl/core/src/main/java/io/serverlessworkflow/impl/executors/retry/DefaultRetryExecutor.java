@@ -44,19 +44,18 @@ public class DefaultRetryExecutor implements RetryExecutor {
   }
 
   @Override
-  public CompletableFuture<WorkflowModel> retry(
+  public Optional<CompletableFuture<WorkflowModel>> retry(
       WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel model) {
-    CompletableFuture<WorkflowModel> completable = new CompletableFuture<>();
     short numAttempts = taskContext.retryAttempt();
     if (numAttempts++ < maxAttempts
         && WorkflowUtils.whenExceptTest(
             whenFilter, exceptFilter, workflowContext, taskContext, model)) {
       taskContext.retryAttempt(numAttempts);
       Duration delay = intervalFunction.apply(workflowContext, taskContext, model, numAttempts);
+      CompletableFuture<WorkflowModel> completable = new CompletableFuture<>();
       completable.completeOnTimeout(model, delay.toMillis(), TimeUnit.MILLISECONDS);
-    } else {
-      completable.complete(model);
+      return Optional.of(completable);
     }
-    return completable;
+    return Optional.empty();
   }
 }

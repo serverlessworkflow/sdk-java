@@ -16,9 +16,11 @@
 package io.serverlessworkflow.impl.test;
 
 import static io.serverlessworkflow.api.WorkflowReader.readWorkflowFromClasspath;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import io.serverlessworkflow.impl.WorkflowApplication;
+import io.serverlessworkflow.impl.WorkflowException;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.jackson.JsonUtils;
 import java.io.IOException;
@@ -32,6 +34,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -83,5 +86,24 @@ public class RetryTest {
     Awaitility.await()
         .atMost(Duration.ofSeconds(1))
         .until(() -> future.join().as(JsonNode.class).orElseThrow().equals(result));
+  }
+
+  @Test
+  void testRetryEnd() throws IOException {
+    apiServer.enqueue(new MockResponse().setResponseCode(404));
+    apiServer.enqueue(new MockResponse().setResponseCode(404));
+    apiServer.enqueue(new MockResponse().setResponseCode(404));
+    apiServer.enqueue(new MockResponse().setResponseCode(404));
+    apiServer.enqueue(new MockResponse().setResponseCode(404));
+    apiServer.enqueue(new MockResponse().setResponseCode(404));
+    assertThatThrownBy(
+            () ->
+                app.workflowDefinition(
+                        readWorkflowFromClasspath(
+                            "workflows-samples/try-catch-retry-reusable.yaml"))
+                    .instance(Map.of())
+                    .start()
+                    .join())
+        .hasCauseInstanceOf(WorkflowException.class);
   }
 }
