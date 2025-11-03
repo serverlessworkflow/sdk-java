@@ -276,10 +276,6 @@
                     <publishingServerId>central</publishingServerId>
                     <autoPublish>true</autoPublish>
                     <waitUntil>published</waitUntil>
-                    <excludeArtifacts>
-                        <excludeArtifact>serverlessworkflow-examples-events</excludeArtifact>
-                        <excludeArtifact>serverlessworkflow-examples-simpleGet</excludeArtifact>
-                    </excludeArtifacts>
                 </configuration>
             </plugin>
             <!-- Set properties containing the scm revision -->
@@ -472,7 +468,8 @@
                     <artifactId>maven-release-plugin</artifactId>
                     <version>${version.release.plugin}</version>
                     <configuration>
-                        <preparationGoals>clean install</preparationGoals>
+                        <preparationGoals>clean install -DperformRelease</preparationGoals>
+                        <arguments>-Prelease -DperformRelease</arguments>
                         <autoVersionSubmodules>true</autoVersionSubmodules>
                         <tagNameFormat>@{project.version}</tagNameFormat>
                         <pushChanges>false</pushChanges>
