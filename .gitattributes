@@ -1,1 +1,2 @@
 * text eol=lf
+*.db -text -eol -working-tree-encoding -merge -diff
