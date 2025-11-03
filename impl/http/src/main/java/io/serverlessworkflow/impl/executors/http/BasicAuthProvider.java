@@ -23,16 +23,14 @@ import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
-import jakarta.ws.rs.client.Invocation.Builder;
 import java.util.Base64;
 
-class BasicAuthProvider implements AuthProvider {
+class BasicAuthProvider extends AbstractAuthProvider {
 
-  private static final String BASIC_TOKEN = "Basic %s";
   private static final String USER_PASSWORD = "%s:%s";
 
-  private WorkflowValueResolver<String> userFilter;
-  private WorkflowValueResolver<String> passwordFilter;
+  private final WorkflowValueResolver<String> userFilter;
+  private final WorkflowValueResolver<String> passwordFilter;
 
   public BasicAuthProvider(
       WorkflowApplication app, Workflow workflow, BasicAuthenticationPolicy authPolicy) {
@@ -44,24 +42,29 @@ class BasicAuthProvider implements AuthProvider {
           WorkflowUtils.buildStringFilter(
               app, authPolicy.getBasic().getBasicAuthenticationProperties().getPassword());
     } else if (authPolicy.getBasic().getBasicAuthenticationPolicySecret() != null) {
-      throw new UnsupportedOperationException("Secrets are still not supported");
+      String secretName =
+          checkSecret(workflow, authPolicy.getBasic().getBasicAuthenticationPolicySecret());
+      userFilter = (w, t, m) -> find(w, secretName, "username");
+      passwordFilter = (w, t, m) -> find(w, secretName, "password");
+    } else {
+      throw new IllegalStateException("Both secret and properties are null for authorization");
     }
   }
 
   @Override
-  public Builder build(
-      Builder builder, WorkflowContext workflow, TaskContext task, WorkflowModel model) {
-    builder.header(
-        AuthProviderFactory.AUTH_HEADER_NAME,
-        String.format(
-            BASIC_TOKEN,
-            Base64.getEncoder()
-                .encode(
-                    String.format(
-                            USER_PASSWORD,
-                            userFilter.apply(workflow, task, model),
-                            passwordFilter.apply(workflow, task, model))
-                        .getBytes())));
-    return builder;
+  protected String authParameter(WorkflowContext workflow, TaskContext task, WorkflowModel model) {
+    return new String(
+        Base64.getEncoder()
+            .encode(
+                String.format(
+                        USER_PASSWORD,
+                        userFilter.apply(workflow, task, model),
+                        passwordFilter.apply(workflow, task, model))
+                    .getBytes()));
+  }
+
+  @Override
+  protected String authScheme() {
+    return "Basic";
   }
 }

@@ -22,17 +22,12 @@ import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
-import io.serverlessworkflow.impl.executors.http.auth.jwt.JWT;
 import io.serverlessworkflow.impl.executors.http.auth.requestbuilder.AuthRequestBuilder;
 import io.serverlessworkflow.impl.executors.http.auth.requestbuilder.OpenIdRequestBuilder;
-import jakarta.ws.rs.client.Invocation;
-import jakarta.ws.rs.client.Invocation.Builder;
 
-public class OpenIdAuthProvider implements AuthProvider {
+public class OpenIdAuthProvider extends AbstractAuthProvider {
 
   private AuthRequestBuilder requestBuilder;
-
-  private static final String BEARER_TOKEN = "Bearer %s";
 
   public OpenIdAuthProvider(
       WorkflowApplication application,
@@ -50,15 +45,12 @@ public class OpenIdAuthProvider implements AuthProvider {
   }
 
   @Override
-  public Builder build(
-      Builder builder, WorkflowContext workflow, TaskContext task, WorkflowModel model) {
-    return builder;
+  protected String authParameter(WorkflowContext workflow, TaskContext task, WorkflowModel model) {
+    return requestBuilder.build(workflow, task, model).validateAndGet().token();
   }
 
   @Override
-  public void preRequest(
-      Invocation.Builder builder, WorkflowContext workflow, TaskContext task, WorkflowModel model) {
-    JWT jwt = requestBuilder.build(workflow, task, model).validateAndGet();
-    builder.header(AuthProviderFactory.AUTH_HEADER_NAME, String.format(BEARER_TOKEN, jwt.token()));
+  protected String authScheme() {
+    return "Bearer";
   }
 }

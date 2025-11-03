@@ -27,4 +27,9 @@ public class SystemPropertyConfigManager extends AbstractConfigManager {
     throw new UnsupportedOperationException(
         "Conversion of property " + value + " to class " + propClass + " is not supported");
   }
+
+  @Override
+  public Iterable<String> names() {
+    return System.getProperties().keySet().stream().map(Object::toString).toList();
+  }
 }

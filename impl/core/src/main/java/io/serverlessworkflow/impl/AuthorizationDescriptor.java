@@ -13,14 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.config;
+package io.serverlessworkflow.impl;
 
-import io.serverlessworkflow.impl.ServicePriority;
-import java.util.Optional;
-
-public interface ConfigManager extends ServicePriority {
-
-  <T> Optional<T> config(String propName, Class<T> propClass);
-
-  Iterable<String> names();
-}
+public record AuthorizationDescriptor(String scheme, String parameter) {}
