@@ -15,15 +15,16 @@
  */
 package io.serverlessworkflow.impl.container.executors;
 
-import static io.serverlessworkflow.api.types.ContainerLifetime.ContainerCleanupPolicy.*;
+import static io.serverlessworkflow.api.types.ContainerLifetime.*;
 
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.CreateContainerCmd;
 import com.github.dockerjava.api.command.CreateContainerResponse;
+import com.github.dockerjava.api.command.PullImageResultCallback;
 import com.github.dockerjava.api.command.WaitContainerResultCallback;
-import com.github.dockerjava.api.exception.DockerClientException;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientImpl;
+import com.github.dockerjava.core.NameParser;
 import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
 import io.serverlessworkflow.api.types.Container;
 import io.serverlessworkflow.impl.TaskContext;
@@ -32,7 +33,6 @@ import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
-import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
@@ -71,48 +71,122 @@ class ContainerRunner {
   CompletableFuture<WorkflowModel> startSync(
       WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel input) {
 
-    StringExpressionResolver resolver =
-        new StringExpressionResolver(workflowContext, taskContext, input);
+    try {
+      var resolver = new StringExpressionResolver(workflowContext, taskContext, input);
+      applyPropertySetters(resolver);
+      pullImageIfNeeded(container.getImage());
 
-    propertySetters.forEach(setter -> setter.accept(resolver));
+      String id = createAndStartContainer();
+      int exit = waitAccordingToLifetime(id, workflowContext, taskContext, input);
 
-    CreateContainerResponse createContainerResponse = createContainerCmd.exec();
-    String containerId = createContainerResponse.getId();
-
-    if (containerId == null || containerId.isEmpty()) {
-      return failed("Container creation failed: empty container ID");
+      return mapExitCode(exit, input);
+    } catch (InterruptedException ie) {
+      Thread.currentThread().interrupt();
+      return failed("Interrupted while waiting for container");
+    } catch (Exception e) {
+      return failed("Container run failed: " + e.getMessage());
     }
+  }
 
-    dockerClient.startContainerCmd(containerId).exec();
+  private void applyPropertySetters(StringExpressionResolver resolver) {
+    for (var setter : propertySetters) setter.accept(resolver);
+  }
 
-    int exitCode;
-    try (WaitContainerResultCallback resultCallback =
-        dockerClient.waitContainerCmd(containerId).exec(new WaitContainerResultCallback())) {
-      if (container.getLifetime() != null
-          && container.getLifetime().getCleanup() != null
-          && container.getLifetime().getCleanup().equals(EVENTUALLY)) {
-        try {
-          WorkflowValueResolver<Duration> durationResolver =
-              WorkflowUtils.fromTimeoutAfter(
-                  definition.application(), container.getLifetime().getAfter());
-          Duration timeout = durationResolver.apply(workflowContext, taskContext, input);
-          exitCode = resultCallback.awaitStatusCode(timeout.toMillis(), TimeUnit.MILLISECONDS);
-        } catch (DockerClientException e) {
-          return failed(
-              String.format("Error while waiting for container to finish: %s ", e.getMessage()));
-        } finally {
-          dockerClient.removeContainerCmd(containerId).withForce(true).exec();
+  private void pullImageIfNeeded(String imageRef) throws InterruptedException {
+    NameParser.ReposTag rt = NameParser.parseRepositoryTag(imageRef);
+    NameParser.HostnameReposName hr = NameParser.resolveRepositoryName(imageRef);
+
+    String repository = hr.reposName;
+    String tag = rt.tag != null && rt.tag.isEmpty() ? rt.tag : "latest";
+    dockerClient
+        .pullImageCmd(repository)
+        .withTag(tag)
+        .exec(new PullImageResultCallback())
+        .awaitCompletion();
+  }
+
+  private String createAndStartContainer() {
+    CreateContainerResponse resp = createContainerCmd.exec();
+    String id = resp.getId();
+    if (id == null || id.isEmpty()) {
+      throw new IllegalStateException("Container creation failed: empty ID");
+    }
+    dockerClient.startContainerCmd(id).exec();
+    return id;
+  }
+
+  private int waitAccordingToLifetime(
+      String id, WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel input)
+      throws Exception {
+
+    var lifetime = container.getLifetime();
+    var policy = lifetime != null ? lifetime.getCleanup() : null;
+
+    try (var cb = dockerClient.waitContainerCmd(id).exec(new WaitContainerResultCallback())) {
+
+      if (policy == ContainerCleanupPolicy.EVENTUALLY) {
+        Duration timeout = resolveAfter(lifetime, workflowContext, taskContext, input);
+        int exit = cb.awaitStatusCode(timeout.toMillis(), TimeUnit.MILLISECONDS);
+
+        if (isRunning(id)) {
+          safeStop(id, Duration.ofSeconds(10));
         }
-      } else {
-        exitCode = resultCallback.awaitStatusCode();
-      }
-    } catch (IOException e) {
-      return failed(
-          String.format("Error while waiting for container to finish: %s ", e.getMessage()));
-    }
+        safeRemove(id);
+        return exit;
 
-    return switch (exitCode) {
-      case 0 -> CompletableFuture.completedFuture(input);
+      } else {
+        int exit = cb.awaitStatusCode();
+        if (policy == ContainerCleanupPolicy.ALWAYS) {
+          safeRemove(id);
+        }
+        return exit;
+      }
+    }
+  }
+
+  private Duration resolveAfter(
+      io.serverlessworkflow.api.types.ContainerLifetime lifetime,
+      WorkflowContext workflowContext,
+      TaskContext taskContext,
+      WorkflowModel input) {
+
+    if (lifetime == null || lifetime.getAfter() == null) {
+      return Duration.ZERO;
+    }
+    WorkflowValueResolver<Duration> r =
+        WorkflowUtils.fromTimeoutAfter(definition.application(), lifetime.getAfter());
+    return r.apply(workflowContext, taskContext, input);
+  }
+
+  private boolean isRunning(String id) {
+    try {
+      var st = dockerClient.inspectContainerCmd(id).exec().getState();
+      return st != null && Boolean.TRUE.equals(st.getRunning());
+    } catch (Exception e) {
+      return false; // must be already removed
+    }
+  }
+
+  private void safeStop(String id, Duration timeout) {
+    try {
+      dockerClient.stopContainerCmd(id).withTimeout((int) Math.max(1, timeout.toSeconds())).exec();
+    } catch (Exception ignore) {
+      // we can ignore this
+    }
+  }
+
+  // must be removed because of withAutoRemove(true), but just in case
+  private void safeRemove(String id) {
+    try {
+      dockerClient.removeContainerCmd(id).withForce(true).exec();
+    } catch (Exception ignore) {
+      // we can ignore this
+    }
+  }
+
+  private static <T> CompletableFuture<T> mapExitCode(int exit, T ok) {
+    return switch (exit) {
+      case 0 -> CompletableFuture.completedFuture(ok);
       case 1 -> failed("General error (exit code 1)");
       case 2 -> failed("Shell syntax error (exit code 2)");
       case 126 -> failed("Command found but not executable (exit code 126)");
@@ -121,7 +195,7 @@ class ContainerRunner {
       case 137 -> failed("Killed by SIGKILL (exit code 137)");
       case 139 -> failed("Segmentation fault (exit code 139)");
       case 143 -> failed("Terminated by SIGTERM (exit code 143)");
-      default -> failed("Process exited with code " + exitCode);
+      default -> failed("Process exited with code " + exit);
     };
   }
 
