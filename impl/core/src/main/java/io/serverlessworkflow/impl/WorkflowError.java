@@ -56,6 +56,10 @@ public record WorkflowError(
     return runtime(Errors.RUNTIME.status(), context, ex);
   }
 
+  public static Builder timeout() {
+    return error(Errors.TIMEOUT.toString(), Errors.TIMEOUT.status());
+  }
+
   public static class Builder {
 
     private final String type;
