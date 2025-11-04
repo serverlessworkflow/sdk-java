@@ -178,10 +178,11 @@ public class AgenticWorkflowHelperIT {
 
     Map<String, Object> input =
         Map.of(
-            "style", "fantasy",
+            "topic", "fantasy",
+            "style", "funny",
             "audience", "young adults");
 
-    Map<String, Object> result;
+    Map<String, Object> result = null;
     try (WorkflowApplication app = WorkflowApplication.builder().build()) {
       result = app.workflowDefinition(wf).instance(input).start().get().asMap().orElseThrow();
     } catch (Exception e) {
@@ -210,7 +211,7 @@ public class AgenticWorkflowHelperIT {
                     conditional(RequestCategory.LEGAL::equals, legalExpert)))
             .build();
 
-    Map<String, Object> input = Map.of("question", "What is the best treatment for a common cold?");
+    Map<String, Object> input = Map.of("request", "What is the best treatment for a common cold?");
 
     Map<String, Object> result;
     try (WorkflowApplication app = WorkflowApplication.builder().build()) {
