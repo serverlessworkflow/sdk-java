@@ -41,26 +41,45 @@ import java.util.Map;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIf;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+@DisabledIf("checkDocker")
 public class ContainerTest {
 
   private static DockerClient dockerClient;
-  private static WorkflowApplication app;
+  private static Logger logger = LoggerFactory.getLogger(ContainerTest.class);
 
-  @BeforeAll
-  static void init() {
+  {
     DefaultDockerClientConfig defaultConfig =
         DefaultDockerClientConfig.createDefaultConfigBuilder().build();
     dockerClient =
         DockerClientImpl.getInstance(
             defaultConfig,
             new ApacheDockerHttpClient.Builder().dockerHost(defaultConfig.getDockerHost()).build());
+  }
+
+  @SuppressWarnings("unused")
+  private static boolean checkDocker() {
+    try {
+      dockerClient.pingCmd().exec();
+      return false;
+    } catch (Exception ex) {
+      logger.warn("Docker is not running, disabling container test");
+      return true;
+    }
+  }
+
+  private static WorkflowApplication app;
+
+  @BeforeAll
+  static void init() {
     app = WorkflowApplication.builder().build();
   }
 
   @AfterAll
   static void cleanup() throws IOException {
-    dockerClient.close();
     app.close();
   }
 
