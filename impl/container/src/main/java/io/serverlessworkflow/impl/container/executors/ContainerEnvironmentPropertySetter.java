@@ -17,34 +17,43 @@ package io.serverlessworkflow.impl.container.executors;
 
 import com.github.dockerjava.api.command.CreateContainerCmd;
 import io.serverlessworkflow.api.types.Container;
-import java.util.ArrayList;
-import java.util.List;
+import io.serverlessworkflow.impl.TaskContext;
+import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.WorkflowDefinition;
+import io.serverlessworkflow.impl.WorkflowModel;
+import io.serverlessworkflow.impl.WorkflowUtils;
+import io.serverlessworkflow.impl.WorkflowValueResolver;
 import java.util.Map;
-import java.util.function.Function;
+import java.util.Optional;
 
-class ContainerEnvironmentPropertySetter extends ContainerPropertySetter {
+class ContainerEnvironmentPropertySetter implements ContainerPropertySetter {
 
-  ContainerEnvironmentPropertySetter(
-      CreateContainerCmd createContainerCmd, Container configuration) {
-    super(createContainerCmd, configuration);
+  private final Optional<WorkflowValueResolver<Map<String, Object>>> envResolver;
+
+  ContainerEnvironmentPropertySetter(WorkflowDefinition definition, Container configuration) {
+
+    this.envResolver =
+        configuration.getEnvironment() != null
+                && configuration.getEnvironment().getAdditionalProperties() != null
+            ? Optional.of(
+                WorkflowUtils.buildMapResolver(
+                    definition.application(),
+                    null,
+                    configuration.getEnvironment().getAdditionalProperties()))
+            : Optional.empty();
   }
 
   @Override
-  public void accept(Function<String, String> resolver) {
-    if (!(configuration.getEnvironment() == null
-        || configuration.getEnvironment().getAdditionalProperties() == null)) {
-      List<String> envs = new ArrayList<>();
-      for (Map.Entry<String, Object> entry :
-          configuration.getEnvironment().getAdditionalProperties().entrySet()) {
-        String key = entry.getKey();
-        if (entry.getValue() instanceof String value) {
-          String resolvedValue = resolver.apply(value);
-          envs.add(key + "=" + resolvedValue);
-        } else {
-          throw new IllegalArgumentException("Environment variable values must be strings");
-        }
-      }
-      createContainerCmd.withEnv(envs.toArray(new String[0]));
-    }
+  public void accept(
+      CreateContainerCmd command,
+      WorkflowContext workflowContext,
+      TaskContext taskContext,
+      WorkflowModel model) {
+    envResolver
+        .map(env -> env.apply(workflowContext, taskContext, model))
+        .ifPresent(
+            envs ->
+                command.withEnv(
+                    envs.entrySet().stream().map(e -> e.getKey() + "=" + e.getValue()).toList()));
   }
 }

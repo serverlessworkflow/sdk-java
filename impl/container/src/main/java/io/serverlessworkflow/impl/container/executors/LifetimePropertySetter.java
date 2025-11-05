@@ -19,26 +19,29 @@ import static io.serverlessworkflow.api.types.ContainerLifetime.*;
 
 import com.github.dockerjava.api.command.CreateContainerCmd;
 import io.serverlessworkflow.api.types.Container;
-import io.serverlessworkflow.api.types.ContainerLifetime;
-import java.util.function.Function;
+import io.serverlessworkflow.impl.TaskContext;
+import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.WorkflowModel;
 
-class LifetimePropertySetter extends ContainerPropertySetter {
+class LifetimePropertySetter implements ContainerPropertySetter {
 
-  LifetimePropertySetter(CreateContainerCmd createContainerCmd, Container configuration) {
-    super(createContainerCmd, configuration);
+  private final ContainerCleanupPolicy cleanupPolicy;
+
+  LifetimePropertySetter(Container configuration) {
+    this.cleanupPolicy =
+        configuration.getLifetime() != null ? configuration.getLifetime().getCleanup() : null;
   }
 
   @Override
-  public void accept(Function<String, String> resolver) {
-    // case of cleanup=eventually processed at ContainerRunner
-    if (configuration.getLifetime() != null) {
-      ContainerLifetime lifetime = configuration.getLifetime();
-      ContainerCleanupPolicy cleanupPolicy = lifetime.getCleanup();
-      if (cleanupPolicy.equals(ContainerCleanupPolicy.ALWAYS)) {
-        createContainerCmd.getHostConfig().withAutoRemove(true);
-      } else if (cleanupPolicy.equals(ContainerCleanupPolicy.NEVER)) {
-        createContainerCmd.getHostConfig().withAutoRemove(false);
-      }
+  public void accept(
+      CreateContainerCmd command,
+      WorkflowContext workflowContext,
+      TaskContext taskContext,
+      WorkflowModel model) {
+    if (ContainerCleanupPolicy.ALWAYS.equals(cleanupPolicy)) {
+      command.getHostConfig().withAutoRemove(true);
+    } else if (ContainerCleanupPolicy.NEVER.equals(cleanupPolicy)) {
+      command.getHostConfig().withAutoRemove(false);
     }
   }
 }

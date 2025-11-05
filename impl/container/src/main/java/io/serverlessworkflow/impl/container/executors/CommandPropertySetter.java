@@ -15,20 +15,38 @@
  */
 package io.serverlessworkflow.impl.container.executors;
 
+import static io.serverlessworkflow.impl.WorkflowUtils.isValid;
+
 import com.github.dockerjava.api.command.CreateContainerCmd;
 import io.serverlessworkflow.api.types.Container;
-import java.util.function.Function;
+import io.serverlessworkflow.impl.TaskContext;
+import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.WorkflowDefinition;
+import io.serverlessworkflow.impl.WorkflowModel;
+import io.serverlessworkflow.impl.WorkflowUtils;
+import io.serverlessworkflow.impl.WorkflowValueResolver;
+import java.util.Optional;
 
-class CommandPropertySetter extends ContainerPropertySetter {
+class CommandPropertySetter implements ContainerPropertySetter {
 
-  CommandPropertySetter(CreateContainerCmd createContainerCmd, Container configuration) {
-    super(createContainerCmd, configuration);
+  private Optional<WorkflowValueResolver<String>> command;
+
+  CommandPropertySetter(WorkflowDefinition definition, Container configuration) {
+    String commandName = configuration.getCommand();
+    command =
+        isValid(commandName)
+            ? Optional.of(WorkflowUtils.buildStringFilter(definition.application(), commandName))
+            : Optional.empty();
   }
 
   @Override
-  public void accept(Function<String, String> resolver) {
-    if (configuration.getCommand() != null && !configuration.getCommand().isEmpty()) {
-      createContainerCmd.withCmd("sh", "-c", configuration.getCommand());
-    }
+  public void accept(
+      CreateContainerCmd containerCmd,
+      WorkflowContext workflowContext,
+      TaskContext taskContext,
+      WorkflowModel model) {
+    command
+        .map(c -> c.apply(workflowContext, taskContext, model))
+        .ifPresent(c -> containerCmd.withCmd("sh", "-c", c));
   }
 }
