@@ -38,29 +38,38 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Map;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 public class ContainerTest {
 
-  private static final DefaultDockerClientConfig DEFAULT_CONFIG =
-      DefaultDockerClientConfig.createDefaultConfigBuilder().build();
+  private static DockerClient dockerClient;
+  private static WorkflowApplication app;
 
-  private static final DockerClient dockerClient =
-      DockerClientImpl.getInstance(
-          DEFAULT_CONFIG,
-          new ApacheDockerHttpClient.Builder().dockerHost(DEFAULT_CONFIG.getDockerHost()).build());
+  @BeforeAll
+  static void init() {
+    DefaultDockerClientConfig defaultConfig =
+        DefaultDockerClientConfig.createDefaultConfigBuilder().build();
+    dockerClient =
+        DockerClientImpl.getInstance(
+            defaultConfig,
+            new ApacheDockerHttpClient.Builder().dockerHost(defaultConfig.getDockerHost()).build());
+    app = WorkflowApplication.builder().build();
+  }
+
+  @AfterAll
+  static void cleanup() throws IOException {
+    dockerClient.close();
+    app.close();
+  }
 
   @Test
   public void testContainer() throws IOException, InterruptedException {
     Workflow workflow =
         readWorkflowFromClasspath("workflows-samples/container/container-test-command.yaml");
-    Map<String, Object> result;
-    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-      result =
-          app.workflowDefinition(workflow).instance(Map.of()).start().get().asMap().orElseThrow();
-    } catch (Exception e) {
-      throw new RuntimeException("Workflow execution failed", e);
-    }
+    Map<String, Object> result =
+        app.workflowDefinition(workflow).instance(Map.of()).start().join().asMap().orElseThrow();
 
     String containerName = "hello-world";
     String containerId = findContainerIdByName(containerName);
@@ -91,12 +100,8 @@ public class ContainerTest {
 
     Map<String, Object> input = Map.of("someValue", "Tested");
 
-    Map<String, Object> result;
-    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-      result = app.workflowDefinition(workflow).instance(input).start().get().asMap().orElseThrow();
-    } catch (Exception e) {
-      throw new RuntimeException("Workflow execution failed", e);
-    }
+    Map<String, Object> result =
+        app.workflowDefinition(workflow).instance(input).start().join().asMap().orElseThrow();
 
     String containerName = "hello-world-envs";
     ByteArrayOutputStream output = new ByteArrayOutputStream();
@@ -126,13 +131,8 @@ public class ContainerTest {
     Workflow workflow =
         readWorkflowFromClasspath("workflows-samples/container/container-timeout.yaml");
 
-    Map<String, Object> result;
-    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-      result =
-          app.workflowDefinition(workflow).instance(Map.of()).start().get().asMap().orElseThrow();
-    } catch (Exception e) {
-      throw new RuntimeException("Workflow execution failed", e);
-    }
+    Map<String, Object> result =
+        app.workflowDefinition(workflow).instance(Map.of()).start().join().asMap().orElseThrow();
 
     String containerName = "hello-world-timeout";
     String containerId = findContainerIdByName(containerName);
@@ -146,13 +146,8 @@ public class ContainerTest {
     Workflow workflow =
         readWorkflowFromClasspath("workflows-samples/container/container-cleanup.yaml");
 
-    Map<String, Object> result;
-    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-      result =
-          app.workflowDefinition(workflow).instance(Map.of()).start().get().asMap().orElseThrow();
-    } catch (Exception e) {
-      throw new RuntimeException("Workflow execution failed", e);
-    }
+    Map<String, Object> result =
+        app.workflowDefinition(workflow).instance(Map.of()).start().join().asMap().orElseThrow();
 
     String containerName = "hello-world-cleanup";
     String containerId = findContainerIdByName(containerName);
@@ -165,14 +160,8 @@ public class ContainerTest {
     Workflow workflow =
         readWorkflowFromClasspath("workflows-samples/container/container-cleanup-default.yaml");
 
-    Map<String, Object> result;
-    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-      result =
-          app.workflowDefinition(workflow).instance(Map.of()).start().get().asMap().orElseThrow();
-    } catch (Exception e) {
-      throw new RuntimeException("Workflow execution failed", e);
-    }
-
+    Map<String, Object> result =
+        app.workflowDefinition(workflow).instance(Map.of()).start().join().asMap().orElseThrow();
     String containerName = "hello-world-cleanup-default";
     String containerId = findContainerIdByName(containerName);
     assertFalse(isContainerGone(containerId));
@@ -188,17 +177,12 @@ public class ContainerTest {
 
     new Thread(
             () -> {
-              try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-                app.workflowDefinition(workflow)
-                    .instance(Map.of())
-                    .start()
-                    .get()
-                    .asMap()
-                    .orElseThrow();
-              } catch (Exception e) {
-                // we can ignore exceptions here, as the workflow will end when the container is
-                // removed
-              }
+              app.workflowDefinition(workflow)
+                  .instance(Map.of())
+                  .start()
+                  .join()
+                  .asMap()
+                  .orElseThrow();
             })
         .start();
 

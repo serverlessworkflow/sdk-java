@@ -16,17 +16,14 @@
 package io.serverlessworkflow.impl.container.executors;
 
 import com.github.dockerjava.api.command.CreateContainerCmd;
-import io.serverlessworkflow.api.types.Container;
-import java.util.function.Consumer;
-import java.util.function.Function;
+import io.serverlessworkflow.impl.TaskContext;
+import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.WorkflowModel;
 
-abstract class ContainerPropertySetter implements Consumer<Function<String, String>> {
-
-  protected final CreateContainerCmd createContainerCmd;
-  protected final Container configuration;
-
-  ContainerPropertySetter(CreateContainerCmd createContainerCmd, Container configuration) {
-    this.createContainerCmd = createContainerCmd;
-    this.configuration = configuration;
-  }
+interface ContainerPropertySetter {
+  abstract void accept(
+      CreateContainerCmd command,
+      WorkflowContext workflowContext,
+      TaskContext taskContext,
+      WorkflowModel model);
 }

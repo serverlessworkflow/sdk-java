@@ -19,34 +19,51 @@ import com.github.dockerjava.api.command.CreateContainerCmd;
 import com.github.dockerjava.api.model.ExposedPort;
 import com.github.dockerjava.api.model.Ports;
 import io.serverlessworkflow.api.types.Container;
+import io.serverlessworkflow.impl.TaskContext;
+import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.WorkflowModel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 
-class PortsPropertySetter extends ContainerPropertySetter {
+class PortsPropertySetter implements ContainerPropertySetter {
 
-  PortsPropertySetter(CreateContainerCmd createContainerCmd, Container configuration) {
-    super(createContainerCmd, configuration);
+  private Ports portBindings = new Ports();
+  private List<ExposedPort> exposed = new ArrayList<>();
+
+  PortsPropertySetter(Container configuration) {
+    if (configuration.getPorts() != null
+        && configuration.getPorts().getAdditionalProperties() != null) {
+      for (Map.Entry<String, Object> entry :
+          configuration.getPorts().getAdditionalProperties().entrySet()) {
+        ExposedPort exposedPort = ExposedPort.tcp(Integer.parseInt(entry.getKey()));
+        exposed.add(exposedPort);
+        portBindings.bind(exposedPort, Ports.Binding.bindPort(from(entry.getValue())));
+      }
+    }
   }
 
   @Override
-  public void accept(Function<String, String> resolver) {
-    if (configuration.getPorts() != null
-        && configuration.getPorts().getAdditionalProperties() != null) {
-      Ports portBindings = new Ports();
-      List<ExposedPort> exposed = new ArrayList<>();
+  public void accept(
+      CreateContainerCmd command,
+      WorkflowContext workflowContext,
+      TaskContext taskContext,
+      WorkflowModel model) {
+    command.withExposedPorts(exposed);
+    command.getHostConfig().withPortBindings(portBindings);
+  }
 
-      for (Map.Entry<String, Object> entry :
-          configuration.getPorts().getAdditionalProperties().entrySet()) {
-        int hostPort = Integer.parseInt(entry.getKey());
-        int containerPort = Integer.parseInt(entry.getValue().toString());
-        ExposedPort exposedPort = ExposedPort.tcp(containerPort);
-        portBindings.bind(exposedPort, Ports.Binding.bindPort(hostPort));
-        exposed.add(exposedPort);
-      }
-      createContainerCmd.withExposedPorts(exposed.toArray(new ExposedPort[0]));
-      createContainerCmd.getHostConfig().withPortBindings(portBindings);
+  private static Integer from(Object obj) {
+    if (obj instanceof Integer number) {
+      return number;
+    } else if (obj instanceof Number number) {
+      return number.intValue();
+    } else if (obj instanceof String str) {
+      return Integer.parseInt(str);
+    } else if (obj != null) {
+      return Integer.parseInt(obj.toString());
+    } else {
+      throw new IllegalArgumentException("Null value for port key");
     }
   }
 }

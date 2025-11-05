@@ -19,34 +19,56 @@ import com.github.dockerjava.api.command.CreateContainerCmd;
 import com.github.dockerjava.api.model.Bind;
 import com.github.dockerjava.api.model.Volume;
 import io.serverlessworkflow.api.types.Container;
+import io.serverlessworkflow.impl.TaskContext;
+import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.WorkflowDefinition;
+import io.serverlessworkflow.impl.WorkflowModel;
+import io.serverlessworkflow.impl.WorkflowUtils;
+import io.serverlessworkflow.impl.WorkflowValueResolver;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
 import java.util.Map;
-import java.util.function.Function;
+import java.util.Objects;
 
-class VolumesPropertySetter extends ContainerPropertySetter {
+class VolumesPropertySetter implements ContainerPropertySetter {
 
-  VolumesPropertySetter(CreateContainerCmd createContainerCmd, Container configuration) {
-    super(createContainerCmd, configuration);
+  private static record HostContainer(
+      WorkflowValueResolver<String> host, WorkflowValueResolver<String> container) {}
+
+  private final Collection<HostContainer> binds = new ArrayList<>();
+
+  VolumesPropertySetter(WorkflowDefinition definition, Container configuration) {
+    if (configuration.getVolumes() != null
+        && configuration.getVolumes().getAdditionalProperties() != null) {
+      for (Map.Entry<String, Object> entry :
+          configuration.getVolumes().getAdditionalProperties().entrySet()) {
+        binds.add(
+            new HostContainer(
+                WorkflowUtils.buildStringFilter(definition.application(), entry.getKey()),
+                WorkflowUtils.buildStringFilter(
+                    definition.application(),
+                    Objects.requireNonNull(
+                            entry.getValue(), "Volume value must be a not null string")
+                        .toString())));
+      }
+    }
   }
 
   @Override
-  public void accept(Function<String, String> resolver) {
-    if (configuration.getVolumes() != null
-        && configuration.getVolumes().getAdditionalProperties() != null) {
-      List<Bind> binds = new ArrayList<>();
-      for (Map.Entry<String, Object> entry :
-          configuration.getVolumes().getAdditionalProperties().entrySet()) {
-        String hostPath = entry.getKey();
-        if (entry.getValue() instanceof String containerPath) {
-          String resolvedHostPath = resolver.apply(hostPath);
-          String resolvedContainerPath = resolver.apply(containerPath);
-          binds.add(new Bind(resolvedHostPath, new Volume(resolvedContainerPath)));
-        } else {
-          throw new IllegalArgumentException("Volume container paths must be strings");
-        }
-      }
-      createContainerCmd.getHostConfig().withBinds(binds);
-    }
+  public void accept(
+      CreateContainerCmd command,
+      WorkflowContext workflowContext,
+      TaskContext taskContext,
+      WorkflowModel model) {
+    command
+        .getHostConfig()
+        .withBinds(
+            binds.stream()
+                .map(
+                    r ->
+                        new Bind(
+                            r.host().apply(workflowContext, taskContext, model),
+                            new Volume(r.container.apply(workflowContext, taskContext, model))))
+                .toList());
   }
 }

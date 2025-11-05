@@ -15,21 +15,38 @@
  */
 package io.serverlessworkflow.impl.container.executors;
 
+import static io.serverlessworkflow.impl.WorkflowUtils.isValid;
+
 import com.github.dockerjava.api.command.CreateContainerCmd;
 import io.serverlessworkflow.api.types.Container;
-import java.util.function.Function;
+import io.serverlessworkflow.impl.TaskContext;
+import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.WorkflowDefinition;
+import io.serverlessworkflow.impl.WorkflowModel;
+import io.serverlessworkflow.impl.WorkflowUtils;
+import io.serverlessworkflow.impl.WorkflowValueResolver;
+import java.util.Optional;
 
-class NamePropertySetter extends ContainerPropertySetter {
+class NamePropertySetter implements ContainerPropertySetter {
 
-  NamePropertySetter(CreateContainerCmd createContainerCmd, Container configuration) {
-    super(createContainerCmd, configuration);
+  private final Optional<WorkflowValueResolver<String>> containerName;
+
+  NamePropertySetter(WorkflowDefinition definition, Container container) {
+    String containerName = container.getName();
+    this.containerName =
+        isValid(containerName)
+            ? Optional.of(WorkflowUtils.buildStringFilter(definition.application(), containerName))
+            : Optional.empty();
   }
 
   @Override
-  public void accept(Function<String, String> resolver) {
-    if (configuration.getName() != null && !configuration.getName().isEmpty()) {
-      String resolvedName = resolver.apply(configuration.getName());
-      createContainerCmd.withName(resolvedName);
-    }
+  public void accept(
+      CreateContainerCmd createContainerCmd,
+      WorkflowContext workflowContext,
+      TaskContext taskContext,
+      WorkflowModel model) {
+    containerName
+        .map(c -> c.apply(workflowContext, taskContext, model))
+        .ifPresent(createContainerCmd::withName);
   }
 }
