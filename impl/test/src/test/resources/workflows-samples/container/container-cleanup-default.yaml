@@ -1,0 +1,12 @@
+document:
+  dsl: '1.0.2'
+  namespace: test
+  name: run-example
+  version: '0.1.0'
+do:
+  - runContainer:
+      run:
+        container:
+          image: alpine:latest
+          command: echo Hello World
+          name: hello-world-cleanup-default

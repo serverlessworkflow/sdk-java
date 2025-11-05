@@ -17,6 +17,7 @@ package io.serverlessworkflow.impl.container.executors;
 
 import com.github.dockerjava.api.command.CreateContainerCmd;
 import io.serverlessworkflow.api.types.Container;
+import java.util.function.Function;
 
 class NamePropertySetter extends ContainerPropertySetter {
 
@@ -25,9 +26,9 @@ class NamePropertySetter extends ContainerPropertySetter {
   }
 
   @Override
-  public void accept(StringExpressionResolver resolver) {
+  public void accept(Function<String, String> resolver) {
     if (configuration.getName() != null && !configuration.getName().isEmpty()) {
-      String resolvedName = resolver.resolve(configuration.getName());
+      String resolvedName = resolver.apply(configuration.getName());
       createContainerCmd.withName(resolvedName);
     }
   }

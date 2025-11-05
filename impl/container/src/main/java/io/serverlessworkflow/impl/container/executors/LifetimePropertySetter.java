@@ -20,6 +20,7 @@ import static io.serverlessworkflow.api.types.ContainerLifetime.*;
 import com.github.dockerjava.api.command.CreateContainerCmd;
 import io.serverlessworkflow.api.types.Container;
 import io.serverlessworkflow.api.types.ContainerLifetime;
+import java.util.function.Function;
 
 class LifetimePropertySetter extends ContainerPropertySetter {
 
@@ -28,7 +29,7 @@ class LifetimePropertySetter extends ContainerPropertySetter {
   }
 
   @Override
-  public void accept(StringExpressionResolver resolver) {
+  public void accept(Function<String, String> resolver) {
     // case of cleanup=eventually processed at ContainerRunner
     if (configuration.getLifetime() != null) {
       ContainerLifetime lifetime = configuration.getLifetime();

@@ -1,0 +1,18 @@
+document:
+  dsl: '1.0.2'
+  namespace: test
+  name: run-example
+  version: '0.1.0'
+do:
+  - runContainer:
+      run:
+        container:
+          image: alpine:latest
+          command: sleep 300
+          name: hello-world-ports
+          ports:
+            8880: 8880
+            8881: 8881
+            8882: 8882
+          lifetime:
+            cleanup: never
