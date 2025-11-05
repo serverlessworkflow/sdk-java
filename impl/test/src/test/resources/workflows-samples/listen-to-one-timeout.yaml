@@ -1,0 +1,26 @@
+document:
+  dsl: '1.0.0-alpha5'
+  namespace: test
+  name: listen-to-one-timeout
+  version: '0.1.0'
+do:
+ - tryListen:
+     try:
+        - waitingNotForever:
+              listen:
+                to:
+                  one:
+                    with:
+                      type: neven-happening-event
+              timeout:
+                after: ${"PT\(.delay)S"}
+     catch:
+        errors:
+         with:
+            type: https://serverlessworkflow.io/spec/1.0.0/errors/timeout
+            status: 408
+        do:
+          - setMessage:
+              set: 
+                message: Viva er Beti Balompie
+            
