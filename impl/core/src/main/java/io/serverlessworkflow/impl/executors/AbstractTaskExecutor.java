@@ -24,17 +24,23 @@ import io.serverlessworkflow.api.types.FlowDirective;
 import io.serverlessworkflow.api.types.Input;
 import io.serverlessworkflow.api.types.Output;
 import io.serverlessworkflow.api.types.TaskBase;
+import io.serverlessworkflow.api.types.TaskTimeout;
+import io.serverlessworkflow.api.types.Timeout;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowDefinition;
+import io.serverlessworkflow.impl.WorkflowError;
+import io.serverlessworkflow.impl.WorkflowException;
 import io.serverlessworkflow.impl.WorkflowFilter;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.WorkflowPosition;
 import io.serverlessworkflow.impl.WorkflowPredicate;
 import io.serverlessworkflow.impl.WorkflowStatus;
+import io.serverlessworkflow.impl.WorkflowUtils;
+import io.serverlessworkflow.impl.WorkflowValueResolver;
 import io.serverlessworkflow.impl.lifecycle.TaskCancelledEvent;
 import io.serverlessworkflow.impl.lifecycle.TaskCompletedEvent;
 import io.serverlessworkflow.impl.lifecycle.TaskFailedEvent;
@@ -42,13 +48,16 @@ import io.serverlessworkflow.impl.lifecycle.TaskRetriedEvent;
 import io.serverlessworkflow.impl.lifecycle.TaskStartedEvent;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
 import io.serverlessworkflow.impl.schema.SchemaValidator;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.TimeUnit;
 
 public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskExecutor<T> {
 
@@ -62,6 +71,7 @@ public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskEx
   private final Optional<SchemaValidator> outputSchemaValidator;
   private final Optional<SchemaValidator> contextSchemaValidator;
   private final Optional<WorkflowPredicate> ifFilter;
+  private final Optional<WorkflowValueResolver<Duration>> timeout;
 
   public abstract static class AbstractTaskExecutorBuilder<
           T extends TaskBase, V extends AbstractTaskExecutor<T>>
@@ -80,6 +90,7 @@ public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskEx
     protected final Workflow workflow;
     protected final ResourceLoader resourceLoader;
     private final WorkflowDefinition definition;
+    private final Optional<WorkflowValueResolver<Duration>> timeout;
 
     private V instance;
 
@@ -113,6 +124,28 @@ public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskEx
             getSchemaValidator(application.validatorFactory(), resourceLoader, export.getSchema());
       }
       this.ifFilter = application.expressionFactory().buildIfFilter(task);
+      this.timeout = getTaskTimeout();
+    }
+
+    private Optional<WorkflowValueResolver<Duration>> getTaskTimeout() {
+      TaskTimeout timeout = task.getTimeout();
+      if (timeout == null) {
+        return Optional.empty();
+      }
+      Timeout timeoutDef = timeout.getTaskTimeoutDefinition();
+      if (timeoutDef == null && timeout.getTaskTimeoutReference() != null) {
+        timeoutDef =
+            Objects.requireNonNull(
+                Objects.requireNonNull(
+                        workflow.getUse().getTimeouts(),
+                        "Timeout reference "
+                            + timeout.getTaskTimeoutReference()
+                            + " specified, but use timeout was not defined")
+                    .getAdditionalProperties()
+                    .get(timeout.getTaskTimeoutReference()),
+                "Timeout reference " + timeout.getTaskTimeoutReference() + "cannot be found");
+      }
+      return Optional.of(WorkflowUtils.fromTimeoutAfter(application, timeoutDef.getAfter()));
     }
 
     protected final TransitionInfoBuilder next(
@@ -171,6 +204,7 @@ public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskEx
     this.outputSchemaValidator = builder.outputSchemaValidator;
     this.contextSchemaValidator = builder.contextSchemaValidator;
     this.ifFilter = builder.ifFilter;
+    this.timeout = builder.timeout;
   }
 
   protected final CompletableFuture<TaskContext> executeNext(
@@ -200,7 +234,7 @@ public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskEx
     } else if (taskContext.isCompleted()) {
       return executeNext(completable, workflowContext);
     } else if (ifFilter.map(f -> f.test(workflowContext, taskContext, input)).orElse(true)) {
-      return executeNext(
+      completable =
           completable
               .thenCompose(workflowContext.instance()::suspendedCheck)
               .thenApply(
@@ -247,8 +281,26 @@ public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskEx
                             l.onTaskCompleted(
                                 new TaskCompletedEvent(workflowContext, taskContext)));
                     return t;
-                  }),
-          workflowContext);
+                  });
+      if (timeout.isPresent()) {
+        completable =
+            completable
+                .orTimeout(
+                    timeout
+                        .map(t -> t.apply(workflowContext, taskContext, input))
+                        .orElseThrow()
+                        .toMillis(),
+                    TimeUnit.MILLISECONDS)
+                .exceptionallyCompose(
+                    e ->
+                        CompletableFuture.failedFuture(
+                            new WorkflowException(
+                                WorkflowError.timeout()
+                                    .instance(taskContext.position().jsonPointer())
+                                    .build(),
+                                e)));
+      }
+      return executeNext(completable, workflowContext);
     } else {
       taskContext.transition(getSkipTransition());
       return executeNext(completable, workflowContext);
