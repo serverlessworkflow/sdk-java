@@ -22,6 +22,7 @@ import io.serverlessworkflow.api.types.Container;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 class VolumesPropertySetter extends ContainerPropertySetter {
 
@@ -30,7 +31,7 @@ class VolumesPropertySetter extends ContainerPropertySetter {
   }
 
   @Override
-  public void accept(StringExpressionResolver resolver) {
+  public void accept(Function<String, String> resolver) {
     if (configuration.getVolumes() != null
         && configuration.getVolumes().getAdditionalProperties() != null) {
       List<Bind> binds = new ArrayList<>();
@@ -38,8 +39,8 @@ class VolumesPropertySetter extends ContainerPropertySetter {
           configuration.getVolumes().getAdditionalProperties().entrySet()) {
         String hostPath = entry.getKey();
         if (entry.getValue() instanceof String containerPath) {
-          String resolvedHostPath = resolver.resolve(hostPath);
-          String resolvedContainerPath = resolver.resolve(containerPath);
+          String resolvedHostPath = resolver.apply(hostPath);
+          String resolvedContainerPath = resolver.apply(containerPath);
           binds.add(new Bind(resolvedHostPath, new Volume(resolvedContainerPath)));
         } else {
           throw new IllegalArgumentException("Volume container paths must be strings");

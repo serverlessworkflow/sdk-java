@@ -20,8 +20,9 @@ import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.expressions.ExpressionUtils;
+import java.util.function.Function;
 
-class StringExpressionResolver {
+class StringExpressionResolver implements Function<String, String> {
 
   private final WorkflowContext workflowContext;
   private final TaskContext taskContext;
@@ -34,9 +35,9 @@ class StringExpressionResolver {
     this.input = input;
   }
 
-  String resolve(String expression) {
+  public String apply(String expression) {
     if (ExpressionUtils.isExpr(expression)) {
-      WorkflowUtils.buildStringResolver(
+      return WorkflowUtils.buildStringResolver(
               workflowContext.definition().application(),
               expression,
               taskContext.input().asJavaObject())

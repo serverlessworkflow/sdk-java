@@ -41,7 +41,7 @@ public class RunContainerExecutor implements RunnableTask<RunContainer> {
   @Override
   public CompletableFuture<WorkflowModel> apply(
       WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel input) {
-    return containerRunner.startSync(workflowContext, taskContext, input);
+    return containerRunner.start(workflowContext, taskContext, input);
   }
 
   @Override

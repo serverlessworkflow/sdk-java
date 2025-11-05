@@ -17,6 +17,7 @@ package io.serverlessworkflow.impl.container.executors;
 
 import com.github.dockerjava.api.command.CreateContainerCmd;
 import io.serverlessworkflow.api.types.Container;
+import java.util.function.Function;
 
 class CommandPropertySetter extends ContainerPropertySetter {
 
@@ -25,7 +26,7 @@ class CommandPropertySetter extends ContainerPropertySetter {
   }
 
   @Override
-  public void accept(StringExpressionResolver resolver) {
+  public void accept(Function<String, String> resolver) {
     if (configuration.getCommand() != null && !configuration.getCommand().isEmpty()) {
       createContainerCmd.withCmd("sh", "-c", configuration.getCommand());
     }

@@ -20,8 +20,9 @@ import static io.serverlessworkflow.api.types.ContainerLifetime.*;
 import com.github.dockerjava.api.DockerClient;
 import com.github.dockerjava.api.command.CreateContainerCmd;
 import com.github.dockerjava.api.command.CreateContainerResponse;
-import com.github.dockerjava.api.command.PullImageResultCallback;
 import com.github.dockerjava.api.command.WaitContainerResultCallback;
+import com.github.dockerjava.api.exception.DockerClientException;
+import com.github.dockerjava.api.exception.NotFoundException;
 import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientImpl;
 import com.github.dockerjava.core.NameParser;
@@ -38,6 +39,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 
 class ContainerRunner {
 
@@ -62,15 +64,15 @@ class ContainerRunner {
     this.propertySetters = new ArrayList<>();
   }
 
-  /**
-   * Blocking container execution according to the lifetime policy. Returns an already completed
-   * CompletableFuture: - completedFuture(input) if exitCode == 0 - exceptionally completed if the
-   * exit code is non-zero or an error occurs. The method blocks the calling thread until the
-   * container finishes or the timeout expires.
-   */
-  CompletableFuture<WorkflowModel> startSync(
+  CompletableFuture<WorkflowModel> start(
       WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel input) {
+    return CompletableFuture.supplyAsync(
+        () -> startSync(workflowContext, taskContext, input),
+        definition.application().executorService());
+  }
 
+  private WorkflowModel startSync(
+      WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel input) {
     try {
       var resolver = new StringExpressionResolver(workflowContext, taskContext, input);
       applyPropertySetters(resolver);
@@ -78,18 +80,20 @@ class ContainerRunner {
 
       String id = createAndStartContainer();
       int exit = waitAccordingToLifetime(id, workflowContext, taskContext, input);
-
-      return mapExitCode(exit, input);
+      if (exit == 0) {
+        return input;
+      }
+      throw mapExitCode(exit);
     } catch (InterruptedException ie) {
       Thread.currentThread().interrupt();
-      return failed("Interrupted while waiting for container");
+      throw failed("Container execution failed with exit code " + ie.getMessage());
     } catch (Exception e) {
-      return failed("Container run failed: " + e.getMessage());
+      throw failed("Container execution failed with exit code " + e.getMessage());
     }
   }
 
-  private void applyPropertySetters(StringExpressionResolver resolver) {
-    for (var setter : propertySetters) setter.accept(resolver);
+  private void applyPropertySetters(Function<String, String> resolver) {
+    propertySetters.forEach(setter -> setter.accept(resolver));
   }
 
   private void pullImageIfNeeded(String imageRef) throws InterruptedException {
@@ -97,12 +101,8 @@ class ContainerRunner {
     NameParser.HostnameReposName hr = NameParser.resolveRepositoryName(imageRef);
 
     String repository = hr.reposName;
-    String tag = rt.tag != null && rt.tag.isEmpty() ? rt.tag : "latest";
-    dockerClient
-        .pullImageCmd(repository)
-        .withTag(tag)
-        .exec(new PullImageResultCallback())
-        .awaitCompletion();
+    String tag = (rt.tag == null || rt.tag.isBlank()) ? "latest" : rt.tag;
+    dockerClient.pullImageCmd(repository).withTag(tag).start().awaitCompletion();
   }
 
   private String createAndStartContainer() {
@@ -123,25 +123,22 @@ class ContainerRunner {
     var policy = lifetime != null ? lifetime.getCleanup() : null;
 
     try (var cb = dockerClient.waitContainerCmd(id).exec(new WaitContainerResultCallback())) {
-
       if (policy == ContainerCleanupPolicy.EVENTUALLY) {
         Duration timeout = resolveAfter(lifetime, workflowContext, taskContext, input);
-        int exit = cb.awaitStatusCode(timeout.toMillis(), TimeUnit.MILLISECONDS);
-
-        if (isRunning(id)) {
-          safeStop(id, Duration.ofSeconds(10));
+        try {
+          Integer exit = cb.awaitStatusCode(timeout.toMillis(), TimeUnit.MILLISECONDS);
+          safeStop(id);
+          return exit != null ? exit : 0;
+        } catch (DockerClientException timeoutOrOther) {
+          safeStop(id);
         }
-        safeRemove(id);
-        return exit;
-
       } else {
-        int exit = cb.awaitStatusCode();
-        if (policy == ContainerCleanupPolicy.ALWAYS) {
-          safeRemove(id);
-        }
-        return exit;
+        return cb.awaitStatusCode();
       }
+    } catch (NotFoundException e) {
+      // container already removed
     }
+    return 0;
   }
 
   private Duration resolveAfter(
@@ -167,6 +164,20 @@ class ContainerRunner {
     }
   }
 
+  private void safeStop(String id) {
+    if (isRunning(id)) {
+      safeStop(id, Duration.ofSeconds(10));
+      try (var cb2 = dockerClient.waitContainerCmd(id).exec(new WaitContainerResultCallback())) {
+        cb2.awaitStatusCode();
+        safeRemove(id);
+      } catch (Exception ignore) {
+        // we can ignore this
+      }
+    } else {
+      safeRemove(id);
+    }
+  }
+
   private void safeStop(String id, Duration timeout) {
     try {
       dockerClient.stopContainerCmd(id).withTimeout((int) Math.max(1, timeout.toSeconds())).exec();
@@ -184,9 +195,8 @@ class ContainerRunner {
     }
   }
 
-  private static <T> CompletableFuture<T> mapExitCode(int exit, T ok) {
+  private static Exception mapExitCode(int exit) {
     return switch (exit) {
-      case 0 -> CompletableFuture.completedFuture(ok);
       case 1 -> failed("General error (exit code 1)");
       case 2 -> failed("Shell syntax error (exit code 2)");
       case 126 -> failed("Command found but not executable (exit code 126)");
@@ -199,10 +209,8 @@ class ContainerRunner {
     };
   }
 
-  private static <T> CompletableFuture<T> failed(String message) {
-    CompletableFuture<T> f = new CompletableFuture<>();
-    f.completeExceptionally(new RuntimeException(message));
-    return f;
+  private static RuntimeException failed(String message) {
+    return new RuntimeException(message);
   }
 
   static ContainerRunnerBuilder builder() {

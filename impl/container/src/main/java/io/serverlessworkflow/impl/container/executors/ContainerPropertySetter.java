@@ -18,8 +18,9 @@ package io.serverlessworkflow.impl.container.executors;
 import com.github.dockerjava.api.command.CreateContainerCmd;
 import io.serverlessworkflow.api.types.Container;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
-abstract class ContainerPropertySetter implements Consumer<StringExpressionResolver> {
+abstract class ContainerPropertySetter implements Consumer<Function<String, String>> {
 
   protected final CreateContainerCmd createContainerCmd;
   protected final Container configuration;

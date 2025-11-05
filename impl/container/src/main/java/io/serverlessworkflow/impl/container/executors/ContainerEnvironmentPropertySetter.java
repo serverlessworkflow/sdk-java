@@ -20,6 +20,7 @@ import io.serverlessworkflow.api.types.Container;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 class ContainerEnvironmentPropertySetter extends ContainerPropertySetter {
 
@@ -29,7 +30,7 @@ class ContainerEnvironmentPropertySetter extends ContainerPropertySetter {
   }
 
   @Override
-  public void accept(StringExpressionResolver resolver) {
+  public void accept(Function<String, String> resolver) {
     if (!(configuration.getEnvironment() == null
         || configuration.getEnvironment().getAdditionalProperties() == null)) {
       List<String> envs = new ArrayList<>();
@@ -37,7 +38,7 @@ class ContainerEnvironmentPropertySetter extends ContainerPropertySetter {
           configuration.getEnvironment().getAdditionalProperties().entrySet()) {
         String key = entry.getKey();
         if (entry.getValue() instanceof String value) {
-          String resolvedValue = resolver.resolve(value);
+          String resolvedValue = resolver.apply(value);
           envs.add(key + "=" + resolvedValue);
         } else {
           throw new IllegalArgumentException("Environment variable values must be strings");

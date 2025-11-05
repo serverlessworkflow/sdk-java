@@ -22,6 +22,7 @@ import io.serverlessworkflow.api.types.Container;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 class PortsPropertySetter extends ContainerPropertySetter {
 
@@ -30,7 +31,7 @@ class PortsPropertySetter extends ContainerPropertySetter {
   }
 
   @Override
-  public void accept(StringExpressionResolver resolver) {
+  public void accept(Function<String, String> resolver) {
     if (configuration.getPorts() != null
         && configuration.getPorts().getAdditionalProperties() != null) {
       Ports portBindings = new Ports();
