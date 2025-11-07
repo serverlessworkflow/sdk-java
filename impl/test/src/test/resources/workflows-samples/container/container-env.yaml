@@ -7,7 +7,7 @@ do:
   - runContainer:
       run:
         container:
-          image: alpine:latest
+          image: busybox:latest
           command: printenv
           name: hello-world-envs
           lifetime:

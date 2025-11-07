@@ -7,6 +7,6 @@ do:
   - runContainer:
       run:
         container:
-          image: alpine:latest
+          image: busybox:latest
           command: echo Hello World
           name: hello-world-cleanup-default

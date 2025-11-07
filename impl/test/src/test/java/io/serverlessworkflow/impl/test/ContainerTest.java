@@ -87,139 +87,157 @@ public class ContainerTest {
   public void testContainer() throws IOException, InterruptedException {
     Workflow workflow =
         readWorkflowFromClasspath("workflows-samples/container/container-test-command.yaml");
-    Map<String, Object> result =
-        app.workflowDefinition(workflow).instance(Map.of()).start().join().asMap().orElseThrow();
-
     String containerName = "hello-world";
-    String containerId = findContainerIdByName(containerName);
-    ByteArrayOutputStream output = new ByteArrayOutputStream();
+    try {
+      Map<String, Object> result =
+          app.workflowDefinition(workflow).instance(Map.of()).start().join().asMap().orElseThrow();
 
-    dockerClient
-        .logContainerCmd(containerId)
-        .withStdOut(true)
-        .withStdErr(true)
-        .withTimestamps(true)
-        .exec(
-            new LogContainerResultCallback() {
-              @Override
-              public void onNext(Frame frame) {
-                output.writeBytes(frame.getPayload());
-              }
-            })
-        .awaitCompletion();
+      String containerId = findContainerIdByName(containerName);
+      ByteArrayOutputStream output = new ByteArrayOutputStream();
 
-    assertTrue(output.toString().contains("Hello World"));
-    assertNotNull(result);
-    dockerClient.removeContainerCmd(containerId).withForce(true).exec();
+      dockerClient
+          .logContainerCmd(containerId)
+          .withStdOut(true)
+          .withStdErr(true)
+          .withTimestamps(true)
+          .exec(
+              new LogContainerResultCallback() {
+                @Override
+                public void onNext(Frame frame) {
+                  output.writeBytes(frame.getPayload());
+                }
+              })
+          .awaitCompletion();
+
+      assertTrue(output.toString().contains("Hello World"));
+      assertNotNull(result);
+    } finally {
+      dockerClient.removeContainerCmd(findContainerIdByName(containerName)).withForce(true).exec();
+    }
   }
 
   @Test
   public void testContainerEnv() throws IOException, InterruptedException {
     Workflow workflow = readWorkflowFromClasspath("workflows-samples/container/container-env.yaml");
+    String containerName = "hello-world-envs";
 
     Map<String, Object> input = Map.of("someValue", "Tested");
 
-    Map<String, Object> result =
-        app.workflowDefinition(workflow).instance(input).start().join().asMap().orElseThrow();
+    try {
+      Map<String, Object> result =
+          app.workflowDefinition(workflow).instance(input).start().join().asMap().orElseThrow();
 
-    String containerName = "hello-world-envs";
-    ByteArrayOutputStream output = new ByteArrayOutputStream();
+      ByteArrayOutputStream output = new ByteArrayOutputStream();
 
-    dockerClient
-        .logContainerCmd(findContainerIdByName(containerName))
-        .withStdOut(true)
-        .withStdErr(true)
-        .withTimestamps(true)
-        .exec(
-            new LogContainerResultCallback() {
-              @Override
-              public void onNext(Frame frame) {
-                output.writeBytes(frame.getPayload());
-              }
-            })
-        .awaitCompletion();
-    assertTrue(output.toString().contains("BAR=FOO"));
-    assertTrue(output.toString().contains("FOO=Tested"));
-    assertNotNull(result);
-    String containerId = findContainerIdByName(containerName);
-    dockerClient.removeContainerCmd(containerId).withForce(true).exec();
+      dockerClient
+          .logContainerCmd(findContainerIdByName(containerName))
+          .withStdOut(true)
+          .withStdErr(true)
+          .withTimestamps(true)
+          .exec(
+              new LogContainerResultCallback() {
+                @Override
+                public void onNext(Frame frame) {
+                  output.writeBytes(frame.getPayload());
+                }
+              })
+          .awaitCompletion();
+      assertTrue(output.toString().contains("BAR=FOO"));
+      assertTrue(output.toString().contains("FOO=Tested"));
+      assertNotNull(result);
+    } finally {
+      dockerClient.removeContainerCmd(findContainerIdByName(containerName)).withForce(true).exec();
+    }
   }
 
   @Test
   public void testContainerTimeout() throws IOException {
-    Workflow workflow =
-        readWorkflowFromClasspath("workflows-samples/container/container-timeout.yaml");
-
-    Map<String, Object> result =
-        app.workflowDefinition(workflow).instance(Map.of()).start().join().asMap().orElseThrow();
-
     String containerName = "hello-world-timeout";
-    String containerId = findContainerIdByName(containerName);
+    try {
+      Workflow workflow =
+          readWorkflowFromClasspath("workflows-samples/container/container-timeout.yaml");
 
-    assertTrue(isContainerGone(containerId));
-    assertNotNull(result);
+      Map<String, Object> result =
+          app.workflowDefinition(workflow).instance(Map.of()).start().join().asMap().orElseThrow();
+
+      String containerId = findContainerIdByName(containerName);
+
+      assertTrue(isContainerGone(containerId));
+      assertNotNull(result);
+    } finally {
+      dockerClient.removeContainerCmd(findContainerIdByName(containerName)).withForce(true).exec();
+    }
   }
 
   @Test
   public void testContainerCleanup() throws IOException {
-    Workflow workflow =
-        readWorkflowFromClasspath("workflows-samples/container/container-cleanup.yaml");
-
-    Map<String, Object> result =
-        app.workflowDefinition(workflow).instance(Map.of()).start().join().asMap().orElseThrow();
-
     String containerName = "hello-world-cleanup";
-    String containerId = findContainerIdByName(containerName);
-    assertTrue(isContainerGone(containerId));
-    assertNotNull(result);
+    try {
+      Workflow workflow =
+          readWorkflowFromClasspath("workflows-samples/container/container-cleanup.yaml");
+
+      Map<String, Object> result =
+          app.workflowDefinition(workflow).instance(Map.of()).start().join().asMap().orElseThrow();
+
+      String containerId = findContainerIdByName(containerName);
+      assertTrue(isContainerGone(containerId));
+      assertNotNull(result);
+    } finally {
+      dockerClient.removeContainerCmd(findContainerIdByName(containerName)).withForce(true).exec();
+    }
   }
 
   @Test
   public void testContainerCleanupDefault() throws IOException {
-    Workflow workflow =
-        readWorkflowFromClasspath("workflows-samples/container/container-cleanup-default.yaml");
-
-    Map<String, Object> result =
-        app.workflowDefinition(workflow).instance(Map.of()).start().join().asMap().orElseThrow();
     String containerName = "hello-world-cleanup-default";
-    String containerId = findContainerIdByName(containerName);
-    assertFalse(isContainerGone(containerId));
-    assertNotNull(result);
+    try {
+      Workflow workflow =
+          readWorkflowFromClasspath("workflows-samples/container/container-cleanup-default.yaml");
 
-    dockerClient.removeContainerCmd(containerId).withForce(true).exec();
+      Map<String, Object> result =
+          app.workflowDefinition(workflow).instance(Map.of()).start().join().asMap().orElseThrow();
+      String containerId = findContainerIdByName(containerName);
+      assertFalse(isContainerGone(containerId));
+      assertNotNull(result);
+    } finally {
+      dockerClient.removeContainerCmd(findContainerIdByName(containerName)).withForce(true).exec();
+    }
   }
 
   @Test
   void testPortBindings() throws Exception {
     Workflow workflow =
         readWorkflowFromClasspath("workflows-samples/container/container-ports.yaml");
-
-    new Thread(
-            () -> {
-              app.workflowDefinition(workflow)
-                  .instance(Map.of())
-                  .start()
-                  .join()
-                  .asMap()
-                  .orElseThrow();
-            })
-        .start();
-
     String containerName = "hello-world-ports";
-    await()
-        .pollInterval(Duration.ofSeconds(1))
-        .atMost(Duration.ofSeconds(10))
-        .until(() -> findContainerIdByName(containerName) != null);
 
-    String containerId = findContainerIdByName(containerName);
-    InspectContainerResponse inspect = dockerClient.inspectContainerCmd(containerId).exec();
-    Map<ExposedPort, Ports.Binding[]> ports = inspect.getNetworkSettings().getPorts().getBindings();
+    try {
+      new Thread(
+              () -> {
+                app.workflowDefinition(workflow)
+                    .instance(Map.of())
+                    .start()
+                    .join()
+                    .asMap()
+                    .orElseThrow();
+              })
+          .start();
 
-    assertTrue(ports.containsKey(ExposedPort.tcp(8880)));
-    assertTrue(ports.containsKey(ExposedPort.tcp(8881)));
-    assertTrue(ports.containsKey(ExposedPort.tcp(8882)));
+      await()
+          .pollInterval(Duration.ofSeconds(1))
+          .atMost(Duration.ofSeconds(10))
+          .until(() -> findContainerIdByName(containerName) != null);
 
-    dockerClient.removeContainerCmd(containerId).withForce(true).exec();
+      String containerId = findContainerIdByName(containerName);
+      InspectContainerResponse inspect = dockerClient.inspectContainerCmd(containerId).exec();
+      Map<ExposedPort, Ports.Binding[]> ports =
+          inspect.getNetworkSettings().getPorts().getBindings();
+
+      assertTrue(ports.containsKey(ExposedPort.tcp(8880)));
+      assertTrue(ports.containsKey(ExposedPort.tcp(8881)));
+      assertTrue(ports.containsKey(ExposedPort.tcp(8882)));
+    } finally {
+      dockerClient.removeContainerCmd(findContainerIdByName(containerName)).withForce(true).exec();
+    }
   }
 
   private static String findContainerIdByName(String containerName) {
