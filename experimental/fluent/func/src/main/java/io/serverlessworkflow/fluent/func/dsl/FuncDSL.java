@@ -18,6 +18,7 @@ package io.serverlessworkflow.fluent.func.dsl;
 import io.cloudevents.CloudEventData;
 import io.serverlessworkflow.api.types.FlowDirectiveEnum;
 import io.serverlessworkflow.api.types.func.JavaContextFunction;
+import io.serverlessworkflow.api.types.func.JavaFilterFunction;
 import io.serverlessworkflow.fluent.func.FuncCallTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncEmitTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncSwitchTaskBuilder;
@@ -26,6 +27,7 @@ import io.serverlessworkflow.fluent.func.configurers.FuncPredicateEventConfigure
 import io.serverlessworkflow.fluent.func.configurers.FuncTaskConfigurer;
 import io.serverlessworkflow.fluent.func.configurers.SwitchCaseConfigurer;
 import io.serverlessworkflow.fluent.func.dsl.internal.CommonFuncOps;
+import io.serverlessworkflow.impl.WorkflowContextData;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -286,7 +288,7 @@ public final class FuncDSL {
   }
 
   /**
-   * Build a call step for functions that need {@code WorkflowContextData} as the first parameter.
+   * Build a call step for functions that need {@link WorkflowContextData} as the first parameter.
    * The DSL wraps it as a {@link JavaContextFunction} and injects the runtime context.
    *
    * <p>Signature expected: {@code (ctx, payload) -> result}
@@ -297,7 +299,7 @@ public final class FuncDSL {
    * @param <R> result type
    * @return a call step
    */
-  public static <T, R> FuncCallStep<T, R> withContext(CtxBiFunction<T, R> fn, Class<T> in) {
+  public static <T, R> FuncCallStep<T, R> withContext(JavaContextFunction<T, R> fn, Class<T> in) {
     return withContext(null, fn, in);
   }
 
@@ -319,7 +321,7 @@ public final class FuncDSL {
   }
 
   /**
-   * Named variant of {@link #withContext(CtxBiFunction, Class)}.
+   * Named variant of {@link #withContext(JavaContextFunction, Class)}.
    *
    * @param name task name
    * @param fn context-aware bi-function
@@ -329,9 +331,40 @@ public final class FuncDSL {
    * @return a named call step
    */
   public static <T, R> FuncCallStep<T, R> withContext(
-      String name, CtxBiFunction<T, R> fn, Class<T> in) {
-    JavaContextFunction<T, R> jcf = (payload, wctx) -> fn.apply(wctx, payload);
-    return new FuncCallStep<>(name, jcf, in);
+      String name, JavaContextFunction<T, R> fn, Class<T> in) {
+    return new FuncCallStep<>(name, fn, in);
+  }
+
+  /**
+   * Build a call step for functions that need {@link WorkflowContextData} and {@link
+   * io.serverlessworkflow.impl.TaskContextData} as the first and second parameter. The DSL wraps it
+   * as a {@link JavaFilterFunction} and injects the runtime context.
+   *
+   * <p>Signature expected: {@code (wctx, tctx, payload) -> result}
+   *
+   * @param fn context-aware bi-function
+   * @param in payload input class
+   * @param <T> input type
+   * @param <R> result type
+   * @return a call step
+   */
+  public static <T, R> FuncCallStep<T, R> withFilter(JavaFilterFunction<T, R> fn, Class<T> in) {
+    return withFilter(null, fn, in);
+  }
+
+  /**
+   * Named variant of {@link #withFilter(JavaFilterFunction, Class)}.
+   *
+   * @param name task name
+   * @param fn context-aware bi-function
+   * @param in payload input class
+   * @param <T> input type
+   * @param <R> result type
+   * @return a named call step
+   */
+  public static <T, R> FuncCallStep<T, R> withFilter(
+      String name, JavaFilterFunction<T, R> fn, Class<T> in) {
+    return new FuncCallStep<>(name, fn, in);
   }
 
   /**
@@ -348,6 +381,31 @@ public final class FuncDSL {
       String name, InstanceIdBiFunction<T, R> fn, Class<T> in) {
     JavaContextFunction<T, R> jcf = (payload, wctx) -> fn.apply(wctx.instanceData().id(), payload);
     return new FuncCallStep<>(name, jcf, in);
+  }
+
+  /**
+   * Build a call step for functions that expect a composition with the workflow instance id and the
+   * task name as the first parameter. The instance ID is extracted from the runtime context, the
+   * task name from the definition.
+   *
+   * <p>Signature expected: {@code (uniqueId, payload) -> result}
+   *
+   * @param fn unique-id-aware bi-function
+   * @param in payload input class
+   * @param <T> input type
+   * @param <R> result type
+   * @return a call step
+   */
+  public static <T, R> FuncCallStep<T, R> withUniqueId(
+      String name, UniqueIdBiFunction<T, R> fn, Class<T> in) {
+    JavaFilterFunction<T, R> jff =
+        (payload, wctx, tctx) ->
+            fn.apply(String.format("%s-%s", wctx.instanceData().id(), tctx.taskName()), payload);
+    return new FuncCallStep<>(name, jff, in);
+  }
+
+  public static <T, R> FuncCallStep<T, R> withUniqueId(UniqueIdBiFunction<T, R> fn, Class<T> in) {
+    return withUniqueId(null, fn, in);
   }
 
   /**
@@ -387,12 +445,12 @@ public final class FuncDSL {
    * @param <R> result type
    * @return a call step
    */
-  public static <T, R> FuncCallStep<T, R> agent(InstanceIdBiFunction<T, R> fn, Class<T> in) {
-    return withInstanceId(fn, in);
+  public static <T, R> FuncCallStep<T, R> agent(UniqueIdBiFunction<T, R> fn, Class<T> in) {
+    return withUniqueId(fn, in);
   }
 
   /**
-   * Named agent-style sugar. See {@link #agent(InstanceIdBiFunction, Class)}.
+   * Named agent-style sugar. See {@link #agent(UniqueIdBiFunction, Class)}.
    *
    * @param name task name
    * @param fn (instanceId, payload) -> result
@@ -402,8 +460,8 @@ public final class FuncDSL {
    * @return a named call step
    */
   public static <T, R> FuncCallStep<T, R> agent(
-      String name, InstanceIdBiFunction<T, R> fn, Class<T> in) {
-    return withInstanceId(name, fn, in);
+      String name, UniqueIdBiFunction<T, R> fn, Class<T> in) {
+    return withUniqueId(name, fn, in);
   }
 
   /**

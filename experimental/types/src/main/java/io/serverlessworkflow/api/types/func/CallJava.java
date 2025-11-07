@@ -54,6 +54,10 @@ public abstract class CallJava extends TaskBase {
     return new CallJavaContextFunction<>(function, Optional.ofNullable(inputClass));
   }
 
+  public static <V, T> CallJava function(JavaFilterFunction<T, V> function, Class<T> inputClass) {
+    return new CallJavaFilterFunction<>(function, Optional.ofNullable(inputClass));
+  }
+
   public static class CallJavaConsumer<T> extends CallJava {
     private static final long serialVersionUID = 1L;
     private final Consumer<T> consumer;
@@ -95,8 +99,8 @@ public abstract class CallJava extends TaskBase {
 
   public static class CallJavaContextFunction<T, V> extends CallJava {
     private static final long serialVersionUID = 1L;
-    private JavaContextFunction<T, V> function;
-    private Optional<Class<T>> inputClass;
+    private final JavaContextFunction<T, V> function;
+    private final Optional<Class<T>> inputClass;
 
     public CallJavaContextFunction(
         JavaContextFunction<T, V> function, Optional<Class<T>> inputClass) {
@@ -105,6 +109,26 @@ public abstract class CallJava extends TaskBase {
     }
 
     public JavaContextFunction<T, V> function() {
+      return function;
+    }
+
+    public Optional<Class<T>> inputClass() {
+      return inputClass;
+    }
+  }
+
+  public static class CallJavaFilterFunction<T, V> extends CallJava {
+    private static final long serialVersionUID = 1L;
+    private final JavaFilterFunction<T, V> function;
+    private final Optional<Class<T>> inputClass;
+
+    public CallJavaFilterFunction(
+        JavaFilterFunction<T, V> function, Optional<Class<T>> inputClass) {
+      this.function = function;
+      this.inputClass = inputClass;
+    }
+
+    public JavaFilterFunction<T, V> function() {
       return function;
     }
 
