@@ -1,0 +1,14 @@
+document:
+  dsl: '1.0.2'
+  namespace: test
+  name: run-script-example
+  version: '0.1.0'
+do:
+  - runScript:
+      run:
+        script:
+          language: js
+          arguments:
+            greetings: Hello, world!
+          code: >
+            console.log(greetings)

@@ -14,6 +14,7 @@
         <version.jakarta.ws.rs>4.0.0</version.jakarta.ws.rs>
         <version.net.thisptr>1.6.0</version.net.thisptr>
         <version.org.glassfish.jersey>3.1.11</version.org.glassfish.jersey>
+        <version.org.graalvm.plyglot>23.1.1</version.org.graalvm.plyglot>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -93,6 +94,22 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
+                <groupId>io.serverlessworkflow</groupId>
+                <artifactId>serverlessworkflow-impl-script-js</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.graalvm.polyglot</groupId>
+                <artifactId>js</artifactId>
+                <version>${version.org.graalvm.plyglot}</version>
+                <type>pom</type>
+            </dependency>
+            <dependency>
+                <groupId>org.graalvm.polyglot</groupId>
+                <artifactId>polyglot</artifactId>
+                <version>${version.org.graalvm.plyglot}</version>
+            </dependency>
+            <dependency>
                 <groupId>net.thisptr</groupId>
                 <artifactId>jackson-jq</artifactId>
                 <version>${version.net.thisptr}</version>
@@ -140,5 +157,6 @@
         <module>lifecycleevent</module>
         <module>validation</module>
         <module>test</module>
+        <module>script-js</module>
     </modules>
 </project>

@@ -42,6 +42,10 @@
             <artifactId>serverlessworkflow-impl-openapi</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.serverlessworkflow</groupId>
+            <artifactId>serverlessworkflow-impl-script-js</artifactId>
+        </dependency>
+        <dependency>
             <groupId>org.glassfish.jersey.core</groupId>
             <artifactId>jersey-client</artifactId>
         </dependency>
