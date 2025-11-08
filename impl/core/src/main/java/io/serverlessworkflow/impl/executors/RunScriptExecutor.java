@@ -37,13 +37,13 @@ import java.util.concurrent.CompletableFuture;
 
 public class RunScriptExecutor implements RunnableTask<RunScript> {
 
-  public enum ScriptLanguage {
+  public enum LanguageId {
     JS("js"),
     PYTHON("python");
 
     private final String lang;
 
-    ScriptLanguage(String lang) {
+    LanguageId(String lang) {
       this.lang = lang;
     }
 
@@ -52,7 +52,7 @@ public class RunScriptExecutor implements RunnableTask<RunScript> {
     }
 
     public static boolean isSupported(String lang) {
-      for (ScriptLanguage l : ScriptLanguage.values()) {
+      for (LanguageId l : LanguageId.values()) {
         if (l.getLang().equalsIgnoreCase(lang)) {
           return true;
         }
@@ -68,8 +68,10 @@ public class RunScriptExecutor implements RunnableTask<RunScript> {
 
   @SuppressWarnings("rawtypes")
   private Map<String, WorkflowValueResolver> environmentExpr;
+
   @SuppressWarnings("rawtypes")
   private Map<String, WorkflowValueResolver> argumentExpr;
+
   private CodeSupplier codeSupplier;
   private boolean isAwait;
   private RunTaskConfiguration.ProcessReturnType returnType;
@@ -82,13 +84,13 @@ public class RunScriptExecutor implements RunnableTask<RunScript> {
     String language = scriptUnion.get().getLanguage();
 
     WorkflowApplication application = definition.application();
-    if (language == null || !ScriptLanguage.isSupported(language)) {
+    if (language == null || !LanguageId.isSupported(language)) {
       throw new IllegalArgumentException(
           "Unsupported script language: "
               + language
               + ". Supported languages are: "
               + Arrays.toString(
-                  Arrays.stream(ScriptLanguage.values()).map(ScriptLanguage::getLang).toArray()));
+                  Arrays.stream(LanguageId.values()).map(LanguageId::getLang).toArray()));
     }
 
     this.taskRunner =
@@ -161,7 +163,7 @@ public class RunScriptExecutor implements RunnableTask<RunScript> {
 
     String code = this.codeSupplier.apply(workflowContext, taskContext);
 
-    RunScriptContext ctx =
+    RunScriptContext scriptContext =
         builder
             .withApplication(workflowContext.definition().application())
             .withReturnType(returnType)
@@ -171,7 +173,8 @@ public class RunScriptExecutor implements RunnableTask<RunScript> {
             .withAwait(isAwait)
             .build();
 
-    return CompletableFuture.supplyAsync(() -> taskRunner.buildRun(taskContext).apply(ctx, input));
+    return CompletableFuture.supplyAsync(
+        () -> taskRunner.buildRun(taskContext).apply(scriptContext, input));
   }
 
   @Override

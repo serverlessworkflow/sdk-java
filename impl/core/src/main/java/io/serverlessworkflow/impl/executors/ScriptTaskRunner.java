@@ -25,9 +25,9 @@ public interface ScriptTaskRunner {
   /**
    * The scripting language supported by this script task runner.
    *
-   * @return the scripting language as {@link RunScriptExecutor.ScriptLanguage} enum.
+   * @return the scripting language as {@link RunScriptExecutor.LanguageId} enum.
    */
-  RunScriptExecutor.ScriptLanguage forLanguage();
+  RunScriptExecutor.LanguageId identifier();
 
   /**
    * Returns a function that executes the script task.

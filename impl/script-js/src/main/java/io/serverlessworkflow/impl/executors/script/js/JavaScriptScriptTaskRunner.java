@@ -29,20 +29,25 @@ import java.util.Map;
 import java.util.function.BiFunction;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.PolyglotException;
+import org.graalvm.polyglot.Source;
 import org.graalvm.polyglot.Value;
 
+/**
+ * JavaScript implementation of the {@link ScriptTaskRunner} interface that executes JavaScript
+ * scripts using GraalVM Polyglot API.
+ */
 public class JavaScriptScriptTaskRunner implements ScriptTaskRunner {
 
   @Override
-  public RunScriptExecutor.ScriptLanguage forLanguage() {
-    return RunScriptExecutor.ScriptLanguage.JS;
+  public RunScriptExecutor.LanguageId identifier() {
+    return RunScriptExecutor.LanguageId.JS;
   }
 
   @Override
   public BiFunction<RunScriptExecutor.RunScriptContext, WorkflowModel, WorkflowModel> buildRun(
       TaskContext taskContext) {
     return (script, input) -> {
-      String js = forLanguage().getLang();
+      String js = identifier().getLang();
       WorkflowApplication application = script.getApplication();
       ByteArrayOutputStream stderr = new ByteArrayOutputStream();
       ByteArrayOutputStream stdout = new ByteArrayOutputStream();
@@ -77,7 +82,7 @@ public class JavaScriptScriptTaskRunner implements ScriptTaskRunner {
           return application.modelFactory().fromAny(input);
         }
 
-        ctx.eval(js, script.getCode());
+        ctx.eval(Source.create(js, script.getCode()));
 
         return switch (script.getReturnType()) {
           case ALL ->
@@ -126,7 +131,7 @@ public class JavaScriptScriptTaskRunner implements ScriptTaskRunner {
    * @param envs the environment variables to set
    */
   private void configureProcessEnv(Context context, Map<String, String> envs) {
-    String js = RunScriptExecutor.ScriptLanguage.JS.getLang();
+    String js = RunScriptExecutor.LanguageId.JS.getLang();
     Value bindings = context.getBindings(js);
     Value process = context.eval(js, "({ env: {} })");
 
