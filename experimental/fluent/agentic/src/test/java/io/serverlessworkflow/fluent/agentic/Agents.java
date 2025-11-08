@@ -15,7 +15,6 @@
  */
 package io.serverlessworkflow.fluent.agentic;
 
-import dev.langchain4j.agent.tool.Tool;
 import dev.langchain4j.agentic.Agent;
 import dev.langchain4j.agentic.internal.AgentSpecification;
 import dev.langchain4j.agentic.scope.AgenticScopeAccess;
@@ -371,7 +370,7 @@ public interface Agents {
             Analyze the following user request under a medical point of view and provide the best possible answer.
             The user request is {{it}}.
             """)
-    @Tool("A medical expert")
+    @Agent("A medical expert")
     String medicalRequest(String request);
   }
 
@@ -383,7 +382,7 @@ public interface Agents {
             Analyze the following user request under a legal point of view and provide the best possible answer.
             The user request is {{it}}.
             """)
-    @Tool("A legal expert")
+    @Agent("A legal expert")
     String legalRequest(String request);
   }
 
@@ -395,7 +394,7 @@ public interface Agents {
             Analyze the following user request under a technical point of view and provide the best possible answer.
             The user request is {{it}}.
             """)
-    @Tool("A technical expert")
+    @Agent("A technical expert")
     String technicalRequest(String request);
   }
 

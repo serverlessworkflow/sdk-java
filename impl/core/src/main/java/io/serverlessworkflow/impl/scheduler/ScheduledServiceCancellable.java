@@ -13,19 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl;
+package io.serverlessworkflow.impl.scheduler;
 
-import io.cloudevents.CloudEvent;
-import io.serverlessworkflow.impl.events.EventRegistrationBuilderInfo;
-import io.serverlessworkflow.impl.scheduler.ScheduledEventConsumer;
-import java.util.Collection;
-import java.util.function.Function;
+import java.util.concurrent.ScheduledFuture;
 
-public interface WorkflowScheduler {
-  Collection<WorkflowInstance> scheduledInstances(WorkflowDefinition def);
+class ScheduledServiceCancellable implements Cancellable {
 
-  ScheduledEventConsumer eventConsumer(
-      WorkflowDefinition definition,
-      Function<CloudEvent, WorkflowModel> converter,
-      EventRegistrationBuilderInfo info);
+  private final ScheduledFuture<?> cancellable;
+
+  public ScheduledServiceCancellable(ScheduledFuture<?> cancellable) {
+    this.cancellable = cancellable;
+  }
+
+  @Override
+  public void cancel() {
+    cancellable.cancel(true);
+  }
 }

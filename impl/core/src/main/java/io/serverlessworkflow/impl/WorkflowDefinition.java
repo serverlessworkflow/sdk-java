@@ -20,7 +20,6 @@ import static io.serverlessworkflow.impl.WorkflowUtils.getSchemaValidator;
 import static io.serverlessworkflow.impl.WorkflowUtils.safeClose;
 
 import io.serverlessworkflow.api.types.Input;
-import io.serverlessworkflow.api.types.ListenTo;
 import io.serverlessworkflow.api.types.Output;
 import io.serverlessworkflow.api.types.Schedule;
 import io.serverlessworkflow.api.types.Workflow;
@@ -28,16 +27,20 @@ import io.serverlessworkflow.impl.events.EventRegistrationBuilderInfo;
 import io.serverlessworkflow.impl.executors.TaskExecutor;
 import io.serverlessworkflow.impl.executors.TaskExecutorHelper;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
+import io.serverlessworkflow.impl.scheduler.Cancellable;
 import io.serverlessworkflow.impl.scheduler.ScheduledEventConsumer;
+import io.serverlessworkflow.impl.scheduler.WorkflowScheduler;
 import io.serverlessworkflow.impl.schema.SchemaValidator;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 public class WorkflowDefinition implements AutoCloseable, WorkflowDefinitionData {
 
   private final Workflow workflow;
+  private final WorkflowDefinitionId definitionId;
   private Optional<SchemaValidator> inputSchemaValidator = Optional.empty();
   private Optional<SchemaValidator> outputSchemaValidator = Optional.empty();
   private Optional<WorkflowFilter> inputFilter = Optional.empty();
@@ -47,10 +50,13 @@ public class WorkflowDefinition implements AutoCloseable, WorkflowDefinitionData
   private final ResourceLoader resourceLoader;
   private final Map<String, TaskExecutor<?>> executors = new HashMap<>();
   private ScheduledEventConsumer scheculedConsumer;
+  private Cancellable everySchedule;
+  private Cancellable cronSchedule;
 
   private WorkflowDefinition(
       WorkflowApplication application, Workflow workflow, ResourceLoader resourceLoader) {
     this.workflow = workflow;
+    this.definitionId = WorkflowDefinitionId.of(workflow);
     this.application = application;
     this.resourceLoader = resourceLoader;
 
@@ -84,15 +90,28 @@ public class WorkflowDefinition implements AutoCloseable, WorkflowDefinitionData
             application.resourceLoaderFactory().getResourceLoader(application, path));
     Schedule schedule = workflow.getSchedule();
     if (schedule != null) {
-      ListenTo to = schedule.getOn();
-      if (to != null) {
+      WorkflowScheduler scheduler = application.scheduler();
+      if (schedule.getOn() != null) {
         definition.scheculedConsumer =
-            application
-                .scheduler()
-                .eventConsumer(
-                    definition,
-                    application.modelFactory()::from,
-                    EventRegistrationBuilderInfo.from(application, to, x -> null));
+            scheduler.eventConsumer(
+                definition,
+                application.modelFactory()::from,
+                EventRegistrationBuilderInfo.from(application, schedule.getOn(), x -> null));
+      }
+      if (schedule.getAfter() != null) {
+        application
+            .schedulerListener()
+            .addAfter(definition, WorkflowUtils.fromTimeoutAfter(application, schedule.getAfter()));
+      }
+      if (schedule.getCron() != null) {
+        definition.cronSchedule = scheduler.scheduleCron(definition, schedule.getCron());
+      }
+      if (schedule.getEvery() != null) {
+        definition.everySchedule =
+            scheduler.scheduleEvery(
+                definition,
+                WorkflowUtils.fromTimeoutAfter(application, schedule.getEvery())
+                    .apply(null, null, application.modelFactory().fromNull()));
       }
     }
     return definition;
@@ -148,7 +167,28 @@ public class WorkflowDefinition implements AutoCloseable, WorkflowDefinitionData
 
   @Override
   public void close() {
-    safeClose(scheculedConsumer);
     safeClose(resourceLoader);
+    safeClose(scheculedConsumer);
+    application.schedulerListener().removeAfter(this);
+    if (everySchedule != null) {
+      everySchedule.cancel();
+    }
+    if (cronSchedule != null) {
+      cronSchedule.cancel();
+    }
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(definitionId);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) return true;
+    if (obj == null) return false;
+    if (getClass() != obj.getClass()) return false;
+    WorkflowDefinition other = (WorkflowDefinition) obj;
+    return Objects.equals(definitionId, other.definitionId);
   }
 }

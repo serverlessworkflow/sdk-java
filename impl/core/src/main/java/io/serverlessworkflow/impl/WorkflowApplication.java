@@ -36,6 +36,7 @@ import io.serverlessworkflow.impl.resources.DefaultResourceLoaderFactory;
 import io.serverlessworkflow.impl.resources.ExternalResourceHandler;
 import io.serverlessworkflow.impl.resources.ResourceLoaderFactory;
 import io.serverlessworkflow.impl.scheduler.DefaultWorkflowScheduler;
+import io.serverlessworkflow.impl.scheduler.WorkflowScheduler;
 import io.serverlessworkflow.impl.schema.SchemaValidator;
 import io.serverlessworkflow.impl.schema.SchemaValidatorFactory;
 import java.util.ArrayList;
@@ -71,6 +72,7 @@ public class WorkflowApplication implements AutoCloseable {
   private final Map<String, WorkflowAdditionalObject<?>> additionalObjects;
   private final ConfigManager configManager;
   private final SecretManager secretManager;
+  private final SchedulerListener schedulerListener;
 
   private WorkflowApplication(Builder builder) {
     this.taskFactory = builder.taskFactory;
@@ -81,13 +83,14 @@ public class WorkflowApplication implements AutoCloseable {
     this.idFactory = builder.idFactory;
     this.runtimeDescriptorFactory = builder.descriptorFactory;
     this.executorFactory = builder.executorFactory;
-    this.listeners = builder.listeners != null ? builder.listeners : Collections.emptySet();
+    this.listeners = builder.listeners;
     this.definitions = new ConcurrentHashMap<>();
     this.eventConsumer = builder.eventConsumer;
     this.eventPublishers = builder.eventPublishers;
     this.lifeCycleCEPublishingEnabled = builder.lifeCycleCEPublishingEnabled;
     this.modelFactory = builder.modelFactory;
     this.scheduler = builder.scheduler;
+    this.schedulerListener = builder.schedulerListener;
     this.additionalObjects = builder.additionalObjects;
     this.configManager = builder.configManager;
     this.secretManager = builder.secretManager;
@@ -169,6 +172,7 @@ public class WorkflowApplication implements AutoCloseable {
     private Map<String, WorkflowAdditionalObject<?>> additionalObjects;
     private SecretManager secretManager;
     private ConfigManager configManager;
+    private SchedulerListener schedulerListener;
 
     private Builder() {}
 
@@ -304,6 +308,8 @@ public class WorkflowApplication implements AutoCloseable {
       if (scheduler == null) {
         scheduler = new DefaultWorkflowScheduler();
       }
+      schedulerListener = new SchedulerListener(scheduler);
+      listeners.add(schedulerListener);
       if (additionalObjects == null) {
         additionalObjects = Collections.emptyMap();
       }
@@ -386,6 +392,10 @@ public class WorkflowApplication implements AutoCloseable {
 
   public SecretManager secretManager() {
     return secretManager;
+  }
+
+  SchedulerListener schedulerListener() {
+    return schedulerListener;
   }
 
   public <T> Optional<T> additionalObject(

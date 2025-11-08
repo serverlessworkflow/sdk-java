@@ -17,7 +17,6 @@ package io.serverlessworkflow.impl.scheduler;
 
 import io.cloudevents.CloudEvent;
 import io.serverlessworkflow.impl.WorkflowDefinition;
-import io.serverlessworkflow.impl.WorkflowInstance;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowModelCollection;
 import io.serverlessworkflow.impl.events.EventConsumer;
@@ -31,22 +30,25 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-public abstract class ScheduledEventConsumer implements AutoCloseable {
+public class ScheduledEventConsumer implements AutoCloseable {
 
   private final Function<CloudEvent, WorkflowModel> converter;
   private final WorkflowDefinition definition;
   private final EventRegistrationBuilderInfo builderInfo;
   private final EventConsumer eventConsumer;
+  private final ScheduledInstanceRunnable instanceRunner;
   private Map<EventRegistrationBuilder, List<CloudEvent>> correlatedEvents;
   private Collection<EventRegistration> registrations = new ArrayList<>();
 
   protected ScheduledEventConsumer(
       WorkflowDefinition definition,
       Function<CloudEvent, WorkflowModel> converter,
-      EventRegistrationBuilderInfo builderInfo) {
+      EventRegistrationBuilderInfo builderInfo,
+      ScheduledInstanceRunnable instanceRunner) {
     this.definition = definition;
     this.converter = converter;
     this.builderInfo = builderInfo;
+    this.instanceRunner = instanceRunner;
     this.eventConsumer = definition.application().eventConsumer();
     if (builderInfo.registrations().isAnd()
         && builderInfo.registrations().registrations().size() > 1) {
@@ -100,19 +102,13 @@ public abstract class ScheduledEventConsumer implements AutoCloseable {
   protected void start(CloudEvent ce) {
     WorkflowModelCollection model = definition.application().modelFactory().createCollection();
     model.add(converter.apply(ce));
-    start(model);
+    instanceRunner.accept(model);
   }
 
   protected void start(Collection<CloudEvent> ces) {
     WorkflowModelCollection model = definition.application().modelFactory().createCollection();
     ces.forEach(ce -> model.add(converter.apply(ce)));
-    start(model);
-  }
-
-  private void start(WorkflowModel model) {
-    WorkflowInstance instance = definition.instance(model);
-    addScheduledInstance(instance);
-    instance.start();
+    instanceRunner.accept(model);
   }
 
   public void close() {
@@ -121,6 +117,4 @@ public abstract class ScheduledEventConsumer implements AutoCloseable {
     }
     registrations.forEach(eventConsumer::unregister);
   }
-
-  protected abstract void addScheduledInstance(WorkflowInstance instace);
 }

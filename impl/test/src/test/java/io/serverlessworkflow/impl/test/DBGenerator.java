@@ -28,8 +28,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class DBGenerator {
+
+  private static final Logger LOG = LoggerFactory.getLogger(DBGenerator.class);
 
   public static void main(String[] args) throws IOException {
     runInstance("db-samples/running_v1.db", false);
@@ -37,6 +41,7 @@ public class DBGenerator {
   }
 
   private static void runInstance(String dbName, boolean suspend) throws IOException {
+    LOG.info("---> Generating db samples at {}", dbName);
     Files.deleteIfExists(Path.of(dbName));
     try (PersistenceInstanceHandlers factories =
             BytesMapPersistenceInstanceHandlers.builder(new MVStorePersistenceStore(dbName))

@@ -16,7 +16,9 @@
 package io.serverlessworkflow.impl.test;
 
 import static io.serverlessworkflow.api.WorkflowReader.readWorkflowFromClasspath;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.Assert.assertThat;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import io.serverlessworkflow.impl.WorkflowApplication;
@@ -38,7 +40,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-public class RetryTest {
+public class RetryTimeoutTest {
 
   private static WorkflowApplication app;
   private MockWebServer apiServer;
@@ -105,5 +107,18 @@ public class RetryTest {
                     .start()
                     .join())
         .hasCauseInstanceOf(WorkflowException.class);
+  }
+
+  @Test
+  void testTimeout() throws IOException {
+    Map<String, Object> result =
+        app.workflowDefinition(
+                readWorkflowFromClasspath("workflows-samples/listen-to-one-timeout.yaml"))
+            .instance(Map.of("delay", 0.01f))
+            .start()
+            .join()
+            .asMap()
+            .orElseThrow();
+    assertThat(result.get("message")).isEqualTo("Viva er Beti Balompie");
   }
 }
