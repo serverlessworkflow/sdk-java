@@ -59,6 +59,10 @@ public class WorkflowUtils {
     return Optional.empty();
   }
 
+  public static boolean isValid(String str) {
+    return str != null && !str.isBlank();
+  }
+
   public static Optional<WorkflowFilter> buildWorkflowFilter(
       WorkflowApplication app, InputFrom from) {
     return from != null

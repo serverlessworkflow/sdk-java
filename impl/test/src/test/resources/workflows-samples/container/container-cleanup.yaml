@@ -1,0 +1,14 @@
+document:
+  dsl: '1.0.2'
+  namespace: test
+  name: cointaner-cleanup
+  version: '0.1.0'
+do:
+  - runContainer:
+      run:
+        container:
+          image: busybox:latest
+          command: echo Hello World
+          name: hello-world-cleanup
+          lifetime:
+            cleanup: always
