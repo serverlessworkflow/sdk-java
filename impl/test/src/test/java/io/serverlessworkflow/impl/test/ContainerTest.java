@@ -45,7 +45,7 @@ import org.junit.jupiter.api.condition.DisabledIf;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@DisabledIf("checkDocker")
+@DisabledIf("isDockerNotAvailable")
 public class ContainerTest {
 
   private static DockerClient dockerClient;
@@ -61,7 +61,7 @@ public class ContainerTest {
   }
 
   @SuppressWarnings("unused")
-  private static boolean checkDocker() {
+  private static boolean isDockerNotAvailable() {
     try {
       dockerClient.pingCmd().exec();
       return false;
