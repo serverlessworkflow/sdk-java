@@ -14,7 +14,6 @@
         <version.jakarta.ws.rs>4.0.0</version.jakarta.ws.rs>
         <version.net.thisptr>1.6.0</version.net.thisptr>
         <version.org.glassfish.jersey>3.1.11</version.org.glassfish.jersey>
-        <version.org.graalvm.plyglot>23.1.1</version.org.graalvm.plyglot>
         <version.com.cronutils>9.2.1</version.com.cronutils>
     </properties>
     <dependencyManagement>
@@ -95,22 +94,6 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>io.serverlessworkflow</groupId>
-                <artifactId>serverlessworkflow-impl-script-js</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.graalvm.polyglot</groupId>
-                <artifactId>js</artifactId>
-                <version>${version.org.graalvm.plyglot}</version>
-                <type>pom</type>
-            </dependency>
-            <dependency>
-                <groupId>org.graalvm.polyglot</groupId>
-                <artifactId>polyglot</artifactId>
-                <version>${version.org.graalvm.plyglot}</version>
-            </dependency>
-            <dependency>
                 <groupId>net.thisptr</groupId>
                 <artifactId>jackson-jq</artifactId>
                 <version>${version.net.thisptr}</version>
@@ -141,12 +124,17 @@
                 <groupId>com.h2database</groupId>
                 <artifactId>h2-mvstore</artifactId>
                 <version>${version.com.h2database}</version>
-             </dependency>
-             <dependency>
-               <groupId>com.cronutils</groupId>
-               <artifactId>cron-utils</artifactId>
-               <version>${version.com.cronutils}</version>
-         </dependency>
+            </dependency>
+            <dependency>
+                <groupId>com.cronutils</groupId>
+                <artifactId>cron-utils</artifactId>
+                <version>${version.com.cronutils}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.serverlessworkflow</groupId>
+                <artifactId>serverlessworkflow-impl-script-js</artifactId>
+                <version>${project.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
     <modules>
