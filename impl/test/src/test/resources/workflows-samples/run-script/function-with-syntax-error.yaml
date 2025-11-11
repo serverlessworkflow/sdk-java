@@ -1,0 +1,19 @@
+document:
+  dsl: '1.0.2'
+  namespace: test
+  name: run-script-example
+  version: '0.1.0'
+do:
+  - runScript:
+      run:
+        script:
+          language: js
+          code: >
+            // there is no reserved word func in JavaScript, it should be function
+            func hello() {
+                console.log("hello from script");
+                throw new Error("This is a test error");
+            }
+            
+            hello();
+        return: stderr

@@ -16,6 +16,7 @@
         <version.org.glassfish.jersey>3.1.11</version.org.glassfish.jersey>
         <version.com.cronutils>9.2.1</version.com.cronutils>
         <version.docker.java>3.6.0</version.docker.java>
+        <version.org.graalvm.polyglot>23.1.1</version.org.graalvm.polyglot>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -130,12 +131,17 @@
                 <groupId>com.h2database</groupId>
                 <artifactId>h2-mvstore</artifactId>
                 <version>${version.com.h2database}</version>
-             </dependency>
-             <dependency>
+            </dependency>
+            <dependency>
+                <groupId>io.serverlessworkflow</groupId>
+                <artifactId>serverlessworkflow-impl-script-js</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
                <groupId>com.cronutils</groupId>
                <artifactId>cron-utils</artifactId>
                <version>${version.com.cronutils}</version>
-         </dependency>
+            </dependency>
             <dependency>
                 <groupId>com.github.docker-java</groupId>
                 <artifactId>docker-java-core</artifactId>
@@ -145,6 +151,17 @@
                 <groupId>com.github.docker-java</groupId>
                 <artifactId>docker-java-transport-httpclient5</artifactId>
                 <version>${version.docker.java}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.graalvm.polyglot</groupId>
+                <artifactId>js</artifactId>
+                <version>${version.org.graalvm.polyglot}</version>
+                <type>pom</type>
+            </dependency>
+            <dependency>
+                <groupId>org.graalvm.polyglot</groupId>
+                <artifactId>polyglot</artifactId>
+                <version>${version.org.graalvm.polyglot}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
@@ -163,5 +180,6 @@
         <module>validation</module>
         <module>container</module>
         <module>test</module>
+        <module>script-js</module>
     </modules>
 </project>
