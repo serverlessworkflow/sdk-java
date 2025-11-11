@@ -16,6 +16,7 @@
         <version.org.glassfish.jersey>3.1.11</version.org.glassfish.jersey>
         <version.com.cronutils>9.2.1</version.com.cronutils>
         <version.docker.java>3.6.0</version.docker.java>
+        <version.org.graalvm.polyglot>23.1.1</version.org.graalvm.polyglot>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -132,11 +133,6 @@
                 <version>${version.com.h2database}</version>
             </dependency>
             <dependency>
-                <groupId>com.cronutils</groupId>
-                <artifactId>cron-utils</artifactId>
-                <version>${version.com.cronutils}</version>
-            </dependency>
-            <dependency>
                 <groupId>io.serverlessworkflow</groupId>
                 <artifactId>serverlessworkflow-impl-script-js</artifactId>
                 <version>${project.version}</version>
@@ -155,6 +151,17 @@
                 <groupId>com.github.docker-java</groupId>
                 <artifactId>docker-java-transport-httpclient5</artifactId>
                 <version>${version.docker.java}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.graalvm.polyglot</groupId>
+                <artifactId>js</artifactId>
+                <version>${version.org.graalvm.polyglot}</version>
+                <type>pom</type>
+            </dependency>
+            <dependency>
+                <groupId>org.graalvm.polyglot</groupId>
+                <artifactId>polyglot</artifactId>
+                <version>${version.org.graalvm.polyglot}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
