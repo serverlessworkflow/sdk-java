@@ -70,7 +70,7 @@
         <version.javadoc.plugin>3.12.0</version.javadoc.plugin>
         <version.org.codehaus.mojo>3.6.2</version.org.codehaus.mojo>
         <version.org.sonatype.central>0.9.0</version.org.sonatype.central>
-        <version.release.plugin>3.1.1</version.release.plugin>
+        <version.release.plugin>3.2.0</version.release.plugin>
         <version.source.plugin>3.3.1</version.source.plugin>
         <version.surefire.plugin>3.5.4</version.surefire.plugin>
         <version.nexus.plugin>1.7.0</version.nexus.plugin>
@@ -90,7 +90,7 @@
         <version.org.junit.jupiter>6.0.1</version.org.junit.jupiter>
         <version.org.mockito>5.20.0</version.org.mockito>
         <version.org.slf4j>2.0.17</version.org.slf4j>
-        <version.org.hibernate.validator>9.0.1.Final</version.org.hibernate.validator>
+        <version.org.hibernate.validator>9.1.0.Final</version.org.hibernate.validator>
         <version.org.glassfish.expressly>6.0.0</version.org.glassfish.expressly>
         <!-- Experimental modules from langchain4j -->
         <version.dev.langchain4j.beta>1.8.0-beta15</version.dev.langchain4j.beta>

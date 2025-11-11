@@ -1,0 +1,16 @@
+document:
+  dsl: '1.0.2'
+  namespace: test
+  name: container-timeout
+  version: '0.1.0'
+do:
+  - runContainer:
+      run:
+        container:
+          image: busybox:latest
+          command: sleep 300
+          name: hello-world-timeout
+          lifetime:
+            cleanup: eventually
+            after:
+              seconds: 1
