@@ -15,103 +15,105 @@
  */
 package io.serverlessworkflow.impl.executors.script.js;
 
+import io.serverlessworkflow.api.types.RunTaskConfiguration;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
+import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowError;
 import io.serverlessworkflow.impl.WorkflowException;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowModelFactory;
 import io.serverlessworkflow.impl.executors.ProcessResult;
-import io.serverlessworkflow.impl.executors.RunScriptExecutor;
-import io.serverlessworkflow.impl.executors.ScriptTaskRunner;
+import io.serverlessworkflow.impl.scripts.ScriptContext;
+import io.serverlessworkflow.impl.scripts.ScriptLanguageId;
+import io.serverlessworkflow.impl.scripts.ScriptRunner;
 import java.io.ByteArrayOutputStream;
 import java.util.Map;
-import java.util.function.BiFunction;
+import java.util.function.Supplier;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.PolyglotException;
 import org.graalvm.polyglot.Source;
 import org.graalvm.polyglot.Value;
 
 /**
- * JavaScript implementation of the {@link ScriptTaskRunner} interface that executes JavaScript
- * scripts using GraalVM Polyglot API.
+ * JavaScript implementation of the {@link ScriptRunner} interface that executes JavaScript scripts
+ * using GraalVM Polyglot API.
  */
-public class JavaScriptScriptTaskRunner implements ScriptTaskRunner {
+public class JavaScriptScriptTaskRunner implements ScriptRunner {
 
   @Override
-  public RunScriptExecutor.LanguageId identifier() {
-    return RunScriptExecutor.LanguageId.JS;
+  public ScriptLanguageId identifier() {
+    return ScriptLanguageId.JS;
   }
 
   @Override
-  public BiFunction<RunScriptExecutor.RunScriptContext, WorkflowModel, WorkflowModel> buildRun(
-      TaskContext taskContext) {
-    return (script, input) -> {
-      String js = identifier().getLang();
-      WorkflowApplication application = script.getApplication();
-      ByteArrayOutputStream stderr = new ByteArrayOutputStream();
-      ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+  public WorkflowModel runScript(
+      ScriptContext script,
+      WorkflowContext workflowContext,
+      TaskContext taskContext,
+      WorkflowModel input) {
+    WorkflowApplication application = workflowContext.definition().application();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
 
-      WorkflowModelFactory modelFactory = application.modelFactory();
-      try (Context ctx =
-          Context.newBuilder()
-              .err(stderr)
-              .out(stdout)
-              .useSystemExit(true)
-              .allowCreateProcess(false)
-              .option("engine.WarnInterpreterOnly", "false")
-              .build()) {
+    try (Context ctx =
+        Context.newBuilder()
+            .err(stderr)
+            .out(stdout)
+            .useSystemExit(true)
+            .allowCreateProcess(false)
+            .option("engine.WarnInterpreterOnly", "false")
+            .build()) {
 
-        script
-            .getArgs()
-            .forEach(
-                (key, val) -> {
-                  ctx.getBindings(js).putMember(key, val);
+      script
+          .args()
+          .forEach(
+              (key, val) -> {
+                ctx.getBindings(identifier().getLang()).putMember(key, val);
+              });
+
+      configureProcessEnv(ctx, script.envs());
+
+      if (!script.isAwait()) {
+        application
+            .executorService()
+            .submit(
+                () -> {
+                  ctx.eval(identifier().getLang(), script.code());
                 });
-
-        configureProcessEnv(ctx, script.getEnvs());
-
-        if (!script.isAwait()) {
-          script
-              .getApplication()
-              .executorService()
-              .submit(
-                  () -> {
-                    ctx.eval(js, script.getCode());
-                  });
-          return application.modelFactory().fromAny(input);
-        }
-
-        ctx.eval(Source.create(js, script.getCode()));
-
-        return switch (script.getReturnType()) {
-          case ALL ->
-              modelFactory.fromAny(new ProcessResult(0, stdout.toString(), stderr.toString()));
-          case NONE -> modelFactory.fromNull();
-          case CODE -> modelFactory.from(0);
-          case STDOUT -> modelFactory.from(stdout.toString().trim());
-          case STDERR -> modelFactory.from(stderr.toString().trim());
-        };
-      } catch (PolyglotException e) {
-        if (e.getExitStatus() != 0 || e.isSyntaxError()) {
-          throw new WorkflowException(WorkflowError.runtime(taskContext, e).build());
-        } else {
-          return switch (script.getReturnType()) {
-            case ALL ->
-                modelFactory.fromAny(
-                    new ProcessResult(
-                        e.getExitStatus(), stdout.toString().trim(), buildStderr(e, stderr)));
-            case NONE -> modelFactory.fromNull();
-            case CODE -> modelFactory.from(e.getExitStatus());
-            case STDOUT -> modelFactory.from(stdout.toString().trim());
-            case STDERR -> modelFactory.from(buildStderr(e, stderr));
-          };
-        }
+        return application.modelFactory().fromAny(input);
       }
+
+      ctx.eval(Source.create(identifier().getLang(), script.code()));
+
+      return modelFromOutput(
+          script.returnType(), application.modelFactory(), stdout, () -> stderr.toString());
+    } catch (PolyglotException e) {
+      if (e.getExitStatus() != 0 || e.isSyntaxError()) {
+        throw new WorkflowException(WorkflowError.runtime(taskContext, e).build());
+      } else {
+        return modelFromOutput(
+            script.returnType(), application.modelFactory(), stdout, () -> buildStderr(e, stderr));
+      }
+    }
+  }
+
+  private WorkflowModel modelFromOutput(
+      RunTaskConfiguration.ProcessReturnType returnType,
+      WorkflowModelFactory modelFactory,
+      ByteArrayOutputStream stdout,
+      Supplier<String> stderr) {
+    return switch (returnType) {
+      case ALL ->
+          modelFactory.fromAny(new ProcessResult(0, stdout.toString().trim(), stderr.get().trim()));
+      case NONE -> modelFactory.fromNull();
+      case CODE -> modelFactory.from(0);
+      case STDOUT -> modelFactory.from(stdout.toString().trim());
+      case STDERR -> modelFactory.from(stderr.get().trim());
     };
   }
 
-  /**
+  /*
    * Gets the stderr message from the PolyglotException or the stderr stream.
    *
    * @param e the {@link PolyglotException} thrown during script execution
@@ -123,15 +125,15 @@ public class JavaScriptScriptTaskRunner implements ScriptTaskRunner {
     return err.isBlank() ? e.getMessage() : err.trim();
   }
 
-  /**
+  /*
    * Configures the process.env object in the JavaScript context with the provided environment
    * variables.
    *
    * @param context the GraalVM context
    * @param envs the environment variables to set
    */
-  private void configureProcessEnv(Context context, Map<String, String> envs) {
-    String js = RunScriptExecutor.LanguageId.JS.getLang();
+  private void configureProcessEnv(Context context, Map<String, Object> envs) {
+    String js = ScriptLanguageId.JS.getLang();
     Value bindings = context.getBindings(js);
     Value process = context.eval(js, "({ env: {} })");
 

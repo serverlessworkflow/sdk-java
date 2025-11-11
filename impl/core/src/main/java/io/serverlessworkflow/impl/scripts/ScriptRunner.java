@@ -13,29 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.executors;
+package io.serverlessworkflow.impl.scripts;
 
+import io.serverlessworkflow.impl.ServicePriority;
 import io.serverlessworkflow.impl.TaskContext;
+import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
-import java.util.function.BiFunction;
+import io.serverlessworkflow.impl.executors.RunScriptExecutor;
 
 /** Represents a script task that executes a script in a specific scripting language. */
-public interface ScriptTaskRunner {
+public interface ScriptRunner extends ServicePriority {
 
   /**
    * The scripting language supported by this script task runner.
    *
    * @return the scripting language as {@link RunScriptExecutor.LanguageId} enum.
    */
-  RunScriptExecutor.LanguageId identifier();
+  ScriptLanguageId identifier();
 
-  /**
-   * Returns a function that executes the script task.
-   *
-   * @param taskContext the task context for the script task.
-   * @return a @{@link BiFunction}} that takes a RunScriptContext and a WorkflowModel as input and
-   *     returns a WorkflowModel as output.
-   */
-  BiFunction<RunScriptExecutor.RunScriptContext, WorkflowModel, WorkflowModel> buildRun(
-      TaskContext taskContext);
+  WorkflowModel runScript(
+      ScriptContext script,
+      WorkflowContext workflowContext,
+      TaskContext taskContext,
+      WorkflowModel input);
 }
