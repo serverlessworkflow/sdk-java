@@ -27,6 +27,7 @@ import io.serverlessworkflow.fluent.func.configurers.FuncPredicateEventConfigure
 import io.serverlessworkflow.fluent.func.configurers.FuncTaskConfigurer;
 import io.serverlessworkflow.fluent.func.configurers.SwitchCaseConfigurer;
 import io.serverlessworkflow.fluent.func.dsl.internal.CommonFuncOps;
+import io.serverlessworkflow.impl.TaskContextData;
 import io.serverlessworkflow.impl.WorkflowContextData;
 import java.util.Collection;
 import java.util.List;
@@ -384,9 +385,17 @@ public final class FuncDSL {
   }
 
   /**
+   * Builds a composition of the current workflow instance id and the definition of the task
+   * position as a JSON pointer.
+   */
+  static String defaultUniqueId(WorkflowContextData wctx, TaskContextData tctx) {
+    return String.format("%s-%s", wctx.instanceData().id(), tctx.position().jsonPointer());
+  }
+
+  /**
    * Build a call step for functions that expect a composition with the workflow instance id and the
-   * task name as the first parameter. The instance ID is extracted from the runtime context, the
-   * task name from the definition.
+   * task position as the first parameter. The instance ID is extracted from the runtime context,
+   * the task position from the definition.
    *
    * <p>Signature expected: {@code (uniqueId, payload) -> result}
    *
@@ -399,8 +408,7 @@ public final class FuncDSL {
   public static <T, R> FuncCallStep<T, R> withUniqueId(
       String name, UniqueIdBiFunction<T, R> fn, Class<T> in) {
     JavaFilterFunction<T, R> jff =
-        (payload, wctx, tctx) ->
-            fn.apply(String.format("%s-%s", wctx.instanceData().id(), tctx.taskName()), payload);
+        (payload, wctx, tctx) -> fn.apply(defaultUniqueId(wctx, tctx), payload);
     return new FuncCallStep<>(name, jff, in);
   }
 
@@ -735,7 +743,7 @@ public final class FuncDSL {
    *   switchWhenOrElse(".approved == true", "sendEmail", FlowDirectiveEnum.END)
    * </pre>
    *
-   * The JQ expression is evaluated against the task input at runtime.
+   * <p>The JQ expression is evaluated against the task input at runtime.
    */
   public static FuncTaskConfigurer switchWhenOrElse(
       String jqExpression, String thenTask, FlowDirectiveEnum otherwise) {
@@ -756,7 +764,7 @@ public final class FuncDSL {
    *   switchWhenOrElse(".score >= 80", "pass", "fail")
    * </pre>
    *
-   * The JQ expression is evaluated against the task input at runtime.
+   * <p>The JQ expression is evaluated against the task input at runtime.
    */
   public static FuncTaskConfigurer switchWhenOrElse(
       String jqExpression, String thenTask, String otherwiseTask) {
