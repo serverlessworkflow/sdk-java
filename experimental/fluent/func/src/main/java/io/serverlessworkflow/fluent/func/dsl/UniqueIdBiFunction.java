@@ -15,6 +15,8 @@
  */
 package io.serverlessworkflow.fluent.func.dsl;
 
+import java.util.function.BiFunction;
+
 /**
  * Functions that expect a unique ID injection in runtime, typically an idempotent generated unique
  * id based on the workflow instance id and task name.
@@ -23,6 +25,6 @@ package io.serverlessworkflow.fluent.func.dsl;
  * @param <R> The task result output
  */
 @FunctionalInterface
-public interface UniqueIdBiFunction<T, R> {
+public interface UniqueIdBiFunction<T, R> extends BiFunction<String, T, R> {
   R apply(String uniqueId, T object);
 }
