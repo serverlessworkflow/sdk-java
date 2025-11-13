@@ -17,27 +17,36 @@ package io.serverlessworkflow.impl.executors.http.auth.requestbuilder;
 
 import io.serverlessworkflow.api.types.OAuth2AuthenticationData;
 import io.serverlessworkflow.impl.WorkflowApplication;
+import io.serverlessworkflow.impl.WorkflowUtils;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
-public class OpenIdRequestBuilder extends AbstractAuthRequestBuilder {
+public class OpenIdRequestBuilder extends AbstractAuthRequestBuilder<OAuth2AuthenticationData> {
 
-  public OpenIdRequestBuilder(
-      WorkflowApplication application, OAuth2AuthenticationData autenthicationData) {
-    super(autenthicationData, application);
+  public OpenIdRequestBuilder(WorkflowApplication application) {
+    super(application);
   }
 
   @Override
-  protected void authenticationURI(HttpRequestBuilder requestBuilder) {
-    String url = authenticationData.getAuthority().getLiteralUri().toString().replaceAll("/$", "");
-    requestBuilder.withUri(URI.create(url));
+  protected void authenticationURI(
+      HttpRequestBuilder requestBuilder, OAuth2AuthenticationData authenticationData) {
+    requestBuilder.withUri(
+        WorkflowUtils.getURISupplier(application, authenticationData.getAuthority()));
   }
 
   @Override
-  protected void scope(HttpRequestBuilder requestBuilder) {
+  protected void scope(
+      HttpRequestBuilder requestBuilder, OAuth2AuthenticationData authenticationData) {
     List<String> scopesList = new ArrayList<>(authenticationData.getScopes());
     scopesList.add("openid");
     scope(requestBuilder, scopesList);
+  }
+
+  @Override
+  protected void authenticationURI(HttpRequestBuilder requestBuilder, Map<String, Object> secret) {
+    URI uri = URI.create((String) secret.get("authority"));
+    requestBuilder.withUri((w, t, m) -> uri);
   }
 }

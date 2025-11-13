@@ -57,8 +57,6 @@ class TokenResponseHandler
                   -1, context, "Failed to connect or process request: " + e.getMessage())
               .build(),
           e);
-    } finally {
-      invocation.close();
     }
   }
 }

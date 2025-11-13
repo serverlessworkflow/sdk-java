@@ -20,5 +20,5 @@ import java.util.Map;
 
 @FunctionalInterface
 public interface SecretManager extends ServicePriority {
-  Map<String, String> secret(String secretName);
+  Map<String, Object> secret(String secretName);
 }

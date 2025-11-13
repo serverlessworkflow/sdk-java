@@ -16,41 +16,21 @@
 package io.serverlessworkflow.impl.executors.http;
 
 import io.serverlessworkflow.api.types.OpenIdConnectAuthenticationPolicy;
-import io.serverlessworkflow.api.types.OpenIdConnectAuthenticationPolicyConfiguration;
 import io.serverlessworkflow.api.types.Workflow;
-import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
-import io.serverlessworkflow.impl.WorkflowContext;
-import io.serverlessworkflow.impl.WorkflowModel;
-import io.serverlessworkflow.impl.executors.http.auth.requestbuilder.AuthRequestBuilder;
 import io.serverlessworkflow.impl.executors.http.auth.requestbuilder.OpenIdRequestBuilder;
 
-public class OpenIdAuthProvider extends AbstractAuthProvider {
-
-  private AuthRequestBuilder requestBuilder;
+class OpenIdAuthProvider extends CommonOAuthProvider {
 
   public OpenIdAuthProvider(
       WorkflowApplication application,
       Workflow workflow,
       OpenIdConnectAuthenticationPolicy authPolicy) {
-    OpenIdConnectAuthenticationPolicyConfiguration configuration = authPolicy.getOidc();
-
-    if (configuration.getOpenIdConnectAuthenticationProperties() != null) {
-      this.requestBuilder =
-          new OpenIdRequestBuilder(
-              application, configuration.getOpenIdConnectAuthenticationProperties());
-    } else if (configuration.getOpenIdConnectAuthenticationPolicySecret() != null) {
-      throw new UnsupportedOperationException("Secrets are still not supported");
-    }
-  }
-
-  @Override
-  protected String authParameter(WorkflowContext workflow, TaskContext task, WorkflowModel model) {
-    return requestBuilder.build(workflow, task, model).validateAndGet().token();
-  }
-
-  @Override
-  protected String authScheme() {
-    return "Bearer";
+    super(
+        accessToken(
+            workflow,
+            authPolicy.getOidc().getOpenIdConnectAuthenticationProperties(),
+            authPolicy.getOidc().getOpenIdConnectAuthenticationPolicySecret(),
+            new OpenIdRequestBuilder(application)));
   }
 }

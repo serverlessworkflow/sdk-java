@@ -35,6 +35,7 @@ import io.serverlessworkflow.impl.lifecycle.WorkflowExecutionListener;
 import io.serverlessworkflow.impl.resources.DefaultResourceLoaderFactory;
 import io.serverlessworkflow.impl.resources.ExternalResourceHandler;
 import io.serverlessworkflow.impl.resources.ResourceLoaderFactory;
+import io.serverlessworkflow.impl.resources.URITemplateResolver;
 import io.serverlessworkflow.impl.scheduler.DefaultWorkflowScheduler;
 import io.serverlessworkflow.impl.scheduler.WorkflowScheduler;
 import io.serverlessworkflow.impl.schema.SchemaValidator;
@@ -73,6 +74,7 @@ public class WorkflowApplication implements AutoCloseable {
   private final ConfigManager configManager;
   private final SecretManager secretManager;
   private final SchedulerListener schedulerListener;
+  private final Optional<URITemplateResolver> templateResolver;
 
   private WorkflowApplication(Builder builder) {
     this.taskFactory = builder.taskFactory;
@@ -94,6 +96,7 @@ public class WorkflowApplication implements AutoCloseable {
     this.additionalObjects = builder.additionalObjects;
     this.configManager = builder.configManager;
     this.secretManager = builder.secretManager;
+    this.templateResolver = builder.templateResolver;
   }
 
   public TaskExecutorFactory taskFactory() {
@@ -173,6 +176,7 @@ public class WorkflowApplication implements AutoCloseable {
     private SecretManager secretManager;
     private ConfigManager configManager;
     private SchedulerListener schedulerListener;
+    private Optional<URITemplateResolver> templateResolver;
 
     private Builder() {}
 
@@ -325,6 +329,7 @@ public class WorkflowApplication implements AutoCloseable {
                 .findFirst()
                 .orElseGet(() -> new ConfigSecretManager(configManager));
       }
+      templateResolver = ServiceLoader.load(URITemplateResolver.class).findFirst();
       return new WorkflowApplication(this);
     }
   }
@@ -396,6 +401,10 @@ public class WorkflowApplication implements AutoCloseable {
 
   SchedulerListener schedulerListener() {
     return schedulerListener;
+  }
+
+  public Optional<URITemplateResolver> templateResolver() {
+    return templateResolver;
   }
 
   public <T> Optional<T> additionalObject(

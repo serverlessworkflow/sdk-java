@@ -108,7 +108,7 @@ public class JQExpression implements ObjectExpression {
           "secret",
           new FunctionJsonNode(
               k -> {
-                Map<String, String> secret =
+                Map<String, Object> secret =
                     workflow.definition().application().secretManager().secret(k);
                 if (secret.isEmpty()) {
                   throw new WorkflowException(WorkflowError.authorization().build());

@@ -23,19 +23,19 @@ public class ConfigSecretManager implements SecretManager {
 
   private final ConfigManager configManager;
 
-  private Map<String, Map<String, String>> secretMap = new ConcurrentHashMap<>();
+  private Map<String, Map<String, Object>> secretMap = new ConcurrentHashMap<>();
 
   public ConfigSecretManager(ConfigManager configManager) {
     this.configManager = configManager;
   }
 
   @Override
-  public Map<String, String> secret(String secretName) {
+  public Map<String, Object> secret(String secretName) {
     return secretMap.computeIfAbsent(secretName, this::buildMap);
   }
 
-  private Map<String, String> buildMap(String secretName) {
-    Map<String, String> map = new HashMap<String, String>();
+  private Map<String, Object> buildMap(String secretName) {
+    Map<String, Object> map = new HashMap<>();
     final String prefix = secretName + ".";
     for (String name : configManager.names()) {
       if (name.startsWith(prefix)) {

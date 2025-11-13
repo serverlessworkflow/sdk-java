@@ -17,17 +17,13 @@ package io.serverlessworkflow.impl.executors.http.auth.requestbuilder;
 
 import static io.serverlessworkflow.api.types.OAuth2TokenRequest.Oauth2TokenRequestEncoding.APPLICATION_X_WWW_FORM_URLENCODED;
 
-import io.serverlessworkflow.api.types.OAuth2AuthenticationData;
 import io.serverlessworkflow.api.types.OAuth2TokenRequest;
-import io.serverlessworkflow.api.types.OAuth2TokenRequest.Oauth2TokenRequestEncoding;
 import io.serverlessworkflow.impl.TaskContext;
-import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
-import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
+import io.serverlessworkflow.impl.executors.http.HttpClientResolver;
 import jakarta.ws.rs.client.Client;
-import jakarta.ws.rs.client.ClientBuilder;
 import jakarta.ws.rs.client.Entity;
 import jakarta.ws.rs.client.Invocation;
 import jakarta.ws.rs.client.WebTarget;
@@ -44,44 +40,57 @@ class HttpRequestBuilder {
 
   private final Map<String, WorkflowValueResolver<String>> queryParams;
 
-  private final WorkflowApplication app;
+  private WorkflowValueResolver<URI> uri;
 
-  private URI uri;
+  private String grantType;
 
-  private OAuth2AuthenticationData.OAuth2AuthenticationDataGrant grantType;
+  private String requestContentType = APPLICATION_X_WWW_FORM_URLENCODED.value();
 
-  private Oauth2TokenRequestEncoding requestContentType = APPLICATION_X_WWW_FORM_URLENCODED;
-
-  HttpRequestBuilder(WorkflowApplication app) {
-    this.app = app;
+  HttpRequestBuilder() {
     headers = new HashMap<>();
     queryParams = new HashMap<>();
   }
 
   HttpRequestBuilder addHeader(String key, String token) {
-    headers.put(key, WorkflowUtils.buildStringFilter(app, token));
+    headers.put(key, (w, t, m) -> token);
+    return this;
+  }
+
+  HttpRequestBuilder addHeader(String key, WorkflowValueResolver<String> token) {
+    headers.put(key, token);
     return this;
   }
 
   HttpRequestBuilder addQueryParam(String key, String token) {
-    queryParams.put(key, WorkflowUtils.buildStringFilter(app, token));
+    queryParams.put(key, (w, t, m) -> token);
     return this;
   }
 
-  HttpRequestBuilder withUri(URI uri) {
+  HttpRequestBuilder addQueryParam(String key, WorkflowValueResolver<String> token) {
+    queryParams.put(key, token);
+    return this;
+  }
+
+  HttpRequestBuilder withUri(WorkflowValueResolver<URI> uri) {
     this.uri = uri;
     return this;
   }
 
   HttpRequestBuilder withRequestContentType(OAuth2TokenRequest oAuth2TokenRequest) {
     if (oAuth2TokenRequest != null) {
-      this.requestContentType = oAuth2TokenRequest.getEncoding();
+      this.requestContentType = oAuth2TokenRequest.getEncoding().value();
     }
     return this;
   }
 
-  HttpRequestBuilder withGrantType(
-      OAuth2AuthenticationData.OAuth2AuthenticationDataGrant grantType) {
+  HttpRequestBuilder withRequestContentType(String contentType) {
+    if (contentType != null) {
+      this.requestContentType = contentType;
+    }
+    return this;
+  }
+
+  HttpRequestBuilder withGrantType(String grantType) {
     this.grantType = grantType;
     return this;
   }
@@ -89,12 +98,12 @@ class HttpRequestBuilder {
   InvocationHolder build(WorkflowContext workflow, TaskContext task, WorkflowModel model) {
     validate();
 
-    Client client = ClientBuilder.newClient();
-    WebTarget target = client.target(uri);
+    Client client = HttpClientResolver.client(workflow, task);
+    WebTarget target = client.target(uri.apply(workflow, task, model));
 
     Invocation.Builder builder = target.request(MediaType.APPLICATION_JSON);
 
-    builder.header("grant_type", grantType.name().toLowerCase());
+    builder.header("grant_type", grantType);
     builder.header("User-Agent", "OAuth2-Client-Credentials/1.0");
     builder.header("Accept", MediaType.APPLICATION_JSON);
     builder.header("Cache-Control", "no-cache");
@@ -107,9 +116,9 @@ class HttpRequestBuilder {
     }
 
     Entity<?> entity;
-    if (requestContentType.equals(APPLICATION_X_WWW_FORM_URLENCODED)) {
+    if (requestContentType.equals(APPLICATION_X_WWW_FORM_URLENCODED.value())) {
       Form form = new Form();
-      form.param("grant_type", grantType.value());
+      form.param("grant_type", grantType);
       queryParams.forEach(
           (key, value) -> {
             String resolved = value.apply(workflow, task, model);
@@ -118,7 +127,7 @@ class HttpRequestBuilder {
       entity = Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED);
     } else {
       Map<String, Object> jsonData = new HashMap<>();
-      jsonData.put("grant_type", grantType.value());
+      jsonData.put("grant_type", grantType);
       queryParams.forEach(
           (key, value) -> {
             String resolved = value.apply(workflow, task, model);
@@ -127,7 +136,7 @@ class HttpRequestBuilder {
       entity = Entity.entity(jsonData, MediaType.APPLICATION_JSON);
     }
 
-    return new InvocationHolder(client, () -> builder.post(entity));
+    return new InvocationHolder(() -> builder.post(entity));
   }
 
   private void validate() {

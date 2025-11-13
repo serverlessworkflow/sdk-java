@@ -15,14 +15,12 @@
  */
 package io.serverlessworkflow.impl.executors.http;
 
-import io.serverlessworkflow.api.types.SecretBasedAuthenticationPolicy;
-import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
 import jakarta.ws.rs.client.Invocation.Builder;
 
-public abstract class AbstractAuthProvider implements AuthProvider {
+abstract class AbstractAuthProvider implements AuthProvider {
 
   private static final String AUTH_HEADER_FORMAT = "%s %s";
 
@@ -35,19 +33,6 @@ public abstract class AbstractAuthProvider implements AuthProvider {
     builder.header(
         AuthProviderFactory.AUTH_HEADER_NAME, String.format(AUTH_HEADER_FORMAT, scheme, parameter));
     return builder;
-  }
-
-  protected final String checkSecret(
-      Workflow workflow, SecretBasedAuthenticationPolicy secretPolicy) {
-    String secretName = secretPolicy.getUse();
-    return workflow.getUse().getSecrets().stream()
-        .filter(s -> s.equals(secretName))
-        .findAny()
-        .orElseThrow(() -> new IllegalStateException("Secret " + secretName + " does not exist"));
-  }
-
-  protected final String find(WorkflowContext context, String secretName, String prop) {
-    return context.definition().application().secretManager().secret(secretName).get(prop);
   }
 
   protected abstract String authScheme();

@@ -16,6 +16,8 @@
 package io.serverlessworkflow.impl.executors.http.auth.requestbuilder;
 
 import io.serverlessworkflow.impl.TaskContext;
+import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.executors.http.auth.jwt.JWT;
 import io.serverlessworkflow.impl.executors.http.auth.jwt.JWTConverter;
 import java.util.List;
@@ -26,27 +28,25 @@ public class AccessTokenProvider {
 
   private final TokenResponseHandler tokenResponseHandler = new TokenResponseHandler();
 
-  private final TaskContext context;
   private final List<String> issuers;
-  private final InvocationHolder invocation;
+  private final HttpRequestBuilder requestBuilder;
 
   private final JWTConverter jwtConverter;
 
-  AccessTokenProvider(InvocationHolder invocation, TaskContext context, List<String> issuers) {
-    this.invocation = invocation;
+  AccessTokenProvider(HttpRequestBuilder requestBuilder, List<String> issuers) {
+    this.requestBuilder = requestBuilder;
     this.issuers = issuers;
-    this.context = context;
-
     this.jwtConverter =
         ServiceLoader.load(JWTConverter.class)
             .findFirst()
             .orElseThrow(() -> new IllegalStateException("No JWTConverter implementation found"));
   }
 
-  public JWT validateAndGet() {
-    Map<String, Object> token = tokenResponseHandler.apply(invocation, context);
+  public JWT validateAndGet(WorkflowContext workflow, TaskContext context, WorkflowModel model) {
+    Map<String, Object> token =
+        tokenResponseHandler.apply(requestBuilder.build(workflow, context, model), context);
     JWT jwt = jwtConverter.fromToken((String) token.get("access_token"));
-    if (!(issuers == null || issuers.isEmpty())) {
+    if (issuers != null && !issuers.isEmpty()) {
       jwt.issuer()
           .ifPresent(
               issuer -> {

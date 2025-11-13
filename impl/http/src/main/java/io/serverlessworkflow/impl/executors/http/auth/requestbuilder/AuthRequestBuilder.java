@@ -15,11 +15,12 @@
  */
 package io.serverlessworkflow.impl.executors.http.auth.requestbuilder;
 
-import io.serverlessworkflow.impl.TaskContext;
-import io.serverlessworkflow.impl.WorkflowContext;
-import io.serverlessworkflow.impl.WorkflowModel;
+import io.serverlessworkflow.api.types.OAuth2AuthenticationData;
+import java.util.Map;
 
-public interface AuthRequestBuilder {
+public interface AuthRequestBuilder<T extends OAuth2AuthenticationData> {
 
-  public AccessTokenProvider build(WorkflowContext workflow, TaskContext task, WorkflowModel model);
+  void accept(HttpRequestBuilder requestBuilder, T authenticationData);
+
+  void accept(HttpRequestBuilder requestBuilder, Map<String, Object> authenticationData);
 }

@@ -15,19 +15,23 @@
  */
 package io.serverlessworkflow.impl.executors.http.auth.requestbuilder;
 
-import jakarta.ws.rs.core.Response;
-import java.util.concurrent.Callable;
-import java.util.function.Supplier;
+class SecretKeys {
 
-class InvocationHolder implements Callable<Response> {
+  private SecretKeys() {}
 
-  private final Supplier<Response> call;
-
-  InvocationHolder(Supplier<Response> call) {
-    this.call = call;
-  }
-
-  public Response call() {
-    return call.get();
-  }
+  static final String GRANT = "grant";
+  static final String USER = "username";
+  static final String CLIENT = "client";
+  static final String PASSWORD = "password";
+  static final String ID = "id";
+  static final String SECRET = "secret";
+  static final String ISSUERS = "issuers";
+  static final String AUDIENCES = "audiences";
+  static final String ENDPOINTS = "endpoints";
+  static final String TOKEN = "token";
+  static final String AUTHORITY = "authority";
+  static final String SCOPES = "scopes";
+  static final String REQUEST = "request";
+  static final String ENCODING = "encoding";
+  static final String AUTHENTICATION = "authentication";
 }

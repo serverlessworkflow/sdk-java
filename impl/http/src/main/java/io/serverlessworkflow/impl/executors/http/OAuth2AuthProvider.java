@@ -16,37 +16,19 @@
 package io.serverlessworkflow.impl.executors.http;
 
 import io.serverlessworkflow.api.types.OAuth2AuthenticationPolicy;
-import io.serverlessworkflow.api.types.OAuth2AuthenticationPolicyConfiguration;
 import io.serverlessworkflow.api.types.Workflow;
-import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
-import io.serverlessworkflow.impl.WorkflowContext;
-import io.serverlessworkflow.impl.WorkflowModel;
-import io.serverlessworkflow.impl.executors.http.auth.requestbuilder.AuthRequestBuilder;
 import io.serverlessworkflow.impl.executors.http.auth.requestbuilder.OAuthRequestBuilder;
 
-public class OAuth2AuthProvider extends AbstractAuthProvider {
-
-  private AuthRequestBuilder requestBuilder;
+class OAuth2AuthProvider extends CommonOAuthProvider {
 
   public OAuth2AuthProvider(
       WorkflowApplication application, Workflow workflow, OAuth2AuthenticationPolicy authPolicy) {
-    OAuth2AuthenticationPolicyConfiguration oauth2 = authPolicy.getOauth2();
-    if (oauth2.getOAuth2ConnectAuthenticationProperties() != null) {
-      this.requestBuilder =
-          new OAuthRequestBuilder(application, oauth2.getOAuth2ConnectAuthenticationProperties());
-    } else if (oauth2.getOAuth2AuthenticationPolicySecret() != null) {
-      throw new UnsupportedOperationException("Secrets are still not supported");
-    }
-  }
-
-  @Override
-  protected String authParameter(WorkflowContext workflow, TaskContext task, WorkflowModel model) {
-    return requestBuilder.build(workflow, task, model).validateAndGet().token();
-  }
-
-  @Override
-  protected String authScheme() {
-    return "Bearer";
+    super(
+        accessToken(
+            workflow,
+            authPolicy.getOauth2().getOAuth2ConnectAuthenticationProperties(),
+            authPolicy.getOauth2().getOAuth2AuthenticationPolicySecret(),
+            new OAuthRequestBuilder(application)));
   }
 }
