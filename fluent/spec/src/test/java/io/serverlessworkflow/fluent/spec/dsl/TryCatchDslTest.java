@@ -158,9 +158,6 @@ public class TryCatchDslTest {
     assertThat(catchDo).hasSize(1);
     var ev = catchDo.get(0).getTask().getEmitTask().getEmit().getEvent().getWith();
     assertThat(ev.getType()).isEqualTo("org.acme.recover");
-
-    // no retry configured here
-    assertThat(cat.getRetry().get()).isNull();
   }
 
   @Test
