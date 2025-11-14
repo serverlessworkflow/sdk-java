@@ -344,7 +344,7 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
     String typeName = getTypeName(node, unionType, parentSchema);
     JFieldVar instanceField =
         getInstanceField(typeName, parentSchema, definedClass, unionType, node);
-    JMethod method = getSetterMethod(typeName, definedClass, instanceField, node);
+    JMethod method = getSetterMethod(typeName, definedClass, instanceField, node, valueField);
     method
         .body()
         .assign(
@@ -369,12 +369,18 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
   }
 
   private JMethod getSetterMethod(
-      String fieldName, JDefinedClass definedClass, JFieldVar instanceField, JsonNode node) {
+      String fieldName,
+      JDefinedClass definedClass,
+      JFieldVar instanceField,
+      JsonNode node,
+      Optional<JFieldVar> valueField) {
     String setterName = ruleFactory.getNameHelper().getSetterName(fieldName, node);
     JMethod fluentMethod =
         definedClass.method(JMod.PUBLIC, definedClass, setterName.replaceFirst("set", "with"));
     JBlock body = fluentMethod.body();
-    body.assign(instanceField, fluentMethod.param(instanceField.type(), "value"));
+    JVar fluentMethodParam = fluentMethod.param(instanceField.type(), "value");
+    body.assign(instanceField, fluentMethodParam);
+    valueField.ifPresent(v -> fluentMethod.body().assign(JExpr._this().ref(v), fluentMethodParam));
     body._return(JExpr._this());
     return definedClass.method(JMod.PUBLIC, definedClass.owner().VOID, setterName);
   }
@@ -393,7 +399,8 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
     String typeName = getTypeName(first.getNode(), first.getType(), parentSchema);
     JFieldVar instanceField =
         getInstanceField(typeName, parentSchema, definedClass, first.getType(), first.getNode());
-    JMethod setterMethod = getSetterMethod(typeName, definedClass, instanceField, first.getNode());
+    JMethod setterMethod =
+        getSetterMethod(typeName, definedClass, instanceField, first.getNode(), valueField);
     JVar methodParam = setupMethod(definedClass, setterMethod, valueField, instanceField);
     JBlock body = setterMethod.body();
     if (pattern != null) {
