@@ -22,7 +22,7 @@ import io.serverlessworkflow.fluent.spec.ForkTaskBuilder;
 import io.serverlessworkflow.fluent.spec.TaskItemListBuilder;
 import io.serverlessworkflow.fluent.spec.TryTaskBuilder;
 import io.serverlessworkflow.fluent.spec.configurers.AuthenticationConfigurer;
-import io.serverlessworkflow.fluent.spec.configurers.CallHTTPConfigurer;
+import io.serverlessworkflow.fluent.spec.configurers.CallHttpConfigurer;
 import io.serverlessworkflow.fluent.spec.configurers.ForEachConfigurer;
 import io.serverlessworkflow.fluent.spec.configurers.ListenConfigurer;
 import io.serverlessworkflow.fluent.spec.configurers.RaiseConfigurer;
@@ -44,8 +44,8 @@ public final class DSL {
 
   // ---- Convenient shortcuts ----//
 
-  public static CallHTTPSpec http() {
-    return new CallHTTPSpec();
+  public static CallHttpSpec http() {
+    return new CallHttpSpec();
   }
 
   public static SwitchSpec cases() {
@@ -196,8 +196,8 @@ public final class DSL {
 
   // ---- Tasks ----//
 
-  public static TasksConfigurer call(CallHTTPConfigurer configurer) {
-    return list -> list.callHTTP(configurer);
+  public static TasksConfigurer call(CallHttpConfigurer configurer) {
+    return list -> list.http(configurer);
   }
 
   public static TasksConfigurer set(SetConfigurer configurer) {

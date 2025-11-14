@@ -15,6 +15,8 @@
  */
 package io.serverlessworkflow.fluent.func;
 
+import io.serverlessworkflow.api.types.CallHTTP;
+import io.serverlessworkflow.api.types.CallTask;
 import io.serverlessworkflow.api.types.Task;
 import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.fluent.func.spi.FuncDoFluent;
@@ -45,7 +47,7 @@ public class FuncTaskItemListBuilder extends BaseTaskItemListBuilder<FuncTaskIte
   }
 
   @Override
-  public FuncTaskItemListBuilder callFn(String name, Consumer<FuncCallTaskBuilder> consumer) {
+  public FuncTaskItemListBuilder function(String name, Consumer<FuncCallTaskBuilder> consumer) {
     name = this.defaultNameAndRequireConfig(name, consumer);
     final FuncCallTaskBuilder callTaskJavaBuilder = new FuncCallTaskBuilder();
     consumer.accept(callTaskJavaBuilder);
@@ -53,8 +55,8 @@ public class FuncTaskItemListBuilder extends BaseTaskItemListBuilder<FuncTaskIte
   }
 
   @Override
-  public FuncTaskItemListBuilder callFn(Consumer<FuncCallTaskBuilder> consumer) {
-    return this.callFn(UUID.randomUUID().toString(), consumer);
+  public FuncTaskItemListBuilder function(Consumer<FuncCallTaskBuilder> consumer) {
+    return this.function(UUID.randomUUID().toString(), consumer);
   }
 
   @Override
@@ -115,5 +117,20 @@ public class FuncTaskItemListBuilder extends BaseTaskItemListBuilder<FuncTaskIte
     itemsConfigurer.accept(forkTaskJavaBuilder);
     return this.addTaskItem(
         new TaskItem(name, new Task().withForkTask(forkTaskJavaBuilder.build())));
+  }
+
+  @Override
+  public FuncTaskItemListBuilder http(
+      String name, Consumer<FuncCallHttpTaskBuilder> itemsConfigurer) {
+    name = this.defaultNameAndRequireConfig(name, itemsConfigurer);
+    final FuncCallHttpTaskBuilder httpTaskJavaBuilder = new FuncCallHttpTaskBuilder();
+    itemsConfigurer.accept(httpTaskJavaBuilder);
+    final CallHTTP callHTTP = httpTaskJavaBuilder.build();
+    final CallTask callTask = new CallTask();
+    callTask.setCallHTTP(callHTTP);
+    final Task task = new Task();
+    task.setCallTask(callTask);
+
+    return this.addTaskItem(new TaskItem(name, task));
   }
 }

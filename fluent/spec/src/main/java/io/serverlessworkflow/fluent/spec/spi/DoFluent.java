@@ -15,7 +15,7 @@
  */
 package io.serverlessworkflow.fluent.spec.spi;
 
-import io.serverlessworkflow.fluent.spec.CallHTTPTaskBuilder;
+import io.serverlessworkflow.fluent.spec.CallHttpTaskBuilder;
 import io.serverlessworkflow.fluent.spec.EmitTaskBuilder;
 import io.serverlessworkflow.fluent.spec.ForEachTaskBuilder;
 import io.serverlessworkflow.fluent.spec.ForkTaskBuilder;
@@ -37,7 +37,7 @@ public interface DoFluent<T>
     extends SetFluent<SetTaskBuilder, T>,
         SwitchFluent<SwitchTaskBuilder, T>,
         TryCatchFluent<TryTaskBuilder<TaskItemListBuilder>, T>,
-        CallHTTPFluent<CallHTTPTaskBuilder, T>,
+        CallHttpFluent<CallHttpTaskBuilder, T>,
         EmitFluent<EmitTaskBuilder, T>,
         ForEachFluent<ForEachTaskBuilder<TaskItemListBuilder>, T>,
         ForkFluent<ForkTaskBuilder, T>,

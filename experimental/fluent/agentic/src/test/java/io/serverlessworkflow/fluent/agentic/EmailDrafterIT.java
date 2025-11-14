@@ -62,8 +62,8 @@ public class EmailDrafterIT {
                 tasks ->
                     tasks
                         .agent("agentEmailDrafter", emailDrafter)
-                        .callFn("parseDraft", fn(EmailDrafts::parse, String.class))
-                        .callFn("policyCheck", fn(EmailPolicies::policyCheck, EmailDraft.class))
+                        .function("parseDraft", fn(EmailDrafts::parse, String.class))
+                        .function("policyCheck", fn(EmailPolicies::policyCheck, EmailDraft.class))
                         .switchCase(
                             "needsHumanReview?",
                             cases(

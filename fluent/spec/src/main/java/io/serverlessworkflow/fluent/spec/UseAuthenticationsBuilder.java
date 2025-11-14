@@ -27,10 +27,11 @@ public class UseAuthenticationsBuilder {
   }
 
   public UseAuthenticationsBuilder authentication(
-      String name, Consumer<AuthenticationPolicyUnionBuilder> authenticationConsumer) {
-    final AuthenticationPolicyUnionBuilder builder = new AuthenticationPolicyUnionBuilder();
+      String name, Consumer<ReferenceableAuthenticationPolicyBuilder> authenticationConsumer) {
+    final ReferenceableAuthenticationPolicyBuilder builder =
+        new ReferenceableAuthenticationPolicyBuilder();
     authenticationConsumer.accept(builder);
-    this.authentication.setAdditionalProperty(name, builder.build());
+    this.authentication.setAdditionalProperty(name, builder.build().getAuthenticationPolicy());
     return this;
   }
 

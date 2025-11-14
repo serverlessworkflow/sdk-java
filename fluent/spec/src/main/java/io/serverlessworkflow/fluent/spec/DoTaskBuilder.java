@@ -31,8 +31,8 @@ public class DoTaskBuilder extends BaseDoTaskBuilder<DoTaskBuilder, TaskItemList
   }
 
   @Override
-  public DoTaskBuilder callHTTP(String name, Consumer<CallHTTPTaskBuilder> itemsConfigurer) {
-    this.listBuilder().callHTTP(name, itemsConfigurer);
+  public DoTaskBuilder http(String name, Consumer<CallHttpTaskBuilder> itemsConfigurer) {
+    this.listBuilder().http(name, itemsConfigurer);
     return this;
   }
 

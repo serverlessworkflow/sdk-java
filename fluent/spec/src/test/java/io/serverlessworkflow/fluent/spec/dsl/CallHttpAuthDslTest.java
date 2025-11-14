@@ -37,10 +37,13 @@ public class CallHttpAuthDslTest {
   void when_call_http_with_basic_auth_on_endpoint_expr() {
     Workflow wf =
         WorkflowBuilder.workflow("f", "ns", "1")
-            .tasks(t -> t.callHTTP(http().GET().endpoint(EXPR_ENDPOINT, basic("alice", "secret"))))
+            .tasks(t -> t.http(http().GET().endpoint(EXPR_ENDPOINT, basic("alice", "secret"))))
             .build();
 
     var args = wf.getDo().get(0).getTask().getCallTask().getCallHTTP().getWith();
+
+    assertThat(wf.getDo().get(0).getTask().get()).isNotNull();
+    assertThat(wf.getDo().get(0).getTask().getCallTask().get()).isNotNull();
 
     // Endpoint expression is set
     assertThat(args.getEndpoint().getRuntimeExpression()).isEqualTo(EXPR_ENDPOINT);
@@ -74,7 +77,7 @@ public class CallHttpAuthDslTest {
   void when_call_http_with_bearer_auth_on_endpoint_expr() {
     Workflow wf =
         WorkflowBuilder.workflow("f", "ns", "1")
-            .tasks(t -> t.callHTTP(http().GET().endpoint(EXPR_ENDPOINT, bearer("token-123"))))
+            .tasks(t -> t.http(http().GET().endpoint(EXPR_ENDPOINT, bearer("token-123"))))
             .build();
 
     var args = wf.getDo().get(0).getTask().getCallTask().getCallHTTP().getWith();
@@ -103,7 +106,7 @@ public class CallHttpAuthDslTest {
   void when_call_http_with_digest_auth_on_endpoint_expr() {
     Workflow wf =
         WorkflowBuilder.workflow("f", "ns", "1")
-            .tasks(t -> t.callHTTP(http().GET().endpoint(EXPR_ENDPOINT, digest("bob", "p@ssw0rd"))))
+            .tasks(t -> t.http(http().GET().endpoint(EXPR_ENDPOINT, digest("bob", "p@ssw0rd"))))
             .build();
 
     var args = wf.getDo().get(0).getTask().getCallTask().getCallHTTP().getWith();
@@ -140,7 +143,7 @@ public class CallHttpAuthDslTest {
         WorkflowBuilder.workflow("f", "ns", "1")
             .tasks(
                 t ->
-                    t.callHTTP(
+                    t.http(
                         http()
                             .POST()
                             .endpoint(
@@ -188,7 +191,7 @@ public class CallHttpAuthDslTest {
         WorkflowBuilder.workflow("f", "ns", "1")
             .tasks(
                 t ->
-                    t.callHTTP(
+                    t.http(
                         http()
                             .POST()
                             .endpoint(
@@ -232,7 +235,7 @@ public class CallHttpAuthDslTest {
         WorkflowBuilder.workflow("f", "ns", "1")
             .tasks(
                 t ->
-                    t.callHTTP(
+                    t.http(
                         http().GET().uri("https://api.example.com/v1/resource", basic("u", "p"))))
             .build();
 

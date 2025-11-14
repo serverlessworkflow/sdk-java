@@ -15,17 +15,21 @@
  */
 package io.serverlessworkflow.fluent.spec;
 
+import io.serverlessworkflow.api.types.AuthenticationPolicyReference;
 import io.serverlessworkflow.api.types.AuthenticationPolicyUnion;
+import io.serverlessworkflow.api.types.ReferenceableAuthenticationPolicy;
 import java.util.function.Consumer;
 
-public class AuthenticationPolicyUnionBuilder {
+public class ReferenceableAuthenticationPolicyBuilder {
   final AuthenticationPolicyUnion authenticationPolicy;
+  final AuthenticationPolicyReference authenticationPolicyReference;
 
-  AuthenticationPolicyUnionBuilder() {
+  public ReferenceableAuthenticationPolicyBuilder() {
     this.authenticationPolicy = new AuthenticationPolicyUnion();
+    this.authenticationPolicyReference = new AuthenticationPolicyReference();
   }
 
-  public AuthenticationPolicyUnionBuilder basic(
+  public ReferenceableAuthenticationPolicyBuilder basic(
       Consumer<BasicAuthenticationPolicyBuilder> basicConsumer) {
     final BasicAuthenticationPolicyBuilder basicAuthenticationPolicyBuilder =
         new BasicAuthenticationPolicyBuilder();
@@ -35,7 +39,7 @@ public class AuthenticationPolicyUnionBuilder {
     return this;
   }
 
-  public AuthenticationPolicyUnionBuilder bearer(
+  public ReferenceableAuthenticationPolicyBuilder bearer(
       Consumer<BearerAuthenticationPolicyBuilder> bearerConsumer) {
     final BearerAuthenticationPolicyBuilder bearerAuthenticationPolicyBuilder =
         new BearerAuthenticationPolicyBuilder();
@@ -45,7 +49,7 @@ public class AuthenticationPolicyUnionBuilder {
     return this;
   }
 
-  public AuthenticationPolicyUnionBuilder digest(
+  public ReferenceableAuthenticationPolicyBuilder digest(
       Consumer<DigestAuthenticationPolicyBuilder> digestConsumer) {
     final DigestAuthenticationPolicyBuilder digestAuthenticationPolicyBuilder =
         new DigestAuthenticationPolicyBuilder();
@@ -55,7 +59,7 @@ public class AuthenticationPolicyUnionBuilder {
     return this;
   }
 
-  public AuthenticationPolicyUnionBuilder oauth2(
+  public ReferenceableAuthenticationPolicyBuilder oauth2(
       Consumer<OAuth2AuthenticationPolicyBuilder> oauth2Consumer) {
     final OAuth2AuthenticationPolicyBuilder oauth2AuthenticationPolicyBuilder =
         new OAuth2AuthenticationPolicyBuilder();
@@ -65,7 +69,7 @@ public class AuthenticationPolicyUnionBuilder {
     return this;
   }
 
-  public AuthenticationPolicyUnionBuilder openIDConnect(
+  public ReferenceableAuthenticationPolicyBuilder openIDConnect(
       Consumer<OpenIdConnectAuthenticationPolicyBuilder> openIdConnectConsumer) {
     final OpenIdConnectAuthenticationPolicyBuilder builder =
         new OpenIdConnectAuthenticationPolicyBuilder();
@@ -74,7 +78,15 @@ public class AuthenticationPolicyUnionBuilder {
     return this;
   }
 
-  public AuthenticationPolicyUnion build() {
-    return authenticationPolicy;
+  public ReferenceableAuthenticationPolicyBuilder use(String use) {
+    this.authenticationPolicyReference.setUse(use);
+    return this;
+  }
+
+  public ReferenceableAuthenticationPolicy build() {
+    final ReferenceableAuthenticationPolicy policy = new ReferenceableAuthenticationPolicy();
+    policy.setAuthenticationPolicy(this.authenticationPolicy);
+    policy.setAuthenticationPolicyReference(this.authenticationPolicyReference);
+    return policy;
   }
 }

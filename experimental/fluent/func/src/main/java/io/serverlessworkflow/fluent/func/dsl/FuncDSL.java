@@ -23,12 +23,15 @@ import io.serverlessworkflow.fluent.func.FuncCallTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncEmitTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncSwitchTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncTaskItemListBuilder;
+import io.serverlessworkflow.fluent.func.configurers.FuncCallHttpConfigurer;
 import io.serverlessworkflow.fluent.func.configurers.FuncPredicateEventConfigurer;
 import io.serverlessworkflow.fluent.func.configurers.FuncTaskConfigurer;
 import io.serverlessworkflow.fluent.func.configurers.SwitchCaseConfigurer;
 import io.serverlessworkflow.fluent.func.dsl.internal.CommonFuncOps;
+import io.serverlessworkflow.fluent.spec.configurers.AuthenticationConfigurer;
 import io.serverlessworkflow.impl.TaskContextData;
 import io.serverlessworkflow.impl.WorkflowContextData;
+import java.net.URI;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -698,6 +701,21 @@ public final class FuncDSL {
     return list -> list.switchCase(cases(caseOf(pred, predClass).then(thenTask)));
   }
 
+  /**
+   * JQ-based condition: if the JQ expression evaluates truthy → jump to {@code thenTask}.
+   *
+   * <pre>
+   *   switchWhen(".approved == true", "approveOrder")
+   * </pre>
+   *
+   * <p>The JQ expression is evaluated against the task input at runtime. When the predicate is
+   * false, the workflow follows the default flow directive for the switch task (as defined by the
+   * underlying implementation / spec).
+   *
+   * @param jqExpression JQ expression evaluated against the current task input
+   * @param thenTask task name to jump to when the expression evaluates truthy
+   * @return list configurer
+   */
   public static FuncTaskConfigurer switchWhen(String jqExpression, String thenTask) {
     return list -> list.switchCase(sw -> sw.on(c -> c.when(jqExpression).then(thenTask)));
   }
@@ -836,5 +854,291 @@ public final class FuncDSL {
    */
   public static FuncTaskConfigurer set(Map<String, Object> map) {
     return list -> list.set(s -> s.expr(map));
+  }
+
+  /**
+   * Low-level HTTP call entrypoint using a {@link FuncCallHttpConfigurer}.
+   *
+   * <p>This overload creates an unnamed HTTP task.
+   *
+   * @param configurer the configurer that mutates the underlying HTTP call builder
+   * @return a {@link FuncTaskConfigurer} that adds an HTTP task to the tasks list
+   */
+  public static FuncTaskConfigurer call(FuncCallHttpConfigurer configurer) {
+    return call(null, configurer);
+  }
+
+  /**
+   * Low-level HTTP call entrypoint using a {@link FuncCallHttpConfigurer}.
+   *
+   * <p>This overload allows assigning an explicit task name.
+   *
+   * @param name task name, or {@code null} for an anonymous task
+   * @param configurer the configurer that mutates the underlying HTTP call builder
+   * @return a {@link FuncTaskConfigurer} that adds an HTTP task to the tasks list
+   */
+  public static FuncTaskConfigurer call(String name, FuncCallHttpConfigurer configurer) {
+    Objects.requireNonNull(configurer, "configurer");
+    return list -> list.http(name, configurer);
+  }
+
+  /**
+   * HTTP call using a fluent {@link FuncCallHttpSpec}.
+   *
+   * <p>This overload creates an unnamed HTTP task.
+   *
+   * <pre>{@code
+   * tasks(
+   *   FuncDSL.call(
+   *     FuncDSL.http()
+   *       .GET()
+   *       .endpoint("http://service/api")
+   *   )
+   * );
+   * }</pre>
+   *
+   * @param spec fluent HTTP spec built via {@link #http()}
+   * @return a {@link FuncTaskConfigurer} that adds an HTTP task
+   */
+  public static FuncTaskConfigurer call(FuncCallHttpSpec spec) {
+    return call(null, spec);
+  }
+
+  /**
+   * HTTP call using a fluent {@link FuncCallHttpSpec} with explicit task name.
+   *
+   * <pre>{@code
+   * tasks(
+   *   FuncDSL.call("fetchUsers",
+   *     FuncDSL.http()
+   *       .GET()
+   *       .endpoint("http://service/users")
+   *   )
+   * );
+   * }</pre>
+   *
+   * @param name task name, or {@code null} for an anonymous task
+   * @param spec fluent HTTP spec built via {@link #http()}
+   * @return a {@link FuncTaskConfigurer} that adds an HTTP task
+   */
+  public static FuncTaskConfigurer call(String name, FuncCallHttpSpec spec) {
+    Objects.requireNonNull(spec, "spec");
+    return call(name, spec::accept);
+  }
+
+  /**
+   * Create a new, empty HTTP specification to be used with {@link #call(FuncCallHttpSpec)}.
+   *
+   * <p>Typical usage:
+   *
+   * <pre>{@code
+   * FuncDSL.call(
+   *   FuncDSL.http()
+   *     .GET()
+   *     .endpoint("http://service/api")
+   *     .acceptJSON()
+   * );
+   * }</pre>
+   *
+   * @return a new {@link FuncCallHttpSpec}
+   */
+  public static FuncCallHttpSpec http() {
+    return new FuncCallHttpSpec();
+  }
+
+  /**
+   * Create a new HTTP specification preconfigured with an endpoint expression and authentication.
+   *
+   * <pre>{@code
+   * FuncDSL.call(
+   *   FuncDSL.http("http://service/api", auth -> auth.use("my-auth"))
+   *     .GET()
+   * );
+   * }</pre>
+   *
+   * @param urlExpr expression or literal string for the endpoint URL
+   * @param auth authentication configurer (e.g. {@code auth -> auth.use("my-auth")})
+   * @return a {@link FuncCallHttpSpec} preconfigured with endpoint + auth
+   */
+  public static FuncCallHttpSpec http(String urlExpr, AuthenticationConfigurer auth) {
+    return new FuncCallHttpSpec().endpoint(urlExpr, auth);
+  }
+
+  /**
+   * Create a new HTTP specification preconfigured with a {@link URI} and authentication.
+   *
+   * @param url concrete URI to call
+   * @param auth authentication configurer
+   * @return a {@link FuncCallHttpSpec} preconfigured with URI + auth
+   */
+  public static FuncCallHttpSpec http(URI url, AuthenticationConfigurer auth) {
+    return new FuncCallHttpSpec().uri(url, auth);
+  }
+
+  /**
+   * Convenience for adding an unnamed {@code GET} HTTP task using a string endpoint.
+   *
+   * <pre>{@code
+   * tasks(
+   *   FuncDSL.get("http://service/health")
+   * );
+   * }</pre>
+   *
+   * @param endpoint literal or expression for the endpoint URL
+   * @return a {@link FuncTaskConfigurer} adding a {@code GET} HTTP task
+   */
+  public static FuncTaskConfigurer get(String endpoint) {
+    return get(null, endpoint);
+  }
+
+  /**
+   * Convenience for adding a named {@code GET} HTTP task using a string endpoint.
+   *
+   * <pre>{@code
+   * tasks(
+   *   FuncDSL.get("checkHealth", "http://service/health")
+   * );
+   * }</pre>
+   *
+   * @param name task name
+   * @param endpoint literal or expression for the endpoint URL
+   * @return a {@link FuncTaskConfigurer} adding a {@code GET} HTTP task
+   */
+  public static FuncTaskConfigurer get(String name, String endpoint) {
+    return call(name, http().GET().endpoint(endpoint));
+  }
+
+  /**
+   * Convenience for adding an unnamed authenticated {@code GET} HTTP task using a string endpoint.
+   *
+   * <pre>{@code
+   * tasks(
+   *   FuncDSL.get("http://service/api/users", auth -> auth.use("user-service-auth"))
+   * );
+   * }</pre>
+   *
+   * @param endpoint literal or expression for the endpoint URL
+   * @param auth authentication configurer
+   * @return a {@link FuncTaskConfigurer} adding a {@code GET} HTTP task
+   */
+  public static FuncTaskConfigurer get(String endpoint, AuthenticationConfigurer auth) {
+    return get(null, endpoint, auth);
+  }
+
+  /**
+   * Convenience for adding a named authenticated {@code GET} HTTP task using a string endpoint.
+   *
+   * @param name task name
+   * @param endpoint literal or expression for the endpoint URL
+   * @param auth authentication configurer
+   * @return a {@link FuncTaskConfigurer} adding a {@code GET} HTTP task
+   */
+  public static FuncTaskConfigurer get(
+      String name, String endpoint, AuthenticationConfigurer auth) {
+    return call(name, http().GET().endpoint(endpoint, auth));
+  }
+
+  /**
+   * Convenience for adding an unnamed {@code GET} HTTP task using a {@link URI}.
+   *
+   * @param endpoint concrete URI to call
+   * @return a {@link FuncTaskConfigurer} adding a {@code GET} HTTP task
+   */
+  public static FuncTaskConfigurer get(URI endpoint) {
+    return get(null, endpoint);
+  }
+
+  /**
+   * Convenience for adding a named {@code GET} HTTP task using a {@link URI}.
+   *
+   * @param name task name
+   * @param endpoint concrete URI to call
+   * @return a {@link FuncTaskConfigurer} adding a {@code GET} HTTP task
+   */
+  public static FuncTaskConfigurer get(String name, URI endpoint) {
+    return call(name, http().GET().uri(endpoint));
+  }
+
+  /**
+   * Convenience for adding an unnamed authenticated {@code GET} HTTP task using a {@link URI}.
+   *
+   * @param endpoint concrete URI to call
+   * @param auth authentication configurer
+   * @return a {@link FuncTaskConfigurer} adding a {@code GET} HTTP task
+   */
+  public static FuncTaskConfigurer get(URI endpoint, AuthenticationConfigurer auth) {
+    return get(null, endpoint, auth);
+  }
+
+  /**
+   * Convenience for adding a named authenticated {@code GET} HTTP task using a {@link URI}.
+   *
+   * @param name task name
+   * @param endpoint concrete URI to call
+   * @param auth authentication configurer
+   * @return a {@link FuncTaskConfigurer} adding a {@code GET} HTTP task
+   */
+  public static FuncTaskConfigurer get(String name, URI endpoint, AuthenticationConfigurer auth) {
+    return call(name, http().GET().uri(endpoint, auth));
+  }
+
+  /**
+   * Convenience for adding an unnamed {@code POST} HTTP task with a body and string endpoint.
+   *
+   * <pre>{@code
+   * tasks(
+   *   FuncDSL.post(
+   *     Map.of("name", "Ricardo"),
+   *     "http://service/api/users"
+   *   )
+   * );
+   * }</pre>
+   *
+   * @param body HTTP request body (literal value or expression-compatible object)
+   * @param endpoint literal or expression for the endpoint URL
+   * @return a {@link FuncTaskConfigurer} adding a {@code POST} HTTP task
+   */
+  public static FuncTaskConfigurer post(Object body, String endpoint) {
+    return post(null, body, endpoint);
+  }
+
+  /**
+   * Convenience for adding a named {@code POST} HTTP task with a body and string endpoint.
+   *
+   * @param name task name
+   * @param body HTTP request body (literal value or expression-compatible object)
+   * @param endpoint literal or expression for the endpoint URL
+   * @return a {@link FuncTaskConfigurer} adding a {@code POST} HTTP task
+   */
+  public static FuncTaskConfigurer post(String name, Object body, String endpoint) {
+    return call(name, http().POST().endpoint(endpoint).body(body));
+  }
+
+  /**
+   * Convenience for adding an unnamed authenticated {@code POST} HTTP task with body and endpoint.
+   *
+   * @param body HTTP request body
+   * @param endpoint literal or expression for the endpoint URL
+   * @param auth authentication configurer
+   * @return a {@link FuncTaskConfigurer} adding an authenticated {@code POST} HTTP task
+   */
+  public static FuncTaskConfigurer post(
+      Object body, String endpoint, AuthenticationConfigurer auth) {
+    return post(null, body, endpoint, auth);
+  }
+
+  /**
+   * Convenience for adding a named authenticated {@code POST} HTTP task with body and endpoint.
+   *
+   * @param name task name
+   * @param body HTTP request body
+   * @param endpoint literal or expression for the endpoint URL
+   * @param auth authentication configurer
+   * @return a {@link FuncTaskConfigurer} adding an authenticated {@code POST} HTTP task
+   */
+  public static FuncTaskConfigurer post(
+      String name, Object body, String endpoint, AuthenticationConfigurer auth) {
+
+    return call(name, http().POST().endpoint(endpoint, auth).body(body));
   }
 }

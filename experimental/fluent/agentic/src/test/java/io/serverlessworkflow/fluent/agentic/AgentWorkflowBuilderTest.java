@@ -177,7 +177,7 @@ class AgentWorkflowBuilderTest {
   void testWorkflowCallFnBare() {
     Workflow wf =
         AgentWorkflowBuilder.workflow()
-            .tasks(d -> d.callFn("myCall", fn -> fn.function(ctx -> "hello")))
+            .tasks(d -> d.function("myCall", fn -> fn.function(ctx -> "hello")))
             .build();
 
     assertThat(wf.getDo()).hasSize(1);
@@ -193,7 +193,7 @@ class AgentWorkflowBuilderTest {
 
     Workflow wf =
         AgentWorkflowBuilder.workflow()
-            .tasks(d -> d.callFn("guarded", fn -> fn.function(ctx -> "x").when(guard)))
+            .tasks(d -> d.function("guarded", fn -> fn.function(ctx -> "x").when(guard)))
             .build();
 
     TaskItem ti = wf.getDo().get(0);

@@ -32,12 +32,12 @@ import org.junit.jupiter.api.Test;
 public class DSLTest {
 
   @Test
-  public void when_new_call_http_task() {
+  public void when_new_http_call_task() {
     Workflow wf =
         WorkflowBuilder.workflow("myFlow", "myNs", "1.2.3")
             .tasks(
                 t ->
-                    t.callHTTP(
+                    t.http(
                         http()
                             .acceptJSON()
                             .header("CustomKey", "CustomValue")

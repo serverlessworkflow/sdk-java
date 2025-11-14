@@ -68,7 +68,7 @@ class AgentDslWorkflowTest {
   void dslCallFnBare() {
     Workflow wf =
         workflow("beanCall")
-            .tasks(tasks -> tasks.callFn("plainCall", fn -> fn.function(ctx -> "pong")))
+            .tasks(tasks -> tasks.function("plainCall", fn -> fn.function(ctx -> "pong")))
             .build();
 
     List<TaskItem> items = wf.getDo();

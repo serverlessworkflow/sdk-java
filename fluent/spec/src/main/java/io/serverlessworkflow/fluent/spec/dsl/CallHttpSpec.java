@@ -13,17 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.fluent.spec.spi;
+package io.serverlessworkflow.fluent.spec.dsl;
 
-import io.serverlessworkflow.fluent.spec.TaskBaseBuilder;
-import java.util.UUID;
-import java.util.function.Consumer;
+import io.serverlessworkflow.fluent.spec.CallHttpTaskBuilder;
+import io.serverlessworkflow.fluent.spec.configurers.CallHttpConfigurer;
 
-public interface CallHTTPFluent<SELF extends TaskBaseBuilder<SELF>, LIST> {
+public final class CallHttpSpec extends BaseCallHttpSpec<CallHttpSpec>
+    implements CallHttpConfigurer {
 
-  LIST callHTTP(String name, Consumer<SELF> itemsConfigurer);
+  @Override
+  protected CallHttpSpec self() {
+    return this;
+  }
 
-  default LIST callHTTP(Consumer<SELF> itemsConfigurer) {
-    return this.callHTTP(UUID.randomUUID().toString(), itemsConfigurer);
+  @Override
+  public void accept(CallHttpTaskBuilder callHttpTaskBuilder) {
+    super.accept(callHttpTaskBuilder);
   }
 }

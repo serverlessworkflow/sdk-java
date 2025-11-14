@@ -407,7 +407,7 @@ public class WorkflowBuilderTest {
         WorkflowBuilder.workflow("flowCallBasic")
             .tasks(
                 d ->
-                    d.callHTTP(
+                    d.http(
                         "basicCall",
                         http()
                             .POST()
@@ -433,7 +433,7 @@ public class WorkflowBuilderTest {
         WorkflowBuilder.workflow("flowCallHeaders")
             .tasks(
                 d ->
-                    d.callHTTP(
+                    d.http(
                         "hdrCall",
                         http().GET().endpoint("${uriExpr}").headers(Map.of("A", "1", "B", "2"))))
             .build();
@@ -444,9 +444,7 @@ public class WorkflowBuilderTest {
 
     Workflow wf2 =
         WorkflowBuilder.workflow()
-            .tasks(
-                d ->
-                    d.callHTTP(http().GET().endpoint("expr").headers(Map.of("X", "10", "Y", "20"))))
+            .tasks(d -> d.http(http().GET().endpoint("expr").headers(Map.of("X", "10", "Y", "20"))))
             .build();
     CallHTTP call2 = wf2.getDo().get(0).getTask().getCallTask().getCallHTTP();
     HTTPHeaders hh2 = call2.getWith().getHeaders().getHTTPHeaders();
@@ -460,7 +458,7 @@ public class WorkflowBuilderTest {
         WorkflowBuilder.workflow("flowCallQuery")
             .tasks(
                 d ->
-                    d.callHTTP(
+                    d.http(
                         "qryCall",
                         http()
                             .GET()
@@ -476,7 +474,7 @@ public class WorkflowBuilderTest {
         WorkflowBuilder.workflow()
             .tasks(
                 d ->
-                    d.callHTTP(
+                    d.http(
                         c -> c.method("GET").endpoint("uri").query(Map.of("q1", "x", "q2", "y"))))
             .build();
     HTTPQuery hq2 =
@@ -498,7 +496,7 @@ public class WorkflowBuilderTest {
         WorkflowBuilder.workflow("flowCallOpts")
             .tasks(
                 d ->
-                    d.callHTTP(
+                    d.http(
                         "optCall",
                         c ->
                             c.method("DELETE")
