@@ -15,36 +15,44 @@
  */
 package io.serverlessworkflow.impl.executors.http.auth.requestbuilder;
 
+import static io.serverlessworkflow.api.types.OAuth2TokenRequest.Oauth2TokenRequestEncoding.APPLICATION_X_WWW_FORM_URLENCODED;
+
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.WorkflowError;
+import io.serverlessworkflow.impl.WorkflowException;
 import io.serverlessworkflow.impl.WorkflowModel;
+import io.serverlessworkflow.impl.executors.http.HttpClientResolver;
 import io.serverlessworkflow.impl.executors.http.auth.jwt.JWT;
 import io.serverlessworkflow.impl.executors.http.auth.jwt.JWTConverter;
+import jakarta.ws.rs.ProcessingException;
+import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.client.Entity;
+import jakarta.ws.rs.client.Invocation;
+import jakarta.ws.rs.client.ResponseProcessingException;
+import jakarta.ws.rs.client.WebTarget;
+import jakarta.ws.rs.core.Form;
+import jakarta.ws.rs.core.GenericType;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.ServiceLoader;
 
 public class AccessTokenProvider {
 
-  private final TokenResponseHandler tokenResponseHandler = new TokenResponseHandler();
-
   private final List<String> issuers;
-  private final HttpRequestBuilder requestBuilder;
-
+  private final HttpRequestInfo requestInfo;
   private final JWTConverter jwtConverter;
 
-  AccessTokenProvider(HttpRequestBuilder requestBuilder, List<String> issuers) {
-    this.requestBuilder = requestBuilder;
+  AccessTokenProvider(HttpRequestInfo requestInfo, List<String> issuers, JWTConverter converter) {
+    this.requestInfo = requestInfo;
     this.issuers = issuers;
-    this.jwtConverter =
-        ServiceLoader.load(JWTConverter.class)
-            .findFirst()
-            .orElseThrow(() -> new IllegalStateException("No JWTConverter implementation found"));
+    this.jwtConverter = converter;
   }
 
   public JWT validateAndGet(WorkflowContext workflow, TaskContext context, WorkflowModel model) {
-    Map<String, Object> token =
-        tokenResponseHandler.apply(requestBuilder.build(workflow, context, model), context);
+    Map<String, Object> token = invoke(workflow, context, model);
     JWT jwt = jwtConverter.fromToken((String) token.get("access_token"));
     if (issuers != null && !issuers.isEmpty()) {
       jwt.issuer()
@@ -56,5 +64,78 @@ public class AccessTokenProvider {
               });
     }
     return jwt;
+  }
+
+  private Map<String, Object> invoke(
+      WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel model) {
+    try {
+      Response response = executeRequest(workflowContext, taskContext, model);
+
+      if (response.getStatus() < 200 || response.getStatus() >= 300) {
+        throw new WorkflowException(
+            WorkflowError.communication(
+                    response.getStatus(),
+                    taskContext,
+                    "Failed to obtain token: HTTP "
+                        + response.getStatus()
+                        + " — "
+                        + response.getEntity())
+                .build());
+      }
+      return response.readEntity(new GenericType<>() {});
+    } catch (ResponseProcessingException e) {
+      throw new WorkflowException(
+          WorkflowError.communication(
+                  e.getResponse().getStatus(),
+                  taskContext,
+                  "Failed to process response: " + e.getMessage())
+              .build(),
+          e);
+    } catch (ProcessingException e) {
+      throw new WorkflowException(
+          WorkflowError.communication(
+                  -1, taskContext, "Failed to connect or process request: " + e.getMessage())
+              .build(),
+          e);
+    }
+  }
+
+  private Response executeRequest(WorkflowContext workflow, TaskContext task, WorkflowModel model) {
+
+    Client client = HttpClientResolver.client(workflow, task);
+    WebTarget target = client.target(requestInfo.uri().apply(workflow, task, model));
+
+    Invocation.Builder builder = target.request(MediaType.APPLICATION_JSON);
+
+    builder.header("grant_type", requestInfo.grantType());
+    builder.header("User-Agent", "OAuth2-Client-Credentials/1.0");
+    builder.header("Accept", MediaType.APPLICATION_JSON);
+    builder.header("Cache-Control", "no-cache");
+
+    for (var entry : requestInfo.headers().entrySet()) {
+      String headerValue = entry.getValue().apply(workflow, task, model);
+      if (headerValue != null) {
+        builder.header(entry.getKey(), headerValue);
+      }
+    }
+
+    Entity<?> entity;
+    if (requestInfo.contentType().equals(APPLICATION_X_WWW_FORM_URLENCODED.value())) {
+      Form form = new Form();
+      form.param("grant_type", requestInfo.grantType());
+      requestInfo
+          .queryParams()
+          .forEach((key, value) -> form.param(key, value.apply(workflow, task, model)));
+      entity = Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED);
+    } else {
+      Map<String, Object> jsonData = new HashMap<>();
+      jsonData.put("grant_type", requestInfo.grantType());
+      requestInfo
+          .queryParams()
+          .forEach((key, value) -> jsonData.put(key, value.apply(workflow, task, model)));
+      entity = Entity.entity(jsonData, MediaType.APPLICATION_JSON);
+    }
+
+    return builder.post(entity);
   }
 }

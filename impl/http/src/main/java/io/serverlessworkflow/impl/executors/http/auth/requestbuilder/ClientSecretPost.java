@@ -15,12 +15,12 @@
  */
 package io.serverlessworkflow.impl.executors.http.auth.requestbuilder;
 
-import static io.serverlessworkflow.impl.executors.http.auth.requestbuilder.SecretKeys.CLIENT;
-import static io.serverlessworkflow.impl.executors.http.auth.requestbuilder.SecretKeys.GRANT;
-import static io.serverlessworkflow.impl.executors.http.auth.requestbuilder.SecretKeys.ID;
-import static io.serverlessworkflow.impl.executors.http.auth.requestbuilder.SecretKeys.PASSWORD;
-import static io.serverlessworkflow.impl.executors.http.auth.requestbuilder.SecretKeys.SECRET;
-import static io.serverlessworkflow.impl.executors.http.auth.requestbuilder.SecretKeys.USER;
+import static io.serverlessworkflow.impl.executors.http.SecretKeys.CLIENT;
+import static io.serverlessworkflow.impl.executors.http.SecretKeys.GRANT;
+import static io.serverlessworkflow.impl.executors.http.SecretKeys.ID;
+import static io.serverlessworkflow.impl.executors.http.SecretKeys.PASSWORD;
+import static io.serverlessworkflow.impl.executors.http.SecretKeys.SECRET;
+import static io.serverlessworkflow.impl.executors.http.SecretKeys.USER;
 
 import io.serverlessworkflow.api.types.OAuth2AuthenticationData;
 import io.serverlessworkflow.impl.WorkflowApplication;
@@ -29,13 +29,13 @@ import java.util.Map;
 
 class ClientSecretPost extends ClientSecretHandler {
 
-  protected ClientSecretPost(WorkflowApplication application) {
-    super(application);
+  protected ClientSecretPost(
+      WorkflowApplication application, HttpRequestInfoBuilder requestBuilder) {
+    super(application, requestBuilder);
   }
 
   @Override
-  protected void clientCredentials(
-      HttpRequestBuilder requestBuilder, OAuth2AuthenticationData authenticationData) {
+  protected void clientCredentials(OAuth2AuthenticationData authenticationData) {
     requestBuilder
         .withGrantType(authenticationData.getGrant().value())
         .addQueryParam(
@@ -48,9 +48,8 @@ class ClientSecretPost extends ClientSecretHandler {
   }
 
   @Override
-  protected void password(
-      HttpRequestBuilder requestBuilder, OAuth2AuthenticationData authenticationData) {
-    clientCredentials(requestBuilder, authenticationData);
+  protected void password(OAuth2AuthenticationData authenticationData) {
+    clientCredentials(authenticationData);
     requestBuilder
         .addQueryParam(
             "username",
@@ -61,7 +60,7 @@ class ClientSecretPost extends ClientSecretHandler {
   }
 
   @Override
-  protected void clientCredentials(HttpRequestBuilder requestBuilder, Map<String, Object> secret) {
+  protected void clientCredentials(Map<String, Object> secret) {
     Map<String, Object> client = (Map<String, Object>) secret.get(CLIENT);
     requestBuilder
         .withGrantType((String) secret.get(GRANT))
@@ -70,8 +69,8 @@ class ClientSecretPost extends ClientSecretHandler {
   }
 
   @Override
-  protected void password(HttpRequestBuilder requestBuilder, Map<String, Object> secret) {
-    clientCredentials(requestBuilder, secret);
+  protected void password(Map<String, Object> secret) {
+    clientCredentials(secret);
     requestBuilder.addQueryParam("username", (String) secret.get(USER));
     requestBuilder.addQueryParam("password", (String) secret.get(PASSWORD));
   }

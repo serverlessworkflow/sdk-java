@@ -20,7 +20,7 @@ import java.util.Map;
 
 public interface AuthRequestBuilder<T extends OAuth2AuthenticationData> {
 
-  void accept(HttpRequestBuilder requestBuilder, T authenticationData);
+  HttpRequestInfo apply(T authenticationData);
 
-  void accept(HttpRequestBuilder requestBuilder, Map<String, Object> authenticationData);
+  HttpRequestInfo apply(Map<String, Object> authenticationData);
 }

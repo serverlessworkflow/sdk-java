@@ -19,31 +19,37 @@ import static io.serverlessworkflow.impl.WorkflowUtils.secret;
 
 import io.serverlessworkflow.api.types.OAuth2AuthenticationData;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
+import io.serverlessworkflow.impl.executors.http.auth.jwt.JWTConverter;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.ServiceLoader;
 
 public class AccessTokenProviderFactory {
 
   private AccessTokenProviderFactory() {}
 
+  private static JWTConverter jwtConverter =
+      ServiceLoader.load(JWTConverter.class)
+          .findFirst()
+          .orElseThrow(() -> new IllegalStateException("No JWTConverter implementation found"));
+
   public static WorkflowValueResolver<AccessTokenProvider> build(
       OAuth2AuthenticationData authenticationData, AuthRequestBuilder authBuilder) {
-    HttpRequestBuilder httpBuilder = new HttpRequestBuilder();
-    authBuilder.accept(httpBuilder, authenticationData);
     AccessTokenProvider tokenProvider =
-        new AccessTokenProvider(httpBuilder, authenticationData.getIssuers());
+        new AccessTokenProvider(
+            authBuilder.apply(authenticationData), authenticationData.getIssuers(), jwtConverter);
     return (w, t, m) -> tokenProvider;
   }
 
   public static WorkflowValueResolver<AccessTokenProvider> build(
       String secretName, AuthRequestBuilder authBuilder) {
-    HttpRequestBuilder httpBuilder = new HttpRequestBuilder();
     return (w, t, m) -> {
       Map<String, Object> secret = secret(w, secretName);
-      authBuilder.accept(httpBuilder, secret);
       String issuers = (String) secret.get("issuers");
       return new AccessTokenProvider(
-          httpBuilder, issuers != null ? Arrays.asList(issuers.split(",")) : null);
+          authBuilder.apply(secret),
+          issuers != null ? Arrays.asList(issuers.split(",")) : null,
+          jwtConverter);
     };
   }
 }

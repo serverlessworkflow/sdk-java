@@ -17,6 +17,7 @@ package io.serverlessworkflow.impl.executors.http;
 
 import static io.serverlessworkflow.impl.WorkflowUtils.checkSecret;
 import static io.serverlessworkflow.impl.WorkflowUtils.secretProp;
+import static io.serverlessworkflow.impl.executors.http.SecretKeys.TOKEN;
 
 import io.serverlessworkflow.api.types.BearerAuthenticationPolicy;
 import io.serverlessworkflow.api.types.BearerAuthenticationPolicyConfiguration;
@@ -42,7 +43,7 @@ class BearerAuthProvider extends AbstractAuthProvider {
       tokenFilter = WorkflowUtils.buildStringFilter(app, token);
     } else if (config.getBearerAuthenticationPolicySecret() != null) {
       String secretName = checkSecret(workflow, config.getBearerAuthenticationPolicySecret());
-      tokenFilter = (w, t, m) -> secretProp(w, secretName, "token");
+      tokenFilter = (w, t, m) -> secretProp(w, secretName, TOKEN);
     }
   }
 

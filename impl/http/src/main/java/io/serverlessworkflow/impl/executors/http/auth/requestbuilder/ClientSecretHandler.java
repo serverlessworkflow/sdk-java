@@ -26,12 +26,15 @@ import java.util.Objects;
 abstract class ClientSecretHandler {
 
   protected final WorkflowApplication application;
+  protected final HttpRequestInfoBuilder requestBuilder;
 
-  protected ClientSecretHandler(WorkflowApplication application) {
+  protected ClientSecretHandler(
+      WorkflowApplication application, HttpRequestInfoBuilder requestBuilder) {
     this.application = application;
+    this.requestBuilder = requestBuilder;
   }
 
-  void accept(HttpRequestBuilder requestBuilder, OAuth2AuthenticationData authenticationData) {
+  void accept(OAuth2AuthenticationData authenticationData) {
     if (authenticationData.getGrant().equals(PASSWORD)) {
       if (authenticationData.getUsername() == null || authenticationData.getPassword() == null) {
         throw new IllegalArgumentException(
@@ -44,7 +47,7 @@ abstract class ClientSecretHandler {
             "Client ID and secret must be provided for client authentication");
       }
 
-      password(requestBuilder, authenticationData);
+      password(authenticationData);
     } else if (authenticationData.getGrant().equals(CLIENT_CREDENTIALS)) {
       if (authenticationData.getClient() == null
           || authenticationData.getClient().getId() == null
@@ -52,32 +55,29 @@ abstract class ClientSecretHandler {
         throw new IllegalArgumentException(
             "Client ID and secret must be provided for client authentication");
       }
-      clientCredentials(requestBuilder, authenticationData);
+      clientCredentials(authenticationData);
     } else {
       throw new UnsupportedOperationException(
           "Unsupported grant type: " + authenticationData.getGrant());
     }
   }
 
-  protected abstract void clientCredentials(
-      HttpRequestBuilder requestBuilder, OAuth2AuthenticationData authenticationData);
+  protected abstract void clientCredentials(OAuth2AuthenticationData authenticationData);
 
-  protected abstract void password(
-      HttpRequestBuilder requestBuilder, OAuth2AuthenticationData authenticationData);
+  protected abstract void password(OAuth2AuthenticationData authenticationData);
 
-  protected abstract void clientCredentials(
-      HttpRequestBuilder requestBuilder, Map<String, Object> secret);
+  protected abstract void clientCredentials(Map<String, Object> secret);
 
-  protected abstract void password(HttpRequestBuilder requestBuilder, Map<String, Object> secret);
+  protected abstract void password(Map<String, Object> secret);
 
-  void accept(HttpRequestBuilder requestBuilder, Map<String, Object> secret) {
+  void accept(Map<String, Object> secret) {
     String grant = Objects.requireNonNull((String) secret.get("grant"), "Grant is mandatory field");
     switch (grant) {
       case "client_credentials":
-        clientCredentials(requestBuilder, secret);
+        clientCredentials(secret);
         break;
       case "password":
-        password(requestBuilder, secret);
+        password(secret);
         break;
       default:
         throw new UnsupportedOperationException("Unsupported grant type: " + grant);
