@@ -23,6 +23,7 @@ import io.serverlessworkflow.fluent.spec.TaskItemListBuilder;
 import io.serverlessworkflow.fluent.spec.TryTaskBuilder;
 import io.serverlessworkflow.fluent.spec.configurers.AuthenticationConfigurer;
 import io.serverlessworkflow.fluent.spec.configurers.CallHttpConfigurer;
+import io.serverlessworkflow.fluent.spec.configurers.CallOpenAPIConfigurer;
 import io.serverlessworkflow.fluent.spec.configurers.ForEachConfigurer;
 import io.serverlessworkflow.fluent.spec.configurers.ListenConfigurer;
 import io.serverlessworkflow.fluent.spec.configurers.RaiseConfigurer;
@@ -46,6 +47,10 @@ public final class DSL {
 
   public static CallHttpSpec http() {
     return new CallHttpSpec();
+  }
+
+  public static CallOpenAPISpec openapi() {
+    return new CallOpenAPISpec();
   }
 
   public static SwitchSpec cases() {
@@ -89,6 +94,10 @@ public final class DSL {
   public static Consumer<TryTaskBuilder.CatchErrorsBuilder> errorFilter(
       Errors.Standard errType, int status) {
     return e -> e.type(errType.toString()).status(status);
+  }
+
+  public static AuthenticationConfigurer auth(String authName) {
+    return a -> a.use(authName);
   }
 
   public static AuthenticationConfigurer basic(String username, String password) {
@@ -198,6 +207,10 @@ public final class DSL {
 
   public static TasksConfigurer call(CallHttpConfigurer configurer) {
     return list -> list.http(configurer);
+  }
+
+  public static TasksConfigurer call(CallOpenAPIConfigurer configurer) {
+    return list -> list.openapi(configurer);
   }
 
   public static TasksConfigurer set(SetConfigurer configurer) {

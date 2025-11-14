@@ -15,20 +15,22 @@
  */
 package io.serverlessworkflow.fluent.spec;
 
-import io.serverlessworkflow.api.types.CallHTTP;
-import io.serverlessworkflow.api.types.HTTPArguments;
-import io.serverlessworkflow.fluent.spec.spi.CallHttpTaskFluent;
+import io.serverlessworkflow.api.types.CallOpenAPI;
+import io.serverlessworkflow.api.types.OpenAPIArguments;
+import io.serverlessworkflow.api.types.WithOpenAPIParameters;
+import io.serverlessworkflow.fluent.spec.spi.CallOpenAPITaskFluent;
 
-public class CallHttpTaskBuilder extends TaskBaseBuilder<CallHttpTaskBuilder>
-    implements CallHttpTaskFluent<CallHttpTaskBuilder> {
+public class CallOpenAPITaskBuilder extends TaskBaseBuilder<CallOpenAPITaskBuilder>
+    implements CallOpenAPITaskFluent<CallOpenAPITaskBuilder> {
 
-  protected CallHttpTaskBuilder() {
-    final CallHTTP callHTTP = new CallHTTP().withWith(new HTTPArguments());
-    super.setTask(callHTTP);
+  CallOpenAPITaskBuilder() {
+    final CallOpenAPI callOpenAPI = new CallOpenAPI();
+    callOpenAPI.setWith(new OpenAPIArguments().withParameters(new WithOpenAPIParameters()));
+    super.setTask(callOpenAPI);
   }
 
   @Override
-  public CallHttpTaskBuilder self() {
+  public CallOpenAPITaskBuilder self() {
     return this;
   }
 }

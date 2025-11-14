@@ -15,6 +15,7 @@
  */
 package io.serverlessworkflow.fluent.spec.dsl;
 
+import static io.serverlessworkflow.fluent.spec.dsl.DSL.call;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.emit;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.event;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.http;
@@ -41,7 +42,7 @@ public class TryCatchDslTest {
                     t.tryCatch(
                         tryCatch()
                             // try block (one HTTP call)
-                            .tasks(DSL.call(http().GET().endpoint(EXPR_ENDPOINT)))
+                            .tasks(call(http().GET().endpoint(EXPR_ENDPOINT)))
                             // catch block
                             .catches()
                             .when("$.error == true")
@@ -115,7 +116,7 @@ public class TryCatchDslTest {
                         tryCatch()
                             // try with two tasks
                             .tasks(
-                                DSL.call(http().GET().endpoint(EXPR_ENDPOINT)),
+                                call(http().GET().endpoint(EXPR_ENDPOINT)),
                                 set("$.status = \"IN_FLIGHT\""))
                             // catch with exceptWhen + explicit URI error filter + status
                             .catches()
@@ -170,7 +171,7 @@ public class TryCatchDslTest {
                 t ->
                     t.tryCatch(
                         tryCatch()
-                            .tasks(DSL.call(http().GET().endpoint(EXPR_ENDPOINT)))
+                            .tasks(call(http().GET().endpoint(EXPR_ENDPOINT)))
                             .catches()
                             .when("$.fail == true")
                             .errors(Errors.COMMUNICATION, 503)

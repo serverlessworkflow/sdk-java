@@ -15,6 +15,7 @@
  */
 package io.serverlessworkflow.fluent.spec.dsl;
 
+import static io.serverlessworkflow.fluent.spec.dsl.DSL.call;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.error;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.event;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.http;
@@ -36,13 +37,12 @@ public class DSLTest {
     Workflow wf =
         WorkflowBuilder.workflow("myFlow", "myNs", "1.2.3")
             .tasks(
-                t ->
-                    t.http(
-                        http()
-                            .acceptJSON()
-                            .header("CustomKey", "CustomValue")
-                            .POST()
-                            .endpoint("${ \"https://petstore.swagger.io/v2/pet/\\(.petId)\" }")))
+                call(
+                    http()
+                        .acceptJSON()
+                        .header("CustomKey", "CustomValue")
+                        .POST()
+                        .endpoint("${ \"https://petstore.swagger.io/v2/pet/\\(.petId)\" }")))
             .build();
 
     HTTPArguments args = wf.getDo().get(0).getTask().getCallTask().getCallHTTP().getWith();

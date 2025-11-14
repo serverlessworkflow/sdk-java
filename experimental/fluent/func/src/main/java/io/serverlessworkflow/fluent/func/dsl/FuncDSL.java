@@ -927,6 +927,82 @@ public final class FuncDSL {
   }
 
   /**
+   * OpenAPI call using a fluent {@link FuncCallOpenAPISpec}.
+   *
+   * <p>This overload creates an unnamed OpenAPI call task.
+   *
+   * <pre>{@code
+   * FuncWorkflowBuilder.workflow("openapi-call")
+   *   .tasks(
+   *     FuncDSL.call(
+   *       FuncDSL.openapi()
+   *         .document("https://petstore.swagger.io/v2/swagger.json", DSL.auth("openapi-auth"))
+   *         .operation("getPetById")
+   *     )
+   *   )
+   *   .build();
+   * }</pre>
+   *
+   * @param spec fluent OpenAPI spec built via {@link #openapi()}
+   * @return a {@link FuncTaskConfigurer} that adds an OpenAPI call task to the workflow
+   */
+  public static FuncTaskConfigurer call(FuncCallOpenAPISpec spec) {
+    return call(null, spec);
+  }
+
+  /**
+   * OpenAPI call using a fluent {@link FuncCallOpenAPISpec} with an explicit task name.
+   *
+   * <p>Example:
+   *
+   * <pre>{@code
+   * FuncWorkflowBuilder.workflow("openapi-call-named")
+   *   .tasks(
+   *     FuncDSL.call(
+   *       "fetchPet",
+   *       FuncDSL.openapi()
+   *         .document("https://petstore.swagger.io/v2/swagger.json", DSL.auth("openapi-auth"))
+   *         .operation("getPetById")
+   *         .parameter("id", 123)
+   *     )
+   *   )
+   *   .build();
+   * }</pre>
+   *
+   * @param name task name, or {@code null} for an anonymous task
+   * @param spec fluent OpenAPI spec built via {@link #openapi()}
+   * @return a {@link FuncTaskConfigurer} that adds a named OpenAPI call task
+   */
+  public static FuncTaskConfigurer call(String name, FuncCallOpenAPISpec spec) {
+    Objects.requireNonNull(spec, "spec");
+    return list -> list.openapi(name, spec);
+  }
+
+  /**
+   * Create a new OpenAPI specification to be used with {@link #call(FuncCallOpenAPISpec)}.
+   *
+   * <p>Typical usage:
+   *
+   * <pre>{@code
+   * FuncDSL.call(
+   *   FuncDSL.openapi()
+   *     .document("https://petstore.swagger.io/v2/swagger.json", DSL.auth("openapi-auth"))
+   *     .operation("getPetById")
+   *     .parameter("id", 123)
+   * );
+   * }</pre>
+   *
+   * <p>The returned spec is a fluent builder that records operations (document, operation,
+   * parameters, authentication, etc.) and applies them to the underlying OpenAPI call task at build
+   * time.
+   *
+   * @return a new {@link FuncCallOpenAPISpec}
+   */
+  public static FuncCallOpenAPISpec openapi() {
+    return new FuncCallOpenAPISpec();
+  }
+
+  /**
    * Create a new, empty HTTP specification to be used with {@link #call(FuncCallHttpSpec)}.
    *
    * <p>Typical usage:
@@ -1095,11 +1171,11 @@ public final class FuncDSL {
    * }</pre>
    *
    * @param body HTTP request body (literal value or expression-compatible object)
-   * @param endpoint literal or expression for the endpoint URL
+   * @param endpointExpr literal or expression for the endpoint URL
    * @return a {@link FuncTaskConfigurer} adding a {@code POST} HTTP task
    */
-  public static FuncTaskConfigurer post(Object body, String endpoint) {
-    return post(null, body, endpoint);
+  public static FuncTaskConfigurer post(Object body, String endpointExpr) {
+    return post(null, body, endpointExpr);
   }
 
   /**

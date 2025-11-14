@@ -89,4 +89,11 @@ public class FuncDoTaskBuilder extends BaseDoTaskBuilder<FuncDoTaskBuilder, Func
     this.listBuilder().http(name, itemsConfigurer);
     return this;
   }
+
+  @Override
+  public FuncDoTaskBuilder openapi(
+      String name, Consumer<FuncCallOpenAPITaskBuilder> itemsConfigurer) {
+    this.listBuilder().openapi(name, itemsConfigurer);
+    return this;
+  }
 }

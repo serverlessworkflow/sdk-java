@@ -444,7 +444,10 @@ public class WorkflowBuilderTest {
 
     Workflow wf2 =
         WorkflowBuilder.workflow()
-            .tasks(d -> d.http(http().GET().endpoint("expr").headers(Map.of("X", "10", "Y", "20"))))
+            .tasks(
+                d ->
+                    d.http(
+                        http().GET().endpoint("${ expr }").headers(Map.of("X", "10", "Y", "20"))))
             .build();
     CallHTTP call2 = wf2.getDo().get(0).getTask().getCallTask().getCallHTTP();
     HTTPHeaders hh2 = call2.getWith().getHeaders().getHTTPHeaders();
@@ -462,7 +465,7 @@ public class WorkflowBuilderTest {
                         "qryCall",
                         http()
                             .GET()
-                            .endpoint("exprUri")
+                            .endpoint("${ exprUri }")
                             .andThen(q -> q.query(Map.of("k1", "v1", "k2", "v2")))))
             .build();
     HTTPQuery hq =
@@ -475,7 +478,10 @@ public class WorkflowBuilderTest {
             .tasks(
                 d ->
                     d.http(
-                        c -> c.method("GET").endpoint("uri").query(Map.of("q1", "x", "q2", "y"))))
+                        c ->
+                            c.method("GET")
+                                .endpoint("http://uri")
+                                .query(Map.of("q1", "x", "q2", "y"))))
             .build();
     HTTPQuery hq2 =
         wf2.getDo()
@@ -500,7 +506,7 @@ public class WorkflowBuilderTest {
                         "optCall",
                         c ->
                             c.method("DELETE")
-                                .endpoint("expr")
+                                .endpoint("${ expr }")
                                 .redirect(true)
                                 .output(HTTPArguments.HTTPOutput.RESPONSE)))
             .build();

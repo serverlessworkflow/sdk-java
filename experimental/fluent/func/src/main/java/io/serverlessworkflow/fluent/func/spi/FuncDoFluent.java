@@ -16,6 +16,7 @@
 package io.serverlessworkflow.fluent.func.spi;
 
 import io.serverlessworkflow.fluent.func.FuncCallHttpTaskBuilder;
+import io.serverlessworkflow.fluent.func.FuncCallOpenAPITaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncCallTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncEmitTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncForTaskBuilder;
@@ -24,6 +25,7 @@ import io.serverlessworkflow.fluent.func.FuncListenTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncSetTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncSwitchTaskBuilder;
 import io.serverlessworkflow.fluent.spec.spi.CallHttpFluent;
+import io.serverlessworkflow.fluent.spec.spi.CallOpenAPIFluent;
 import io.serverlessworkflow.fluent.spec.spi.EmitFluent;
 import io.serverlessworkflow.fluent.spec.spi.ForEachFluent;
 import io.serverlessworkflow.fluent.spec.spi.ForkFluent;
@@ -39,4 +41,5 @@ public interface FuncDoFluent<SELF extends FuncDoFluent<SELF>>
         ForkFluent<FuncForkTaskBuilder, SELF>,
         ListenFluent<FuncListenTaskBuilder, SELF>,
         CallFnFluent<FuncCallTaskBuilder, SELF>,
-        CallHttpFluent<FuncCallHttpTaskBuilder, SELF> {}
+        CallHttpFluent<FuncCallHttpTaskBuilder, SELF>,
+        CallOpenAPIFluent<FuncCallOpenAPITaskBuilder, SELF> {}

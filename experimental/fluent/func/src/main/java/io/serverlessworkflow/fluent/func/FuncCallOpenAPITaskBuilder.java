@@ -15,24 +15,27 @@
  */
 package io.serverlessworkflow.fluent.func;
 
-import io.serverlessworkflow.api.types.CallHTTP;
-import io.serverlessworkflow.api.types.HTTPArguments;
+import io.serverlessworkflow.api.types.CallOpenAPI;
+import io.serverlessworkflow.api.types.OpenAPIArguments;
+import io.serverlessworkflow.api.types.WithOpenAPIParameters;
 import io.serverlessworkflow.fluent.func.spi.ConditionalTaskBuilder;
 import io.serverlessworkflow.fluent.func.spi.FuncTaskTransformations;
 import io.serverlessworkflow.fluent.spec.TaskBaseBuilder;
-import io.serverlessworkflow.fluent.spec.spi.CallHttpTaskFluent;
+import io.serverlessworkflow.fluent.spec.spi.CallOpenAPITaskFluent;
 
-public class FuncCallHttpTaskBuilder extends TaskBaseBuilder<FuncCallHttpTaskBuilder>
-    implements CallHttpTaskFluent<FuncCallHttpTaskBuilder>,
-        FuncTaskTransformations<FuncCallHttpTaskBuilder>,
-        ConditionalTaskBuilder<FuncCallHttpTaskBuilder> {
+public class FuncCallOpenAPITaskBuilder extends TaskBaseBuilder<FuncCallOpenAPITaskBuilder>
+    implements CallOpenAPITaskFluent<FuncCallOpenAPITaskBuilder>,
+        FuncTaskTransformations<FuncCallOpenAPITaskBuilder>,
+        ConditionalTaskBuilder<FuncCallOpenAPITaskBuilder> {
 
-  FuncCallHttpTaskBuilder() {
-    super.setTask(new CallHTTP().withWith(new HTTPArguments()));
+  FuncCallOpenAPITaskBuilder() {
+    final CallOpenAPI callOpenAPI = new CallOpenAPI();
+    callOpenAPI.setWith(new OpenAPIArguments().withParameters(new WithOpenAPIParameters()));
+    super.setTask(callOpenAPI);
   }
 
   @Override
-  public FuncCallHttpTaskBuilder self() {
+  public FuncCallOpenAPITaskBuilder self() {
     return this;
   }
 }

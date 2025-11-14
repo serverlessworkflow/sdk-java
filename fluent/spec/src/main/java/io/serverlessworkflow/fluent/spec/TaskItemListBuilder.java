@@ -119,10 +119,28 @@ public class TaskItemListBuilder extends BaseTaskItemListBuilder<TaskItemListBui
   @Override
   public TaskItemListBuilder http(String name, Consumer<CallHttpTaskBuilder> itemsConfigurer) {
     name = defaultNameAndRequireConfig(name, itemsConfigurer);
+
     final CallHttpTaskBuilder callHTTPBuilder = new CallHttpTaskBuilder();
     itemsConfigurer.accept(callHTTPBuilder);
+
     final CallTask callTask = new CallTask();
     callTask.setCallHTTP(callHTTPBuilder.build());
+    final Task task = new Task();
+    task.setCallTask(callTask);
+
+    return addTaskItem(new TaskItem(name, task));
+  }
+
+  @Override
+  public TaskItemListBuilder openapi(
+      String name, Consumer<CallOpenAPITaskBuilder> itemsConfigurer) {
+    name = defaultNameAndRequireConfig(name, itemsConfigurer);
+
+    final CallOpenAPITaskBuilder callOpenAPIBuilder = new CallOpenAPITaskBuilder();
+    itemsConfigurer.accept(callOpenAPIBuilder);
+
+    final CallTask callTask = new CallTask();
+    callTask.setCallOpenAPI(callOpenAPIBuilder.build());
     final Task task = new Task();
     task.setCallTask(callTask);
 

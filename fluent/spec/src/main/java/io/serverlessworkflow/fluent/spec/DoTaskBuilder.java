@@ -91,4 +91,10 @@ public class DoTaskBuilder extends BaseDoTaskBuilder<DoTaskBuilder, TaskItemList
     this.listBuilder().tryCatch(name, itemsConfigurer);
     return this;
   }
+
+  @Override
+  public DoTaskBuilder openapi(String name, Consumer<CallOpenAPITaskBuilder> itemsConfigurer) {
+    this.listBuilder().openapi(name, itemsConfigurer);
+    return this;
+  }
 }

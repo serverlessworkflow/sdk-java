@@ -13,22 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.fluent.spec;
+package io.serverlessworkflow.fluent.spec.configurers;
 
-import io.serverlessworkflow.api.types.CallHTTP;
-import io.serverlessworkflow.api.types.HTTPArguments;
-import io.serverlessworkflow.fluent.spec.spi.CallHttpTaskFluent;
+import io.serverlessworkflow.fluent.spec.CallOpenAPITaskBuilder;
+import java.util.function.Consumer;
 
-public class CallHttpTaskBuilder extends TaskBaseBuilder<CallHttpTaskBuilder>
-    implements CallHttpTaskFluent<CallHttpTaskBuilder> {
-
-  protected CallHttpTaskBuilder() {
-    final CallHTTP callHTTP = new CallHTTP().withWith(new HTTPArguments());
-    super.setTask(callHTTP);
-  }
-
-  @Override
-  public CallHttpTaskBuilder self() {
-    return this;
-  }
-}
+@FunctionalInterface
+public interface CallOpenAPIConfigurer extends Consumer<CallOpenAPITaskBuilder> {}

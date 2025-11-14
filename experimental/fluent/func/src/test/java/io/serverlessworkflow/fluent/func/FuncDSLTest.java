@@ -18,8 +18,10 @@ package io.serverlessworkflow.fluent.func;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.emit;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.event;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.function;
+import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.get;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.listen;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.toOne;
+import static io.serverlessworkflow.fluent.spec.dsl.DSL.auth;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -229,7 +231,7 @@ class FuncDSLTest {
     assertEquals("GET", http.getWith().getMethod(), "HTTP method should be GET");
     assertEquals(
         "http://service/health",
-        http.getWith().getEndpoint().getRuntimeExpression(),
+        http.getWith().getEndpoint().getUriTemplate().getLiteralUri().toString(),
         "endpoint should match the DSL endpoint");
   }
 
@@ -238,7 +240,7 @@ class FuncDSLTest {
   void get_convenience_creates_http_get() {
     Workflow wf =
         FuncWorkflowBuilder.workflow("http-get-convenience")
-            .tasks(FuncDSL.get("http://service/status"))
+            .tasks(get("http://service/status"))
             .build();
 
     List<TaskItem> items = wf.getDo();
@@ -251,7 +253,7 @@ class FuncDSLTest {
     assertEquals("GET", http.getWith().getMethod());
     assertEquals(
         "http://service/status",
-        http.getWith().getEndpoint().getRuntimeExpression(),
+        http.getWith().getEndpoint().getUriTemplate().getLiteralUri().toString(),
         "endpoint should be set from get(endpoint)");
   }
 
@@ -260,11 +262,7 @@ class FuncDSLTest {
   void get_named_with_authentication_uses_auth_policy() {
     Workflow wf =
         FuncWorkflowBuilder.workflow("http-get-auth")
-            .tasks(
-                FuncDSL.get(
-                    "fetchUsers",
-                    "http://service/api/users",
-                    auth -> auth.use("user-service-auth")))
+            .tasks(get("fetchUsers", "http://service/api/users", auth("user-service-auth")))
             .build();
 
     List<TaskItem> items = wf.getDo();
@@ -278,7 +276,7 @@ class FuncDSLTest {
     assertEquals("GET", http.getWith().getMethod());
     assertEquals(
         "http://service/api/users",
-        http.getWith().getEndpoint().getRuntimeExpression(),
+        http.getWith().getEndpoint().getUriTemplate().getLiteralUri().toString(),
         "endpoint should be set from get(name, endpoint, auth)");
 
     assertNotNull(
@@ -302,7 +300,7 @@ class FuncDSLTest {
 
     Workflow wf =
         FuncWorkflowBuilder.workflow("http-get-uri-auth")
-            .tasks(FuncDSL.get("checkHealth", endpoint, auth -> auth.use("tls-auth")))
+            .tasks(get("checkHealth", endpoint, auth -> auth.use("tls-auth")))
             .build();
 
     List<TaskItem> items = wf.getDo();
@@ -350,7 +348,7 @@ class FuncDSLTest {
     assertEquals("POST", http.getWith().getMethod());
     assertEquals(
         "http://service/api/users",
-        http.getWith().getEndpoint().getRuntimeExpression(),
+        http.getWith().getEndpoint().getUriTemplate().getLiteralUri().toString(),
         "endpoint should be set from post(body, endpoint)");
 
     assertNotNull(http.getWith().getBody(), "Body should be set on POST");
@@ -383,7 +381,7 @@ class FuncDSLTest {
     assertEquals("POST", http.getWith().getMethod());
     assertEquals(
         "https://orders.example.com/api/orders",
-        http.getWith().getEndpoint().getRuntimeExpression());
+        http.getWith().getEndpoint().getUriTemplate().getLiteralUri().toString());
     assertEquals(body, http.getWith().getBody());
 
     assertNotNull(http.getWith().getEndpoint().getEndpointConfiguration().getAuthentication());
@@ -419,7 +417,9 @@ class FuncDSLTest {
 
     CallHTTP http = (CallHTTP) t.getCallTask().get();
     assertEquals("POST", http.getWith().getMethod());
-    assertEquals("http://service/api", http.getWith().getEndpoint().getRuntimeExpression());
+    assertEquals(
+        "http://service/api",
+        http.getWith().getEndpoint().getUriTemplate().getLiteralUri().toString());
     assertEquals(
         "svc-auth",
         http.getWith()

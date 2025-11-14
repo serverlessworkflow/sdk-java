@@ -34,7 +34,13 @@ import java.util.function.Consumer;
 
 public interface CallHttpTaskFluent<SELF extends TaskBaseBuilder<SELF>> {
 
-  CallHTTP build();
+  default CallHTTP build() {
+    final CallHTTP callHTTP = ((CallHTTP) this.self().getTask());
+    if (callHTTP.getWith().getOutput() == null) {
+      callHTTP.getWith().setOutput(HTTPArguments.HTTPOutput.CONTENT);
+    }
+    return callHTTP;
+  }
 
   SELF self();
 
@@ -65,9 +71,7 @@ public interface CallHttpTaskFluent<SELF extends TaskBaseBuilder<SELF>> {
   }
 
   default SELF endpoint(String expr) {
-    ((CallHTTP) this.self().getTask())
-        .getWith()
-        .setEndpoint(new Endpoint().withRuntimeExpression(expr));
+    ((CallHTTP) this.self().getTask()).getWith().setEndpoint(EndpointUtil.fromString(expr));
     return self();
   }
 
@@ -75,28 +79,24 @@ public interface CallHttpTaskFluent<SELF extends TaskBaseBuilder<SELF>> {
     final ReferenceableAuthenticationPolicyBuilder policy =
         new ReferenceableAuthenticationPolicyBuilder();
     auth.accept(policy);
-    ((CallHTTP) this.self().getTask())
-        .getWith()
-        .setEndpoint(
-            new Endpoint()
-                .withEndpointConfiguration(
-                    new EndpointConfiguration().withAuthentication(policy.build()))
-                .withRuntimeExpression(expr));
+
+    final Endpoint endpoint = EndpointUtil.fromString(expr);
+    endpoint.setEndpointConfiguration(
+        new EndpointConfiguration().withAuthentication(policy.build()));
+
+    ((CallHTTP) this.self().getTask()).getWith().setEndpoint(endpoint);
     return self();
   }
 
   default SELF endpoint(String expr, String authUse) {
-    ((CallHTTP) this.self().getTask())
-        .getWith()
-        .setEndpoint(
-            new Endpoint()
-                .withEndpointConfiguration(
-                    new EndpointConfiguration()
-                        .withAuthentication(
-                            new ReferenceableAuthenticationPolicy()
-                                .withAuthenticationPolicyReference(
-                                    new AuthenticationPolicyReference(authUse))))
-                .withRuntimeExpression(expr));
+    final Endpoint endpoint = EndpointUtil.fromString(expr);
+    endpoint.withEndpointConfiguration(
+        new EndpointConfiguration()
+            .withAuthentication(
+                new ReferenceableAuthenticationPolicy()
+                    .withAuthenticationPolicyReference(
+                        new AuthenticationPolicyReference(authUse))));
+    ((CallHTTP) this.self().getTask()).getWith().setEndpoint(endpoint);
     return self();
   }
 

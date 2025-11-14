@@ -16,6 +16,7 @@
 package io.serverlessworkflow.fluent.func;
 
 import io.serverlessworkflow.api.types.CallHTTP;
+import io.serverlessworkflow.api.types.CallOpenAPI;
 import io.serverlessworkflow.api.types.CallTask;
 import io.serverlessworkflow.api.types.Task;
 import io.serverlessworkflow.api.types.TaskItem;
@@ -123,11 +124,30 @@ public class FuncTaskItemListBuilder extends BaseTaskItemListBuilder<FuncTaskIte
   public FuncTaskItemListBuilder http(
       String name, Consumer<FuncCallHttpTaskBuilder> itemsConfigurer) {
     name = this.defaultNameAndRequireConfig(name, itemsConfigurer);
+
     final FuncCallHttpTaskBuilder httpTaskJavaBuilder = new FuncCallHttpTaskBuilder();
     itemsConfigurer.accept(httpTaskJavaBuilder);
+
     final CallHTTP callHTTP = httpTaskJavaBuilder.build();
     final CallTask callTask = new CallTask();
     callTask.setCallHTTP(callHTTP);
+    final Task task = new Task();
+    task.setCallTask(callTask);
+
+    return this.addTaskItem(new TaskItem(name, task));
+  }
+
+  @Override
+  public FuncTaskItemListBuilder openapi(
+      String name, Consumer<FuncCallOpenAPITaskBuilder> itemsConfigurer) {
+    name = this.defaultNameAndRequireConfig(name, itemsConfigurer);
+
+    final FuncCallOpenAPITaskBuilder openAPITaskBuilder = new FuncCallOpenAPITaskBuilder();
+    itemsConfigurer.accept(openAPITaskBuilder);
+
+    final CallOpenAPI callOpenAPI = openAPITaskBuilder.build();
+    final CallTask callTask = new CallTask();
+    callTask.setCallOpenAPI(callOpenAPI);
     final Task task = new Task();
     task.setCallTask(callTask);
 
