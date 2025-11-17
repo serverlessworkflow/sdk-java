@@ -15,6 +15,11 @@
  */
 package io.serverlessworkflow.impl.executors.http;
 
+import static io.serverlessworkflow.impl.WorkflowUtils.checkSecret;
+import static io.serverlessworkflow.impl.WorkflowUtils.secretProp;
+import static io.serverlessworkflow.impl.executors.http.SecretKeys.PASSWORD;
+import static io.serverlessworkflow.impl.executors.http.SecretKeys.USER;
+
 import io.serverlessworkflow.api.types.BasicAuthenticationPolicy;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.TaskContext;
@@ -44,8 +49,8 @@ class BasicAuthProvider extends AbstractAuthProvider {
     } else if (authPolicy.getBasic().getBasicAuthenticationPolicySecret() != null) {
       String secretName =
           checkSecret(workflow, authPolicy.getBasic().getBasicAuthenticationPolicySecret());
-      userFilter = (w, t, m) -> find(w, secretName, "username");
-      passwordFilter = (w, t, m) -> find(w, secretName, "password");
+      userFilter = (w, t, m) -> secretProp(w, secretName, USER);
+      passwordFilter = (w, t, m) -> secretProp(w, secretName, PASSWORD);
     } else {
       throw new IllegalStateException("Both secret and properties are null for authorization");
     }

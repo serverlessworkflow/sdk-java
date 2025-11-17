@@ -16,89 +16,121 @@
 package io.serverlessworkflow.impl.executors.http.auth.requestbuilder;
 
 import static io.serverlessworkflow.api.types.OAuth2AuthenticationDataClient.ClientAuthentication.CLIENT_SECRET_POST;
+import static io.serverlessworkflow.impl.WorkflowUtils.isValid;
+import static io.serverlessworkflow.impl.executors.http.SecretKeys.AUDIENCES;
+import static io.serverlessworkflow.impl.executors.http.SecretKeys.AUTHENTICATION;
+import static io.serverlessworkflow.impl.executors.http.SecretKeys.CLIENT;
+import static io.serverlessworkflow.impl.executors.http.SecretKeys.ENCODING;
+import static io.serverlessworkflow.impl.executors.http.SecretKeys.REQUEST;
+import static io.serverlessworkflow.impl.executors.http.SecretKeys.SCOPES;
 
 import io.serverlessworkflow.api.types.OAuth2AuthenticationData;
 import io.serverlessworkflow.api.types.OAuth2AuthenticationDataClient;
-import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
-import io.serverlessworkflow.impl.WorkflowContext;
-import io.serverlessworkflow.impl.WorkflowModel;
+import io.serverlessworkflow.impl.WorkflowUtils;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-abstract class AbstractAuthRequestBuilder implements AuthRequestBuilder {
-
-  protected final OAuth2AuthenticationData authenticationData;
+abstract class AbstractAuthRequestBuilder<T extends OAuth2AuthenticationData>
+    implements AuthRequestBuilder<T> {
 
   protected final WorkflowApplication application;
+  protected final HttpRequestInfoBuilder requestBuilder = new HttpRequestInfoBuilder();
 
-  private final List<Consumer<HttpRequestBuilder>> steps =
-      List.of(
-          this::requestEncoding,
-          this::authenticationURI,
-          this::audience,
-          this::scope,
-          this::authenticationMethod);
-
-  protected AbstractAuthRequestBuilder(
-      OAuth2AuthenticationData authenticationData, WorkflowApplication application) {
-    this.authenticationData = authenticationData;
+  public AbstractAuthRequestBuilder(WorkflowApplication application) {
     this.application = application;
   }
 
-  protected void audience(HttpRequestBuilder requestBuilder) {
+  @Override
+  public HttpRequestInfo apply(T authenticationData) {
+    requestEncoding(authenticationData);
+    authenticationURI(authenticationData);
+    audience(authenticationData);
+    scope(authenticationData);
+    authenticationMethod(authenticationData);
+    return requestBuilder.build();
+  }
+
+  @Override
+  public HttpRequestInfo apply(Map<String, Object> secret) {
+    requestEncoding(secret);
+    authenticationURI(secret);
+    audience(secret);
+    scope(secret);
+    authenticationMethod(secret);
+    return requestBuilder.build();
+  }
+
+  protected void audience(T authenticationData) {
     if (authenticationData.getAudiences() != null && !authenticationData.getAudiences().isEmpty()) {
       String audiences = String.join(" ", authenticationData.getAudiences());
+      requestBuilder.addQueryParam(
+          "audience", WorkflowUtils.buildStringFilter(application, audiences));
+    }
+  }
+
+  protected void audience(Map<String, Object> secret) {
+    String audiences = (String) secret.get(AUDIENCES);
+    if (isValid(audiences)) {
       requestBuilder.addQueryParam("audience", audiences);
     }
   }
 
-  protected void authenticationMethod(HttpRequestBuilder requestBuilder) {
-    switch (getClientAuthentication()) {
+  protected void authenticationMethod(T authenticationData) {
+    ClientSecretHandler secretHandler;
+    switch (getClientAuthentication(authenticationData)) {
       case CLIENT_SECRET_BASIC:
-        clientSecretBasic(requestBuilder);
+        secretHandler = new ClientSecretBasic(application, requestBuilder);
       case CLIENT_SECRET_JWT:
         throw new UnsupportedOperationException("Client Secret JWT is not supported yet");
       case PRIVATE_KEY_JWT:
         throw new UnsupportedOperationException("Private Key JWT is not supported yet");
       default:
-        clientSecretPost(requestBuilder);
+        secretHandler = new ClientSecretPost(application, requestBuilder);
     }
+    secretHandler.accept(authenticationData);
   }
 
-  private void clientSecretBasic(HttpRequestBuilder requestBuilder) {
-    new ClientSecretBasic(authenticationData).execute(requestBuilder);
-  }
-
-  private void clientSecretPost(HttpRequestBuilder requestBuilder) {
-    new ClientSecretPost(authenticationData).execute(requestBuilder);
-  }
-
-  private OAuth2AuthenticationDataClient.ClientAuthentication getClientAuthentication() {
-    if (authenticationData.getClient() == null
-        || authenticationData.getClient().getAuthentication() == null) {
-      return CLIENT_SECRET_POST;
+  protected void authenticationMethod(Map<String, Object> secret) {
+    Map<String, Object> client = (Map<String, Object>) secret.get(CLIENT);
+    ClientSecretHandler secretHandler;
+    String auth = (String) client.get(AUTHENTICATION);
+    if (auth == null) {
+      secretHandler = new ClientSecretPost(application, requestBuilder);
+    } else {
+      switch (auth) {
+        case "client_secret_basic":
+          secretHandler = new ClientSecretBasic(application, requestBuilder);
+          break;
+        default:
+        case "client_secret_post":
+          secretHandler = new ClientSecretPost(application, requestBuilder);
+          break;
+        case "private_key_jwt":
+          throw new UnsupportedOperationException("Private Key JWT is not supported yet");
+        case "client_secret_jwt":
+          throw new UnsupportedOperationException("Client Secret JWT is not supported yet");
+      }
     }
-    return authenticationData.getClient().getAuthentication();
+    secretHandler.accept(secret);
   }
 
-  @Override
-  public AccessTokenProvider build(
-      WorkflowContext workflow, TaskContext task, WorkflowModel model) {
-    HttpRequestBuilder requestBuilder = new HttpRequestBuilder(application);
-    steps.forEach(step -> step.accept(requestBuilder));
-    return new AccessTokenProvider(
-        requestBuilder.build(workflow, task, model), task, authenticationData.getIssuers());
+  private OAuth2AuthenticationDataClient.ClientAuthentication getClientAuthentication(
+      OAuth2AuthenticationData authenticationData) {
+    return authenticationData.getClient() == null
+            || authenticationData.getClient().getAuthentication() == null
+        ? CLIENT_SECRET_POST
+        : authenticationData.getClient().getAuthentication();
   }
 
-  protected void scope(HttpRequestBuilder requestBuilder) {
-    scope(requestBuilder, authenticationData.getScopes());
+  protected void scope(T authenticationData) {
+    scope(authenticationData.getScopes());
   }
 
-  protected void scope(HttpRequestBuilder requestBuilder, List<String> scopesList) {
+  protected void scope(List<String> scopesList) {
     if (scopesList == null || scopesList.isEmpty()) {
       return;
     }
@@ -112,19 +144,30 @@ abstract class AbstractAuthRequestBuilder implements AuthRequestBuilder {
             .collect(Collectors.joining(" "));
 
     if (!scope.isEmpty()) {
-      requestBuilder.addQueryParam("scope", scope);
+      requestBuilder.addQueryParam("scope", WorkflowUtils.buildStringFilter(application, scope));
     }
   }
 
-  void requestEncoding(HttpRequestBuilder requestBuilder) {
-    if (authenticationData.getRequest() != null
-        && authenticationData.getRequest().getEncoding() != null) {
-      requestBuilder.addHeader(
-          "Content-Type", authenticationData.getRequest().getEncoding().value());
-    } else {
-      requestBuilder.addHeader("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8");
+  protected void scope(Map<String, Object> secret) {
+    String scopes = (String) secret.get(SCOPES);
+    if (isValid(scopes)) {
+      requestBuilder.addQueryParam("scope", scopes);
     }
   }
 
-  protected abstract void authenticationURI(HttpRequestBuilder requestBuilder);
+  void requestEncoding(T authenticationData) {
+    requestBuilder.withContentType(authenticationData.getRequest());
+  }
+
+  void requestEncoding(Map<String, Object> secret) {
+    Map<String, Object> request = (Map<String, Object>) secret.get(REQUEST);
+    String encoding = (String) request.get(ENCODING);
+    if (isValid(encoding)) {
+      requestBuilder.addHeader("Content-Type", encoding);
+    }
+  }
+
+  protected abstract void authenticationURI(T authenticationData);
+
+  protected abstract void authenticationURI(Map<String, Object> secret);
 }

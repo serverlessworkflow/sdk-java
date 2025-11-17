@@ -15,64 +15,63 @@
  */
 package io.serverlessworkflow.impl.executors.http.auth.requestbuilder;
 
-import static io.serverlessworkflow.api.types.OAuth2AuthenticationData.OAuth2AuthenticationDataGrant.CLIENT_CREDENTIALS;
-import static io.serverlessworkflow.api.types.OAuth2AuthenticationData.OAuth2AuthenticationDataGrant.PASSWORD;
+import static io.serverlessworkflow.impl.executors.http.SecretKeys.CLIENT;
+import static io.serverlessworkflow.impl.executors.http.SecretKeys.GRANT;
+import static io.serverlessworkflow.impl.executors.http.SecretKeys.ID;
+import static io.serverlessworkflow.impl.executors.http.SecretKeys.PASSWORD;
+import static io.serverlessworkflow.impl.executors.http.SecretKeys.SECRET;
+import static io.serverlessworkflow.impl.executors.http.SecretKeys.USER;
 
 import io.serverlessworkflow.api.types.OAuth2AuthenticationData;
+import io.serverlessworkflow.impl.WorkflowApplication;
+import io.serverlessworkflow.impl.WorkflowUtils;
+import java.util.Map;
 
-class ClientSecretPost {
-  private final OAuth2AuthenticationData authenticationData;
+class ClientSecretPost extends ClientSecretHandler {
 
-  ClientSecretPost(OAuth2AuthenticationData authenticationData) {
-    this.authenticationData = authenticationData;
+  protected ClientSecretPost(
+      WorkflowApplication application, HttpRequestInfoBuilder requestBuilder) {
+    super(application, requestBuilder);
   }
 
-  void execute(HttpRequestBuilder requestBuilder) {
-    if (authenticationData.getGrant().equals(PASSWORD)) {
-      password(requestBuilder, authenticationData);
-    } else if (authenticationData.getGrant().equals(CLIENT_CREDENTIALS)) {
-      clientCredentials(requestBuilder, authenticationData);
-    } else {
-      throw new UnsupportedOperationException(
-          "Unsupported grant type: " + authenticationData.getGrant());
-    }
-  }
-
-  private void clientCredentials(
-      HttpRequestBuilder requestBuilder, OAuth2AuthenticationData authenticationData) {
-    if (authenticationData.getClient() == null
-        || authenticationData.getClient().getId() == null
-        || authenticationData.getClient().getSecret() == null) {
-      throw new IllegalArgumentException(
-          "Client ID and secret must be provided for client authentication");
-    }
-
+  @Override
+  protected void clientCredentials(OAuth2AuthenticationData authenticationData) {
     requestBuilder
-        .withGrantType(authenticationData.getGrant())
-        .withRequestContentType(authenticationData.getRequest())
-        .addQueryParam("client_id", authenticationData.getClient().getId())
-        .addQueryParam("client_secret", authenticationData.getClient().getSecret());
+        .withGrantType(authenticationData.getGrant().value())
+        .addQueryParam(
+            "client_id",
+            WorkflowUtils.buildStringFilter(application, authenticationData.getClient().getId()))
+        .addQueryParam(
+            "client_secret",
+            WorkflowUtils.buildStringFilter(
+                application, authenticationData.getClient().getSecret()));
   }
 
-  private void password(
-      HttpRequestBuilder requestBuilder, OAuth2AuthenticationData authenticationData) {
-    if (authenticationData.getUsername() == null || authenticationData.getPassword() == null) {
-      throw new IllegalArgumentException(
-          "Username and password must be provided for password grant type");
-    }
-    if (authenticationData.getClient() == null
-        || authenticationData.getClient().getId() == null
-        || authenticationData.getClient().getSecret() == null) {
-      throw new IllegalArgumentException(
-          "Client ID and secret must be provided for client authentication");
-    }
-
+  @Override
+  protected void password(OAuth2AuthenticationData authenticationData) {
+    clientCredentials(authenticationData);
     requestBuilder
-        .withGrantType(authenticationData.getGrant())
-        .withRequestContentType(authenticationData.getRequest())
-        .addQueryParam("client_id", authenticationData.getClient().getId())
-        .addQueryParam("client_secret", authenticationData.getClient().getSecret())
-        .addQueryParam("username", authenticationData.getUsername())
-        .addQueryParam("password", authenticationData.getPassword());
+        .addQueryParam(
+            "username",
+            WorkflowUtils.buildStringFilter(application, authenticationData.getUsername()))
+        .addQueryParam(
+            "password",
+            WorkflowUtils.buildStringFilter(application, authenticationData.getPassword()));
+  }
+
+  @Override
+  protected void clientCredentials(Map<String, Object> secret) {
+    Map<String, Object> client = (Map<String, Object>) secret.get(CLIENT);
+    requestBuilder
+        .withGrantType((String) secret.get(GRANT))
+        .addQueryParam("client_id", (String) client.get(ID))
+        .addQueryParam("client_secret", (String) client.get(SECRET));
+  }
+
+  @Override
+  protected void password(Map<String, Object> secret) {
+    clientCredentials(secret);
+    requestBuilder.addQueryParam("username", (String) secret.get(USER));
+    requestBuilder.addQueryParam("password", (String) secret.get(PASSWORD));
   }
 }

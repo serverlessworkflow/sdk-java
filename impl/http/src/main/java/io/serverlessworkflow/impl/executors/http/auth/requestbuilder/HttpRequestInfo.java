@@ -15,29 +15,13 @@
  */
 package io.serverlessworkflow.impl.executors.http.auth.requestbuilder;
 
-import jakarta.ws.rs.client.Client;
-import jakarta.ws.rs.core.Response;
-import java.io.Closeable;
-import java.util.concurrent.Callable;
-import java.util.function.Supplier;
+import io.serverlessworkflow.impl.WorkflowValueResolver;
+import java.net.URI;
+import java.util.Map;
 
-class InvocationHolder implements Callable<Response>, Closeable {
-
-  private final Client client;
-  private final Supplier<Response> call;
-
-  InvocationHolder(Client client, Supplier<Response> call) {
-    this.client = client;
-    this.call = call;
-  }
-
-  public Response call() {
-    return call.get();
-  }
-
-  public void close() {
-    if (client != null) {
-      client.close();
-    }
-  }
-}
+record HttpRequestInfo(
+    Map<String, WorkflowValueResolver<String>> headers,
+    Map<String, WorkflowValueResolver<String>> queryParams,
+    WorkflowValueResolver<URI> uri,
+    String grantType,
+    String contentType) {}

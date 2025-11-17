@@ -20,8 +20,10 @@ import io.serverlessworkflow.api.types.ExportAs;
 import io.serverlessworkflow.api.types.InputFrom;
 import io.serverlessworkflow.api.types.OutputAs;
 import io.serverlessworkflow.api.types.SchemaUnion;
+import io.serverlessworkflow.api.types.SecretBasedAuthenticationPolicy;
 import io.serverlessworkflow.api.types.TimeoutAfter;
 import io.serverlessworkflow.api.types.UriTemplate;
+import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.expressions.ExpressionDescriptor;
 import io.serverlessworkflow.impl.expressions.ExpressionUtils;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
@@ -199,5 +201,46 @@ public class WorkflowUtils {
     } else {
       return (w, t, f) -> Duration.ZERO;
     }
+  }
+
+  public static final String secretProp(WorkflowContext context, String secretName, String prop) {
+    return (String) secret(context, secretName).get(prop);
+  }
+
+  public static final Map<String, Object> secret(WorkflowContext context, String secretName) {
+    return context.definition().application().secretManager().secret(secretName);
+  }
+
+  public static final String checkSecret(
+      Workflow workflow, SecretBasedAuthenticationPolicy secretPolicy) {
+    String secretName = secretPolicy.getUse();
+    return workflow.getUse().getSecrets().stream()
+        .filter(s -> s.equals(secretName))
+        .findAny()
+        .orElseThrow(() -> new IllegalStateException("Secret " + secretName + " does not exist"));
+  }
+
+  public static URI concatURI(URI uri, String pathToAppend) {
+    return uri.getPath().endsWith("/")
+        ? uri.resolve(pathToAppend)
+        : URI.create(
+            uri.toString() + (pathToAppend.startsWith("/") ? pathToAppend : "/" + pathToAppend));
+  }
+
+  public static WorkflowValueResolver<URI> getURISupplier(
+      WorkflowApplication application, UriTemplate template) {
+    if (template.getLiteralUri() != null) {
+      return (w, t, n) -> template.getLiteralUri();
+    } else if (template.getLiteralUriTemplate() != null) {
+      return (w, t, n) ->
+          application
+              .templateResolver()
+              .orElseThrow(
+                  () ->
+                      new IllegalStateException(
+                          "Need an uri template resolver to resolve uri template"))
+              .resolveTemplates(template.getLiteralUriTemplate(), w, t, n);
+    }
+    throw new IllegalArgumentException("Invalid uritemplate definition " + template);
   }
 }

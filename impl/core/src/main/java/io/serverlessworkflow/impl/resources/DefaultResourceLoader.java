@@ -15,10 +15,11 @@
  */
 package io.serverlessworkflow.impl.resources;
 
+import static io.serverlessworkflow.impl.WorkflowUtils.getURISupplier;
+
 import io.serverlessworkflow.api.types.Endpoint;
 import io.serverlessworkflow.api.types.EndpointUri;
 import io.serverlessworkflow.api.types.ExternalResource;
-import io.serverlessworkflow.api.types.UriTemplate;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
@@ -31,9 +32,7 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
-import java.util.ServiceLoader;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
 public class DefaultResourceLoader implements ResourceLoader {
@@ -41,29 +40,11 @@ public class DefaultResourceLoader implements ResourceLoader {
   private final Optional<Path> workflowPath;
   private final WorkflowApplication application;
 
-  private final AtomicReference<URITemplateResolver> templateResolver =
-      new AtomicReference<URITemplateResolver>();
-
   private Map<ExternalResourceHandler, CachedResource> resourceCache = new ConcurrentHashMap<>();
 
   protected DefaultResourceLoader(WorkflowApplication application, Path workflowPath) {
     this.application = application;
     this.workflowPath = Optional.ofNullable(workflowPath);
-  }
-
-  private URITemplateResolver templateResolver() {
-    URITemplateResolver result = templateResolver.get();
-    if (result == null) {
-      result =
-          ServiceLoader.load(URITemplateResolver.class)
-              .findFirst()
-              .orElseThrow(
-                  () ->
-                      new IllegalStateException(
-                          "Need an uri template resolver to resolve uri template"));
-      templateResolver.set(result);
-    }
-    return result;
   }
 
   private ExternalResourceHandler fileResource(String pathStr) {
@@ -122,7 +103,7 @@ public class DefaultResourceLoader implements ResourceLoader {
     if (endpoint.getEndpointConfiguration() != null) {
       EndpointUri uri = endpoint.getEndpointConfiguration().getUri();
       if (uri.getLiteralEndpointURI() != null) {
-        return getURISupplier(uri.getLiteralEndpointURI());
+        return getURISupplier(application, uri.getLiteralEndpointURI());
       } else if (uri.getExpressionEndpointURI() != null) {
         return new ExpressionURISupplier(
             application
@@ -135,19 +116,9 @@ public class DefaultResourceLoader implements ResourceLoader {
               .expressionFactory()
               .resolveString(ExpressionDescriptor.from(endpoint.getRuntimeExpression())));
     } else if (endpoint.getUriTemplate() != null) {
-      return getURISupplier(endpoint.getUriTemplate());
+      return getURISupplier(application, endpoint.getUriTemplate());
     }
     throw new IllegalArgumentException("Invalid endpoint definition " + endpoint);
-  }
-
-  private WorkflowValueResolver<URI> getURISupplier(UriTemplate template) {
-    if (template.getLiteralUri() != null) {
-      return (w, t, n) -> template.getLiteralUri();
-    } else if (template.getLiteralUriTemplate() != null) {
-      return (w, t, n) ->
-          templateResolver().resolveTemplates(template.getLiteralUriTemplate(), w, t, n);
-    }
-    throw new IllegalArgumentException("Invalid uritemplate definition " + template);
   }
 
   private class ExpressionURISupplier implements WorkflowValueResolver<URI> {

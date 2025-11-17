@@ -47,7 +47,7 @@ public class HttpExecutor implements CallableTask<CallHTTP> {
   // TODO allow changing default converter
   private static final HttpModelConverter defaultConverter = new HttpModelConverter() {};
 
-  private TargetSupplier targetSupplier;
+  private WorkflowValueResolver<WebTarget> targetSupplier;
   private Optional<WorkflowValueResolver<Map<String, Object>>> headersMap;
   private Optional<WorkflowValueResolver<Map<String, Object>>> queryMap;
   private Optional<AuthProvider> authProvider;
@@ -255,18 +255,15 @@ public class HttpExecutor implements CallableTask<CallHTTP> {
     return clazz.equals(CallHTTP.class);
   }
 
-  private static TargetSupplier getTargetSupplier(WorkflowValueResolver<URI> uriSupplier) {
+  private static WorkflowValueResolver<WebTarget> getTargetSupplier(
+      WorkflowValueResolver<URI> uriSupplier) {
     return (w, t, n) -> HttpClientResolver.client(w, t).target(uriSupplier.apply(w, t, n));
   }
 
-  private static TargetSupplier getTargetSupplier(
+  private static WorkflowValueResolver<WebTarget> getTargetSupplier(
       WorkflowValueResolver<URI> uriSupplier, WorkflowValueResolver<URI> pathSupplier) {
     return (w, t, n) ->
         HttpClientResolver.client(w, t)
             .target(uriSupplier.apply(w, t, n).resolve(pathSupplier.apply(w, t, n)));
-  }
-
-  private static interface TargetSupplier {
-    WebTarget apply(WorkflowContext workflow, TaskContext task, WorkflowModel node);
   }
 }
