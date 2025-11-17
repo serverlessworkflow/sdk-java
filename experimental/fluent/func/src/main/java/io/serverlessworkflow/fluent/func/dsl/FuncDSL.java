@@ -32,6 +32,7 @@ import io.serverlessworkflow.fluent.func.dsl.internal.CommonFuncOps;
 import io.serverlessworkflow.fluent.spec.configurers.AuthenticationConfigurer;
 import io.serverlessworkflow.impl.TaskContextData;
 import io.serverlessworkflow.impl.WorkflowContextData;
+
 import java.net.URI;
 import java.util.Collection;
 import java.util.List;
@@ -48,22 +49,23 @@ import java.util.function.Predicate;
  *
  * <ul>
  *   <li>Infer input types for Java lambdas where possible.
- *   <li>Expose chainable steps (e.g., {@code emit(...).exportAs(...).when(...)}) via {@code Step}s.
+ *   <li>Expose chainable steps (e.g., {@code emit(...).exportAs(...).when(...)}) via {@link Step}
+ *       subclasses.
  *   <li>Provide opinionated helpers for CloudEvents (JSON/bytes) and listen strategies.
- *   <li>Offer context-aware function variants ({@code withContext}, {@code withInstanceId}, {@code
- *       agent}).
+ *   <li>Offer context-aware function variants ({@code withContext}, {@code withInstanceId},
+ *       {@code withUniqueId}, {@code agent}).
  * </ul>
  *
  * <p>Typical usage:
  *
  * <pre>{@code
- * Workflow wf = FuncWorkflowBuilder.workflow()
+ * Workflow wf = FuncWorkflowBuilder.workflow("example")
  *   .tasks(
  *     FuncDSL.function(String::trim, String.class),
  *     FuncDSL.emitJson("org.acme.started", MyPayload.class),
  *     FuncDSL.listen(FuncDSL.toAny("type.one", "type.two"))
  *       .outputAs(map -> map.get("value")),
- *     FuncDSL.switchWhenOrElse((Integer v) -> v > 0, "positive", FlowDirectiveEnum.END)
+ *     FuncDSL.switchWhenOrElse((Integer v) -> v > 0, "positive", FlowDirectiveEnum.END, Integer.class)
  *   ).build();
  * }</pre>
  */
@@ -73,8 +75,8 @@ public final class FuncDSL {
   private FuncDSL() {}
 
   /**
-   * Create a builder configurer for a {@link FuncCallTaskBuilder} that invokes a plain Java {@link
-   * Function} with an explicit input type.
+   * Create a builder configurer for a {@link FuncCallTaskBuilder} that invokes a plain Java
+   * {@link Function} with an explicit input type.
    *
    * @param function the function to call during task execution
    * @param argClass the expected input class for type-safe model conversion
@@ -83,13 +85,13 @@ public final class FuncDSL {
    * @return a consumer that configures a {@code FuncCallTaskBuilder}
    */
   public static <T, V> Consumer<FuncCallTaskBuilder> fn(
-      Function<T, V> function, Class<T> argClass) {
+          Function<T, V> function, Class<T> argClass) {
     return OPS.fn(function, argClass);
   }
 
   /**
-   * Create a builder configurer for a {@link FuncCallTaskBuilder} that invokes a plain Java {@link
-   * Function}. The input type is inferred when possible.
+   * Create a builder configurer for a {@link FuncCallTaskBuilder} that invokes a plain Java
+   * {@link Function}. The input type is inferred when possible.
    *
    * @param function the function to call during task execution
    * @param <T> input type
@@ -145,8 +147,8 @@ public final class FuncDSL {
   }
 
   /**
-   * Default branch for a switch that uses a {@link FlowDirectiveEnum} (e.g. {@code END}, {@code
-   * CONTINUE}).
+   * Default branch for a switch that uses a {@link FlowDirectiveEnum} (e.g. {@code END},
+   * {@code CONTINUE}).
    *
    * @param directive fallback directive when no predicate matches
    * @return switch case configurer
@@ -203,8 +205,8 @@ public final class FuncDSL {
   }
 
   /**
-   * Build an {@code emit} event configurer by supplying a type and a function that produces {@link
-   * CloudEventData}. The function is invoked at runtime with the current payload.
+   * Build an {@code emit} event configurer by supplying a type and a function that produces
+   * {@link CloudEventData}. The function is invoked at runtime with the current payload.
    *
    * @param type CloudEvent type
    * @param function function that maps workflow input to {@link CloudEventData}
@@ -212,7 +214,7 @@ public final class FuncDSL {
    * @return a consumer to configure {@link FuncEmitTaskBuilder}
    */
   public static <T> Consumer<FuncEmitTaskBuilder> event(
-      String type, Function<T, CloudEventData> function) {
+          String type, Function<T, CloudEventData> function) {
     return OPS.event(type, function);
   }
 
@@ -226,13 +228,14 @@ public final class FuncDSL {
    * @return a consumer to configure {@link FuncEmitTaskBuilder}
    */
   public static <T> Consumer<FuncEmitTaskBuilder> event(
-      String type, Function<T, CloudEventData> function, Class<T> clazz) {
+          String type, Function<T, CloudEventData> function, Class<T> clazz) {
     return OPS.event(type, function, clazz);
   }
 
   /**
-   * Emit a JSON CloudEvent for a POJO input type. Sets {@code contentType=application/json} and
-   * serializes the input to bytes using the configured JSON mapper.
+   * Emit a JSON CloudEvent for a POJO input type. Sets
+   * {@code contentType=application/json} and serializes the input to bytes using the configured
+   * JSON mapper.
    *
    * @param type CloudEvent type
    * @param clazz input POJO class (used for typing and conversion)
@@ -253,7 +256,7 @@ public final class FuncDSL {
    * @return a consumer to configure {@link FuncEmitTaskBuilder}
    */
   public static <T> Consumer<FuncEmitTaskBuilder> eventBytes(
-      String type, Function<T, byte[]> serializer, Class<T> clazz) {
+          String type, Function<T, byte[]> serializer, Class<T> clazz) {
     return b -> new FuncEmitSpec().type(type).bytesData(serializer, clazz).accept(b);
   }
 
@@ -298,7 +301,7 @@ public final class FuncDSL {
    *
    * <p>Signature expected: {@code (ctx, payload) -> result}
    *
-   * @param fn context-aware bi-function
+   * @param fn context-aware function
    * @param in payload input class
    * @param <T> input type
    * @param <R> result type
@@ -314,14 +317,14 @@ public final class FuncDSL {
    *
    * <p>Signature expected: {@code (instanceId, payload) -> result}
    *
-   * @param fn instance-id-aware bi-function
+   * @param fn instance-id-aware function
    * @param in payload input class
    * @param <T> input type
    * @param <R> result type
    * @return a call step
    */
   public static <T, R> FuncCallStep<T, R> withInstanceId(
-      InstanceIdBiFunction<T, R> fn, Class<T> in) {
+          InstanceIdBiFunction<T, R> fn, Class<T> in) {
     return withInstanceId(null, fn, in);
   }
 
@@ -329,25 +332,25 @@ public final class FuncDSL {
    * Named variant of {@link #withContext(JavaContextFunction, Class)}.
    *
    * @param name task name
-   * @param fn context-aware bi-function
+   * @param fn context-aware function
    * @param in payload input class
    * @param <T> input type
    * @param <R> result type
    * @return a named call step
    */
   public static <T, R> FuncCallStep<T, R> withContext(
-      String name, JavaContextFunction<T, R> fn, Class<T> in) {
+          String name, JavaContextFunction<T, R> fn, Class<T> in) {
     return new FuncCallStep<>(name, fn, in);
   }
 
   /**
-   * Build a call step for functions that need {@link WorkflowContextData} and {@link
-   * io.serverlessworkflow.impl.TaskContextData} as the first and second parameter. The DSL wraps it
-   * as a {@link JavaFilterFunction} and injects the runtime context.
+   * Build a call step for functions that need {@link WorkflowContextData} and
+   * {@link TaskContextData} as the first and second parameter. The DSL wraps it as a
+   * {@link JavaFilterFunction} and injects the runtime context.
    *
-   * <p>Signature expected: {@code (wctx, tctx, payload) -> result}
+   * <p>Signature expected: {@code (payload, wctx, tctx) -> result}
    *
-   * @param fn context-aware bi-function
+   * @param fn context-aware filter function
    * @param in payload input class
    * @param <T> input type
    * @param <R> result type
@@ -361,14 +364,14 @@ public final class FuncDSL {
    * Named variant of {@link #withFilter(JavaFilterFunction, Class)}.
    *
    * @param name task name
-   * @param fn context-aware bi-function
+   * @param fn context-aware filter function
    * @param in payload input class
    * @param <T> input type
    * @param <R> result type
    * @return a named call step
    */
   public static <T, R> FuncCallStep<T, R> withFilter(
-      String name, JavaFilterFunction<T, R> fn, Class<T> in) {
+          String name, JavaFilterFunction<T, R> fn, Class<T> in) {
     return new FuncCallStep<>(name, fn, in);
   }
 
@@ -376,46 +379,61 @@ public final class FuncDSL {
    * Named variant of {@link #withInstanceId(InstanceIdBiFunction, Class)}.
    *
    * @param name task name
-   * @param fn instance-id-aware bi-function
+   * @param fn instance-id-aware function
    * @param in payload input class
    * @param <T> input type
    * @param <R> result type
    * @return a named call step
    */
   public static <T, R> FuncCallStep<T, R> withInstanceId(
-      String name, InstanceIdBiFunction<T, R> fn, Class<T> in) {
+          String name, InstanceIdBiFunction<T, R> fn, Class<T> in) {
     JavaContextFunction<T, R> jcf = (payload, wctx) -> fn.apply(wctx.instanceData().id(), payload);
     return new FuncCallStep<>(name, jcf, in);
   }
 
   /**
    * Builds a composition of the current workflow instance id and the definition of the task
-   * position as a JSON pointer.
+   * position as a JSON pointer, used as a stable "unique id" for the task.
+   *
+   * @param wctx workflow context
+   * @param tctx task context
+   * @return a unique id in the form {@code "<instanceId>-<jsonPointer>"}
    */
   static String defaultUniqueId(WorkflowContextData wctx, TaskContextData tctx) {
     return String.format("%s-%s", wctx.instanceData().id(), tctx.position().jsonPointer());
   }
 
   /**
-   * Build a call step for functions that expect a composition with the workflow instance id and the
-   * task position as the first parameter. The instance ID is extracted from the runtime context,
-   * the task position from the definition.
+   * Build a call step for functions that expect a composite "unique id" as the first parameter.
+   * This id is derived from the workflow instance id and the task definition position, encoded as
+   * a JSON pointer.
    *
    * <p>Signature expected: {@code (uniqueId, payload) -> result}
    *
-   * @param fn unique-id-aware bi-function
+   * @param name task name (or {@code null} for an anonymous task)
+   * @param fn unique-id-aware function
    * @param in payload input class
    * @param <T> input type
    * @param <R> result type
    * @return a call step
    */
   public static <T, R> FuncCallStep<T, R> withUniqueId(
-      String name, UniqueIdBiFunction<T, R> fn, Class<T> in) {
+          String name, UniqueIdBiFunction<T, R> fn, Class<T> in) {
     JavaFilterFunction<T, R> jff =
-        (payload, wctx, tctx) -> fn.apply(defaultUniqueId(wctx, tctx), payload);
+            (payload, wctx, tctx) -> fn.apply(defaultUniqueId(wctx, tctx), payload);
     return new FuncCallStep<>(name, jff, in);
   }
 
+  /**
+   * Variant of {@link #withUniqueId(String, UniqueIdBiFunction, Class)} without an explicit task
+   * name.
+   *
+   * @param fn unique-id-aware function
+   * @param in payload input class
+   * @param <T> input type
+   * @param <R> result type
+   * @return a call step
+   */
   public static <T, R> FuncCallStep<T, R> withUniqueId(UniqueIdBiFunction<T, R> fn, Class<T> in) {
     return withUniqueId(null, fn, in);
   }
@@ -426,7 +444,7 @@ public final class FuncDSL {
    * @param consumer side-effect function
    * @param clazz expected input class for conversion
    * @param <T> input type
-   * @return a consume step
+   * @return a {@link ConsumeStep} which can be chained and added via {@link #tasks(FuncTaskConfigurer...)}
    */
   public static <T> ConsumeStep<T> consume(Consumer<T> consumer, Class<T> clazz) {
     return new ConsumeStep<>(consumer, clazz);
@@ -439,19 +457,20 @@ public final class FuncDSL {
    * @param consumer side-effect function
    * @param clazz expected input class
    * @param <T> input type
-   * @return a consume step
+   * @return a named {@link ConsumeStep}
    */
   public static <T> ConsumeStep<T> consume(String name, Consumer<T> consumer, Class<T> clazz) {
     return new ConsumeStep<>(name, consumer, clazz);
   }
 
   /**
-   * Agent-style sugar for methods that receive a "memory id" as first parameter. We reuse the
-   * workflow instance id for that purpose.
+   * Agent-style sugar for methods that receive a "memory id" as first parameter. The DSL uses a
+   * derived unique id composed of the workflow instance id and the task position (JSON pointer),
+   * via {@link #withUniqueId(UniqueIdBiFunction, Class)}.
    *
-   * <p>Equivalent to {@link #withInstanceId(InstanceIdBiFunction, Class)}.
+   * <p>Signature expected: {@code (uniqueId, payload) -> result}
    *
-   * @param fn (instanceId, payload) -> result
+   * @param fn (uniqueId, payload) -> result
    * @param in payload input class
    * @param <T> input type
    * @param <R> result type
@@ -464,15 +483,17 @@ public final class FuncDSL {
   /**
    * Named agent-style sugar. See {@link #agent(UniqueIdBiFunction, Class)}.
    *
+   * <p>Signature expected: {@code (uniqueId, payload) -> result}
+   *
    * @param name task name
-   * @param fn (instanceId, payload) -> result
+   * @param fn (uniqueId, payload) -> result
    * @param in payload input class
    * @param <T> input type
    * @param <R> result type
    * @return a named call step
    */
   public static <T, R> FuncCallStep<T, R> agent(
-      String name, UniqueIdBiFunction<T, R> fn, Class<T> in) {
+          String name, UniqueIdBiFunction<T, R> fn, Class<T> in) {
     return withUniqueId(name, fn, in);
   }
 
@@ -514,7 +535,8 @@ public final class FuncDSL {
    * @param <R> output type
    * @return a named call step
    */
-  public static <T, R> FuncCallStep<T, R> function(String name, Function<T, R> fn, Class<T> clazz) {
+  public static <T, R> FuncCallStep<T, R> function(
+          String name, Function<T, R> fn, Class<T> clazz) {
     return new FuncCallStep<>(name, fn, clazz);
   }
 
@@ -549,7 +571,7 @@ public final class FuncDSL {
    *
    * @param name task name
    * @param cfg emit builder configurer
-   * @return a named emit step
+   * @return a named {@link EmitStep}
    */
   public static EmitStep emit(String name, Consumer<FuncEmitTaskBuilder> cfg) {
     return new EmitStep(name, cfg);
@@ -591,11 +613,19 @@ public final class FuncDSL {
    * @return a named {@link EmitStep}
    */
   public static <T> EmitStep emit(
-      String name, String type, Function<T, byte[]> serializer, Class<T> clazz) {
+          String name, String type, Function<T, byte[]> serializer, Class<T> clazz) {
     return new EmitStep(name, eventBytes(type, serializer, clazz));
   }
 
-  /** Unnamed variant of {@link #emit(String, String, Function, Class)}. */
+  /**
+   * Unnamed variant of {@link #emit(String, String, Function, Class)}.
+   *
+   * @param type CloudEvent type
+   * @param serializer function producing bytes
+   * @param clazz expected input class
+   * @param <T> input type
+   * @return an {@link EmitStep}
+   */
   public static <T> EmitStep emit(String type, Function<T, byte[]> serializer, Class<T> clazz) {
     return new EmitStep(null, eventBytes(type, serializer, clazz));
   }
@@ -647,26 +677,30 @@ public final class FuncDSL {
   }
 
   /**
-   * Low-level switch case configurer using a custom builder consumer. Prefer the {@link
-   * #caseOf(Predicate)} helpers when possible.
+   * Low-level switch case configurer using a custom builder consumer. Prefer the
+   * {@link #caseOf(Predicate)} helpers when possible.
    *
    * @param taskName optional task name
    * @param switchCase consumer to configure the {@link FuncSwitchTaskBuilder}
    * @return a list configurer
    */
   public static FuncTaskConfigurer switchCase(
-      String taskName, Consumer<FuncSwitchTaskBuilder> switchCase) {
+          String taskName, Consumer<FuncSwitchTaskBuilder> switchCase) {
     return list -> list.switchCase(taskName, switchCase);
   }
 
-  /** Variant of {@link #switchCase(String, Consumer)} without a name. */
+  /**
+   * Variant of {@link #switchCase(String, Consumer)} without a name.
+   *
+   * @param switchCase consumer to configure the {@link FuncSwitchTaskBuilder}
+   * @return a list configurer
+   */
   public static FuncTaskConfigurer switchCase(Consumer<FuncSwitchTaskBuilder> switchCase) {
     return list -> list.switchCase(switchCase);
   }
 
   /**
-   * Convenience to apply multiple {@link SwitchCaseConfigurer} built via {@link
-   * #caseOf(Predicate)}.
+   * Convenience to apply multiple {@link SwitchCaseConfigurer} built via {@link #caseOf(Predicate)}.
    *
    * @param cases case configurers
    * @return list configurer
@@ -698,7 +732,7 @@ public final class FuncDSL {
    * @return list configurer
    */
   public static <T> FuncTaskConfigurer switchWhen(
-      Predicate<T> pred, String thenTask, Class<T> predClass) {
+          Predicate<T> pred, String thenTask, Class<T> predClass) {
     return list -> list.switchCase(cases(caseOf(pred, predClass).then(thenTask)));
   }
 
@@ -732,10 +766,10 @@ public final class FuncDSL {
    * @return list configurer
    */
   public static <T> FuncTaskConfigurer switchWhenOrElse(
-      Predicate<T> pred, String thenTask, FlowDirectiveEnum otherwise, Class<T> predClass) {
+          Predicate<T> pred, String thenTask, FlowDirectiveEnum otherwise, Class<T> predClass) {
     return list ->
-        list.switchCase(
-            FuncDSL.cases(caseOf(pred, predClass).then(thenTask), caseDefault(otherwise)));
+            list.switchCase(
+                    FuncDSL.cases(caseOf(pred, predClass).then(thenTask), caseDefault(otherwise)));
   }
 
   /**
@@ -749,9 +783,10 @@ public final class FuncDSL {
    * @return list configurer
    */
   public static <T> FuncTaskConfigurer switchWhenOrElse(
-      Predicate<T> pred, String thenTask, String otherwiseTask, Class<T> predClass) {
+          Predicate<T> pred, String thenTask, String otherwiseTask, Class<T> predClass) {
     return list ->
-        list.switchCase(cases(caseOf(pred, predClass).then(thenTask), caseDefault(otherwiseTask)));
+            list.switchCase(
+                    cases(caseOf(pred, predClass).then(thenTask), caseDefault(otherwiseTask)));
   }
 
   /**
@@ -763,16 +798,22 @@ public final class FuncDSL {
    * </pre>
    *
    * <p>The JQ expression is evaluated against the task input at runtime.
+   *
+   * @param jqExpression JQ expression evaluated against the current task input
+   * @param thenTask task to jump to if the expression evaluates truthy
+   * @param otherwise default flow directive when the expression is falsy
+   * @return list configurer
    */
   public static FuncTaskConfigurer switchWhenOrElse(
-      String jqExpression, String thenTask, FlowDirectiveEnum otherwise) {
+          String jqExpression, String thenTask, FlowDirectiveEnum otherwise) {
 
     Objects.requireNonNull(jqExpression, "jqExpression");
     Objects.requireNonNull(thenTask, "thenTask");
     Objects.requireNonNull(otherwise, "otherwise");
 
     return list ->
-        list.switchCase(sw -> sw.on(c -> c.when(jqExpression).then(thenTask)).onDefault(otherwise));
+            list.switchCase(
+                    sw -> sw.on(c -> c.when(jqExpression).then(thenTask)).onDefault(otherwise));
   }
 
   /**
@@ -784,17 +825,22 @@ public final class FuncDSL {
    * </pre>
    *
    * <p>The JQ expression is evaluated against the task input at runtime.
+   *
+   * @param jqExpression JQ expression evaluated against the current task input
+   * @param thenTask task name when truthy
+   * @param otherwiseTask task name when falsy
+   * @return list configurer
    */
   public static FuncTaskConfigurer switchWhenOrElse(
-      String jqExpression, String thenTask, String otherwiseTask) {
+          String jqExpression, String thenTask, String otherwiseTask) {
 
     Objects.requireNonNull(jqExpression, "jqExpression");
     Objects.requireNonNull(thenTask, "thenTask");
     Objects.requireNonNull(otherwiseTask, "otherwiseTask");
 
     return list ->
-        list.switchCase(
-            sw -> sw.on(c -> c.when(jqExpression).then(thenTask)).onDefault(otherwiseTask));
+            list.switchCase(
+                    sw -> sw.on(c -> c.when(jqExpression).then(thenTask)).onDefault(otherwiseTask));
   }
 
   /**
@@ -806,7 +852,7 @@ public final class FuncDSL {
    * @return list configurer
    */
   public static <T> FuncTaskConfigurer forEach(
-      Function<T, Collection<?>> collection, Consumer<FuncTaskItemListBuilder> body) {
+          Function<T, Collection<?>> collection, Consumer<FuncTaskItemListBuilder> body) {
     return list -> list.forEach(j -> j.collection(collection).tasks(body));
   }
 
@@ -819,7 +865,7 @@ public final class FuncDSL {
    * @return list configurer
    */
   public static <T> FuncTaskConfigurer forEach(
-      Collection<?> collection, Consumer<FuncTaskItemListBuilder> body) {
+          Collection<?> collection, Consumer<FuncTaskItemListBuilder> body) {
     Function<T, Collection<?>> f = ctx -> (Collection<?>) collection;
     return list -> list.forEach(j -> j.collection(f).tasks(body));
   }
@@ -833,12 +879,12 @@ public final class FuncDSL {
    * @return list configurer
    */
   public static <T> FuncTaskConfigurer forEach(
-      List<T> collection, Consumer<FuncTaskItemListBuilder> body) {
+          List<T> collection, Consumer<FuncTaskItemListBuilder> body) {
     return list -> list.forEach(j -> j.collection(ctx -> collection).tasks(body));
   }
 
   /**
-   * Set a raw JQ-like expression on the current list (advanced).
+   * Set a raw expression on the current list (advanced).
    *
    * @param expr expression string
    * @return list configurer
@@ -848,7 +894,7 @@ public final class FuncDSL {
   }
 
   /**
-   * Set a map-based expression on the current list (advanced).
+   * Set values on the current list from a map (advanced).
    *
    * @param map map of values to set
    * @return list configurer
@@ -856,6 +902,10 @@ public final class FuncDSL {
   public static FuncTaskConfigurer set(Map<String, Object> map) {
     return list -> list.set(s -> s.expr(map));
   }
+
+  // ---------------------------------------------------------------------------
+  // HTTP / OpenAPI
+  // ---------------------------------------------------------------------------
 
   /**
    * Low-level HTTP call entrypoint using a {@link FuncCallHttpConfigurer}.
@@ -980,10 +1030,27 @@ public final class FuncDSL {
     return spec;
   }
 
+  /**
+   * Low-level OpenAPI call entrypoint using a {@link FuncCallOpenAPIConfigurer}.
+   *
+   * <p>This overload creates an unnamed OpenAPI call task.
+   *
+   * @param configurer configurer that mutates the underlying OpenAPI call builder
+   * @return a {@link FuncTaskConfigurer} that adds an OpenAPI call task
+   */
   public static FuncTaskConfigurer call(FuncCallOpenAPIConfigurer configurer) {
     return call(null, configurer);
   }
 
+  /**
+   * Low-level OpenAPI call entrypoint using a {@link FuncCallOpenAPIConfigurer}.
+   *
+   * <p>This overload allows assigning an explicit task name.
+   *
+   * @param name task name, or {@code null} for an anonymous task
+   * @param configurer configurer that mutates the underlying OpenAPI call builder
+   * @return a {@link FuncTaskConfigurer} that adds an OpenAPI call task
+   */
   public static FuncTaskConfigurer call(String name, FuncCallOpenAPIConfigurer configurer) {
     Objects.requireNonNull(configurer, "configurer");
     return list -> list.openapi(name, configurer);
@@ -1013,6 +1080,12 @@ public final class FuncDSL {
     return new FuncCallOpenAPIStep();
   }
 
+  /**
+   * Named variant of {@link #openapi()}.
+   *
+   * @param name task name to be used when the spec is attached via {@link #call(FuncCallOpenAPIStep)}
+   * @return a new named {@link FuncCallOpenAPIStep}
+   */
   public static FuncCallOpenAPIStep openapi(String name) {
     return new FuncCallOpenAPIStep(name);
   }
@@ -1037,6 +1110,12 @@ public final class FuncDSL {
     return new FuncCallHttpStep();
   }
 
+  /**
+   * Named variant of {@link #http()}.
+   *
+   * @param name task name to be used when the spec is attached via {@link #call(FuncCallHttpStep)}
+   * @return a new named {@link FuncCallHttpStep}
+   */
   public static FuncCallHttpStep http(String name) {
     return new FuncCallHttpStep(name);
   }
@@ -1071,166 +1150,179 @@ public final class FuncDSL {
   }
 
   /**
-   * Convenience for adding an unnamed {@code GET} HTTP task using a string endpoint.
+   * Convenience for building an unnamed {@code GET} HTTP step using a string endpoint.
    *
    * <pre>{@code
    * tasks(
-   *   FuncDSL.get("http://service/health")
+   *   FuncDSL.call(
+   *     FuncDSL.get("http://service/health")
+   *   )
    * );
    * }</pre>
    *
    * @param endpoint literal or expression for the endpoint URL
-   * @return a {@link FuncTaskConfigurer} adding a {@code GET} HTTP task
+   * @return a {@link FuncCallHttpStep} that can be chained and later passed to {@link #call(FuncCallHttpStep)}
    */
   public static FuncCallHttpStep get(String endpoint) {
     return get(null, endpoint);
   }
 
   /**
-   * Convenience for adding a named {@code GET} HTTP task using a string endpoint.
+   * Convenience for building a named {@code GET} HTTP step using a string endpoint.
    *
    * <pre>{@code
    * tasks(
-   *   FuncDSL.get("checkHealth", "http://service/health")
+   *   FuncDSL.call(
+   *     FuncDSL.get("checkHealth", "http://service/health")
+   *   )
    * );
    * }</pre>
    *
    * @param name task name
    * @param endpoint literal or expression for the endpoint URL
-   * @return a {@link FuncTaskConfigurer} adding a {@code GET} HTTP task
+   * @return a named {@link FuncCallHttpStep} that can be passed to {@link #call(FuncCallHttpStep)}
    */
   public static FuncCallHttpStep get(String name, String endpoint) {
     return http(name).GET().endpoint(endpoint);
   }
 
   /**
-   * Convenience for adding an unnamed authenticated {@code GET} HTTP task using a string endpoint.
+   * Convenience for building an unnamed authenticated {@code GET} HTTP step using a string
+   * endpoint.
    *
    * <pre>{@code
    * tasks(
-   *   FuncDSL.get("http://service/api/users", auth -> auth.use("user-service-auth"))
+   *   FuncDSL.call(
+   *     FuncDSL.get("http://service/api/users", auth -> auth.use("user-service-auth"))
+   *   )
    * );
    * }</pre>
    *
    * @param endpoint literal or expression for the endpoint URL
    * @param auth authentication configurer
-   * @return a {@link FuncTaskConfigurer} adding a {@code GET} HTTP task
+   * @return a {@link FuncCallHttpStep} that can be passed to {@link #call(FuncCallHttpStep)}
    */
   public static FuncCallHttpStep get(String endpoint, AuthenticationConfigurer auth) {
     return get(null, endpoint, auth);
   }
 
   /**
-   * Convenience for adding a named authenticated {@code GET} HTTP task using a string endpoint.
+   * Convenience for building a named authenticated {@code GET} HTTP step using a string endpoint.
    *
    * @param name task name
    * @param endpoint literal or expression for the endpoint URL
    * @param auth authentication configurer
-   * @return a {@link FuncTaskConfigurer} adding a {@code GET} HTTP task
+   * @return a named {@link FuncCallHttpStep} that can be passed to {@link #call(FuncCallHttpStep)}
    */
-  public static FuncCallHttpStep get(String name, String endpoint, AuthenticationConfigurer auth) {
+  public static FuncCallHttpStep get(
+          String name, String endpoint, AuthenticationConfigurer auth) {
     return http(name).GET().endpoint(endpoint, auth);
   }
 
   /**
-   * Convenience for adding an unnamed {@code GET} HTTP task using a {@link URI}.
+   * Convenience for building an unnamed {@code GET} HTTP step using a {@link URI}.
    *
    * @param endpoint concrete URI to call
-   * @return a {@link FuncTaskConfigurer} adding a {@code GET} HTTP task
+   * @return a {@link FuncCallHttpStep} that can be passed to {@link #call(FuncCallHttpStep)}
    */
   public static FuncCallHttpStep get(URI endpoint) {
     return get(null, endpoint);
   }
 
   /**
-   * Convenience for adding a named {@code GET} HTTP task using a {@link URI}.
+   * Convenience for building a named {@code GET} HTTP step using a {@link URI}.
    *
    * @param name task name
    * @param endpoint concrete URI to call
-   * @return a {@link FuncTaskConfigurer} adding a {@code GET} HTTP task
+   * @return a named {@link FuncCallHttpStep} that can be passed to {@link #call(FuncCallHttpStep)}
    */
   public static FuncCallHttpStep get(String name, URI endpoint) {
     return http(name).GET().uri(endpoint);
   }
 
   /**
-   * Convenience for adding an unnamed authenticated {@code GET} HTTP task using a {@link URI}.
+   * Convenience for building an unnamed authenticated {@code GET} HTTP step using a {@link URI}.
    *
    * @param endpoint concrete URI to call
    * @param auth authentication configurer
-   * @return a {@link FuncTaskConfigurer} adding a {@code GET} HTTP task
+   * @return a {@link FuncCallHttpStep} that can be passed to {@link #call(FuncCallHttpStep)}
    */
   public static FuncCallHttpStep get(URI endpoint, AuthenticationConfigurer auth) {
     return get(null, endpoint, auth);
   }
 
   /**
-   * Convenience for adding a named authenticated {@code GET} HTTP task using a {@link URI}.
+   * Convenience for building a named authenticated {@code GET} HTTP step using a {@link URI}.
    *
    * @param name task name
    * @param endpoint concrete URI to call
    * @param auth authentication configurer
-   * @return a {@link FuncTaskConfigurer} adding a {@code GET} HTTP task
+   * @return a named {@link FuncCallHttpStep} that can be passed to {@link #call(FuncCallHttpStep)}
    */
-  public static FuncCallHttpStep get(String name, URI endpoint, AuthenticationConfigurer auth) {
+  public static FuncCallHttpStep get(
+          String name, URI endpoint, AuthenticationConfigurer auth) {
     return http(name).GET().uri(endpoint, auth);
   }
 
   /**
-   * Convenience for adding an unnamed {@code POST} HTTP task with a body and string endpoint.
+   * Convenience for building an unnamed {@code POST} HTTP step with a body and string endpoint.
    *
    * <pre>{@code
    * tasks(
-   *   FuncDSL.post(
-   *     Map.of("name", "Ricardo"),
-   *     "http://service/api/users"
+   *   FuncDSL.call(
+   *     FuncDSL.post(
+   *       Map.of("name", "Ricardo"),
+   *       "http://service/api/users"
+   *     )
    *   )
    * );
    * }</pre>
    *
    * @param body HTTP request body (literal value or expression-compatible object)
    * @param endpointExpr literal or expression for the endpoint URL
-   * @return a {@link FuncTaskConfigurer} adding a {@code POST} HTTP task
+   * @return a {@link FuncCallHttpStep} that can be passed to {@link #call(FuncCallHttpStep)}
    */
   public static FuncCallHttpStep post(Object body, String endpointExpr) {
     return post(null, body, endpointExpr);
   }
 
   /**
-   * Convenience for adding a named {@code POST} HTTP task with a body and string endpoint.
+   * Convenience for building a named {@code POST} HTTP step with a body and string endpoint.
    *
    * @param name task name
    * @param body HTTP request body (literal value or expression-compatible object)
    * @param endpoint literal or expression for the endpoint URL
-   * @return a {@link FuncTaskConfigurer} adding a {@code POST} HTTP task
+   * @return a named {@link FuncCallHttpStep} that can be passed to {@link #call(FuncCallHttpStep)}
    */
   public static FuncCallHttpStep post(String name, Object body, String endpoint) {
     return http(name).POST().endpoint(endpoint).body(body);
   }
 
   /**
-   * Convenience for adding an unnamed authenticated {@code POST} HTTP task with body and endpoint.
+   * Convenience for building an unnamed authenticated {@code POST} HTTP step with body and
+   * endpoint.
    *
    * @param body HTTP request body
    * @param endpoint literal or expression for the endpoint URL
    * @param auth authentication configurer
-   * @return a {@link FuncTaskConfigurer} adding an authenticated {@code POST} HTTP task
+   * @return a {@link FuncCallHttpStep} that can be passed to {@link #call(FuncCallHttpStep)}
    */
-  public static FuncCallHttpStep post(Object body, String endpoint, AuthenticationConfigurer auth) {
+  public static FuncCallHttpStep post(
+          Object body, String endpoint, AuthenticationConfigurer auth) {
     return post(null, body, endpoint, auth);
   }
 
   /**
-   * Convenience for adding a named authenticated {@code POST} HTTP task with body and endpoint.
+   * Convenience for building a named authenticated {@code POST} HTTP step with body and endpoint.
    *
    * @param name task name
    * @param body HTTP request body
    * @param endpoint literal or expression for the endpoint URL
    * @param auth authentication configurer
-   * @return a {@link FuncTaskConfigurer} adding an authenticated {@code POST} HTTP task
+   * @return a named {@link FuncCallHttpStep} that can be passed to {@link #call(FuncCallHttpStep)}
    */
   public static FuncCallHttpStep post(
-      String name, Object body, String endpoint, AuthenticationConfigurer auth) {
+          String name, Object body, String endpoint, AuthenticationConfigurer auth) {
 
     return http(name).POST().endpoint(endpoint, auth).body(body);
   }
