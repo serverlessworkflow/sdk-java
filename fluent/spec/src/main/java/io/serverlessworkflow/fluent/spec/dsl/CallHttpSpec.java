@@ -17,17 +17,29 @@ package io.serverlessworkflow.fluent.spec.dsl;
 
 import io.serverlessworkflow.fluent.spec.CallHttpTaskBuilder;
 import io.serverlessworkflow.fluent.spec.configurers.CallHttpConfigurer;
+import io.serverlessworkflow.fluent.spec.spi.CallHttpTaskFluent;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
 
-public final class CallHttpSpec extends BaseCallHttpSpec<CallHttpSpec>
-    implements CallHttpConfigurer {
+public final class CallHttpSpec implements BaseCallHttpSpec<CallHttpSpec>, CallHttpConfigurer {
+
+  private final List<Consumer<CallHttpTaskFluent<?>>> steps = new ArrayList<>();
+
+  public CallHttpSpec() {}
 
   @Override
-  protected CallHttpSpec self() {
+  public CallHttpSpec self() {
     return this;
   }
 
   @Override
-  public void accept(CallHttpTaskBuilder callHttpTaskBuilder) {
-    super.accept(callHttpTaskBuilder);
+  public List<Consumer<CallHttpTaskFluent<?>>> steps() {
+    return steps;
+  }
+
+  @Override
+  public void accept(CallHttpTaskBuilder builder) {
+    BaseCallHttpSpec.super.accept(builder);
   }
 }

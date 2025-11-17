@@ -15,10 +15,12 @@
  */
 package io.serverlessworkflow.fluent.func;
 
+import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.call;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.emit;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.event;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.function;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.get;
+import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.http;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.listen;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.toOne;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.auth;
@@ -213,8 +215,7 @@ class FuncDSLTest {
   void http_spec_via_call_builds_call_http_task() {
     Workflow wf =
         FuncWorkflowBuilder.workflow("http-call-spec")
-            .tasks(
-                FuncDSL.call("checkHealth", FuncDSL.http().GET().endpoint("http://service/health")))
+            .tasks(call("checkHealth", http().GET().endpoint("http://service/health")))
             .build();
 
     List<TaskItem> items = wf.getDo();
@@ -401,9 +402,9 @@ class FuncDSLTest {
     Workflow wf =
         FuncWorkflowBuilder.workflow("http-call-preconfigured")
             .tasks(
-                FuncDSL.call(
+                call(
                     "preconfigured",
-                    FuncDSL.http("http://service/api", auth -> auth.use("svc-auth"))
+                    http("http://service/api", auth -> auth.use("svc-auth"))
                         .POST()
                         .body(Map.of("foo", "bar"))))
             .build();

@@ -24,6 +24,7 @@ import io.serverlessworkflow.fluent.func.FuncEmitTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncSwitchTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncTaskItemListBuilder;
 import io.serverlessworkflow.fluent.func.configurers.FuncCallHttpConfigurer;
+import io.serverlessworkflow.fluent.func.configurers.FuncCallOpenAPIConfigurer;
 import io.serverlessworkflow.fluent.func.configurers.FuncPredicateEventConfigurer;
 import io.serverlessworkflow.fluent.func.configurers.FuncTaskConfigurer;
 import io.serverlessworkflow.fluent.func.configurers.SwitchCaseConfigurer;
@@ -883,7 +884,7 @@ public final class FuncDSL {
   }
 
   /**
-   * HTTP call using a fluent {@link FuncCallHttpSpec}.
+   * HTTP call using a fluent {@link FuncCallHttpStep}.
    *
    * <p>This overload creates an unnamed HTTP task.
    *
@@ -900,12 +901,12 @@ public final class FuncDSL {
    * @param spec fluent HTTP spec built via {@link #http()}
    * @return a {@link FuncTaskConfigurer} that adds an HTTP task
    */
-  public static FuncTaskConfigurer call(FuncCallHttpSpec spec) {
+  public static FuncTaskConfigurer call(FuncCallHttpStep spec) {
     return call(null, spec);
   }
 
   /**
-   * HTTP call using a fluent {@link FuncCallHttpSpec} with explicit task name.
+   * HTTP call using a fluent {@link FuncCallHttpStep} with explicit task name.
    *
    * <pre>{@code
    * tasks(
@@ -921,13 +922,13 @@ public final class FuncDSL {
    * @param spec fluent HTTP spec built via {@link #http()}
    * @return a {@link FuncTaskConfigurer} that adds an HTTP task
    */
-  public static FuncTaskConfigurer call(String name, FuncCallHttpSpec spec) {
+  public static FuncTaskConfigurer call(String name, FuncCallHttpStep spec) {
     Objects.requireNonNull(spec, "spec");
-    return call(name, spec::accept);
+    return call(name, (FuncCallHttpConfigurer) spec::accept);
   }
 
   /**
-   * OpenAPI call using a fluent {@link FuncCallOpenAPISpec}.
+   * OpenAPI call using a fluent {@link FuncCallOpenAPIStep}.
    *
    * <p>This overload creates an unnamed OpenAPI call task.
    *
@@ -946,12 +947,12 @@ public final class FuncDSL {
    * @param spec fluent OpenAPI spec built via {@link #openapi()}
    * @return a {@link FuncTaskConfigurer} that adds an OpenAPI call task to the workflow
    */
-  public static FuncTaskConfigurer call(FuncCallOpenAPISpec spec) {
+  public static FuncTaskConfigurer call(FuncCallOpenAPIStep spec) {
     return call(null, spec);
   }
 
   /**
-   * OpenAPI call using a fluent {@link FuncCallOpenAPISpec} with an explicit task name.
+   * OpenAPI call using a fluent {@link FuncCallOpenAPIStep} with an explicit task name.
    *
    * <p>Example:
    *
@@ -973,13 +974,23 @@ public final class FuncDSL {
    * @param spec fluent OpenAPI spec built via {@link #openapi()}
    * @return a {@link FuncTaskConfigurer} that adds a named OpenAPI call task
    */
-  public static FuncTaskConfigurer call(String name, FuncCallOpenAPISpec spec) {
+  public static FuncTaskConfigurer call(String name, FuncCallOpenAPIStep spec) {
     Objects.requireNonNull(spec, "spec");
-    return list -> list.openapi(name, spec);
+    spec.setName(name);
+    return spec;
+  }
+
+  public static FuncTaskConfigurer call(FuncCallOpenAPIConfigurer configurer) {
+    return call(null, configurer);
+  }
+
+  public static FuncTaskConfigurer call(String name, FuncCallOpenAPIConfigurer configurer) {
+    Objects.requireNonNull(configurer, "configurer");
+    return list -> list.openapi(name, configurer);
   }
 
   /**
-   * Create a new OpenAPI specification to be used with {@link #call(FuncCallOpenAPISpec)}.
+   * Create a new OpenAPI specification to be used with {@link #call(FuncCallOpenAPIStep)}.
    *
    * <p>Typical usage:
    *
@@ -996,14 +1007,18 @@ public final class FuncDSL {
    * parameters, authentication, etc.) and applies them to the underlying OpenAPI call task at build
    * time.
    *
-   * @return a new {@link FuncCallOpenAPISpec}
+   * @return a new {@link FuncCallOpenAPIStep}
    */
-  public static FuncCallOpenAPISpec openapi() {
-    return new FuncCallOpenAPISpec();
+  public static FuncCallOpenAPIStep openapi() {
+    return new FuncCallOpenAPIStep();
+  }
+
+  public static FuncCallOpenAPIStep openapi(String name) {
+    return new FuncCallOpenAPIStep(name);
   }
 
   /**
-   * Create a new, empty HTTP specification to be used with {@link #call(FuncCallHttpSpec)}.
+   * Create a new, empty HTTP specification to be used with {@link #call(FuncCallHttpStep)}.
    *
    * <p>Typical usage:
    *
@@ -1016,10 +1031,14 @@ public final class FuncDSL {
    * );
    * }</pre>
    *
-   * @return a new {@link FuncCallHttpSpec}
+   * @return a new {@link FuncCallHttpStep}
    */
-  public static FuncCallHttpSpec http() {
-    return new FuncCallHttpSpec();
+  public static FuncCallHttpStep http() {
+    return new FuncCallHttpStep();
+  }
+
+  public static FuncCallHttpStep http(String name) {
+    return new FuncCallHttpStep(name);
   }
 
   /**
@@ -1034,10 +1053,10 @@ public final class FuncDSL {
    *
    * @param urlExpr expression or literal string for the endpoint URL
    * @param auth authentication configurer (e.g. {@code auth -> auth.use("my-auth")})
-   * @return a {@link FuncCallHttpSpec} preconfigured with endpoint + auth
+   * @return a {@link FuncCallHttpStep} preconfigured with endpoint + auth
    */
-  public static FuncCallHttpSpec http(String urlExpr, AuthenticationConfigurer auth) {
-    return new FuncCallHttpSpec().endpoint(urlExpr, auth);
+  public static FuncCallHttpStep http(String urlExpr, AuthenticationConfigurer auth) {
+    return new FuncCallHttpStep().endpoint(urlExpr, auth);
   }
 
   /**
@@ -1045,10 +1064,10 @@ public final class FuncDSL {
    *
    * @param url concrete URI to call
    * @param auth authentication configurer
-   * @return a {@link FuncCallHttpSpec} preconfigured with URI + auth
+   * @return a {@link FuncCallHttpStep} preconfigured with URI + auth
    */
-  public static FuncCallHttpSpec http(URI url, AuthenticationConfigurer auth) {
-    return new FuncCallHttpSpec().uri(url, auth);
+  public static FuncCallHttpStep http(URI url, AuthenticationConfigurer auth) {
+    return new FuncCallHttpStep().uri(url, auth);
   }
 
   /**
@@ -1063,7 +1082,7 @@ public final class FuncDSL {
    * @param endpoint literal or expression for the endpoint URL
    * @return a {@link FuncTaskConfigurer} adding a {@code GET} HTTP task
    */
-  public static FuncTaskConfigurer get(String endpoint) {
+  public static FuncCallHttpStep get(String endpoint) {
     return get(null, endpoint);
   }
 
@@ -1080,8 +1099,8 @@ public final class FuncDSL {
    * @param endpoint literal or expression for the endpoint URL
    * @return a {@link FuncTaskConfigurer} adding a {@code GET} HTTP task
    */
-  public static FuncTaskConfigurer get(String name, String endpoint) {
-    return call(name, http().GET().endpoint(endpoint));
+  public static FuncCallHttpStep get(String name, String endpoint) {
+    return http(name).GET().endpoint(endpoint);
   }
 
   /**
@@ -1097,7 +1116,7 @@ public final class FuncDSL {
    * @param auth authentication configurer
    * @return a {@link FuncTaskConfigurer} adding a {@code GET} HTTP task
    */
-  public static FuncTaskConfigurer get(String endpoint, AuthenticationConfigurer auth) {
+  public static FuncCallHttpStep get(String endpoint, AuthenticationConfigurer auth) {
     return get(null, endpoint, auth);
   }
 
@@ -1109,9 +1128,8 @@ public final class FuncDSL {
    * @param auth authentication configurer
    * @return a {@link FuncTaskConfigurer} adding a {@code GET} HTTP task
    */
-  public static FuncTaskConfigurer get(
-      String name, String endpoint, AuthenticationConfigurer auth) {
-    return call(name, http().GET().endpoint(endpoint, auth));
+  public static FuncCallHttpStep get(String name, String endpoint, AuthenticationConfigurer auth) {
+    return http(name).GET().endpoint(endpoint, auth);
   }
 
   /**
@@ -1120,7 +1138,7 @@ public final class FuncDSL {
    * @param endpoint concrete URI to call
    * @return a {@link FuncTaskConfigurer} adding a {@code GET} HTTP task
    */
-  public static FuncTaskConfigurer get(URI endpoint) {
+  public static FuncCallHttpStep get(URI endpoint) {
     return get(null, endpoint);
   }
 
@@ -1131,8 +1149,8 @@ public final class FuncDSL {
    * @param endpoint concrete URI to call
    * @return a {@link FuncTaskConfigurer} adding a {@code GET} HTTP task
    */
-  public static FuncTaskConfigurer get(String name, URI endpoint) {
-    return call(name, http().GET().uri(endpoint));
+  public static FuncCallHttpStep get(String name, URI endpoint) {
+    return http(name).GET().uri(endpoint);
   }
 
   /**
@@ -1142,7 +1160,7 @@ public final class FuncDSL {
    * @param auth authentication configurer
    * @return a {@link FuncTaskConfigurer} adding a {@code GET} HTTP task
    */
-  public static FuncTaskConfigurer get(URI endpoint, AuthenticationConfigurer auth) {
+  public static FuncCallHttpStep get(URI endpoint, AuthenticationConfigurer auth) {
     return get(null, endpoint, auth);
   }
 
@@ -1154,8 +1172,8 @@ public final class FuncDSL {
    * @param auth authentication configurer
    * @return a {@link FuncTaskConfigurer} adding a {@code GET} HTTP task
    */
-  public static FuncTaskConfigurer get(String name, URI endpoint, AuthenticationConfigurer auth) {
-    return call(name, http().GET().uri(endpoint, auth));
+  public static FuncCallHttpStep get(String name, URI endpoint, AuthenticationConfigurer auth) {
+    return http(name).GET().uri(endpoint, auth);
   }
 
   /**
@@ -1174,7 +1192,7 @@ public final class FuncDSL {
    * @param endpointExpr literal or expression for the endpoint URL
    * @return a {@link FuncTaskConfigurer} adding a {@code POST} HTTP task
    */
-  public static FuncTaskConfigurer post(Object body, String endpointExpr) {
+  public static FuncCallHttpStep post(Object body, String endpointExpr) {
     return post(null, body, endpointExpr);
   }
 
@@ -1186,8 +1204,8 @@ public final class FuncDSL {
    * @param endpoint literal or expression for the endpoint URL
    * @return a {@link FuncTaskConfigurer} adding a {@code POST} HTTP task
    */
-  public static FuncTaskConfigurer post(String name, Object body, String endpoint) {
-    return call(name, http().POST().endpoint(endpoint).body(body));
+  public static FuncCallHttpStep post(String name, Object body, String endpoint) {
+    return http(name).POST().endpoint(endpoint).body(body);
   }
 
   /**
@@ -1198,8 +1216,7 @@ public final class FuncDSL {
    * @param auth authentication configurer
    * @return a {@link FuncTaskConfigurer} adding an authenticated {@code POST} HTTP task
    */
-  public static FuncTaskConfigurer post(
-      Object body, String endpoint, AuthenticationConfigurer auth) {
+  public static FuncCallHttpStep post(Object body, String endpoint, AuthenticationConfigurer auth) {
     return post(null, body, endpoint, auth);
   }
 
@@ -1212,9 +1229,9 @@ public final class FuncDSL {
    * @param auth authentication configurer
    * @return a {@link FuncTaskConfigurer} adding an authenticated {@code POST} HTTP task
    */
-  public static FuncTaskConfigurer post(
+  public static FuncCallHttpStep post(
       String name, Object body, String endpoint, AuthenticationConfigurer auth) {
 
-    return call(name, http().POST().endpoint(endpoint, auth).body(body));
+    return http(name).POST().endpoint(endpoint, auth).body(body);
   }
 }

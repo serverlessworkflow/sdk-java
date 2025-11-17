@@ -37,7 +37,7 @@ abstract class Step<SELF extends Step<SELF, B>, B> implements FuncTaskConfigurer
   private final List<Consumer<B>> postConfigurers = new ArrayList<>();
 
   @SuppressWarnings("unchecked")
-  protected final SELF self() {
+  protected SELF self() {
     return (SELF) this;
   }
 
