@@ -19,6 +19,7 @@ import static io.serverlessworkflow.impl.WorkflowUtils.safeClose;
 
 import io.serverlessworkflow.api.types.SchemaInline;
 import io.serverlessworkflow.api.types.Workflow;
+import io.serverlessworkflow.impl.additional.NamedWorkflowAdditionalObject;
 import io.serverlessworkflow.impl.additional.WorkflowAdditionalObject;
 import io.serverlessworkflow.impl.config.ConfigManager;
 import io.serverlessworkflow.impl.config.ConfigSecretManager;
@@ -172,13 +173,16 @@ public class WorkflowApplication implements AutoCloseable {
         () -> new RuntimeDescriptor("reference impl", "1.0.0_alpha", Collections.emptyMap());
     private boolean lifeCycleCEPublishingEnabled = true;
     private WorkflowModelFactory modelFactory;
-    private Map<String, WorkflowAdditionalObject<?>> additionalObjects;
+    private Map<String, WorkflowAdditionalObject<?>> additionalObjects = new HashMap<>();
     private SecretManager secretManager;
     private ConfigManager configManager;
     private SchedulerListener schedulerListener;
     private Optional<URITemplateResolver> templateResolver;
 
-    private Builder() {}
+    private Builder() {
+      ServiceLoader.load(NamedWorkflowAdditionalObject.class)
+          .forEach(a -> additionalObjects.put(a.name(), a));
+    }
 
     public Builder withListener(WorkflowExecutionListener listener) {
       listeners.add(listener);
@@ -257,9 +261,6 @@ public class WorkflowApplication implements AutoCloseable {
 
     public <T> Builder withAdditionalObject(
         String name, WorkflowAdditionalObject<T> additionalObject) {
-      if (additionalObjects == null) {
-        additionalObjects = new HashMap<>();
-      }
       additionalObjects.put(name, additionalObject);
       return this;
     }
@@ -314,9 +315,7 @@ public class WorkflowApplication implements AutoCloseable {
       }
       schedulerListener = new SchedulerListener(scheduler);
       listeners.add(schedulerListener);
-      if (additionalObjects == null) {
-        additionalObjects = Collections.emptyMap();
-      }
+
       if (configManager == null) {
         configManager =
             ServiceLoader.load(ConfigManager.class)

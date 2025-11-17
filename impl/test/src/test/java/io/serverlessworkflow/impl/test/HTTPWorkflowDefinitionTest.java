@@ -107,6 +107,10 @@ public class HTTPWorkflowDefinitionTest {
         Arguments.of(
             "workflows-samples/call-http-query-parameters.yaml", starTrekInput, starTrekCondition),
         Arguments.of(
+            "workflows-samples/callFindByStatusHttp.yaml",
+            Map.of(),
+            new Condition<WorkflowModel>(o -> !o.asCollection().isEmpty(), "HasElementCondition")),
+        Arguments.of(
             "workflows-samples/call-http-query-parameters-external-schema.yaml",
             starTrekInput,
             starTrekCondition),
