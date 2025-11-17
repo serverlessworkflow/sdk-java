@@ -19,8 +19,8 @@ import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
+import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
-import io.serverlessworkflow.impl.expressions.ExpressionDescriptor;
 import jakarta.ws.rs.core.UriBuilder;
 import java.net.URI;
 import java.util.Map;
@@ -31,7 +31,7 @@ class OperationPathResolver implements WorkflowValueResolver<URI> {
 
   OperationPathResolver(String path, WorkflowApplication application, Map<String, Object> args) {
     this.path = path;
-    this.asMap = application.expressionFactory().resolveMap(ExpressionDescriptor.object(args));
+    this.asMap = WorkflowUtils.buildMapResolver(application, args);
   }
 
   @Override
