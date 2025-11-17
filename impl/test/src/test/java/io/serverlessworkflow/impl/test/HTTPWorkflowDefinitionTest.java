@@ -91,6 +91,10 @@ public class HTTPWorkflowDefinitionTest {
                     .get("title")
                     .equals("Star Trek"),
             "StartTrek");
+    Condition<WorkflowModel> postCondition =
+        new Condition<WorkflowModel>(
+            o -> o.asText().orElseThrow().equals("Javierito"), "CallHttpPostCondition");
+    Map<String, String> postMap = Map.of("name", "Javierito", "surname", "Unknown");
     return Stream.of(
         Arguments.of("workflows-samples/callGetHttp.yaml", petInput, petCondition),
         Arguments.of(
@@ -106,10 +110,7 @@ public class HTTPWorkflowDefinitionTest {
             "workflows-samples/call-http-query-parameters-external-schema.yaml",
             starTrekInput,
             starTrekCondition),
-        Arguments.of(
-            "workflows-samples/callPostHttp.yaml",
-            Map.of("name", "Javierito", "surname", "Unknown"),
-            new Condition<WorkflowModel>(
-                o -> o.asText().orElseThrow().equals("Javierito"), "CallHttpPostCondition")));
+        Arguments.of("workflows-samples/callPostHttp.yaml", postMap, postCondition),
+        Arguments.of("workflows-samples/callPostHttpAsExpr.yaml", postMap, postCondition));
   }
 }

@@ -28,10 +28,11 @@ import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowError;
 import io.serverlessworkflow.impl.WorkflowException;
+import io.serverlessworkflow.impl.WorkflowFilter;
 import io.serverlessworkflow.impl.WorkflowModel;
+import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
 import io.serverlessworkflow.impl.executors.CallableTask;
-import io.serverlessworkflow.impl.expressions.ExpressionDescriptor;
 import jakarta.ws.rs.HttpMethod;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.client.Invocation.Builder;
@@ -95,19 +96,11 @@ public class HttpExecutor implements CallableTask<CallHTTP> {
     }
 
     public HttpExecutorBuilder withHeaders(Map<String, Object> headersMap) {
-      return withHeaders(
-          definition
-              .application()
-              .expressionFactory()
-              .resolveMap(ExpressionDescriptor.object(headersMap)));
+      return withHeaders(WorkflowUtils.buildMapResolver(definition.application(), headersMap));
     }
 
-    public HttpExecutorBuilder withQueryMap(Map<String, Object> headersMap) {
-      return withQueryMap(
-          definition
-              .application()
-              .expressionFactory()
-              .resolveMap(ExpressionDescriptor.object(headersMap)));
+    public HttpExecutorBuilder withQueryMap(Map<String, Object> queryMap) {
+      return withQueryMap(WorkflowUtils.buildMapResolver(definition.application(), queryMap));
     }
 
     public HttpExecutorBuilder withMethod(String method) {
@@ -193,8 +186,7 @@ public class HttpExecutor implements CallableTask<CallHTTP> {
       String method, Object body, WorkflowApplication application, HttpModelConverter converter) {
     switch (method.toUpperCase()) {
       case HttpMethod.POST:
-        WorkflowValueResolver<Map<String, Object>> bodyFilter =
-            buildMapResolver(application, null, body);
+        WorkflowFilter bodyFilter = WorkflowUtils.buildWorkflowFilter(application, body);
         return (request, w, context, node) ->
             converter.toModel(
                 application.modelFactory(),

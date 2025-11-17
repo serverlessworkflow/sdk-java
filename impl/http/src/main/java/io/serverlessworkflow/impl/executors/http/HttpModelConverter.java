@@ -18,7 +18,6 @@ package io.serverlessworkflow.impl.executors.http;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowModelFactory;
 import jakarta.ws.rs.client.Entity;
-import java.util.Map;
 
 public interface HttpModelConverter {
 
@@ -26,7 +25,7 @@ public interface HttpModelConverter {
     return factory.fromAny(model, entity);
   }
 
-  default Entity toEntity(Map<String, Object> model) {
-    return Entity.json(model);
+  default Entity toEntity(WorkflowModel model) {
+    return Entity.json(model.as(model.objectClass()).orElseThrow());
   }
 }

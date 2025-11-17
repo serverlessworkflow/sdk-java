@@ -72,8 +72,7 @@ public class RunShellExecutor implements RunnableTask<RunShell> {
           StringBuilder commandBuilder =
               new StringBuilder(
                   ExpressionUtils.isExpr(shellCommand)
-                      ? WorkflowUtils.buildStringResolver(
-                              application, shellCommand, taskContext.input().asJavaObject())
+                      ? WorkflowUtils.buildStringFilter(application, shellCommand)
                           .apply(workflowContext, taskContext, taskContext.input())
                       : shellCommand);
 
@@ -85,8 +84,7 @@ public class RunShellExecutor implements RunnableTask<RunShell> {
                   .append(" ")
                   .append(
                       ExpressionUtils.isExpr(entry.getKey())
-                          ? WorkflowUtils.buildStringResolver(
-                                  application, entry.getKey(), taskContext.input().asJavaObject())
+                          ? WorkflowUtils.buildStringFilter(application, entry.getKey())
                               .apply(workflowContext, taskContext, taskContext.input())
                           : entry.getKey());
               if (entry.getValue() != null) {
@@ -95,10 +93,8 @@ public class RunShellExecutor implements RunnableTask<RunShell> {
                     .append("=")
                     .append(
                         ExpressionUtils.isExpr(entry.getValue())
-                            ? WorkflowUtils.buildStringResolver(
-                                    application,
-                                    entry.getValue().toString(),
-                                    taskContext.input().asJavaObject())
+                            ? WorkflowUtils.buildStringFilter(
+                                    application, entry.getValue().toString())
                                 .apply(workflowContext, taskContext, taskContext.input())
                             : entry.getValue().toString());
               }
@@ -113,10 +109,7 @@ public class RunShellExecutor implements RunnableTask<RunShell> {
                 shell.getEnvironment().getAdditionalProperties().entrySet()) {
               String value =
                   ExpressionUtils.isExpr(entry.getValue())
-                      ? WorkflowUtils.buildStringResolver(
-                              application,
-                              entry.getValue().toString(),
-                              taskContext.input().asJavaObject())
+                      ? WorkflowUtils.buildStringFilter(application, entry.getValue().toString())
                           .apply(workflowContext, taskContext, taskContext.input())
                       : entry.getValue().toString();
 

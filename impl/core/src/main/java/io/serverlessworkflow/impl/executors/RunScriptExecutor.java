@@ -72,14 +72,14 @@ public class RunScriptExecutor implements RunnableTask<RunScript> {
         script.getEnvironment() != null && script.getEnvironment().getAdditionalProperties() != null
             ? Optional.of(
                 WorkflowUtils.buildMapResolver(
-                    application, null, script.getEnvironment().getAdditionalProperties()))
+                    application, script.getEnvironment().getAdditionalProperties()))
             : Optional.empty();
 
     this.argumentExpr =
         script.getArguments() != null && script.getArguments().getAdditionalProperties() != null
             ? Optional.of(
                 WorkflowUtils.buildMapResolver(
-                    application, null, script.getArguments().getAdditionalProperties()))
+                    application, script.getArguments().getAdditionalProperties()))
             : Optional.empty();
 
     this.codeSupplier =
