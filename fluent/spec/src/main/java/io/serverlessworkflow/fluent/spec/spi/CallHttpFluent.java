@@ -19,11 +19,11 @@ import io.serverlessworkflow.fluent.spec.TaskBaseBuilder;
 import java.util.UUID;
 import java.util.function.Consumer;
 
-public interface CallHTTPFluent<SELF extends TaskBaseBuilder<SELF>, LIST> {
+public interface CallHttpFluent<SELF extends TaskBaseBuilder<SELF>, LIST> {
 
-  LIST callHTTP(String name, Consumer<SELF> itemsConfigurer);
+  LIST http(String name, Consumer<SELF> itemsConfigurer);
 
-  default LIST callHTTP(Consumer<SELF> itemsConfigurer) {
-    return this.callHTTP(UUID.randomUUID().toString(), itemsConfigurer);
+  default LIST http(Consumer<SELF> itemsConfigurer) {
+    return this.http(UUID.randomUUID().toString(), itemsConfigurer);
   }
 }

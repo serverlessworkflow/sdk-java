@@ -49,7 +49,7 @@ public class LoopAgentsBuilder {
     forEachIndexed(
         execs,
         (exec, idx) ->
-            funcDelegate.callFn(
+            funcDelegate.function(
                 baseName + "-" + idx, fn -> fn.function(AgentAdapters.toFunction(exec))));
     return this;
   }

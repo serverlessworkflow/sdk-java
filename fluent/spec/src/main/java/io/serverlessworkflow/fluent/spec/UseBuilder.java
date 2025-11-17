@@ -16,6 +16,7 @@
 package io.serverlessworkflow.fluent.spec;
 
 import io.serverlessworkflow.api.types.Use;
+import io.serverlessworkflow.api.types.UseAuthentications;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -25,6 +26,7 @@ public class UseBuilder {
 
   UseBuilder() {
     this.use = new Use();
+    this.use.setAuthentications(new UseAuthentications());
   }
 
   public UseBuilder secrets(final String... secrets) {
@@ -37,7 +39,11 @@ public class UseBuilder {
   public UseBuilder authentications(Consumer<UseAuthenticationsBuilder> authenticationsConsumer) {
     final UseAuthenticationsBuilder builder = new UseAuthenticationsBuilder();
     authenticationsConsumer.accept(builder);
-    this.use.setAuthentications(builder.build());
+    final UseAuthentications useAuthentications = builder.build();
+    this.use
+        .getAuthentications()
+        .getAdditionalProperties()
+        .putAll(useAuthentications.getAdditionalProperties());
     return this;
   }
 

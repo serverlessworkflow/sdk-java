@@ -70,8 +70,8 @@ public class AgentDoTaskBuilder
   }
 
   @Override
-  public AgentDoTaskBuilder callFn(String name, Consumer<FuncCallTaskBuilder> cfg) {
-    this.listBuilder().callFn(name, cfg);
+  public AgentDoTaskBuilder function(String name, Consumer<FuncCallTaskBuilder> cfg) {
+    this.listBuilder().function(name, cfg);
     return self();
   }
 

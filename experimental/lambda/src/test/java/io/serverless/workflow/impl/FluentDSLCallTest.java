@@ -34,7 +34,7 @@ public class FluentDSLCallTest {
     try (WorkflowApplication app = WorkflowApplication.builder().build()) {
       final Workflow workflow =
           FuncWorkflowBuilder.workflow("testJavaCall")
-              .tasks(tasks -> tasks.callFn(f -> f.function(JavaFunctions::getName)))
+              .tasks(tasks -> tasks.function(f -> f.function(JavaFunctions::getName)))
               .build();
       assertThat(
               app.workflowDefinition(workflow)
@@ -85,7 +85,7 @@ public class FluentDSLCallTest {
                                   switchOdd.onPredicate(
                                       item ->
                                           item.when(CallTest::isOdd).then(FlowDirectiveEnum.END)))
-                          .callFn(callJava -> callJava.function(CallTest::zero)))
+                          .function(callJava -> callJava.function(CallTest::zero)))
               .build();
 
       WorkflowDefinition definition = app.workflowDefinition(workflow);

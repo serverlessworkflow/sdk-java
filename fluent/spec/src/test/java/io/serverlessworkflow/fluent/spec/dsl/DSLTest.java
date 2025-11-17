@@ -15,9 +15,14 @@
  */
 package io.serverlessworkflow.fluent.spec.dsl;
 
+import static io.serverlessworkflow.fluent.spec.dsl.DSL.auth;
+import static io.serverlessworkflow.fluent.spec.dsl.DSL.basic;
+import static io.serverlessworkflow.fluent.spec.dsl.DSL.bearer;
+import static io.serverlessworkflow.fluent.spec.dsl.DSL.call;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.error;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.event;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.http;
+import static io.serverlessworkflow.fluent.spec.dsl.DSL.secrets;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.to;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -32,17 +37,16 @@ import org.junit.jupiter.api.Test;
 public class DSLTest {
 
   @Test
-  public void when_new_call_http_task() {
+  public void when_new_http_call_task() {
     Workflow wf =
         WorkflowBuilder.workflow("myFlow", "myNs", "1.2.3")
             .tasks(
-                t ->
-                    t.callHTTP(
-                        http()
-                            .acceptJSON()
-                            .header("CustomKey", "CustomValue")
-                            .POST()
-                            .endpoint("${ \"https://petstore.swagger.io/v2/pet/\\(.petId)\" }")))
+                call(
+                    http()
+                        .acceptJSON()
+                        .header("CustomKey", "CustomValue")
+                        .POST()
+                        .endpoint("${ \"https://petstore.swagger.io/v2/pet/\\(.petId)\" }")))
             .build();
 
     HTTPArguments args = wf.getDo().get(0).getTask().getCallTask().getCallHTTP().getWith();
@@ -259,5 +263,22 @@ public class DSLTest {
     assertThat(def.getStatus()).isEqualTo(500);
     assertThat(def.getTitle().getExpressionErrorTitle()).isEqualTo("Boom");
     assertThat(def.getDetail().getExpressionErrorDetails()).isEqualTo("x");
+  }
+
+  @Test
+  void use_spec_accumulates_secrets_and_auths() {
+    Workflow wf =
+        WorkflowBuilder.workflow("id", "ns", "1")
+            .use(
+                auth("basic-auth", basic("u", "p")),
+                auth("bearer-auth", bearer("t")),
+                secrets("s1", "s2"))
+            .build();
+
+    var use = wf.getUse();
+    assertThat(use).isNotNull();
+    assertThat(use.getSecrets()).containsExactly("s1", "s2");
+    assertThat(use.getAuthentications().getAdditionalProperties().keySet())
+        .containsExactly("basic-auth", "bearer-auth");
   }
 }

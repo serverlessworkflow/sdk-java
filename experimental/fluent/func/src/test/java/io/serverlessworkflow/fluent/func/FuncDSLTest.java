@@ -18,11 +18,17 @@ package io.serverlessworkflow.fluent.func;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.emit;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.event;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.function;
+import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.get;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.listen;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.toOne;
-import static org.junit.jupiter.api.Assertions.*;
+import static io.serverlessworkflow.fluent.spec.dsl.DSL.auth;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import io.cloudevents.core.data.BytesCloudEventData;
+import io.serverlessworkflow.api.types.CallHTTP;
 import io.serverlessworkflow.api.types.Export;
 import io.serverlessworkflow.api.types.FlowDirectiveEnum;
 import io.serverlessworkflow.api.types.Task;
@@ -33,6 +39,7 @@ import io.serverlessworkflow.api.types.func.JavaFilterFunction;
 import io.serverlessworkflow.fluent.func.dsl.FuncDSL;
 import io.serverlessworkflow.fluent.func.dsl.FuncEmitSpec;
 import io.serverlessworkflow.fluent.func.dsl.FuncListenSpec;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
@@ -200,5 +207,227 @@ class FuncDSLTest {
     assertEquals(".score >= 80", items.get(0).getSwitchCase().getWhen());
     assertEquals(
         FlowDirectiveEnum.END, items.get(1).getSwitchCase().getThen().getFlowDirectiveEnum());
+  }
+
+  @Test
+  void http_spec_via_call_builds_call_http_task() {
+    Workflow wf =
+        FuncWorkflowBuilder.workflow("http-call-spec")
+            .tasks(
+                FuncDSL.call("checkHealth", FuncDSL.http().GET().endpoint("http://service/health")))
+            .build();
+
+    List<TaskItem> items = wf.getDo();
+    assertEquals(1, items.size());
+
+    Task t = items.get(0).getTask();
+    assertNotNull(t.getCallTask(), "CallTask expected for HTTP call");
+
+    // HTTP-specific call
+    assertInstanceOf(
+        CallHTTP.class, t.getCallTask().get(), "CallTask should be an instance of CallHTTP");
+
+    CallHTTP http = (CallHTTP) t.getCallTask().get();
+    assertEquals("GET", http.getWith().getMethod(), "HTTP method should be GET");
+    assertEquals(
+        "http://service/health",
+        http.getWith().getEndpoint().getUriTemplate().getLiteralUri().toString(),
+        "endpoint should match the DSL endpoint");
+  }
+
+  @Test
+  @DisplayName("get(endpoint) convenience creates unnamed GET CallHTTP task")
+  void get_convenience_creates_http_get() {
+    Workflow wf =
+        FuncWorkflowBuilder.workflow("http-get-convenience")
+            .tasks(get("http://service/status"))
+            .build();
+
+    List<TaskItem> items = wf.getDo();
+    assertEquals(1, items.size());
+
+    Task t = items.get(0).getTask();
+    assertNotNull(t.getCallTask(), "CallTask expected");
+
+    CallHTTP http = (CallHTTP) t.getCallTask().get();
+    assertEquals("GET", http.getWith().getMethod());
+    assertEquals(
+        "http://service/status",
+        http.getWith().getEndpoint().getUriTemplate().getLiteralUri().toString(),
+        "endpoint should be set from get(endpoint)");
+  }
+
+  @Test
+  @DisplayName("get(name, endpoint, auth -> auth.use(\"auth-id\")) wires authentication")
+  void get_named_with_authentication_uses_auth_policy() {
+    Workflow wf =
+        FuncWorkflowBuilder.workflow("http-get-auth")
+            .tasks(get("fetchUsers", "http://service/api/users", auth("user-service-auth")))
+            .build();
+
+    List<TaskItem> items = wf.getDo();
+    assertEquals(1, items.size());
+
+    assertEquals("fetchUsers", items.get(0).getName(), "Task should use the provided name");
+    Task t = items.get(0).getTask();
+    assertNotNull(t.getCallTask(), "CallTask expected");
+
+    CallHTTP http = (CallHTTP) t.getCallTask().get();
+    assertEquals("GET", http.getWith().getMethod());
+    assertEquals(
+        "http://service/api/users",
+        http.getWith().getEndpoint().getUriTemplate().getLiteralUri().toString(),
+        "endpoint should be set from get(name, endpoint, auth)");
+
+    assertNotNull(
+        http.getWith().getEndpoint().getEndpointConfiguration().getAuthentication(),
+        "authentication should be configured");
+    assertEquals(
+        "user-service-auth",
+        http.getWith()
+            .getEndpoint()
+            .getEndpointConfiguration()
+            .getAuthentication()
+            .getAuthenticationPolicyReference()
+            .getUse(),
+        "auth.use(\"...\") should set authentication.use");
+  }
+
+  @Test
+  @DisplayName("get(URI endpoint, auth) uses URI and authentication")
+  void get_with_uri_and_authentication() {
+    URI endpoint = URI.create("https://service.example.com/api/health");
+
+    Workflow wf =
+        FuncWorkflowBuilder.workflow("http-get-uri-auth")
+            .tasks(get("checkHealth", endpoint, auth -> auth.use("tls-auth")))
+            .build();
+
+    List<TaskItem> items = wf.getDo();
+    assertEquals(1, items.size());
+
+    Task t = items.get(0).getTask();
+    assertEquals("checkHealth", items.get(0).getName(), "Task should use the provided name");
+    assertNotNull(t.getCallTask());
+
+    CallHTTP http = (CallHTTP) t.getCallTask().get();
+    assertEquals("GET", http.getWith().getMethod());
+    assertEquals(
+        endpoint.toString(),
+        http.getWith().getEndpoint().getUriTemplate().getLiteralUri().toString(),
+        "endpoint should be derived from URI");
+
+    assertNotNull(http.getWith().getEndpoint().getEndpointConfiguration().getAuthentication());
+    assertEquals(
+        "tls-auth",
+        http.getWith()
+            .getEndpoint()
+            .getEndpointConfiguration()
+            .getAuthentication()
+            .getAuthenticationPolicyReference()
+            .getUse());
+  }
+
+  @Test
+  @DisplayName("post(body, endpoint) convenience creates POST CallHTTP with body")
+  void post_convenience_creates_http_post_with_body() {
+    Map<String, Object> body = Map.of("name", "Ricardo");
+
+    Workflow wf =
+        FuncWorkflowBuilder.workflow("http-post-convenience")
+            .tasks(FuncDSL.post(body, "http://service/api/users"))
+            .build();
+
+    List<TaskItem> items = wf.getDo();
+    assertEquals(1, items.size());
+
+    Task t = items.get(0).getTask();
+    assertNotNull(t.getCallTask(), "CallTask expected");
+
+    CallHTTP http = (CallHTTP) t.getCallTask().get();
+    assertEquals("POST", http.getWith().getMethod());
+    assertEquals(
+        "http://service/api/users",
+        http.getWith().getEndpoint().getUriTemplate().getLiteralUri().toString(),
+        "endpoint should be set from post(body, endpoint)");
+
+    assertNotNull(http.getWith().getBody(), "Body should be set on POST");
+    assertEquals(body, http.getWith().getBody(), "Body should match the provided payload");
+  }
+
+  @Test
+  @DisplayName("post(name, body, endpoint, auth) wires name, method, endpoint, body and auth")
+  void post_named_with_authentication() {
+    Map<String, Object> body = Map.of("id", 123, "status", "NEW");
+
+    Workflow wf =
+        FuncWorkflowBuilder.workflow("http-post-named-auth")
+            .tasks(
+                FuncDSL.post(
+                    "createOrder",
+                    body,
+                    "https://orders.example.com/api/orders",
+                    auth -> auth.use("orders-auth")))
+            .build();
+
+    List<TaskItem> items = wf.getDo();
+    assertEquals(1, items.size());
+
+    Task t = items.get(0).getTask();
+    assertEquals("createOrder", items.get(0).getName(), "Task should use the provided name");
+    assertNotNull(t.getCallTask());
+
+    CallHTTP http = (CallHTTP) t.getCallTask().get();
+    assertEquals("POST", http.getWith().getMethod());
+    assertEquals(
+        "https://orders.example.com/api/orders",
+        http.getWith().getEndpoint().getUriTemplate().getLiteralUri().toString());
+    assertEquals(body, http.getWith().getBody());
+
+    assertNotNull(http.getWith().getEndpoint().getEndpointConfiguration().getAuthentication());
+    assertEquals(
+        "orders-auth",
+        http.getWith()
+            .getEndpoint()
+            .getEndpointConfiguration()
+            .getAuthentication()
+            .getAuthenticationPolicyReference()
+            .getUse());
+  }
+
+  @Test
+  @DisplayName("call(http(\"...\", auth)) reuses fluent HTTP spec in call(...)")
+  void call_with_preconfigured_http_spec() {
+    Workflow wf =
+        FuncWorkflowBuilder.workflow("http-call-preconfigured")
+            .tasks(
+                FuncDSL.call(
+                    "preconfigured",
+                    FuncDSL.http("http://service/api", auth -> auth.use("svc-auth"))
+                        .POST()
+                        .body(Map.of("foo", "bar"))))
+            .build();
+
+    List<TaskItem> items = wf.getDo();
+    assertEquals(1, items.size());
+
+    Task t = items.get(0).getTask();
+    assertEquals("preconfigured", items.get(0).getName());
+    assertNotNull(t.getCallTask());
+
+    CallHTTP http = (CallHTTP) t.getCallTask().get();
+    assertEquals("POST", http.getWith().getMethod());
+    assertEquals(
+        "http://service/api",
+        http.getWith().getEndpoint().getUriTemplate().getLiteralUri().toString());
+    assertEquals(
+        "svc-auth",
+        http.getWith()
+            .getEndpoint()
+            .getEndpointConfiguration()
+            .getAuthentication()
+            .getAuthenticationPolicyReference()
+            .getUse());
+    assertEquals(Map.of("foo", "bar"), http.getWith().getBody());
   }
 }

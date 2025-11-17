@@ -79,6 +79,24 @@ public abstract class BaseWorkflowBuilder<
     return self();
   }
 
+  @SafeVarargs
+  public final SELF use(Consumer<UseBuilder>... configurers) {
+    if (configurers == null || configurers.length == 0) {
+      return self();
+    }
+    return use(List.of(configurers.clone()));
+  }
+
+  private SELF use(List<Consumer<UseBuilder>> configurers) {
+    final UseBuilder builder = new UseBuilder();
+    configurers.forEach(
+        c -> {
+          if (c != null) c.accept(builder);
+        });
+    this.workflow.setUse(builder.build());
+    return self();
+  }
+
   public SELF tasks(Consumer<DBuilder> doTaskConsumer) {
     return appendDo(doTaskConsumer);
   }

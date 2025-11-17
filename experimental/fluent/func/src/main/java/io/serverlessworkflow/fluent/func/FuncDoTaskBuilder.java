@@ -73,14 +73,27 @@ public class FuncDoTaskBuilder extends BaseDoTaskBuilder<FuncDoTaskBuilder, Func
   }
 
   @Override
-  public FuncDoTaskBuilder callFn(String name, Consumer<FuncCallTaskBuilder> cfg) {
-    this.listBuilder().callFn(name, cfg);
+  public FuncDoTaskBuilder function(String name, Consumer<FuncCallTaskBuilder> cfg) {
+    this.listBuilder().function(name, cfg);
     return this;
   }
 
   @Override
   public FuncDoTaskBuilder fork(String name, Consumer<FuncForkTaskBuilder> itemsConfigurer) {
     this.listBuilder().fork(name, itemsConfigurer);
+    return this;
+  }
+
+  @Override
+  public FuncDoTaskBuilder http(String name, Consumer<FuncCallHttpTaskBuilder> itemsConfigurer) {
+    this.listBuilder().http(name, itemsConfigurer);
+    return this;
+  }
+
+  @Override
+  public FuncDoTaskBuilder openapi(
+      String name, Consumer<FuncCallOpenAPITaskBuilder> itemsConfigurer) {
+    this.listBuilder().openapi(name, itemsConfigurer);
     return this;
   }
 }

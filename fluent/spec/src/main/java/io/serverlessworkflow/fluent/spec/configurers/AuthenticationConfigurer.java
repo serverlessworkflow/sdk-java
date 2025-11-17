@@ -15,8 +15,9 @@
  */
 package io.serverlessworkflow.fluent.spec.configurers;
 
-import io.serverlessworkflow.fluent.spec.AuthenticationPolicyUnionBuilder;
+import io.serverlessworkflow.fluent.spec.ReferenceableAuthenticationPolicyBuilder;
 import java.util.function.Consumer;
 
 @FunctionalInterface
-public interface AuthenticationConfigurer extends Consumer<AuthenticationPolicyUnionBuilder> {}
+public interface AuthenticationConfigurer
+    extends Consumer<ReferenceableAuthenticationPolicyBuilder> {}

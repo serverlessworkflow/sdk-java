@@ -87,9 +87,9 @@ public final class FuncCallStep<T, R> extends Step<FuncCallStep<T, R>, FuncCallT
         };
 
     if (name == null) {
-      list.callFn(apply);
+      list.function(apply);
     } else {
-      list.callFn(name, apply);
+      list.function(name, apply);
     }
   }
 }

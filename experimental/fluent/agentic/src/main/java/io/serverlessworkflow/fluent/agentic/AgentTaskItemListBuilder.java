@@ -56,7 +56,7 @@ public class AgentTaskItemListBuilder extends BaseTaskItemListBuilder<AgentTaskI
     AgentAdapters.toExecutors(agent)
         .forEach(
             exec ->
-                this.delegate.callFn(
+                this.delegate.function(
                     name,
                     fn -> fn.function(AgentAdapters.toFunction(exec), DefaultAgenticScope.class)));
     return self();
@@ -103,8 +103,8 @@ public class AgentTaskItemListBuilder extends BaseTaskItemListBuilder<AgentTaskI
   }
 
   @Override
-  public AgentTaskItemListBuilder callFn(String name, Consumer<FuncCallTaskBuilder> cfg) {
-    this.delegate.callFn(name, cfg);
+  public AgentTaskItemListBuilder function(String name, Consumer<FuncCallTaskBuilder> cfg) {
+    this.delegate.function(name, cfg);
     return self();
   }
 

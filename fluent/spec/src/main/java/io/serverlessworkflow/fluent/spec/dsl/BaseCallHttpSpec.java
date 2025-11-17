@@ -15,89 +15,95 @@
  */
 package io.serverlessworkflow.fluent.spec.dsl;
 
-import io.serverlessworkflow.fluent.spec.CallHTTPTaskBuilder;
 import io.serverlessworkflow.fluent.spec.configurers.AuthenticationConfigurer;
-import io.serverlessworkflow.fluent.spec.configurers.CallHTTPConfigurer;
+import io.serverlessworkflow.fluent.spec.spi.CallHttpTaskFluent;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
-public final class CallHTTPSpec implements CallHTTPConfigurer {
+public abstract class BaseCallHttpSpec<SELF extends BaseCallHttpSpec<SELF>> {
 
-  private final List<CallHTTPConfigurer> steps = new ArrayList<>();
+  private final List<Consumer<CallHttpTaskFluent<?>>> steps = new ArrayList<>();
 
-  public CallHTTPSpec GET() {
+  protected abstract SELF self();
+
+  public SELF GET() {
     steps.add(c -> c.method("GET"));
-    return this;
+    return self();
   }
 
-  public CallHTTPSpec POST() {
+  public SELF POST() {
     steps.add(c -> c.method("POST"));
-    return this;
+    return self();
   }
 
-  public CallHTTPSpec acceptJSON() {
+  public SELF acceptJSON() {
     return header("Accept", "application/json");
   }
 
-  public CallHTTPSpec endpoint(String urlExpr) {
+  public SELF endpoint(String urlExpr) {
     steps.add(b -> b.endpoint(urlExpr));
-    return this;
+    return self();
   }
 
-  public CallHTTPSpec endpoint(String urlExpr, AuthenticationConfigurer auth) {
+  public SELF endpoint(String urlExpr, AuthenticationConfigurer auth) {
     steps.add(b -> b.endpoint(urlExpr, auth));
-    return this;
+    return self();
   }
 
-  public CallHTTPSpec uri(String url) {
+  public SELF uri(String url) {
     steps.add(b -> b.endpoint(URI.create(url)));
-    return this;
+    return self();
   }
 
-  public CallHTTPSpec uri(String url, AuthenticationConfigurer auth) {
+  public SELF uri(String url, AuthenticationConfigurer auth) {
     steps.add(b -> b.endpoint(URI.create(url), auth));
-    return this;
+    return self();
   }
 
-  public CallHTTPSpec uri(URI uri) {
+  public SELF uri(URI uri) {
     steps.add(b -> b.endpoint(uri));
-    return this;
+    return self();
   }
 
-  public CallHTTPSpec uri(URI uri, AuthenticationConfigurer auth) {
+  public SELF uri(URI uri, AuthenticationConfigurer auth) {
     steps.add(b -> b.endpoint(uri, auth));
-    return this;
+    return self();
   }
 
-  public CallHTTPSpec body(String bodyExpr) {
+  public SELF body(String bodyExpr) {
     steps.add(c -> c.body(bodyExpr));
-    return this;
+    return self();
   }
 
-  public CallHTTPSpec body(Map<String, Object> body) {
+  public SELF body(Map<String, Object> body) {
     steps.add(c -> c.body(body));
-    return this;
+    return self();
   }
 
-  public CallHTTPSpec method(String method) {
+  public SELF body(Object bodyExpr) {
+    steps.add(c -> c.body(bodyExpr));
+    return self();
+  }
+
+  public SELF method(String method) {
     steps.add(b -> b.method(method));
-    return this;
+    return self();
   }
 
-  public CallHTTPSpec header(String name, String value) {
+  public SELF header(String name, String value) {
     steps.add(c -> c.headers(h -> h.header(name, value)));
-    return this;
+    return self();
   }
 
-  public CallHTTPSpec headers(Map<String, String> headers) {
+  public SELF headers(Map<String, String> headers) {
     steps.add(b -> b.headers(headers));
-    return this;
+    return self();
   }
 
-  @Override
-  public void accept(CallHTTPTaskBuilder b) {
+  public void accept(CallHttpTaskFluent<?> b) {
     for (var s : steps) s.accept(b);
   }
 }

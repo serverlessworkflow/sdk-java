@@ -32,7 +32,7 @@ class FuncDSLConsumeTest {
   @Test
   @DisplayName(
       "consume(name, Consumer, Class) produces CallTask and leaves output unchanged by contract")
-  void consume_produces_CallTask() {
+  void consume_produces_callTask() {
     AtomicReference<String> sink = new AtomicReference<>();
 
     Workflow wf =

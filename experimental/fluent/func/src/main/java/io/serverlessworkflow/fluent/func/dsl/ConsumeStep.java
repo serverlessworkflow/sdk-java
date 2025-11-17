@@ -38,7 +38,7 @@ public final class ConsumeStep<T> extends Step<ConsumeStep<T>, FuncCallTaskBuild
   protected void configure(
       FuncTaskItemListBuilder list, java.util.function.Consumer<FuncCallTaskBuilder> post) {
     if (name == null) {
-      list.callFn(
+      list.function(
           cb -> {
             // prefer the typed consumer if your builder supports it; otherwise fallback:
             if (argClass != null) cb.consumer(consumer, argClass);
@@ -46,7 +46,7 @@ public final class ConsumeStep<T> extends Step<ConsumeStep<T>, FuncCallTaskBuild
             post.accept(cb);
           });
     } else {
-      list.callFn(
+      list.function(
           name,
           cb -> {
             if (argClass != null) cb.consumer(consumer, argClass);

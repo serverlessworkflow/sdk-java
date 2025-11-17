@@ -13,17 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.fluent.func.spi;
+package io.serverlessworkflow.fluent.spec.spi;
 
 import io.serverlessworkflow.fluent.spec.TaskBaseBuilder;
 import java.util.UUID;
 import java.util.function.Consumer;
 
-public interface CallFnFluent<SELF extends TaskBaseBuilder<?>, LIST> {
+public interface CallOpenAPIFluent<SELF extends TaskBaseBuilder<SELF>, LIST> {
 
-  LIST function(String name, Consumer<SELF> cfg);
+  LIST openapi(String name, Consumer<SELF> itemsConfigurer);
 
-  default LIST function(Consumer<SELF> cfg) {
-    return this.function(UUID.randomUUID().toString(), cfg);
+  default LIST openapi(Consumer<SELF> itemsConfigurer) {
+    return this.openapi(UUID.randomUUID().toString(), itemsConfigurer);
   }
 }

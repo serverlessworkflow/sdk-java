@@ -143,12 +143,12 @@ public final class AgenticDSL {
   }
 
   public static <T, V> AgentTaskConfigurer function(Function<T, V> function, Class<T> argClass) {
-    return list -> list.callFn(fn(function, argClass));
+    return list -> list.function(fn(function, argClass));
   }
 
   public static <T, V> AgentTaskConfigurer function(Function<T, V> function) {
     Class<T> clazz = ReflectionUtils.inferInputType(function);
-    return list -> list.callFn(fn(function, clazz));
+    return list -> list.function(fn(function, clazz));
   }
 
   public static AgentTaskConfigurer agent(Object agent) {

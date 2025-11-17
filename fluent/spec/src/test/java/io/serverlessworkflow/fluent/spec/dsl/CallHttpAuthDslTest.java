@@ -17,6 +17,7 @@ package io.serverlessworkflow.fluent.spec.dsl;
 
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.basic;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.bearer;
+import static io.serverlessworkflow.fluent.spec.dsl.DSL.call;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.digest;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.http;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.oauth2;
@@ -37,10 +38,13 @@ public class CallHttpAuthDslTest {
   void when_call_http_with_basic_auth_on_endpoint_expr() {
     Workflow wf =
         WorkflowBuilder.workflow("f", "ns", "1")
-            .tasks(t -> t.callHTTP(http().GET().endpoint(EXPR_ENDPOINT, basic("alice", "secret"))))
+            .tasks(call(http().GET().endpoint(EXPR_ENDPOINT, basic("alice", "secret"))))
             .build();
 
     var args = wf.getDo().get(0).getTask().getCallTask().getCallHTTP().getWith();
+
+    assertThat(wf.getDo().get(0).getTask().get()).isNotNull();
+    assertThat(wf.getDo().get(0).getTask().getCallTask().get()).isNotNull();
 
     // Endpoint expression is set
     assertThat(args.getEndpoint().getRuntimeExpression()).isEqualTo(EXPR_ENDPOINT);
@@ -74,7 +78,7 @@ public class CallHttpAuthDslTest {
   void when_call_http_with_bearer_auth_on_endpoint_expr() {
     Workflow wf =
         WorkflowBuilder.workflow("f", "ns", "1")
-            .tasks(t -> t.callHTTP(http().GET().endpoint(EXPR_ENDPOINT, bearer("token-123"))))
+            .tasks(call(http().GET().endpoint(EXPR_ENDPOINT, bearer("token-123"))))
             .build();
 
     var args = wf.getDo().get(0).getTask().getCallTask().getCallHTTP().getWith();
@@ -103,7 +107,7 @@ public class CallHttpAuthDslTest {
   void when_call_http_with_digest_auth_on_endpoint_expr() {
     Workflow wf =
         WorkflowBuilder.workflow("f", "ns", "1")
-            .tasks(t -> t.callHTTP(http().GET().endpoint(EXPR_ENDPOINT, digest("bob", "p@ssw0rd"))))
+            .tasks(call(http().GET().endpoint(EXPR_ENDPOINT, digest("bob", "p@ssw0rd"))))
             .build();
 
     var args = wf.getDo().get(0).getTask().getCallTask().getCallHTTP().getWith();
@@ -139,18 +143,17 @@ public class CallHttpAuthDslTest {
     Workflow wf =
         WorkflowBuilder.workflow("f", "ns", "1")
             .tasks(
-                t ->
-                    t.callHTTP(
-                        http()
-                            .POST()
-                            .endpoint(
-                                EXPR_ENDPOINT,
-                                oidc(
-                                    "https://auth.example.com/",
-                                    OAuth2AuthenticationData.OAuth2AuthenticationDataGrant
-                                        .CLIENT_CREDENTIALS,
-                                    "client-id",
-                                    "client-secret"))))
+                call(
+                    http()
+                        .POST()
+                        .endpoint(
+                            EXPR_ENDPOINT,
+                            oidc(
+                                "https://auth.example.com/",
+                                OAuth2AuthenticationData.OAuth2AuthenticationDataGrant
+                                    .CLIENT_CREDENTIALS,
+                                "client-id",
+                                "client-secret"))))
             .build();
 
     var args = wf.getDo().get(0).getTask().getCallTask().getCallHTTP().getWith();
@@ -187,16 +190,15 @@ public class CallHttpAuthDslTest {
     Workflow wf =
         WorkflowBuilder.workflow("f", "ns", "1")
             .tasks(
-                t ->
-                    t.callHTTP(
-                        http()
-                            .POST()
-                            .endpoint(
-                                EXPR_ENDPOINT,
-                                oauth2(
-                                    "https://auth.example.com/",
-                                    OAuth2AuthenticationData.OAuth2AuthenticationDataGrant
-                                        .CLIENT_CREDENTIALS))))
+                call(
+                    http()
+                        .POST()
+                        .endpoint(
+                            EXPR_ENDPOINT,
+                            oauth2(
+                                "https://auth.example.com/",
+                                OAuth2AuthenticationData.OAuth2AuthenticationDataGrant
+                                    .CLIENT_CREDENTIALS))))
             .build();
 
     var args = wf.getDo().get(0).getTask().getCallTask().getCallHTTP().getWith();
@@ -230,10 +232,7 @@ public class CallHttpAuthDslTest {
   void when_call_http_with_basic_auth_on_uri_string() {
     Workflow wf =
         WorkflowBuilder.workflow("f", "ns", "1")
-            .tasks(
-                t ->
-                    t.callHTTP(
-                        http().GET().uri("https://api.example.com/v1/resource", basic("u", "p"))))
+            .tasks(call(http().GET().uri("https://api.example.com/v1/resource", basic("u", "p"))))
             .build();
 
     var args = wf.getDo().get(0).getTask().getCallTask().getCallHTTP().getWith();
