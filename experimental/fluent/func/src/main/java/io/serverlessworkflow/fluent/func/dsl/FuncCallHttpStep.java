@@ -13,33 +13,45 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.fluent.spec.dsl;
+package io.serverlessworkflow.fluent.func.dsl;
 
-import io.serverlessworkflow.fluent.spec.CallHttpTaskBuilder;
-import io.serverlessworkflow.fluent.spec.configurers.CallHttpConfigurer;
+import io.serverlessworkflow.fluent.func.FuncCallHttpTaskBuilder;
+import io.serverlessworkflow.fluent.func.FuncTaskItemListBuilder;
+import io.serverlessworkflow.fluent.spec.dsl.BaseCallHttpSpec;
 import io.serverlessworkflow.fluent.spec.spi.CallHttpTaskFluent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-public final class CallHttpSpec implements BaseCallHttpSpec<CallHttpSpec>, CallHttpConfigurer {
+public class FuncCallHttpStep extends Step<FuncCallHttpStep, FuncCallHttpTaskBuilder>
+    implements BaseCallHttpSpec<FuncCallHttpStep> {
 
   private final List<Consumer<CallHttpTaskFluent<?>>> steps = new ArrayList<>();
 
-  public CallHttpSpec() {}
+  private String name;
+
+  public FuncCallHttpStep(String name) {
+    this.name = name;
+  }
+
+  public FuncCallHttpStep() {}
 
   @Override
-  public CallHttpSpec self() {
+  public FuncCallHttpStep self() {
     return this;
+  }
+
+  protected void configure(FuncTaskItemListBuilder list, Consumer<FuncCallHttpTaskBuilder> post) {
+    list.http(
+        name,
+        builder -> {
+          this.accept(builder);
+          post.accept(builder);
+        });
   }
 
   @Override
   public List<Consumer<CallHttpTaskFluent<?>>> steps() {
     return steps;
-  }
-
-  @Override
-  public void accept(CallHttpTaskBuilder builder) {
-    BaseCallHttpSpec.super.accept(builder);
   }
 }

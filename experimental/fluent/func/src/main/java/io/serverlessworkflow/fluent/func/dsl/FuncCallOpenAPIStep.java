@@ -17,7 +17,7 @@ package io.serverlessworkflow.fluent.func.dsl;
 
 import io.serverlessworkflow.api.types.OpenAPIArguments;
 import io.serverlessworkflow.fluent.func.FuncCallOpenAPITaskBuilder;
-import io.serverlessworkflow.fluent.func.configurers.FuncCallOpenAPIConfigurer;
+import io.serverlessworkflow.fluent.func.FuncTaskItemListBuilder;
 import io.serverlessworkflow.fluent.spec.configurers.AuthenticationConfigurer;
 import io.serverlessworkflow.fluent.spec.spi.CallOpenAPITaskFluent;
 import java.net.URI;
@@ -26,65 +26,83 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-public class FuncCallOpenAPISpec implements FuncCallOpenAPIConfigurer {
+public class FuncCallOpenAPIStep extends Step<FuncCallOpenAPIStep, FuncCallOpenAPITaskBuilder> {
 
   private final List<Consumer<CallOpenAPITaskFluent<?>>> steps = new ArrayList<>();
 
-  public FuncCallOpenAPISpec document(String uri) {
+  private String name;
+
+  public FuncCallOpenAPIStep(String name) {
+    this.name = name;
+  }
+
+  public FuncCallOpenAPIStep() {}
+
+  public void setName(String name) {
+    this.name = name;
+  }
+
+  public FuncCallOpenAPIStep document(String uri) {
     steps.add(b -> b.document(uri));
     return this;
   }
 
-  public FuncCallOpenAPISpec document(
+  public FuncCallOpenAPIStep document(
       String uri, AuthenticationConfigurer authenticationConfigurer) {
     steps.add(b -> b.document(uri, authenticationConfigurer));
     return this;
   }
 
-  public FuncCallOpenAPISpec document(URI uri) {
+  public FuncCallOpenAPIStep document(URI uri) {
     steps.add(b -> b.document(uri));
     return this;
   }
 
-  public FuncCallOpenAPISpec document(URI uri, AuthenticationConfigurer authenticationConfigurer) {
+  public FuncCallOpenAPIStep document(URI uri, AuthenticationConfigurer authenticationConfigurer) {
     steps.add(b -> b.document(uri, authenticationConfigurer));
     return this;
   }
 
-  public FuncCallOpenAPISpec operation(String operationId) {
+  public FuncCallOpenAPIStep operation(String operationId) {
     steps.add(b -> b.operation(operationId));
     return this;
   }
 
-  public FuncCallOpenAPISpec parameters(Map<String, Object> params) {
+  public FuncCallOpenAPIStep parameters(Map<String, Object> params) {
     steps.add(b -> b.parameters(params));
     return this;
   }
 
-  public FuncCallOpenAPISpec parameter(String name, String value) {
+  public FuncCallOpenAPIStep parameter(String name, String value) {
     steps.add(b -> b.parameter(name, value));
     return this;
   }
 
-  public FuncCallOpenAPISpec redirect(boolean redirect) {
+  public FuncCallOpenAPIStep redirect(boolean redirect) {
     steps.add(b -> b.redirect(redirect));
     return this;
   }
 
-  public FuncCallOpenAPISpec authentication(AuthenticationConfigurer authenticationConfigurer) {
+  public FuncCallOpenAPIStep authentication(AuthenticationConfigurer authenticationConfigurer) {
     steps.add(b -> b.authentication(authenticationConfigurer));
     return this;
   }
 
-  public FuncCallOpenAPISpec output(OpenAPIArguments.WithOpenAPIOutput output) {
+  public FuncCallOpenAPIStep output(OpenAPIArguments.WithOpenAPIOutput output) {
     steps.add(b -> b.output(output));
     return this;
   }
 
   @Override
-  public void accept(FuncCallOpenAPITaskBuilder builder) {
-    for (var s : steps) {
-      s.accept(builder);
-    }
+  protected void configure(
+      FuncTaskItemListBuilder list, Consumer<FuncCallOpenAPITaskBuilder> post) {
+    list.openapi(
+        name,
+        builder -> {
+          for (Consumer<CallOpenAPITaskFluent<?>> c : steps) {
+            c.accept(builder);
+          }
+          post.accept(builder);
+        });
   }
 }
