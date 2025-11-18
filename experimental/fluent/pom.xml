@@ -4,7 +4,7 @@
     <parent>
         <groupId>io.serverlessworkflow</groupId>
         <artifactId>serverlessworkflow-experimental</artifactId>
-        <version>8.0.0-SNAPSHOT</version>
+        <version>7.5.0.Final</version>
     </parent>
     <name>Serverless Workflow :: Experimental :: Fluent</name>
     <artifactId>serverlessworkflow-experimental-fluent</artifactId>
@@ -69,4 +69,8 @@
         <module>agentic-langchain4j</module>
     </modules>
 
+
+  <scm>
+    <tag>7.5.0.Final</tag>
+  </scm>
 </project>
