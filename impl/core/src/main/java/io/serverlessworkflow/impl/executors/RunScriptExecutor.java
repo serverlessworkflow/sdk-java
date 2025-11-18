@@ -39,12 +39,10 @@ import java.util.concurrent.CompletableFuture;
 public class RunScriptExecutor implements RunnableTask<RunScript> {
 
   private Optional<WorkflowValueResolver<Map<String, Object>>> environmentExpr;
-
   private Optional<WorkflowValueResolver<Map<String, Object>>> argumentExpr;
-
   private WorkflowValueResolver<String> codeSupplier;
   private boolean isAwait;
-  private RunTaskConfiguration.ProcessReturnType returnType;
+  private Optional<RunTaskConfiguration.ProcessReturnType> returnType;
   private ScriptRunner taskRunner;
 
   @Override
@@ -65,7 +63,7 @@ public class RunScriptExecutor implements RunnableTask<RunScript> {
 
     this.isAwait = taskConfiguration.isAwait();
 
-    this.returnType = taskConfiguration.getReturn();
+    this.returnType = Optional.ofNullable(taskConfiguration.getReturn());
 
     WorkflowApplication application = definition.application();
     this.environmentExpr =
@@ -102,22 +100,24 @@ public class RunScriptExecutor implements RunnableTask<RunScript> {
   @Override
   public CompletableFuture<WorkflowModel> apply(
       WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel input) {
-    return CompletableFuture.supplyAsync(
-        () ->
-            taskRunner.runScript(
-                new ScriptContext(
-                    argumentExpr
-                        .map(m -> m.apply(workflowContext, taskContext, input))
-                        .orElse(Map.of()),
-                    environmentExpr
-                        .map(m -> m.apply(workflowContext, taskContext, input))
-                        .orElse(Map.of()),
-                    codeSupplier.apply(workflowContext, taskContext, input),
-                    isAwait,
-                    returnType),
-                workflowContext,
-                taskContext,
-                input));
+    ScriptContext scriptContext =
+        new ScriptContext(
+            argumentExpr.map(m -> m.apply(workflowContext, taskContext, input)).orElse(Map.of()),
+            environmentExpr.map(m -> m.apply(workflowContext, taskContext, input)).orElse(Map.of()),
+            codeSupplier.apply(workflowContext, taskContext, input),
+            returnType);
+    if (isAwait) {
+      return CompletableFuture.supplyAsync(
+          () -> taskRunner.runScript(scriptContext, workflowContext, taskContext, input),
+          workflowContext.definition().application().executorService());
+    } else {
+      workflowContext
+          .definition()
+          .application()
+          .executorService()
+          .submit(() -> taskRunner.runScript(scriptContext, workflowContext, taskContext, input));
+      return CompletableFuture.completedFuture(input);
+    }
   }
 
   @Override
