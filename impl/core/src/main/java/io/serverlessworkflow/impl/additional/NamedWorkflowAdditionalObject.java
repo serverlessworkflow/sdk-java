@@ -13,16 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.executors.http;
+package io.serverlessworkflow.impl.additional;
 
-import io.serverlessworkflow.impl.WorkflowModel;
-import jakarta.ws.rs.client.Entity;
-
-public interface HttpModelConverter {
-
-  default Entity<?> toEntity(WorkflowModel model) {
-    return Entity.json(model.as(model.objectClass()).orElseThrow());
-  }
-
-  Class<?> responseType();
+public interface NamedWorkflowAdditionalObject<T> extends WorkflowAdditionalObject<T> {
+  String name();
 }

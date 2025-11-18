@@ -45,9 +45,6 @@ import java.util.function.Supplier;
 
 public class HttpExecutor implements CallableTask<CallHTTP> {
 
-  // TODO allow changing default converter
-  private static final HttpModelConverter defaultConverter = new HttpModelConverter() {};
-
   private WorkflowValueResolver<WebTarget> targetSupplier;
   private Optional<WorkflowValueResolver<Map<String, Object>>> headersMap;
   private Optional<WorkflowValueResolver<Map<String, Object>>> queryMap;
@@ -124,8 +121,7 @@ public class HttpExecutor implements CallableTask<CallHTTP> {
               ? getTargetSupplier(uriSupplier)
               : getTargetSupplier(uriSupplier, pathSupplier);
       executor.authProvider = AuthProviderFactory.getAuth(definition, authPolicy);
-      executor.requestFunction =
-          buildRequestSupplier(method, body, definition.application(), defaultConverter);
+      executor.requestFunction = buildRequestSupplier(method, body, definition.application());
       executor.headersMap = Optional.ofNullable(headersMap);
       executor.queryMap = Optional.ofNullable(queryMap);
       return executor;
@@ -176,27 +172,31 @@ public class HttpExecutor implements CallableTask<CallHTTP> {
             : Optional.empty();
     this.requestFunction =
         buildRequestSupplier(
-            httpArgs.getMethod().toUpperCase(),
-            httpArgs.getBody(),
-            definition.application(),
-            defaultConverter);
+            httpArgs.getMethod().toUpperCase(), httpArgs.getBody(), definition.application());
   }
 
   private static RequestSupplier buildRequestSupplier(
-      String method, Object body, WorkflowApplication application, HttpModelConverter converter) {
+      String method, Object body, WorkflowApplication application) {
+
     switch (method.toUpperCase()) {
       case HttpMethod.POST:
         WorkflowFilter bodyFilter = WorkflowUtils.buildWorkflowFilter(application, body);
-        return (request, w, context, node) ->
-            converter.toModel(
-                application.modelFactory(),
-                node,
-                request.post(
-                    converter.toEntity(bodyFilter.apply(w, context, node)), node.objectClass()));
+        return (request, w, t, node) -> {
+          HttpModelConverter converter = HttpConverterResolver.converter(w, t);
+          return w.definition()
+              .application()
+              .modelFactory()
+              .fromAny(
+                  request.post(
+                      converter.toEntity(bodyFilter.apply(w, t, node)), converter.responseType()));
+        };
       case HttpMethod.GET:
       default:
         return (request, w, t, n) ->
-            converter.toModel(application.modelFactory(), n, request.get(n.objectClass()));
+            w.definition()
+                .application()
+                .modelFactory()
+                .fromAny(request.get(HttpConverterResolver.converter(w, t).responseType()));
     }
   }
 
