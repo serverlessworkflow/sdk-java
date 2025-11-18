@@ -96,23 +96,13 @@ public class FuncCallOpenAPIStep extends Step<FuncCallOpenAPIStep, FuncCallOpenA
   @Override
   protected void configure(
       FuncTaskItemListBuilder list, Consumer<FuncCallOpenAPITaskBuilder> post) {
-    if (name == null) {
-      list.openapi(
-          builder -> {
-            for (Consumer<CallOpenAPITaskFluent<?>> c : steps) {
-              c.accept(builder); // OpenAPI DSL
-            }
-            post.accept(builder); // when/inputFrom/outputAs/exportAs
-          });
-    } else {
-      list.openapi(
-          name,
-          builder -> {
-            for (Consumer<CallOpenAPITaskFluent<?>> c : steps) {
-              c.accept(builder);
-            }
-            post.accept(builder);
-          });
-    }
+    list.openapi(
+        name,
+        builder -> {
+          for (Consumer<CallOpenAPITaskFluent<?>> c : steps) {
+            c.accept(builder);
+          }
+          post.accept(builder);
+        });
   }
 }

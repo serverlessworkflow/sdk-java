@@ -42,22 +42,12 @@ public class FuncCallHttpStep extends Step<FuncCallHttpStep, FuncCallHttpTaskBui
   }
 
   protected void configure(FuncTaskItemListBuilder list, Consumer<FuncCallHttpTaskBuilder> post) {
-    if (name == null) {
-      list.http(
-          builder -> {
-            // Apply HTTP config (BaseCallHttpSpec)
-            this.accept(builder); // default method from BaseCallHttpSpec
-            // Apply Step’s post-configurers (when / inputFrom / outputAs / exportAs)
-            post.accept(builder);
-          });
-    } else {
-      list.http(
-          name,
-          builder -> {
-            this.accept(builder);
-            post.accept(builder);
-          });
-    }
+    list.http(
+        name,
+        builder -> {
+          this.accept(builder);
+          post.accept(builder);
+        });
   }
 
   @Override
