@@ -3,3 +3,4 @@ io.serverlessworkflow.impl.executors.func.JavaLoopFunctionCallExecutor
 io.serverlessworkflow.impl.executors.func.JavaFunctionCallExecutor
 io.serverlessworkflow.impl.executors.func.JavaConsumerCallExecutor
 io.serverlessworkflow.impl.executors.func.JavaContextFunctionCallExecutor
+io.serverlessworkflow.impl.executors.func.JavaFilterFunctionCallExecutor
