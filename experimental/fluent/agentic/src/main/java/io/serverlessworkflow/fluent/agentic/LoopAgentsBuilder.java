@@ -22,7 +22,9 @@ import io.serverlessworkflow.api.types.func.ForTaskFunction;
 import io.serverlessworkflow.fluent.func.FuncTaskItemListBuilder;
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiPredicate;
+import java.util.function.Consumer;
 import java.util.function.ObjIntConsumer;
 import java.util.function.Predicate;
 import java.util.stream.IntStream;
@@ -31,6 +33,10 @@ public class LoopAgentsBuilder {
 
   private final FuncTaskItemListBuilder funcDelegate;
   private final ForTaskFunction forTask;
+  private final AtomicReference<Consumer<AgenticScope>> beforeAgentInvocation =
+      new AtomicReference<>();
+  private final AtomicReference<Consumer<AgenticScope>> afterAgentInvocation =
+      new AtomicReference<>();
 
   private int maxIterations = 1024;
 
@@ -50,7 +56,11 @@ public class LoopAgentsBuilder {
         execs,
         (exec, idx) ->
             funcDelegate.function(
-                baseName + "-" + idx, fn -> fn.function(AgentAdapters.toFunction(exec))));
+                baseName + "-" + idx,
+                fn ->
+                    fn.function(
+                        AgentAdapters.toFunction(
+                            exec, beforeAgentInvocation, afterAgentInvocation))));
     return this;
   }
 
@@ -70,6 +80,16 @@ public class LoopAgentsBuilder {
 
   public LoopAgentsBuilder exitCondition(BiPredicate<AgenticScope, Integer> exitCondition) {
     this.forTask.withWhile(AgentAdapters.toWhile(exitCondition), AgenticScope.class);
+    return this;
+  }
+
+  public LoopAgentsBuilder inputFrom(Consumer<AgenticScope> beforeAgentInvocationConsumer) {
+    this.beforeAgentInvocation.set(beforeAgentInvocationConsumer);
+    return this;
+  }
+
+  public LoopAgentsBuilder outputAs(Consumer<AgenticScope> afterAgentInvocationConsumer) {
+    this.afterAgentInvocation.set(afterAgentInvocationConsumer);
     return this;
   }
 

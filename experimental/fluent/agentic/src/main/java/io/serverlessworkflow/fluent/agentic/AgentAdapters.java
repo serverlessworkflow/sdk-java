@@ -22,7 +22,9 @@ import dev.langchain4j.agentic.scope.AgenticScope;
 import dev.langchain4j.agentic.scope.DefaultAgenticScope;
 import io.serverlessworkflow.api.types.func.LoopPredicateIndex;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiPredicate;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -34,8 +36,21 @@ public final class AgentAdapters {
     return agentsToExecutors(agents);
   }
 
-  public static Function<DefaultAgenticScope, Object> toFunction(AgentExecutor exec) {
-    return exec::execute;
+  public static Function<DefaultAgenticScope, Object> toFunction(
+      AgentExecutor exec,
+      AtomicReference<Consumer<AgenticScope>> beforeAgentInvocation,
+      AtomicReference<Consumer<AgenticScope>> afterAgentInvocation) {
+    return defaultAgenticScope -> {
+      if (beforeAgentInvocation.get() != null) {
+        beforeAgentInvocation.get().accept(defaultAgenticScope);
+      }
+      Object result = exec.execute(defaultAgenticScope);
+      if (afterAgentInvocation.get() != null) {
+        defaultAgenticScope.writeState("input", result);
+        afterAgentInvocation.get().accept(defaultAgenticScope);
+      }
+      return result;
+    };
   }
 
   public static LoopPredicateIndex<AgenticScope, Object> toWhile(Predicate<AgenticScope> exit) {

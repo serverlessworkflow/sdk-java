@@ -16,6 +16,7 @@
 package io.serverlessworkflow.fluent.agentic;
 
 import dev.langchain4j.agentic.internal.AgentExecutor;
+import dev.langchain4j.agentic.scope.AgenticScope;
 import dev.langchain4j.agentic.scope.DefaultAgenticScope;
 import io.serverlessworkflow.api.types.Task;
 import io.serverlessworkflow.api.types.TaskItem;
@@ -29,12 +30,17 @@ import io.serverlessworkflow.fluent.func.FuncSwitchTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncTaskItemListBuilder;
 import io.serverlessworkflow.fluent.spec.BaseTaskItemListBuilder;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 public class AgentTaskItemListBuilder extends BaseTaskItemListBuilder<AgentTaskItemListBuilder>
     implements AgentDoFluent<AgentTaskItemListBuilder> {
 
   private final FuncTaskItemListBuilder delegate;
+  private final AtomicReference<Consumer<AgenticScope>> beforeAgentInvocation =
+      new AtomicReference<>();
+  private final AtomicReference<Consumer<AgenticScope>> afterAgentInvocation =
+      new AtomicReference<>();
 
   public AgentTaskItemListBuilder() {
     super();
@@ -58,7 +64,11 @@ public class AgentTaskItemListBuilder extends BaseTaskItemListBuilder<AgentTaskI
             exec ->
                 this.delegate.function(
                     name,
-                    fn -> fn.function(AgentAdapters.toFunction(exec), DefaultAgenticScope.class)));
+                    fn ->
+                        fn.function(
+                            AgentAdapters.toFunction(
+                                exec, beforeAgentInvocation, afterAgentInvocation),
+                            DefaultAgenticScope.class)));
     return self();
   }
 
@@ -96,7 +106,10 @@ public class AgentTaskItemListBuilder extends BaseTaskItemListBuilder<AgentTaskI
                 ex.agentInvoker().name() != null
                     ? ex.agentInvoker().name()
                     : "branch-" + i + "-" + name;
-            fork.branch(agentName, AgentAdapters.toFunction(ex), DefaultAgenticScope.class);
+            fork.branch(
+                agentName,
+                AgentAdapters.toFunction(ex, beforeAgentInvocation, afterAgentInvocation),
+                DefaultAgenticScope.class);
           }
         });
     return self();
@@ -152,6 +165,16 @@ public class AgentTaskItemListBuilder extends BaseTaskItemListBuilder<AgentTaskI
   public AgentTaskItemListBuilder switchCase(
       String name, Consumer<FuncSwitchTaskBuilder> itemsConfigurer) {
     this.delegate.switchCase(name, itemsConfigurer);
+    return self();
+  }
+
+  public AgentTaskItemListBuilder inputFrom(Consumer<AgenticScope> beforeAgentInvocation) {
+    this.beforeAgentInvocation.set(beforeAgentInvocation);
+    return self();
+  }
+
+  public AgentTaskItemListBuilder outputAs(Consumer<AgenticScope> afterAgentInvocationConsumer) {
+    this.afterAgentInvocation.set(afterAgentInvocationConsumer);
     return self();
   }
 }

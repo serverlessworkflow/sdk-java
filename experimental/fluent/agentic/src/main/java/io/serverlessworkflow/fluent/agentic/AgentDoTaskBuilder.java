@@ -15,6 +15,7 @@
  */
 package io.serverlessworkflow.fluent.agentic;
 
+import dev.langchain4j.agentic.scope.AgenticScope;
 import io.serverlessworkflow.fluent.agentic.spi.AgentDoFluent;
 import io.serverlessworkflow.fluent.func.FuncCallTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncEmitTaskBuilder;
@@ -115,6 +116,16 @@ public class AgentDoTaskBuilder
   public AgentDoTaskBuilder switchCase(
       String name, Consumer<FuncSwitchTaskBuilder> itemsConfigurer) {
     this.listBuilder().switchCase(name, itemsConfigurer);
+    return self();
+  }
+
+  public AgentDoTaskBuilder inputFrom(Consumer<AgenticScope> inputFrom) {
+    this.listBuilder().inputFrom(inputFrom);
+    return self();
+  }
+
+  public AgentDoTaskBuilder outputAs(Consumer<AgenticScope> outputAs) {
+    this.listBuilder().outputAs(outputAs);
     return self();
   }
 }
