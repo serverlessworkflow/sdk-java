@@ -221,11 +221,42 @@ public class WorkflowUtils {
         .orElseThrow(() -> new IllegalStateException("Secret " + secretName + " does not exist"));
   }
 
-  public static URI concatURI(URI uri, String pathToAppend) {
-    return uri.getPath().endsWith("/")
-        ? uri.resolve(pathToAppend)
-        : URI.create(
-            uri.toString() + (pathToAppend.startsWith("/") ? pathToAppend : "/" + pathToAppend));
+  public static URI concatURI(URI base, String pathToAppend) {
+    if (pathToAppend == null || pathToAppend.isEmpty()) {
+      return base;
+    }
+
+    final URI child = URI.create(pathToAppend);
+    if (child.isAbsolute()) {
+      return child;
+    }
+
+    String basePath = base.getPath();
+    if (basePath == null || basePath.isEmpty()) {
+      basePath = "/";
+    } else if (!basePath.endsWith("/")) {
+      basePath = basePath + "/";
+    }
+
+    String relPath = child.getPath();
+    if (relPath == null) {
+      relPath = "";
+    }
+    while (relPath.startsWith("/")) {
+      relPath = relPath.substring(1);
+    }
+
+    String finalPath = basePath + relPath;
+
+    String query = child.getQuery();
+    String fragment = child.getFragment();
+
+    try {
+      return new URI(base.getScheme(), base.getAuthority(), finalPath, query, fragment);
+    } catch (Exception e) {
+      throw new IllegalArgumentException(
+          "Failed to build combined URI from base=" + base + " and path=" + pathToAppend, e);
+    }
   }
 
   public static WorkflowValueResolver<URI> getURISupplier(

@@ -13,21 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.executors.http;
+package io.serverlessworkflow.impl;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.net.URI;
 import org.junit.jupiter.api.Test;
 
-class HttpExecutorTargetSupplierTest {
-
+public class WorkflowUtilsTest {
   @Test
   void openApiServerWithTrailingSlashAndRootPath() {
     URI base = URI.create("https://petstore3.swagger.io/api/v3/");
     URI path = URI.create("/pet/findByStatus");
 
-    URI result = HttpExecutor.buildTargetUri(base, path);
+    URI result = WorkflowUtils.concatURI(base, path.toString());
 
     assertEquals("https://petstore3.swagger.io/api/v3/pet/findByStatus", result.toString());
   }
@@ -37,7 +36,7 @@ class HttpExecutorTargetSupplierTest {
     URI base = URI.create("https://petstore3.swagger.io/api/v3");
     URI path = URI.create("/pet/findByStatus");
 
-    URI result = HttpExecutor.buildTargetUri(base, path);
+    URI result = WorkflowUtils.concatURI(base, path.toString());
 
     assertEquals("https://petstore3.swagger.io/api/v3/pet/findByStatus", result.toString());
   }
@@ -47,7 +46,7 @@ class HttpExecutorTargetSupplierTest {
     URI base = URI.create("https://example.com/api/v1/");
     URI path = URI.create("pets");
 
-    URI result = HttpExecutor.buildTargetUri(base, path);
+    URI result = WorkflowUtils.concatURI(base, path.toString());
 
     assertEquals("https://example.com/api/v1/pets", result.toString());
   }
@@ -57,7 +56,7 @@ class HttpExecutorTargetSupplierTest {
     URI base = URI.create("https://example.com");
     URI path = URI.create("/pets");
 
-    URI result = HttpExecutor.buildTargetUri(base, path);
+    URI result = WorkflowUtils.concatURI(base, path.toString());
 
     assertEquals("https://example.com/pets", result.toString());
   }
@@ -67,7 +66,7 @@ class HttpExecutorTargetSupplierTest {
     URI base = URI.create("https://example.com/api");
     URI path = URI.create("https://other.example.com/foo");
 
-    URI result = HttpExecutor.buildTargetUri(base, path);
+    URI result = WorkflowUtils.concatURI(base, path.toString());
 
     assertEquals("https://other.example.com/foo", result.toString());
   }
@@ -77,7 +76,7 @@ class HttpExecutorTargetSupplierTest {
     URI base = URI.create("https://example.com/api/v1");
     URI path = URI.create("/pets?status=available#top");
 
-    URI result = HttpExecutor.buildTargetUri(base, path);
+    URI result = WorkflowUtils.concatURI(base, path.toString());
 
     assertEquals("https://example.com/api/v1/pets?status=available#top", result.toString());
   }

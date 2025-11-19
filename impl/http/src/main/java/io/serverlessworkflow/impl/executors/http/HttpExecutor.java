@@ -254,41 +254,10 @@ public class HttpExecutor implements CallableTask<CallHTTP> {
 
   private static WorkflowValueResolver<WebTarget> getTargetSupplier(
       WorkflowValueResolver<URI> uriSupplier, WorkflowValueResolver<URI> pathSupplier) {
-    return (w, t, n) -> {
-      URI base = uriSupplier.apply(w, t, n);
-      URI path = pathSupplier.apply(w, t, n);
-      URI combined = buildTargetUri(base, path);
-      return HttpClientResolver.client(w, t).target(combined);
-    };
-  }
-
-  static URI buildTargetUri(URI base, URI path) {
-    if (path.isAbsolute()) {
-      return path;
-    }
-
-    String basePath = base.getPath();
-    if (basePath == null || basePath.isEmpty()) {
-      basePath = "/";
-    } else if (!basePath.endsWith("/")) {
-      basePath = basePath + "/";
-    }
-
-    String relPath = path.getPath() == null ? "" : path.getPath();
-    while (relPath.startsWith("/")) {
-      relPath = relPath.substring(1);
-    }
-
-    try {
-      return new URI(
-          base.getScheme(),
-          base.getAuthority(),
-          basePath + relPath,
-          path.getQuery(),
-          path.getFragment());
-    } catch (Exception e) {
-      throw new IllegalArgumentException(
-          "Failed to build combined URI from base=" + base + " and path=" + path, e);
-    }
+    return (w, t, n) ->
+        HttpClientResolver.client(w, t)
+            .target(
+                WorkflowUtils.concatURI(
+                    uriSupplier.apply(w, t, n), pathSupplier.apply(w, t, n).toString()));
   }
 }
