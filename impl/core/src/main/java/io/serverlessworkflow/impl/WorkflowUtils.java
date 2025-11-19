@@ -30,6 +30,7 @@ import io.serverlessworkflow.impl.resources.ResourceLoader;
 import io.serverlessworkflow.impl.schema.SchemaValidator;
 import io.serverlessworkflow.impl.schema.SchemaValidatorFactory;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
@@ -222,7 +223,7 @@ public class WorkflowUtils {
   }
 
   public static URI concatURI(URI base, String pathToAppend) {
-    if (pathToAppend == null || pathToAppend.isEmpty()) {
+    if (!isValid(pathToAppend)) {
       return base;
     }
 
@@ -232,7 +233,7 @@ public class WorkflowUtils {
     }
 
     String basePath = base.getPath();
-    if (basePath == null || basePath.isEmpty()) {
+    if (!isValid(basePath)) {
       basePath = "/";
     } else if (!basePath.endsWith("/")) {
       basePath = basePath + "/";
@@ -253,7 +254,7 @@ public class WorkflowUtils {
 
     try {
       return new URI(base.getScheme(), base.getAuthority(), finalPath, query, fragment);
-    } catch (Exception e) {
+    } catch (URISyntaxException e) {
       throw new IllegalArgumentException(
           "Failed to build combined URI from base=" + base + " and path=" + pathToAppend, e);
     }
