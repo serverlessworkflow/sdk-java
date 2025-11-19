@@ -22,7 +22,6 @@ import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowModel;
-import io.serverlessworkflow.impl.WorkflowModelFactory;
 import io.serverlessworkflow.impl.executors.CallableTask;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -31,7 +30,7 @@ public class JavaContextFunctionCallExecutor<T, V>
     implements CallableTask<CallJava.CallJavaContextFunction<T, V>> {
 
   private JavaContextFunction<T, V> function;
-  private Optional<Class<T>> inputClass = Optional.empty();
+  private Optional<Class<T>> inputClass;
 
   @Override
   public void init(CallJava.CallJavaContextFunction<T, V> task, WorkflowDefinition definition) {
@@ -42,10 +41,13 @@ public class JavaContextFunctionCallExecutor<T, V>
   @Override
   public CompletableFuture<WorkflowModel> apply(
       WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel input) {
-    WorkflowModelFactory mf = workflowContext.definition().application().modelFactory();
-    T typedIn = JavaFuncUtils.convertT(input, inputClass);
-    V out = function.apply(typedIn, workflowContext);
-    return CompletableFuture.completedFuture(mf.fromAny(input, out));
+    return CompletableFuture.completedFuture(
+        workflowContext
+            .definition()
+            .application()
+            .modelFactory()
+            .fromAny(
+                input, function.apply(JavaFuncUtils.convertT(input, inputClass), workflowContext)));
   }
 
   @Override
