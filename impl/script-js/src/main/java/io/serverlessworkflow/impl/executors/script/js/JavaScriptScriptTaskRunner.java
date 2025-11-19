@@ -55,7 +55,6 @@ public class JavaScriptScriptTaskRunner implements ScriptRunner {
     WorkflowApplication application = workflowContext.definition().application();
     ByteArrayOutputStream stderr = new ByteArrayOutputStream();
     ByteArrayOutputStream stdout = new ByteArrayOutputStream();
-
     try (Context ctx =
         Context.newBuilder()
             .err(stderr)
@@ -71,29 +70,26 @@ public class JavaScriptScriptTaskRunner implements ScriptRunner {
               (key, val) -> {
                 ctx.getBindings(identifier().getLang()).putMember(key, val);
               });
-
       configureProcessEnv(ctx, script.envs());
-
-      if (!script.isAwait()) {
-        application
-            .executorService()
-            .submit(
-                () -> {
-                  ctx.eval(identifier().getLang(), script.code());
-                });
-        return application.modelFactory().fromAny(input);
-      }
-
       ctx.eval(Source.create(identifier().getLang(), script.code()));
-
-      return modelFromOutput(
-          script.returnType(), application.modelFactory(), stdout, () -> stderr.toString());
+      return script
+          .returnType()
+          .map(
+              type ->
+                  modelFromOutput(
+                      type, application.modelFactory(), stdout, () -> stderr.toString()))
+          .orElse(input);
     } catch (PolyglotException e) {
       if (e.getExitStatus() != 0 || e.isSyntaxError()) {
         throw new WorkflowException(WorkflowError.runtime(taskContext, e).build());
       } else {
-        return modelFromOutput(
-            script.returnType(), application.modelFactory(), stdout, () -> buildStderr(e, stderr));
+        return script
+            .returnType()
+            .map(
+                type ->
+                    modelFromOutput(
+                        type, application.modelFactory(), stdout, () -> buildStderr(e, stderr)))
+            .orElse(input);
       }
     }
   }

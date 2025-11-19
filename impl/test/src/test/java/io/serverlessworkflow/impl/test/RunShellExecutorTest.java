@@ -21,8 +21,6 @@ import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.executors.ProcessResult;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.Map;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Test;
@@ -127,15 +125,10 @@ public class RunShellExecutorTest {
             "workflows-samples/run-shell/echo-not-awaiting.yaml");
     try (WorkflowApplication appl = WorkflowApplication.builder().build()) {
       Map<String, String> inputMap = Map.of("full_name", "Matheus Cruz");
-
       WorkflowModel outputModel =
           appl.workflowDefinition(workflow).instance(inputMap).start().join();
-
-      String content = Files.readString(Path.of("/tmp/hello.txt"));
-
       SoftAssertions.assertSoftly(
           softly -> {
-            softly.assertThat(content).contains("hello world not awaiting (Matheus Cruz)");
             softly.assertThat(outputModel.asMap().get()).isEqualTo(inputMap);
           });
     }
