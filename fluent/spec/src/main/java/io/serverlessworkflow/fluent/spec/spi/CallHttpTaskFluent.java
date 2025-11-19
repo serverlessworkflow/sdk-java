@@ -19,6 +19,7 @@ import io.serverlessworkflow.api.types.AuthenticationPolicyReference;
 import io.serverlessworkflow.api.types.CallHTTP;
 import io.serverlessworkflow.api.types.Endpoint;
 import io.serverlessworkflow.api.types.EndpointConfiguration;
+import io.serverlessworkflow.api.types.EndpointUri;
 import io.serverlessworkflow.api.types.HTTPArguments;
 import io.serverlessworkflow.api.types.HTTPHeaders;
 import io.serverlessworkflow.api.types.HTTPQuery;
@@ -59,14 +60,17 @@ public interface CallHttpTaskFluent<SELF extends TaskBaseBuilder<SELF>> {
   default SELF endpoint(URI endpoint, Consumer<ReferenceableAuthenticationPolicyBuilder> auth) {
     final ReferenceableAuthenticationPolicyBuilder policy =
         new ReferenceableAuthenticationPolicyBuilder();
+    final UriTemplate uriTemplate = new UriTemplate().withLiteralUri(endpoint);
     auth.accept(policy);
     ((CallHTTP) this.self().getTask())
         .getWith()
         .setEndpoint(
             new Endpoint()
                 .withEndpointConfiguration(
-                    new EndpointConfiguration().withAuthentication(policy.build()))
-                .withUriTemplate(new UriTemplate().withLiteralUri(endpoint)));
+                    new EndpointConfiguration()
+                        .withUri(new EndpointUri().withLiteralEndpointURI(uriTemplate))
+                        .withAuthentication(policy.build()))
+                .withUriTemplate(uriTemplate));
     return self();
   }
 

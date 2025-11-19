@@ -319,7 +319,7 @@ public final class DSL {
    * @param authName the name of a reusable authentication policy
    * @return an {@link AuthenticationConfigurer} that sets {@code use(authName)}
    */
-  public static AuthenticationConfigurer auth(String authName) {
+  public static AuthenticationConfigurer use(String authName) {
     return a -> a.use(authName);
   }
 

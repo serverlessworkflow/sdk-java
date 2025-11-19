@@ -24,6 +24,7 @@ import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.http;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.listen;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.toOne;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.auth;
+import static io.serverlessworkflow.fluent.spec.dsl.DSL.use;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -263,7 +264,7 @@ class FuncDSLTest {
   void get_named_with_authentication_uses_auth_policy() {
     Workflow wf =
         FuncWorkflowBuilder.workflow("http-get-auth")
-            .tasks(get("fetchUsers", "http://service/api/users", auth("user-service-auth")))
+            .tasks(get("fetchUsers", "http://service/api/users", use("user-service-auth")))
             .build();
 
     List<TaskItem> items = wf.getDo();
