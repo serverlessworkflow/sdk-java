@@ -3,7 +3,7 @@
     <parent>
         <groupId>io.serverlessworkflow</groupId>
         <artifactId>serverlessworkflow-impl</artifactId>
-        <version>7.5.1.Final</version>
+        <version>8.0.0-SNAPSHOT</version>
     </parent>
     <artifactId>serverlessworkflow-impl-script-js</artifactId>
     <name>Serverless Workflow :: Impl :: Script JavaScript</name>
@@ -22,8 +22,4 @@
             <type>pom</type>
         </dependency>
     </dependencies>
-
-  <scm>
-    <tag>7.5.1.Final</tag>
-  </scm>
 </project>
