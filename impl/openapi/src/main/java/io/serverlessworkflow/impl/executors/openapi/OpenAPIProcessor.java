@@ -15,11 +15,12 @@
  */
 package io.serverlessworkflow.impl.executors.openapi;
 
+import io.swagger.parser.OpenAPIParser;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.PathItem;
-import io.swagger.v3.parser.OpenAPIV3Parser;
 import io.swagger.v3.parser.core.models.ParseOptions;
+import io.swagger.v3.parser.core.models.SwaggerParseResult;
 import java.util.Set;
 
 class OpenAPIProcessor {
@@ -31,14 +32,22 @@ class OpenAPIProcessor {
   }
 
   public OperationDefinition parse(String content) {
-    OpenAPIV3Parser parser = new OpenAPIV3Parser();
+    OpenAPIParser parser = new OpenAPIParser();
     ParseOptions opts = new ParseOptions();
     opts.setResolve(true);
-    opts.setResolveFully(false);
-    return getOperation(parser.readContents(content).getOpenAPI());
+    opts.setResolveFully(true);
+
+    SwaggerParseResult result = parser.readContents(content, null, opts);
+
+    if (result.getMessages() != null && !result.getMessages().isEmpty()) {
+      throw new IllegalArgumentException(
+          "Failed to parse OpenAPI document: " + String.join(", ", result.getMessages()));
+    }
+    return getOperation(result.getOpenAPI(), !result.isOpenapi31());
   }
 
-  private OperationDefinition getOperation(OpenAPI openAPI) {
+  private OperationDefinition getOperation(
+      OpenAPI openAPI, boolean emulateSwaggerV2BodyParameters) {
     if (openAPI == null || openAPI.getPaths() == null) {
       throw new IllegalArgumentException("Invalid OpenAPI document");
     }
@@ -50,7 +59,11 @@ class OpenAPIProcessor {
       OperationAndMethod operationAndMethod = findInPathItem(pathItem, operationId);
       if (operationAndMethod != null) {
         return new OperationDefinition(
-            openAPI, operationAndMethod.operation, path, operationAndMethod.method);
+            openAPI,
+            operationAndMethod.operation,
+            path,
+            operationAndMethod.method,
+            emulateSwaggerV2BodyParameters);
       }
     }
     throw new IllegalArgumentException(

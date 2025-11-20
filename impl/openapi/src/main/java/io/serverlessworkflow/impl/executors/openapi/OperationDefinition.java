@@ -17,26 +17,33 @@ package io.serverlessworkflow.impl.executors.openapi;
 
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.Operation;
-import io.swagger.v3.oas.models.media.Content;
 import io.swagger.v3.oas.models.media.MediaType;
 import io.swagger.v3.oas.models.media.Schema;
-import io.swagger.v3.oas.models.parameters.Parameter;
-import io.swagger.v3.oas.models.responses.ApiResponse;
 import io.swagger.v3.oas.models.servers.Server;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 class OperationDefinition {
   private final Operation operation;
   private final String method;
   private final OpenAPI openAPI;
   private final String path;
+  private final boolean emulateSwaggerV2BodyParameters;
 
-  OperationDefinition(OpenAPI openAPI, Operation operation, String path, String method) {
+  OperationDefinition(
+      OpenAPI openAPI,
+      Operation operation,
+      String path,
+      String method,
+      boolean emulateSwaggerV2BodyParameters) {
     this.openAPI = openAPI;
     this.operation = operation;
     this.path = path;
     this.method = method;
+    this.emulateSwaggerV2BodyParameters = emulateSwaggerV2BodyParameters;
   }
 
   String getMethod() {
@@ -52,67 +59,66 @@ class OperationDefinition {
   }
 
   List<String> getServers() {
+    if (openAPI.getServers() == null) {
+      return List.of();
+    }
     return openAPI.getServers().stream().map(Server::getUrl).toList();
   }
 
-  List<Parameter> getParameters() {
+  List<ParameterDefinition> getParameters() {
+    return emulateSwaggerV2BodyParameters ? getSwaggerV2Parameters() : getOpenApiParameters();
+  }
+
+  private List<ParameterDefinition> getOpenApiParameters() {
     if (operation.getParameters() == null) {
       return List.of();
     }
-    return operation.getParameters();
+    return operation.getParameters().stream().map(ParameterDefinition::new).toList();
   }
 
-  @SuppressWarnings({"rawtypes", "unchecked"})
-  Map<String, Schema> getBody() {
-    if (operation.getRequestBody() != null && operation.getRequestBody().getContent() != null) {
-      Content content = operation.getRequestBody().getContent();
-      if (content.containsKey("application/json")) {
-        MediaType mt = content.get("application/json");
-        if (mt.getSchema().get$ref() != null && !mt.getSchema().get$ref().isEmpty()) {
-          Schema<?> schema = resolveSchema(mt.getSchema().get$ref());
-          return schema.getProperties();
-        } else if (mt.getSchema().getProperties() != null) {
-          return mt.getSchema().getProperties();
-        } else {
-          throw new IllegalArgumentException(
-              "Can't resolve schema for request body of operation " + operation.getOperationId());
+  @SuppressWarnings({"rawtypes"})
+  private List<ParameterDefinition> getSwaggerV2Parameters() {
+    if (operation.getParameters() != null && !operation.getParameters().isEmpty()) {
+      return operation.getParameters().stream().map(ParameterDefinition::new).toList();
+    }
+    if (operation.getRequestBody() != null) {
+      Schema<?> schema = null;
+      if (operation.getRequestBody().getContent() != null
+          && operation
+              .getRequestBody()
+              .getContent()
+              .containsKey(jakarta.ws.rs.core.MediaType.APPLICATION_JSON)) {
+        MediaType mt =
+            operation
+                .getRequestBody()
+                .getContent()
+                .get(jakarta.ws.rs.core.MediaType.APPLICATION_JSON);
+        schema = mt.getSchema();
+      } else if (operation.getRequestBody().get$ref() != null) {
+        schema = resolveSchema(operation.getRequestBody().get$ref());
+      }
+
+      if (schema == null) {
+        return List.of();
+      }
+
+      Set<String> required =
+          schema.getRequired() != null ? new HashSet<>(schema.getRequired()) : new HashSet<>();
+
+      Map<String, Schema> properties = schema.getProperties();
+      if (properties != null) {
+        List<ParameterDefinition> result = new ArrayList<>();
+        for (Map.Entry<String, Schema> prop : properties.entrySet()) {
+          String fieldName = prop.getKey();
+          ParameterDefinition fieldParam =
+              new ParameterDefinition(
+                  fieldName, "body", required.contains(fieldName), prop.getValue());
+          result.add(fieldParam);
         }
-      } else {
-        throw new IllegalArgumentException("Only 'application/json' content type is supported");
+        return result;
       }
     }
-    return Map.of();
-  }
-
-  String getContentType() {
-    String method = getMethod().toUpperCase();
-
-    if (method.equals("POST") || method.equals("PUT") || method.equals("PATCH")) {
-      if (operation.getRequestBody() != null && operation.getRequestBody().getContent() != null) {
-        Content content = operation.getRequestBody().getContent();
-        if (!content.isEmpty()) {
-          return content.keySet().iterator().next();
-        }
-      }
-    }
-
-    if (operation.getResponses() != null) {
-      for (String code : new String[] {"200", "201", "204"}) {
-        ApiResponse resp = operation.getResponses().get(code);
-        if (resp != null && resp.getContent() != null && !resp.getContent().isEmpty()) {
-          return resp.getContent().keySet().iterator().next();
-        }
-      }
-      for (Map.Entry<String, ApiResponse> e : operation.getResponses().entrySet()) {
-        Content content = e.getValue().getContent();
-        if (content != null && !content.isEmpty()) {
-          return content.keySet().iterator().next();
-        }
-      }
-    }
-
-    throw new IllegalStateException(
-        "No content type found for operation " + operation.getOperationId() + " [" + method + "]");
+    return List.of();
   }
 
   Schema<?> resolveSchema(String ref) {
