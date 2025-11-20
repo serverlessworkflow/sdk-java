@@ -4,7 +4,7 @@
   <parent>
     <groupId>io.serverlessworkflow</groupId>
     <artifactId>serverlessworkflow-generators</artifactId>
-    <version>8.0.0-SNAPSHOT</version>
+    <version>7.5.1.Final</version>
   </parent>
   <artifactId>serverless-workflow-jackson-generator</artifactId>
   <name>Serverless Workflow :: Generator:: Jackson</name>
@@ -76,4 +76,8 @@
       <artifactId>serverlessworkflow-serialization</artifactId>
      </dependency>
   </dependencies>
+
+  <scm>
+    <tag>7.5.1.Final</tag>
+  </scm>
 </project>

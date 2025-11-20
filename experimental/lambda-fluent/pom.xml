@@ -4,7 +4,7 @@
     <parent>
         <groupId>io.serverlessworkflow</groupId>
         <artifactId>serverlessworkflow-experimental</artifactId>
-        <version>8.0.0-SNAPSHOT</version>
+        <version>7.5.1.Final</version>
     </parent>
 
     <artifactId>serverlessworkflow-lambda-fluent</artifactId>
@@ -27,4 +27,8 @@
             <artifactId>serverlessworkflow-experimental-lambda</artifactId>
         </dependency>
     </dependencies>
+
+  <scm>
+    <tag>7.5.1.Final</tag>
+  </scm>
 </project>
