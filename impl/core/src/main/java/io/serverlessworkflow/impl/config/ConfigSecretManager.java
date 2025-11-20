@@ -17,6 +17,7 @@ package io.serverlessworkflow.impl.config;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.StringTokenizer;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ConfigSecretManager implements SecretManager {
@@ -41,9 +42,21 @@ public class ConfigSecretManager implements SecretManager {
       if (name.startsWith(prefix)) {
         configManager
             .config(name, String.class)
-            .ifPresent(v -> map.put(name.substring(prefix.length()), v));
+            .ifPresent(v -> addToMap(map, name.substring(prefix.length()), v));
       }
     }
     return map;
+  }
+
+  private void addToMap(Map<String, Object> map, String name, Object v) {
+    StringTokenizer tokenizer = new StringTokenizer(name, ".");
+    while (tokenizer.hasMoreTokens()) {
+      name = tokenizer.nextToken();
+      if (tokenizer.hasMoreTokens()) {
+        map = (Map<String, Object>) map.computeIfAbsent(name, k -> new HashMap<>());
+      } else {
+        map.put(name, v);
+      }
+    }
   }
 }
