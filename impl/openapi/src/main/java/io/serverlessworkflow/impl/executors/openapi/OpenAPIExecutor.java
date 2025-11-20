@@ -28,6 +28,7 @@ import io.serverlessworkflow.impl.executors.CallableTask;
 import io.serverlessworkflow.impl.executors.http.HttpExecutor;
 import io.serverlessworkflow.impl.executors.http.HttpExecutor.HttpExecutorBuilder;
 import io.serverlessworkflow.impl.resources.ResourceLoaderUtils;
+import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.parameters.Parameter;
 import java.util.Collection;
 import java.util.HashMap;
@@ -52,7 +53,10 @@ public class OpenAPIExecutor implements CallableTask<CallOpenAPI> {
     OpenAPIArguments with = task.getWith();
     this.processor = new OpenAPIProcessor(with.getOperationId());
     this.resource = with.getDocument();
-    this.parameters = with.getParameters().getAdditionalProperties();
+    this.parameters =
+        with.getParameters() != null && with.getParameters().getAdditionalProperties() != null
+            ? with.getParameters().getAdditionalProperties()
+            : Map.of();
     this.builder =
         HttpExecutor.builder(definition)
             .withAuth(with.getAuthentication())
@@ -62,20 +66,27 @@ public class OpenAPIExecutor implements CallableTask<CallOpenAPI> {
   @Override
   public CompletableFuture<WorkflowModel> apply(
       WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel input) {
+
+    // In the same workflow, access to an already cached document
+    final OperationDefinition operationDefinition =
+        processor.parse(
+            workflowContext
+                .definition()
+                .resourceLoader()
+                .load(
+                    resource,
+                    ResourceLoaderUtils::readString,
+                    workflowContext,
+                    taskContext,
+                    input));
+
+    fillHttpBuilder(workflowContext.definition().application(), operationDefinition);
+    // One executor per operation, even if the document is the same
+    // Me may refactor this even further to reuse the same executor (since the base URI is the same,
+    // but the path differs, although some use cases may require different client configurations for
+    // different paths...)
     Collection<HttpExecutor> executors =
-        workflowContext
-            .definition()
-            .resourceLoader()
-            .<Collection<HttpExecutor>>load(
-                resource,
-                r -> {
-                  OperationDefinition o = processor.parse(ResourceLoaderUtils.readString(r));
-                  fillHttpBuilder(workflowContext.definition().application(), o);
-                  return o.getServers().stream().map(s -> builder.build(s)).toList();
-                },
-                workflowContext,
-                taskContext,
-                input);
+        operationDefinition.getServers().stream().map(s -> builder.build(s)).toList();
 
     Iterator<HttpExecutor> iter = executors.iterator();
     if (!iter.hasNext()) {
@@ -91,9 +102,9 @@ public class OpenAPIExecutor implements CallableTask<CallOpenAPI> {
   }
 
   private void fillHttpBuilder(WorkflowApplication application, OperationDefinition operation) {
-    Map<String, Object> headersMap = new HashMap<String, Object>();
-    Map<String, Object> queryMap = new HashMap<String, Object>();
-    Map<String, Object> pathParameters = new HashMap<String, Object>();
+    Map<String, Object> headersMap = new HashMap<>();
+    Map<String, Object> queryMap = new HashMap<>();
+    Map<String, Object> pathParameters = new HashMap<>();
 
     Map<String, Object> bodyParameters = new HashMap<>(parameters);
     for (Parameter parameter : operation.getParameters()) {
@@ -110,6 +121,8 @@ public class OpenAPIExecutor implements CallableTask<CallOpenAPI> {
       }
     }
 
+    validateRequiredParameters(operation, headersMap, queryMap, pathParameters);
+
     builder
         .withMethod(operation.getMethod())
         .withPath(new OperationPathResolver(operation.getPath(), application, pathParameters))
@@ -122,6 +135,67 @@ public class OpenAPIExecutor implements CallableTask<CallOpenAPI> {
     Object value = origMap.remove(name);
     if (value != null) {
       collectorMap.put(name, value);
+    }
+  }
+
+  private void validateRequiredParameters(
+      OperationDefinition operation,
+      Map<String, Object> headersMap,
+      Map<String, Object> queryMap,
+      Map<String, Object> pathParameters) {
+
+    StringBuilder missing = new StringBuilder();
+
+    for (Parameter parameter : operation.getParameters()) {
+      if (!Boolean.TRUE.equals(parameter.getRequired())) {
+        continue;
+      }
+
+      String in = parameter.getIn();
+      String name = parameter.getName();
+
+      Map<String, Object> targetMap =
+          switch (in) {
+            case "header" -> headersMap;
+            case "path" -> pathParameters;
+            case "query" -> queryMap;
+            default -> null;
+          };
+
+      if (targetMap == null) {
+        // We don't currently handle other "in" locations here (e.g., cookie).
+        // Treat as "not validated" instead of failing.
+        continue;
+      }
+
+      boolean present = targetMap.containsKey(name);
+
+      if (!present) {
+        // Try to satisfy the requirement using the OpenAPI default, if any
+        Schema<?> schema = parameter.getSchema();
+        Object defaultValue = schema != null ? schema.getDefault() : null;
+
+        if (defaultValue != null) {
+          targetMap.put(name, defaultValue);
+          present = true;
+        }
+      }
+
+      if (!present) {
+        if (!missing.isEmpty()) {
+          missing.append(", ");
+        }
+        missing.append(in).append(" parameter '").append(name).append("'");
+      }
+    }
+
+    if (!missing.isEmpty()) {
+      String operationId =
+          operation.getOperation().getOperationId() != null
+              ? operation.getOperation().getOperationId()
+              : "<unknown>";
+      throw new IllegalArgumentException(
+          "Missing required OpenAPI parameters for operation '" + operationId + "': " + missing);
     }
   }
 }

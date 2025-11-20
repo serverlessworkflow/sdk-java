@@ -52,49 +52,49 @@ public class OpenAPITest {
 
   private static String PROJECT_JSON_SUCCESS =
       """
-                  {
-                      "success": true,
-                      "data": {
-                          "id": 55504,
-                          "name": "CRM",
-                          "code": "crm-20251111",
-                          "ownerId": 12345,
-                          "members": [
-                              12345,
-                              67890
-                          ],
-                          "created_at": "2025-09-20T00:58:50.170784Z"
+                      {
+                          "success": true,
+                          "data": {
+                              "id": 55504,
+                              "name": "CRM",
+                              "code": "crm-20251111",
+                              "ownerId": 12345,
+                              "members": [
+                                  12345,
+                                  67890
+                              ],
+                              "created_at": "2025-09-20T00:58:50.170784Z"
+                          }
                       }
-                  }
-                  """;
+                      """;
 
   private static String PROJECT_JSON_FALSE =
       """
-                  {
-                      "success": false,
-                      "error": {
-                          "code": "PROJECT_CONFLICT",
-                          "message": "A project with the code "crm-2025" already exists.",
-                          "details": null
+                      {
+                          "success": false,
+                          "error": {
+                              "code": "PROJECT_CONFLICT",
+                              "message": "A project with the code crm-2025 already exists.",
+                              "details": null
+                          }
                       }
-                  }
-                  """;
+                      """;
 
   private static String PROJECT_GET_JSON_POSITIVE =
       """
-                  {
-                    "success": true,
-                    "data": {
-                      "id": 40099,
-                      "name": "Severus Calix",
-                      "email": "severus.calix@hive-terra.example.com"
-                    },
-                    "meta": {
-                      "request_id": "req_terra123def456",
-                      "timestamp": "999.M41-01-20T12:00:00Z"
-                    }
-                  }
-                  """;
+                      {
+                        "success": true,
+                        "data": {
+                          "id": 40099,
+                          "name": "Severus Calix",
+                          "email": "severus.calix@hive-terra.example.com"
+                        },
+                        "meta": {
+                          "request_id": "req_terra123def456",
+                          "timestamp": "999.M41-01-20T12:00:00Z"
+                        }
+                      }
+                      """;
 
   @BeforeAll
   static void init() throws IOException {
@@ -153,7 +153,7 @@ public class OpenAPITest {
 
     RecordedRequest restRequest = restServer.takeRequest();
     assertEquals("POST", restRequest.getMethod());
-    assertTrue(restRequest.getPath().startsWith("/projects?"));
+    assertTrue(restRequest.getPath().startsWith("/api/v1/projects?"));
     assertTrue(restRequest.getPath().contains("notifyMembers=true"));
     assertTrue(restRequest.getPath().contains("validateOnly=false"));
     assertTrue(restRequest.getPath().contains("lang=en"));
@@ -207,7 +207,7 @@ public class OpenAPITest {
 
     RecordedRequest restRequest = restServer.takeRequest();
     assertEquals("POST", restRequest.getMethod());
-    assertTrue(restRequest.getPath().startsWith("/projects?"));
+    assertTrue(restRequest.getPath().startsWith("/api/v1/projects?"));
     assertTrue(restRequest.getPath().contains("notifyMembers=true"));
     assertTrue(restRequest.getPath().contains("validateOnly=false"));
     assertTrue(restRequest.getPath().contains("lang=en"));
@@ -257,7 +257,7 @@ public class OpenAPITest {
   private void assertData(Map<String, Object> result) throws InterruptedException {
     RecordedRequest restRequest = restServer.takeRequest();
     assertEquals("GET", restRequest.getMethod());
-    assertTrue(restRequest.getPath().startsWith("/users/40099?"));
+    assertTrue(restRequest.getPath().startsWith("/api/v1/users/40099?"));
 
     assertTrue(result.containsKey("data"));
     Map<String, Object> data = (Map<String, Object>) result.get("data");
@@ -307,7 +307,7 @@ public class OpenAPITest {
 
     RecordedRequest restRequest = restServer.takeRequest();
     assertEquals("GET", restRequest.getMethod());
-    assertTrue(restRequest.getPath().startsWith("/users/40099?"));
+    assertTrue(restRequest.getPath().startsWith("/api/v1/users/40099?"));
 
     assertTrue(result.containsKey("data"));
     Map<String, Object> data = (Map<String, Object>) result.get("data");

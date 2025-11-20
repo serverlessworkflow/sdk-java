@@ -256,6 +256,8 @@ public class HttpExecutor implements CallableTask<CallHTTP> {
       WorkflowValueResolver<URI> uriSupplier, WorkflowValueResolver<URI> pathSupplier) {
     return (w, t, n) ->
         HttpClientResolver.client(w, t)
-            .target(uriSupplier.apply(w, t, n).resolve(pathSupplier.apply(w, t, n)));
+            .target(
+                WorkflowUtils.concatURI(
+                    uriSupplier.apply(w, t, n), pathSupplier.apply(w, t, n).toString()));
   }
 }

@@ -21,51 +21,44 @@ import io.serverlessworkflow.api.types.ReferenceableAuthenticationPolicy;
 import java.util.function.Consumer;
 
 public class ReferenceableAuthenticationPolicyBuilder {
-  final AuthenticationPolicyUnion authenticationPolicy;
-  final AuthenticationPolicyReference authenticationPolicyReference;
+  private AuthenticationPolicyUnion authenticationPolicy;
+  private AuthenticationPolicyReference authenticationPolicyReference;
 
-  public ReferenceableAuthenticationPolicyBuilder() {
-    this.authenticationPolicy = new AuthenticationPolicyUnion();
-    this.authenticationPolicyReference = new AuthenticationPolicyReference();
-  }
+  public ReferenceableAuthenticationPolicyBuilder() {}
 
   public ReferenceableAuthenticationPolicyBuilder basic(
       Consumer<BasicAuthenticationPolicyBuilder> basicConsumer) {
-    final BasicAuthenticationPolicyBuilder basicAuthenticationPolicyBuilder =
-        new BasicAuthenticationPolicyBuilder();
-    basicConsumer.accept(basicAuthenticationPolicyBuilder);
-    this.authenticationPolicy.setBasicAuthenticationPolicy(
-        basicAuthenticationPolicyBuilder.build());
+    final BasicAuthenticationPolicyBuilder builder = new BasicAuthenticationPolicyBuilder();
+    basicConsumer.accept(builder);
+    this.authenticationPolicy =
+        new AuthenticationPolicyUnion().withBasicAuthenticationPolicy(builder.build());
     return this;
   }
 
   public ReferenceableAuthenticationPolicyBuilder bearer(
       Consumer<BearerAuthenticationPolicyBuilder> bearerConsumer) {
-    final BearerAuthenticationPolicyBuilder bearerAuthenticationPolicyBuilder =
-        new BearerAuthenticationPolicyBuilder();
-    bearerConsumer.accept(bearerAuthenticationPolicyBuilder);
-    this.authenticationPolicy.setBearerAuthenticationPolicy(
-        bearerAuthenticationPolicyBuilder.build());
+    final BearerAuthenticationPolicyBuilder builder = new BearerAuthenticationPolicyBuilder();
+    bearerConsumer.accept(builder);
+    this.authenticationPolicy =
+        new AuthenticationPolicyUnion().withBearerAuthenticationPolicy(builder.build());
     return this;
   }
 
   public ReferenceableAuthenticationPolicyBuilder digest(
       Consumer<DigestAuthenticationPolicyBuilder> digestConsumer) {
-    final DigestAuthenticationPolicyBuilder digestAuthenticationPolicyBuilder =
-        new DigestAuthenticationPolicyBuilder();
-    digestConsumer.accept(digestAuthenticationPolicyBuilder);
-    this.authenticationPolicy.setDigestAuthenticationPolicy(
-        digestAuthenticationPolicyBuilder.build());
+    final DigestAuthenticationPolicyBuilder builder = new DigestAuthenticationPolicyBuilder();
+    digestConsumer.accept(builder);
+    this.authenticationPolicy =
+        new AuthenticationPolicyUnion().withDigestAuthenticationPolicy(builder.build());
     return this;
   }
 
   public ReferenceableAuthenticationPolicyBuilder oauth2(
       Consumer<OAuth2AuthenticationPolicyBuilder> oauth2Consumer) {
-    final OAuth2AuthenticationPolicyBuilder oauth2AuthenticationPolicyBuilder =
-        new OAuth2AuthenticationPolicyBuilder();
-    oauth2Consumer.accept(oauth2AuthenticationPolicyBuilder);
-    this.authenticationPolicy.setOAuth2AuthenticationPolicy(
-        oauth2AuthenticationPolicyBuilder.build());
+    final OAuth2AuthenticationPolicyBuilder builder = new OAuth2AuthenticationPolicyBuilder();
+    oauth2Consumer.accept(builder);
+    this.authenticationPolicy =
+        new AuthenticationPolicyUnion().withOAuth2AuthenticationPolicy(builder.build());
     return this;
   }
 
@@ -74,12 +67,13 @@ public class ReferenceableAuthenticationPolicyBuilder {
     final OpenIdConnectAuthenticationPolicyBuilder builder =
         new OpenIdConnectAuthenticationPolicyBuilder();
     openIdConnectConsumer.accept(builder);
-    this.authenticationPolicy.setOpenIdConnectAuthenticationPolicy(builder.build());
+    this.authenticationPolicy =
+        new AuthenticationPolicyUnion().withOpenIdConnectAuthenticationPolicy(builder.build());
     return this;
   }
 
   public ReferenceableAuthenticationPolicyBuilder use(String use) {
-    this.authenticationPolicyReference.setUse(use);
+    this.authenticationPolicyReference = new AuthenticationPolicyReference().withUse(use);
     return this;
   }
 
