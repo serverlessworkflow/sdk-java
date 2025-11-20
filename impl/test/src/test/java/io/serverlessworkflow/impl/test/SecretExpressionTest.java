@@ -45,18 +45,18 @@ public class SecretExpressionTest {
   @ResourceLock(Resources.SYSTEM_PROPERTIES)
   void testDefault() {
     System.setProperty("superman.name", "ClarkKent");
+    System.setProperty("superman.enemy.name", "Lex Luthor");
+    System.setProperty("superman.enemy.isHuman", "true");
     try (WorkflowApplication appl = WorkflowApplication.builder().build()) {
-      assertThat(
-              appl.workflowDefinition(workflow)
-                  .instance(Map.of())
-                  .start()
-                  .join()
-                  .asMap()
-                  .orElseThrow()
-                  .get("superSecret"))
-          .isEqualTo("ClarkKent");
+      Map<String, Object> map =
+          appl.workflowDefinition(workflow).instance(Map.of()).start().join().asMap().orElseThrow();
+      assertThat(map.get("superSecret")).isEqualTo("ClarkKent");
+      assertThat(map.get("theEnemy")).isEqualTo("Lex Luthor");
+      assertThat(map.get("humanEnemy")).isEqualTo("true");
     } finally {
       System.clearProperty("superman.name");
+      System.clearProperty("superman.enemy.name");
+      System.clearProperty("superman.enemy.isHuman");
     }
   }
 
@@ -78,16 +78,20 @@ public class SecretExpressionTest {
   @Test
   void testCustom() {
     try (WorkflowApplication appl =
-        WorkflowApplication.builder().withSecretManager(k -> Map.of("name", "ClarkKent")).build()) {
-      assertThat(
-              appl.workflowDefinition(workflow)
-                  .instance(Map.of())
-                  .start()
-                  .join()
-                  .asMap()
-                  .orElseThrow()
-                  .get("superSecret"))
-          .isEqualTo("ClarkKent");
+        WorkflowApplication.builder()
+            .withSecretManager(
+                k ->
+                    Map.of(
+                        "name",
+                        "ClarkKent",
+                        "enemy",
+                        Map.of("name", "Lex Luthor", "isHuman", true)))
+            .build()) {
+      Map<String, Object> map =
+          appl.workflowDefinition(workflow).instance(Map.of()).start().join().asMap().orElseThrow();
+      assertThat(map.get("superSecret")).isEqualTo("ClarkKent");
+      assertThat(map.get("theEnemy")).isEqualTo("Lex Luthor");
+      assertThat(map.get("humanEnemy")).isEqualTo(true);
     }
   }
 }
