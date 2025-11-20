@@ -18,9 +18,11 @@ package io.serverlessworkflow.fluent.spec;
 import io.serverlessworkflow.api.types.DigestAuthenticationPolicy;
 import io.serverlessworkflow.api.types.DigestAuthenticationPolicyConfiguration;
 import io.serverlessworkflow.api.types.DigestAuthenticationProperties;
+import io.serverlessworkflow.api.types.SecretBasedAuthenticationPolicy;
 
 public final class DigestAuthenticationPolicyBuilder {
   private final DigestAuthenticationProperties digestAuthenticationProperties;
+  private SecretBasedAuthenticationPolicy secretBasedAuthenticationPolicy;
 
   DigestAuthenticationPolicyBuilder() {
     this.digestAuthenticationProperties = new DigestAuthenticationProperties();
@@ -36,10 +38,19 @@ public final class DigestAuthenticationPolicyBuilder {
     return this;
   }
 
+  public DigestAuthenticationPolicyBuilder use(String secret) {
+    this.secretBasedAuthenticationPolicy = new SecretBasedAuthenticationPolicy(secret);
+    return this;
+  }
+
   public DigestAuthenticationPolicy build() {
     final DigestAuthenticationPolicyConfiguration configuration =
         new DigestAuthenticationPolicyConfiguration();
-    configuration.setDigestAuthenticationProperties(digestAuthenticationProperties);
+    if (this.secretBasedAuthenticationPolicy != null) {
+      configuration.setDigestAuthenticationPolicySecret(this.secretBasedAuthenticationPolicy);
+    } else {
+      configuration.setDigestAuthenticationProperties(digestAuthenticationProperties);
+    }
     return new DigestAuthenticationPolicy(configuration);
   }
 }

@@ -38,7 +38,13 @@ public final class OAuth2AuthenticationPolicyBuilder
   public OAuth2AuthenticationPolicy build() {
     final OAuth2AuthenticationPolicyConfiguration configuration =
         new OAuth2AuthenticationPolicyConfiguration();
-    configuration.setOAuth2ConnectAuthenticationProperties(this.authenticationData);
+
+    if (this.secretBasedAuthenticationPolicy != null) {
+      configuration.setOAuth2AuthenticationPolicySecret(this.secretBasedAuthenticationPolicy);
+    } else {
+      configuration.setOAuth2ConnectAuthenticationProperties(this.authenticationData);
+    }
+
     final OAuth2AuthenticationPolicy policy = new OAuth2AuthenticationPolicy();
     policy.setOauth2(configuration);
     return policy;

@@ -18,23 +18,32 @@ package io.serverlessworkflow.fluent.spec;
 import io.serverlessworkflow.api.types.BearerAuthenticationPolicy;
 import io.serverlessworkflow.api.types.BearerAuthenticationPolicyConfiguration;
 import io.serverlessworkflow.api.types.BearerAuthenticationProperties;
+import io.serverlessworkflow.api.types.SecretBasedAuthenticationPolicy;
 
 public final class BearerAuthenticationPolicyBuilder {
-  private final BearerAuthenticationProperties bearerAuthenticationProperties;
+  private BearerAuthenticationProperties bearerAuthenticationProperties;
+  private SecretBasedAuthenticationPolicy secretBasedAuthenticationPolicy;
 
-  BearerAuthenticationPolicyBuilder() {
-    this.bearerAuthenticationProperties = new BearerAuthenticationProperties();
-  }
+  BearerAuthenticationPolicyBuilder() {}
 
   public BearerAuthenticationPolicyBuilder token(final String token) {
-    this.bearerAuthenticationProperties.setToken(token);
+    this.bearerAuthenticationProperties = new BearerAuthenticationProperties().withToken(token);
+    return this;
+  }
+
+  public BearerAuthenticationPolicyBuilder use(final String secret) {
+    this.secretBasedAuthenticationPolicy = new SecretBasedAuthenticationPolicy(secret);
     return this;
   }
 
   public BearerAuthenticationPolicy build() {
     final BearerAuthenticationPolicyConfiguration configuration =
         new BearerAuthenticationPolicyConfiguration();
-    configuration.setBearerAuthenticationProperties(bearerAuthenticationProperties);
+    if (this.secretBasedAuthenticationPolicy != null) {
+      configuration.setBearerAuthenticationPolicySecret(this.secretBasedAuthenticationPolicy);
+    } else {
+      configuration.setBearerAuthenticationProperties(bearerAuthenticationProperties);
+    }
     return new BearerAuthenticationPolicy(configuration);
   }
 }

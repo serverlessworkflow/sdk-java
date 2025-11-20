@@ -340,6 +340,10 @@ public final class DSL {
     return a -> a.basic(b -> b.username(username).password(password));
   }
 
+  public static AuthenticationConfigurer basic(String secret) {
+    return a -> a.basic(b -> b.use(secret));
+  }
+
   /**
    * Build a Bearer token authentication configurer.
    *
@@ -356,6 +360,10 @@ public final class DSL {
     return a -> a.bearer(b -> b.token(token));
   }
 
+  public static AuthenticationConfigurer bearerUse(String secret) {
+    return a -> a.bearer(b -> b.use(secret));
+  }
+
   /**
    * Build a Digest authentication configurer with username and password.
    *
@@ -365,6 +373,10 @@ public final class DSL {
    */
   public static AuthenticationConfigurer digest(String username, String password) {
     return a -> a.digest(d -> d.username(username).password(password));
+  }
+
+  public static AuthenticationConfigurer digest(String secret) {
+    return a -> a.digest(d -> d.use(secret));
   }
 
   /**
@@ -401,7 +413,9 @@ public final class DSL {
                     .client(c -> c.id(clientId).secret(clientSecret)));
   }
 
-  // TODO: we may create an OIDCSpec for chained builders if necessary
+  public static AuthenticationConfigurer oidc(String secret) {
+    return a -> a.openIDConnect(o -> o.use(secret));
+  }
 
   /**
    * Alias for {@link #oidc(String, OAuth2AuthenticationData.OAuth2AuthenticationDataGrant)} using
@@ -437,6 +451,10 @@ public final class DSL {
                 o.authority(authority)
                     .grant(grant)
                     .client(c -> c.id(clientId).secret(clientSecret)));
+  }
+
+  public static AuthenticationConfigurer oauth2(String secret) {
+    return a -> a.openIDConnect(o -> o.use(secret));
   }
 
   /**
