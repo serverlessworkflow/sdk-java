@@ -223,11 +223,10 @@ public class WorkflowUtils {
   }
 
   public static URI concatURI(URI base, String pathToAppend) {
-    if (!isValid(pathToAppend)) {
-      return base;
-    }
+    return !isValid(pathToAppend) ? base : concatURI(base, URI.create(pathToAppend));
+  }
 
-    final URI child = URI.create(pathToAppend);
+  public static URI concatURI(URI base, URI child) {
     if (child.isAbsolute()) {
       return child;
     }
@@ -242,21 +241,21 @@ public class WorkflowUtils {
     String relPath = child.getPath();
     if (relPath == null) {
       relPath = "";
+    } else {
+      while (relPath.startsWith("/")) {
+        relPath = relPath.substring(1);
+      }
     }
-    while (relPath.startsWith("/")) {
-      relPath = relPath.substring(1);
-    }
-
-    String finalPath = basePath + relPath;
-
-    String query = child.getQuery();
-    String fragment = child.getFragment();
-
     try {
-      return new URI(base.getScheme(), base.getAuthority(), finalPath, query, fragment);
+      return new URI(
+          base.getScheme(),
+          base.getAuthority(),
+          basePath + relPath,
+          child.getQuery(),
+          child.getFragment());
     } catch (URISyntaxException e) {
       throw new IllegalArgumentException(
-          "Failed to build combined URI from base=" + base + " and path=" + pathToAppend, e);
+          "Failed to build combined URI from base=" + base + " and child=" + child, e);
     }
   }
 

@@ -32,8 +32,10 @@ import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.parameters.Parameter;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
 public class OpenAPIExecutor implements CallableTask<CallOpenAPI> {
@@ -105,24 +107,31 @@ public class OpenAPIExecutor implements CallableTask<CallOpenAPI> {
     Map<String, Object> headersMap = new HashMap<>();
     Map<String, Object> queryMap = new HashMap<>();
     Map<String, Object> pathParameters = new HashMap<>();
+    Set<String> missingParams = new HashSet<>();
 
     Map<String, Object> bodyParameters = new HashMap<>(parameters);
     for (Parameter parameter : operation.getParameters()) {
       switch (parameter.getIn()) {
         case "header":
-          param(parameter.getName(), bodyParameters, headersMap);
+          param(parameter, bodyParameters, headersMap, missingParams);
           break;
         case "path":
-          param(parameter.getName(), bodyParameters, pathParameters);
+          param(parameter, bodyParameters, pathParameters, missingParams);
           break;
         case "query":
-          param(parameter.getName(), bodyParameters, queryMap);
+          param(parameter, bodyParameters, queryMap, missingParams);
           break;
       }
     }
 
-    validateRequiredParameters(operation, headersMap, queryMap, pathParameters);
-
+    if (!missingParams.isEmpty()) {
+      throw new IllegalArgumentException(
+          "Missing required OpenAPI parameters for operation '"
+              + (operation.getOperation().getOperationId() != null
+                  ? operation.getOperation().getOperationId()
+                  : "<unknown>" + "': ")
+              + missingParams);
+    }
     builder
         .withMethod(operation.getMethod())
         .withPath(new OperationPathResolver(operation.getPath(), application, pathParameters))
@@ -131,71 +140,22 @@ public class OpenAPIExecutor implements CallableTask<CallOpenAPI> {
         .withHeaders(headersMap);
   }
 
-  private void param(String name, Map<String, Object> origMap, Map<String, Object> collectorMap) {
-    Object value = origMap.remove(name);
-    if (value != null) {
-      collectorMap.put(name, value);
-    }
-  }
-
-  private void validateRequiredParameters(
-      OperationDefinition operation,
-      Map<String, Object> headersMap,
-      Map<String, Object> queryMap,
-      Map<String, Object> pathParameters) {
-
-    StringBuilder missing = new StringBuilder();
-
-    for (Parameter parameter : operation.getParameters()) {
-      if (!Boolean.TRUE.equals(parameter.getRequired())) {
-        continue;
+  private void param(
+      Parameter parameter,
+      Map<String, Object> origMap,
+      Map<String, Object> collectorMap,
+      Set<String> missingParams) {
+    String name = parameter.getName();
+    if (origMap.containsKey(name)) {
+      collectorMap.put(parameter.getName(), origMap.remove(name));
+    } else if (parameter.getRequired()) {
+      Schema<?> schema = parameter.getSchema();
+      Object defaultValue = schema != null ? schema.getDefault() : null;
+      if (defaultValue != null) {
+        collectorMap.put(name, defaultValue);
+      } else {
+        missingParams.add(name);
       }
-
-      String in = parameter.getIn();
-      String name = parameter.getName();
-
-      Map<String, Object> targetMap =
-          switch (in) {
-            case "header" -> headersMap;
-            case "path" -> pathParameters;
-            case "query" -> queryMap;
-            default -> null;
-          };
-
-      if (targetMap == null) {
-        // We don't currently handle other "in" locations here (e.g., cookie).
-        // Treat as "not validated" instead of failing.
-        continue;
-      }
-
-      boolean present = targetMap.containsKey(name);
-
-      if (!present) {
-        // Try to satisfy the requirement using the OpenAPI default, if any
-        Schema<?> schema = parameter.getSchema();
-        Object defaultValue = schema != null ? schema.getDefault() : null;
-
-        if (defaultValue != null) {
-          targetMap.put(name, defaultValue);
-          present = true;
-        }
-      }
-
-      if (!present) {
-        if (!missing.isEmpty()) {
-          missing.append(", ");
-        }
-        missing.append(in).append(" parameter '").append(name).append("'");
-      }
-    }
-
-    if (!missing.isEmpty()) {
-      String operationId =
-          operation.getOperation().getOperationId() != null
-              ? operation.getOperation().getOperationId()
-              : "<unknown>";
-      throw new IllegalArgumentException(
-          "Missing required OpenAPI parameters for operation '" + operationId + "': " + missing);
     }
   }
 }
