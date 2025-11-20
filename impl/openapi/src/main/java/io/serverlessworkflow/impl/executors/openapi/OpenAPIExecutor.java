@@ -29,7 +29,6 @@ import io.serverlessworkflow.impl.executors.http.HttpExecutor;
 import io.serverlessworkflow.impl.executors.http.HttpExecutor.HttpExecutorBuilder;
 import io.serverlessworkflow.impl.resources.ResourceLoaderUtils;
 import io.swagger.v3.oas.models.media.Schema;
-import io.swagger.v3.oas.models.parameters.Parameter;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -110,7 +109,7 @@ public class OpenAPIExecutor implements CallableTask<CallOpenAPI> {
     Set<String> missingParams = new HashSet<>();
 
     Map<String, Object> bodyParameters = new HashMap<>(parameters);
-    for (Parameter parameter : operation.getParameters()) {
+    for (ParameterDefinition parameter : operation.getParameters()) {
       switch (parameter.getIn()) {
         case "header":
           param(parameter, bodyParameters, headersMap, missingParams);
@@ -141,7 +140,7 @@ public class OpenAPIExecutor implements CallableTask<CallOpenAPI> {
   }
 
   private void param(
-      Parameter parameter,
+      ParameterDefinition parameter,
       Map<String, Object> origMap,
       Map<String, Object> collectorMap,
       Set<String> missingParams) {
