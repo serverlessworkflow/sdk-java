@@ -22,11 +22,13 @@ import io.serverlessworkflow.api.types.OAuth2AuthenticationPropertiesEndpoints;
 import io.serverlessworkflow.api.types.OAuth2ConnectAuthenticationProperties;
 import io.serverlessworkflow.api.types.OAuth2TokenDefinition;
 import io.serverlessworkflow.api.types.OAuth2TokenRequest;
+import io.serverlessworkflow.api.types.SecretBasedAuthenticationPolicy;
 import java.util.List;
 import java.util.function.Consumer;
 
 public abstract class OIDCBuilder<T extends AuthenticationPolicy> {
   protected final OAuth2ConnectAuthenticationProperties authenticationData;
+  protected SecretBasedAuthenticationPolicy secretBasedAuthenticationPolicy;
 
   OIDCBuilder() {
     this.authenticationData = new OAuth2ConnectAuthenticationProperties();
@@ -98,6 +100,11 @@ public abstract class OIDCBuilder<T extends AuthenticationPolicy> {
         new OAuth2AuthenticationDataClientBuilder();
     clientConsumer.accept(builder);
     this.authenticationData.setClient(builder.build());
+    return this;
+  }
+
+  public OIDCBuilder<T> use(String secret) {
+    this.secretBasedAuthenticationPolicy = new SecretBasedAuthenticationPolicy(secret);
     return this;
   }
 

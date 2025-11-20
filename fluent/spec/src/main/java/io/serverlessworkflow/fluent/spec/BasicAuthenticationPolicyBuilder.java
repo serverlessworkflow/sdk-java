@@ -18,10 +18,12 @@ package io.serverlessworkflow.fluent.spec;
 import io.serverlessworkflow.api.types.BasicAuthenticationPolicy;
 import io.serverlessworkflow.api.types.BasicAuthenticationPolicyConfiguration;
 import io.serverlessworkflow.api.types.BasicAuthenticationProperties;
+import io.serverlessworkflow.api.types.SecretBasedAuthenticationPolicy;
 
 public final class BasicAuthenticationPolicyBuilder {
 
-  private final BasicAuthenticationProperties basicAuthenticationProperties;
+  private BasicAuthenticationProperties basicAuthenticationProperties;
+  private SecretBasedAuthenticationPolicy secretBasedAuthenticationPolicy;
 
   BasicAuthenticationPolicyBuilder() {
     this.basicAuthenticationProperties = new BasicAuthenticationProperties();
@@ -37,10 +39,19 @@ public final class BasicAuthenticationPolicyBuilder {
     return this;
   }
 
+  public BasicAuthenticationPolicyBuilder use(String secret) {
+    this.secretBasedAuthenticationPolicy = new SecretBasedAuthenticationPolicy(secret);
+    return this;
+  }
+
   public BasicAuthenticationPolicy build() {
     final BasicAuthenticationPolicyConfiguration configuration =
         new BasicAuthenticationPolicyConfiguration();
-    configuration.setBasicAuthenticationProperties(basicAuthenticationProperties);
+    if (this.secretBasedAuthenticationPolicy != null) {
+      configuration.setBasicAuthenticationPolicySecret(secretBasedAuthenticationPolicy);
+    } else {
+      configuration.setBasicAuthenticationProperties(basicAuthenticationProperties);
+    }
     return new BasicAuthenticationPolicy(configuration);
   }
 }
