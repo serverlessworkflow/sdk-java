@@ -37,9 +37,9 @@ public class AgentTaskItemListBuilder extends BaseTaskItemListBuilder<AgentTaskI
     implements AgentDoFluent<AgentTaskItemListBuilder> {
 
   private final FuncTaskItemListBuilder delegate;
-  private final AtomicReference<Consumer<AgenticScope>> beforeAgentInvocation =
+  private final AtomicReference<Consumer<AgenticScopedRequest>> beforeAgentInvocation =
       new AtomicReference<>();
-  private final AtomicReference<Consumer<AgenticScope>> afterAgentInvocation =
+  private final AtomicReference<Consumer<AgenticScopedResponse>> afterAgentInvocation =
       new AtomicReference<>();
 
   public AgentTaskItemListBuilder() {
@@ -169,12 +169,12 @@ public class AgentTaskItemListBuilder extends BaseTaskItemListBuilder<AgentTaskI
   }
 
   public AgentTaskItemListBuilder inputFrom(Consumer<AgenticScope> beforeAgentInvocation) {
-    this.beforeAgentInvocation.set(beforeAgentInvocation);
+    this.beforeAgentInvocation.set(beforeAgentInvocation::accept);
     return self();
   }
 
   public AgentTaskItemListBuilder outputAs(Consumer<AgenticScope> afterAgentInvocationConsumer) {
-    this.afterAgentInvocation.set(afterAgentInvocationConsumer);
+    this.afterAgentInvocation.set(afterAgentInvocationConsumer::accept);
     return self();
   }
 }

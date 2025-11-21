@@ -38,16 +38,21 @@ public final class AgentAdapters {
 
   public static Function<DefaultAgenticScope, Object> toFunction(
       AgentExecutor exec,
-      AtomicReference<Consumer<AgenticScope>> beforeAgentInvocation,
-      AtomicReference<Consumer<AgenticScope>> afterAgentInvocation) {
+      AtomicReference<Consumer<AgenticScopedRequest>> beforeAgentInvocation,
+      AtomicReference<Consumer<AgenticScopedResponse>> afterAgentInvocation) {
+    String agentName = exec.agentInvoker().name();
     return defaultAgenticScope -> {
       if (beforeAgentInvocation.get() != null) {
-        beforeAgentInvocation.get().accept(defaultAgenticScope);
+        beforeAgentInvocation
+            .get()
+            .accept(new AgenticScopedRequest(defaultAgenticScope, agentName));
       }
       Object result = exec.execute(defaultAgenticScope);
       if (afterAgentInvocation.get() != null) {
         defaultAgenticScope.writeState("input", result);
-        afterAgentInvocation.get().accept(defaultAgenticScope);
+        afterAgentInvocation
+            .get()
+            .accept(new AgenticScopedResponse(defaultAgenticScope, agentName, result));
       }
       return result;
     };

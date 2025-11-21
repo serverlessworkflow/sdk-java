@@ -20,14 +20,22 @@ import dev.langchain4j.agentic.agent.AgentResponse;
 import dev.langchain4j.agentic.internal.AgentExecutor;
 import dev.langchain4j.agentic.scope.AgenticScope;
 import dev.langchain4j.agentic.workflow.ConditionalAgentService;
+import io.serverlessworkflow.fluent.agentic.AgenticScopedRequest;
+import io.serverlessworkflow.fluent.agentic.AgenticScopedResponse;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 public class ConditionalAgentServiceImpl<T>
     extends AbstractAgentService<T, ConditionalAgentService<T>>
     implements ConditionalAgentService<T> {
+
+  private final AtomicReference<Consumer<AgenticScopedRequest>> beforeAgentInvocation =
+      new AtomicReference<>();
+  private final AtomicReference<Consumer<AgenticScopedResponse>> afterAgentInvocation =
+      new AtomicReference<>();
 
   private ConditionalAgentServiceImpl(Class<T> agentServiceClass) {
     super(agentServiceClass);
@@ -39,7 +47,21 @@ public class ConditionalAgentServiceImpl<T>
 
   @Override
   public ConditionalAgentService<T> subAgents(Object... agents) {
-    this.workflowBuilder.tasks(t -> t.sequence(agents));
+    this.workflowBuilder.tasks(
+        t ->
+            t.sequence(agents)
+                .inputFrom(
+                    scope -> {
+                      if (beforeAgentInvocation.get() != null) {
+                        beforeAgentInvocation.get().accept((AgenticScopedRequest) scope);
+                      }
+                    })
+                .outputAs(
+                    scope -> {
+                      if (afterAgentInvocation.get() != null) {
+                        afterAgentInvocation.get().accept((AgenticScopedResponse) scope);
+                      }
+                    }));
     return this;
   }
 
@@ -50,20 +72,43 @@ public class ConditionalAgentServiceImpl<T>
 
   @Override
   public ConditionalAgentService<T> beforeAgentInvocation(Consumer<AgentRequest> consumer) {
-    throw new UnsupportedOperationException(
-        "Feature not implemented yet. See: https://github.com/serverlessworkflow/sdk-java/issues/836");
+    beforeAgentInvocation.set(
+        agenticScopedRequest -> consumer.accept(agenticScopedRequest.asAgentRequest()));
+    return this;
   }
 
   @Override
   public ConditionalAgentService<T> afterAgentInvocation(Consumer<AgentResponse> consumer) {
-    throw new UnsupportedOperationException(
-        "Feature not implemented yet. See: https://github.com/serverlessworkflow/sdk-java/issues/836");
+    afterAgentInvocation.set(
+        agenticScopedResponse -> consumer.accept(agenticScopedResponse.asAgentResponse()));
+    return this;
   }
 
   @Override
   public ConditionalAgentService<T> subAgents(Predicate<AgenticScope> condition, Object... agents) {
     this.workflowBuilder.tasks(
-        t -> Arrays.stream(agents).forEach(agent -> t.when(condition).agent(agent)));
+        t ->
+            Arrays.stream(agents)
+                .forEach(
+                    agent ->
+                        t.when(condition)
+                            .agent(agent)
+                            .inputFrom(
+                                scope -> {
+                                  if (beforeAgentInvocation.get() != null) {
+                                    beforeAgentInvocation
+                                        .get()
+                                        .accept((AgenticScopedRequest) scope);
+                                  }
+                                })
+                            .outputAs(
+                                scope -> {
+                                  if (afterAgentInvocation.get() != null) {
+                                    afterAgentInvocation
+                                        .get()
+                                        .accept((AgenticScopedResponse) scope);
+                                  }
+                                })));
     return this;
   }
 
@@ -76,7 +121,22 @@ public class ConditionalAgentServiceImpl<T>
   @Override
   public ConditionalAgentService<T> subAgent(
       Predicate<AgenticScope> condition, AgentExecutor agentExecutor) {
-    this.workflowBuilder.tasks(t -> t.when(condition).agent(agentExecutor));
+    this.workflowBuilder.tasks(
+        t ->
+            t.when(condition)
+                .agent(agentExecutor)
+                .inputFrom(
+                    scope -> {
+                      if (beforeAgentInvocation.get() != null) {
+                        beforeAgentInvocation.get().accept((AgenticScopedRequest) scope);
+                      }
+                    })
+                .outputAs(
+                    scope -> {
+                      if (afterAgentInvocation.get() != null) {
+                        afterAgentInvocation.get().accept((AgenticScopedResponse) scope);
+                      }
+                    }));
     return this;
   }
 }

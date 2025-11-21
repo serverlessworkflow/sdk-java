@@ -33,9 +33,9 @@ public class LoopAgentsBuilder {
 
   private final FuncTaskItemListBuilder funcDelegate;
   private final ForTaskFunction forTask;
-  private final AtomicReference<Consumer<AgenticScope>> beforeAgentInvocation =
+  private final AtomicReference<Consumer<AgenticScopedRequest>> beforeAgentInvocation =
       new AtomicReference<>();
-  private final AtomicReference<Consumer<AgenticScope>> afterAgentInvocation =
+  private final AtomicReference<Consumer<AgenticScopedResponse>> afterAgentInvocation =
       new AtomicReference<>();
 
   private int maxIterations = 1024;
@@ -84,12 +84,12 @@ public class LoopAgentsBuilder {
   }
 
   public LoopAgentsBuilder inputFrom(Consumer<AgenticScope> beforeAgentInvocationConsumer) {
-    this.beforeAgentInvocation.set(beforeAgentInvocationConsumer);
+    this.beforeAgentInvocation.set(beforeAgentInvocationConsumer::accept);
     return this;
   }
 
   public LoopAgentsBuilder outputAs(Consumer<AgenticScope> afterAgentInvocationConsumer) {
-    this.afterAgentInvocation.set(afterAgentInvocationConsumer);
+    this.afterAgentInvocation.set(afterAgentInvocationConsumer::accept);
     return this;
   }
 
