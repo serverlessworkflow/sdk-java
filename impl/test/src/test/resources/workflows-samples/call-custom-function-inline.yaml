@@ -1,6 +1,6 @@
 document:
   dsl: '1.0.1'
-  namespace: samples
+  namespace: test
   name: call-custom-function-inline
   version: '0.1.0'
 use:
@@ -12,7 +12,7 @@ use:
             type: object
             properties:
               petId:
-                type: string
+                type: integer
             required: [ petId ]
       call: http
       with:

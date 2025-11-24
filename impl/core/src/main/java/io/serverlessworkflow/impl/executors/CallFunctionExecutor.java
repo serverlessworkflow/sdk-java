@@ -16,20 +16,31 @@
 package io.serverlessworkflow.impl.executors;
 
 import io.serverlessworkflow.api.types.CallFunction;
+import io.serverlessworkflow.api.types.FunctionArguments;
 import io.serverlessworkflow.api.types.Task;
 import io.serverlessworkflow.api.types.TaskBase;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowMutablePosition;
+import io.serverlessworkflow.impl.WorkflowUtils;
+import io.serverlessworkflow.impl.WorkflowValueResolver;
+import java.util.Map;
 import java.util.Optional;
 
 public class CallFunctionExecutor implements CallableTaskBuilder<CallFunction> {
 
   private TaskExecutorBuilder<? extends TaskBase> executorBuilder;
+  private WorkflowValueResolver<Map<String, Object>> args;
 
   @Override
   public void init(
       CallFunction task, WorkflowDefinition definition, WorkflowMutablePosition position) {
     String functionName = task.getCall();
+    FunctionArguments functionArgs = task.getWith();
+    args =
+        functionArgs != null
+            ? WorkflowUtils.buildMapResolver(
+                definition.application(), functionArgs.getAdditionalProperties())
+            : (w, t, m) -> Map.of();
     Task function = null;
     if (definition.workflow().getUse() != null
         && definition.workflow().getUse().getFunctions() != null
@@ -53,6 +64,12 @@ public class CallFunctionExecutor implements CallableTaskBuilder<CallFunction> {
   @Override
   public CallableTask build() {
     TaskExecutor<? extends TaskBase> executor = executorBuilder.build();
-    return (w, t, m) -> executor.apply(w, Optional.of(t), m).thenApply(o -> o.output());
+    return (w, t, m) ->
+        executor
+            .apply(
+                w,
+                Optional.of(t),
+                w.definition().application().modelFactory().fromAny(args.apply(w, t, m)))
+            .thenApply(o -> o.output());
   }
 }

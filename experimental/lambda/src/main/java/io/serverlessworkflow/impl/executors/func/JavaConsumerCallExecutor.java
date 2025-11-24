@@ -42,7 +42,7 @@ public class JavaConsumerCallExecutor<T>
     inputClass = task.inputClass();
   }
 
-  public CompletableFuture<WorkflowModel> apply(
+  private CompletableFuture<WorkflowModel> apply(
       WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel input) {
     T typed = JavaFuncUtils.convertT(input, inputClass);
     consumer.accept(typed);

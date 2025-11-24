@@ -35,17 +35,6 @@ public class JavaContextFunctionCallExecutor<T, V>
   private JavaContextFunction<T, V> function;
   private Optional<Class<T>> inputClass;
 
-  public CompletableFuture<WorkflowModel> apply(
-      WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel input) {
-    return CompletableFuture.completedFuture(
-        workflowContext
-            .definition()
-            .application()
-            .modelFactory()
-            .fromAny(
-                input, function.apply(JavaFuncUtils.convertT(input, inputClass), workflowContext)));
-  }
-
   @Override
   public boolean accept(Class<? extends TaskBase> clazz) {
     return CallJava.CallJavaContextFunction.class.isAssignableFrom(clazz);
@@ -63,5 +52,16 @@ public class JavaContextFunctionCallExecutor<T, V>
   @Override
   public CallableTask build() {
     return this::apply;
+  }
+
+  private CompletableFuture<WorkflowModel> apply(
+      WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel input) {
+    return CompletableFuture.completedFuture(
+        workflowContext
+            .definition()
+            .application()
+            .modelFactory()
+            .fromAny(
+                input, function.apply(JavaFuncUtils.convertT(input, inputClass), workflowContext)));
   }
 }
