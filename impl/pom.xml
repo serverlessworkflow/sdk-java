@@ -15,7 +15,7 @@
         <version.net.thisptr>1.6.0</version.net.thisptr>
         <version.org.glassfish.jersey>4.0.0</version.org.glassfish.jersey>
         <version.com.cronutils>9.2.1</version.com.cronutils>
-        <version.docker.java>3.6.0</version.docker.java>
+        <version.docker.java>3.7.0</version.docker.java>
         <version.org.graalvm.polyglot>25.0.1</version.org.graalvm.polyglot>
     </properties>
     <dependencyManagement>
