@@ -15,13 +15,16 @@
  */
 package io.serverlessworkflow.impl.executors;
 
-import io.serverlessworkflow.impl.TaskContext;
-import io.serverlessworkflow.impl.WorkflowContext;
-import io.serverlessworkflow.impl.WorkflowModel;
-import java.util.concurrent.CompletableFuture;
+import io.serverlessworkflow.api.types.TaskBase;
+import io.serverlessworkflow.impl.ServicePriority;
+import io.serverlessworkflow.impl.WorkflowDefinition;
+import io.serverlessworkflow.impl.WorkflowMutablePosition;
 
-@FunctionalInterface
-public interface CallableTask {
-  CompletableFuture<WorkflowModel> apply(
-      WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel input);
+public interface CallableTaskBuilder<T extends TaskBase> extends ServicePriority {
+
+  boolean accept(Class<? extends TaskBase> clazz);
+
+  void init(T task, WorkflowDefinition definition, WorkflowMutablePosition position);
+
+  CallableTask build();
 }

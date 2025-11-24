@@ -19,30 +19,26 @@ import static io.serverlessworkflow.impl.executors.func.JavaFuncUtils.safeObject
 
 import io.serverlessworkflow.api.types.TaskBase;
 import io.serverlessworkflow.api.types.func.CallJava;
+import io.serverlessworkflow.api.types.func.CallJava.CallJavaLoopFunctionIndex;
 import io.serverlessworkflow.api.types.func.LoopFunctionIndex;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowModelFactory;
+import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.executors.CallableTask;
+import io.serverlessworkflow.impl.executors.CallableTaskBuilder;
 import java.util.concurrent.CompletableFuture;
 
 public class JavaLoopFunctionIndexCallExecutor
-    implements CallableTask<CallJava.CallJavaLoopFunctionIndex> {
+    implements CallableTaskBuilder<CallJava.CallJavaLoopFunctionIndex> {
 
   private LoopFunctionIndex function;
   private String varName;
   private String indexName;
 
-  public void init(CallJava.CallJavaLoopFunctionIndex task, WorkflowDefinition definition) {
-    function = task.function();
-    varName = task.varName();
-    indexName = task.indexName();
-  }
-
-  @Override
-  public CompletableFuture<WorkflowModel> apply(
+  private CompletableFuture<WorkflowModel> apply(
       WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel input) {
     WorkflowModelFactory modelFactory = workflowContext.definition().application().modelFactory();
 
@@ -58,5 +54,20 @@ public class JavaLoopFunctionIndexCallExecutor
   @Override
   public boolean accept(Class<? extends TaskBase> clazz) {
     return CallJava.CallJavaLoopFunctionIndex.class.isAssignableFrom(clazz);
+  }
+
+  @Override
+  public void init(
+      CallJavaLoopFunctionIndex task,
+      WorkflowDefinition definition,
+      WorkflowMutablePosition position) {
+    function = task.function();
+    varName = task.varName();
+    indexName = task.indexName();
+  }
+
+  @Override
+  public CallableTask build() {
+    return this::apply;
   }
 }

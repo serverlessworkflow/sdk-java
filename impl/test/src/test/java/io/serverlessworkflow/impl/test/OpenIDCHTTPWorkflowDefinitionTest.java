@@ -103,7 +103,8 @@ public class OpenIDCHTTPWorkflowDefinitionTest {
             .setResponseCode(200));
 
     Workflow workflow =
-        readWorkflowFromClasspath("workflows-samples/openidcClientSecretPostPasswordHttpCall.yaml");
+        readWorkflowFromClasspath(
+            "workflows-samples/openid/openidcClientSecretPostPasswordHttpCall.yaml");
     Map<String, Object> result =
         app.workflowDefinition(workflow).instance(Map.of()).start().get().asMap().orElseThrow();
 
@@ -148,7 +149,7 @@ public class OpenIDCHTTPWorkflowDefinitionTest {
 
     Workflow workflow =
         readWorkflowFromClasspath(
-            "workflows-samples/openidcClientSecretPostPasswordAsArgHttpCall.yaml");
+            "workflows-samples/openid/openidcClientSecretPostPasswordAsArgHttpCall.yaml");
     Map<String, String> params =
         Map.of(
             "clientId", "serverless-workflow",
@@ -199,7 +200,7 @@ public class OpenIDCHTTPWorkflowDefinitionTest {
 
     Workflow workflow =
         readWorkflowFromClasspath(
-            "workflows-samples/openidcClientSecretPostPasswordAllGrantsHttpCall.yaml");
+            "workflows-samples/openid/openidcClientSecretPostPasswordAllGrantsHttpCall.yaml");
     Map<String, String> params =
         Map.of(
             "clientId", "serverless-workflow",
@@ -258,7 +259,7 @@ public class OpenIDCHTTPWorkflowDefinitionTest {
 
     Workflow workflow =
         readWorkflowFromClasspath(
-            "workflows-samples/openidcClientSecretPostClientCredentialsParamsHttpCall.yaml");
+            "workflows-samples/openid/openidcClientSecretPostClientCredentialsParamsHttpCall.yaml");
     Map<String, String> params =
         Map.of(
             "clientId", "serverless-workflow",
@@ -307,7 +308,7 @@ public class OpenIDCHTTPWorkflowDefinitionTest {
 
     Workflow workflow =
         readWorkflowFromClasspath(
-            "workflows-samples/openidcClientSecretPostClientCredentialsParamsNoEndPointHttpCall.yaml");
+            "workflows-samples/openid/openidcClientSecretPostClientCredentialsParamsNoEndPointHttpCall.yaml");
     Map<String, String> params =
         Map.of(
             "clientId", "serverless-workflow",
@@ -352,7 +353,7 @@ public class OpenIDCHTTPWorkflowDefinitionTest {
             .setResponseCode(200));
 
     Workflow workflow =
-        readWorkflowFromClasspath("workflows-samples/openidcJSONPasswordHttpCall.yaml");
+        readWorkflowFromClasspath("workflows-samples/openid/openidcJSONPasswordHttpCall.yaml");
     Map<String, Object> result =
         app.workflowDefinition(workflow).instance(Map.of()).start().get().asMap().orElseThrow();
 
@@ -407,7 +408,7 @@ public class OpenIDCHTTPWorkflowDefinitionTest {
             .setResponseCode(200));
 
     Workflow workflow =
-        readWorkflowFromClasspath("workflows-samples/openidcJSONPasswordAsArgHttpCall.yaml");
+        readWorkflowFromClasspath("workflows-samples/openid/openidcJSONPasswordAsArgHttpCall.yaml");
     Map<String, String> params =
         Map.of(
             "clientId", "serverless-workflow",
@@ -466,7 +467,8 @@ public class OpenIDCHTTPWorkflowDefinitionTest {
             .setResponseCode(200));
 
     Workflow workflow =
-        readWorkflowFromClasspath("workflows-samples/openidcJSONPasswordNoEndpointsHttpCall.yaml");
+        readWorkflowFromClasspath(
+            "workflows-samples/openid/openidcJSONPasswordNoEndpointsHttpCall.yaml");
     Map<String, String> params =
         Map.of(
             "clientId", "serverless-workflow",
@@ -524,7 +526,8 @@ public class OpenIDCHTTPWorkflowDefinitionTest {
             .setResponseCode(200));
 
     Workflow workflow =
-        readWorkflowFromClasspath("workflows-samples/openidcJSONPasswordAllGrantsHttpCall.yaml");
+        readWorkflowFromClasspath(
+            "workflows-samples/openid/openidcJSONPasswordAllGrantsHttpCall.yaml");
     Map<String, String> params =
         Map.of(
             "clientId", "serverless-workflow",
@@ -596,7 +599,8 @@ public class OpenIDCHTTPWorkflowDefinitionTest {
             .setResponseCode(200));
 
     Workflow workflow =
-        readWorkflowFromClasspath("workflows-samples/openidcJSONClientCredentialsHttpCall.yaml");
+        readWorkflowFromClasspath(
+            "workflows-samples/openid/openidcJSONClientCredentialsHttpCall.yaml");
     Map<String, Object> result =
         app.workflowDefinition(workflow).instance(Map.of()).start().get().asMap().orElseThrow();
 
@@ -644,7 +648,7 @@ public class OpenIDCHTTPWorkflowDefinitionTest {
 
     Workflow workflow =
         readWorkflowFromClasspath(
-            "workflows-samples/openidcJSONClientCredentialsParamsHttpCall.yaml");
+            "workflows-samples/openid/openidcJSONClientCredentialsParamsHttpCall.yaml");
     Map<String, String> params =
         Map.of(
             "clientId", "serverless-workflow",
@@ -697,7 +701,7 @@ public class OpenIDCHTTPWorkflowDefinitionTest {
 
     Workflow workflow =
         readWorkflowFromClasspath(
-            "workflows-samples/openidcJSONClientCredentialsParamsNoEndPointHttpCall.yaml");
+            "workflows-samples/openid/openidcJSONClientCredentialsParamsNoEndPointHttpCall.yaml");
     Map<String, String> params =
         Map.of(
             "clientId", "serverless-workflow",

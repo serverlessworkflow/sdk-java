@@ -17,29 +17,44 @@ package io.serverlessworkflow.impl.executors.func;
 
 import io.serverlessworkflow.api.types.TaskBase;
 import io.serverlessworkflow.api.types.func.CallJava;
+import io.serverlessworkflow.api.types.func.CallJava.CallJavaContextFunction;
 import io.serverlessworkflow.api.types.func.JavaContextFunction;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowModel;
+import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.executors.CallableTask;
+import io.serverlessworkflow.impl.executors.CallableTaskBuilder;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public class JavaContextFunctionCallExecutor<T, V>
-    implements CallableTask<CallJava.CallJavaContextFunction<T, V>> {
+    implements CallableTaskBuilder<CallJava.CallJavaContextFunction<T, V>> {
 
   private JavaContextFunction<T, V> function;
   private Optional<Class<T>> inputClass;
 
   @Override
-  public void init(CallJava.CallJavaContextFunction<T, V> task, WorkflowDefinition definition) {
+  public boolean accept(Class<? extends TaskBase> clazz) {
+    return CallJava.CallJavaContextFunction.class.isAssignableFrom(clazz);
+  }
+
+  @Override
+  public void init(
+      CallJavaContextFunction<T, V> task,
+      WorkflowDefinition definition,
+      WorkflowMutablePosition position) {
     this.function = task.function();
     this.inputClass = task.inputClass();
   }
 
   @Override
-  public CompletableFuture<WorkflowModel> apply(
+  public CallableTask build() {
+    return this::apply;
+  }
+
+  private CompletableFuture<WorkflowModel> apply(
       WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel input) {
     return CompletableFuture.completedFuture(
         workflowContext
@@ -48,10 +63,5 @@ public class JavaContextFunctionCallExecutor<T, V>
             .modelFactory()
             .fromAny(
                 input, function.apply(JavaFuncUtils.convertT(input, inputClass), workflowContext)));
-  }
-
-  @Override
-  public boolean accept(Class<? extends TaskBase> clazz) {
-    return CallJava.CallJavaContextFunction.class.isAssignableFrom(clazz);
   }
 }

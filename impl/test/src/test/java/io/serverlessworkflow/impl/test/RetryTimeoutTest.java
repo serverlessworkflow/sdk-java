@@ -121,4 +121,19 @@ public class RetryTimeoutTest {
             .orElseThrow();
     assertThat(result.get("message")).isEqualTo("Viva er Beti Balompie");
   }
+
+  @Test
+  void testCustomFunction() {
+    assertThatThrownBy(
+            () ->
+                app.workflowDefinition(
+                        readWorkflowFromClasspath(
+                            "workflows-samples/call-custom-function-inline.yaml"))
+                    .instance(Map.of())
+                    .start()
+                    .join())
+        .hasCauseInstanceOf(WorkflowException.class)
+        .extracting(w -> ((WorkflowException) w.getCause()).getWorkflowError().status())
+        .isEqualTo(404);
+  }
 }

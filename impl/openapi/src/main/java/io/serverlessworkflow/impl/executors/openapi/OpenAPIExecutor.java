@@ -15,18 +15,14 @@
  */
 package io.serverlessworkflow.impl.executors.openapi;
 
-import io.serverlessworkflow.api.types.CallOpenAPI;
 import io.serverlessworkflow.api.types.ExternalResource;
-import io.serverlessworkflow.api.types.OpenAPIArguments;
-import io.serverlessworkflow.api.types.TaskBase;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
-import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.executors.CallableTask;
 import io.serverlessworkflow.impl.executors.http.HttpExecutor;
-import io.serverlessworkflow.impl.executors.http.HttpExecutor.HttpExecutorBuilder;
+import io.serverlessworkflow.impl.executors.http.HttpExecutorBuilder;
 import io.serverlessworkflow.impl.resources.ResourceLoaderUtils;
 import io.swagger.v3.oas.models.media.Schema;
 import java.util.Collection;
@@ -37,31 +33,22 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
-public class OpenAPIExecutor implements CallableTask<CallOpenAPI> {
+class OpenAPIExecutor implements CallableTask {
 
-  private OpenAPIProcessor processor;
-  private ExternalResource resource;
-  private Map<String, Object> parameters;
-  private HttpExecutorBuilder builder;
+  private final OpenAPIProcessor processor;
+  private final ExternalResource resource;
+  private final Map<String, Object> parameters;
+  private final HttpExecutorBuilder builder;
 
-  @Override
-  public boolean accept(Class<? extends TaskBase> clazz) {
-    return clazz.equals(CallOpenAPI.class);
-  }
-
-  @Override
-  public void init(CallOpenAPI task, WorkflowDefinition definition) {
-    OpenAPIArguments with = task.getWith();
-    this.processor = new OpenAPIProcessor(with.getOperationId());
-    this.resource = with.getDocument();
-    this.parameters =
-        with.getParameters() != null && with.getParameters().getAdditionalProperties() != null
-            ? with.getParameters().getAdditionalProperties()
-            : Map.of();
-    this.builder =
-        HttpExecutor.builder(definition)
-            .withAuth(with.getAuthentication())
-            .redirect(with.isRedirect());
+  OpenAPIExecutor(
+      OpenAPIProcessor processor,
+      ExternalResource resource,
+      Map<String, Object> parameters,
+      HttpExecutorBuilder builder) {
+    this.processor = processor;
+    this.resource = resource;
+    this.parameters = parameters;
+    this.builder = builder;
   }
 
   @Override
