@@ -45,7 +45,8 @@ public class DefaultTaskExecutorFactory implements TaskExecutorFactory {
 
   protected DefaultTaskExecutorFactory() {}
 
-  private ServiceLoader<CallableTask> callTasks = ServiceLoader.load(CallableTask.class);
+  private ServiceLoader<CallableTaskBuilder> callTasks =
+      ServiceLoader.load(CallableTaskBuilder.class);
 
   @Override
   public TaskExecutorBuilder<? extends TaskBase> getTaskExecutor(
@@ -84,8 +85,8 @@ public class DefaultTaskExecutorFactory implements TaskExecutorFactory {
   }
 
   @SuppressWarnings("unchecked")
-  private <T extends TaskBase> CallableTask<T> findCallTask(Class<T> clazz) {
-    return (CallableTask<T>)
+  private <T extends TaskBase> CallableTaskBuilder<T> findCallTask(Class<T> clazz) {
+    return (CallableTaskBuilder<T>)
         callTasks.stream()
             .map(Provider::get)
             .filter(s -> s.accept(clazz))

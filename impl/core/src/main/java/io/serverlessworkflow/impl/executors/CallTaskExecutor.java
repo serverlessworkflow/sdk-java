@@ -25,20 +25,20 @@ import java.util.concurrent.CompletableFuture;
 
 public class CallTaskExecutor<T extends TaskBase> extends RegularTaskExecutor<T> {
 
-  private final CallableTask<T> callable;
+  private final CallableTask callable;
 
   public static class CallTaskExecutorBuilder<T extends TaskBase>
       extends RegularTaskExecutorBuilder<T> {
-    private CallableTask<T> callable;
+    private final CallableTaskBuilder<T> callable;
 
     protected CallTaskExecutorBuilder(
         WorkflowMutablePosition position,
         T task,
         WorkflowDefinition definition,
-        CallableTask<T> callable) {
+        CallableTaskBuilder<T> callable) {
       super(position, task, definition);
       this.callable = callable;
-      callable.init(task, definition);
+      callable.init(task, definition, position);
     }
 
     @Override
@@ -49,7 +49,7 @@ public class CallTaskExecutor<T extends TaskBase> extends RegularTaskExecutor<T>
 
   protected CallTaskExecutor(CallTaskExecutorBuilder<T> builder) {
     super(builder);
-    this.callable = builder.callable;
+    this.callable = builder.callable.build();
   }
 
   @Override

@@ -17,29 +17,25 @@ package io.serverlessworkflow.impl.executors.func;
 
 import io.serverlessworkflow.api.types.TaskBase;
 import io.serverlessworkflow.api.types.func.CallJava;
+import io.serverlessworkflow.api.types.func.CallJava.CallJavaFilterFunction;
 import io.serverlessworkflow.api.types.func.JavaFilterFunction;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowModel;
+import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.executors.CallableTask;
+import io.serverlessworkflow.impl.executors.CallableTaskBuilder;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public class JavaFilterFunctionCallExecutor<T, V>
-    implements CallableTask<CallJava.CallJavaFilterFunction<T, V>> {
+    implements CallableTaskBuilder<CallJava.CallJavaFilterFunction<T, V>> {
 
   private JavaFilterFunction<T, V> function;
   private Optional<Class<T>> inputClass;
 
-  @Override
-  public void init(CallJava.CallJavaFilterFunction<T, V> task, WorkflowDefinition definition) {
-    this.function = task.function();
-    this.inputClass = task.inputClass();
-  }
-
-  @Override
-  public CompletableFuture<WorkflowModel> apply(
+  private CompletableFuture<WorkflowModel> apply(
       WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel input) {
     return CompletableFuture.completedFuture(
         workflowContext
@@ -55,5 +51,19 @@ public class JavaFilterFunctionCallExecutor<T, V>
   @Override
   public boolean accept(Class<? extends TaskBase> clazz) {
     return CallJava.CallJavaFilterFunction.class.isAssignableFrom(clazz);
+  }
+
+  @Override
+  public void init(
+      CallJavaFilterFunction<T, V> task,
+      WorkflowDefinition definition,
+      WorkflowMutablePosition position) {
+    this.function = task.function();
+    this.inputClass = task.inputClass();
+  }
+
+  @Override
+  public CallableTask build() {
+    return this::apply;
   }
 }

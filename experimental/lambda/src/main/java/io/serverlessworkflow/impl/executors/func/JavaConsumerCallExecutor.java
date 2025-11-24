@@ -21,22 +21,27 @@ import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowModel;
+import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.executors.CallableTask;
+import io.serverlessworkflow.impl.executors.CallableTaskBuilder;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
-public class JavaConsumerCallExecutor<T> implements CallableTask<CallJava.CallJavaConsumer<T>> {
+public class JavaConsumerCallExecutor<T>
+    implements CallableTaskBuilder<CallJava.CallJavaConsumer<T>> {
 
   private Consumer<T> consumer;
-  private Optional<Class<T>> inputClass = Optional.empty();
+  private Optional<Class<T>> inputClass;
 
-  public void init(CallJava.CallJavaConsumer<T> task, WorkflowDefinition definition) {
+  public void init(
+      CallJava.CallJavaConsumer<T> task,
+      WorkflowDefinition definition,
+      WorkflowMutablePosition position) {
     consumer = task.consumer();
     inputClass = task.inputClass();
   }
 
-  @Override
   public CompletableFuture<WorkflowModel> apply(
       WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel input) {
     T typed = JavaFuncUtils.convertT(input, inputClass);
@@ -47,5 +52,10 @@ public class JavaConsumerCallExecutor<T> implements CallableTask<CallJava.CallJa
   @Override
   public boolean accept(Class<? extends TaskBase> clazz) {
     return CallJava.CallJavaConsumer.class.isAssignableFrom(clazz);
+  }
+
+  @Override
+  public CallableTask build() {
+    return this::apply;
   }
 }

@@ -17,28 +17,25 @@ package io.serverlessworkflow.impl.executors.func;
 
 import io.serverlessworkflow.api.types.TaskBase;
 import io.serverlessworkflow.api.types.func.CallJava;
+import io.serverlessworkflow.api.types.func.CallJava.CallJavaFunction;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowModel;
+import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.executors.CallableTask;
+import io.serverlessworkflow.impl.executors.CallableTaskBuilder;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
 public class JavaFunctionCallExecutor<T, V>
-    implements CallableTask<CallJava.CallJavaFunction<T, V>> {
+    implements CallableTaskBuilder<CallJava.CallJavaFunction<T, V>> {
 
   private Function<T, V> function;
   private Optional<Class<T>> inputClass;
 
-  public void init(CallJava.CallJavaFunction<T, V> task, WorkflowDefinition definition) {
-    function = task.function();
-    inputClass = task.inputClass();
-  }
-
-  @Override
-  public CompletableFuture<WorkflowModel> apply(
+  private CompletableFuture<WorkflowModel> apply(
       WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel input) {
     return CompletableFuture.completedFuture(
         workflowContext
@@ -51,5 +48,19 @@ public class JavaFunctionCallExecutor<T, V>
   @Override
   public boolean accept(Class<? extends TaskBase> clazz) {
     return CallJava.CallJavaFunction.class.isAssignableFrom(clazz);
+  }
+
+  @Override
+  public void init(
+      CallJavaFunction<T, V> task,
+      WorkflowDefinition definition,
+      WorkflowMutablePosition position) {
+    function = task.function();
+    inputClass = task.inputClass();
+  }
+
+  @Override
+  public CallableTask build() {
+    return this::apply;
   }
 }

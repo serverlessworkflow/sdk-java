@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.executors;
+package io.serverlessworkflow.impl.executors.http;
 
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
-import java.util.concurrent.CompletableFuture;
+import jakarta.ws.rs.client.Invocation.Builder;
 
 @FunctionalInterface
-public interface CallableTask {
-  CompletableFuture<WorkflowModel> apply(
-      WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel input);
+interface RequestSupplier {
+  WorkflowModel apply(
+      Builder request, WorkflowContext workflow, TaskContext task, WorkflowModel node);
 }
