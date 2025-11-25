@@ -31,16 +31,16 @@ public interface HttpModelConverter {
 
   default WorkflowError.Builder errorFromResponse(
       WorkflowError.Builder errorBuilder, Response response) {
+    errorBuilder.title(response.getStatusInfo().getReasonPhrase());
     try {
-      Object title = response.readEntity(responseType());
-      if (title != null) {
-        errorBuilder.title(title.toString());
+      Object details = response.readEntity(responseType());
+      if (details != null) {
+        errorBuilder.details(details.toString());
       }
     } catch (Exception ex) {
       LoggerFactory.getLogger(HttpModelConverter.class)
-          .warn("Problem extracting error from http response", ex);
+          .debug("Problem extracting error from http response", ex);
     }
-
     return errorBuilder;
   }
 }
