@@ -47,7 +47,7 @@ public class RetryTimeoutTest {
 
   @BeforeAll
   static void init() {
-    app = WorkflowApplication.builder().withListener(new TraceExecutionListener()).build();
+    app = WorkflowApplication.builder().build();
   }
 
   @AfterAll

@@ -15,8 +15,11 @@
  */
 package io.serverlessworkflow.impl.executors.http;
 
+import io.serverlessworkflow.impl.WorkflowError;
 import io.serverlessworkflow.impl.WorkflowModel;
 import jakarta.ws.rs.client.Entity;
+import jakarta.ws.rs.core.Response;
+import org.slf4j.LoggerFactory;
 
 public interface HttpModelConverter {
 
@@ -25,4 +28,19 @@ public interface HttpModelConverter {
   }
 
   Class<?> responseType();
+
+  default WorkflowError.Builder errorFromResponse(
+      WorkflowError.Builder errorBuilder, Response response) {
+    try {
+      Object title = response.readEntity(responseType());
+      if (title != null) {
+        errorBuilder.title(title.toString());
+      }
+    } catch (Exception ex) {
+      LoggerFactory.getLogger(HttpModelConverter.class)
+          .warn("Problem extracting error from http response", ex);
+    }
+
+    return errorBuilder;
+  }
 }

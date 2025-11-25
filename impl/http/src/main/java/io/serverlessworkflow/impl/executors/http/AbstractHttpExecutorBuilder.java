@@ -16,10 +16,9 @@
 package io.serverlessworkflow.impl.executors.http;
 
 import io.serverlessworkflow.impl.WorkflowApplication;
-import io.serverlessworkflow.impl.WorkflowFilter;
-import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
 import jakarta.ws.rs.HttpMethod;
+import jakarta.ws.rs.client.Invocation;
 import jakarta.ws.rs.client.WebTarget;
 import java.net.URI;
 import java.util.Map;
@@ -32,30 +31,27 @@ abstract class AbstractHttpExecutorBuilder {
   protected WorkflowValueResolver<Map<String, Object>> queryMap;
   protected Optional<AuthProvider> authProvider = Optional.empty();
   protected RequestSupplier requestFunction;
-  protected boolean redirect;
 
   protected static RequestSupplier buildRequestSupplier(
-      String method, Object body, WorkflowApplication application) {
+      String method, Object body, boolean redirect, WorkflowApplication application) {
 
     switch (method.toUpperCase()) {
       case HttpMethod.POST:
-        WorkflowFilter bodyFilter = WorkflowUtils.buildWorkflowFilter(application, body);
-        return (request, w, t, node) -> {
-          HttpModelConverter converter = HttpConverterResolver.converter(w, t);
-          return w.definition()
-              .application()
-              .modelFactory()
-              .fromAny(
-                  request.post(
-                      converter.toEntity(bodyFilter.apply(w, t, node)), converter.responseType()));
-        };
+        return new WithBodyRequestSupplier(Invocation.Builder::post, application, body, redirect);
+      case HttpMethod.PUT:
+        return new WithBodyRequestSupplier(Invocation.Builder::put, application, body, redirect);
+      case HttpMethod.DELETE:
+        return new WithoutBodyRequestSupplier(Invocation.Builder::delete, application, redirect);
+      case HttpMethod.HEAD:
+        return new WithoutBodyRequestSupplier(Invocation.Builder::head, application, redirect);
+      case HttpMethod.OPTIONS:
+        return new WithoutBodyRequestSupplier(Invocation.Builder::options, application, redirect);
+      case HttpMethod.PATCH:
+        return new WithBodyRequestSupplier(
+            (request, entity) -> request.method("patch", entity), application, body, redirect);
       case HttpMethod.GET:
       default:
-        return (request, w, t, n) ->
-            w.definition()
-                .application()
-                .modelFactory()
-                .fromAny(request.get(HttpConverterResolver.converter(w, t).responseType()));
+        return new WithoutBodyRequestSupplier(Invocation.Builder::get, application, redirect);
     }
   }
 

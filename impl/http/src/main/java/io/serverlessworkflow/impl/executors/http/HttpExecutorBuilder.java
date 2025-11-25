@@ -30,6 +30,7 @@ public class HttpExecutorBuilder extends AbstractHttpExecutorBuilder {
   private WorkflowValueResolver<URI> pathSupplier;
   private Object body;
   private String method = HttpMethod.GET;
+  private boolean redirect;
 
   private HttpExecutorBuilder(WorkflowDefinition definition) {
     this.definition = definition;
@@ -83,7 +84,7 @@ public class HttpExecutorBuilder extends AbstractHttpExecutorBuilder {
   }
 
   public HttpExecutor build(WorkflowValueResolver<URI> uriSupplier) {
-    this.requestFunction = buildRequestSupplier(method, body, definition.application());
+    this.requestFunction = buildRequestSupplier(method, body, redirect, definition.application());
     this.targetSupplier =
         pathSupplier == null
             ? getTargetSupplier(uriSupplier)

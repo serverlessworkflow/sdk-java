@@ -63,7 +63,10 @@ public class CallableTaskHttpExecutorBuilder extends AbstractHttpExecutorBuilder
     }
     this.requestFunction =
         buildRequestSupplier(
-            httpArgs.getMethod().toUpperCase(), httpArgs.getBody(), definition.application());
+            httpArgs.getMethod().toUpperCase(),
+            httpArgs.getBody(),
+            httpArgs.isRedirect(),
+            definition.application());
   }
 
   @Override

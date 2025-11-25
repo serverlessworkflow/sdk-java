@@ -42,6 +42,11 @@ public record WorkflowError(
         .title(title);
   }
 
+  public static Builder communication(int status, TaskContext context) {
+    return new Builder(Errors.COMMUNICATION.toString(), status)
+        .instance(context.position().jsonPointer());
+  }
+
   public static Builder communication(TaskContext context, String title) {
     return communication(Errors.COMMUNICATION.status(), context, title);
   }
