@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.additional;
+package io.serverlessworkflow.impl;
 
-import io.serverlessworkflow.impl.NamedObject;
-
-public interface NamedWorkflowAdditionalObject<T>
-    extends WorkflowAdditionalObject<T>, NamedObject {}
+public interface NamedObject {
+  String name();
+}

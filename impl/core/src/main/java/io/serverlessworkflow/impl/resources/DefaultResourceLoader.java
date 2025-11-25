@@ -15,17 +15,7 @@
  */
 package io.serverlessworkflow.impl.resources;
 
-import static io.serverlessworkflow.impl.WorkflowUtils.getURISupplier;
-
-import io.serverlessworkflow.api.types.Endpoint;
-import io.serverlessworkflow.api.types.EndpointUri;
-import io.serverlessworkflow.api.types.ExternalResource;
-import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
-import io.serverlessworkflow.impl.WorkflowContext;
-import io.serverlessworkflow.impl.WorkflowModel;
-import io.serverlessworkflow.impl.WorkflowValueResolver;
-import io.serverlessworkflow.impl.expressions.ExpressionDescriptor;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.nio.file.Path;
@@ -35,16 +25,29 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
-public class DefaultResourceLoader implements ResourceLoader {
+public class DefaultResourceLoader extends ResourceLoader {
 
   private final Optional<Path> workflowPath;
-  private final WorkflowApplication application;
 
   private Map<ExternalResourceHandler, CachedResource> resourceCache = new ConcurrentHashMap<>();
 
   protected DefaultResourceLoader(WorkflowApplication application, Path workflowPath) {
-    this.application = application;
+    super(application);
     this.workflowPath = Optional.ofNullable(workflowPath);
+  }
+
+  @Override
+  public <T> T loadURI(URI uri, Function<ExternalResourceHandler, T> function) {
+    ExternalResourceHandler resourceHandler = buildFromURI(uri);
+    return (T)
+        resourceCache
+            .compute(
+                resourceHandler,
+                (k, v) ->
+                    v == null || k.shouldReload(v.lastReload())
+                        ? new CachedResource(Instant.now(), function.apply(k))
+                        : v)
+            .content();
   }
 
   private ExternalResourceHandler fileResource(String pathStr) {
@@ -74,66 +77,6 @@ public class DefaultResourceLoader implements ResourceLoader {
   }
 
   @Override
-  public <T> T load(
-      ExternalResource resource,
-      Function<ExternalResourceHandler, T> function,
-      WorkflowContext workflowContext,
-      TaskContext taskContext,
-      WorkflowModel model) {
-    ExternalResourceHandler resourceHandler =
-        buildFromURI(
-            uriSupplier(resource.getEndpoint())
-                .apply(
-                    workflowContext,
-                    taskContext,
-                    model == null ? application.modelFactory().fromNull() : model));
-    return (T)
-        resourceCache
-            .compute(
-                resourceHandler,
-                (k, v) ->
-                    v == null || k.shouldReload(v.lastReload())
-                        ? new CachedResource(Instant.now(), function.apply(k))
-                        : v)
-            .content();
-  }
-
-  @Override
-  public WorkflowValueResolver<URI> uriSupplier(Endpoint endpoint) {
-    if (endpoint.getEndpointConfiguration() != null) {
-      EndpointUri uri = endpoint.getEndpointConfiguration().getUri();
-      if (uri.getLiteralEndpointURI() != null) {
-        return getURISupplier(application, uri.getLiteralEndpointURI());
-      } else if (uri.getExpressionEndpointURI() != null) {
-        return new ExpressionURISupplier(
-            application
-                .expressionFactory()
-                .resolveString(ExpressionDescriptor.from(uri.getExpressionEndpointURI())));
-      }
-    } else if (endpoint.getRuntimeExpression() != null) {
-      return new ExpressionURISupplier(
-          application
-              .expressionFactory()
-              .resolveString(ExpressionDescriptor.from(endpoint.getRuntimeExpression())));
-    } else if (endpoint.getUriTemplate() != null) {
-      return getURISupplier(application, endpoint.getUriTemplate());
-    }
-    throw new IllegalArgumentException("Invalid endpoint definition " + endpoint);
-  }
-
-  private class ExpressionURISupplier implements WorkflowValueResolver<URI> {
-    private WorkflowValueResolver<String> expr;
-
-    public ExpressionURISupplier(WorkflowValueResolver<String> expr) {
-      this.expr = expr;
-    }
-
-    @Override
-    public URI apply(WorkflowContext workflow, TaskContext task, WorkflowModel node) {
-      return URI.create(expr.apply(workflow, task, node));
-    }
-  }
-
   public void close() {
     resourceCache.clear();
   }

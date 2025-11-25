@@ -28,7 +28,7 @@ public class HttpResource implements ExternalResourceHandler {
   private URL url;
 
   public HttpResource(URL url) {
-    this.url = url;
+    this.url = GitHubHelper.handleURL(url);
   }
 
   @Override

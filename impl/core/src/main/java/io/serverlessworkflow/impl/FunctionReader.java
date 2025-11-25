@@ -13,9 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.additional;
+package io.serverlessworkflow.impl;
 
-import io.serverlessworkflow.impl.NamedObject;
+import io.serverlessworkflow.api.types.Task;
+import io.serverlessworkflow.impl.resources.ExternalResourceHandler;
+import java.util.function.Function;
 
-public interface NamedWorkflowAdditionalObject<T>
-    extends WorkflowAdditionalObject<T>, NamedObject {}
+public interface FunctionReader extends Function<ExternalResourceHandler, Task> {}

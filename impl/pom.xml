@@ -50,12 +50,17 @@
                 <artifactId>serverlessworkflow-impl-model</artifactId>
                 <version>${project.version}</version>
             </dependency>
-             <dependency>
+            <dependency>
                 <groupId>io.serverlessworkflow</groupId>
                 <artifactId>serverlessworkflow-impl-validation</artifactId>
                 <version>${project.version}</version>
             </dependency>
-             <dependency>
+            <dependency>
+                <groupId>io.serverlessworkflow</groupId>
+                <artifactId>serverlessworkflow-impl-function</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>io.serverlessworkflow</groupId>
                 <artifactId>serverlessworkflow-impl-lifecycle-events</artifactId>
                 <version>${project.version}</version>
@@ -178,6 +183,7 @@
         <module>model</module>
         <module>lifecycleevent</module>
         <module>validation</module>
+        <module>function</module>
         <module>container</module>
         <module>test</module>
         <module>script-js</module>
