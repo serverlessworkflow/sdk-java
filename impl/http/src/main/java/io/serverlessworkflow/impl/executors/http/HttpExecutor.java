@@ -17,12 +17,9 @@ package io.serverlessworkflow.impl.executors.http;
 
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
-import io.serverlessworkflow.impl.WorkflowError;
-import io.serverlessworkflow.impl.WorkflowException;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
 import io.serverlessworkflow.impl.executors.CallableTask;
-import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.client.Invocation.Builder;
 import jakarta.ws.rs.client.WebTarget;
 import java.util.Map;
@@ -79,15 +76,8 @@ public class HttpExecutor implements CallableTask {
         h -> h.apply(workflow, taskContext, input).forEach((k, v) -> request.header(k, v)));
     return CompletableFuture.supplyAsync(
         () -> {
-          try {
-            authProvider.ifPresent(auth -> auth.build(request, workflow, taskContext, input));
-            return requestFunction.apply(request, workflow, taskContext, input);
-          } catch (WebApplicationException exception) {
-            throw new WorkflowException(
-                WorkflowError.communication(
-                        exception.getResponse().getStatus(), taskContext, exception)
-                    .build());
-          }
+          authProvider.ifPresent(auth -> auth.build(request, workflow, taskContext, input));
+          return requestFunction.apply(request, workflow, taskContext, input);
         },
         workflow.definition().application().executorService());
   }

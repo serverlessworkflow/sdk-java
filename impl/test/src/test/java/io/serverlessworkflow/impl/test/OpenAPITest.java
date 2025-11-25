@@ -203,7 +203,6 @@ public class OpenAPITest {
                     .orElseThrow());
     assertInstanceOf(WorkflowException.class, exception.getCause());
     assertTrue(exception.getMessage().contains("status=409"));
-    assertTrue(exception.getMessage().contains("title=HTTP 409 Client Error"));
 
     RecordedRequest restRequest = restServer.takeRequest();
     assertEquals("POST", restRequest.getMethod());

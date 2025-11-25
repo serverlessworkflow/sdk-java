@@ -16,12 +16,31 @@
 package io.serverlessworkflow.impl.executors.http;
 
 import io.serverlessworkflow.impl.TaskContext;
+import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
 import jakarta.ws.rs.client.Invocation.Builder;
+import jakarta.ws.rs.core.Response;
+import java.util.function.Function;
 
-@FunctionalInterface
-interface RequestSupplier {
-  WorkflowModel apply(
-      Builder request, WorkflowContext workflow, TaskContext task, WorkflowModel model);
+class WithoutBodyRequestSupplier extends AbstractRequestSupplier {
+  private final Function<Builder, Response> requestFunction;
+
+  public WithoutBodyRequestSupplier(
+      Function<Builder, Response> requestFunction,
+      WorkflowApplication application,
+      boolean redirect) {
+    super(redirect);
+    this.requestFunction = requestFunction;
+  }
+
+  @Override
+  protected Response invokeRequest(
+      Builder request,
+      HttpModelConverter converter,
+      WorkflowContext workflow,
+      TaskContext task,
+      WorkflowModel model) {
+    return requestFunction.apply(request);
+  }
 }

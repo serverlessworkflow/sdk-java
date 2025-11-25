@@ -22,4 +22,4 @@ do:
   - getPet:
       call: getPetById
       with:
-        petId: 69
+        petId: -1
