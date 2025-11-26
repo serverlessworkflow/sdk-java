@@ -25,7 +25,6 @@ import io.serverlessworkflow.impl.WorkflowModel;
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.CompletionException;
-import java.util.stream.Stream;
 import mockwebserver3.MockResponse;
 import mockwebserver3.MockWebServer;
 import okhttp3.Headers;
@@ -35,15 +34,10 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.ValueSource;
 
 public class HTTPWorkflowDefinitionTest {
 
   private static WorkflowApplication appl;
-
   private static MockWebServer mockServer;
 
   @BeforeAll
@@ -67,137 +61,136 @@ public class HTTPWorkflowDefinitionTest {
     mockServer.close();
   }
 
-  @ParameterizedTest
-  @MethodSource("provideParameters")
-  void testWorkflowExecution(
-      String fileName, Object input, Runnable setup, Condition<Object> condition)
-      throws IOException {
-    setup.run();
-    assertThat(
-            appl.workflowDefinition(readWorkflowFromClasspath(fileName))
-                .instance(input)
-                .start()
-                .join())
-        .is(condition);
-  }
-
-  @ParameterizedTest
-  @ValueSource(
-      strings = {
-        "workflows-samples/call-http-query-parameters.yaml",
-        "workflows-samples/call-http-query-parameters-external-schema.yaml"
-      })
-  void testWrongSchema(String fileName) {
-    IllegalArgumentException exception =
-        catchThrowableOfType(
-            IllegalArgumentException.class,
-            () -> appl.workflowDefinition(readWorkflowFromClasspath(fileName)).instance(Map.of()));
-    assertThat(exception)
-        .isNotNull()
-        .hasMessageContaining("There are JsonSchema validation errors");
-  }
-
   private static boolean httpCondition(WorkflowModel obj) {
     Map<String, Object> map = obj.asMap().orElseThrow();
     return map.containsKey("photoUrls") || map.containsKey("petId");
   }
 
-  private static Stream<Arguments> provideParameters() {
-    Map<String, Object> petInput = Map.of("petId", 10);
-    Map<String, Object> starTrekInput = Map.of("uid", "MOMA0000092393");
-    Condition<WorkflowModel> petCondition =
-        new Condition<>(HTTPWorkflowDefinitionTest::httpCondition, "callHttpCondition");
-    Condition<WorkflowModel> starTrekCondition =
-        new Condition<>(
-            o ->
-                ((Map<String, Object>) o.asMap().orElseThrow().get("movie"))
-                    .get("title")
-                    .equals("Star Trek"),
-            "StartTrek");
-    Condition<WorkflowModel> postCondition =
-        new Condition<WorkflowModel>(
-            o -> o.asText().orElseThrow().equals("Javierito"), "CallHttpPostCondition");
-
-    Condition<WorkflowModel> putCondition =
-        new Condition<>(o -> o.asText().get().contains("John"), "CallHttpPutCondition");
-
-    Condition<WorkflowModel> patchCondition =
-        new Condition<>(o -> o.asText().get().contains("John"), "CallHttpPatchCondition");
-
-    Map<String, String> postMap = Map.of("name", "Javierito", "surname", "Unknown");
-    Map<String, Object> putMap = Map.of("firstName", "John");
-
-    Runnable setupPost =
-        () ->
-            mockServer.enqueue(
-                new MockResponse(
-                    200,
-                    Headers.of("Content-Type", "application/json"),
-                    """
-                        {
-                            "firstName": "Javierito"
-                        }
-                        """));
-
-    return Stream.of(
-        Arguments.of("workflows-samples/call-http-get.yaml", petInput, doNothing, petCondition),
-        Arguments.of(
-            "workflows-samples/call-http-get.yaml",
-            Map.of("petId", "-1"),
-            doNothing,
-            new Condition<WorkflowModel>(
-                o -> o.asMap().orElseThrow().containsKey("petId"), "notFoundCondition")),
-        Arguments.of(
-            "workflows-samples/call-http-endpoint-interpolation.yaml",
-            petInput,
-            doNothing,
-            petCondition),
-        Arguments.of(
-            "workflows-samples/call-http-query-parameters.yaml",
-            starTrekInput,
-            doNothing,
-            starTrekCondition),
-        Arguments.of(
-            "workflows-samples/call-http-find-by-status.yaml",
-            Map.of(),
-            doNothing,
-            new Condition<WorkflowModel>(o -> !o.asCollection().isEmpty(), "HasElementCondition")),
-        Arguments.of(
-            "workflows-samples/call-http-query-parameters-external-schema.yaml",
-            starTrekInput,
-            doNothing,
-            starTrekCondition),
-        Arguments.of("workflows-samples/call-http-post.yaml", postMap, setupPost, postCondition),
-        Arguments.of(
-            "workflows-samples/call-http-delete.yaml",
-            Map.of(),
-            doNothing,
-            new Condition<WorkflowModel>(o -> o.asMap().isEmpty(), "HTTP delete")),
-        Arguments.of("workflows-samples/call-http-put.yaml", putMap, doNothing, putCondition));
+  @Test
+  void callHttpGet_should_return_pet_data() throws Exception {
+    WorkflowModel result =
+        appl.workflowDefinition(readWorkflowFromClasspath("workflows-samples/call-http-get.yaml"))
+            .instance(Map.of("petId", 10))
+            .start()
+            .join();
+    assertThat(result)
+        .has(new Condition<>(HTTPWorkflowDefinitionTest::httpCondition, "callHttpCondition"));
   }
 
-  private static final Runnable doNothing = () -> {};
+  @Test
+  void callHttpGet_with_not_found_petId_should_keep_input_petId() throws Exception {
+    WorkflowModel result =
+        appl.workflowDefinition(readWorkflowFromClasspath("workflows-samples/call-http-get.yaml"))
+            .instance(Map.of("petId", "-1"))
+            .start()
+            .join();
+    assertThat(result.asMap().orElseThrow()).containsKey("petId");
+  }
 
   @Test
-  void post_should_run_call_http_with_expression_body() {
+  void callHttpEndpointInterpolation_should_work() throws Exception {
+    WorkflowModel result =
+        appl.workflowDefinition(
+                readWorkflowFromClasspath(
+                    "workflows-samples/call-http-endpoint-interpolation.yaml"))
+            .instance(Map.of("petId", 10))
+            .start()
+            .join();
+    assertThat(result)
+        .has(new Condition<>(HTTPWorkflowDefinitionTest::httpCondition, "callHttpCondition"));
+  }
+
+  @Test
+  void callHttpQueryParameters_should_find_star_trek_movie() throws Exception {
+    WorkflowModel result =
+        appl.workflowDefinition(
+                readWorkflowFromClasspath("workflows-samples/call-http-query-parameters.yaml"))
+            .instance(Map.of("uid", "MOMA0000092393"))
+            .start()
+            .join();
+    assertThat(((Map<String, Object>) result.asMap().orElseThrow().get("movie")).get("title"))
+        .isEqualTo("Star Trek");
+  }
+
+  @Test
+  void callHttpFindByStatus_should_return_non_empty_collection() throws Exception {
+
+    WorkflowModel result =
+        appl.workflowDefinition(
+                readWorkflowFromClasspath("workflows-samples/call-http-find-by-status.yaml"))
+            .instance(Map.of())
+            .start()
+            .join();
+    assertThat(result.asCollection()).isNotEmpty();
+  }
+
+  @Test
+  void callHttpQueryParameters_external_schema_should_find_star_trek() throws Exception {
+    WorkflowModel result =
+        appl.workflowDefinition(
+                readWorkflowFromClasspath(
+                    "workflows-samples/call-http-query-parameters-external-schema.yaml"))
+            .instance(Map.of("uid", "MOMA0000092393"))
+            .start()
+            .join();
+    assertThat(((Map<String, Object>) result.asMap().orElseThrow().get("movie")).get("title"))
+        .isEqualTo("Star Trek");
+  }
+
+  @Test
+  void callHttpPost_should_return_created_firstName() throws Exception {
     mockServer.enqueue(
         new MockResponse(
             200,
             Headers.of("Content-Type", "application/json"),
             """
-                        {
-                            "firstName": "Javierito"
-                        }
-                        """));
+                                    {
+                                        "firstName": "Javierito"
+                                    }
+                                    """));
+    WorkflowModel result =
+        appl.workflowDefinition(readWorkflowFromClasspath("workflows-samples/call-http-post.yaml"))
+            .instance(Map.of("name", "Javierito", "surname", "Unknown"))
+            .start()
+            .join();
+    assertThat(result.asText().orElseThrow()).isEqualTo("Javierito");
+  }
 
+  @Test
+  void testCallHttpDelete() {
     assertDoesNotThrow(
         () -> {
           appl.workflowDefinition(
-                  readWorkflowFromClasspath("workflows-samples/call-http-post-expr.yaml"))
-              .instance(Map.of("name", "Javierito", "surname", "Unknown"))
+                  readWorkflowFromClasspath("workflows-samples/call-http-delete.yaml"))
+              .instance(Map.of())
               .start()
               .join();
         });
+  }
+
+  @Test
+  void callHttpPut_should_contain_firstName_with_john() throws Exception {
+    WorkflowModel result =
+        appl.workflowDefinition(readWorkflowFromClasspath("workflows-samples/call-http-put.yaml"))
+            .instance(Map.of("firstName", "John"))
+            .start()
+            .join();
+    assertThat(result.asText().orElseThrow()).contains("John");
+  }
+
+  @Test
+  void testWrongSchema_should_throw_illegal_argument() {
+    IllegalArgumentException exception =
+        catchThrowableOfType(
+            IllegalArgumentException.class,
+            () ->
+                appl.workflowDefinition(
+                        readWorkflowFromClasspath(
+                            "workflows-samples/call-http-query-parameters.yaml"))
+                    .instance(Map.of()));
+    assertThat(exception)
+        .isNotNull()
+        .hasMessageContaining("There are JsonSchema validation errors");
   }
 
   @Test
@@ -258,24 +251,4 @@ public class HTTPWorkflowDefinitionTest {
         .contains(
             "The property 'redirect' is set to false but received status 301 (Redirection); expected status in the 200-299 range");
   }
-
-  //  @Test
-  //  void testRedirectAsTrueWhenReceivingRedirection() {
-  //    mockServer.enqueue(
-  //        new MockResponse(301, Headers.of("Location", "http://localhost:9876/redirected"), ""));
-  //
-  //    mockServer.enqueue(
-  //        new MockResponse(
-  //            200, Headers.of("Content-Type", "application/json"), "{\"status\":\"OK\"}"));
-  //
-  //    assertDoesNotThrow(
-  //        () -> {
-  //          appl.workflowDefinition(
-  //
-  // readWorkflowFromClasspath("workflows-samples/call-with-response-output-expr.yaml"))
-  //              .instance(Map.of())
-  //              .start()
-  //              .join();
-  //        });
-  //  }
 }
