@@ -25,12 +25,14 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowException;
+import io.serverlessworkflow.impl.WorkflowInstance;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.jackson.JsonUtils;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletionException;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -76,7 +78,8 @@ public class WorkflowDefinitionTest {
         args(
             "workflows-samples/for-sum.yaml",
             Map.of("input", Arrays.asList(1, 2, 3)),
-            o -> assertThat(o).isEqualTo(6)),
+            o -> assertThat(o).isEqualTo(6),
+            c -> assertThat(c).isEqualTo(Map.of("incr", Arrays.asList(2, 3, 4)))),
         args(
             "workflows-samples/switch-then-loop.yaml",
             Map.of("count", 1),
@@ -116,16 +119,36 @@ public class WorkflowDefinitionTest {
   }
 
   private static Arguments args(
-      String fileName, Map<String, Object> input, Consumer<Object> instance) {
+      String fileName,
+      Map<String, Object> input,
+      Consumer<Object> modelAssert,
+      Optional<Consumer<Object>> context) {
     return Arguments.of(
         fileName,
         (Consumer<WorkflowDefinition>)
-            d ->
-                instance.accept(
-                    d.instance(input)
-                        .start()
-                        .thenApply(model -> JsonUtils.toJavaValue(JsonUtils.modelToJson(model)))
-                        .join()));
+            d -> {
+              WorkflowInstance instance = d.instance(input);
+              modelAssert.accept(
+                  instance
+                      .start()
+                      .thenApply(model -> JsonUtils.toJavaValue(JsonUtils.modelToJson(model)))
+                      .join());
+              context.ifPresent(
+                  c -> c.accept(JsonUtils.toJavaValue(JsonUtils.fromValue(instance.context()))));
+            });
+  }
+
+  private static Arguments args(
+      String fileName,
+      Map<String, Object> input,
+      Consumer<Object> instance,
+      Consumer<Object> context) {
+    return args(fileName, input, instance, Optional.of(context));
+  }
+
+  private static Arguments args(
+      String fileName, Map<String, Object> input, Consumer<Object> instance) {
+    return args(fileName, input, instance, Optional.empty());
   }
 
   private static Arguments argsJson(

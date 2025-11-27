@@ -116,7 +116,7 @@ class CallTest {
       Workflow workflow =
           new Workflow()
               .withDocument(
-                  new Document().withNamespace("test").withName("testSwith").withVersion("1.0"))
+                  new Document().withNamespace("test").withName("testSwitch").withVersion("1.0"))
               .withDo(
                   List.of(
                       new TaskItem(

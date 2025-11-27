@@ -15,6 +15,7 @@
  */
 package io.serverless.workflow.impl;
 
+import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.function;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.serverlessworkflow.api.types.FlowDirectiveEnum;
@@ -22,6 +23,7 @@ import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.fluent.func.FuncWorkflowBuilder;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowDefinition;
+import io.serverlessworkflow.impl.WorkflowInstance;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -44,6 +46,23 @@ public class FluentDSLCallTest {
                   .asText()
                   .orElseThrow())
           .isEqualTo("Francisco Javierito");
+    }
+  }
+
+  @Test
+  void textExportFunction() {
+    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
+      final Workflow workflow =
+          FuncWorkflowBuilder.workflow("testExportFunction")
+              .tasks(
+                  function(JavaFunctions::getName, Person.class)
+                      .exportAs(
+                          (prevContext, w, t) -> t.output().asText().orElseThrow() + " Tirado"))
+              .build();
+      WorkflowInstance instance =
+          app.workflowDefinition(workflow).instance(new Person("Francisco", 33));
+      assertThat(instance.start().join().asText().orElseThrow()).isEqualTo("Francisco Javierito");
+      assertThat(instance.context().asText().orElseThrow()).isEqualTo("Francisco Javierito Tirado");
     }
   }
 
