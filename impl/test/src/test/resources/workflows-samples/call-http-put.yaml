@@ -13,7 +13,7 @@ do:
           accept: application/json
         method: put
         endpoint:
-          uri: https://fakerestapi.azurewebsites.net/api/v1/Authors/1
+          uri: http://localhost:9876/api/v1/authors/1
         body: "${{firstName: .firstName}}"
       output:
         as: .firstName

@@ -44,6 +44,9 @@ abstract class AbstractHttpExecutorBuilder {
         return new WithoutBodyRequestSupplier(Invocation.Builder::delete, application, redirect);
       case HttpMethod.HEAD:
         return new WithoutBodyRequestSupplier(Invocation.Builder::head, application, redirect);
+      case HttpMethod.PATCH:
+        return new WithBodyRequestSupplier(
+            (request, entity) -> request.method("PATCH", entity), application, body, redirect);
       case HttpMethod.OPTIONS:
         return new WithoutBodyRequestSupplier(Invocation.Builder::options, application, redirect);
       case HttpMethod.GET:

@@ -13,7 +13,7 @@ do:
                 content-type: application/json
               method: get
               endpoint: 
-                uri: https://petstore.swagger.io/v2/pet/findByStatus?status=sold
+                uri: http://localhost:9876/v2/pet/findByStatus?status=sold
       catch:
         errors:
           with:

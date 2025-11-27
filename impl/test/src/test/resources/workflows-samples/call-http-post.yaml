@@ -9,7 +9,7 @@ do:
       with:
        method: post
        endpoint:
-         uri: https://fakerestapi.azurewebsites.net/api/v1/Authors
+         uri: http://localhost:9876/api/v1/authors
        body:
          firstName: ${.name}
          lastName: ${.surname }

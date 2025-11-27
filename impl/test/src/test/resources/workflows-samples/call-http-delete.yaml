@@ -9,4 +9,4 @@ do:
       with:
         method: delete
         endpoint:
-          uri: https://fakerestapi.azurewebsites.net/api/v1/Authors/1
+          uri: https://localhost:9876/api/v1/authors/1
