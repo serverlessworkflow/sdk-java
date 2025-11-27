@@ -367,7 +367,7 @@ public class HTTPWorkflowDefinitionTest {
   }
 
   @Test
-  void testHeadCall() {
+  void testHeadCall() throws InterruptedException {
     mockServer.enqueue(
         new MockResponse(
             200,
@@ -380,6 +380,7 @@ public class HTTPWorkflowDefinitionTest {
                     "X-Custom-Header",
                     "CustomValue")),
             ""));
+
     assertDoesNotThrow(
         () -> {
           appl.workflowDefinition(
@@ -388,24 +389,33 @@ public class HTTPWorkflowDefinitionTest {
               .start()
               .join();
         });
-  }
 
-  @Test
-  void testOptionsCall() {
-    mockServer.enqueue(new MockResponse(200, Headers.of("Allow", "GET, POST, OPTIONS"), ""));
-
-    assertDoesNotThrow(
-        () -> {
-          appl.workflowDefinition(
-                  readWorkflowFromClasspath("workflows-samples/call-http-options.yaml"))
-              .instance(Map.of())
-              .start()
-              .join();
+    RecordedRequest recordedRequest = mockServer.takeRequest();
+    SoftAssertions.assertSoftly(
+        softly -> {
+          softly.assertThat(recordedRequest.getMethod()).isEqualTo("HEAD");
+          softly.assertThat(recordedRequest.getUrl().toString()).contains("/users/1");
         });
   }
 
   @Test
-  void testRedirectAsFalse() {
+  void testOptionsCall() throws IOException, InterruptedException {
+    mockServer.enqueue(new MockResponse(200, Headers.of("Allow", "GET, POST, OPTIONS"), ""));
+    appl.workflowDefinition(readWorkflowFromClasspath("workflows-samples/call-http-options.yaml"))
+        .instance(Map.of())
+        .start()
+        .join();
+
+    RecordedRequest recordedRequest = mockServer.takeRequest();
+    SoftAssertions.assertSoftly(
+        softly -> {
+          softly.assertThat(recordedRequest.getMethod()).isEqualTo("OPTIONS");
+          softly.assertThat(recordedRequest.getUrl().toString()).contains("/users/1");
+        });
+  }
+
+  @Test
+  void testRedirect_should_throws_when_redirect_is_false_and_response_status_is_not_2xx() {
     mockServer.enqueue(
         new MockResponse(301, Headers.of("Location", "http://localhost:9876/redirected"), ""));
 
@@ -419,7 +429,6 @@ public class HTTPWorkflowDefinitionTest {
                     .instance(Map.of())
                     .start()
                     .join());
-
     assertThat(exception.getCause().getMessage())
         .contains(
             "The property 'redirect' is set to false but received status 301 (Redirection); expected status in the 200-299 range");

@@ -40,6 +40,10 @@ abstract class AbstractRequestSupplier implements RequestSupplier {
       Builder request, WorkflowContext workflow, TaskContext task, WorkflowModel model) {
     HttpModelConverter converter = HttpConverterResolver.converter(workflow, task);
 
+    if (!redirect) {
+      request.property("jersey.config.client.followRedirects", false);
+    }
+
     Response response = invokeRequest(request, converter, workflow, task, model);
     validateStatus(task, response);
     return workflow
