@@ -17,7 +17,7 @@ do:
       call: http
       with:
         method: get
-        endpoint: https://stapi.co/api/v1/rest/movie
+        endpoint: http://localhost:9876/api/v1/rest/movie
         query:
           uid: ${.uid}
       

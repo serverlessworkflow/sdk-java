@@ -15,6 +15,9 @@
  */
 package io.serverlessworkflow.impl.executors.http;
 
+import static jakarta.ws.rs.core.Response.Status.Family.REDIRECTION;
+import static jakarta.ws.rs.core.Response.Status.Family.SUCCESSFUL;
+
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowError;
@@ -36,8 +39,13 @@ abstract class AbstractRequestSupplier implements RequestSupplier {
   public WorkflowModel apply(
       Builder request, WorkflowContext workflow, TaskContext task, WorkflowModel model) {
     HttpModelConverter converter = HttpConverterResolver.converter(workflow, task);
+
+    if (!redirect) {
+      request.property("jersey.config.client.followRedirects", false);
+    }
+
     Response response = invokeRequest(request, converter, workflow, task, model);
-    validateStatus(task, response, converter);
+    validateStatus(task, response);
     return workflow
         .definition()
         .application()
@@ -45,11 +53,24 @@ abstract class AbstractRequestSupplier implements RequestSupplier {
         .fromAny(response.readEntity(converter.responseType()));
   }
 
-  private void validateStatus(TaskContext task, Response response, HttpModelConverter converter) {
-    if (response.getStatusInfo().getFamily() != Family.SUCCESSFUL) {
+  private void validateStatus(TaskContext task, Response response) {
+    Family statusFamily = response.getStatusInfo().getFamily();
+    boolean isSuccess = statusFamily.equals(SUCCESSFUL);
+    boolean isRedirect = statusFamily.equals(REDIRECTION);
+    boolean valid = redirect ? (isSuccess || isRedirect) : isSuccess;
+
+    if (!valid) {
+      String expectedRange = redirect ? "200-399" : "200-299";
       throw new WorkflowException(
-          converter
-              .errorFromResponse(WorkflowError.communication(response.getStatus(), task), response)
+          WorkflowError.communication(
+                  response.getStatus(),
+                  task,
+                  String.format(
+                      "The property 'redirect' is set to %s but received status %d (%s); expected status in the %s range",
+                      redirect,
+                      response.getStatus(),
+                      response.getStatusInfo().getReasonPhrase(),
+                      expectedRange))
               .build());
     }
   }
