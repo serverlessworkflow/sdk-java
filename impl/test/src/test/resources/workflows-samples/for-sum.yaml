@@ -12,5 +12,8 @@ do:
         - accumulate:
             set:
               counter: ${.counter+$number}
+            export: 
+             as: if .incr==null then {incr:[$number+1]} else .incr+=[$number+1] end 
       output:
         as: .counter
+     
