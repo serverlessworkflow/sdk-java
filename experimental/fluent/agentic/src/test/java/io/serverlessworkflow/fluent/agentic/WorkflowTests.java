@@ -16,8 +16,18 @@
 package io.serverlessworkflow.fluent.agentic;
 
 import static io.serverlessworkflow.fluent.agentic.Agents.*;
+import static io.serverlessworkflow.fluent.agentic.AgentsUtils.newConflictAgent;
+import static io.serverlessworkflow.fluent.agentic.AgentsUtils.newCultureAgent;
+import static io.serverlessworkflow.fluent.agentic.AgentsUtils.newFactAgent;
+import static io.serverlessworkflow.fluent.agentic.AgentsUtils.newHeroAgent;
+import static io.serverlessworkflow.fluent.agentic.AgentsUtils.newPlotAgent;
+import static io.serverlessworkflow.fluent.agentic.AgentsUtils.newSceneAgent;
+import static io.serverlessworkflow.fluent.agentic.AgentsUtils.newSettingAgent;
+import static io.serverlessworkflow.fluent.agentic.AgentsUtils.newStorySeedAgent;
+import static io.serverlessworkflow.fluent.agentic.AgentsUtils.newTechnologyAgent;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -38,9 +48,12 @@ class WorkflowTests {
 
   @Test
   public void testAgent() throws ExecutionException, InterruptedException {
-    final StorySeedAgent storySeedAgent = mock(StorySeedAgent.class);
+    final StorySeedAgent storySeedAgent = newStorySeedAgent();
 
-    when(storySeedAgent.invoke(eq("A Great Story"))).thenReturn("storySeedAgent");
+    doReturn("storySeedAgent")
+        .when(storySeedAgent)
+        .invoke(org.mockito.ArgumentMatchers.anyString());
+
     when(storySeedAgent.outputKey()).thenReturn("premise");
     when(storySeedAgent.name()).thenReturn("storySeedAgent");
 
@@ -67,21 +80,23 @@ class WorkflowTests {
 
   @Test
   public void testAgents() throws ExecutionException, InterruptedException {
-    final StorySeedAgent storySeedAgent = mock(StorySeedAgent.class);
-    final PlotAgent plotAgent = mock(PlotAgent.class);
-    final SceneAgent sceneAgent = mock(SceneAgent.class);
+    final StorySeedAgent storySeedAgent = newStorySeedAgent();
+    final PlotAgent plotAgent = newPlotAgent();
+    final SceneAgent sceneAgent = newSceneAgent();
 
-    when(storySeedAgent.invoke(eq("A Great Story"))).thenReturn("storySeedAgent");
     when(storySeedAgent.outputKey()).thenReturn("premise");
     when(storySeedAgent.name()).thenReturn("storySeedAgent");
+    doReturn("storySeedAgent")
+        .when(storySeedAgent)
+        .invoke(org.mockito.ArgumentMatchers.anyString());
 
-    when(plotAgent.invoke(eq("storySeedAgent"))).thenReturn("plotAgent");
     when(plotAgent.outputKey()).thenReturn("plot");
     when(plotAgent.name()).thenReturn("plotAgent");
+    doReturn("plotAgent").when(plotAgent).invoke(org.mockito.ArgumentMatchers.anyString());
 
-    when(sceneAgent.invoke(eq("plotAgent"))).thenReturn("sceneAgent");
     when(sceneAgent.outputKey()).thenReturn("story");
     when(sceneAgent.name()).thenReturn("sceneAgent");
+    doReturn("sceneAgent").when(sceneAgent).invoke(org.mockito.ArgumentMatchers.anyString());
 
     Workflow workflow =
         AgentWorkflowBuilder.workflow("storyFlow")
@@ -110,21 +125,25 @@ class WorkflowTests {
 
   @Test
   public void testSequence() throws ExecutionException, InterruptedException {
-    final StorySeedAgent storySeedAgent = mock(StorySeedAgent.class);
-    final PlotAgent plotAgent = mock(PlotAgent.class);
-    final SceneAgent sceneAgent = mock(SceneAgent.class);
+    final StorySeedAgent storySeedAgent = newStorySeedAgent();
+    final PlotAgent plotAgent = newPlotAgent();
+    final SceneAgent sceneAgent = newSceneAgent();
 
-    when(storySeedAgent.invoke(eq("A Great Story"))).thenReturn("storySeedAgent");
     when(storySeedAgent.outputKey()).thenReturn("premise");
     when(storySeedAgent.name()).thenReturn("storySeedAgent");
 
-    when(plotAgent.invoke(eq("storySeedAgent"))).thenReturn("plotAgent");
+    doReturn("storySeedAgent")
+        .when(storySeedAgent)
+        .invoke(org.mockito.ArgumentMatchers.anyString());
+
     when(plotAgent.outputKey()).thenReturn("plot");
     when(plotAgent.name()).thenReturn("plotAgent");
 
-    when(sceneAgent.invoke(eq("plotAgent"))).thenReturn("sceneAgent");
+    doReturn("plotAgent").when(plotAgent).invoke(org.mockito.ArgumentMatchers.anyString());
+
     when(sceneAgent.outputKey()).thenReturn("story");
     when(sceneAgent.name()).thenReturn("sceneAgent");
+    doReturn("sceneAgent").when(sceneAgent).invoke(org.mockito.ArgumentMatchers.anyString());
 
     Workflow workflow =
         AgentWorkflowBuilder.workflow("storyFlow")
@@ -149,22 +168,25 @@ class WorkflowTests {
 
   @Test
   public void testParallel() throws ExecutionException, InterruptedException {
+    final SettingAgent setting = newSettingAgent();
+    final HeroAgent hero = newHeroAgent();
+    final ConflictAgent conflict = newConflictAgent();
 
-    final SettingAgent setting = mock(SettingAgent.class);
-    final HeroAgent hero = mock(HeroAgent.class);
-    final ConflictAgent conflict = mock(ConflictAgent.class);
-
-    when(setting.invoke(eq("sci-fi"))).thenReturn("Fake conflict response");
     when(setting.outputKey()).thenReturn("setting");
     when(setting.name()).thenReturn("setting");
+    doReturn("Fake setting response")
+        .when(setting)
+        .invoke(org.mockito.ArgumentMatchers.anyString());
 
-    when(hero.invoke(eq("sci-fi"))).thenReturn("Fake hero response");
     when(hero.outputKey()).thenReturn("hero");
     when(hero.name()).thenReturn("hero");
+    doReturn("Fake hero response").when(hero).invoke(org.mockito.ArgumentMatchers.anyString());
 
-    when(conflict.invoke(eq("sci-fi"))).thenReturn("Fake setting response");
     when(conflict.outputKey()).thenReturn("conflict");
     when(conflict.name()).thenReturn("conflict");
+    doReturn("Fake conflict response")
+        .when(conflict)
+        .invoke(org.mockito.ArgumentMatchers.anyString());
 
     Workflow workflow =
         AgentWorkflowBuilder.workflow("parallelFlow")
@@ -178,9 +200,9 @@ class WorkflowTests {
       Map<String, Object> result =
           app.workflowDefinition(workflow).instance(topic).start().get().asMap().orElseThrow();
 
-      assertEquals("Fake conflict response", result.get("setting").toString());
+      assertEquals("Fake setting response", result.get("setting").toString());
       assertEquals("Fake hero response", result.get("hero").toString());
-      assertEquals("Fake setting response", result.get("conflict").toString());
+      assertEquals("Fake conflict response", result.get("conflict").toString());
     }
 
     try (WorkflowApplication app = WorkflowApplication.builder().build()) {
@@ -192,17 +214,17 @@ class WorkflowTests {
               .as(AgenticScope.class)
               .orElseThrow();
 
-      assertEquals("Fake conflict response", result.readState("setting").toString());
+      assertEquals("Fake setting response", result.readState("setting").toString());
       assertEquals("Fake hero response", result.readState("hero").toString());
-      assertEquals("Fake setting response", result.readState("conflict").toString());
+      assertEquals("Fake conflict response", result.readState("conflict").toString());
     }
   }
 
   @Test
   public void testSeqAndThenParallel() throws ExecutionException, InterruptedException {
-    final FactAgent factAgent = mock(FactAgent.class);
-    final CultureAgent cultureAgent = mock(CultureAgent.class);
-    final TechnologyAgent technologyAgent = mock(TechnologyAgent.class);
+    final FactAgent factAgent = newFactAgent();
+    final CultureAgent cultureAgent = newCultureAgent();
+    final TechnologyAgent technologyAgent = newTechnologyAgent();
 
     List<String> cultureTraits =
         List.of("Alien Culture Trait 1", "Alien Culture Trait 2", "Alien Culture Trait 3");
@@ -210,17 +232,22 @@ class WorkflowTests {
     List<String> technologyTraits =
         List.of("Alien Technology Trait 1", "Alien Technology Trait 2", "Alien Technology Trait 3");
 
-    when(factAgent.invoke(eq("alien"))).thenReturn("Some Fact about aliens");
     when(factAgent.outputKey()).thenReturn("fact");
     when(factAgent.name()).thenReturn("fact");
+    doReturn("Some Fact about aliens")
+        .when(factAgent)
+        .invoke(org.mockito.ArgumentMatchers.anyString());
 
-    when(cultureAgent.invoke(eq("Some Fact about aliens"))).thenReturn(cultureTraits);
     when(cultureAgent.outputKey()).thenReturn("culture");
     when(cultureAgent.name()).thenReturn("culture");
+    doReturn(cultureTraits).when(cultureAgent).invoke(org.mockito.ArgumentMatchers.anyString());
 
-    when(technologyAgent.invoke(eq("Some Fact about aliens"))).thenReturn(technologyTraits);
     when(technologyAgent.outputKey()).thenReturn("technology");
     when(technologyAgent.name()).thenReturn("technology");
+    doReturn(technologyTraits)
+        .when(technologyAgent)
+        .invoke(org.mockito.ArgumentMatchers.anyString());
+
     Workflow workflow =
         AgentWorkflowBuilder.workflow("alienCultureFlow")
             .tasks(

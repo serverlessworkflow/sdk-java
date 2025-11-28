@@ -17,6 +17,7 @@ package io.serverlessworkflow.fluent.agentic.langchain4j;
 
 import dev.langchain4j.agentic.agent.AgentRequest;
 import dev.langchain4j.agentic.agent.AgentResponse;
+import dev.langchain4j.agentic.declarative.TypedKey;
 import dev.langchain4j.agentic.internal.AgentExecutor;
 import dev.langchain4j.agentic.workflow.ParallelAgentService;
 import io.serverlessworkflow.impl.ExecutorServiceHolder;
@@ -45,6 +46,11 @@ public class ParallelAgentServiceImpl<T> extends AbstractAgentService<T, Paralle
   @Override
   public ParallelAgentService<T> subAgents(List<AgentExecutor> agentExecutors) {
     return this.subAgents(agentExecutors.toArray());
+  }
+
+  @Override
+  public ParallelAgentService<T> outputKey(Class<? extends TypedKey<?>> outputKey) {
+    throw new UnsupportedOperationException("Feature not implemented yet");
   }
 
   @Override

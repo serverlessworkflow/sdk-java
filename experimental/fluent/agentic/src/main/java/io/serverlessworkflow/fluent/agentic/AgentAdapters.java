@@ -18,6 +18,7 @@ package io.serverlessworkflow.fluent.agentic;
 import static dev.langchain4j.agentic.internal.AgentUtil.agentsToExecutors;
 
 import dev.langchain4j.agentic.internal.AgentExecutor;
+import dev.langchain4j.agentic.scope.AgentInvocationListener;
 import dev.langchain4j.agentic.scope.AgenticScope;
 import dev.langchain4j.agentic.scope.DefaultAgenticScope;
 import io.serverlessworkflow.api.types.func.LoopPredicateIndex;
@@ -35,7 +36,7 @@ public final class AgentAdapters {
   }
 
   public static Function<DefaultAgenticScope, Object> toFunction(AgentExecutor exec) {
-    return exec::execute;
+    return agenticScope -> exec.execute(agenticScope, AgentInvocationListener.NO_OP);
   }
 
   public static LoopPredicateIndex<AgenticScope, Object> toWhile(Predicate<AgenticScope> exit) {
