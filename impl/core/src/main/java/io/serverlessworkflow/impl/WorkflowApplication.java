@@ -76,6 +76,7 @@ public class WorkflowApplication implements AutoCloseable {
   private final SecretManager secretManager;
   private final SchedulerListener schedulerListener;
   private final Optional<URITemplateResolver> templateResolver;
+  private final Optional<FunctionReader> functionReader;
 
   private WorkflowApplication(Builder builder) {
     this.taskFactory = builder.taskFactory;
@@ -98,6 +99,7 @@ public class WorkflowApplication implements AutoCloseable {
     this.configManager = builder.configManager;
     this.secretManager = builder.secretManager;
     this.templateResolver = builder.templateResolver;
+    this.functionReader = builder.functionReader;
   }
 
   public TaskExecutorFactory taskFactory() {
@@ -178,6 +180,7 @@ public class WorkflowApplication implements AutoCloseable {
     private ConfigManager configManager;
     private SchedulerListener schedulerListener;
     private Optional<URITemplateResolver> templateResolver;
+    private Optional<FunctionReader> functionReader;
 
     private Builder() {
       ServiceLoader.load(NamedWorkflowAdditionalObject.class)
@@ -329,6 +332,7 @@ public class WorkflowApplication implements AutoCloseable {
                 .orElseGet(() -> new ConfigSecretManager(configManager));
       }
       templateResolver = ServiceLoader.load(URITemplateResolver.class).findFirst();
+      functionReader = ServiceLoader.load(FunctionReader.class).findFirst();
       return new WorkflowApplication(this);
     }
   }
@@ -404,6 +408,10 @@ public class WorkflowApplication implements AutoCloseable {
 
   public Optional<URITemplateResolver> templateResolver() {
     return templateResolver;
+  }
+
+  public Optional<FunctionReader> functionReader() {
+    return functionReader;
   }
 
   public <T> Optional<T> additionalObject(
