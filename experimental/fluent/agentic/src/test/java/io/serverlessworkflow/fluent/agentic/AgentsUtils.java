@@ -137,4 +137,76 @@ public final class AgentsUtils {
     String createNovel(
         @V("topic") String topic, @V("audience") String audience, @V("style") String style);
   }
+
+  public static Agents.StorySeedAgent newStorySeedAgent() {
+    return spy(
+        AgenticServices.agentBuilder(Agents.StorySeedAgent.class)
+            .chatModel(BASE_MODEL)
+            .outputKey("response")
+            .build());
+  }
+
+  public static Agents.PlotAgent newPlotAgent() {
+    return spy(
+        AgenticServices.agentBuilder(Agents.PlotAgent.class)
+            .chatModel(BASE_MODEL)
+            .outputKey("response")
+            .build());
+  }
+
+  public static Agents.SceneAgent newSceneAgent() {
+    return spy(
+        AgenticServices.agentBuilder(Agents.SceneAgent.class)
+            .chatModel(BASE_MODEL)
+            .outputKey("response")
+            .build());
+  }
+
+  public static Agents.SettingAgent newSettingAgent() {
+    return spy(
+        AgenticServices.agentBuilder(Agents.SettingAgent.class)
+            .chatModel(BASE_MODEL)
+            .outputKey("response")
+            .build());
+  }
+
+  public static Agents.HeroAgent newHeroAgent() {
+    return spy(
+        AgenticServices.agentBuilder(Agents.HeroAgent.class)
+            .chatModel(BASE_MODEL)
+            .outputKey("response")
+            .build());
+  }
+
+  public static Agents.ConflictAgent newConflictAgent() {
+    return spy(
+        AgenticServices.agentBuilder(Agents.ConflictAgent.class)
+            .chatModel(BASE_MODEL)
+            .outputKey("response")
+            .build());
+  }
+
+  public static Agents.FactAgent newFactAgent() {
+    return spy(
+        AgenticServices.agentBuilder(Agents.FactAgent.class)
+            .chatModel(BASE_MODEL)
+            .outputKey("response")
+            .build());
+  }
+
+  public static Agents.CultureAgent newCultureAgent() {
+    return spy(
+        AgenticServices.agentBuilder(Agents.CultureAgent.class)
+            .chatModel(BASE_MODEL)
+            .outputKey("response")
+            .build());
+  }
+
+  public static Agents.TechnologyAgent newTechnologyAgent() {
+    return spy(
+        AgenticServices.agentBuilder(Agents.TechnologyAgent.class)
+            .chatModel(BASE_MODEL)
+            .outputKey("response")
+            .build());
+  }
 }

@@ -17,6 +17,7 @@ package io.serverlessworkflow.fluent.agentic.langchain4j;
 
 import dev.langchain4j.agentic.agent.AgentRequest;
 import dev.langchain4j.agentic.agent.AgentResponse;
+import dev.langchain4j.agentic.declarative.TypedKey;
 import dev.langchain4j.agentic.internal.AgentExecutor;
 import dev.langchain4j.agentic.scope.AgenticScope;
 import dev.langchain4j.agentic.workflow.LoopAgentService;
@@ -75,6 +76,11 @@ public class LoopAgentServiceImpl<T> extends AbstractAgentService<T, LoopAgentSe
     this.loopAgentsBuilder.subAgents(agentExecutors.toArray());
     this.workflowBuilder.tasks(t -> t.loop(this.loopAgentsBuilder));
     return this;
+  }
+
+  @Override
+  public LoopAgentService<T> outputKey(Class<? extends TypedKey<?>> outputKey) {
+    throw new UnsupportedOperationException("Feature not implemented yet");
   }
 
   @Override
