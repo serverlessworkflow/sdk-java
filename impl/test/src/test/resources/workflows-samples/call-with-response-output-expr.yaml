@@ -1,0 +1,18 @@
+document:
+  dsl: 1.0.0-alpha1
+  namespace: test
+  name: http-call-with-response-output-expr
+  version: 1.0.0
+do:
+  - postPet:
+      call: http
+      with:
+        redirect: true
+        headers:
+          content-type: application/json
+        method: post
+        endpoint:
+          uri: http://localhost:9876/users
+        body: "${{firstName: .firstName, lastName: .lastName, id: .id, bookId: .bookId}}"
+      output:
+         as: .status

@@ -12,7 +12,7 @@ do:
             headers:
               content-type: application/json
             method: get
-            endpoint: ${ "https://petstore.swagger.io/v2/pet/\(.petId)" }
+            endpoint: ${ "http://localhost:9876/pets/\(.petId)" }
       catch:
         errors:
           with:

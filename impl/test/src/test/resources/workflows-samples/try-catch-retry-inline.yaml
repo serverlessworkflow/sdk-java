@@ -11,6 +11,7 @@ do:
             with:
               method: get
               endpoint: http://localhost:9797
+              redirect: true
       catch:
         errors:
           with:

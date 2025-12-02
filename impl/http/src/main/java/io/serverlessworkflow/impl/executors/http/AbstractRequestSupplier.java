@@ -15,6 +15,9 @@
  */
 package io.serverlessworkflow.impl.executors.http;
 
+import static jakarta.ws.rs.core.Response.Status.Family.REDIRECTION;
+import static jakarta.ws.rs.core.Response.Status.Family.SUCCESSFUL;
+
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowError;
@@ -36,6 +39,7 @@ abstract class AbstractRequestSupplier implements RequestSupplier {
   public WorkflowModel apply(
       Builder request, WorkflowContext workflow, TaskContext task, WorkflowModel model) {
     HttpModelConverter converter = HttpConverterResolver.converter(workflow, task);
+
     Response response = invokeRequest(request, converter, workflow, task, model);
     validateStatus(task, response, converter);
     return workflow
@@ -46,7 +50,9 @@ abstract class AbstractRequestSupplier implements RequestSupplier {
   }
 
   private void validateStatus(TaskContext task, Response response, HttpModelConverter converter) {
-    if (response.getStatusInfo().getFamily() != Family.SUCCESSFUL) {
+    Family statusFamily = response.getStatusInfo().getFamily();
+
+    if (statusFamily != SUCCESSFUL || (!this.redirect && statusFamily == REDIRECTION)) {
       throw new WorkflowException(
           converter
               .errorFromResponse(WorkflowError.communication(response.getStatus(), task), response)

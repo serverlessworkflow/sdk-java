@@ -18,23 +18,30 @@ package io.serverlessworkflow.impl.test;
 import static io.serverlessworkflow.api.WorkflowReader.readWorkflowFromClasspath;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowableOfType;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowModel;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
-import java.util.stream.Stream;
-import org.assertj.core.api.Condition;
+import java.util.concurrent.CompletionException;
+import mockwebserver3.MockResponse;
+import mockwebserver3.MockWebServer;
+import mockwebserver3.RecordedRequest;
+import okhttp3.Headers;
+import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 public class HTTPWorkflowDefinitionTest {
 
   private static WorkflowApplication appl;
+  private static MockWebServer mockServer;
 
   @BeforeAll
   static void init() {
@@ -46,32 +53,15 @@ public class HTTPWorkflowDefinitionTest {
     appl.close();
   }
 
-  @ParameterizedTest
-  @MethodSource("provideParameters")
-  void testWorkflowExecution(String fileName, Object input, Condition<Object> condition)
-      throws IOException {
-    assertThat(
-            appl.workflowDefinition(readWorkflowFromClasspath(fileName))
-                .instance(input)
-                .start()
-                .join())
-        .is(condition);
+  @BeforeEach
+  void setup() throws IOException {
+    mockServer = new MockWebServer();
+    mockServer.start(9876);
   }
 
-  @ParameterizedTest
-  @ValueSource(
-      strings = {
-        "workflows-samples/call-http-query-parameters.yaml",
-        "workflows-samples/call-http-query-parameters-external-schema.yaml"
-      })
-  void testWrongSchema(String fileName) {
-    IllegalArgumentException exception =
-        catchThrowableOfType(
-            IllegalArgumentException.class,
-            () -> appl.workflowDefinition(readWorkflowFromClasspath(fileName)).instance(Map.of()));
-    assertThat(exception)
-        .isNotNull()
-        .hasMessageContaining("There are JsonSchema validation errors");
+  @AfterEach
+  void shutdownServer() {
+    mockServer.close();
   }
 
   private static boolean httpCondition(WorkflowModel obj) {
@@ -79,42 +69,388 @@ public class HTTPWorkflowDefinitionTest {
     return map.containsKey("photoUrls") || map.containsKey("petId");
   }
 
-  private static Stream<Arguments> provideParameters() {
-    Map<String, Object> petInput = Map.of("petId", 10);
-    Map<String, Object> starTrekInput = Map.of("uid", "MOMA0000092393");
-    Condition<WorkflowModel> petCondition =
-        new Condition<>(HTTPWorkflowDefinitionTest::httpCondition, "callHttpCondition");
-    Condition<WorkflowModel> starTrekCondition =
-        new Condition<>(
-            o ->
-                ((Map<String, Object>) o.asMap().orElseThrow().get("movie"))
-                    .get("title")
-                    .equals("Star Trek"),
-            "StartTrek");
-    Condition<WorkflowModel> postCondition =
-        new Condition<WorkflowModel>(
-            o -> o.asText().orElseThrow().equals("Javierito"), "CallHttpPostCondition");
-    Map<String, String> postMap = Map.of("name", "Javierito", "surname", "Unknown");
-    return Stream.of(
-        Arguments.of("workflows-samples/callGetHttp.yaml", petInput, petCondition),
-        Arguments.of(
-            "workflows-samples/callGetHttp.yaml",
-            Map.of("petId", "-1"),
-            new Condition<WorkflowModel>(
-                o -> o.asMap().orElseThrow().containsKey("petId"), "notFoundCondition")),
-        Arguments.of(
-            "workflows-samples/call-http-endpoint-interpolation.yaml", petInput, petCondition),
-        Arguments.of(
-            "workflows-samples/call-http-query-parameters.yaml", starTrekInput, starTrekCondition),
-        Arguments.of(
-            "workflows-samples/callFindByStatusHttp.yaml",
-            Map.of(),
-            new Condition<WorkflowModel>(o -> !o.asCollection().isEmpty(), "HasElementCondition")),
-        Arguments.of(
-            "workflows-samples/call-http-query-parameters-external-schema.yaml",
-            starTrekInput,
-            starTrekCondition),
-        Arguments.of("workflows-samples/callPostHttp.yaml", postMap, postCondition),
-        Arguments.of("workflows-samples/callPostHttpAsExpr.yaml", postMap, postCondition));
+  @Test
+  void callHttpGet_should_return_pet_data() throws Exception {
+    mockServer.enqueue(
+        new MockResponse(
+            200,
+            Headers.of("Content-Type", "application/json"),
+            """
+            {
+                "petId": 10,
+                "photoUrls": [
+                    "https://example.com/photos/rex1.jpg",
+                    "https://example.com/photos/rex2.jpg"
+                ]
+            }
+            """));
+    WorkflowModel result =
+        appl.workflowDefinition(readWorkflowFromClasspath("workflows-samples/call-http-get.yaml"))
+            .instance(Map.of("petId", 10))
+            .start()
+            .join();
+    SoftAssertions.assertSoftly(
+        softly -> {
+          softly
+              .assertThat(result.asMap().orElseThrow())
+              .containsKey("petId")
+              .containsKey("photoUrls");
+          try {
+            RecordedRequest recordedRequest = mockServer.takeRequest();
+            softly.assertThat(recordedRequest.getUrl()).asString().contains("/pets/10");
+            softly.assertThat(recordedRequest.getMethod()).isEqualTo("GET");
+          } catch (InterruptedException e) {
+            softly.fail(e);
+          }
+        });
+  }
+
+  @Test
+  void callHttpGet_with_not_found_petId_should_keep_input_petId() throws Exception {
+    mockServer.enqueue(
+        new MockResponse(
+            404,
+            Headers.of("Content-Type", "application/json"),
+            """
+    {"message": "Pet not found"}
+    """));
+    WorkflowModel result =
+        appl.workflowDefinition(readWorkflowFromClasspath("workflows-samples/call-http-get.yaml"))
+            .instance(Map.of("petId", "-1"))
+            .start()
+            .join();
+
+    RecordedRequest recordedRequest = mockServer.takeRequest();
+    SoftAssertions.assertSoftly(
+        softly -> {
+          softly.assertThat(result.asMap().orElseThrow()).containsKey("petId");
+          softly.assertThat(recordedRequest.getUrl()).asString().contains("/pets/-1");
+          softly.assertThat(recordedRequest.getMethod()).isEqualTo("GET");
+        });
+  }
+
+  @Test
+  void callHttpEndpointInterpolation_should_work() throws Exception {
+    mockServer.enqueue(
+        new MockResponse(
+            200,
+            Headers.of("Content-Type", "application/json"),
+            """
+            {
+                "petId": 1994,
+                "photoUrls": [
+                    "https://example.com/photos/dog1.jpg",
+                    "https://example.com/photos/dog2.jpg"
+                ]
+            }
+            """));
+    WorkflowModel result =
+        appl.workflowDefinition(
+                readWorkflowFromClasspath(
+                    "workflows-samples/call-http-endpoint-interpolation.yaml"))
+            .instance(Map.of("petId", 1994))
+            .start()
+            .join();
+
+    RecordedRequest recordedRequest = mockServer.takeRequest();
+    SoftAssertions.assertSoftly(
+        softly -> {
+          softly
+              .assertThat(result.asMap().orElseThrow())
+              .containsKey("petId")
+              .containsKey("photoUrls");
+          softly.assertThat(recordedRequest.getUrl()).asString().contains("/pets/1994");
+          softly.assertThat(recordedRequest.getMethod()).isEqualTo("GET");
+        });
+  }
+
+  @Test
+  void callHttpQueryParameters_should_find_star_trek_movie() throws Exception {
+    mockServer.enqueue(
+        new MockResponse(
+            200,
+            Headers.of("Content-Type", "application/json"),
+            """
+            {
+                "movie": {
+                    "uid": "MOMA0000092393",
+                    "title": "Star Trek",
+                    "director": "J.J. Abrams"
+                }
+            }
+            """));
+
+    WorkflowModel result =
+        appl.workflowDefinition(
+                readWorkflowFromClasspath("workflows-samples/call-http-query-parameters.yaml"))
+            .instance(Map.of("uid", "MOMA0000092393"))
+            .start()
+            .join();
+
+    RecordedRequest recordedRequest = mockServer.takeRequest();
+    SoftAssertions.assertSoftly(
+        softly -> {
+          Map<String, Object> response = result.asMap().orElseThrow();
+          softly.assertThat(response).containsKey("movie");
+          var movie = (Map<String, Object>) response.get("movie");
+          softly.assertThat(movie).containsEntry("title", "Star Trek");
+          softly.assertThat(recordedRequest.getUrl()).asString().contains("uid=MOMA0000092393");
+          softly.assertThat(recordedRequest.getMethod()).isEqualTo("GET");
+        });
+  }
+
+  @Test
+  void callHttpFindByStatus_should_return_non_empty_collection() throws Exception {
+    mockServer.enqueue(
+        new MockResponse(
+            200,
+            Headers.of("Content-Type", "application/json"),
+            """
+            [
+                {
+                    "id": 1,
+                    "name": "Rex",
+                    "status": "sold"
+                },
+                {
+                    "id": 2,
+                    "name": "Fido",
+                    "status": "sold"
+                }
+            ]
+            """));
+
+    WorkflowModel result =
+        appl.workflowDefinition(
+                readWorkflowFromClasspath("workflows-samples/call-http-find-by-status.yaml"))
+            .instance(Map.of())
+            .start()
+            .join();
+
+    RecordedRequest recordedRequest = mockServer.takeRequest();
+    SoftAssertions.assertSoftly(
+        softly -> {
+          softly.assertThat(result.asCollection()).isNotEmpty();
+          softly.assertThat(recordedRequest.getUrl()).asString().contains("status=sold");
+          softly.assertThat(recordedRequest.getMethod()).isEqualTo("GET");
+        });
+  }
+
+  @Test
+  void callHttpQueryParameters_external_schema_should_find_star_trek() throws Exception {
+    mockServer.enqueue(
+        new MockResponse(
+            200,
+            Headers.of("Content-Type", "application/json"),
+            """
+                      {
+                          "movie": {
+                              "uid": "MOMA0000092393",
+                              "title": "Star Trek",
+                              "director": "J.J. Abrams"
+                          }
+                      }
+                      """));
+
+    WorkflowModel result =
+        appl.workflowDefinition(
+                readWorkflowFromClasspath("workflows-samples/call-http-query-parameters.yaml"))
+            .instance(Map.of("uid", "MOMA0000092393"))
+            .start()
+            .join();
+
+    RecordedRequest recordedRequest = mockServer.takeRequest();
+    SoftAssertions.assertSoftly(
+        softly -> {
+          Map<String, Object> response = result.asMap().orElseThrow();
+          softly.assertThat(response).containsKey("movie");
+          var movie = (Map<String, Object>) response.get("movie");
+          softly.assertThat(movie).containsEntry("title", "Star Trek");
+          softly.assertThat(recordedRequest.getUrl()).asString().contains("uid=MOMA0000092393");
+          softly.assertThat(recordedRequest.getMethod()).isEqualTo("GET");
+        });
+  }
+
+  @Test
+  void callHttpPost_should_return_created_firstName() throws Exception {
+    mockServer.enqueue(
+        new MockResponse(
+            200,
+            Headers.of("Content-Type", "application/json"),
+            """
+                {
+                    "firstName": "Javierito"
+                }
+                """));
+    WorkflowModel result =
+        appl.workflowDefinition(readWorkflowFromClasspath("workflows-samples/call-http-post.yaml"))
+            .instance(Map.of("name", "Javierito", "surname", "Unknown"))
+            .start()
+            .join();
+
+    RecordedRequest recordedRequest = mockServer.takeRequest();
+    SoftAssertions.assertSoftly(
+        softly -> {
+          softly.assertThat(result.asText().orElseThrow()).isEqualTo("Javierito");
+          softly.assertThat(recordedRequest.getMethod()).isEqualTo("POST");
+          softly.assertThat(recordedRequest.getBody()).isNotNull();
+          softly
+              .assertThat(recordedRequest.getBody().string(StandardCharsets.UTF_8))
+              .contains("\"firstName\":\"Javierito\"")
+              .contains("\"lastName\":\"Unknown\"");
+        });
+  }
+
+  @Test
+  void testCallHttpDelete() throws IOException, InterruptedException {
+    mockServer.enqueue(new MockResponse(204, Headers.of(), ""));
+
+    WorkflowModel model =
+        appl.workflowDefinition(
+                readWorkflowFromClasspath("workflows-samples/call-http-delete.yaml"))
+            .instance(Map.of())
+            .start()
+            .join();
+
+    RecordedRequest recordedRequest = mockServer.takeRequest();
+    SoftAssertions.assertSoftly(
+        softly -> {
+          softly.assertThat(model).isNotNull();
+          softly.assertThat(recordedRequest.getMethod()).isEqualTo("DELETE");
+          softly.assertThat(recordedRequest.getUrl()).asString().contains("/api/v1/authors/1");
+        });
+  }
+
+  @Test
+  void callHttpPut_should_contain_firstName_with_john() throws Exception {
+    mockServer.enqueue(
+        new MockResponse(
+            200,
+            Headers.of("Content-Type", "application/json"),
+            """
+            {
+                "id": 1,
+                "firstName": "John"
+            }
+            """));
+
+    WorkflowModel result =
+        appl.workflowDefinition(readWorkflowFromClasspath("workflows-samples/call-http-put.yaml"))
+            .instance(Map.of("firstName", "John"))
+            .start()
+            .join();
+
+    RecordedRequest recordedRequest = mockServer.takeRequest();
+    SoftAssertions.assertSoftly(
+        softly -> {
+          softly.assertThat(result.asText().orElseThrow()).contains("John");
+          softly.assertThat(recordedRequest.getMethod()).contains("PUT");
+          softly
+              .assertThat(recordedRequest.getBody().string(StandardCharsets.UTF_8))
+              .contains("\"firstName\":\"John\"");
+          softly.assertThat(recordedRequest.getUrl()).asString().contains("api/v1/authors/1");
+        });
+  }
+
+  @Test
+  void testWrongSchema_should_throw_illegal_argument() {
+    IllegalArgumentException exception =
+        catchThrowableOfType(
+            IllegalArgumentException.class,
+            () ->
+                appl.workflowDefinition(
+                        readWorkflowFromClasspath(
+                            "workflows-samples/call-http-query-parameters.yaml"))
+                    .instance(Map.of()));
+    assertThat(exception)
+        .isNotNull()
+        .hasMessageContaining("There are JsonSchema validation errors");
+  }
+
+  @Test
+  void testHeadCall() throws InterruptedException {
+    mockServer.enqueue(
+        new MockResponse(
+            200,
+            Headers.of(
+                Map.of(
+                    "Content-Length",
+                    "123",
+                    "Content-Type",
+                    "application/json",
+                    "X-Custom-Header",
+                    "CustomValue")),
+            ""));
+
+    assertDoesNotThrow(
+        () -> {
+          appl.workflowDefinition(
+                  readWorkflowFromClasspath("workflows-samples/call-http-head.yaml"))
+              .instance(Map.of())
+              .start()
+              .join();
+        });
+
+    RecordedRequest recordedRequest = mockServer.takeRequest();
+    SoftAssertions.assertSoftly(
+        softly -> {
+          softly.assertThat(recordedRequest.getMethod()).isEqualTo("HEAD");
+          softly.assertThat(recordedRequest.getUrl().toString()).contains("/users/1");
+        });
+  }
+
+  @Test
+  void testOptionsCall() throws IOException, InterruptedException {
+    mockServer.enqueue(new MockResponse(200, Headers.of("Allow", "GET, POST, OPTIONS"), ""));
+    appl.workflowDefinition(readWorkflowFromClasspath("workflows-samples/call-http-options.yaml"))
+        .instance(Map.of())
+        .start()
+        .join();
+
+    RecordedRequest recordedRequest = mockServer.takeRequest();
+    SoftAssertions.assertSoftly(
+        softly -> {
+          softly.assertThat(recordedRequest.getMethod()).isEqualTo("OPTIONS");
+          softly.assertThat(recordedRequest.getUrl().toString()).contains("/users/1");
+        });
+  }
+
+  @Test
+  @Disabled(
+      value =
+          "See the following discussion: https://github.com/serverlessworkflow/sdk-java/pull/1013/files#r2562919102 and https://github.com/serverlessworkflow/sdk-java/issues/1024")
+  void testPatchCall() throws IOException, InterruptedException {
+    mockServer.enqueue(new MockResponse(204, Headers.of(), ""));
+    appl.workflowDefinition(readWorkflowFromClasspath("workflows-samples/call-http-patch.yaml"))
+        .instance(Map.of())
+        .start()
+        .join();
+
+    RecordedRequest recordedRequest = mockServer.takeRequest();
+    SoftAssertions.assertSoftly(
+        softly -> {
+          softly.assertThat(recordedRequest.getMethod()).isEqualTo("PATCH");
+          softly.assertThat(recordedRequest.getUrl().toString()).contains("/users/1");
+        });
+  }
+
+  @Test
+  @Disabled(
+      "See the following discussion: https://github.com/serverlessworkflow/sdk-java/pull/1013/files#r2566152233 and https://github.com/serverlessworkflow/sdk-java/issues/1024#issue-3680971320")
+  void testRedirect_should_throws_when_redirect_is_false_and_response_status_is_not_2xx() {
+    mockServer.enqueue(
+        new MockResponse(301, Headers.of("Location", "http://localhost:9876/redirected"), ""));
+
+    CompletionException exception =
+        catchThrowableOfType(
+            CompletionException.class,
+            () ->
+                appl.workflowDefinition(
+                        readWorkflowFromClasspath(
+                            "workflows-samples/call-http-redirect-false.yaml"))
+                    .instance(Map.of())
+                    .start()
+                    .join());
+    assertThat(exception.getCause().getMessage()).contains("status=301");
   }
 }
