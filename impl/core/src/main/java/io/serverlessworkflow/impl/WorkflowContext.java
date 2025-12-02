@@ -23,7 +23,7 @@ public class WorkflowContext implements WorkflowContextData {
   WorkflowContext(WorkflowDefinition definition, WorkflowMutableInstance instance) {
     this.definition = definition;
     this.instance = instance;
-    this.context = definition.application().modelFactory().fromNull();
+    this.context = definition.application().contextFactory().fromNull();
   }
 
   @Override

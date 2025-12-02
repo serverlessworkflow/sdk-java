@@ -70,6 +70,7 @@ public class WorkflowApplication implements AutoCloseable {
   private final Collection<EventPublisher> eventPublishers;
   private final boolean lifeCycleCEPublishingEnabled;
   private final WorkflowModelFactory modelFactory;
+  private final WorkflowModelFactory contextFactory;
   private final WorkflowScheduler scheduler;
   private final Map<String, WorkflowAdditionalObject<?>> additionalObjects;
   private final ConfigManager configManager;
@@ -93,6 +94,7 @@ public class WorkflowApplication implements AutoCloseable {
     this.eventPublishers = builder.eventPublishers;
     this.lifeCycleCEPublishingEnabled = builder.lifeCycleCEPublishingEnabled;
     this.modelFactory = builder.modelFactory;
+    this.contextFactory = builder.contextFactory;
     this.scheduler = builder.scheduler;
     this.schedulerListener = builder.schedulerListener;
     this.additionalObjects = builder.additionalObjects;
@@ -175,6 +177,7 @@ public class WorkflowApplication implements AutoCloseable {
         () -> new RuntimeDescriptor("reference impl", "1.0.0_alpha", Collections.emptyMap());
     private boolean lifeCycleCEPublishingEnabled = true;
     private WorkflowModelFactory modelFactory;
+    private WorkflowModelFactory contextFactory;
     private Map<String, WorkflowAdditionalObject<?>> additionalObjects = new HashMap<>();
     private SecretManager secretManager;
     private ConfigManager configManager;
@@ -273,6 +276,11 @@ public class WorkflowApplication implements AutoCloseable {
       return this;
     }
 
+    public Builder withContextFactory(WorkflowModelFactory contextFactory) {
+      this.contextFactory = contextFactory;
+      return this;
+    }
+
     public WorkflowApplication build() {
       if (modelFactory == null) {
         modelFactory =
@@ -282,6 +290,9 @@ public class WorkflowApplication implements AutoCloseable {
                     () ->
                         new IllegalStateException(
                             "WorkflowModelFactory instance has to be set in WorkflowApplication or present in the classpath"));
+      }
+      if (contextFactory == null) {
+        contextFactory = modelFactory;
       }
       ServiceLoader.load(ExpressionFactory.class).forEach(exprFactories::add);
       if (schemaValidatorFactory == null) {
@@ -371,6 +382,10 @@ public class WorkflowApplication implements AutoCloseable {
 
   public WorkflowModelFactory modelFactory() {
     return modelFactory;
+  }
+
+  public WorkflowModelFactory contextFactory() {
+    return contextFactory;
   }
 
   public RuntimeDescriptorFactory runtimeDescriptorFactory() {

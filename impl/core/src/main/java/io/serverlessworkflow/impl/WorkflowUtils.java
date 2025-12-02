@@ -25,6 +25,7 @@ import io.serverlessworkflow.api.types.TimeoutAfter;
 import io.serverlessworkflow.api.types.UriTemplate;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.expressions.ExpressionDescriptor;
+import io.serverlessworkflow.impl.expressions.ExpressionFactory;
 import io.serverlessworkflow.impl.expressions.ExpressionUtils;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
 import io.serverlessworkflow.impl.schema.SchemaValidator;
@@ -77,7 +78,9 @@ public class WorkflowUtils {
 
   public static Optional<WorkflowFilter> buildWorkflowFilter(WorkflowApplication app, ExportAs as) {
     return as != null
-        ? Optional.of(buildFilterFromStrObject(app, as.getString(), as.getObject()))
+        ? Optional.of(
+            buildFilterFromStrObject(
+                app.expressionFactory(), app.contextFactory(), as.getString(), as.getObject()))
         : Optional.empty();
   }
 
@@ -118,8 +121,12 @@ public class WorkflowUtils {
 
   private static WorkflowFilter buildFilterFromStrObject(
       WorkflowApplication app, String str, Object object) {
-    return app.expressionFactory()
-        .buildFilter(new ExpressionDescriptor(str, object), app.modelFactory());
+    return buildFilterFromStrObject(app.expressionFactory(), app.modelFactory(), str, object);
+  }
+
+  private static WorkflowFilter buildFilterFromStrObject(
+      ExpressionFactory exprFactory, WorkflowModelFactory modelFactory, String str, Object object) {
+    return exprFactory.buildFilter(new ExpressionDescriptor(str, object), modelFactory);
   }
 
   public static WorkflowValueResolver<Map<String, Object>> buildMapResolver(
