@@ -45,6 +45,8 @@ public class WorkflowMutableInstance implements WorkflowInstance {
   protected final WorkflowContext workflowContext;
   protected Instant startedAt;
 
+  protected final Map<String, Object> additionalObjects = new ConcurrentHashMap<String, Object>();
+
   protected AtomicReference<CompletableFuture<WorkflowModel>> futureRef = new AtomicReference<>();
   protected Instant completedAt;
 
@@ -290,4 +292,8 @@ public class WorkflowMutableInstance implements WorkflowInstance {
   }
 
   public void restoreContext(WorkflowContext workflow, TaskContext context) {}
+
+  public <T> T additionalObject(String key, Supplier<T> supplier) {
+    return (T) additionalObjects.computeIfAbsent(key, k -> supplier.get());
+  }
 }

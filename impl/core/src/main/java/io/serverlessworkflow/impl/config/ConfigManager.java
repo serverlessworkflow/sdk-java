@@ -16,11 +16,14 @@
 package io.serverlessworkflow.impl.config;
 
 import io.serverlessworkflow.impl.ServicePriority;
+import java.util.Collection;
 import java.util.Optional;
 
 public interface ConfigManager extends ServicePriority {
 
   <T> Optional<T> config(String propName, Class<T> propClass);
+
+  <T> Collection<T> multiConfig(String propName, Class<T> propClass);
 
   Iterable<String> names();
 }

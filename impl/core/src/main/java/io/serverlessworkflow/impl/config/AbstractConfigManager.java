@@ -17,6 +17,9 @@ package io.serverlessworkflow.impl.config;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Optional;
 
 public abstract class AbstractConfigManager implements ConfigManager {
@@ -54,6 +57,20 @@ public abstract class AbstractConfigManager implements ConfigManager {
       result = convertComplex(value, propClass);
     }
     return propClass.cast(result);
+  }
+
+  @Override
+  public <T> Collection<T> multiConfig(String propName, Class<T> propClass) {
+    String multiValue = get(propName);
+    if (multiValue != null) {
+      Collection<T> result = new ArrayList<>();
+      for (String value : multiValue.split(",")) {
+        result.add(convert(value, propClass));
+      }
+      return result;
+    } else {
+      return Collections.emptyList();
+    }
   }
 
   protected abstract <T> T convertComplex(String value, Class<T> propClass);

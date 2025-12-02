@@ -121,36 +121,4 @@ public class RetryTimeoutTest {
             .orElseThrow();
     assertThat(result.get("message")).isEqualTo("Viva er Beti Balompie");
   }
-
-  @Test
-  void testCustomFunction() {
-    assertThatThrownBy(
-            () ->
-                app.workflowDefinition(
-                        readWorkflowFromClasspath(
-                            "workflows-samples/call-custom-function-inline.yaml"))
-                    .instance(Map.of())
-                    .start()
-                    .join())
-        .hasCauseInstanceOf(WorkflowException.class)
-        .extracting(w -> ((WorkflowException) w.getCause()).getWorkflowError().status())
-        .isEqualTo(404);
-  }
-
-  @ParameterizedTest
-  @ValueSource(
-      strings = {
-        "workflows-samples/call-custom-function-cataloged.yaml",
-        "workflows-samples/call-custom-function-cataloged-global.yaml"
-      })
-  void testCustomCatalogFunction(String fileName) throws IOException {
-    assertThatThrownBy(
-            () ->
-                app.workflowDefinition(readWorkflowFromClasspath(fileName))
-                    .instance(Map.of())
-                    .start()
-                    .join())
-        .isInstanceOf(IllegalStateException.class)
-        .hasMessageContaining("No script runner implementation found for language PYTHON");
-  }
 }

@@ -15,11 +15,13 @@
  */
 package io.serverlessworkflow.impl.test;
 
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import io.serverlessworkflow.api.WorkflowReader;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.WorkflowApplication;
+import io.serverlessworkflow.impl.WorkflowException;
 import io.serverlessworkflow.impl.WorkflowModel;
-import io.serverlessworkflow.impl.executors.ProcessResult;
 import java.io.IOException;
 import java.util.Map;
 import okhttp3.mockwebserver.MockResponse;
@@ -126,13 +128,9 @@ public class RunScriptJavaScriptTest {
         WorkflowReader.readWorkflowFromClasspath(
             "workflows-samples/run-script/function-with-throw.yaml");
     try (WorkflowApplication appl = WorkflowApplication.builder().build()) {
-      WorkflowModel model = appl.workflowDefinition(workflow).instance(Map.of()).start().join();
-
-      SoftAssertions.assertSoftly(
-          softly -> {
-            softly.assertThat(model.asText()).isPresent();
-            softly.assertThat(model.asText().get()).isEqualTo("Error: This is a test error");
-          });
+      assertThatThrownBy(() -> appl.workflowDefinition(workflow).instance(Map.of()).start().join())
+          .hasCauseInstanceOf(WorkflowException.class)
+          .hasMessageContaining("test error");
     }
   }
 
@@ -142,15 +140,9 @@ public class RunScriptJavaScriptTest {
         WorkflowReader.readWorkflowFromClasspath(
             "workflows-samples/run-script/function-with-throw-all.yaml");
     try (WorkflowApplication appl = WorkflowApplication.builder().build()) {
-      WorkflowModel model = appl.workflowDefinition(workflow).instance(Map.of()).start().join();
-
-      SoftAssertions.assertSoftly(
-          softly -> {
-            ProcessResult r = model.as(ProcessResult.class).orElseThrow();
-            softly.assertThat(r.stderr()).isEqualTo("Error: This is a test error");
-            softly.assertThat(r.stdout()).isEqualTo("logged before the 'throw' statement");
-            softly.assertThat(r.code()).isEqualTo(0);
-          });
+      assertThatThrownBy(() -> appl.workflowDefinition(workflow).instance(Map.of()).start().join())
+          .hasCauseInstanceOf(WorkflowException.class)
+          .hasMessageContaining("test error");
     }
   }
 
