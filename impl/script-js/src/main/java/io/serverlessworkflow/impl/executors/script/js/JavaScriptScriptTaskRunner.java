@@ -17,10 +17,12 @@ package io.serverlessworkflow.impl.executors.script.js;
 
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
-import io.serverlessworkflow.impl.scripts.AbstractScriptRunner;
+import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.scripts.ScriptContext;
 import io.serverlessworkflow.impl.scripts.ScriptLanguageId;
 import io.serverlessworkflow.impl.scripts.ScriptRunner;
+import io.serverlessworkflow.impl.scripts.ScriptUtils;
+import io.serverlessworkflow.impl.scripts.StreamSuppliers;
 import java.io.ByteArrayOutputStream;
 import java.util.Map;
 import org.graalvm.polyglot.Context;
@@ -31,7 +33,7 @@ import org.graalvm.polyglot.Value;
  * JavaScript implementation of the {@link ScriptRunner} interface that executes JavaScript scripts
  * using GraalVM Polyglot API.
  */
-public class JavaScriptScriptTaskRunner extends AbstractScriptRunner {
+public class JavaScriptScriptTaskRunner implements ScriptRunner {
 
   @Override
   public ScriptLanguageId identifier() {
@@ -57,12 +59,13 @@ public class JavaScriptScriptTaskRunner extends AbstractScriptRunner {
   }
 
   @Override
-  protected void runScript(
+  public WorkflowModel runScript(
       ScriptContext scriptContext,
-      ByteArrayOutputStream stdout,
-      ByteArrayOutputStream stderr,
       WorkflowContext workflowContext,
-      TaskContext taskContext) {
+      TaskContext taskContext,
+      WorkflowModel model) {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
     try (Context ctx =
         Context.newBuilder()
             .err(stderr)
@@ -74,6 +77,12 @@ public class JavaScriptScriptTaskRunner extends AbstractScriptRunner {
       scriptContext.args().forEach(ctx.getBindings(identifier().getLang())::putMember);
       configureProcessEnv(ctx, scriptContext.envs());
       ctx.eval(Source.create(identifier().getLang(), scriptContext.code()));
+      return ScriptUtils.modelFromOutput(
+          0,
+          StreamSuppliers.from(stdout, stderr),
+          scriptContext.returnType(),
+          workflowContext.definition().application().modelFactory(),
+          model);
     }
   }
 }

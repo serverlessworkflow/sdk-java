@@ -17,7 +17,6 @@
         <version.com.cronutils>9.2.1</version.com.cronutils>
         <version.docker.java>3.7.0</version.docker.java>
         <version.org.graalvm.polyglot>25.0.1</version.org.graalvm.polyglot>
-        <version.black.ninia>4.2.0</version.black.ninia>
     </properties>
     <dependencyManagement>
         <dependencies>
@@ -173,11 +172,6 @@
                 <groupId>org.graalvm.polyglot</groupId>
                 <artifactId>polyglot</artifactId>
                 <version>${version.org.graalvm.polyglot}</version>
-            </dependency>
-            <dependency>
-              <groupId>black.ninia</groupId>
-              <artifactId>jep</artifactId>
-              <version>${version.black.ninia}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

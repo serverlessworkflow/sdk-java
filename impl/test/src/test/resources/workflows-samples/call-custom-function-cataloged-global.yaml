@@ -6,7 +6,7 @@ document:
 use:
     catalogs: 
         global:
-            endpoint: https://github.com/fjtirado/catalog
+            endpoint: https://github.com/serverlessworkflow/catalog
 do:
   - log:
       call: log:1.0.0@global

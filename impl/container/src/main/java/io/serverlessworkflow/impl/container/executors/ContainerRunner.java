@@ -28,24 +28,21 @@ import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientImpl;
 import com.github.dockerjava.core.NameParser;
 import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
-import io.serverlessworkflow.api.types.Container;
-import io.serverlessworkflow.api.types.ContainerLifetime;
-import io.serverlessworkflow.api.types.TimeoutAfter;
+import io.serverlessworkflow.api.types.ContainerLifetime.ContainerCleanupPolicy;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
-import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
+import io.serverlessworkflow.impl.executors.CallableTask;
 import java.io.IOException;
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-class ContainerRunner {
+class ContainerRunner implements CallableTask {
 
   private static final DefaultDockerClientConfig DEFAULT_CONFIG =
       DefaultDockerClientConfig.createDefaultConfigBuilder().build();
@@ -64,14 +61,19 @@ class ContainerRunner {
   private final ContainerCleanupPolicy policy;
   private final String containerImage;
 
-  private ContainerRunner(ContainerRunnerBuilder builder) {
-    this.propertySetters = builder.propertySetters;
-    this.timeout = Optional.ofNullable(builder.timeout);
-    this.policy = builder.policy;
-    this.containerImage = builder.containerImage;
+  public ContainerRunner(
+      Collection<ContainerPropertySetter> propertySetters,
+      Optional<WorkflowValueResolver<Duration>> timeout,
+      ContainerCleanupPolicy policy,
+      String containerImage) {
+    this.propertySetters = propertySetters;
+    this.timeout = timeout;
+    this.policy = policy;
+    this.containerImage = containerImage;
   }
 
-  CompletableFuture<WorkflowModel> start(
+  @Override
+  public CompletableFuture<WorkflowModel> apply(
       WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel input) {
     return CompletableFuture.supplyAsync(
         () -> startSync(workflowContext, taskContext, input),
@@ -214,53 +216,5 @@ class ContainerRunner {
 
   private static RuntimeException failed(String message) {
     return new RuntimeException(message);
-  }
-
-  static ContainerRunnerBuilder builder() {
-    return new ContainerRunnerBuilder();
-  }
-
-  public static class ContainerRunnerBuilder {
-    private Container container;
-    private WorkflowDefinition definition;
-    private WorkflowValueResolver<Duration> timeout;
-    private ContainerCleanupPolicy policy;
-    private String containerImage;
-    private Collection<ContainerPropertySetter> propertySetters = new ArrayList<>();
-
-    private ContainerRunnerBuilder() {}
-
-    ContainerRunnerBuilder withContainer(Container container) {
-      this.container = container;
-      return this;
-    }
-
-    public ContainerRunnerBuilder withWorkflowDefinition(WorkflowDefinition definition) {
-      this.definition = definition;
-      return this;
-    }
-
-    ContainerRunner build() {
-      propertySetters.add(new NamePropertySetter(definition, container));
-      propertySetters.add(new CommandPropertySetter(definition, container));
-      propertySetters.add(new ContainerEnvironmentPropertySetter(definition, container));
-      propertySetters.add(new LifetimePropertySetter(container));
-      propertySetters.add(new PortsPropertySetter(container));
-      propertySetters.add(new VolumesPropertySetter(definition, container));
-
-      containerImage = container.getImage();
-      if (containerImage == null || container.getImage().isBlank()) {
-        throw new IllegalArgumentException("Container image must be provided");
-      }
-      ContainerLifetime lifetime = container.getLifetime();
-      if (lifetime != null) {
-        policy = lifetime.getCleanup();
-        TimeoutAfter afterTimeout = lifetime.getAfter();
-        if (afterTimeout != null)
-          timeout = WorkflowUtils.fromTimeoutAfter(definition.application(), afterTimeout);
-      }
-
-      return new ContainerRunner(this);
-    }
   }
 }

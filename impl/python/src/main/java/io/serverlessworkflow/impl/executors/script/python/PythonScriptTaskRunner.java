@@ -17,50 +17,49 @@ package io.serverlessworkflow.impl.executors.script.python;
 
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
-import io.serverlessworkflow.impl.config.ConfigManager;
-import io.serverlessworkflow.impl.scripts.AbstractScriptRunner;
+import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.scripts.ScriptContext;
 import io.serverlessworkflow.impl.scripts.ScriptLanguageId;
-import java.io.ByteArrayOutputStream;
-import java.util.Collection;
-import jep.Interpreter;
-import jep.SharedInterpreter;
+import io.serverlessworkflow.impl.scripts.ScriptRunner;
+import io.serverlessworkflow.impl.scripts.ScriptUtils;
+import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class PythonScriptTaskRunner extends AbstractScriptRunner {
+public class PythonScriptTaskRunner implements ScriptRunner {
+
+  private static final Logger logger = LoggerFactory.getLogger(PythonScriptTaskRunner.class);
 
   @Override
   public ScriptLanguageId identifier() {
     return ScriptLanguageId.PYTHON;
   }
 
-  private static final String PYTHON_SYS_PATH = "sys.path.append('%s')\n";
-  private static final String SEARCH_PATH_PROPERTY = "io.serverlessworkflow.impl.";
-
   @Override
-  protected void runScript(
+  public WorkflowModel runScript(
       ScriptContext scriptContext,
-      ByteArrayOutputStream stdout,
-      ByteArrayOutputStream stderr,
       WorkflowContext workflowContext,
-      TaskContext taskContext) {
-    Interpreter py =
-        workflowContext
-            .instance()
-            .additionalObject(
-                "pyInterpreter",
-                () -> interpreter(workflowContext.definition().application().configManager()));
-    scriptContext.args().forEach(py::set);
-    py.exec(scriptContext.code());
+      TaskContext taskContext,
+      WorkflowModel model) {
+    ProcessBuilder builder = new ProcessBuilder("python", "-c", scriptContext.code());
+    ScriptUtils.addEnviromment(builder, scriptContext.envs());
+    scriptContext.args().forEach((k, v) -> addArg(builder.command(), k, v));
+    logger.debug("Invoking python with command line {}", builder.command());
+    return ScriptUtils.buildResultFromProcess(
+        workflowContext.definition(),
+        ScriptUtils.uncheckedStart(builder),
+        scriptContext.returnType(),
+        model);
   }
 
-  protected Interpreter interpreter(ConfigManager configManager) {
-    Interpreter py = new SharedInterpreter();
-    Collection<String> searchPaths = configManager.multiConfig(SEARCH_PATH_PROPERTY, String.class);
-    if (!searchPaths.isEmpty()) {
-      StringBuilder sb = new StringBuilder("import sys\n");
-      searchPaths.forEach(path -> sb.append(String.format(PYTHON_SYS_PATH, path)));
-      py.exec(sb.toString());
+  private void addArg(List<String> list, String name, Object value) {
+    if (value instanceof Boolean bool) {
+      if (bool) {
+        list.add("--" + name);
+      }
+    } else if (value != null) {
+      list.add("--" + name);
+      list.add(value.toString());
     }
-    return py;
   }
 }

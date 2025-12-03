@@ -12,9 +12,5 @@
             <groupId>io.serverlessworkflow</groupId>
             <artifactId>serverlessworkflow-impl-core</artifactId>
         </dependency>
-      <dependency>
-         <groupId>black.ninia</groupId>
-          <artifactId>jep</artifactId>
-    </dependency>
     </dependencies>
 </project>

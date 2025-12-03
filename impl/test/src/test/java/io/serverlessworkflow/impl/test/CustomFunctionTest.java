@@ -16,6 +16,7 @@
 package io.serverlessworkflow.impl.test;
 
 import static io.serverlessworkflow.api.WorkflowReader.readWorkflowFromClasspath;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.serverlessworkflow.impl.WorkflowApplication;
@@ -64,6 +65,13 @@ public class CustomFunctionTest {
         "workflows-samples/call-custom-function-cataloged-global.yaml"
       })
   void testCustomCatalogFunction(String fileName) throws IOException {
-    app.workflowDefinition(readWorkflowFromClasspath(fileName)).instance(Map.of()).start().join();
+    assertThat(
+            app.workflowDefinition(readWorkflowFromClasspath(fileName))
+                .instance(Map.of())
+                .start()
+                .join()
+                .asText()
+                .orElseThrow())
+        .contains("Hello");
   }
 }

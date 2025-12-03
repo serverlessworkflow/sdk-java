@@ -183,7 +183,7 @@ public class RunShellExecutorTest {
 
       SoftAssertions.assertSoftly(
           softly -> {
-            softly.assertThat(outputModel.asJavaObject()).isNull();
+            softly.assertThat(outputModel.asJavaObject()).isEqualTo(Map.of());
           });
     }
   }

@@ -15,28 +15,24 @@
  */
 package io.serverlessworkflow.impl.executors;
 
-import io.serverlessworkflow.api.types.RunTaskConfiguration;
-import io.serverlessworkflow.api.types.RunWorkflow;
-import io.serverlessworkflow.api.types.SubflowConfiguration;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowDefinitionId;
 import io.serverlessworkflow.impl.WorkflowModel;
+import io.serverlessworkflow.impl.WorkflowValueResolver;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
-public class RunWorkflowExecutor implements RunnableTask<RunWorkflow> {
+public class RunWorkflowExecutor implements CallableTask {
+  private final WorkflowDefinitionId workflowDefinitionId;
+  private final WorkflowValueResolver<Map<String, Object>> additionalParameters;
 
-  private WorkflowDefinitionId workflowDefinitionId;
-  private Map<String, Object> additionalParameters;
-
-  public void init(RunWorkflow taskConfiguration, WorkflowDefinition definition) {
-    SubflowConfiguration workflowConfig = taskConfiguration.getWorkflow();
-    this.workflowDefinitionId =
-        new WorkflowDefinitionId(
-            workflowConfig.getNamespace(), workflowConfig.getName(), workflowConfig.getVersion());
-    this.additionalParameters = workflowConfig.getInput().getAdditionalProperties();
+  public RunWorkflowExecutor(
+      WorkflowDefinitionId workflowDefinitionId,
+      WorkflowValueResolver<Map<String, Object>> additionalParameters) {
+    this.workflowDefinitionId = workflowDefinitionId;
+    this.additionalParameters = additionalParameters;
   }
 
   @Override
@@ -44,17 +40,16 @@ public class RunWorkflowExecutor implements RunnableTask<RunWorkflow> {
       WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel input) {
     WorkflowDefinition definition =
         workflowContext.definition().application().workflowDefinitions().get(workflowDefinitionId);
-    if (definition != null) {
-      //  TODO add additional parameters
-      return definition.instance(input).start();
-    } else {
+    if (definition == null) {
       throw new IllegalArgumentException(
           "Workflow definition for " + workflowDefinitionId + " has not been found");
     }
-  }
-
-  @Override
-  public boolean accept(Class<? extends RunTaskConfiguration> clazz) {
-    return RunWorkflow.class.equals(clazz);
+    Map<String, Object> args = additionalParameters.apply(workflowContext, taskContext, input);
+    return definition
+        .instance(
+            !args.isEmpty()
+                ? workflowContext.definition().application().modelFactory().from(args)
+                : input)
+        .start();
   }
 }

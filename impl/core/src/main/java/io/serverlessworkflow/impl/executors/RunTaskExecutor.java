@@ -26,15 +26,15 @@ import java.util.ServiceLoader;
 import java.util.ServiceLoader.Provider;
 import java.util.concurrent.CompletableFuture;
 
-public class RunTaskExecutor<T extends RunTaskConfiguration> extends RegularTaskExecutor<RunTask> {
+public class RunTaskExecutor extends RegularTaskExecutor<RunTask> {
 
-  private final RunnableTask<T> runnable;
+  private final CallableTask runnable;
 
-  private static final ServiceLoader<RunnableTask> runnables =
-      ServiceLoader.load(RunnableTask.class);
+  private static final ServiceLoader<RunnableTaskBuilder> runnables =
+      ServiceLoader.load(RunnableTaskBuilder.class);
 
   public static class RunTaskExecutorBuilder extends RegularTaskExecutorBuilder<RunTask> {
-    private RunnableTask runnable;
+    private CallableTask runnable;
 
     protected RunTaskExecutorBuilder(
         WorkflowMutablePosition position, RunTask task, WorkflowDefinition definition) {
@@ -45,11 +45,11 @@ public class RunTaskExecutor<T extends RunTaskConfiguration> extends RegularTask
               .map(Provider::get)
               .filter(r -> r.accept(config.getClass()))
               .findFirst()
+              .map(r -> r.build(config, definition))
               .orElseThrow(
                   () ->
                       new UnsupportedOperationException(
                           "No runnable found for operation " + config.getClass()));
-      runnable.init(config, definition);
     }
 
     @Override
