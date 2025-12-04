@@ -34,6 +34,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Supplier;
 
 public class WorkflowMutableInstance implements WorkflowInstance {
 
@@ -46,6 +47,8 @@ public class WorkflowMutableInstance implements WorkflowInstance {
 
   protected AtomicReference<CompletableFuture<WorkflowModel>> futureRef = new AtomicReference<>();
   protected Instant completedAt;
+
+  protected final Map<String, Object> additionalObjects = new ConcurrentHashMap<String, Object>();
 
   private Lock statusLock = new ReentrantLock();
   private Map<CompletableFuture<TaskContext>, TaskContext> suspended;
@@ -84,14 +87,18 @@ public class WorkflowMutableInstance implements WorkflowInstance {
                     .inputFilter()
                     .map(f -> f.apply(workflowContext, null, input))
                     .orElse(input))
-            .whenComplete(this::whenFailed)
+            .whenComplete(this::whenCompleted)
             .thenApply(this::whenSuccess);
     futureRef.set(future);
     return future;
   }
 
-  private void whenFailed(WorkflowModel result, Throwable ex) {
+  private void whenCompleted(WorkflowModel result, Throwable ex) {
     completedAt = Instant.now();
+    additionalObjects.values().stream()
+        .filter(AutoCloseable.class::isInstance)
+        .map(AutoCloseable.class::cast)
+        .forEach(WorkflowUtils::safeClose);
     if (ex != null) {
       handleException(ex instanceof CompletionException ? ex = ex.getCause() : ex);
     }
@@ -276,6 +283,10 @@ public class WorkflowMutableInstance implements WorkflowInstance {
     } finally {
       statusLock.unlock();
     }
+  }
+
+  public <T> T additionalObject(String key, Supplier<T> supplier) {
+    return (T) additionalObjects.computeIfAbsent(key, k -> supplier.get());
   }
 
   public void restoreContext(WorkflowContext workflow, TaskContext context) {}
