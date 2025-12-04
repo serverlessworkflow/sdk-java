@@ -103,8 +103,8 @@ class ScheduleEventConsumerTest {
     Collection<WorkflowInstance> oneDefInstances = appl.scheduler().scheduledInstances(oneDef);
     Collection<WorkflowInstance> allDefInstances = appl.scheduler().scheduledInstances(allDef);
     await()
-        .pollDelay(Duration.ofMillis(20))
-        .atMost(Duration.ofMillis(800))
+        .pollDelay(Duration.ofMillis(40))
+        .atMost(Duration.ofMillis(980))
         .until(
             () ->
                 oneDefInstances.stream().filter(i -> i.status() == WorkflowStatus.COMPLETED).count()

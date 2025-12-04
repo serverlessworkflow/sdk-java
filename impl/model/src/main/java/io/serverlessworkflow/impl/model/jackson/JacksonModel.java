@@ -40,7 +40,7 @@ public class JacksonModel extends AbstractWorkflowModel {
   public static final JacksonModel FALSE = new JacksonModel(BooleanNode.FALSE);
   public static final JacksonModel NULL = new JacksonModel(NullNode.instance);
 
-  JacksonModel(JsonNode node) {
+  protected JacksonModel(JsonNode node) {
     this.node = node;
   }
 
