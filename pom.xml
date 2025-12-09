@@ -66,7 +66,7 @@
     <version.jsonschema2pojo-maven-plugin>1.2.2</version.jsonschema2pojo-maven-plugin>
     <version.javadoc.plugin>3.12.0</version.javadoc.plugin>
     <version.release.plugin>3.2.0</version.release.plugin>
-    <version.source.plugin>3.3.1</version.source.plugin>
+    <version.source.plugin>3.4.0</version.source.plugin>
     <version.surefire.plugin>3.5.4</version.surefire.plugin>
     <version.nexus.plugin>1.7.0</version.nexus.plugin>
 
