@@ -17,10 +17,9 @@ package io.serverlessworkflow.impl.scripts;
 
 import io.serverlessworkflow.api.types.RunTaskConfiguration;
 import java.util.Map;
-import java.util.Optional;
 
 public record ScriptContext(
     Map<String, Object> args,
     Map<String, Object> envs,
     String code,
-    Optional<RunTaskConfiguration.ProcessReturnType> returnType) {}
+    RunTaskConfiguration.ProcessReturnType returnType) {}

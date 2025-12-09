@@ -15,33 +15,36 @@
  */
 package io.serverlessworkflow.impl.executors;
 
-import io.serverlessworkflow.api.types.RunShell;
-import io.serverlessworkflow.api.types.RunTaskConfiguration;
+import static io.serverlessworkflow.impl.scripts.ScriptUtils.uncheckedStart;
+
 import io.serverlessworkflow.api.types.RunTaskConfiguration.ProcessReturnType;
-import io.serverlessworkflow.api.types.Shell;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
-import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowModel;
-import io.serverlessworkflow.impl.WorkflowModelFactory;
-import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.charset.StandardCharsets;
-import java.util.LinkedHashMap;
+import io.serverlessworkflow.impl.scripts.ScriptUtils;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.stream.Collectors;
 
-public class RunShellExecutor implements RunnableTask<RunShell> {
-
-  private WorkflowValueResolver<String> shellCommand;
-  private Map<WorkflowValueResolver<String>, Optional<WorkflowValueResolver<String>>>
+public class RunShellExecutor implements CallableTask {
+  private final WorkflowValueResolver<String> shellCommand;
+  private final Map<WorkflowValueResolver<String>, Optional<WorkflowValueResolver<String>>>
       shellArguments;
-  private Optional<WorkflowValueResolver<Map<String, Object>>> shellEnv;
-  private Optional<ProcessReturnType> returnType;
+  private final Optional<WorkflowValueResolver<Map<String, Object>>> shellEnv;
+  private final Optional<ProcessReturnType> returnType;
+
+  public RunShellExecutor(
+      WorkflowValueResolver<String> shellCommand,
+      Map<WorkflowValueResolver<String>, Optional<WorkflowValueResolver<String>>> shellArguments,
+      Optional<WorkflowValueResolver<Map<String, Object>>> shellEnv,
+      Optional<ProcessReturnType> returnType) {
+    super();
+    this.shellCommand = shellCommand;
+    this.shellArguments = shellArguments;
+    this.shellEnv = shellEnv;
+    this.returnType = returnType;
+  }
 
   @Override
   public CompletableFuture<WorkflowModel> apply(
@@ -55,26 +58,17 @@ public class RunShellExecutor implements RunnableTask<RunShell> {
           .ifPresent(
               v -> commandBuilder.append("=").append(v.apply(workflowContext, taskContext, model)));
     }
-
     ProcessBuilder builder = new ProcessBuilder("sh", "-c", commandBuilder.toString());
     shellEnv.ifPresent(
-        map -> {
-          for (Map.Entry<String, Object> entry :
-              map.apply(workflowContext, taskContext, model).entrySet()) {
-            builder.environment().put(entry.getKey(), (String) entry.getValue());
-          }
-        });
+        map -> ScriptUtils.addEnviromment(builder, map.apply(workflowContext, taskContext, model)));
 
     return returnType
         .map(
             type ->
                 CompletableFuture.supplyAsync(
                     () ->
-                        buildResultFromProcess(
-                                workflowContext.definition().application().modelFactory(),
-                                uncheckedStart(builder),
-                                type)
-                            .orElse(model),
+                        ScriptUtils.buildResultFromProcess(
+                            workflowContext.definition(), uncheckedStart(builder), type, model),
                     workflowContext.definition().application().executorService()))
         .orElseGet(
             () -> {
@@ -85,78 +79,5 @@ public class RunShellExecutor implements RunnableTask<RunShell> {
                   .submit(() -> uncheckedStart(builder));
               return CompletableFuture.completedFuture(model);
             });
-  }
-
-  private Process uncheckedStart(ProcessBuilder builder) {
-    try {
-      return builder.start();
-    } catch (IOException e) {
-      throw new UncheckedIOException(e);
-    }
-  }
-
-  @Override
-  public void init(RunShell taskConfiguration, WorkflowDefinition definition) {
-    Shell shell = taskConfiguration.getShell();
-    if (!WorkflowUtils.isValid(taskConfiguration.getShell().getCommand())) {
-      throw new IllegalStateException("Missing shell command in RunShell task configuration");
-    }
-    shellCommand =
-        WorkflowUtils.buildStringFilter(
-            definition.application(), taskConfiguration.getShell().getCommand());
-
-    shellArguments =
-        shell.getArguments() != null && shell.getArguments().getAdditionalProperties() != null
-            ? shell.getArguments().getAdditionalProperties().entrySet().stream()
-                .collect(
-                    Collectors.toMap(
-                        e -> WorkflowUtils.buildStringFilter(definition.application(), e.getKey()),
-                        e ->
-                            e.getValue() != null
-                                ? Optional.of(
-                                    WorkflowUtils.buildStringFilter(
-                                        definition.application(), e.getValue().toString()))
-                                : Optional.empty(),
-                        (x, y) -> y,
-                        LinkedHashMap::new))
-            : Map.of();
-
-    shellEnv =
-        shell.getEnvironment() != null && shell.getEnvironment().getAdditionalProperties() != null
-            ? Optional.of(
-                WorkflowUtils.buildMapResolver(
-                    definition.application(), shell.getEnvironment().getAdditionalProperties()))
-            : Optional.empty();
-
-    returnType =
-        taskConfiguration.isAwait() ? Optional.of(taskConfiguration.getReturn()) : Optional.empty();
-  }
-
-  private static Optional<WorkflowModel> buildResultFromProcess(
-      WorkflowModelFactory modelFactory, Process process, ProcessReturnType type) {
-    try {
-      int exitCode = process.waitFor();
-      String stdout = new String(process.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
-      String stderr = new String(process.getErrorStream().readAllBytes(), StandardCharsets.UTF_8);
-      return Optional.of(
-          switch (type) {
-            case ALL ->
-                modelFactory.fromAny(new ProcessResult(exitCode, stdout.trim(), stderr.trim()));
-            case NONE -> modelFactory.fromNull();
-            case CODE -> modelFactory.from(exitCode);
-            case STDOUT -> modelFactory.from(stdout.trim());
-            case STDERR -> modelFactory.from(stderr.trim());
-          });
-    } catch (IOException e) {
-      throw new UncheckedIOException(e);
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-      return Optional.empty();
-    }
-  }
-
-  @Override
-  public boolean accept(Class<? extends RunTaskConfiguration> clazz) {
-    return RunShell.class.equals(clazz);
   }
 }

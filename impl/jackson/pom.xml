@@ -7,7 +7,7 @@
   </parent>
   <artifactId>serverlessworkflow-impl-jackson</artifactId>
   <name> Serverless Workflow :: Impl :: Jackson  </name>
- <dependencies>
+  <dependencies>
     <dependency>
         <groupId>io.serverlessworkflow</groupId>
         <artifactId>serverlessworkflow-impl-core</artifactId>
@@ -36,5 +36,5 @@
         <groupId>io.serverlessworkflow</groupId>
         <artifactId>serverlessworkflow-impl-lifecycle-events</artifactId>
     </dependency>
-    </dependencies>
+  </dependencies>
 </project>

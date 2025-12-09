@@ -143,6 +143,11 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
+                <groupId>io.serverlessworkflow</groupId>
+                <artifactId>serverlessworkflow-impl-script-python</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
                <groupId>com.cronutils</groupId>
                <artifactId>cron-utils</artifactId>
                <version>${version.com.cronutils}</version>
@@ -187,5 +192,6 @@
         <module>container</module>
         <module>test</module>
         <module>script-js</module>
+        <module>python</module>
     </modules>
 </project>

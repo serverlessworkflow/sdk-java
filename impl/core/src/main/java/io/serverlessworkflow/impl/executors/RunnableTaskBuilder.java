@@ -16,17 +16,10 @@
 package io.serverlessworkflow.impl.executors;
 
 import io.serverlessworkflow.api.types.RunTaskConfiguration;
-import io.serverlessworkflow.impl.TaskContext;
-import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowDefinition;
-import io.serverlessworkflow.impl.WorkflowModel;
-import java.util.concurrent.CompletableFuture;
 
-public interface RunnableTask<T extends RunTaskConfiguration> {
-  default void init(T taskConfiguration, WorkflowDefinition definition) {}
-
-  CompletableFuture<WorkflowModel> apply(
-      WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel input);
-
+public interface RunnableTaskBuilder<T extends RunTaskConfiguration> {
   boolean accept(Class<? extends RunTaskConfiguration> clazz);
+
+  CallableTask build(T taskConfiguration, WorkflowDefinition definition);
 }

@@ -15,23 +15,17 @@
  */
 package io.serverlessworkflow.impl.executors.script.js;
 
-import io.serverlessworkflow.api.types.RunTaskConfiguration;
 import io.serverlessworkflow.impl.TaskContext;
-import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
-import io.serverlessworkflow.impl.WorkflowError;
-import io.serverlessworkflow.impl.WorkflowException;
 import io.serverlessworkflow.impl.WorkflowModel;
-import io.serverlessworkflow.impl.WorkflowModelFactory;
-import io.serverlessworkflow.impl.executors.ProcessResult;
 import io.serverlessworkflow.impl.scripts.ScriptContext;
 import io.serverlessworkflow.impl.scripts.ScriptLanguageId;
 import io.serverlessworkflow.impl.scripts.ScriptRunner;
+import io.serverlessworkflow.impl.scripts.ScriptUtils;
+import io.serverlessworkflow.impl.scripts.StreamSuppliers;
 import java.io.ByteArrayOutputStream;
 import java.util.Map;
-import java.util.function.Supplier;
 import org.graalvm.polyglot.Context;
-import org.graalvm.polyglot.PolyglotException;
 import org.graalvm.polyglot.Source;
 import org.graalvm.polyglot.Value;
 
@@ -44,81 +38,6 @@ public class JavaScriptScriptTaskRunner implements ScriptRunner {
   @Override
   public ScriptLanguageId identifier() {
     return ScriptLanguageId.JS;
-  }
-
-  @Override
-  public WorkflowModel runScript(
-      ScriptContext script,
-      WorkflowContext workflowContext,
-      TaskContext taskContext,
-      WorkflowModel input) {
-    WorkflowApplication application = workflowContext.definition().application();
-    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
-    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
-    try (Context ctx =
-        Context.newBuilder()
-            .err(stderr)
-            .out(stdout)
-            .useSystemExit(true)
-            .allowCreateProcess(false)
-            .option("engine.WarnInterpreterOnly", "false")
-            .build()) {
-
-      script
-          .args()
-          .forEach(
-              (key, val) -> {
-                ctx.getBindings(identifier().getLang()).putMember(key, val);
-              });
-      configureProcessEnv(ctx, script.envs());
-      ctx.eval(Source.create(identifier().getLang(), script.code()));
-      return script
-          .returnType()
-          .map(
-              type ->
-                  modelFromOutput(
-                      type, application.modelFactory(), stdout, () -> stderr.toString()))
-          .orElse(input);
-    } catch (PolyglotException e) {
-      if (e.getExitStatus() != 0 || e.isSyntaxError()) {
-        throw new WorkflowException(WorkflowError.runtime(taskContext, e).build());
-      } else {
-        return script
-            .returnType()
-            .map(
-                type ->
-                    modelFromOutput(
-                        type, application.modelFactory(), stdout, () -> buildStderr(e, stderr)))
-            .orElse(input);
-      }
-    }
-  }
-
-  private WorkflowModel modelFromOutput(
-      RunTaskConfiguration.ProcessReturnType returnType,
-      WorkflowModelFactory modelFactory,
-      ByteArrayOutputStream stdout,
-      Supplier<String> stderr) {
-    return switch (returnType) {
-      case ALL ->
-          modelFactory.fromAny(new ProcessResult(0, stdout.toString().trim(), stderr.get().trim()));
-      case NONE -> modelFactory.fromNull();
-      case CODE -> modelFactory.from(0);
-      case STDOUT -> modelFactory.from(stdout.toString().trim());
-      case STDERR -> modelFactory.from(stderr.get().trim());
-    };
-  }
-
-  /*
-   * Gets the stderr message from the PolyglotException or the stderr stream.
-   *
-   * @param e the {@link PolyglotException} thrown during script execution
-   * @param stderr the stderr stream
-   * @return the stderr message
-   */
-  private String buildStderr(PolyglotException e, ByteArrayOutputStream stderr) {
-    String err = stderr.toString();
-    return err.isBlank() ? e.getMessage() : err.trim();
   }
 
   /*
@@ -137,5 +56,33 @@ public class JavaScriptScriptTaskRunner implements ScriptRunner {
       process.getMember("env").putMember(entry.getKey(), entry.getValue());
     }
     bindings.putMember("process", process);
+  }
+
+  @Override
+  public WorkflowModel runScript(
+      ScriptContext scriptContext,
+      WorkflowContext workflowContext,
+      TaskContext taskContext,
+      WorkflowModel model) {
+    ByteArrayOutputStream stdout = new ByteArrayOutputStream();
+    ByteArrayOutputStream stderr = new ByteArrayOutputStream();
+    try (Context ctx =
+        Context.newBuilder()
+            .err(stderr)
+            .out(stdout)
+            .useSystemExit(true)
+            .allowCreateProcess(false)
+            .option("engine.WarnInterpreterOnly", "false")
+            .build()) {
+      scriptContext.args().forEach(ctx.getBindings(identifier().getLang())::putMember);
+      configureProcessEnv(ctx, scriptContext.envs());
+      ctx.eval(Source.create(identifier().getLang(), scriptContext.code()));
+      return ScriptUtils.modelFromOutput(
+          0,
+          StreamSuppliers.from(stdout, stderr),
+          scriptContext.returnType(),
+          workflowContext.definition().application().modelFactory(),
+          model);
+    }
   }
 }

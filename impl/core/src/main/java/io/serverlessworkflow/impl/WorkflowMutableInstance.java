@@ -48,7 +48,7 @@ public class WorkflowMutableInstance implements WorkflowInstance {
   protected AtomicReference<CompletableFuture<WorkflowModel>> futureRef = new AtomicReference<>();
   protected Instant completedAt;
 
-  protected final Map<String, Object> additionalObjects = new ConcurrentHashMap<String, Object>();
+  protected final Map<String, Object> additionalObjects = new ConcurrentHashMap<>();
 
   private Lock statusLock = new ReentrantLock();
   private Map<CompletableFuture<TaskContext>, TaskContext> suspended;

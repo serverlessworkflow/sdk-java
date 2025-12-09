@@ -1,3 +1,0 @@
-io.serverlessworkflow.impl.executors.RunWorkflowExecutor
-io.serverlessworkflow.impl.executors.RunShellExecutor
-io.serverlessworkflow.impl.executors.RunScriptExecutor
