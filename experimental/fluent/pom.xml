@@ -67,5 +67,6 @@
         <module>func</module>
         <module>agentic</module>
         <module>agentic-langchain4j</module>
+        <module>flex-processes</module>
     </modules>
 </project>
