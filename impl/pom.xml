@@ -191,7 +191,7 @@
         <module>function</module>
         <module>container</module>
         <module>test</module>
-        <module>script-js</module>
+        <module>javascript</module>
         <module>python</module>
     </modules>
 </project>
