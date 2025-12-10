@@ -43,6 +43,7 @@ public class FuncForkTaskBuilder extends TaskBaseBuilder<FuncForkTaskBuilder>
     this.forkTask = new ForkTask();
     this.forkTask.setFork(new ForkTaskConfiguration());
     this.items = new ArrayList<>();
+    this.setTask(forkTask);
   }
 
   @Override

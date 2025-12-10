@@ -92,10 +92,6 @@
         <version.org.slf4j>2.0.17</version.org.slf4j>
         <version.org.hibernate.validator>9.1.0.Final</version.org.hibernate.validator>
         <version.org.glassfish.expressly>6.0.0</version.org.glassfish.expressly>
-        <!-- Experimental modules from langchain4j -->
-        <version.dev.langchain4j.beta>1.8.0-beta15</version.dev.langchain4j.beta>
-        <!-- Base langchain4j version -->
-        <version.dev.langchain4j>1.8.0</version.dev.langchain4j>
         <!-- Swagger Parser -->
         <version.io.swagger.parser.v3>2.1.36</version.io.swagger.parser.v3>
         <!-- Checkstyle props -->
@@ -256,11 +252,6 @@
                 <artifactId>awaitility</artifactId>
                 <version>${version.awaitility}</version>
                 <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>dev.langchain4j</groupId>
-                <artifactId>langchain4j-agentic</artifactId>
-                <version>${version.dev.langchain4j.beta}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
