@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>io.serverlessworkflow</groupId>
+        <artifactId>serverlessworkflow-parent</artifactId>
+        <version>8.0.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>serverlessworkflow-bom</artifactId>
+    <packaging>pom</packaging>
+    <name>Serverless Workflow :: BOM</name>
+    <description>Bill of Materials for Serverless Workflow Java SDK</description>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>eu.maveniverse.maven.plugins</groupId>
+                <artifactId>bom-builder3</artifactId>
+                <version>${version.eu.maveniverse.maven.plugins}</version>
+                <executions>
+                    <execution>
+                        <id>build-bom</id>
+                        <goals>
+                            <goal>build-bom</goal>
+                        </goals>
+                        <configuration>
+                            <attach>true</attach>
+                            <bomGroupId>${project.groupId}</bomGroupId>
+                            <bomArtifactId>${project.artifactId}</bomArtifactId>
+                            <bomVersion>${project.version}</bomVersion>
+                            <bomName>${project.name}</bomName>
+                            <bomDescription>${project.description}</bomDescription>
+                            <addVersionProperties>true</addVersionProperties>
+                            <usePropertiesForVersion>true</usePropertiesForVersion>
+                            <reactorDependencies>REACTOR</reactorDependencies>
+                            <useProjectParentAsParent>true</useProjectParentAsParent>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
