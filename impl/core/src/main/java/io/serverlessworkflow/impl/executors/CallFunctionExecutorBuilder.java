@@ -33,7 +33,7 @@ import java.net.URI;
 import java.util.Map;
 import java.util.Optional;
 
-public class CallFunctionExecutor implements CallableTaskBuilder<CallFunction> {
+public class CallFunctionExecutorBuilder implements CallableTaskBuilder<CallFunction> {
 
   private TaskExecutorBuilder<? extends TaskBase> executorBuilder;
   private WorkflowValueResolver<Map<String, Object>> args;
