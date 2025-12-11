@@ -52,7 +52,7 @@ abstract class AbstractRequestSupplier implements RequestSupplier {
   private void validateStatus(TaskContext task, Response response, HttpModelConverter converter) {
     Family statusFamily = response.getStatusInfo().getFamily();
 
-    if (statusFamily != SUCCESSFUL || (!this.redirect && statusFamily == REDIRECTION)) {
+    if (statusFamily != SUCCESSFUL && (!this.redirect || statusFamily != REDIRECTION)) {
       throw new WorkflowException(
           converter
               .errorFromResponse(WorkflowError.communication(response.getStatus(), task), response)

@@ -21,6 +21,9 @@ import io.serverlessworkflow.api.types.InputFrom;
 import io.serverlessworkflow.api.types.OutputAs;
 import io.serverlessworkflow.api.types.SchemaUnion;
 import io.serverlessworkflow.api.types.SecretBasedAuthenticationPolicy;
+import io.serverlessworkflow.api.types.TaskBase;
+import io.serverlessworkflow.api.types.TaskTimeout;
+import io.serverlessworkflow.api.types.Timeout;
 import io.serverlessworkflow.api.types.TimeoutAfter;
 import io.serverlessworkflow.api.types.UriTemplate;
 import io.serverlessworkflow.api.types.Workflow;
@@ -34,6 +37,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.time.Duration;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -206,6 +210,28 @@ public class WorkflowUtils {
     } else {
       return (w, t, f) -> Duration.ZERO;
     }
+  }
+
+  public static Optional<WorkflowValueResolver<Duration>> getTaskTimeout(
+      WorkflowApplication appl, Workflow workflow, TaskBase task) {
+    TaskTimeout timeout = task.getTimeout();
+    if (timeout == null) {
+      return Optional.empty();
+    }
+    Timeout timeoutDef = timeout.getTaskTimeoutDefinition();
+    if (timeoutDef == null && timeout.getTaskTimeoutReference() != null) {
+      timeoutDef =
+          Objects.requireNonNull(
+              Objects.requireNonNull(
+                      workflow.getUse().getTimeouts(),
+                      "Timeout reference "
+                          + timeout.getTaskTimeoutReference()
+                          + " specified, but use timeout was not defined")
+                  .getAdditionalProperties()
+                  .get(timeout.getTaskTimeoutReference()),
+              "Timeout reference " + timeout.getTaskTimeoutReference() + "cannot be found");
+    }
+    return Optional.of(WorkflowUtils.fromTimeoutAfter(appl, timeoutDef.getAfter()));
   }
 
   public static final String secretProp(WorkflowContext context, String secretName, String prop) {

@@ -23,54 +23,64 @@ import io.serverlessworkflow.api.types.HTTPArguments;
 import io.serverlessworkflow.api.types.TaskBase;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowMutablePosition;
+import io.serverlessworkflow.impl.WorkflowUtils;
+import io.serverlessworkflow.impl.WorkflowValueResolver;
+import io.serverlessworkflow.impl.executors.CallableTask;
 import io.serverlessworkflow.impl.executors.CallableTaskBuilder;
-import java.util.Optional;
+import java.net.URI;
 
-public class CallableTaskHttpExecutorBuilder extends AbstractHttpExecutorBuilder
-    implements CallableTaskBuilder<CallHTTP> {
+public class CallableTaskHttpExecutorBuilder implements CallableTaskBuilder<CallHTTP> {
+
+  private HttpExecutorBuilder builder;
+  private WorkflowValueResolver<URI> uriSupplier;
 
   @Override
   public void init(CallHTTP task, WorkflowDefinition definition, WorkflowMutablePosition position) {
+
+    builder = HttpExecutorBuilder.builder(definition);
     final HTTPArguments httpArgs = task.getWith();
     final Endpoint endpoint = httpArgs.getEndpoint();
 
-    this.authProvider =
-        endpoint.getEndpointConfiguration() == null
-            ? Optional.empty()
-            : AuthProviderFactory.getAuth(
-                definition, endpoint.getEndpointConfiguration().getAuthentication());
+    if (endpoint.getEndpointConfiguration() != null) {
+      builder.withAuth(endpoint.getEndpointConfiguration().getAuthentication());
+    }
 
-    this.targetSupplier = getTargetSupplier(definition.resourceLoader().uriSupplier(endpoint));
+    uriSupplier = definition.resourceLoader().uriSupplier(endpoint);
 
     if (httpArgs.getHeaders() != null) {
-      this.headersMap =
+      builder.withHeaders(
           buildMapResolver(
               definition.application(),
               httpArgs.getHeaders().getRuntimeExpression(),
               httpArgs.getHeaders().getHTTPHeaders() != null
                   ? httpArgs.getHeaders().getHTTPHeaders().getAdditionalProperties()
-                  : null);
+                  : null));
     }
 
     if (httpArgs.getQuery() != null) {
-      queryMap =
+      builder.withQueryMap(
           buildMapResolver(
               definition.application(),
               httpArgs.getQuery().getRuntimeExpression(),
               httpArgs.getQuery().getHTTPQuery() != null
                   ? httpArgs.getQuery().getHTTPQuery().getAdditionalProperties()
-                  : null);
+                  : null));
     }
-    this.requestFunction =
-        buildRequestSupplier(
-            httpArgs.getMethod().toUpperCase(),
-            httpArgs.getBody(),
-            httpArgs.isRedirect(),
-            definition.application());
+
+    builder.withBody(httpArgs.getBody());
+    builder.withMethod(httpArgs.getMethod().toUpperCase());
+    builder.redirect(httpArgs.isRedirect());
+    builder.timeout(
+        WorkflowUtils.getTaskTimeout(definition.application(), definition.workflow(), task));
   }
 
   @Override
   public boolean accept(Class<? extends TaskBase> clazz) {
     return clazz.equals(CallHTTP.class);
+  }
+
+  @Override
+  public CallableTask build() {
+    return builder.build(uriSupplier);
   }
 }
