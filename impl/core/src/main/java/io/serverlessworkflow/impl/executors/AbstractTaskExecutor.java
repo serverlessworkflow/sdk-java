@@ -24,8 +24,6 @@ import io.serverlessworkflow.api.types.FlowDirective;
 import io.serverlessworkflow.api.types.Input;
 import io.serverlessworkflow.api.types.Output;
 import io.serverlessworkflow.api.types.TaskBase;
-import io.serverlessworkflow.api.types.TaskTimeout;
-import io.serverlessworkflow.api.types.Timeout;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
@@ -52,7 +50,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
@@ -124,28 +121,7 @@ public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskEx
             getSchemaValidator(application.validatorFactory(), resourceLoader, export.getSchema());
       }
       this.ifFilter = application.expressionFactory().buildIfFilter(task);
-      this.timeout = getTaskTimeout();
-    }
-
-    private Optional<WorkflowValueResolver<Duration>> getTaskTimeout() {
-      TaskTimeout timeout = task.getTimeout();
-      if (timeout == null) {
-        return Optional.empty();
-      }
-      Timeout timeoutDef = timeout.getTaskTimeoutDefinition();
-      if (timeoutDef == null && timeout.getTaskTimeoutReference() != null) {
-        timeoutDef =
-            Objects.requireNonNull(
-                Objects.requireNonNull(
-                        workflow.getUse().getTimeouts(),
-                        "Timeout reference "
-                            + timeout.getTaskTimeoutReference()
-                            + " specified, but use timeout was not defined")
-                    .getAdditionalProperties()
-                    .get(timeout.getTaskTimeoutReference()),
-                "Timeout reference " + timeout.getTaskTimeoutReference() + "cannot be found");
-      }
-      return Optional.of(WorkflowUtils.fromTimeoutAfter(application, timeoutDef.getAfter()));
+      this.timeout = WorkflowUtils.getTaskTimeout(application, workflow, task);
     }
 
     protected final TransitionInfoBuilder next(
