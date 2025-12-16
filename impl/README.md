@@ -39,13 +39,20 @@ This reference implementation can run workflows consisting of:
 * `Try` (with `Catch`/`Retry`)
 * `Wait`
 * `Call`
-
   * **HTTP**
-
     * Basic auth
     * Bearer auth
     * OAuth2 / OIDC auth
     * Digest auth (via Fluent DSL)
+  * **OpenAPI**
+  * **Function**
+* `Run`
+  * **Container**
+  * **Script**
+    * `Python`
+    * `Javascript`
+  * **Workflow** 
+  * **Shell**
 
 **Schema Validation**
 
@@ -83,14 +90,27 @@ This SDK is modular by design—pull in only what you need:
     * **serverlessworkflow-impl-model** Jackson model implementation
     * **serverlessworkflow-impl-validation** Schema validation implementation
     * **serverlessworkflow-impl-lifecycle-events** Enable publication of lifecycle events as Json cloud events. 
+    * **serverlessworkflow-impl-function** Function support. 
+    * **serverlessworkflow-impl-template-resolver** JaxRS URI template implementation. 
     * **serverlessworkflow-impl-json** Json common utilities shared by all modules in this list
     
-    
 * **serverlessworkflow-impl-http**
-  HTTP `Call` task handler.
+  HTTP `Call` task handler, based on Jax-RS client
 
 * **serverlessworkflow-impl-jackson-jwt**
-  OAuth2/OIDC helpers for HTTP calls.
+  Optimized entity converter for Jackson model and OAuth2/OIDC helpers for HTTP calls.
+  
+* **serverlessworkflow-impl-openapi**
+  OpenAPI support
+  
+* **serverlessworkflow-impl-script-python**
+  Python support
+  
+* **serverlessworkflow-impl-script-js**
+  Javascript support
+  
+* **serverlessworkflow-impl-container**
+  Docker container support  
 
 There are also companion modules/docs for:
 
