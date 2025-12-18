@@ -26,8 +26,11 @@ import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
+import io.serverlessworkflow.impl.auth.AuthProviderFactory;
+import io.serverlessworkflow.impl.auth.AuthUtils;
 import io.serverlessworkflow.impl.expressions.ExpressionDescriptor;
 import java.net.URI;
+import java.util.Optional;
 import java.util.function.Function;
 
 public abstract class ResourceLoader implements AutoCloseable {
@@ -102,10 +105,22 @@ public abstract class ResourceLoader implements AutoCloseable {
                 workflowContext,
                 taskContext,
                 model == null ? application.modelFactory().fromNull() : model),
-        function);
+        function,
+        AuthProviderFactory.getAuth(
+                workflowContext.definition(), endPoint.getEndpointConfiguration())
+            .map(
+                auth ->
+                    AuthUtils.authHeaderValue(
+                        auth.authScheme(),
+                        auth.authParameter(workflowContext, taskContext, model))));
   }
 
-  public abstract <T> T loadURI(URI uri, Function<ExternalResourceHandler, T> function);
+  public <T> T loadURI(URI uri, Function<ExternalResourceHandler, T> function) {
+    return loadURI(uri, function, Optional.empty());
+  }
+
+  protected abstract <T> T loadURI(
+      URI uri, Function<ExternalResourceHandler, T> function, Optional<String> auth);
 
   private class ExpressionURISupplier implements WorkflowValueResolver<URI> {
     private WorkflowValueResolver<String> expr;

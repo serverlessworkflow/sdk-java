@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.executors.http;
+package io.serverlessworkflow.impl.auth;
 
 import static io.serverlessworkflow.impl.WorkflowUtils.checkSecret;
 import static io.serverlessworkflow.impl.WorkflowUtils.secretProp;
-import static io.serverlessworkflow.impl.executors.http.SecretKeys.PASSWORD;
-import static io.serverlessworkflow.impl.executors.http.SecretKeys.USER;
+import static io.serverlessworkflow.impl.auth.AuthUtils.PASSWORD;
+import static io.serverlessworkflow.impl.auth.AuthUtils.USER;
 
 import io.serverlessworkflow.api.types.BasicAuthenticationPolicy;
 import io.serverlessworkflow.api.types.Workflow;
@@ -30,7 +30,7 @@ import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
 import java.util.Base64;
 
-class BasicAuthProvider extends AbstractAuthProvider {
+class BasicAuthProvider implements AuthProvider {
 
   private static final String USER_PASSWORD = "%s:%s";
 
@@ -57,7 +57,7 @@ class BasicAuthProvider extends AbstractAuthProvider {
   }
 
   @Override
-  protected String authParameter(WorkflowContext workflow, TaskContext task, WorkflowModel model) {
+  public String authParameter(WorkflowContext workflow, TaskContext task, WorkflowModel model) {
     return new String(
         Base64.getEncoder()
             .encode(
@@ -69,7 +69,7 @@ class BasicAuthProvider extends AbstractAuthProvider {
   }
 
   @Override
-  protected String authScheme() {
+  public String authScheme() {
     return "Basic";
   }
 }

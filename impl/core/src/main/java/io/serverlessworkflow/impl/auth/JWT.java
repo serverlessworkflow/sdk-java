@@ -13,15 +13,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.executors.http.auth.jwt;
+package io.serverlessworkflow.impl.auth;
 
-public interface JWTConverter {
+import java.time.Instant;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
-  /**
-   * Converts a JWT token string into a JWT object.
-   *
-   * @param token the JWT token string
-   * @return a JWT object containing the token and its claims
-   */
-  JWT fromToken(String token) throws IllegalArgumentException;
+public interface JWT {
+
+  String token();
+
+  List<String> audience();
+
+  Map<String, Object> claims();
+
+  <T> Optional<T> claim(String name, Class<T> type);
+
+  Optional<Instant> expiresAt();
+
+  Map<String, Object> header();
+
+  Optional<Instant> issuedAt();
+
+  Optional<String> issuer();
+
+  Optional<String> subject();
+
+  Optional<String> type();
 }

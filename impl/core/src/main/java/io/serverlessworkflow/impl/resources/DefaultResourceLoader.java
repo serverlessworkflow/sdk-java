@@ -37,8 +37,9 @@ public class DefaultResourceLoader extends ResourceLoader {
   }
 
   @Override
-  public <T> T loadURI(URI uri, Function<ExternalResourceHandler, T> function) {
-    ExternalResourceHandler resourceHandler = buildFromURI(uri);
+  public <T> T loadURI(
+      URI uri, Function<ExternalResourceHandler, T> function, Optional<String> auth) {
+    ExternalResourceHandler resourceHandler = buildFromURI(uri, auth);
     return (T)
         resourceCache
             .compute(
@@ -61,13 +62,13 @@ public class DefaultResourceLoader extends ResourceLoader {
     }
   }
 
-  private ExternalResourceHandler buildFromURI(URI uri) {
+  private ExternalResourceHandler buildFromURI(URI uri, Optional<String> auth) {
     String scheme = uri.getScheme();
     if (scheme == null || scheme.equalsIgnoreCase("file")) {
       return fileResource(uri.getPath());
     } else if (scheme.equalsIgnoreCase("http") || scheme.equalsIgnoreCase("https")) {
       try {
-        return new HttpResource(uri.toURL());
+        return new HttpResource(uri.toURL(), auth);
       } catch (MalformedURLException e) {
         throw new IllegalArgumentException(e);
       }

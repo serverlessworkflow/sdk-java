@@ -13,15 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.executors.http.auth.requestbuilder;
+package io.serverlessworkflow.impl.auth;
 
-import io.serverlessworkflow.impl.WorkflowValueResolver;
-import java.net.URI;
-import java.util.Map;
+import io.serverlessworkflow.impl.TaskContext;
+import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.WorkflowModel;
 
-record HttpRequestInfo(
-    Map<String, WorkflowValueResolver<String>> headers,
-    Map<String, WorkflowValueResolver<String>> queryParams,
-    WorkflowValueResolver<URI> uri,
-    String grantType,
-    String contentType) {}
+public interface AccessTokenProvider {
+  JWT validateAndGet(WorkflowContext workflow, TaskContext context, WorkflowModel model);
+}

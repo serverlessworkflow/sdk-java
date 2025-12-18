@@ -19,6 +19,8 @@ import io.serverlessworkflow.api.types.ReferenceableAuthenticationPolicy;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
+import io.serverlessworkflow.impl.auth.AuthProvider;
+import io.serverlessworkflow.impl.auth.AuthProviderFactory;
 import jakarta.ws.rs.HttpMethod;
 import jakarta.ws.rs.client.Invocation;
 import jakarta.ws.rs.client.WebTarget;

@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.executors.http.auth.requestbuilder;
+package io.serverlessworkflow.impl.auth;
 
-import static io.serverlessworkflow.impl.executors.http.SecretKeys.AUTHORITY;
+import static io.serverlessworkflow.impl.auth.AuthUtils.AUTHORITY;
 
 import io.serverlessworkflow.api.types.OAuth2AuthenticationData;
 import io.serverlessworkflow.impl.WorkflowApplication;
@@ -25,7 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class OpenIdRequestBuilder extends AbstractAuthRequestBuilder<OAuth2AuthenticationData> {
+class OpenIdRequestBuilder extends AbstractAuthRequestBuilder<OAuth2AuthenticationData> {
 
   public OpenIdRequestBuilder(WorkflowApplication application) {
     super(application);

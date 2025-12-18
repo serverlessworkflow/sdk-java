@@ -15,26 +15,33 @@
  */
 package io.serverlessworkflow.impl.resources;
 
+import io.serverlessworkflow.impl.auth.AuthUtils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLConnection;
 import java.time.Instant;
 import java.util.Objects;
+import java.util.Optional;
 
 public class HttpResource implements ExternalResourceHandler {
 
-  private URL url;
+  private final URL url;
+  private final Optional<String> auth;
 
-  public HttpResource(URL url) {
+  public HttpResource(URL url, Optional<String> auth) {
     this.url = GitHubHelper.handleURL(url);
+    this.auth = auth;
   }
 
   @Override
   public InputStream open() {
     try {
-      return url.openStream();
+      URLConnection connection = url.openConnection();
+      auth.ifPresent(s -> connection.setRequestProperty(AuthUtils.AUTH_HEADER_NAME, s));
+      return connection.getInputStream();
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }

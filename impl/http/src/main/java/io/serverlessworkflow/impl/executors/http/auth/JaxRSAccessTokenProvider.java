@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.executors.http.auth.requestbuilder;
+package io.serverlessworkflow.impl.executors.http.auth;
 
 import static io.serverlessworkflow.api.types.OAuth2TokenRequest.Oauth2TokenRequestEncoding.APPLICATION_X_WWW_FORM_URLENCODED;
 
@@ -22,9 +22,11 @@ import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowError;
 import io.serverlessworkflow.impl.WorkflowException;
 import io.serverlessworkflow.impl.WorkflowModel;
+import io.serverlessworkflow.impl.auth.AccessTokenProvider;
+import io.serverlessworkflow.impl.auth.HttpRequestInfo;
+import io.serverlessworkflow.impl.auth.JWT;
+import io.serverlessworkflow.impl.auth.JWTConverter;
 import io.serverlessworkflow.impl.executors.http.HttpClientResolver;
-import io.serverlessworkflow.impl.executors.http.auth.jwt.JWT;
-import io.serverlessworkflow.impl.executors.http.auth.jwt.JWTConverter;
 import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.Entity;
@@ -39,13 +41,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class AccessTokenProvider {
+class JaxRSAccessTokenProvider implements AccessTokenProvider {
 
   private final List<String> issuers;
   private final HttpRequestInfo requestInfo;
   private final JWTConverter jwtConverter;
 
-  AccessTokenProvider(HttpRequestInfo requestInfo, List<String> issuers, JWTConverter converter) {
+  JaxRSAccessTokenProvider(
+      HttpRequestInfo requestInfo, List<String> issuers, JWTConverter converter) {
     this.requestInfo = requestInfo;
     this.issuers = issuers;
     this.jwtConverter = converter;

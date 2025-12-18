@@ -13,20 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.executors.http;
+package io.serverlessworkflow.impl.auth;
 
 import io.serverlessworkflow.api.types.AuthenticationPolicyUnion;
+import io.serverlessworkflow.api.types.EndpointConfiguration;
 import io.serverlessworkflow.api.types.ReferenceableAuthenticationPolicy;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import java.util.Optional;
 
-class AuthProviderFactory {
+public class AuthProviderFactory {
 
   private AuthProviderFactory() {}
 
-  static final String AUTH_HEADER_NAME = "Authorization";
+  public static Optional<AuthProvider> getAuth(
+      WorkflowDefinition definition, EndpointConfiguration configuration) {
+    return configuration == null
+        ? Optional.empty()
+        : getAuth(definition, configuration.getAuthentication());
+  }
 
   public static Optional<AuthProvider> getAuth(
       WorkflowDefinition definition, ReferenceableAuthenticationPolicy auth) {
@@ -64,9 +70,8 @@ class AuthProviderFactory {
           new BearerAuthProvider(
               app, workflow, authenticationPolicy.getBearerAuthenticationPolicy()));
     } else if (authenticationPolicy.getDigestAuthenticationPolicy() != null) {
-      return Optional.of(
-          new DigestAuthProvider(
-              app, workflow, authenticationPolicy.getDigestAuthenticationPolicy()));
+      // TODO implement digest authentication
+      return Optional.empty();
     } else if (authenticationPolicy.getOAuth2AuthenticationPolicy() != null) {
       return Optional.of(
           new OAuth2AuthProvider(

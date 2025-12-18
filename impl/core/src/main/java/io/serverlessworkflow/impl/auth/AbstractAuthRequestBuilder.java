@@ -13,16 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.executors.http.auth.requestbuilder;
+package io.serverlessworkflow.impl.auth;
 
 import static io.serverlessworkflow.api.types.OAuth2AuthenticationDataClient.ClientAuthentication.CLIENT_SECRET_POST;
 import static io.serverlessworkflow.impl.WorkflowUtils.isValid;
-import static io.serverlessworkflow.impl.executors.http.SecretKeys.AUDIENCES;
-import static io.serverlessworkflow.impl.executors.http.SecretKeys.AUTHENTICATION;
-import static io.serverlessworkflow.impl.executors.http.SecretKeys.CLIENT;
-import static io.serverlessworkflow.impl.executors.http.SecretKeys.ENCODING;
-import static io.serverlessworkflow.impl.executors.http.SecretKeys.REQUEST;
-import static io.serverlessworkflow.impl.executors.http.SecretKeys.SCOPES;
+import static io.serverlessworkflow.impl.auth.AuthUtils.AUDIENCES;
+import static io.serverlessworkflow.impl.auth.AuthUtils.AUTHENTICATION;
+import static io.serverlessworkflow.impl.auth.AuthUtils.CLIENT;
+import static io.serverlessworkflow.impl.auth.AuthUtils.ENCODING;
+import static io.serverlessworkflow.impl.auth.AuthUtils.REQUEST;
+import static io.serverlessworkflow.impl.auth.AuthUtils.SCOPES;
 
 import io.serverlessworkflow.api.types.OAuth2AuthenticationData;
 import io.serverlessworkflow.api.types.OAuth2AuthenticationDataClient;

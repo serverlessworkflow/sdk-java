@@ -13,24 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.executors.http;
+package io.serverlessworkflow.impl.auth;
 
-import io.serverlessworkflow.api.types.OpenIdConnectAuthenticationPolicy;
+import io.serverlessworkflow.api.types.OAuth2AuthenticationPolicy;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.WorkflowApplication;
-import io.serverlessworkflow.impl.executors.http.auth.requestbuilder.OpenIdRequestBuilder;
 
-class OpenIdAuthProvider extends CommonOAuthProvider {
+class OAuth2AuthProvider extends CommonOAuthProvider {
 
-  public OpenIdAuthProvider(
-      WorkflowApplication application,
-      Workflow workflow,
-      OpenIdConnectAuthenticationPolicy authPolicy) {
+  public OAuth2AuthProvider(
+      WorkflowApplication application, Workflow workflow, OAuth2AuthenticationPolicy authPolicy) {
     super(
         accessToken(
             workflow,
-            authPolicy.getOidc().getOpenIdConnectAuthenticationProperties(),
-            authPolicy.getOidc().getOpenIdConnectAuthenticationPolicySecret(),
-            new OpenIdRequestBuilder(application)));
+            authPolicy.getOauth2().getOAuth2ConnectAuthenticationProperties(),
+            authPolicy.getOauth2().getOAuth2AuthenticationPolicySecret(),
+            new OAuthRequestBuilder(application)));
   }
 }
