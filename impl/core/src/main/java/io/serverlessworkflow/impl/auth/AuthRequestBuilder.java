@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.executors.http;
+package io.serverlessworkflow.impl.auth;
 
-import io.serverlessworkflow.impl.TaskContext;
-import io.serverlessworkflow.impl.WorkflowContext;
-import io.serverlessworkflow.impl.WorkflowModel;
-import jakarta.ws.rs.client.Invocation;
+import io.serverlessworkflow.api.types.OAuth2AuthenticationData;
+import java.util.Map;
 
-interface AuthProvider {
-  Invocation.Builder build(
-      Invocation.Builder builder, WorkflowContext workflow, TaskContext task, WorkflowModel model);
+public interface AuthRequestBuilder<T extends OAuth2AuthenticationData> {
+
+  HttpRequestInfo apply(T authenticationData);
+
+  HttpRequestInfo apply(Map<String, Object> authenticationData);
 }

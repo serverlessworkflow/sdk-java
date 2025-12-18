@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.executors.http;
+package io.serverlessworkflow.impl.auth;
 
 import static io.serverlessworkflow.impl.WorkflowUtils.checkSecret;
 import static io.serverlessworkflow.impl.WorkflowUtils.secretProp;
-import static io.serverlessworkflow.impl.executors.http.SecretKeys.TOKEN;
+import static io.serverlessworkflow.impl.auth.AuthUtils.TOKEN;
 
 import io.serverlessworkflow.api.types.BearerAuthenticationPolicy;
 import io.serverlessworkflow.api.types.BearerAuthenticationPolicyConfiguration;
@@ -29,7 +29,7 @@ import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
 
-class BearerAuthProvider extends AbstractAuthProvider {
+class BearerAuthProvider implements AuthProvider {
 
   private WorkflowValueResolver<String> tokenFilter;
 
@@ -48,12 +48,12 @@ class BearerAuthProvider extends AbstractAuthProvider {
   }
 
   @Override
-  protected String authParameter(WorkflowContext workflow, TaskContext task, WorkflowModel model) {
+  public String authParameter(WorkflowContext workflow, TaskContext task, WorkflowModel model) {
     return tokenFilter.apply(workflow, task, model);
   }
 
   @Override
-  protected String authScheme() {
+  public String authScheme() {
     return "Bearer";
   }
 }

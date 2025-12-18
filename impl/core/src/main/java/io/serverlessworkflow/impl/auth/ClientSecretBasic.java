@@ -13,23 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.executors.http.auth.requestbuilder;
+package io.serverlessworkflow.impl.auth;
 
-import static io.serverlessworkflow.impl.executors.http.SecretKeys.CLIENT;
-import static io.serverlessworkflow.impl.executors.http.SecretKeys.GRANT;
-import static io.serverlessworkflow.impl.executors.http.SecretKeys.ID;
-import static io.serverlessworkflow.impl.executors.http.SecretKeys.PASSWORD;
-import static io.serverlessworkflow.impl.executors.http.SecretKeys.SECRET;
-import static io.serverlessworkflow.impl.executors.http.SecretKeys.USER;
+import static io.serverlessworkflow.impl.auth.AuthUtils.CLIENT;
+import static io.serverlessworkflow.impl.auth.AuthUtils.GRANT;
+import static io.serverlessworkflow.impl.auth.AuthUtils.ID;
+import static io.serverlessworkflow.impl.auth.AuthUtils.PASSWORD;
+import static io.serverlessworkflow.impl.auth.AuthUtils.SECRET;
+import static io.serverlessworkflow.impl.auth.AuthUtils.USER;
 
 import io.serverlessworkflow.api.types.OAuth2AuthenticationData;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowUtils;
+import java.util.Base64;
 import java.util.Map;
 
-class ClientSecretPost extends ClientSecretHandler {
+class ClientSecretBasic extends ClientSecretHandler {
 
-  protected ClientSecretPost(
+  protected ClientSecretBasic(
       WorkflowApplication application, HttpRequestInfoBuilder requestBuilder) {
     super(application, requestBuilder);
   }
@@ -37,14 +38,8 @@ class ClientSecretPost extends ClientSecretHandler {
   @Override
   protected void clientCredentials(OAuth2AuthenticationData authenticationData) {
     requestBuilder
-        .withGrantType(authenticationData.getGrant().value())
-        .addQueryParam(
-            "client_id",
-            WorkflowUtils.buildStringFilter(application, authenticationData.getClient().getId()))
-        .addQueryParam(
-            "client_secret",
-            WorkflowUtils.buildStringFilter(
-                application, authenticationData.getClient().getSecret()));
+        .addHeader("Authorization", "Basic " + encodedAuth(authenticationData))
+        .withGrantType(authenticationData.getGrant().value());
   }
 
   @Override
@@ -61,17 +56,30 @@ class ClientSecretPost extends ClientSecretHandler {
 
   @Override
   protected void clientCredentials(Map<String, Object> secret) {
-    Map<String, Object> client = (Map<String, Object>) secret.get(CLIENT);
     requestBuilder
         .withGrantType((String) secret.get(GRANT))
-        .addQueryParam("client_id", (String) client.get(ID))
-        .addQueryParam("client_secret", (String) client.get(SECRET));
+        .addHeader("Authorization", "Basic " + encodedAuth(secret));
   }
 
   @Override
   protected void password(Map<String, Object> secret) {
     clientCredentials(secret);
-    requestBuilder.addQueryParam("username", (String) secret.get(USER));
-    requestBuilder.addQueryParam("password", (String) secret.get(PASSWORD));
+    requestBuilder
+        .addQueryParam("username", (String) secret.get(USER))
+        .addQueryParam("password", (String) secret.get(PASSWORD));
+  }
+
+  private String encodedAuth(Map<String, Object> secret) {
+    Map<String, Object> client = (Map<String, Object>) secret.get(CLIENT);
+    return encodedAuth((String) client.get(ID), (String) client.get(SECRET));
+  }
+
+  private String encodedAuth(OAuth2AuthenticationData authenticationData) {
+    return encodedAuth(
+        authenticationData.getClient().getId(), authenticationData.getClient().getSecret());
+  }
+
+  private String encodedAuth(String id, String secret) {
+    return Base64.getEncoder().encodeToString((id + ":" + secret).getBytes());
   }
 }

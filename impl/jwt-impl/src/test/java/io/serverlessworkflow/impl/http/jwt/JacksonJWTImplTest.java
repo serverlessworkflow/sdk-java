@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import io.serverlessworkflow.impl.executors.http.auth.jwt.JWT;
+import io.serverlessworkflow.impl.auth.JWT;
 import io.serverlessworkflow.impl.executors.http.oauth.jackson.JacksonJWTConverter;
 import java.time.Instant;
 import java.util.List;

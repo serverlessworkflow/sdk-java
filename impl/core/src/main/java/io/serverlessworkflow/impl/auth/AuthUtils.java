@@ -13,12 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.executors.http;
+package io.serverlessworkflow.impl.auth;
 
-public class SecretKeys {
+public class AuthUtils {
 
-  private SecretKeys() {}
+  private AuthUtils() {}
 
+  public static final String AUTH_HEADER_NAME = "Authorization";
   public static final String GRANT = "grant";
   public static final String USER = "username";
   public static final String CLIENT = "client";
@@ -34,4 +35,10 @@ public class SecretKeys {
   public static final String REQUEST = "request";
   public static final String ENCODING = "encoding";
   public static final String AUTHENTICATION = "authentication";
+
+  private static final String AUTH_HEADER_FORMAT = "%s %s";
+
+  public static String authHeaderValue(String scheme, String parameter) {
+    return String.format(AUTH_HEADER_FORMAT, scheme, parameter);
+  }
 }

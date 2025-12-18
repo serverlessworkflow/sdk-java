@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.executors.http.auth.requestbuilder;
+package io.serverlessworkflow.impl.auth;
 
 import static io.serverlessworkflow.impl.WorkflowUtils.concatURI;
-import static io.serverlessworkflow.impl.executors.http.SecretKeys.AUTHORITY;
+import static io.serverlessworkflow.impl.auth.AuthUtils.AUTHORITY;
 
 import io.serverlessworkflow.api.types.OAuth2AuthenticationPropertiesEndpoints;
 import io.serverlessworkflow.api.types.OAuth2ConnectAuthenticationProperties;
@@ -26,7 +26,7 @@ import io.serverlessworkflow.impl.WorkflowValueResolver;
 import java.net.URI;
 import java.util.Map;
 
-public class OAuthRequestBuilder
+class OAuthRequestBuilder
     extends AbstractAuthRequestBuilder<OAuth2ConnectAuthenticationProperties> {
 
   private static String DEFAULT_TOKEN_PATH = "oauth2/token";

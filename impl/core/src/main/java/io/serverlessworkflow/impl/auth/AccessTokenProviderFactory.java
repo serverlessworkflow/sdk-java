@@ -13,32 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.executors.http.auth.jwt;
+package io.serverlessworkflow.impl.auth;
 
-import java.time.Instant;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
-public interface JWT {
+public interface AccessTokenProviderFactory {
 
-  String token();
-
-  List<String> audience();
-
-  Map<String, Object> claims();
-
-  <T> Optional<T> claim(String name, Class<T> type);
-
-  Optional<Instant> expiresAt();
-
-  Map<String, Object> header();
-
-  Optional<Instant> issuedAt();
-
-  Optional<String> issuer();
-
-  Optional<String> subject();
-
-  Optional<String> type();
+  AccessTokenProvider build(
+      HttpRequestInfo requestInfo, List<String> issuers, JWTConverter converter);
 }

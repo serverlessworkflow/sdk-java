@@ -19,6 +19,8 @@ import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
+import io.serverlessworkflow.impl.auth.AuthProvider;
+import io.serverlessworkflow.impl.auth.AuthUtils;
 import io.serverlessworkflow.impl.executors.CallableTask;
 import jakarta.ws.rs.client.Invocation.Builder;
 import jakarta.ws.rs.client.WebTarget;
@@ -76,9 +78,22 @@ public class HttpExecutor implements CallableTask {
         h -> h.apply(workflow, taskContext, input).forEach((k, v) -> request.header(k, v)));
     return CompletableFuture.supplyAsync(
         () -> {
-          authProvider.ifPresent(auth -> auth.build(request, workflow, taskContext, input));
+          authProvider.ifPresent(
+              auth -> addAuthHeader(auth, request, workflow, taskContext, input));
           return requestFunction.apply(request, workflow, taskContext, input);
         },
         workflow.definition().application().executorService());
+  }
+
+  private void addAuthHeader(
+      AuthProvider auth,
+      Builder request,
+      WorkflowContext workflow,
+      TaskContext task,
+      WorkflowModel model) {
+    String scheme = auth.authScheme();
+    String parameter = auth.authParameter(workflow, task, model);
+    task.authorization(scheme, parameter);
+    request.header(AuthUtils.AUTH_HEADER_NAME, AuthUtils.authHeaderValue(scheme, parameter));
   }
 }

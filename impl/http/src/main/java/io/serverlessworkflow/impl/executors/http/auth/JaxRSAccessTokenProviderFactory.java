@@ -13,14 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.executors.http.auth.requestbuilder;
+package io.serverlessworkflow.impl.executors.http.auth;
 
-import io.serverlessworkflow.api.types.OAuth2AuthenticationData;
-import java.util.Map;
+import io.serverlessworkflow.impl.auth.AccessTokenProvider;
+import io.serverlessworkflow.impl.auth.AccessTokenProviderFactory;
+import io.serverlessworkflow.impl.auth.HttpRequestInfo;
+import io.serverlessworkflow.impl.auth.JWTConverter;
+import java.util.List;
 
-public interface AuthRequestBuilder<T extends OAuth2AuthenticationData> {
+public class JaxRSAccessTokenProviderFactory implements AccessTokenProviderFactory {
 
-  HttpRequestInfo apply(T authenticationData);
-
-  HttpRequestInfo apply(Map<String, Object> authenticationData);
+  @Override
+  public AccessTokenProvider build(
+      HttpRequestInfo requestInfo, List<String> issuers, JWTConverter converter) {
+    return new JaxRSAccessTokenProvider(requestInfo, issuers, converter);
+  }
 }

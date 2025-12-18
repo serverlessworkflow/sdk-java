@@ -13,27 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.executors.http;
+package io.serverlessworkflow.impl.auth;
 
-import io.serverlessworkflow.api.types.DigestAuthenticationPolicy;
-import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.TaskContext;
-import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
-import jakarta.ws.rs.client.Invocation.Builder;
 
-public class DigestAuthProvider implements AuthProvider {
+public interface AuthProvider {
 
-  public DigestAuthProvider(
-      WorkflowApplication app, Workflow workflow, DigestAuthenticationPolicy authPolicy) {
-    throw new UnsupportedOperationException("Digest auth not supported yet");
-  }
+  String authScheme();
 
-  @Override
-  public Builder build(
-      Builder builder, WorkflowContext workflow, TaskContext task, WorkflowModel model) {
-    // TODO Auto-generated method stub
-    return builder;
-  }
+  String authParameter(WorkflowContext workflow, TaskContext task, WorkflowModel model);
 }
