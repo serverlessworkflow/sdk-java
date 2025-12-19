@@ -1,0 +1,24 @@
+document:
+  dsl: 1.0.0-alpha1
+  namespace: test
+  name: digest-properties-auth
+  version: 1.0.0
+use:
+  secrets:
+   - mySecret
+do:
+    - getPet:
+        call: http
+        with:
+          headers:
+            content-type: application/json
+          method: get
+          endpoint:
+            uri:  http://localhost:10110/dir/index.html
+            authentication:
+              digest:
+                username: ${$secret.mySecret.username}
+                password: ${$secret.mySecret.password}
+        export:
+          as:
+            info: ${$authorization}

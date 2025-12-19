@@ -23,23 +23,31 @@ import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowError;
 import io.serverlessworkflow.impl.WorkflowException;
 import io.serverlessworkflow.impl.WorkflowModel;
+import io.serverlessworkflow.impl.auth.AuthProvider;
+import io.serverlessworkflow.impl.auth.AuthUtils;
 import jakarta.ws.rs.client.Invocation.Builder;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status.Family;
+import java.net.URI;
+import java.util.Optional;
 
-abstract class AbstractRequestSupplier implements RequestSupplier {
+abstract class AbstractRequestExecutor implements RequestExecutor {
 
   private final boolean redirect;
+  private final Optional<AuthProvider> authProvider;
+  protected final String method;
 
-  public AbstractRequestSupplier(boolean redirect) {
+  public AbstractRequestExecutor(String method, boolean redirect, Optional<AuthProvider> auth) {
     this.redirect = redirect;
+    this.method = method;
+    this.authProvider = auth;
   }
 
   @Override
   public WorkflowModel apply(
-      Builder request, WorkflowContext workflow, TaskContext task, WorkflowModel model) {
+      Builder request, URI uri, WorkflowContext workflow, TaskContext task, WorkflowModel model) {
     HttpModelConverter converter = HttpConverterResolver.converter(workflow, task);
-
+    authProvider.ifPresent(auth -> addAuthHeader(auth, uri, request, workflow, task, model));
     Response response = invokeRequest(request, converter, workflow, task, model);
     validateStatus(task, response, converter);
     return workflow
@@ -51,7 +59,6 @@ abstract class AbstractRequestSupplier implements RequestSupplier {
 
   private void validateStatus(TaskContext task, Response response, HttpModelConverter converter) {
     Family statusFamily = response.getStatusInfo().getFamily();
-
     if (statusFamily != SUCCESSFUL && (!this.redirect || statusFamily != REDIRECTION)) {
       throw new WorkflowException(
           converter
@@ -66,4 +73,17 @@ abstract class AbstractRequestSupplier implements RequestSupplier {
       WorkflowContext workflow,
       TaskContext task,
       WorkflowModel model);
+
+  private void addAuthHeader(
+      AuthProvider auth,
+      URI uri,
+      Builder request,
+      WorkflowContext workflow,
+      TaskContext task,
+      WorkflowModel model) {
+    String scheme = auth.scheme();
+    String parameter = auth.content(workflow, task, model, uri);
+    task.authorization(scheme, parameter);
+    request.header(AuthUtils.AUTH_HEADER_NAME, AuthUtils.authHeaderValue(scheme, parameter));
+  }
 }

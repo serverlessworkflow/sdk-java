@@ -16,28 +16,17 @@
 package io.serverlessworkflow.impl.executors.http;
 
 import io.serverlessworkflow.impl.TaskContext;
-import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
-import io.serverlessworkflow.impl.WorkflowFilter;
 import io.serverlessworkflow.impl.WorkflowModel;
-import io.serverlessworkflow.impl.WorkflowUtils;
-import jakarta.ws.rs.client.Entity;
+import io.serverlessworkflow.impl.auth.AuthProvider;
 import jakarta.ws.rs.client.Invocation.Builder;
 import jakarta.ws.rs.core.Response;
-import java.util.function.BiFunction;
+import java.util.Optional;
 
-class WithBodyRequestSupplier extends AbstractRequestSupplier {
-  private final WorkflowFilter bodyFilter;
-  private final BiFunction<Builder, Entity<?>, Response> requestFunction;
+class WithoutBodyRequestExecutor extends AbstractRequestExecutor {
 
-  public WithBodyRequestSupplier(
-      BiFunction<Builder, Entity<?>, Response> requestFunction,
-      WorkflowApplication application,
-      Object body,
-      boolean redirect) {
-    super(redirect);
-    this.requestFunction = requestFunction;
-    bodyFilter = WorkflowUtils.buildWorkflowFilter(application, body);
+  public WithoutBodyRequestExecutor(String method, boolean redirect, Optional<AuthProvider> auth) {
+    super(method, redirect, auth);
   }
 
   @Override
@@ -47,7 +36,6 @@ class WithBodyRequestSupplier extends AbstractRequestSupplier {
       WorkflowContext workflow,
       TaskContext task,
       WorkflowModel model) {
-    return requestFunction.apply(
-        request, converter.toEntity(bodyFilter.apply(workflow, task, model)));
+    return request.method(method);
   }
 }

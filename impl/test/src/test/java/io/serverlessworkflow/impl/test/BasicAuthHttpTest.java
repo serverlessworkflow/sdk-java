@@ -79,7 +79,7 @@ public class BasicAuthHttpTest {
       })
   void testBasic(String path) throws IOException {
     Workflow workflow = readWorkflowFromClasspath(path);
-    WorkflowInstance instance = app.workflowDefinition(workflow).instance(Map.of("petId", 1));
+    WorkflowInstance instance = app.workflowDefinition(workflow).instance(Map.of());
     instance.start().join();
     assertThat(instance.context()).isNotNull();
     Map<String, Object> authInfo =

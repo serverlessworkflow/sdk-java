@@ -23,7 +23,6 @@ import io.serverlessworkflow.api.types.HTTPArguments;
 import io.serverlessworkflow.api.types.TaskBase;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowMutablePosition;
-import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
 import io.serverlessworkflow.impl.executors.CallableTask;
 import io.serverlessworkflow.impl.executors.CallableTaskBuilder;
@@ -70,8 +69,6 @@ public class CallableTaskHttpExecutorBuilder implements CallableTaskBuilder<Call
     builder.withBody(httpArgs.getBody());
     builder.withMethod(httpArgs.getMethod().toUpperCase());
     builder.redirect(httpArgs.isRedirect());
-    builder.timeout(
-        WorkflowUtils.getTaskTimeout(definition.application(), definition.workflow(), task));
   }
 
   @Override

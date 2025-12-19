@@ -28,6 +28,7 @@ import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
+import java.net.URI;
 import java.util.Base64;
 
 class BasicAuthProvider implements AuthProvider {
@@ -57,7 +58,7 @@ class BasicAuthProvider implements AuthProvider {
   }
 
   @Override
-  public String authParameter(WorkflowContext workflow, TaskContext task, WorkflowModel model) {
+  public String content(WorkflowContext workflow, TaskContext task, WorkflowModel model, URI uri) {
     return new String(
         Base64.getEncoder()
             .encode(
@@ -69,7 +70,7 @@ class BasicAuthProvider implements AuthProvider {
   }
 
   @Override
-  public String authScheme() {
+  public String scheme() {
     return "Basic";
   }
 }

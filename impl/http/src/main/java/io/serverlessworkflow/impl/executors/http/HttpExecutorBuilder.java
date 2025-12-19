@@ -19,13 +19,9 @@ import io.serverlessworkflow.api.types.ReferenceableAuthenticationPolicy;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
-import io.serverlessworkflow.impl.auth.AuthProvider;
 import io.serverlessworkflow.impl.auth.AuthProviderFactory;
 import jakarta.ws.rs.HttpMethod;
-import jakarta.ws.rs.client.Invocation;
-import jakarta.ws.rs.client.WebTarget;
 import java.net.URI;
-import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
 
@@ -35,18 +31,17 @@ public class HttpExecutorBuilder {
   private WorkflowValueResolver<URI> pathSupplier;
   private Object body;
   private String method = HttpMethod.GET;
+  private ReferenceableAuthenticationPolicy policy;
   private boolean redirect;
-  private Optional<WorkflowValueResolver<Duration>> timeout = Optional.empty();
   private WorkflowValueResolver<Map<String, Object>> headersMap;
   private WorkflowValueResolver<Map<String, Object>> queryMap;
-  private Optional<AuthProvider> authProvider = Optional.empty();
 
   private HttpExecutorBuilder(WorkflowDefinition definition) {
     this.definition = definition;
   }
 
   public HttpExecutorBuilder withAuth(ReferenceableAuthenticationPolicy policy) {
-    this.authProvider = AuthProviderFactory.getAuth(definition, policy);
+    this.policy = policy;
     return this;
   }
 
@@ -88,69 +83,42 @@ public class HttpExecutorBuilder {
     return this;
   }
 
-  public HttpExecutorBuilder timeout(Optional<WorkflowValueResolver<Duration>> timeout) {
-    this.timeout = timeout;
-    return this;
-  }
-
   public HttpExecutor build(String uri) {
     return build((w, f, n) -> URI.create(uri));
   }
 
   public HttpExecutor build(WorkflowValueResolver<URI> uriSupplier) {
-
     return new HttpExecutor(
-        getTargetSupplier(uriSupplier),
+        uriSupplier,
         Optional.ofNullable(headersMap),
         Optional.ofNullable(queryMap),
-        authProvider,
-        buildRequestSupplier());
-  }
-
-  private WorkflowValueResolver<WebTarget> getTargetSupplier(
-      WorkflowValueResolver<URI> uriSupplier) {
-    return pathSupplier == null
-        ? (w, t, n) ->
-            HttpClientResolver.client(w, t, redirect, timeout.map(v -> v.apply(w, t, n)))
-                .target(uriSupplier.apply(w, t, n))
-        : (w, t, n) ->
-            HttpClientResolver.client(w, t, redirect, timeout.map(v -> v.apply(w, t, n)))
-                .target(
-                    WorkflowUtils.concatURI(
-                        uriSupplier.apply(w, t, n), pathSupplier.apply(w, t, n)));
+        buildRequestExecutor(),
+        Optional.ofNullable(pathSupplier));
   }
 
   public static HttpExecutorBuilder builder(WorkflowDefinition definition) {
     return new HttpExecutorBuilder(definition);
   }
 
-  private RequestSupplier buildRequestSupplier() {
-    switch (method.toUpperCase()) {
+  private RequestExecutor buildRequestExecutor() {
+    String theMethod = method.toUpperCase();
+    switch (theMethod) {
       case HttpMethod.POST:
-        return new WithBodyRequestSupplier(
-            Invocation.Builder::post, definition.application(), body, redirect);
       case HttpMethod.PUT:
-        return new WithBodyRequestSupplier(
-            Invocation.Builder::put, definition.application(), body, redirect);
-      case HttpMethod.DELETE:
-        return new WithoutBodyRequestSupplier(
-            Invocation.Builder::delete, definition.application(), redirect);
-      case HttpMethod.HEAD:
-        return new WithoutBodyRequestSupplier(
-            Invocation.Builder::head, definition.application(), redirect);
       case HttpMethod.PATCH:
-        return new WithBodyRequestSupplier(
-            (request, entity) -> request.method("PATCH", entity),
+        return new WithBodyRequestExecutor(
+            theMethod,
+            redirect,
+            AuthProviderFactory.getAuth(definition, policy, method),
             definition.application(),
-            body,
-            redirect);
+            body);
+      case HttpMethod.DELETE:
+      case HttpMethod.HEAD:
       case HttpMethod.OPTIONS:
-        return new WithoutBodyRequestSupplier(
-            Invocation.Builder::options, definition.application(), redirect);
       case HttpMethod.GET:
       default:
-        return new WithoutBodyRequestSupplier(
-            Invocation.Builder::get, definition.application(), redirect);
+        return new WithoutBodyRequestExecutor(
+            theMethod, redirect, AuthProviderFactory.getAuth(definition, policy, method));
     }
   }
 }

@@ -20,8 +20,6 @@ import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
-import java.time.Duration;
-import java.util.Optional;
 
 public class HttpClientResolver {
 
@@ -32,14 +30,6 @@ public class HttpClientResolver {
   }
 
   public static Client client(WorkflowContext workflowContext, TaskContext taskContext) {
-    return client(workflowContext, taskContext, false, Optional.empty());
-  }
-
-  public static Client client(
-      WorkflowContext workflowContext,
-      TaskContext taskContext,
-      boolean redirect,
-      Optional<Duration> timeout) {
     WorkflowApplication appl = workflowContext.definition().application();
     return appl.<Client>additionalObject(HTTP_CLIENT_PROVIDER, workflowContext, taskContext)
         .orElseGet(() -> DefaultHolder.client);

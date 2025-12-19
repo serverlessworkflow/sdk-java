@@ -28,6 +28,7 @@ import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
+import java.net.URI;
 
 class BearerAuthProvider implements AuthProvider {
 
@@ -48,12 +49,12 @@ class BearerAuthProvider implements AuthProvider {
   }
 
   @Override
-  public String authParameter(WorkflowContext workflow, TaskContext task, WorkflowModel model) {
+  public String content(WorkflowContext workflow, TaskContext task, WorkflowModel model, URI uri) {
     return tokenFilter.apply(workflow, task, model);
   }
 
   @Override
-  public String authScheme() {
+  public String scheme() {
     return "Bearer";
   }
 }
