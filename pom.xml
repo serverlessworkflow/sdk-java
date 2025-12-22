@@ -54,7 +54,7 @@
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.release>${java.version}</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <version.maven>3.9.11</version.maven>
+        <version.maven>3.9.12</version.maven>
 
         <!-- Plugin versions, please keep in alphabetical order -->
         <version.buildnumber.plugin>3.2.1</version.buildnumber.plugin>
