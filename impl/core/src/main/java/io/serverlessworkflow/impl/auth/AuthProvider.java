@@ -18,10 +18,11 @@ package io.serverlessworkflow.impl.auth;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
+import java.net.URI;
 
 public interface AuthProvider {
 
-  String authScheme();
+  String scheme();
 
-  String authParameter(WorkflowContext workflow, TaskContext task, WorkflowModel model);
+  String content(WorkflowContext workflow, TaskContext task, WorkflowModel model, URI uri);
 }

@@ -25,6 +25,7 @@ import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
+import java.net.URI;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.ServiceLoader;
@@ -48,12 +49,12 @@ abstract class CommonOAuthProvider implements AuthProvider {
   }
 
   @Override
-  public String authParameter(WorkflowContext workflow, TaskContext task, WorkflowModel model) {
+  public String content(WorkflowContext workflow, TaskContext task, WorkflowModel model, URI uri) {
     return tokenProvider.apply(workflow, task, model).validateAndGet(workflow, task, model).token();
   }
 
   @Override
-  public String authScheme() {
+  public String scheme() {
     return "Bearer";
   }
 

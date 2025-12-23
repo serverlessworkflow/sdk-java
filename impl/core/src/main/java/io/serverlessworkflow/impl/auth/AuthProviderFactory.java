@@ -31,11 +31,11 @@ public class AuthProviderFactory {
       WorkflowDefinition definition, EndpointConfiguration configuration) {
     return configuration == null
         ? Optional.empty()
-        : getAuth(definition, configuration.getAuthentication());
+        : getAuth(definition, configuration.getAuthentication(), "GET");
   }
 
   public static Optional<AuthProvider> getAuth(
-      WorkflowDefinition definition, ReferenceableAuthenticationPolicy auth) {
+      WorkflowDefinition definition, ReferenceableAuthenticationPolicy auth, String method) {
     if (auth == null) {
       return Optional.empty();
     }
@@ -43,24 +43,28 @@ public class AuthProviderFactory {
       return buildFromReference(
           definition.application(),
           definition.workflow(),
-          auth.getAuthenticationPolicyReference().getUse());
+          auth.getAuthenticationPolicyReference().getUse(),
+          method);
     } else if (auth.getAuthenticationPolicy() != null) {
       return buildFromPolicy(
-          definition.application(), definition.workflow(), auth.getAuthenticationPolicy());
+          definition.application(), definition.workflow(), auth.getAuthenticationPolicy(), method);
     }
     return Optional.empty();
   }
 
   private static Optional<AuthProvider> buildFromReference(
-      WorkflowApplication app, Workflow workflow, String use) {
+      WorkflowApplication app, Workflow workflow, String use, String method) {
     return workflow.getUse().getAuthentications().getAdditionalProperties().entrySet().stream()
         .filter(s -> s.getKey().equals(use))
         .findAny()
-        .flatMap(e -> buildFromPolicy(app, workflow, e.getValue()));
+        .flatMap(e -> buildFromPolicy(app, workflow, e.getValue(), method));
   }
 
   private static Optional<AuthProvider> buildFromPolicy(
-      WorkflowApplication app, Workflow workflow, AuthenticationPolicyUnion authenticationPolicy) {
+      WorkflowApplication app,
+      Workflow workflow,
+      AuthenticationPolicyUnion authenticationPolicy,
+      String method) {
     if (authenticationPolicy.getBasicAuthenticationPolicy() != null) {
       return Optional.of(
           new BasicAuthProvider(
@@ -70,8 +74,9 @@ public class AuthProviderFactory {
           new BearerAuthProvider(
               app, workflow, authenticationPolicy.getBearerAuthenticationPolicy()));
     } else if (authenticationPolicy.getDigestAuthenticationPolicy() != null) {
-      // TODO implement digest authentication
-      return Optional.empty();
+      return Optional.of(
+          new DigestAuthProvider(
+              app, workflow, authenticationPolicy.getDigestAuthenticationPolicy(), method));
     } else if (authenticationPolicy.getOAuth2AuthenticationPolicy() != null) {
       return Optional.of(
           new OAuth2AuthProvider(

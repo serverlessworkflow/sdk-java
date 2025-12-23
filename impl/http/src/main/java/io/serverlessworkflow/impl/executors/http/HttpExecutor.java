@@ -18,82 +18,59 @@ package io.serverlessworkflow.impl.executors.http;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
+import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
-import io.serverlessworkflow.impl.auth.AuthProvider;
-import io.serverlessworkflow.impl.auth.AuthUtils;
 import io.serverlessworkflow.impl.executors.CallableTask;
 import jakarta.ws.rs.client.Invocation.Builder;
 import jakarta.ws.rs.client.WebTarget;
+import java.net.URI;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Supplier;
 
 public class HttpExecutor implements CallableTask {
 
-  private final WorkflowValueResolver<WebTarget> targetSupplier;
+  private final WorkflowValueResolver<URI> uriSupplier;
+  private final Optional<WorkflowValueResolver<URI>> pathSupplier;
   private final Optional<WorkflowValueResolver<Map<String, Object>>> headersMap;
   private final Optional<WorkflowValueResolver<Map<String, Object>>> queryMap;
-  private final Optional<AuthProvider> authProvider;
-  private final RequestSupplier requestFunction;
+  private final RequestExecutor requestFunction;
 
   HttpExecutor(
-      WorkflowValueResolver<WebTarget> targetSupplier,
+      WorkflowValueResolver<URI> uriSupplier,
       Optional<WorkflowValueResolver<Map<String, Object>>> headersMap,
       Optional<WorkflowValueResolver<Map<String, Object>>> queryMap,
-      Optional<AuthProvider> authProvider,
-      RequestSupplier requestFunction) {
-    this.targetSupplier = targetSupplier;
+      RequestExecutor requestFunction,
+      Optional<WorkflowValueResolver<URI>> pathSupplier) {
+    this.uriSupplier = uriSupplier;
     this.headersMap = headersMap;
     this.queryMap = queryMap;
-    this.authProvider = authProvider;
     this.requestFunction = requestFunction;
-  }
-
-  private static class TargetQuerySupplier implements Supplier<WebTarget> {
-
-    private WebTarget target;
-
-    public TargetQuerySupplier(WebTarget original) {
-      this.target = original;
-    }
-
-    public void addQuery(String key, Object value) {
-      target = target.queryParam(key, value);
-    }
-
-    public WebTarget get() {
-      return target;
-    }
+    this.pathSupplier = pathSupplier;
   }
 
   public CompletableFuture<WorkflowModel> apply(
       WorkflowContext workflow, TaskContext taskContext, WorkflowModel input) {
-    TargetQuerySupplier supplier =
-        new TargetQuerySupplier(targetSupplier.apply(workflow, taskContext, input));
-    queryMap.ifPresent(
-        q -> q.apply(workflow, taskContext, input).forEach((k, v) -> supplier.addQuery(k, v)));
-    Builder request = supplier.get().request();
+    URI uri =
+        pathSupplier
+            .map(
+                p ->
+                    WorkflowUtils.concatURI(
+                        uriSupplier.apply(workflow, taskContext, input),
+                        p.apply(workflow, taskContext, input)))
+            .orElse(uriSupplier.apply(workflow, taskContext, input));
+
+    WebTarget target = HttpClientResolver.client(workflow, taskContext).target(uri);
+    for (Entry<String, Object> entry :
+        queryMap.map(q -> q.apply(workflow, taskContext, input)).orElse(Map.of()).entrySet()) {
+      target = target.queryParam(entry.getKey(), entry.getValue());
+    }
+    Builder request = target.request();
     headersMap.ifPresent(
         h -> h.apply(workflow, taskContext, input).forEach((k, v) -> request.header(k, v)));
     return CompletableFuture.supplyAsync(
-        () -> {
-          authProvider.ifPresent(
-              auth -> addAuthHeader(auth, request, workflow, taskContext, input));
-          return requestFunction.apply(request, workflow, taskContext, input);
-        },
+        () -> requestFunction.apply(request, uri, workflow, taskContext, input),
         workflow.definition().application().executorService());
-  }
-
-  private void addAuthHeader(
-      AuthProvider auth,
-      Builder request,
-      WorkflowContext workflow,
-      TaskContext task,
-      WorkflowModel model) {
-    String scheme = auth.authScheme();
-    String parameter = auth.authParameter(workflow, task, model);
-    task.authorization(scheme, parameter);
-    request.header(AuthUtils.AUTH_HEADER_NAME, AuthUtils.authHeaderValue(scheme, parameter));
   }
 }

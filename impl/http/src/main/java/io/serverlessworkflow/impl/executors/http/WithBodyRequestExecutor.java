@@ -18,20 +18,25 @@ package io.serverlessworkflow.impl.executors.http;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.WorkflowFilter;
 import io.serverlessworkflow.impl.WorkflowModel;
+import io.serverlessworkflow.impl.WorkflowUtils;
+import io.serverlessworkflow.impl.auth.AuthProvider;
 import jakarta.ws.rs.client.Invocation.Builder;
 import jakarta.ws.rs.core.Response;
-import java.util.function.Function;
+import java.util.Optional;
 
-class WithoutBodyRequestSupplier extends AbstractRequestSupplier {
-  private final Function<Builder, Response> requestFunction;
+class WithBodyRequestExecutor extends AbstractRequestExecutor {
+  private final WorkflowFilter bodyFilter;
 
-  public WithoutBodyRequestSupplier(
-      Function<Builder, Response> requestFunction,
+  public WithBodyRequestExecutor(
+      String method,
+      boolean redirect,
+      Optional<AuthProvider> auth,
       WorkflowApplication application,
-      boolean redirect) {
-    super(redirect);
-    this.requestFunction = requestFunction;
+      Object body) {
+    super(method, redirect, auth);
+    bodyFilter = WorkflowUtils.buildWorkflowFilter(application, body);
   }
 
   @Override
@@ -41,6 +46,6 @@ class WithoutBodyRequestSupplier extends AbstractRequestSupplier {
       WorkflowContext workflow,
       TaskContext task,
       WorkflowModel model) {
-    return requestFunction.apply(request);
+    return request.method(method, converter.toEntity(bodyFilter.apply(workflow, task, model)));
   }
 }

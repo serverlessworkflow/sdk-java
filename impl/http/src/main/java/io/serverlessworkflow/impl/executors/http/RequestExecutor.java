@@ -19,9 +19,10 @@ import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
 import jakarta.ws.rs.client.Invocation.Builder;
+import java.net.URI;
 
 @FunctionalInterface
-interface RequestSupplier {
+interface RequestExecutor {
   WorkflowModel apply(
-      Builder request, WorkflowContext workflow, TaskContext task, WorkflowModel model);
+      Builder request, URI uri, WorkflowContext workflow, TaskContext task, WorkflowModel model);
 }
