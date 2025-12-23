@@ -328,7 +328,7 @@ public abstract class AbstractLifeCyclePublisher implements WorkflowExecutionLis
    * using application event publishers. That might be changed if needed by children by overriding this method
    */
   protected void publish(WorkflowApplication application, CloudEvent ce) {
-    application.eventPublishers().forEach(p -> p.publish(ce));
+    application.eventPublishers().forEach(p -> p.publishLifeCycle(ce));
   }
 
   private static <T> CloudEventData cloudEventData(T data, ToBytes<T> toBytes) {
