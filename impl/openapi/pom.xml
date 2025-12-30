@@ -7,13 +7,6 @@
     </parent>
     <artifactId>serverlessworkflow-impl-openapi</artifactId>
     <name>Serverless Workflow :: Impl :: OpenAPI</name>
-
-    <properties>
-        <version.org.mozilla.rhino>1.9.0</version.org.mozilla.rhino>
-        <version.org.apache.commons.lang3>3.20.0</version.org.apache.commons.lang3>
-        <version.commons.codec>1.20.0</version.commons.codec>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>jakarta.ws.rs</groupId>
@@ -25,32 +18,12 @@
         </dependency>
         <dependency>
             <groupId>io.serverlessworkflow</groupId>
+            <artifactId>serverlessworkflow-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.serverlessworkflow</groupId>
             <artifactId>serverlessworkflow-impl-http</artifactId>
         </dependency>
-        <dependency>
-            <groupId>io.swagger.parser.v3</groupId>
-            <artifactId>swagger-parser</artifactId>
-            <version>${version.io.swagger.parser.v3}</version>
-        </dependency>
-
-        <!-- Swagger Parser brings a few dependencies with CVE, we are breaking them here -->
-        <!-- Once they upgrade, we can remove -->
-        <dependency>
-            <groupId>org.mozilla</groupId>
-            <artifactId>rhino</artifactId>
-            <version>${version.org.mozilla.rhino}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-lang3</artifactId>
-            <version>${version.org.apache.commons.lang3}</version>
-        </dependency>
-        <dependency>
-            <groupId>commons-codec</groupId>
-            <artifactId>commons-codec</artifactId>
-            <version>${version.commons.codec}</version>
-        </dependency>
-
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>

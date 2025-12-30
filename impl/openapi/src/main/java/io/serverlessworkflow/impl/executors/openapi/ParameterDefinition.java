@@ -15,44 +15,5 @@
  */
 package io.serverlessworkflow.impl.executors.openapi;
 
-import io.swagger.v3.oas.models.media.Schema;
-import io.swagger.v3.oas.models.parameters.Parameter;
-
-class ParameterDefinition {
-
-  private final String name;
-  private final String in;
-  private final boolean required;
-  private final Schema schema;
-
-  ParameterDefinition(Parameter parameter) {
-    this(
-        parameter.getName(),
-        parameter.getIn(),
-        parameter.getRequired() != null && parameter.getRequired(),
-        parameter.getSchema());
-  }
-
-  ParameterDefinition(String name, String in, boolean required, Schema schema) {
-    this.name = name;
-    this.in = in;
-    this.required = required;
-    this.schema = schema;
-  }
-
-  public String getIn() {
-    return in;
-  }
-
-  public String getName() {
-    return name;
-  }
-
-  public boolean getRequired() {
-    return required;
-  }
-
-  public Schema getSchema() {
-    return schema;
-  }
-}
+record ParameterDefinition(
+    String name, String in, boolean required, UnifiedOpenAPI.Schema schema) {}
