@@ -193,9 +193,6 @@ public record UnifiedOpenAPI(
   public record Components(Map<String, Schema> schemas) {}
 
   @JsonIgnoreProperties(ignoreUnknown = true)
-  public record Definitions(Map<String, Schema> definitions) {}
-
-  @JsonIgnoreProperties(ignoreUnknown = true)
   public record Schema(
       String type,
       Map<String, Schema> properties,
