@@ -96,7 +96,7 @@ class OpenAPIExecutor implements CallableTask {
 
     Map<String, Object> bodyParameters = new HashMap<>(parameters);
     for (ParameterDefinition parameter : operation.getParameters()) {
-      switch (parameter.getIn()) {
+      switch (parameter.in()) {
         case "header":
           param(parameter, bodyParameters, headersMap, missingParams);
           break;
@@ -130,12 +130,12 @@ class OpenAPIExecutor implements CallableTask {
       Map<String, Object> origMap,
       Map<String, Object> collectorMap,
       Set<String> missingParams) {
-    String name = parameter.getName();
+    String name = parameter.name();
     if (origMap.containsKey(name)) {
-      collectorMap.put(parameter.getName(), origMap.remove(name));
-    } else if (parameter.getRequired()) {
+      collectorMap.put(parameter.name(), origMap.remove(name));
+    } else if (parameter.required()) {
 
-      UnifiedOpenAPI.Schema schema = parameter.getSchema();
+      UnifiedOpenAPI.Schema schema = parameter.schema();
       Object defaultValue = schema != null ? schema._default() : null;
       if (defaultValue != null) {
         collectorMap.put(name, defaultValue);

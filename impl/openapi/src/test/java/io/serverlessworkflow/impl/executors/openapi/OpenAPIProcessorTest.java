@@ -48,9 +48,9 @@ public class OpenAPIProcessorTest {
     assertTrue(checkServer(definition.getServers(), "https://petstore.swagger.io/v2"));
     assertEquals(1, definition.getParameters().size());
     ParameterDefinition param = definition.getParameters().get(0);
-    assertEquals("path", param.getIn());
-    assertEquals("petId", param.getName());
-    assertTrue(param.getRequired());
+    assertEquals("path", param.in());
+    assertEquals("petId", param.name());
+    assertTrue(param.required());
   }
 
   @Test
@@ -74,29 +74,29 @@ public class OpenAPIProcessorTest {
     assertEquals(6, definition.getParameters().size());
 
     ParameterDefinition param = definition.getParameters().get(0);
-    assertEquals("body", param.getIn());
-    assertEquals("id", param.getName());
-    assertFalse(param.getRequired());
+    assertEquals("body", param.in());
+    assertEquals("id", param.name());
+    assertFalse(param.required());
     param = definition.getParameters().get(1);
-    assertEquals("body", param.getIn());
-    assertEquals("category", param.getName());
-    assertFalse(param.getRequired());
+    assertEquals("body", param.in());
+    assertEquals("category", param.name());
+    assertFalse(param.required());
     param = definition.getParameters().get(2);
-    assertEquals("body", param.getIn());
-    assertEquals("name", param.getName());
-    assertTrue(param.getRequired());
+    assertEquals("body", param.in());
+    assertEquals("name", param.name());
+    assertTrue(param.required());
     param = definition.getParameters().get(3);
-    assertEquals("body", param.getIn());
-    assertEquals("photoUrls", param.getName());
-    assertTrue(param.getRequired());
+    assertEquals("body", param.in());
+    assertEquals("photoUrls", param.name());
+    assertTrue(param.required());
     param = definition.getParameters().get(4);
-    assertEquals("body", param.getIn());
-    assertEquals("tags", param.getName());
-    assertFalse(param.getRequired());
+    assertEquals("body", param.in());
+    assertEquals("tags", param.name());
+    assertFalse(param.required());
     param = definition.getParameters().get(5);
-    assertEquals("body", param.getIn());
-    assertEquals("status", param.getName());
-    assertFalse(param.getRequired());
+    assertEquals("body", param.in());
+    assertEquals("status", param.name());
+    assertFalse(param.required());
   }
 
   @Test
@@ -140,30 +140,30 @@ public class OpenAPIProcessorTest {
     assertTrue(checkServer(definition.getServers(), "https://petstore.swagger.io/v2"));
     assertEquals(6, definition.getParameters().size());
     ParameterDefinition param = definition.getParameters().get(0);
-    assertEquals("body", param.getIn());
-    assertEquals("id", param.getName());
-    assertFalse(param.getRequired());
+    assertEquals("body", param.in());
+    assertEquals("id", param.name());
+    assertFalse(param.required());
 
     param = definition.getParameters().get(1);
-    assertEquals("body", param.getIn());
-    assertEquals("petId", param.getName());
-    assertFalse(param.getRequired());
+    assertEquals("body", param.in());
+    assertEquals("petId", param.name());
+    assertFalse(param.required());
     param = definition.getParameters().get(2);
-    assertEquals("body", param.getIn());
-    assertEquals("quantity", param.getName());
-    assertFalse(param.getRequired());
+    assertEquals("body", param.in());
+    assertEquals("quantity", param.name());
+    assertFalse(param.required());
     param = definition.getParameters().get(3);
-    assertEquals("body", param.getIn());
-    assertEquals("shipDate", param.getName());
-    assertFalse(param.getRequired());
+    assertEquals("body", param.in());
+    assertEquals("shipDate", param.name());
+    assertFalse(param.required());
     param = definition.getParameters().get(4);
-    assertEquals("body", param.getIn());
-    assertEquals("status", param.getName());
-    assertFalse(param.getRequired());
+    assertEquals("body", param.in());
+    assertEquals("status", param.name());
+    assertFalse(param.required());
     param = definition.getParameters().get(5);
-    assertEquals("body", param.getIn());
-    assertEquals("complete", param.getName());
-    assertFalse(param.getRequired());
+    assertEquals("body", param.in());
+    assertEquals("complete", param.name());
+    assertFalse(param.required());
   }
 
   @Test
@@ -186,13 +186,13 @@ public class OpenAPIProcessorTest {
     assertTrue(checkServer(definition.getServers(), "https://petstore.swagger.io/v2"));
     assertEquals(2, definition.getParameters().size());
     ParameterDefinition param1 = definition.getParameters().get(0);
-    assertEquals("query", param1.getIn());
-    assertEquals("username", param1.getName());
-    assertTrue(param1.getRequired());
+    assertEquals("query", param1.in());
+    assertEquals("username", param1.name());
+    assertTrue(param1.required());
     ParameterDefinition param2 = definition.getParameters().get(1);
-    assertEquals("query", param2.getIn());
-    assertEquals("password", param2.getName());
-    assertTrue(param2.getRequired());
+    assertEquals("query", param2.in());
+    assertEquals("password", param2.name());
+    assertTrue(param2.required());
   }
 
   private boolean checkServer(List<String> servers, String expected) {
