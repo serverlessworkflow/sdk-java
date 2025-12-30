@@ -15,25 +15,24 @@
  */
 package io.serverlessworkflow.impl.executors.openapi;
 
-import io.swagger.v3.oas.models.media.Schema;
-import io.swagger.v3.oas.models.parameters.Parameter;
+import com.fasterxml.jackson.databind.JsonNode;
 
 class ParameterDefinition {
 
   private final String name;
   private final String in;
   private final boolean required;
-  private final Schema schema;
+  private final UnifiedOpenAPI.Schema schema;
 
-  ParameterDefinition(Parameter parameter) {
+  ParameterDefinition(JsonNode parameter) {
     this(
-        parameter.getName(),
-        parameter.getIn(),
-        parameter.getRequired() != null && parameter.getRequired(),
-        parameter.getSchema());
+        parameter.get("name").asText(),
+        parameter.get("in").asText(),
+        parameter.has("required") && parameter.get("required").asBoolean(),
+        null);
   }
 
-  ParameterDefinition(String name, String in, boolean required, Schema schema) {
+  ParameterDefinition(String name, String in, boolean required, UnifiedOpenAPI.Schema schema) {
     this.name = name;
     this.in = in;
     this.required = required;
@@ -52,7 +51,7 @@ class ParameterDefinition {
     return required;
   }
 
-  public Schema getSchema() {
+  public UnifiedOpenAPI.Schema getSchema() {
     return schema;
   }
 }

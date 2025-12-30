@@ -15,35 +15,25 @@
  */
 package io.serverlessworkflow.impl.executors.openapi;
 
-import io.swagger.v3.oas.models.OpenAPI;
-import io.swagger.v3.oas.models.Operation;
-import io.swagger.v3.oas.models.media.MediaType;
-import io.swagger.v3.oas.models.media.Schema;
-import io.swagger.v3.oas.models.servers.Server;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Objects;
 
 class OperationDefinition {
-  private final Operation operation;
+
+  private final UnifiedOpenAPI.Operation operation;
   private final String method;
-  private final OpenAPI openAPI;
+  private final UnifiedOpenAPI openAPI;
   private final String path;
-  private final boolean emulateSwaggerV2BodyParameters;
 
   OperationDefinition(
-      OpenAPI openAPI,
-      Operation operation,
-      String path,
-      String method,
-      boolean emulateSwaggerV2BodyParameters) {
-    this.openAPI = openAPI;
-    this.operation = operation;
-    this.path = path;
-    this.method = method;
-    this.emulateSwaggerV2BodyParameters = emulateSwaggerV2BodyParameters;
+      UnifiedOpenAPI openAPI, UnifiedOpenAPI.Operation operation, String path, String method) {
+
+    this.openAPI = Objects.requireNonNull(openAPI, "openAPI cannot be null");
+    this.operation = Objects.requireNonNull(operation, "operation cannot be null");
+    this.path = Objects.requireNonNull(path, "path cannot be null");
+    this.method = Objects.requireNonNull(method, "method cannot be null");
   }
 
   String getMethod() {
@@ -54,7 +44,7 @@ class OperationDefinition {
     return path;
   }
 
-  Operation getOperation() {
+  UnifiedOpenAPI.Operation getOperation() {
     return operation;
   }
 
@@ -62,77 +52,90 @@ class OperationDefinition {
     if (openAPI.getServers() == null) {
       return List.of();
     }
-    return openAPI.getServers().stream().map(Server::getUrl).toList();
+
+    return openAPI.getServers();
   }
 
   List<ParameterDefinition> getParameters() {
-    return emulateSwaggerV2BodyParameters ? getSwaggerV2Parameters() : getOpenApiParameters();
+    List<ParameterDefinition> paramDefinitions = new ArrayList<>();
+    if (operation.hasParameters()) {
+      for (UnifiedOpenAPI.Parameter parameter : operation.parameters()) {
+        if (parameter.in().equals("body")) {
+          continue; // body parameters are handled separately
+        }
+
+        paramDefinitions.add(
+            new ParameterDefinition(
+                parameter.name(), parameter.in(), parameter.required(), parameter.schema()));
+      }
+    }
+
+    if (openAPI.swaggerVersion().equals(UnifiedOpenAPI.SwaggerVersion.SWAGGER_V2)) {
+      operation.parameters().stream()
+          .filter(p -> p.in().equals("body"))
+          .forEach(
+              p -> {
+                UnifiedOpenAPI.Schema schema = p.schema();
+                if (schema.hasRef()) {
+                  String ref = schema.ref();
+                  schema = openAPI.resolveSchema(ref);
+                }
+
+                if (schema != null && schema.hasProperties()) {
+                  Map<String, UnifiedOpenAPI.Schema> properties = schema.properties();
+                  for (String fieldName : properties.keySet()) {
+                    UnifiedOpenAPI.Schema fieldSchema = properties.get(fieldName);
+                    boolean isRequired = schema.requiredFields().contains(fieldName);
+                    paramDefinitions.add(
+                        new ParameterDefinition(fieldName, "body", isRequired, fieldSchema));
+                  }
+                }
+              });
+    }
+
+    if (operation.hasRequestBody()) {
+      List<ParameterDefinition> fromBody = parametersFromRequestBody(operation.requestBody());
+      if (!fromBody.isEmpty()) {
+        paramDefinitions.addAll(fromBody);
+      }
+    }
+
+    return paramDefinitions;
   }
 
-  private List<ParameterDefinition> getOpenApiParameters() {
-    if (operation.getParameters() == null) {
+  private List<ParameterDefinition> parametersFromRequestBody(
+      UnifiedOpenAPI.RequestBody requestBody) {
+    if (requestBody == null) {
       return List.of();
     }
-    return operation.getParameters().stream().map(ParameterDefinition::new).toList();
-  }
 
-  @SuppressWarnings({"rawtypes"})
-  private List<ParameterDefinition> getSwaggerV2Parameters() {
-    if (operation.getParameters() != null && !operation.getParameters().isEmpty()) {
-      return operation.getParameters().stream().map(ParameterDefinition::new).toList();
+    UnifiedOpenAPI.Content content = requestBody.content();
+    if (!content.isApplicationJson()) {
+      return List.of();
     }
-    if (operation.getRequestBody() != null) {
-      Schema<?> schema = null;
-      if (operation.getRequestBody().getContent() != null
-          && operation
-              .getRequestBody()
-              .getContent()
-              .containsKey(jakarta.ws.rs.core.MediaType.APPLICATION_JSON)) {
-        MediaType mt =
-            operation
-                .getRequestBody()
-                .getContent()
-                .get(jakarta.ws.rs.core.MediaType.APPLICATION_JSON);
-        schema = mt.getSchema();
-      } else if (operation.getRequestBody().get$ref() != null) {
-        schema = resolveSchema(operation.getRequestBody().get$ref());
-      }
 
-      if (schema == null) {
-        return List.of();
-      }
+    UnifiedOpenAPI.MediaType mediaType = content.applicationJson();
+    UnifiedOpenAPI.Schema schema = mediaType.schema();
 
-      Set<String> required =
-          schema.getRequired() != null ? new HashSet<>(schema.getRequired()) : new HashSet<>();
+    // resolve $ref if present
+    if (schema != null && schema.hasRef()) {
+      String ref = schema.ref();
+      schema = openAPI.resolveSchema(ref);
+    }
 
-      Map<String, Schema> properties = schema.getProperties();
-      if (properties != null) {
-        List<ParameterDefinition> result = new ArrayList<>();
-        for (Map.Entry<String, Schema> prop : properties.entrySet()) {
-          String fieldName = prop.getKey();
-          ParameterDefinition fieldParam =
-              new ParameterDefinition(
-                  fieldName, "body", required.contains(fieldName), prop.getValue());
-          result.add(fieldParam);
-        }
-        return result;
-      }
+    if (schema == null || !schema.hasProperties()) {
+      return List.of();
     }
-    return List.of();
-  }
 
-  Schema<?> resolveSchema(String ref) {
-    if (ref == null || !ref.startsWith("#/components/schemas/")) {
-      throw new IllegalArgumentException("Unsupported $ref format: " + ref);
+    Map<String, UnifiedOpenAPI.Schema> properties = schema.properties();
+    List<ParameterDefinition> paramDefinitions = new ArrayList<>();
+
+    for (String fieldName : properties.keySet()) {
+      UnifiedOpenAPI.Schema fieldSchema = properties.get(fieldName);
+      boolean isRequired = schema.requiredFields().contains(fieldName);
+      paramDefinitions.add(new ParameterDefinition(fieldName, "body", isRequired, fieldSchema));
     }
-    String name = ref.substring("#/components/schemas/".length());
-    if (openAPI.getComponents() == null || openAPI.getComponents().getSchemas() == null) {
-      throw new IllegalStateException("No components/schemas found in OpenAPI");
-    }
-    Schema<?> schema = openAPI.getComponents().getSchemas().get(name);
-    if (schema == null) {
-      throw new IllegalArgumentException("Schema not found: " + name);
-    }
-    return schema;
+
+    return paramDefinitions;
   }
 }

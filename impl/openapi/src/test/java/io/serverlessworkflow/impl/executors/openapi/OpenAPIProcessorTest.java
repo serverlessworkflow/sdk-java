@@ -19,9 +19,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.serverlessworkflow.api.WorkflowFormat;
+import io.serverlessworkflow.impl.resources.ClasspathResource;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -29,17 +31,17 @@ public class OpenAPIProcessorTest {
 
   @Test
   public void testGetPetByIdSwaggerV2() {
-    String json = readResource("schema/swagger/petstore.json");
-    testGetPetById(json);
+    UnifiedOpenAPI openAPI = readResource("schema/swagger/petstore.json");
+    testGetPetById(openAPI);
   }
 
   @Test
   public void testGetPetByIdOpenAPI() {
-    String json = readResource("schema/openapi/petstore.json");
-    testGetPetById(json);
+    UnifiedOpenAPI openAPI = readResource("schema/openapi/petstore.json");
+    testGetPetById(openAPI);
   }
 
-  public void testGetPetById(String json) {
+  public void testGetPetById(UnifiedOpenAPI json) {
     OperationDefinition definition = new OpenAPIProcessor("getPetById").parse(json);
     assertEquals("GET", definition.getMethod());
     assertEquals("/pet/{petId}", definition.getPath());
@@ -53,17 +55,17 @@ public class OpenAPIProcessorTest {
 
   @Test
   public void testAddPetByIdSwaggerV2() {
-    String swaggerJson = readResource("schema/swagger/petstore.json");
-    testAddPetById(swaggerJson);
+    UnifiedOpenAPI openAPI = readResource("schema/swagger/petstore.json");
+    testAddPetById(openAPI);
   }
 
   @Test
   public void testAddPetByIdOpenAPI() {
-    String json = readResource("schema/openapi/petstore.json");
-    testAddPetById(json);
+    UnifiedOpenAPI openAPI = readResource("schema/openapi/petstore.json");
+    testAddPetById(openAPI);
   }
 
-  public void testAddPetById(String json) {
+  public void testAddPetById(UnifiedOpenAPI json) {
     OperationDefinition definition = new OpenAPIProcessor("addPet").parse(json);
 
     assertEquals("POST", definition.getMethod());
@@ -99,17 +101,17 @@ public class OpenAPIProcessorTest {
 
   @Test
   public void testGetInventorySwaggerV2() {
-    String swaggerJson = readResource("schema/swagger/petstore.json");
-    testGetInventory(swaggerJson);
+    UnifiedOpenAPI openAPI = readResource("schema/swagger/petstore.json");
+    testGetInventory(openAPI);
   }
 
   @Test
   public void testGetInventoryOpenAPI() {
-    String json = readResource("schema/openapi/petstore.json");
-    testGetInventory(json);
+    UnifiedOpenAPI openAPI = readResource("schema/openapi/petstore.json");
+    testGetInventory(openAPI);
   }
 
-  public void testGetInventory(String json) {
+  public void testGetInventory(UnifiedOpenAPI json) {
     OperationDefinition definition = new OpenAPIProcessor("getInventory").parse(json);
 
     assertEquals("GET", definition.getMethod());
@@ -120,17 +122,17 @@ public class OpenAPIProcessorTest {
 
   @Test
   public void testPlaceOrderSwaggerV2() {
-    String json = readResource("schema/swagger/petstore.json");
+    UnifiedOpenAPI json = readResource("schema/swagger/petstore.json");
     testPlaceOrder(json);
   }
 
   @Test
   public void testPlaceOrderOpenAPI() {
-    String json = readResource("schema/openapi/petstore.json");
-    testPlaceOrder(json);
+    UnifiedOpenAPI openAPI = readResource("schema/openapi/petstore.json");
+    testPlaceOrder(openAPI);
   }
 
-  public void testPlaceOrder(String json) {
+  public void testPlaceOrder(UnifiedOpenAPI json) {
     OperationDefinition definition = new OpenAPIProcessor("placeOrder").parse(json);
 
     assertEquals("POST", definition.getMethod());
@@ -166,17 +168,17 @@ public class OpenAPIProcessorTest {
 
   @Test
   public void testLoginUserSwaggerV2() {
-    String json = readResource("schema/swagger/petstore.json");
-    testLoginUser(json);
+    UnifiedOpenAPI openAPI = readResource("schema/swagger/petstore.json");
+    testLoginUser(openAPI);
   }
 
   @Test
   public void testLoginUserOpenAPI() {
-    String json = readResource("schema/openapi/petstore.json");
-    testLoginUser(json);
+    UnifiedOpenAPI openAPI = readResource("schema/openapi/petstore.json");
+    testLoginUser(openAPI);
   }
 
-  public void testLoginUser(String json) {
+  public void testLoginUser(UnifiedOpenAPI json) {
     OperationDefinition definition = new OpenAPIProcessor("loginUser").parse(json);
 
     assertEquals("GET", definition.getMethod());
@@ -202,15 +204,15 @@ public class OpenAPIProcessorTest {
     return false;
   }
 
-  public static String readResource(String path) {
-    try (InputStream is =
-        Thread.currentThread().getContextClassLoader().getResourceAsStream(path)) {
-      if (is == null) {
-        throw new IllegalArgumentException("Resource not found: " + path);
-      }
-      return new String(is.readAllBytes(), StandardCharsets.UTF_8);
+  public static UnifiedOpenAPI readResource(String path) {
+
+    ClasspathResource classpathResource = new ClasspathResource(path);
+    ObjectMapper mapper = WorkflowFormat.fromFileName(classpathResource.name()).mapper();
+
+    try (InputStream is = classpathResource.open()) {
+      return mapper.readValue(is, UnifiedOpenAPI.class);
     } catch (IOException e) {
-      throw new RuntimeException("Failed to read resource: " + path, e);
+      throw new RuntimeException("Failed to read OpenAPI resource: " + path, e);
     }
   }
 }
