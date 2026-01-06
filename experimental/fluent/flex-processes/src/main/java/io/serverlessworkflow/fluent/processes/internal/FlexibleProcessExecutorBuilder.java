@@ -16,27 +16,51 @@
 package io.serverlessworkflow.fluent.processes.internal;
 
 import io.serverlessworkflow.api.types.TaskBase;
+import io.serverlessworkflow.fluent.processes.Activity;
 import io.serverlessworkflow.fluent.processes.FlexibleProcess;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.executors.CallableTask;
 import io.serverlessworkflow.impl.executors.CallableTaskBuilder;
+import io.serverlessworkflow.impl.executors.TaskExecutor;
+import io.serverlessworkflow.impl.executors.TaskExecutorBuilder;
+import io.serverlessworkflow.impl.executors.TaskExecutorFactory;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 public class FlexibleProcessExecutorBuilder implements CallableTaskBuilder<FlexibleProcess> {
 
-  private FlexibleProcess task;
+  private FlexibleProcess flexibleProcess;
   private WorkflowDefinition definition;
 
   @Override
   public void init(
-      FlexibleProcess task, WorkflowDefinition definition, WorkflowMutablePosition position) {
-    this.task = task;
+      FlexibleProcess flexibleProcess,
+      WorkflowDefinition definition,
+      WorkflowMutablePosition position) {
+    this.flexibleProcess = flexibleProcess;
     this.definition = definition;
   }
 
   @Override
   public CallableTask build() {
-    return new FlexibleProcessExecutor(task, definition);
+    WorkflowMutablePosition position = definition.application().positionFactory().get();
+    position.addProperty(UUID.randomUUID().toString());
+    TaskExecutorFactory factory = definition.application().taskFactory();
+
+    return new FlexibleProcessExecutor(
+        flexibleProcess,
+        () -> {
+          Map<Activity, TaskExecutor<?>> executors = new HashMap<>();
+          for (Activity activity : flexibleProcess.getActivities()) {
+            TaskExecutorBuilder<?> builder =
+                factory.getTaskExecutor(position, activity.getTask(), definition);
+            TaskExecutor<?> executor = builder.build();
+            executors.put(activity, executor);
+          }
+          return executors;
+        });
   }
 
   @Override

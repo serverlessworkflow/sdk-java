@@ -26,9 +26,12 @@ public class FlexibleProcess extends TaskBase {
   private Predicate<WorkflowModel> exitCondition;
   private Activity[] activities;
 
-  private int maxAttempts = 1024;
+  private int maxAttempts;
 
-  private FlexibleProcess() {}
+  private FlexibleProcess(Predicate<WorkflowModel> exitCondition, Activity[] activities) {
+    this.exitCondition = exitCondition;
+    this.activities = activities;
+  }
 
   public Predicate<WorkflowModel> getExitCondition() {
     return exitCondition;
@@ -59,7 +62,7 @@ public class FlexibleProcess extends TaskBase {
   public static class FlexibleProcessBuilder {
     private Predicate<WorkflowModel> exitCondition;
     private Activity[] activities;
-    private Integer maxAttempts;
+    private int maxAttempts = 1024;
 
     public FlexibleProcessBuilder exitCondition(Predicate<WorkflowModel> exitCondition) {
       this.exitCondition = exitCondition;
@@ -71,8 +74,7 @@ public class FlexibleProcess extends TaskBase {
       return this;
     }
 
-    public FlexibleProcessBuilder maxAttempts(Integer maxAttempts) {
-      Objects.requireNonNull(maxAttempts, "maxAttempts cannot be null");
+    public FlexibleProcessBuilder maxAttempts(int maxAttempts) {
       if (maxAttempts < 1) {
         throw new IllegalArgumentException("maxAttempts must be greater than 0");
       }
@@ -81,14 +83,11 @@ public class FlexibleProcess extends TaskBase {
     }
 
     public FlexibleProcess build() {
-      FlexibleProcess flexibleProcess = new FlexibleProcess();
-      flexibleProcess.exitCondition =
-          Objects.requireNonNull(this.exitCondition, "Exit condition must be provided");
-      flexibleProcess.activities =
-          Objects.requireNonNull(this.activities, "Activities must be provided");
-      if (this.maxAttempts != null) {
-        flexibleProcess.maxAttempts = this.maxAttempts;
-      }
+      FlexibleProcess flexibleProcess =
+          new FlexibleProcess(
+              Objects.requireNonNull(exitCondition, "Exit condition must be provided"),
+              Objects.requireNonNull(activities, "Activities must be provided"));
+      flexibleProcess.maxAttempts = maxAttempts;
       return flexibleProcess;
     }
   }
