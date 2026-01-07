@@ -20,4 +20,9 @@ import java.util.concurrent.CompletableFuture;
 
 public interface EventPublisher extends AutoCloseable {
   CompletableFuture<Void> publish(CloudEvent event);
+
+  /*override this method and leave it empty  to ignore life cycle events*/
+  default void publishLifeCycle(CloudEvent event) {
+    publish(event);
+  }
 }
