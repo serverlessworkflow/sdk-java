@@ -94,8 +94,6 @@
         <version.org.slf4j>2.0.17</version.org.slf4j>
         <version.org.hibernate.validator>9.1.0.Final</version.org.hibernate.validator>
         <version.org.glassfish.expressly>6.0.0</version.org.glassfish.expressly>
-        <!-- Swagger Parser -->
-        <version.io.swagger.parser.v3>2.1.37</version.io.swagger.parser.v3>
         <!-- Checkstyle props -->
         <checkstyle.failOnViolation>true</checkstyle.failOnViolation>
         <checkstyle.header.extensions>java</checkstyle.header.extensions>

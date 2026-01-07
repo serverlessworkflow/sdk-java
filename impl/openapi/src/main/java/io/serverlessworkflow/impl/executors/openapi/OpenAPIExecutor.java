@@ -15,6 +15,8 @@
  */
 package io.serverlessworkflow.impl.executors.openapi;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.serverlessworkflow.api.WorkflowFormat;
 import io.serverlessworkflow.api.types.ExternalResource;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
@@ -23,8 +25,10 @@ import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.executors.CallableTask;
 import io.serverlessworkflow.impl.executors.http.HttpExecutor;
 import io.serverlessworkflow.impl.executors.http.HttpExecutorBuilder;
-import io.serverlessworkflow.impl.resources.ResourceLoaderUtils;
-import io.swagger.v3.oas.models.media.Schema;
+import io.serverlessworkflow.impl.resources.ExternalResourceHandler;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -61,12 +65,7 @@ class OpenAPIExecutor implements CallableTask {
             workflowContext
                 .definition()
                 .resourceLoader()
-                .load(
-                    resource,
-                    ResourceLoaderUtils::readString,
-                    workflowContext,
-                    taskContext,
-                    input));
+                .load(resource, this::readUnifiedOpenAPI, workflowContext, taskContext, input));
 
     fillHttpBuilder(workflowContext.definition().application(), operationDefinition);
     // One executor per operation, even if the document is the same
@@ -74,7 +73,7 @@ class OpenAPIExecutor implements CallableTask {
     // but the path differs, although some use cases may require different client configurations for
     // different paths...)
     Collection<HttpExecutor> executors =
-        operationDefinition.getServers().stream().map(s -> builder.build(s)).toList();
+        operationDefinition.getServers().stream().map(builder::build).toList();
 
     Iterator<HttpExecutor> iter = executors.iterator();
     if (!iter.hasNext()) {
@@ -97,7 +96,7 @@ class OpenAPIExecutor implements CallableTask {
 
     Map<String, Object> bodyParameters = new HashMap<>(parameters);
     for (ParameterDefinition parameter : operation.getParameters()) {
-      switch (parameter.getIn()) {
+      switch (parameter.in()) {
         case "header":
           param(parameter, bodyParameters, headersMap, missingParams);
           break;
@@ -113,8 +112,8 @@ class OpenAPIExecutor implements CallableTask {
     if (!missingParams.isEmpty()) {
       throw new IllegalArgumentException(
           "Missing required OpenAPI parameters for operation '"
-              + (operation.getOperation().getOperationId() != null
-                  ? operation.getOperation().getOperationId()
+              + (operation.getOperation().operationId() != null
+                  ? operation.getOperation().operationId()
                   : "<unknown>" + "': ")
               + missingParams);
     }
@@ -131,17 +130,27 @@ class OpenAPIExecutor implements CallableTask {
       Map<String, Object> origMap,
       Map<String, Object> collectorMap,
       Set<String> missingParams) {
-    String name = parameter.getName();
+    String name = parameter.name();
     if (origMap.containsKey(name)) {
-      collectorMap.put(parameter.getName(), origMap.remove(name));
-    } else if (parameter.getRequired()) {
-      Schema<?> schema = parameter.getSchema();
-      Object defaultValue = schema != null ? schema.getDefault() : null;
+      collectorMap.put(parameter.name(), origMap.remove(name));
+    } else if (parameter.required()) {
+
+      UnifiedOpenAPI.Schema schema = parameter.schema();
+      Object defaultValue = schema != null ? schema._default() : null;
       if (defaultValue != null) {
         collectorMap.put(name, defaultValue);
       } else {
         missingParams.add(name);
       }
+    }
+  }
+
+  private UnifiedOpenAPI readUnifiedOpenAPI(ExternalResourceHandler handler) {
+    ObjectMapper objectMapper = WorkflowFormat.fromFileName(handler.name()).mapper();
+    try (InputStream is = handler.open()) {
+      return objectMapper.readValue(is, UnifiedOpenAPI.class);
+    } catch (IOException e) {
+      throw new UncheckedIOException("Error while reading OpenAPI document " + handler.name(), e);
     }
   }
 }
