@@ -25,15 +25,14 @@ import io.serverlessworkflow.impl.executors.TaskExecutor;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Supplier;
 
 public class FlexibleProcessExecutor implements CallableTask {
 
   private final FlexibleProcess flexibleProcess;
-  private Supplier<Map<Activity, TaskExecutor<?>>> executors;
+  private Map<Activity, TaskExecutor<?>> executors;
 
   public FlexibleProcessExecutor(
-      FlexibleProcess flexibleProcess, Supplier<Map<Activity, TaskExecutor<?>>> executors) {
+      FlexibleProcess flexibleProcess, Map<Activity, TaskExecutor<?>> executors) {
     this.flexibleProcess = flexibleProcess;
     this.executors = executors;
   }
@@ -41,7 +40,7 @@ public class FlexibleProcessExecutor implements CallableTask {
   @Override
   public CompletableFuture<WorkflowModel> apply(
       WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel input) {
-    FlexibleProcessManager manager = new FlexibleProcessManager(flexibleProcess, executors.get());
+    FlexibleProcessManager manager = new FlexibleProcessManager(flexibleProcess, executors);
     return manager.run(workflowContext, Optional.of(taskContext), input);
   }
 }

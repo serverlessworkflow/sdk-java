@@ -49,18 +49,15 @@ public class FlexibleProcessExecutorBuilder implements CallableTaskBuilder<Flexi
     position.addProperty(UUID.randomUUID().toString());
     TaskExecutorFactory factory = definition.application().taskFactory();
 
-    return new FlexibleProcessExecutor(
-        flexibleProcess,
-        () -> {
-          Map<Activity, TaskExecutor<?>> executors = new HashMap<>();
-          for (Activity activity : flexibleProcess.getActivities()) {
-            TaskExecutorBuilder<?> builder =
-                factory.getTaskExecutor(position, activity.getTask(), definition);
-            TaskExecutor<?> executor = builder.build();
-            executors.put(activity, executor);
-          }
-          return executors;
-        });
+    Map<Activity, TaskExecutor<?>> executors = new HashMap<>();
+    for (Activity activity : flexibleProcess.getActivities()) {
+      TaskExecutorBuilder<?> builder =
+          factory.getTaskExecutor(position, activity.getTask(), definition);
+      TaskExecutor<?> executor = builder.build();
+      executors.put(activity, executor);
+    }
+
+    return new FlexibleProcessExecutor(flexibleProcess, executors);
   }
 
   @Override

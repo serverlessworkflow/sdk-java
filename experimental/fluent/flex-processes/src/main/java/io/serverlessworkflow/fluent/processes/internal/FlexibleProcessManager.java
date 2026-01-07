@@ -34,7 +34,9 @@ public class FlexibleProcessManager {
   public FlexibleProcessManager(
       FlexibleProcess flexibleProcess, Map<Activity, TaskExecutor<?>> executors) {
     this.flexibleProcess = flexibleProcess;
-    this.executors = executors;
+    this.executors =
+        executors.entrySet().stream()
+            .collect(Collectors.toMap(entry -> entry.getKey().copy(), Map.Entry::getValue));
   }
 
   public CompletableFuture<WorkflowModel> run(

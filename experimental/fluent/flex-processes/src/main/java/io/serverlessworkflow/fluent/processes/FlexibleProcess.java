@@ -18,7 +18,6 @@ package io.serverlessworkflow.fluent.processes;
 import io.serverlessworkflow.api.types.Task;
 import io.serverlessworkflow.api.types.TaskBase;
 import io.serverlessworkflow.impl.WorkflowModel;
-import java.util.Objects;
 import java.util.function.Predicate;
 
 public class FlexibleProcess extends TaskBase {
@@ -26,9 +25,9 @@ public class FlexibleProcess extends TaskBase {
   private Predicate<WorkflowModel> exitCondition;
   private Activity[] activities;
 
-  private int maxAttempts;
+  private int maxAttempts = 1024;
 
-  private FlexibleProcess(Predicate<WorkflowModel> exitCondition, Activity[] activities) {
+  public FlexibleProcess(Predicate<WorkflowModel> exitCondition, Activity... activities) {
     this.exitCondition = exitCondition;
     this.activities = activities;
   }
@@ -45,6 +44,11 @@ public class FlexibleProcess extends TaskBase {
     return result;
   }
 
+  public FlexibleProcess setMaxAttempts(int maxAttempts) {
+    this.maxAttempts = maxAttempts;
+    return this;
+  }
+
   public int getMaxAttempts() {
     return maxAttempts;
   }
@@ -53,42 +57,5 @@ public class FlexibleProcess extends TaskBase {
     Task task = new Task();
     task.setCallTask(new FlexibleProcessCallTask(this));
     return task;
-  }
-
-  public static FlexibleProcessBuilder builder() {
-    return new FlexibleProcessBuilder();
-  }
-
-  public static class FlexibleProcessBuilder {
-    private Predicate<WorkflowModel> exitCondition;
-    private Activity[] activities;
-    private int maxAttempts = 1024;
-
-    public FlexibleProcessBuilder exitCondition(Predicate<WorkflowModel> exitCondition) {
-      this.exitCondition = exitCondition;
-      return this;
-    }
-
-    public FlexibleProcessBuilder activities(Activity... activities) {
-      this.activities = activities;
-      return this;
-    }
-
-    public FlexibleProcessBuilder maxAttempts(int maxAttempts) {
-      if (maxAttempts < 1) {
-        throw new IllegalArgumentException("maxAttempts must be greater than 0");
-      }
-      this.maxAttempts = maxAttempts;
-      return this;
-    }
-
-    public FlexibleProcess build() {
-      FlexibleProcess flexibleProcess =
-          new FlexibleProcess(
-              Objects.requireNonNull(exitCondition, "Exit condition must be provided"),
-              Objects.requireNonNull(activities, "Activities must be provided"));
-      flexibleProcess.maxAttempts = maxAttempts;
-      return flexibleProcess;
-    }
   }
 }

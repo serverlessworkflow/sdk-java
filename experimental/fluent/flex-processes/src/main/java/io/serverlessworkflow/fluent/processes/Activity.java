@@ -85,6 +85,11 @@ public class Activity {
         && Objects.equals(postAction, activity.postAction);
   }
 
+  public Activity copy() {
+    return new Activity(
+        this.task, this.name, this.entryCondition, this.postAction, this.isRepeatable);
+  }
+
   public static ActivityBuilder builder() {
     return new ActivityBuilder();
   }

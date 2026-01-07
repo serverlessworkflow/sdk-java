@@ -19,9 +19,11 @@ import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.fluent.func.configurers.FuncTaskConfigurer;
 import io.serverlessworkflow.fluent.processes.Activity;
 import io.serverlessworkflow.fluent.processes.FlexibleProcess;
+import io.serverlessworkflow.impl.WorkflowModel;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 /**
  * DSL helper class providing fluent API methods for creating and configuring FlexibleProcess and
@@ -31,6 +33,81 @@ import java.util.function.Consumer;
  * boilerplate code, supporting both explicit and lambda-based configuration.
  */
 public class FlexibleProcessDSL {
+
+  /**
+   * Creates a FuncTaskConfigurer for a FlexibleProcess defined inline by an exit condition and a
+   * sequence of activities, using an auto-generated unique task name.
+   *
+   * <p>This is a convenience method that allows defining a process without explicitly creating a
+   * {@link FlexibleProcess} instance. A random UUID is used as the task name.
+   *
+   * <p>Use this method when:
+   *
+   * <ul>
+   *   <li>the process task does not need a meaningful name
+   *   <li>the process is defined inline as part of a workflow definition
+   * </ul>
+   *
+   * <p>Example usage:
+   *
+   * <pre>{@code
+   * Workflow workflow = FuncWorkflowBuilder.workflow("sample-workflow")
+   *     .tasks(
+   *         process(
+   *             model -> (boolean) model.asMap().get().get("done"),
+   *             activity1,
+   *             activity2
+   *         )
+   *     )
+   *     .build();
+   * }</pre>
+   *
+   * @param exitCondition predicate that determines when the process execution should terminate
+   * @param activities activities to be executed as part of the process
+   * @return a FuncTaskConfigurer that adds the process as a task with a generated name
+   * @throws NullPointerException if exitCondition or activities is null
+   */
+  public static FuncTaskConfigurer process(
+      Predicate<WorkflowModel> exitCondition, Activity... activities) {
+    return process(UUID.randomUUID().toString(), exitCondition, activities);
+  }
+
+  /**
+   * Creates a FuncTaskConfigurer for a FlexibleProcess defined inline by an exit condition and a
+   * sequence of activities, using the specified task name.
+   *
+   * <p>This method is useful when you want to define a process declaratively while still assigning
+   * a stable, meaningful name to the resulting workflow task (for debugging, monitoring, or
+   * referencing in workflow logic).
+   *
+   * <p>This is functionally equivalent to creating a {@link FlexibleProcess} explicitly and passing
+   * it to {@link #process(String, FlexibleProcess)}, but with reduced boilerplate.
+   *
+   * <p>Example usage:
+   *
+   * <pre>{@code
+   * Workflow workflow = FuncWorkflowBuilder.workflow("order-processing")
+   *     .tasks(
+   *         process(
+   *             "validation-process",
+   *             model -> (boolean) model.asMap().get().get("validated"),
+   *             validateActivity,
+   *             enrichActivity
+   *         )
+   *     )
+   *     .build();
+   * }</pre>
+   *
+   * @param name the name to assign to the process task (must not be null)
+   * @param exitCondition predicate that determines when the process execution should terminate
+   * @param activities activities to be executed as part of the process
+   * @return a FuncTaskConfigurer that adds the named process as a task
+   * @throws NullPointerException if name, exitCondition, or activities is null
+   */
+  public static FuncTaskConfigurer process(
+      String name, Predicate<WorkflowModel> exitCondition, Activity... activities) {
+    return process(name, new FlexibleProcess(exitCondition, activities));
+  }
 
   /**
    * Creates a FuncTaskConfigurer for a FlexibleProcess with an auto-generated unique name.
@@ -91,79 +168,6 @@ public class FlexibleProcessDSL {
   public static FuncTaskConfigurer process(String name, FlexibleProcess process) {
     Objects.requireNonNull(process, "FlexibleProcess cannot be null");
     return list -> list.addTaskItem(new TaskItem(name, process.asTask()));
-  }
-
-  /**
-   * Creates a FuncTaskConfigurer for a FlexibleProcess using a builder lambda with an
-   * auto-generated name.
-   *
-   * <p>This method provides a fluent inline way to configure a FlexibleProcess without explicitly
-   * calling the builder pattern. The builder instance is created automatically and passed to the
-   * consumer for configuration.
-   *
-   * <p>Example usage:
-   *
-   * <pre>{@code
-   * Workflow workflow = FuncWorkflowBuilder.workflow("my-workflow")
-   *     .tasks(
-   *         process(builder -> builder
-   *             .exitCondition(model -> (int) model.asMap().get().get("count") >= 5)
-   *             .activities(incrementActivity)
-   *             .maxAttempts(10)
-   *         )
-   *     )
-   *     .build();
-   * }</pre>
-   *
-   * @param builder a consumer that configures the FlexibleProcess.FlexibleProcessBuilder
-   * @return a FuncTaskConfigurer that adds the configured process as a task with a generated name
-   * @throws NullPointerException if builder is null
-   * @see #process(String, Consumer)
-   */
-  public static FuncTaskConfigurer process(
-      Consumer<FlexibleProcess.FlexibleProcessBuilder> builder) {
-    FlexibleProcess.FlexibleProcessBuilder builderInstance = FlexibleProcess.builder();
-    builder.accept(builderInstance);
-    return process(builderInstance.build());
-  }
-
-  /**
-   * Creates a FuncTaskConfigurer for a FlexibleProcess using a builder lambda with a specified
-   * name.
-   *
-   * <p>This method combines the benefits of named tasks with inline builder configuration, allowing
-   * you to create and configure a FlexibleProcess in a single fluent expression.
-   *
-   * <p>Example usage:
-   *
-   * <pre>{@code
-   * Workflow workflow = FuncWorkflowBuilder.workflow("order-processing")
-   *     .tasks(
-   *         process("validation", builder -> builder
-   *             .exitCondition(model -> (boolean) model.asMap().get().get("validated"))
-   *             .activities(validationActivity)
-   *             .onProcessFinished((status, model) ->
-   *                 System.out.println("Validation finished with status: " + status))
-   *         ),
-   *         process("fulfillment", builder -> builder
-   *             .exitCondition(model -> (boolean) model.asMap().get().get("fulfilled"))
-   *             .activities(fulfillmentActivity)
-   *         )
-   *     )
-   *     .build();
-   * }</pre>
-   *
-   * @param name the name to assign to this process task (must not be null)
-   * @param builder a consumer that configures the FlexibleProcess.FlexibleProcessBuilder
-   * @return a FuncTaskConfigurer that adds the configured named process as a task
-   * @throws NullPointerException if either name or builder is null
-   * @see #process(Consumer)
-   */
-  public static FuncTaskConfigurer process(
-      String name, Consumer<FlexibleProcess.FlexibleProcessBuilder> builder) {
-    FlexibleProcess.FlexibleProcessBuilder builderInstance = FlexibleProcess.builder();
-    builder.accept(builderInstance);
-    return process(name, builderInstance.build());
   }
 
   /**

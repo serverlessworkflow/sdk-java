@@ -45,27 +45,22 @@ public class FlexibleProcessTest {
           FuncWorkflowBuilder.workflow("testJavaCall")
               .tasks(
                   process(
-                      pb ->
-                          pb.exitCondition(
-                                  workflowModel -> {
-                                    Integer counter =
-                                        (Integer) workflowModel.asMap().get().get("counter");
-                                    return counter >= 3;
-                                  })
-                              .activities(
-                                  activity(
-                                      ab ->
-                                          ab.callTask(
-                                                  consumer(
-                                                      map -> {
-                                                        Integer counter =
-                                                            (Integer) map.get("counter");
-                                                        counter++;
-                                                        map.put("counter", counter);
-                                                      },
-                                                      Map.class))
-                                              .entryCondition(wm -> true)
-                                              .isRepeatable(true)))))
+                      workflowModel -> {
+                        Integer counter = (Integer) workflowModel.asMap().get().get("counter");
+                        return counter >= 3;
+                      },
+                      activity(
+                          ab ->
+                              ab.callTask(
+                                      consumer(
+                                          map -> {
+                                            Integer counter = (Integer) map.get("counter");
+                                            counter++;
+                                            map.put("counter", counter);
+                                          },
+                                          Map.class))
+                                  .entryCondition(wm -> true)
+                                  .isRepeatable(true))))
               .build();
 
       Map<String, Object> result =
@@ -82,28 +77,29 @@ public class FlexibleProcessTest {
 
   @Test
   public void testFluentWorkflow() throws InterruptedException, ExecutionException {
+
+    Activity activity =
+        activity(
+            builder ->
+                builder
+                    .callTask(
+                        consumer(
+                            map -> {
+                              Integer counter = (Integer) map.get("counter");
+                              counter++;
+                              map.put("counter", counter);
+                            },
+                            Map.class))
+                    .entryCondition(workflowModel -> true)
+                    .isRepeatable(true));
+
     FlexibleProcess flexibleProcess =
-        FlexibleProcess.builder()
-            .exitCondition(
-                workflowModel -> {
-                  Integer counter = (Integer) workflowModel.asMap().get().get("counter");
-                  return counter >= 3;
-                })
-            .activities(
-                activity(
-                    builder ->
-                        builder
-                            .callTask(
-                                consumer(
-                                    map -> {
-                                      Integer counter = (Integer) map.get("counter");
-                                      counter++;
-                                      map.put("counter", counter);
-                                    },
-                                    Map.class))
-                            .entryCondition(workflowModel -> true)
-                            .isRepeatable(true)))
-            .build();
+        new FlexibleProcess(
+            workflowModel -> {
+              Integer counter = (Integer) workflowModel.asMap().get().get("counter");
+              return counter >= 3;
+            },
+            activity);
 
     Workflow workflow =
         FuncWorkflowBuilder.workflow("step-emit-export")
@@ -156,11 +152,8 @@ public class FlexibleProcessTest {
                   List.of(
                       new TaskItem(
                           "flexible_process",
-                          FlexibleProcess.builder()
-                              .exitCondition(workflowModel -> false)
-                              .activities(incrementer1, incrementer2)
-                              .maxAttempts(5)
-                              .build()
+                          new FlexibleProcess(workflowModel -> false, incrementer1, incrementer2)
+                              .setMaxAttempts(5)
                               .asTask())));
 
       app.workflowDefinition(workflow).instance(Map.of()).start().get().asMap().orElseThrow();
@@ -223,10 +216,7 @@ public class FlexibleProcessTest {
                   List.of(
                       new TaskItem(
                           "flexible_process",
-                          FlexibleProcess.builder()
-                              .exitCondition(exceeds10)
-                              .activities(evenIncrementer, oddIncrementer)
-                              .build()
+                          new FlexibleProcess(exceeds10, evenIncrementer, oddIncrementer)
                               .asTask())));
 
       Map<String, Object> result =
@@ -277,11 +267,7 @@ public class FlexibleProcessTest {
                   List.of(
                       new TaskItem(
                           "flexible_process",
-                          FlexibleProcess.builder()
-                              .exitCondition(sumExceeds20)
-                              .activities(calculator)
-                              .build()
-                              .asTask())));
+                          new FlexibleProcess(sumExceeds20, calculator).asTask())));
 
       Map<String, Object> result =
           app.workflowDefinition(workflow)
@@ -325,11 +311,7 @@ public class FlexibleProcessTest {
                   List.of(
                       new TaskItem(
                           "flexible_process",
-                          FlexibleProcess.builder()
-                              .exitCondition(alwaysTrue)
-                              .activities(shouldNotRun)
-                              .build()
-                              .asTask())));
+                          new FlexibleProcess(alwaysTrue, shouldNotRun).asTask())));
 
       Map<String, Object> result =
           app.workflowDefinition(workflow)
@@ -384,11 +366,9 @@ public class FlexibleProcessTest {
           return value < 10;
         };
 
-    FlexibleProcess growthProcess =
-        FlexibleProcess.builder().exitCondition(exceeds50).activities(multiplier).build();
+    FlexibleProcess growthProcess = new FlexibleProcess(exceeds50, multiplier);
 
-    FlexibleProcess shrinkProcess =
-        FlexibleProcess.builder().exitCondition(below10).activities(subtractor).build();
+    FlexibleProcess shrinkProcess = new FlexibleProcess(below10, subtractor);
 
     Workflow workflow =
         FuncWorkflowBuilder.workflow("chained-processes")
@@ -450,10 +430,7 @@ public class FlexibleProcessTest {
                   List.of(
                       new TaskItem(
                           "flexible_process",
-                          FlexibleProcess.builder()
-                              .exitCondition(maxIterations)
-                              .activities(neverRuns, iterationCounter)
-                              .build()
+                          new FlexibleProcess(maxIterations, neverRuns, iterationCounter)
                               .asTask())));
 
       Map<String, Object> result =
@@ -478,10 +455,7 @@ public class FlexibleProcessTest {
                       map.put("validated", true);
                     },
                     Map.class))
-            .entryCondition(
-                workflowModel -> {
-                  return !workflowModel.asMap().get().containsKey("validated");
-                })
+            .entryCondition(workflowModel -> !workflowModel.asMap().get().containsKey("validated"))
             .isRepeatable(false)
             .build();
 
@@ -522,11 +496,7 @@ public class FlexibleProcessTest {
                   List.of(
                       new TaskItem(
                           "flexible_process",
-                          FlexibleProcess.builder()
-                              .exitCondition(targetReached)
-                              .activities(validator, scoreBooster)
-                              .build()
-                              .asTask())));
+                          new FlexibleProcess(targetReached, validator, scoreBooster).asTask())));
 
       Map<String, Object> result =
           app.workflowDefinition(workflow)
@@ -578,11 +548,7 @@ public class FlexibleProcessTest {
                   List.of(
                       new TaskItem(
                           "flexible_process",
-                          FlexibleProcess.builder()
-                              .exitCondition(valueAtLeast200)
-                              .activities(activities)
-                              .build()
-                              .asTask())));
+                          new FlexibleProcess(valueAtLeast200, activities).asTask())));
 
       Map<String, Object> result =
           app.workflowDefinition(workflow)
@@ -640,11 +606,7 @@ public class FlexibleProcessTest {
                   List.of(
                       new TaskItem(
                           "flexible_process",
-                          FlexibleProcess.builder()
-                              .exitCondition(allStagesCompleted)
-                              .activities(activities)
-                              .build()
-                              .asTask())));
+                          new FlexibleProcess(allStagesCompleted, activities).asTask())));
 
       Map<String, Object> result =
           app.workflowDefinition(workflow)
@@ -694,11 +656,8 @@ public class FlexibleProcessTest {
                   List.of(
                       new TaskItem(
                           "flexible_process",
-                          FlexibleProcess.builder()
-                              .exitCondition(workflowModel -> false)
-                              .activities(activities)
-                              .maxAttempts(7)
-                              .build()
+                          new FlexibleProcess(workflowModel -> false, activities)
+                              .setMaxAttempts(7)
                               .asTask())));
 
       app.workflowDefinition(workflow).instance(Map.of()).start().get().asMap().orElseThrow();
@@ -790,10 +749,8 @@ public class FlexibleProcessTest {
                   List.of(
                       new TaskItem(
                           "flexible_process",
-                          FlexibleProcess.builder()
-                              .exitCondition(accountingFinished)
-                              .activities(loadCustomer, applyWelcomeBonus, chargeFee)
-                              .build()
+                          new FlexibleProcess(
+                                  accountingFinished, loadCustomer, applyWelcomeBonus, chargeFee)
                               .asTask())));
 
       Map<String, Object> result =
@@ -886,10 +843,11 @@ public class FlexibleProcessTest {
                   List.of(
                       new TaskItem(
                           "flexible_process",
-                          FlexibleProcess.builder()
-                              .exitCondition(producerConsumerFinished)
-                              .activities(producer, consumerActivity, completionMarker)
-                              .build()
+                          new FlexibleProcess(
+                                  producerConsumerFinished,
+                                  producer,
+                                  consumerActivity,
+                                  completionMarker)
                               .asTask())));
 
       Map<String, Object> result =
@@ -985,10 +943,11 @@ public class FlexibleProcessTest {
                   List.of(
                       new TaskItem(
                           "flexible_process",
-                          FlexibleProcess.builder()
-                              .exitCondition(cascadingFinished)
-                              .activities(prepareInput, computeIntermediate, finalizeResult)
-                              .build()
+                          new FlexibleProcess(
+                                  cascadingFinished,
+                                  prepareInput,
+                                  computeIntermediate,
+                                  finalizeResult)
                               .asTask())));
 
       Map<String, Object> result =
@@ -1068,11 +1027,8 @@ public class FlexibleProcessTest {
                   List.of(
                       new TaskItem(
                           "flexible_process",
-                          FlexibleProcess.builder()
-                              .exitCondition(toggleScenarioFinished)
-                              .activities(toggler, worker)
-                              .maxAttempts(20)
-                              .build()
+                          new FlexibleProcess(toggleScenarioFinished, toggler, worker)
+                              .setMaxAttempts(20)
                               .asTask())));
 
       Map<String, Object> result =
@@ -1108,8 +1064,7 @@ public class FlexibleProcessTest {
           return Boolean.TRUE.equals(data.get("classified"));
         };
 
-    FlexibleProcess classificationProcess =
-        FlexibleProcess.builder().exitCondition(classificationDone).activities(classifier).build();
+    FlexibleProcess classificationProcess = new FlexibleProcess(classificationDone, classifier);
 
     Activity highRiskHandler =
         Activity.builder()
@@ -1152,10 +1107,7 @@ public class FlexibleProcessTest {
         };
 
     FlexibleProcess handlingProcess =
-        FlexibleProcess.builder()
-            .exitCondition(handlingFinished)
-            .activities(highRiskHandler, lowRiskHandler)
-            .build();
+        new FlexibleProcess(handlingFinished, highRiskHandler, lowRiskHandler);
 
     Workflow workflow =
         FuncWorkflowBuilder.workflow("chained-classifier-handler")
@@ -1228,11 +1180,7 @@ public class FlexibleProcessTest {
                 List.of(
                     new TaskItem(
                         "flexible_process",
-                        FlexibleProcess.builder()
-                            .exitCondition(counterReachedOne)
-                            .activities(oneShot)
-                            .build()
-                            .asTask())));
+                        new FlexibleProcess(counterReachedOne, oneShot).asTask())));
 
     try (WorkflowApplication app = WorkflowApplication.builder().build()) {
       var definition = app.workflowDefinition(workflow);
@@ -1275,8 +1223,7 @@ public class FlexibleProcessTest {
           return counter >= 1;
         };
 
-    FlexibleProcess process =
-        FlexibleProcess.builder().exitCondition(counterReachedOne).activities(oneShot).build();
+    FlexibleProcess process = new FlexibleProcess(counterReachedOne, oneShot);
 
     Workflow workflow =
         FuncWorkflowBuilder.workflow("test-non-repeatable-resets-between-definitions")
@@ -1327,11 +1274,8 @@ public class FlexibleProcessTest {
             .tasks(
                 process(
                     "flexible_process",
-                    FlexibleProcess.builder()
-                        .exitCondition(workflowModel -> false)
-                        .activities(iterationCounter)
-                        .maxAttempts(3)
-                        .build()))
+                    new FlexibleProcess(workflowModel -> false, iterationCounter)
+                        .setMaxAttempts(3)))
             .build();
 
     try (WorkflowApplication app = WorkflowApplication.builder().build()) {
@@ -1376,8 +1320,7 @@ public class FlexibleProcessTest {
           return Boolean.TRUE.equals(data.get("classified"));
         };
 
-    FlexibleProcess classificationProcess =
-        FlexibleProcess.builder().exitCondition(classificationDone).activities(classifier).build();
+    FlexibleProcess classificationProcess = new FlexibleProcess(classificationDone, classifier);
 
     Activity highRiskHandler =
         Activity.builder()
@@ -1420,10 +1363,7 @@ public class FlexibleProcessTest {
         };
 
     FlexibleProcess handlingProcess =
-        FlexibleProcess.builder()
-            .exitCondition(handlingFinished)
-            .activities(highRiskHandler, lowRiskHandler)
-            .build();
+        new FlexibleProcess(handlingFinished, highRiskHandler, lowRiskHandler);
 
     Workflow workflow =
         FuncWorkflowBuilder.workflow("chained-classifier-handler-nonleaking")
