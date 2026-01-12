@@ -62,7 +62,8 @@ public class CustomFunctionTest {
   @ValueSource(
       strings = {
         "workflows-samples/call-custom-function-cataloged.yaml",
-        "workflows-samples/call-custom-function-cataloged-global.yaml"
+        "workflows-samples/call-custom-function-cataloged-global.yaml",
+        "workflows-samples/call-custom-function-cataloged-default.yaml"
       })
   void testCustomCatalogFunction(String fileName) throws IOException {
     assertThat(

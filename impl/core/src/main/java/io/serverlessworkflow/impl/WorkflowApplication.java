@@ -41,6 +41,7 @@ import io.serverlessworkflow.impl.scheduler.DefaultWorkflowScheduler;
 import io.serverlessworkflow.impl.scheduler.WorkflowScheduler;
 import io.serverlessworkflow.impl.schema.SchemaValidator;
 import io.serverlessworkflow.impl.schema.SchemaValidatorFactory;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -78,6 +79,7 @@ public class WorkflowApplication implements AutoCloseable {
   private final SchedulerListener schedulerListener;
   private final Optional<URITemplateResolver> templateResolver;
   private final Optional<FunctionReader> functionReader;
+  private final URI defaultCatalogURI;
 
   private WorkflowApplication(Builder builder) {
     this.taskFactory = builder.taskFactory;
@@ -102,6 +104,7 @@ public class WorkflowApplication implements AutoCloseable {
     this.secretManager = builder.secretManager;
     this.templateResolver = builder.templateResolver;
     this.functionReader = builder.functionReader;
+    this.defaultCatalogURI = builder.defaultCatalogURI;
   }
 
   public TaskExecutorFactory taskFactory() {
@@ -184,6 +187,7 @@ public class WorkflowApplication implements AutoCloseable {
     private SchedulerListener schedulerListener;
     private Optional<URITemplateResolver> templateResolver;
     private Optional<FunctionReader> functionReader;
+    private URI defaultCatalogURI;
 
     private Builder() {
       ServiceLoader.load(NamedWorkflowAdditionalObject.class)
@@ -281,6 +285,15 @@ public class WorkflowApplication implements AutoCloseable {
       return this;
     }
 
+    public Builder withDefaultCatalogURI(String defaultCatalogURI) {
+      return withDefaultCatalogURI(URI.create(defaultCatalogURI));
+    }
+
+    public Builder withDefaultCatalogURI(URI defaultCatalogURI) {
+      this.defaultCatalogURI = defaultCatalogURI;
+      return this;
+    }
+
     public WorkflowApplication build() {
       if (modelFactory == null) {
         modelFactory =
@@ -344,6 +357,9 @@ public class WorkflowApplication implements AutoCloseable {
       }
       templateResolver = ServiceLoader.load(URITemplateResolver.class).findFirst();
       functionReader = ServiceLoader.load(FunctionReader.class).findFirst();
+      if (defaultCatalogURI == null) {
+        defaultCatalogURI = URI.create("https://github.com/serverlessworkflow/catalog");
+      }
       return new WorkflowApplication(this);
     }
   }
@@ -427,6 +443,10 @@ public class WorkflowApplication implements AutoCloseable {
 
   public Optional<FunctionReader> functionReader() {
     return functionReader;
+  }
+
+  public URI defaultCatalogURI() {
+    return defaultCatalogURI;
   }
 
   public <T> Optional<T> additionalObject(
