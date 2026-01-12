@@ -21,8 +21,6 @@ import io.serverlessworkflow.api.types.FunctionArguments;
 import io.serverlessworkflow.api.types.Task;
 import io.serverlessworkflow.api.types.TaskBase;
 import io.serverlessworkflow.api.types.Use;
-import io.serverlessworkflow.api.types.UseCatalogs;
-import io.serverlessworkflow.api.types.UseFunctions;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.WorkflowUtils;
@@ -43,33 +41,43 @@ public class CallFunctionExecutorBuilder implements CallableTaskBuilder<CallFunc
       CallFunction task, WorkflowDefinition definition, WorkflowMutablePosition position) {
     String functionName = task.getCall();
     Use use = definition.workflow().getUse();
+    int indexOf = functionName.indexOf('@');
     Task function = null;
-    if (use != null) {
-      UseFunctions functions = use.getFunctions();
-      if (functions != null) {
-        function = functions.getAdditionalProperties().get(functionName);
-      }
-      if (function == null) {
-        int indexOf = functionName.indexOf('@');
-        if (indexOf > 0) {
-          String catalogName = functionName.substring(indexOf + 1);
-          UseCatalogs catalogs = use.getCatalogs();
-          if (catalogs != null) {
-            Catalog catalog = catalogs.getAdditionalProperties().get(catalogName);
-            ResourceLoader loader = definition.resourceLoader();
-            function =
-                definition
-                    .resourceLoader()
-                    .loadURI(
-                        WorkflowUtils.concatURI(
-                            loader.uri(catalog.getEndpoint()),
-                            pathFromFunctionName(functionName.substring(0, indexOf))),
-                        h -> from(definition, h));
-          }
+    if (indexOf > 0) {
+      // Catalog function
+      URI catalogEndpoint;
+      String catalogName = functionName.substring(indexOf + 1);
+      ResourceLoader loader = definition.resourceLoader();
+      if (catalogName.equalsIgnoreCase("default")) {
+        catalogEndpoint = definition.application().defaultCatalogURI();
+      } else {
+        if (use == null || use.getCatalogs() == null) {
+          throw new IllegalStateException(
+              "Using catalog " + catalogName + ", but there is not catalog definition");
         }
+        Catalog catalog = use.getCatalogs().getAdditionalProperties().get(catalogName);
+        if (catalog == null) {
+          throw new IllegalStateException(
+              "Catalog "
+                  + catalogName
+                  + " is not included in Catalog dictionary: "
+                  + use.getCatalogs().getAdditionalProperties());
+        }
+        catalogEndpoint = loader.uri(catalog.getEndpoint());
       }
+      function =
+          definition
+              .resourceLoader()
+              .loadURI(
+                  WorkflowUtils.concatURI(
+                      catalogEndpoint, pathFromFunctionName(functionName.substring(0, indexOf))),
+                  h -> from(definition, h));
+    } else if (use != null && use.getFunctions() != null) {
+      // search for inline function definition
+      function = use.getFunctions().getAdditionalProperties().get(functionName);
     }
     if (function == null) {
+      // try to load function if function name is an uri
       function =
           definition.resourceLoader().loadURI(URI.create(functionName), h -> from(definition, h));
     }
