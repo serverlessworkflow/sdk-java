@@ -15,17 +15,22 @@
  */
 package io.serverlessworkflow.impl.executors.http;
 
+import io.serverlessworkflow.impl.ServicePriority;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
 import jakarta.ws.rs.client.Invocation;
 
 /**
- * Interface for decorating HTTP requests with additional headers or modifications.
+ * Interface for decorating HTTP requests with additional modifications.
  *
- * <p>Implementations should be loaded via ServiceLoader.
+ * <p>Implementations should be loaded via ServiceLoader and are sorted by priority in ascending
+ * order (lower priority numbers executed first). Decorators are applied in sequence, where later
+ * decorators can override headers set by earlier decorators with the same header name.
+ *
+ * @see ServicePriority
  */
-public interface RequestDecorator {
+public interface RequestDecorator extends ServicePriority {
 
   /**
    * Decorate the HTTP request builder with additional headers or modifications.
