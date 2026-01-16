@@ -33,6 +33,7 @@ import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
 import io.serverlessworkflow.impl.events.CloudEventUtils;
+import io.serverlessworkflow.impl.events.EmittedEventDecorator;
 import io.serverlessworkflow.impl.events.EventPublisher;
 import io.serverlessworkflow.impl.expressions.ExpressionDescriptor;
 import java.net.URI;
@@ -40,10 +41,16 @@ import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
+import java.util.ServiceLoader;
 import java.util.concurrent.CompletableFuture;
 
 public class EmitExecutor extends RegularTaskExecutor<EmitTask> {
 
+  private static final Collection<EmittedEventDecorator> emittedDecorators =
+      ServiceLoader.load(EmittedEventDecorator.class).stream()
+          .map(ServiceLoader.Provider::get)
+          .sorted()
+          .toList();
   private final EventPropertiesBuilder props;
 
   public static class EmitExecutorBuilder extends RegularTaskExecutorBuilder<EmitTask> {
@@ -124,7 +131,7 @@ public class EmitExecutor extends RegularTaskExecutor<EmitTask> {
         .additionalFilter()
         .map(filter -> filter.apply(workflow, taskContext, taskContext.input()))
         .ifPresent(value -> value.forEach((k, v) -> addExtension(ceBuilder, k, v)));
-
+    emittedDecorators.forEach(d -> d.decorate(ceBuilder, workflow, taskContext));
     return ceBuilder.build();
   }
 
