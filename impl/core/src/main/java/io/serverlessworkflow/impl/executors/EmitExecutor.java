@@ -32,19 +32,23 @@ import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
+import io.serverlessworkflow.impl.events.BuilderDecorator;
 import io.serverlessworkflow.impl.events.CloudEventUtils;
 import io.serverlessworkflow.impl.events.EventPublisher;
 import io.serverlessworkflow.impl.expressions.ExpressionDescriptor;
 import java.net.URI;
 import java.time.OffsetDateTime;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.ServiceLoader;
 import java.util.concurrent.CompletableFuture;
 
 public class EmitExecutor extends RegularTaskExecutor<EmitTask> {
 
   private final EventPropertiesBuilder props;
+  private final List<BuilderDecorator> decorators;
 
   public static class EmitExecutorBuilder extends RegularTaskExecutorBuilder<EmitTask> {
 
@@ -66,6 +70,11 @@ public class EmitExecutor extends RegularTaskExecutor<EmitTask> {
   private EmitExecutor(EmitExecutorBuilder builder) {
     super(builder);
     this.props = builder.eventBuilder;
+    this.decorators =
+        ServiceLoader.load(BuilderDecorator.class).stream()
+            .map(ServiceLoader.Provider::get)
+            .sorted()
+            .toList();
   }
 
   @Override
@@ -73,6 +82,7 @@ public class EmitExecutor extends RegularTaskExecutor<EmitTask> {
       WorkflowContext workflow, TaskContext taskContext) {
     Collection<EventPublisher> eventPublishers =
         workflow.definition().application().eventPublishers();
+
     CloudEvent ce = buildCloudEvent(workflow, taskContext);
     return CompletableFuture.allOf(
             eventPublishers.stream()
@@ -83,6 +93,13 @@ public class EmitExecutor extends RegularTaskExecutor<EmitTask> {
 
   private CloudEvent buildCloudEvent(WorkflowContext workflow, TaskContext taskContext) {
     io.cloudevents.core.v1.CloudEventBuilder ceBuilder = CloudEventBuilder.v1();
+
+    for (BuilderDecorator decorator : decorators) {
+      if (decorator.accept(io.cloudevents.core.v1.CloudEventBuilder.class)) {
+        decorator.decorate(ceBuilder, workflow, taskContext, taskContext.input());
+      }
+    }
+
     ceBuilder.withId(
         props
             .idFilter()
