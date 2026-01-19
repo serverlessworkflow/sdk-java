@@ -80,8 +80,7 @@ public class HttpExecutor implements CallableTask {
       requestDecorator.decorate(request, workflow, taskContext);
     }
 
-    headersMap.ifPresent(
-        h -> h.apply(workflow, taskContext, input).forEach(request::header));
+    headersMap.ifPresent(h -> h.apply(workflow, taskContext, input).forEach(request::header));
     return CompletableFuture.supplyAsync(
         () -> requestFunction.apply(request, uri, workflow, taskContext, input),
         workflow.definition().application().executorService());

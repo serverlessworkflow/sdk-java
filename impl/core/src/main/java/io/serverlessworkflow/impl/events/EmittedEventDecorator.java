@@ -25,7 +25,7 @@ import io.serverlessworkflow.impl.WorkflowContext;
  *
  * <p>Implementations should be loaded via ServiceLoader and are sorted by priority in ascending
  * order (lower priority numbers executed first). Decorators are applied in sequence, where later
- * decorators can override headers set by earlier decorators with the same header name.
+ * decorators can override configurations set by earlier decorators.
  *
  * @see ServicePriority
  */
