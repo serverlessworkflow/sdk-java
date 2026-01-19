@@ -85,6 +85,8 @@ public class Activity {
         && Objects.equals(postAction, activity.postAction);
   }
 
+  // Activity keeps track of its own execution state, so we need to create a new instance when used
+  // In other words, an Activity is a prototype
   public Activity copy() {
     return new Activity(
         this.task, this.name, this.entryCondition, this.postAction, this.isRepeatable);
@@ -92,6 +94,11 @@ public class Activity {
 
   public static ActivityBuilder builder() {
     return new ActivityBuilder();
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(task, name, entryCondition, postAction);
   }
 
   public static class ActivityBuilder {
@@ -140,16 +147,5 @@ public class Activity {
           postAction,
           isRepeatable);
     }
-  }
-
-  // Activity keeps track of its own execution state, so we need to create a new instance when used
-  // In other words, an Activity is a prototype
-  Activity newInstance() {
-    return new Activity(this.task, name, this.entryCondition, this.postAction, this.isRepeatable);
-  }
-
-  @Override
-  public int hashCode() {
-    return Objects.hash(task, name, entryCondition, postAction);
   }
 }

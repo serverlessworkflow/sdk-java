@@ -39,7 +39,7 @@ public class FlexibleProcess extends TaskBase {
   public Activity[] getActivities() {
     Activity[] result = new Activity[activities.length];
     for (int i = 0; i < activities.length; i++) {
-      result[i] = activities[i].newInstance();
+      result[i] = activities[i].copy();
     }
     return result;
   }
