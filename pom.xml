@@ -53,7 +53,7 @@
     <version.maven>3.9.9</version.maven>
 
     <!-- Plugin versions -->
-    <version.buildnumber.plugin>3.2.1</version.buildnumber.plugin>
+    <version.buildnumber.plugin>3.3.0</version.buildnumber.plugin>
     <version.checkstyle.plugin>3.6.0</version.checkstyle.plugin>
     <version.compiler.plugin>3.14.1</version.compiler.plugin>
     <version.deploy.plugin>3.1.4</version.deploy.plugin>
