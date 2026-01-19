@@ -20,6 +20,15 @@ import io.serverlessworkflow.impl.ServicePriority;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
 
+/**
+ * Interface for decorating {@link CloudEventBuilder} objects.
+ *
+ * <p>Implementations should be loaded via ServiceLoader and are sorted by priority in ascending
+ * order (lower priority numbers executed first). Decorators are applied in sequence, where later
+ * decorators can override headers set by earlier decorators with the same header name.
+ *
+ * @see ServicePriority
+ */
 public interface EmittedEventDecorator extends ServicePriority {
 
   void decorate(
