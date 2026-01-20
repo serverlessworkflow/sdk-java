@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.events;
+package io.serverlessworkflow.impl.executors.http;
 
-import io.cloudevents.core.builder.CloudEventBuilder;
 import io.serverlessworkflow.impl.WorkflowDecorator;
+import jakarta.ws.rs.client.Invocation;
 
-/** Interface for decorating {@link CloudEventBuilder} objects. */
-public interface EmittedEventDecorator extends WorkflowDecorator<CloudEventBuilder> {}
+/** Interface for decorating HTTP requests with additional modifications. */
+public interface HttpRequestDecorator extends WorkflowDecorator<Invocation.Builder> {}
