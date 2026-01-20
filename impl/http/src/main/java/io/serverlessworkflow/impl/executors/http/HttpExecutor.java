@@ -24,7 +24,7 @@ import io.serverlessworkflow.impl.executors.CallableTask;
 import jakarta.ws.rs.client.Invocation.Builder;
 import jakarta.ws.rs.client.WebTarget;
 import java.net.URI;
-import java.util.List;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -38,7 +38,7 @@ public class HttpExecutor implements CallableTask {
   private final Optional<WorkflowValueResolver<Map<String, Object>>> headersMap;
   private final Optional<WorkflowValueResolver<Map<String, Object>>> queryMap;
   private final RequestExecutor requestFunction;
-  private final List<RequestDecorator> requestDecorators;
+  private final Collection<HttpRequestDecorator> requestDecorators;
 
   HttpExecutor(
       WorkflowValueResolver<URI> uriSupplier,
@@ -52,7 +52,7 @@ public class HttpExecutor implements CallableTask {
     this.requestFunction = requestFunction;
     this.pathSupplier = pathSupplier;
     this.requestDecorators =
-        ServiceLoader.load(RequestDecorator.class).stream()
+        ServiceLoader.load(HttpRequestDecorator.class).stream()
             .map(ServiceLoader.Provider::get)
             .sorted()
             .toList();
@@ -75,11 +75,7 @@ public class HttpExecutor implements CallableTask {
       target = target.queryParam(entry.getKey(), entry.getValue());
     }
     Builder request = target.request();
-
-    for (RequestDecorator requestDecorator : requestDecorators) {
-      requestDecorator.decorate(request, workflow, taskContext);
-    }
-
+    requestDecorators.forEach(d -> d.decorate(request, workflow, taskContext));
     headersMap.ifPresent(h -> h.apply(workflow, taskContext, input).forEach(request::header));
     return CompletableFuture.supplyAsync(
         () -> requestFunction.apply(request, uri, workflow, taskContext, input),
