@@ -70,6 +70,7 @@ public class WorkflowApplication implements AutoCloseable {
   private final EventConsumer<?, ?> eventConsumer;
   private final Collection<EventPublisher> eventPublishers;
   private final boolean lifeCycleCEPublishingEnabled;
+  private final boolean lifeCycleStatusChangeEnabled;
   private final WorkflowModelFactory modelFactory;
   private final WorkflowModelFactory contextFactory;
   private final WorkflowScheduler scheduler;
@@ -95,6 +96,7 @@ public class WorkflowApplication implements AutoCloseable {
     this.eventConsumer = builder.eventConsumer;
     this.eventPublishers = builder.eventPublishers;
     this.lifeCycleCEPublishingEnabled = builder.lifeCycleCEPublishingEnabled;
+    this.lifeCycleStatusChangeEnabled = builder.lifeCycleStatusChangeEnabled;
     this.modelFactory = builder.modelFactory;
     this.contextFactory = builder.contextFactory;
     this.scheduler = builder.scheduler;
@@ -179,6 +181,7 @@ public class WorkflowApplication implements AutoCloseable {
     private RuntimeDescriptorFactory descriptorFactory =
         () -> new RuntimeDescriptor("reference impl", "1.0.0_alpha", Collections.emptyMap());
     private boolean lifeCycleCEPublishingEnabled = true;
+    private boolean lifeCycleStatusChangeEnabled = true;
     private WorkflowModelFactory modelFactory;
     private WorkflowModelFactory contextFactory;
     private Map<String, WorkflowAdditionalObject<?>> additionalObjects = new HashMap<>();
@@ -221,6 +224,11 @@ public class WorkflowApplication implements AutoCloseable {
 
     public Builder disableLifeCycleCEPublishing() {
       this.lifeCycleCEPublishingEnabled = false;
+      return this;
+    }
+
+    public Builder disableStatusChangePublishing() {
+      this.lifeCycleStatusChangeEnabled = false;
       return this;
     }
 
@@ -419,6 +427,10 @@ public class WorkflowApplication implements AutoCloseable {
 
   public boolean isLifeCycleCEPublishingEnabled() {
     return lifeCycleCEPublishingEnabled;
+  }
+
+  public boolean isStatusChangePublishingEnabled() {
+    return lifeCycleStatusChangeEnabled;
   }
 
   public WorkflowScheduler scheduler() {

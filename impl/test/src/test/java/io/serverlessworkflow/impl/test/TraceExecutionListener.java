@@ -15,19 +15,16 @@
  */
 package io.serverlessworkflow.impl.test;
 
-import io.serverlessworkflow.impl.lifecycle.TaskCancelledEvent;
 import io.serverlessworkflow.impl.lifecycle.TaskCompletedEvent;
 import io.serverlessworkflow.impl.lifecycle.TaskFailedEvent;
-import io.serverlessworkflow.impl.lifecycle.TaskResumedEvent;
 import io.serverlessworkflow.impl.lifecycle.TaskRetriedEvent;
 import io.serverlessworkflow.impl.lifecycle.TaskStartedEvent;
-import io.serverlessworkflow.impl.lifecycle.TaskSuspendedEvent;
-import io.serverlessworkflow.impl.lifecycle.WorkflowCancelledEvent;
 import io.serverlessworkflow.impl.lifecycle.WorkflowCompletedEvent;
 import io.serverlessworkflow.impl.lifecycle.WorkflowExecutionListener;
 import io.serverlessworkflow.impl.lifecycle.WorkflowFailedEvent;
 import io.serverlessworkflow.impl.lifecycle.WorkflowResumedEvent;
 import io.serverlessworkflow.impl.lifecycle.WorkflowStartedEvent;
+import io.serverlessworkflow.impl.lifecycle.WorkflowStatusEvent;
 import io.serverlessworkflow.impl.lifecycle.WorkflowSuspendedEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +33,7 @@ public class TraceExecutionListener implements WorkflowExecutionListener {
 
   private static final Logger logger = LoggerFactory.getLogger(TraceExecutionListener.class);
 
+  @Override
   public void onWorkflowStarted(WorkflowStartedEvent ev) {
     logger.info(
         "Workflow definition {} with id {} started at {} with data {}",
@@ -45,6 +43,7 @@ public class TraceExecutionListener implements WorkflowExecutionListener {
         ev.workflowContext().instanceData().input());
   }
 
+  @Override
   public void onWorkflowResumed(WorkflowResumedEvent ev) {
     logger.info(
         "Workflow definition {} with id {} resumed at {}",
@@ -53,6 +52,7 @@ public class TraceExecutionListener implements WorkflowExecutionListener {
         ev.eventDate());
   }
 
+  @Override
   public void onWorkflowSuspended(WorkflowSuspendedEvent ev) {
     logger.info(
         "Workflow definition {} with id {} suspended at {}",
@@ -61,6 +61,7 @@ public class TraceExecutionListener implements WorkflowExecutionListener {
         ev.eventDate());
   }
 
+  @Override
   public void onWorkflowCompleted(WorkflowCompletedEvent ev) {
     logger.info(
         "Workflow definition {} with id {} completed at {}",
@@ -69,6 +70,7 @@ public class TraceExecutionListener implements WorkflowExecutionListener {
         ev.eventDate());
   }
 
+  @Override
   public void onWorkflowFailed(WorkflowFailedEvent ev) {
     logger.info(
         "Workflow definition {} with id {} failed at {}",
@@ -78,8 +80,7 @@ public class TraceExecutionListener implements WorkflowExecutionListener {
         ev.cause());
   }
 
-  public void onWorkflowCancelled(WorkflowCancelledEvent ev) {}
-
+  @Override
   public void onTaskStarted(TaskStartedEvent ev) {
     logger.info(
         "Task {} started at {}, position {}",
@@ -88,6 +89,7 @@ public class TraceExecutionListener implements WorkflowExecutionListener {
         ev.taskContext().position());
   }
 
+  @Override
   public void onTaskCompleted(TaskCompletedEvent ev) {
     logger.info(
         "Task {} completed at {} with output {}",
@@ -96,6 +98,7 @@ public class TraceExecutionListener implements WorkflowExecutionListener {
         ev.taskContext().output().asJavaObject());
   }
 
+  @Override
   public void onTaskFailed(TaskFailedEvent ev) {
     logger.info(
         "Task {} failed at {}",
@@ -105,17 +108,23 @@ public class TraceExecutionListener implements WorkflowExecutionListener {
         ev.cause());
   }
 
-  public void onTaskCancelled(TaskCancelledEvent ev) {}
-
-  public void onTaskSuspended(TaskSuspendedEvent ev) {}
-
-  public void onTaskResumed(TaskResumedEvent ev) {}
-
+  @Override
   public void onTaskRetried(TaskRetriedEvent ev) {
     logger.info(
         "Task {} retried at {}, position {}",
         ev.taskContext().taskName(),
         ev.eventDate(),
         ev.taskContext().position());
+  }
+
+  @Override
+  public void onWorkflowStatusChanged(WorkflowStatusEvent ev) {
+    logger.info(
+        "Workflow definition {} with id {} changed status from {} to {} at {}",
+        ev.workflowContext().definition().workflow().getDocument().getName(),
+        ev.workflowContext().instanceData().id(),
+        ev.previousStatus(),
+        ev.status(),
+        ev.eventDate());
   }
 }

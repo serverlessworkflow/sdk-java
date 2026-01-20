@@ -43,6 +43,8 @@ public interface WorkflowExecutionListener extends AutoCloseable {
 
   default void onTaskRetried(TaskRetriedEvent ev) {}
 
+  default void onWorkflowStatusChanged(WorkflowStatusEvent ev) {}
+
   @Override
   default void close() {}
 }
