@@ -18,7 +18,6 @@ package io.serverlessworkflow.impl.executors.http;
 import io.serverlessworkflow.impl.ServicePriority;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
-import io.serverlessworkflow.impl.WorkflowModel;
 import jakarta.ws.rs.client.Invocation;
 
 /**
@@ -38,11 +37,7 @@ public interface RequestDecorator extends ServicePriority {
    * @param requestBuilder the request builder to decorate
    * @param workflowContext the workflow context
    * @param taskContext the task context
-   * @param workflowModel the input data
    */
   void decorate(
-      Invocation.Builder requestBuilder,
-      WorkflowContext workflowContext,
-      TaskContext taskContext,
-      WorkflowModel workflowModel);
+      Invocation.Builder requestBuilder, WorkflowContext workflowContext, TaskContext taskContext);
 }
