@@ -1,0 +1,80 @@
+/*
+ * Copyright 2020-Present The Serverless Workflow Specification Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.serverlessworkflow.impl.executors.grpc;
+
+import com.google.protobuf.Message;
+import io.grpc.Status;
+import io.grpc.stub.StreamObserver;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+
+public class WaitingStreamObserver implements StreamObserver<Message> {
+
+  List<Message> responses = new ArrayList<>();
+  CompletableFuture<List<Message>> responsesFuture = new CompletableFuture<>();
+
+  @Override
+  public void onNext(Message messageReply) {
+    responses.add(messageReply);
+  }
+
+  @Override
+  public void onError(Throwable throwable) {
+    responsesFuture.completeExceptionally(throwable);
+  }
+
+  @Override
+  public void onCompleted() {
+    responsesFuture.complete(responses);
+  }
+
+  public List<Message> get() {
+    int defaultTimeout = 10000;
+
+    try {
+      return responsesFuture.get(defaultTimeout, TimeUnit.SECONDS);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new IllegalStateException(e);
+    } catch (TimeoutException e) {
+      throw new IllegalStateException(
+          String.format("gRPC call timed out after %d seconds", defaultTimeout), e);
+    } catch (ExecutionException e) {
+      throw new IllegalStateException(getServerStreamErrorMessage(e.getCause()), e.getCause());
+    }
+  }
+
+  public void checkForServerStreamErrors() {
+    if (responsesFuture.isCompletedExceptionally()) {
+      try {
+        responsesFuture.join();
+      } catch (CompletionException e) {
+        throw new IllegalStateException(getServerStreamErrorMessage(e.getCause()), e.getCause());
+      }
+    }
+  }
+
+  private String getServerStreamErrorMessage(Throwable throwable) {
+    return String.format(
+        "Received an error through gRPC server stream with status: %s",
+        Status.fromThrowable(throwable));
+  }
+}
