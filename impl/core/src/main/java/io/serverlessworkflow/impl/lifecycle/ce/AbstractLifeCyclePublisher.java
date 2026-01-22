@@ -41,6 +41,7 @@ import io.serverlessworkflow.impl.lifecycle.WorkflowExecutionListener;
 import io.serverlessworkflow.impl.lifecycle.WorkflowFailedEvent;
 import io.serverlessworkflow.impl.lifecycle.WorkflowResumedEvent;
 import io.serverlessworkflow.impl.lifecycle.WorkflowStartedEvent;
+import io.serverlessworkflow.impl.lifecycle.WorkflowStatusEvent;
 import io.serverlessworkflow.impl.lifecycle.WorkflowSuspendedEvent;
 import java.time.OffsetDateTime;
 import java.util.Collection;
@@ -63,6 +64,8 @@ public abstract class AbstractLifeCyclePublisher implements WorkflowExecutionLis
   private static final String WORKFLOW_RESUMED = "io.serverlessworkflow.workflow.resumed.v1";
   private static final String WORKFLOW_FAULTED = "io.serverlessworkflow.workflow.faulted.v1";
   private static final String WORKFLOW_CANCELLED = "io.serverlessworkflow.workflow.cancelled.v1";
+  private static final String WORKFLOW_STATUS_CHANGED =
+      "io.serverlessworkflow.workflow.status-changed.v1";
 
   public static Collection<String> getLifeCycleTypes() {
     return Set.of(
@@ -78,7 +81,8 @@ public abstract class AbstractLifeCyclePublisher implements WorkflowExecutionLis
         WORKFLOW_SUSPENDED,
         WORKFLOW_RESUMED,
         WORKFLOW_FAULTED,
-        WORKFLOW_CANCELLED);
+        WORKFLOW_CANCELLED,
+        WORKFLOW_STATUS_CHANGED);
   }
 
   @Override
@@ -263,6 +267,23 @@ public abstract class AbstractLifeCyclePublisher implements WorkflowExecutionLis
                 .build());
   }
 
+  @Override
+  public void onWorkflowStatusChanged(WorkflowStatusEvent event) {
+    if (appl(event).isStatusChangePublishingEnabled()) {
+      publish(
+          event,
+          ev ->
+              builder()
+                  .withData(
+                      cloudEventData(
+                          new WorkflowStatusCEDataEvent(
+                              id(ev), ref(ev), ev.eventDate(), ev.status().toString()),
+                          this::convert))
+                  .withType(WORKFLOW_STATUS_CHANGED)
+                  .build());
+    }
+  }
+
   protected byte[] convert(WorkflowStartedCEData data) {
     return convertToBytes(data);
   }
@@ -315,10 +336,14 @@ public abstract class AbstractLifeCyclePublisher implements WorkflowExecutionLis
     return convertToBytes(data);
   }
 
+  protected byte[] convert(WorkflowStatusCEDataEvent data) {
+    return convertToBytes(data);
+  }
+
   protected abstract <T> byte[] convertToBytes(T data);
 
   protected <T extends WorkflowEvent> void publish(T ev, Function<T, CloudEvent> ceFunction) {
-    WorkflowApplication appl = ev.workflowContext().definition().application();
+    WorkflowApplication appl = appl(ev);
     if (appl.isLifeCycleCEPublishingEnabled()) {
       publish(appl, ceFunction.apply(ev));
     }
@@ -340,6 +365,10 @@ public abstract class AbstractLifeCyclePublisher implements WorkflowExecutionLis
         .withId(CloudEventUtils.id())
         .withSource(CloudEventUtils.source())
         .withTime(OffsetDateTime.now());
+  }
+
+  private static WorkflowApplication appl(WorkflowEvent ev) {
+    return ev.workflowContext().definition().application();
   }
 
   private static String id(WorkflowEvent ev) {

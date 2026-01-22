@@ -23,6 +23,7 @@ import io.serverlessworkflow.impl.lifecycle.WorkflowCompletedEvent;
 import io.serverlessworkflow.impl.lifecycle.WorkflowFailedEvent;
 import io.serverlessworkflow.impl.lifecycle.WorkflowResumedEvent;
 import io.serverlessworkflow.impl.lifecycle.WorkflowStartedEvent;
+import io.serverlessworkflow.impl.lifecycle.WorkflowStatusEvent;
 import io.serverlessworkflow.impl.lifecycle.WorkflowSuspendedEvent;
 import java.time.Instant;
 import java.util.Map;
@@ -38,7 +39,7 @@ import java.util.function.Supplier;
 
 public class WorkflowMutableInstance implements WorkflowInstance {
 
-  protected final AtomicReference<WorkflowStatus> status;
+  private final AtomicReference<WorkflowStatus> status;
   protected final String id;
   protected final WorkflowModel input;
 
@@ -75,7 +76,7 @@ public class WorkflowMutableInstance implements WorkflowInstance {
     if (future != null) {
       return future;
     }
-    status.set(WorkflowStatus.RUNNING);
+    status(WorkflowStatus.RUNNING);
     runnable.run();
     future =
         TaskExecutorHelper.processTaskList(
@@ -106,7 +107,7 @@ public class WorkflowMutableInstance implements WorkflowInstance {
 
   private void handleException(Throwable ex) {
     if (!(ex instanceof CancellationException)) {
-      status.set(WorkflowStatus.FAULTED);
+      status(WorkflowStatus.FAULTED);
       publishEvent(
           workflowContext, l -> l.onWorkflowFailed(new WorkflowFailedEvent(workflowContext, ex)));
     }
@@ -120,7 +121,7 @@ public class WorkflowMutableInstance implements WorkflowInstance {
             .map(f -> f.apply(workflowContext, null, node))
             .orElse(node);
     workflowContext.definition().outputSchemaValidator().ifPresent(v -> v.validate(output));
-    status.set(WorkflowStatus.COMPLETED);
+    status(WorkflowStatus.COMPLETED);
     publishEvent(
         workflowContext,
         l -> l.onWorkflowCompleted(new WorkflowCompletedEvent(workflowContext, output)));
@@ -177,7 +178,14 @@ public class WorkflowMutableInstance implements WorkflowInstance {
   }
 
   public void status(WorkflowStatus state) {
-    this.status.set(state);
+    WorkflowStatus prevState = this.status.getAndSet(state);
+    if (prevState != state) {
+      publishEvent(
+          workflowContext,
+          l ->
+              l.onWorkflowStatusChanged(
+                  new WorkflowStatusEvent(workflowContext, prevState, state)));
+    }
   }
 
   @Override
@@ -213,7 +221,7 @@ public class WorkflowMutableInstance implements WorkflowInstance {
 
   protected final void internalSuspend() {
     suspended = new ConcurrentHashMap<>();
-    status.set(WorkflowStatus.SUSPENDED);
+    status(WorkflowStatus.SUSPENDED);
   }
 
   @Override
@@ -259,7 +267,7 @@ public class WorkflowMutableInstance implements WorkflowInstance {
         suspended.put(suspendedTask, t);
         return suspendedTask;
       } else if (TaskExecutorHelper.isActive(status.get())) {
-        status.set(WorkflowStatus.RUNNING);
+        status(WorkflowStatus.RUNNING);
       }
     } finally {
       statusLock.unlock();
@@ -272,7 +280,7 @@ public class WorkflowMutableInstance implements WorkflowInstance {
     try {
       statusLock.lock();
       if (TaskExecutorHelper.isActive(status.get())) {
-        status.set(WorkflowStatus.CANCELLED);
+        status(WorkflowStatus.CANCELLED);
         publishEvent(
             workflowContext,
             l -> l.onWorkflowCancelled(new WorkflowCancelledEvent(workflowContext)));
