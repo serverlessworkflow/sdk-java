@@ -21,6 +21,7 @@ import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
 import io.serverlessworkflow.impl.executors.CallableTask;
+import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.Invocation.Builder;
 import jakarta.ws.rs.client.WebTarget;
 import java.net.URI;
@@ -69,7 +70,12 @@ public class HttpExecutor implements CallableTask {
                         p.apply(workflow, taskContext, input)))
             .orElse(uriSupplier.apply(workflow, taskContext, input));
 
-    WebTarget target = HttpClientResolver.client(workflow, taskContext).target(uri);
+    Client client = HttpClientResolver.client(workflow, taskContext);
+
+    HttpClientResolver.clientRequestFilter(workflow, taskContext).ifPresent(client::register);
+
+    WebTarget target = client.target(uri);
+
     for (Entry<String, Object> entry :
         queryMap.map(q -> q.apply(workflow, taskContext, input)).orElse(Map.of()).entrySet()) {
       target = target.queryParam(entry.getKey(), entry.getValue());
