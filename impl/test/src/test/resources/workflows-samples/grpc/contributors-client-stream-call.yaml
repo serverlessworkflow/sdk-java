@@ -10,7 +10,7 @@ do:
         proto:
           endpoint: workflows-samples/grpc/proto/contributors.proto
         service:
-          name: ContributorsAPI
+          name: ClientStreaming
           host: localhost
           port: 5011
         method: CreateContributor
