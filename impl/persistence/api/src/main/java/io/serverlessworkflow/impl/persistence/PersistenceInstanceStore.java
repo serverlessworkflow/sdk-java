@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.persistence.bigmap;
+package io.serverlessworkflow.impl.persistence;
 
-public interface BigMapInstanceStore<K, V, T, S> extends AutoCloseable {
-  BigMapInstanceTransaction<K, V, T, S> begin();
+public interface PersistenceInstanceStore<K> extends AutoCloseable {
+  PersistenceInstanceTransaction<K> begin();
 }

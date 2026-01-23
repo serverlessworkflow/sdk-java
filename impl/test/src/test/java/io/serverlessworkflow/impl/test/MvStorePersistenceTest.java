@@ -24,7 +24,6 @@ import io.serverlessworkflow.impl.WorkflowInstance;
 import io.serverlessworkflow.impl.WorkflowStatus;
 import io.serverlessworkflow.impl.persistence.PersistenceApplicationBuilder;
 import io.serverlessworkflow.impl.persistence.PersistenceInstanceHandlers;
-import io.serverlessworkflow.impl.persistence.bigmap.BytesMapPersistenceInstanceHandlers;
 import io.serverlessworkflow.impl.persistence.mvstore.MVStorePersistenceStore;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -38,18 +37,17 @@ public class MvStorePersistenceTest {
   @Test
   void testSimpleRun() throws IOException {
     final String dbName = "db-samples/simple.db";
-    try (PersistenceInstanceHandlers handlers =
-            BytesMapPersistenceInstanceHandlers.builder(new MVStorePersistenceStore(dbName))
-                .build();
+    try (PersistenceInstanceHandlers<String> handlers =
+            PersistenceInstanceHandlers.from(new MVStorePersistenceStore(dbName));
         WorkflowApplication application =
             PersistenceApplicationBuilder.builder(WorkflowApplication.builder(), handlers.writer())
                 .build(); ) {
       WorkflowDefinition definition =
           application.workflowDefinition(
               readWorkflowFromClasspath("workflows-samples/simple-expression.yaml"));
-      assertThat(handlers.reader().readAll(definition).values()).isEmpty();
+      assertThat(handlers.reader().scanAll(definition).count()).isEqualTo(0);
       definition.instance(Map.of()).start().join();
-      assertThat(handlers.reader().readAll(definition).values()).isEmpty();
+      assertThat(handlers.reader().scanAll(definition).count()).isEqualTo(0);
     } finally {
       Files.delete(Path.of(dbName));
     }
@@ -92,9 +90,8 @@ public class MvStorePersistenceTest {
 
   private void runIt(String dbName, WorkflowStatus expectedStatus) throws IOException {
     TaskCounterPerInstanceListener taskCounter = new TaskCounterPerInstanceListener();
-    try (PersistenceInstanceHandlers handlers =
-            BytesMapPersistenceInstanceHandlers.builder(new MVStorePersistenceStore(dbName))
-                .build();
+    try (PersistenceInstanceHandlers<String> handlers =
+            PersistenceInstanceHandlers.from(new MVStorePersistenceStore(dbName));
         WorkflowApplication application =
             PersistenceApplicationBuilder.builder(
                     WorkflowApplication.builder()
@@ -105,7 +102,7 @@ public class MvStorePersistenceTest {
       WorkflowDefinition definition =
           application.workflowDefinition(
               readWorkflowFromClasspath("workflows-samples/set-listen-to-any.yaml"));
-      Collection<WorkflowInstance> instances = handlers.reader().readAll(definition).values();
+      Collection<WorkflowInstance> instances = handlers.reader().scanAll(definition).toList();
       assertThat(instances).hasSize(1);
       instances.forEach(WorkflowInstance::start);
       assertThat(instances)

@@ -15,26 +15,33 @@
  */
 package io.serverlessworkflow.impl.persistence.mvstore;
 
-import io.serverlessworkflow.impl.persistence.bigmap.BigMapInstanceStore;
+import io.serverlessworkflow.impl.marshaller.DefaultBufferFactory;
+import io.serverlessworkflow.impl.marshaller.WorkflowBufferFactory;
+import io.serverlessworkflow.impl.persistence.PersistenceInstanceStore;
 import io.serverlessworkflow.impl.persistence.bigmap.BigMapInstanceTransaction;
 import org.h2.mvstore.MVStore;
 import org.h2.mvstore.tx.TransactionStore;
 
-public class MVStorePersistenceStore
-    implements BigMapInstanceStore<String, byte[], byte[], byte[]> {
+public class MVStorePersistenceStore implements PersistenceInstanceStore<String> {
   private final TransactionStore mvStore;
+  private WorkflowBufferFactory factory;
 
   public MVStorePersistenceStore(String dbName) {
+    this(dbName, DefaultBufferFactory.factory());
+  }
+
+  public MVStorePersistenceStore(String dbName, WorkflowBufferFactory factory) {
     this.mvStore = new TransactionStore(MVStore.open(dbName));
+    this.factory = factory;
   }
 
   @Override
-  public void close() {
+  public void close() throws Exception {
     mvStore.close();
   }
 
   @Override
   public BigMapInstanceTransaction<String, byte[], byte[], byte[]> begin() {
-    return new MVStoreTransaction(mvStore.begin());
+    return new MVStoreTransaction(mvStore.begin(), factory);
   }
 }

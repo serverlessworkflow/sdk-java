@@ -13,14 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.persistence.bigmap;
+package io.serverlessworkflow.impl.persistence;
 
 import io.serverlessworkflow.impl.WorkflowContextData;
 
-public abstract class BigMapIdInstanceWriter<V, T, S>
-    extends BigMapInstanceWriter<String, V, T, S> {
+public class DefaultPersistenceInstanceWriter extends AbstractPersistenceInstanceWriter<String> {
 
-  protected BigMapIdInstanceWriter(BigMapInstanceStore<String, V, T, S> store) {
+  public DefaultPersistenceInstanceWriter(PersistenceInstanceStore<String> store) {
     super(store);
   }
 
