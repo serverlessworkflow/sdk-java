@@ -20,6 +20,7 @@ import static io.serverlessworkflow.api.WorkflowReader.readWorkflowFromClasspath
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowInstance;
+import io.serverlessworkflow.impl.persistence.DefaultPersistenceInstanceHandlers;
 import io.serverlessworkflow.impl.persistence.PersistenceApplicationBuilder;
 import io.serverlessworkflow.impl.persistence.PersistenceInstanceHandlers;
 import io.serverlessworkflow.impl.persistence.mvstore.MVStorePersistenceStore;
@@ -42,8 +43,8 @@ public class DBGenerator {
   private static void runInstance(String dbName, boolean suspend) throws IOException {
     LOG.info("---> Generating db samples at {}", dbName);
     Files.deleteIfExists(Path.of(dbName));
-    try (PersistenceInstanceHandlers<String> factories =
-            PersistenceInstanceHandlers.from(new MVStorePersistenceStore(dbName));
+    try (PersistenceInstanceHandlers factories =
+            DefaultPersistenceInstanceHandlers.from(new MVStorePersistenceStore(dbName));
         WorkflowApplication application =
             PersistenceApplicationBuilder.builder(
                     WorkflowApplication.builder().withListener(new TraceExecutionListener()),

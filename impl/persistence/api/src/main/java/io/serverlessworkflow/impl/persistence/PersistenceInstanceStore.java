@@ -15,6 +15,9 @@
  */
 package io.serverlessworkflow.impl.persistence;
 
-public interface PersistenceInstanceStore<K> extends AutoCloseable {
-  PersistenceInstanceTransaction<K> begin();
+public interface PersistenceInstanceStore extends AutoCloseable {
+  PersistenceInstanceTransaction begin();
+
+  @Override
+  default void close() {}
 }

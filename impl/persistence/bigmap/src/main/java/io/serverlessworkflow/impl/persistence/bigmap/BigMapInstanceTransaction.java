@@ -32,28 +32,25 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public abstract class BigMapInstanceTransaction<K, V, T, S>
-    implements PersistenceInstanceTransaction<K> {
+public abstract class BigMapInstanceTransaction<V, T, S> implements PersistenceInstanceTransaction {
 
   @Override
-  public void writeInstanceData(K key, WorkflowContextData workflowContext) {
+  public void writeInstanceData(WorkflowContextData workflowContext) {
     instanceData(workflowContext.definition())
-        .put(key, marshallInstance(workflowContext.instanceData()));
+        .put(key(workflowContext), marshallInstance(workflowContext.instanceData()));
   }
 
   @Override
-  public void writeRetryTask(
-      K key, WorkflowContextData workflowContext, TaskContextData taskContext) {
-    tasks(key)
+  public void writeRetryTask(WorkflowContextData workflowContext, TaskContextData taskContext) {
+    tasks(key(workflowContext))
         .put(
             taskContext.position().jsonPointer(),
             marshallTaskRetried(workflowContext, (TaskContext) taskContext));
   }
 
   @Override
-  public void writeCompletedTask(
-      K key, WorkflowContextData workflowContext, TaskContextData taskContext) {
-    tasks(key)
+  public void writeCompletedTask(WorkflowContextData workflowContext, TaskContextData taskContext) {
+    tasks(key(workflowContext))
         .put(
             taskContext.position().jsonPointer(),
             marshallTaskRetried(workflowContext, (TaskContext) taskContext));
@@ -61,8 +58,8 @@ public abstract class BigMapInstanceTransaction<K, V, T, S>
 
   @Override
   public Stream<PersistenceWorkflowInfo> scanAll(WorkflowDefinition definition) {
-    Map<K, V> instances = instanceData(definition);
-    Map<K, S> status = status(definition);
+    Map<String, V> instances = instanceData(definition);
+    Map<String, S> status = status(definition);
     return instances.entrySet().stream()
         .map(
             e ->
@@ -71,8 +68,9 @@ public abstract class BigMapInstanceTransaction<K, V, T, S>
   }
 
   @Override
-  public Optional<PersistenceWorkflowInfo> readWorkflowInfo(WorkflowDefinition definition, K key) {
-    Map<K, V> instances = instanceData(definition);
+  public Optional<PersistenceWorkflowInfo> readWorkflowInfo(
+      WorkflowDefinition definition, String key) {
+    Map<String, V> instances = instanceData(definition);
     return instances.containsKey(key)
         ? Optional.empty()
         : Optional.of(
@@ -80,23 +78,33 @@ public abstract class BigMapInstanceTransaction<K, V, T, S>
   }
 
   @Override
-  public void writeStatus(K key, WorkflowStatus status, WorkflowContextData workflowContext) {
-    status(workflowContext.definition()).put(key, marshallStatus(status));
+  public void writeStatus(WorkflowContextData workflowContext, WorkflowStatus status) {
+    status(workflowContext.definition()).put(key(workflowContext), marshallStatus(status));
   }
 
-  public void removeInstanceData(K key, WorkflowContextData workflowContext) {
-    instanceData(workflowContext.definition()).remove(key);
+  @Override
+  public void removeProcessInstance(WorkflowContextData workflowContext) {
+    String key = key(workflowContext);
+    WorkflowDefinitionData definition = workflowContext.definition();
+    instanceData(definition).remove(key);
+    clearStatus(definition, key);
+    removeTasks(key);
   }
 
-  public void removeStatus(K key, WorkflowContextData workflowContext) {
-    status(workflowContext.definition()).remove(key);
+  @Override
+  public void clearStatus(WorkflowContextData workflowContext) {
+    clearStatus(workflowContext.definition(), key(workflowContext));
+  }
+
+  private void clearStatus(WorkflowDefinitionData definition, String key) {
+    status(definition).remove(key);
   }
 
   protected PersistenceWorkflowInfo readPersistenceInfo(
-      K instanceId, V instanceData, Map<String, T> tasksData, S status) {
+      String instanceId, V instanceData, Map<String, T> tasksData, S status) {
     PersistenceInstanceInfo instanceInfo = unmarshallInstanceInfo(instanceData);
     return new PersistenceWorkflowInfo(
-        instanceId.toString(),
+        instanceId,
         instanceInfo.startedAt(),
         instanceInfo.input(),
         status == null ? null : unmarshallStatus(status),
@@ -105,11 +113,15 @@ public abstract class BigMapInstanceTransaction<K, V, T, S>
                 Collectors.toMap(Entry::getKey, entry -> unmarshallTaskInfo(entry.getValue()))));
   }
 
-  protected abstract Map<K, V> instanceData(WorkflowDefinitionData definition);
+  private String key(WorkflowContextData workflowContext) {
+    return workflowContext.instanceData().id();
+  }
 
-  protected abstract Map<K, S> status(WorkflowDefinitionData workflowContext);
+  protected abstract Map<String, V> instanceData(WorkflowDefinitionData definition);
 
-  protected abstract Map<String, T> tasks(K instanceId);
+  protected abstract Map<String, S> status(WorkflowDefinitionData workflowContext);
+
+  protected abstract Map<String, T> tasks(String instanceId);
 
   protected abstract V marshallInstance(WorkflowInstanceData instance);
 
@@ -126,4 +138,6 @@ public abstract class BigMapInstanceTransaction<K, V, T, S>
   protected abstract PersistenceInstanceInfo unmarshallInstanceInfo(V instanceData);
 
   protected abstract WorkflowStatus unmarshallStatus(S statusData);
+
+  protected abstract void removeTasks(String key);
 }

@@ -22,7 +22,7 @@ import io.serverlessworkflow.impl.persistence.bigmap.BigMapInstanceTransaction;
 import org.h2.mvstore.MVStore;
 import org.h2.mvstore.tx.TransactionStore;
 
-public class MVStorePersistenceStore implements PersistenceInstanceStore<String> {
+public class MVStorePersistenceStore implements PersistenceInstanceStore {
   private final TransactionStore mvStore;
   private WorkflowBufferFactory factory;
 
@@ -36,12 +36,12 @@ public class MVStorePersistenceStore implements PersistenceInstanceStore<String>
   }
 
   @Override
-  public void close() throws Exception {
+  public void close() {
     mvStore.close();
   }
 
   @Override
-  public BigMapInstanceTransaction<String, byte[], byte[], byte[]> begin() {
+  public BigMapInstanceTransaction<byte[], byte[], byte[]> begin() {
     return new MVStoreTransaction(mvStore.begin(), factory);
   }
 }

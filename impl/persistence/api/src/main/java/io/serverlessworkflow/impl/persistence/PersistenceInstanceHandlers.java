@@ -15,28 +15,15 @@
  */
 package io.serverlessworkflow.impl.persistence;
 
-import static io.serverlessworkflow.impl.WorkflowUtils.safeClose;
-
-public class PersistenceInstanceHandlers<K> implements AutoCloseable {
-
-  public static PersistenceInstanceHandlers<String> from(PersistenceInstanceStore<String> store) {
-    return new PersistenceInstanceHandlers<>(
-        new DefaultPersistenceInstanceWriter(store),
-        new DefaultPersistenceInstanceReader(store),
-        store);
-  }
+public class PersistenceInstanceHandlers implements AutoCloseable {
 
   private final PersistenceInstanceWriter writer;
   private final PersistenceInstanceReader reader;
-  private final PersistenceInstanceStore<K> store;
 
   public PersistenceInstanceHandlers(
-      PersistenceInstanceWriter writer,
-      PersistenceInstanceReader reader,
-      PersistenceInstanceStore<K> store) {
+      PersistenceInstanceWriter writer, PersistenceInstanceReader reader) {
     this.writer = writer;
     this.reader = reader;
-    this.store = store;
   }
 
   public PersistenceInstanceWriter writer() {
@@ -48,7 +35,5 @@ public class PersistenceInstanceHandlers<K> implements AutoCloseable {
   }
 
   @Override
-  public void close() {
-    safeClose(store);
-  }
+  public void close() {}
 }
