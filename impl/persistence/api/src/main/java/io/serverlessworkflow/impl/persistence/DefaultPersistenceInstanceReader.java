@@ -23,16 +23,16 @@ import java.util.stream.Stream;
 
 public class DefaultPersistenceInstanceReader implements PersistenceInstanceReader {
 
-  private final PersistenceInstanceStore<String> store;
+  private final PersistenceInstanceStore store;
 
-  protected DefaultPersistenceInstanceReader(PersistenceInstanceStore<String> store) {
+  protected DefaultPersistenceInstanceReader(PersistenceInstanceStore store) {
     this.store = store;
   }
 
   @Override
   public Stream<WorkflowInstance> scan(
       WorkflowDefinition definition, Collection<String> instanceIds) {
-    PersistenceInstanceTransaction<String> transaction = store.begin();
+    PersistenceInstanceTransaction transaction = store.begin();
     return instanceIds.stream()
         .map(id -> read(transaction, definition, id))
         .flatMap(Optional::stream)
@@ -41,7 +41,7 @@ public class DefaultPersistenceInstanceReader implements PersistenceInstanceRead
 
   @Override
   public Optional<WorkflowInstance> find(WorkflowDefinition definition, String instanceId) {
-    PersistenceInstanceTransaction<String> transaction = store.begin();
+    PersistenceInstanceTransaction transaction = store.begin();
     try {
       return read(transaction, definition, instanceId);
     } catch (Exception ex) {
@@ -51,14 +51,14 @@ public class DefaultPersistenceInstanceReader implements PersistenceInstanceRead
   }
 
   private Optional<WorkflowInstance> read(
-      PersistenceInstanceTransaction<String> t, WorkflowDefinition definition, String instanceId) {
+      PersistenceInstanceTransaction t, WorkflowDefinition definition, String instanceId) {
     return t.readWorkflowInfo(definition, instanceId)
         .map(i -> new WorkflowPersistenceInstance(definition, i));
   }
 
   @Override
   public Stream<WorkflowInstance> scanAll(WorkflowDefinition definition) {
-    PersistenceInstanceTransaction<String> transaction = store.begin();
+    PersistenceInstanceTransaction transaction = store.begin();
     return transaction
         .scanAll(definition)
         .onClose(() -> transaction.commit())

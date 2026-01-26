@@ -21,7 +21,8 @@ import io.serverlessworkflow.impl.WorkflowInstanceData;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowStatus;
 import io.serverlessworkflow.impl.executors.AbstractTaskExecutor;
-import io.serverlessworkflow.impl.executors.TaskExecutor;
+import io.serverlessworkflow.impl.executors.TransitionInfo;
+import io.serverlessworkflow.impl.marshaller.TaskStatus;
 import io.serverlessworkflow.impl.marshaller.WorkflowBufferFactory;
 import io.serverlessworkflow.impl.marshaller.WorkflowInputBuffer;
 import io.serverlessworkflow.impl.marshaller.WorkflowOutputBuffer;
@@ -33,7 +34,10 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 
 public abstract class BytesMapInstanceTransaction
-    extends BigMapInstanceTransaction<String, byte[], byte[], byte[]> {
+    extends BigMapInstanceTransaction<byte[], byte[], byte[]> {
+
+  private static final byte VERSION_0 = 0;
+  private static final byte VERSION_1 = 1;
 
   private final WorkflowBufferFactory factory;
 
@@ -45,22 +49,21 @@ public abstract class BytesMapInstanceTransaction
   protected byte[] marshallTaskCompleted(WorkflowContextData contextData, TaskContext taskContext) {
     ByteArrayOutputStream bytes = new ByteArrayOutputStream();
     try (WorkflowOutputBuffer writer = factory.output(bytes)) {
-      writer.writeByte(MarshallingUtils.VERSION_1);
+      writer.writeByte(VERSION_1);
       writer.writeEnum(TaskStatus.COMPLETED);
       writer.writeInstant(taskContext.completedAt());
       writeModel(writer, taskContext.output());
       writeModel(writer, contextData.context());
-      boolean isEndNode = taskContext.transition().isEndNode();
-      writer.writeBoolean(isEndNode);
-      TaskExecutor<?> next = taskContext.transition().next();
+      TransitionInfo transition = taskContext.transition();
+      writer.writeBoolean(transition.isEndNode());
+      AbstractTaskExecutor<?> next = (AbstractTaskExecutor<?>) transition.next();
       if (next == null) {
         writer.writeBoolean(false);
       } else {
         writer.writeBoolean(true);
-        writer.writeString(((AbstractTaskExecutor) next).position().jsonPointer());
+        writer.writeString(next.position().jsonPointer());
       }
     }
-
     return bytes.toByteArray();
   }
 
@@ -68,7 +71,7 @@ public abstract class BytesMapInstanceTransaction
   protected byte[] marshallStatus(WorkflowStatus status) {
     ByteArrayOutputStream bytes = new ByteArrayOutputStream();
     try (WorkflowOutputBuffer writer = factory.output(bytes)) {
-      writer.writeByte(MarshallingUtils.VERSION_0);
+      writer.writeByte(VERSION_0);
       writer.writeEnum(status);
     }
     return bytes.toByteArray();
@@ -78,7 +81,7 @@ public abstract class BytesMapInstanceTransaction
   protected byte[] marshallInstance(WorkflowInstanceData instance) {
     ByteArrayOutputStream bytes = new ByteArrayOutputStream();
     try (WorkflowOutputBuffer writer = factory.output(bytes)) {
-      writer.writeByte(MarshallingUtils.VERSION_0);
+      writer.writeByte(VERSION_0);
       writer.writeInstant(instance.startedAt());
       writeModel(writer, instance.input());
     }
@@ -94,7 +97,7 @@ public abstract class BytesMapInstanceTransaction
       WorkflowContextData workflowContext, TaskContext taskContext) {
     ByteArrayOutputStream bytes = new ByteArrayOutputStream();
     try (WorkflowOutputBuffer writer = factory.output(bytes)) {
-      writer.writeByte(MarshallingUtils.VERSION_1);
+      writer.writeByte(VERSION_1);
       writer.writeEnum(TaskStatus.RETRIED);
       writer.writeShort(taskContext.retryAttempt());
     }
@@ -106,10 +109,10 @@ public abstract class BytesMapInstanceTransaction
     try (WorkflowInputBuffer buffer = factory.input(new ByteArrayInputStream(taskData))) {
       byte version = buffer.readByte();
       switch (version) {
-        case MarshallingUtils.VERSION_0:
+        case VERSION_0:
         default:
           return readVersion0(buffer);
-        case MarshallingUtils.VERSION_1:
+        case VERSION_1:
           return readVersion1(buffer);
       }
     }

@@ -22,27 +22,26 @@ import io.serverlessworkflow.impl.WorkflowStatus;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-public interface PersistenceInstanceTransaction<K> {
+public interface PersistenceInstanceTransaction {
 
   void commit();
 
   void rollback();
 
-  void writeInstanceData(K key, WorkflowContextData workflowContext);
+  void writeInstanceData(WorkflowContextData workflowContext);
 
-  void writeRetryTask(K key, WorkflowContextData workflowContext, TaskContextData taskContext);
+  void writeRetryTask(WorkflowContextData workflowContext, TaskContextData taskContext);
 
-  void writeCompletedTask(K key, WorkflowContextData workflowContext, TaskContextData taskContext);
+  void writeCompletedTask(WorkflowContextData workflowContext, TaskContextData taskContext);
 
-  void writeStatus(K key, WorkflowStatus suspended, WorkflowContextData workflowContext);
+  void writeStatus(WorkflowContextData workflowContext, WorkflowStatus suspended);
 
-  void removeInstanceData(K key, WorkflowContextData workflowContext);
+  void removeProcessInstance(WorkflowContextData workflowContext);
 
-  void removeStatus(K key, WorkflowContextData workflowContext);
-
-  void removeTasks(K instanceId);
+  void clearStatus(WorkflowContextData workflowContext);
 
   Stream<PersistenceWorkflowInfo> scanAll(WorkflowDefinition definition);
 
-  Optional<PersistenceWorkflowInfo> readWorkflowInfo(WorkflowDefinition definition, K key);
+  Optional<PersistenceWorkflowInfo> readWorkflowInfo(
+      WorkflowDefinition definition, String instanceId);
 }

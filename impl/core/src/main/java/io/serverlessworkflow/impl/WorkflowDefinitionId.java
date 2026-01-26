@@ -32,4 +32,8 @@ public record WorkflowDefinitionId(String namespace, String name, String version
   public static WorkflowDefinitionId fromName(String name) {
     return new WorkflowDefinitionId(DEFAULT_NAMESPACE, name, DEFAULT_VERSION);
   }
+
+  public String toString(String separator) {
+    return namespace + separator + name + separator + version;
+  }
 }

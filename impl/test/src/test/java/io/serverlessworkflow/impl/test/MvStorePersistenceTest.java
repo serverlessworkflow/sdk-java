@@ -22,6 +22,7 @@ import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowInstance;
 import io.serverlessworkflow.impl.WorkflowStatus;
+import io.serverlessworkflow.impl.persistence.DefaultPersistenceInstanceHandlers;
 import io.serverlessworkflow.impl.persistence.PersistenceApplicationBuilder;
 import io.serverlessworkflow.impl.persistence.PersistenceInstanceHandlers;
 import io.serverlessworkflow.impl.persistence.mvstore.MVStorePersistenceStore;
@@ -30,6 +31,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Map;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
 public class MvStorePersistenceTest {
@@ -37,19 +39,26 @@ public class MvStorePersistenceTest {
   @Test
   void testSimpleRun() throws IOException {
     final String dbName = "db-samples/simple.db";
-    try (PersistenceInstanceHandlers<String> handlers =
-            PersistenceInstanceHandlers.from(new MVStorePersistenceStore(dbName));
+    try (PersistenceInstanceHandlers handlers =
+            DefaultPersistenceInstanceHandlers.from(new MVStorePersistenceStore(dbName));
         WorkflowApplication application =
             PersistenceApplicationBuilder.builder(WorkflowApplication.builder(), handlers.writer())
                 .build(); ) {
       WorkflowDefinition definition =
           application.workflowDefinition(
               readWorkflowFromClasspath("workflows-samples/simple-expression.yaml"));
-      assertThat(handlers.reader().scanAll(definition).count()).isEqualTo(0);
+      assertNoInstance(handlers, definition);
       definition.instance(Map.of()).start().join();
-      assertThat(handlers.reader().scanAll(definition).count()).isEqualTo(0);
+      assertNoInstance(handlers, definition);
     } finally {
       Files.delete(Path.of(dbName));
+    }
+  }
+
+  private void assertNoInstance(
+      PersistenceInstanceHandlers handlers, WorkflowDefinition definition) {
+    try (Stream<WorkflowInstance> stream = handlers.reader().scanAll(definition)) {
+      assertThat(stream.count()).isEqualTo(0);
     }
   }
 
@@ -90,8 +99,8 @@ public class MvStorePersistenceTest {
 
   private void runIt(String dbName, WorkflowStatus expectedStatus) throws IOException {
     TaskCounterPerInstanceListener taskCounter = new TaskCounterPerInstanceListener();
-    try (PersistenceInstanceHandlers<String> handlers =
-            PersistenceInstanceHandlers.from(new MVStorePersistenceStore(dbName));
+    try (PersistenceInstanceHandlers handlers =
+            DefaultPersistenceInstanceHandlers.from(new MVStorePersistenceStore(dbName));
         WorkflowApplication application =
             PersistenceApplicationBuilder.builder(
                     WorkflowApplication.builder()
@@ -102,16 +111,19 @@ public class MvStorePersistenceTest {
       WorkflowDefinition definition =
           application.workflowDefinition(
               readWorkflowFromClasspath("workflows-samples/set-listen-to-any.yaml"));
-      Collection<WorkflowInstance> instances = handlers.reader().scanAll(definition).toList();
-      assertThat(instances).hasSize(1);
-      instances.forEach(WorkflowInstance::start);
-      assertThat(instances)
-          .singleElement()
-          .satisfies(
-              instance -> {
-                assertThat(instance.status()).isEqualTo(expectedStatus);
-                assertThat(taskCounter.taskCounter(instance.id()).completed()).isEqualTo(0);
-              });
+
+      try (Stream<WorkflowInstance> stream = handlers.reader().scanAll(definition)) {
+        Collection<WorkflowInstance> instances = stream.toList();
+        assertThat(instances).hasSize(1);
+        instances.forEach(WorkflowInstance::start);
+        assertThat(instances)
+            .singleElement()
+            .satisfies(
+                instance -> {
+                  assertThat(instance.status()).isEqualTo(expectedStatus);
+                  assertThat(taskCounter.taskCounter(instance.id()).completed()).isEqualTo(0);
+                });
+      }
     }
   }
 }

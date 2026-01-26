@@ -22,4 +22,6 @@ public interface WorkflowDefinitionData {
   Workflow workflow();
 
   WorkflowApplication application();
+
+  WorkflowDefinitionId id();
 }
