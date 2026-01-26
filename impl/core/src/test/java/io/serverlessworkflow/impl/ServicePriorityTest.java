@@ -15,8 +15,15 @@
  */
 package io.serverlessworkflow.impl;
 
-import io.serverlessworkflow.api.types.Task;
-import io.serverlessworkflow.impl.resources.ExternalResourceHandler;
-import java.util.function.Function;
+import static org.assertj.core.api.Assertions.assertThat;
 
-public interface FunctionReader extends Function<ExternalResourceHandler, Task>, ServicePriority {}
+import org.junit.jupiter.api.Test;
+
+class ServicePriorityTest {
+
+  @Test
+  void testRightOrder() {
+    assertThat(WorkflowUtils.loadFirst(ServicePriority.class).orElseThrow())
+        .isInstanceOf(TopPriority.class);
+  }
+}

@@ -68,6 +68,7 @@ public class RunScriptExecutorBuilder implements RunnableTaskBuilder<RunScript> 
         ServiceLoader.load(ScriptRunner.class).stream()
             .map(ServiceLoader.Provider::get)
             .filter(s -> s.identifier().equals(language))
+            .sorted()
             .findFirst()
             .orElseThrow(
                 () ->

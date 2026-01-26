@@ -15,12 +15,13 @@
  */
 package io.serverlessworkflow.impl.resources;
 
+import io.serverlessworkflow.impl.ServicePriority;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
 import java.net.URI;
 
-public interface URITemplateResolver {
+public interface URITemplateResolver extends ServicePriority {
   URI resolveTemplates(
       String uri, WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel model);
 }

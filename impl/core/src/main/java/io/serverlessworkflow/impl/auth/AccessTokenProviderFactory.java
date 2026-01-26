@@ -15,9 +15,10 @@
  */
 package io.serverlessworkflow.impl.auth;
 
+import io.serverlessworkflow.impl.ServicePriority;
 import java.util.List;
 
-public interface AccessTokenProviderFactory {
+public interface AccessTokenProviderFactory extends ServicePriority {
 
   AccessTokenProvider build(
       HttpRequestInfo requestInfo, List<String> issuers, JWTConverter converter);

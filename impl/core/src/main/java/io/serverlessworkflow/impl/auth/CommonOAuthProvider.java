@@ -16,6 +16,7 @@
 package io.serverlessworkflow.impl.auth;
 
 import static io.serverlessworkflow.impl.WorkflowUtils.checkSecret;
+import static io.serverlessworkflow.impl.WorkflowUtils.loadFirst;
 import static io.serverlessworkflow.impl.WorkflowUtils.secret;
 
 import io.serverlessworkflow.api.types.OAuth2AuthenticationData;
@@ -28,20 +29,17 @@ import io.serverlessworkflow.impl.WorkflowValueResolver;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Map;
-import java.util.ServiceLoader;
 
 abstract class CommonOAuthProvider implements AuthProvider {
 
   private final WorkflowValueResolver<AccessTokenProvider> tokenProvider;
 
   private static JWTConverter jwtConverter =
-      ServiceLoader.load(JWTConverter.class)
-          .findFirst()
+      loadFirst(JWTConverter.class)
           .orElseThrow(() -> new IllegalStateException("No JWTConverter implementation found"));
 
   private static AccessTokenProviderFactory accessTokenProviderFactory =
-      ServiceLoader.load(AccessTokenProviderFactory.class)
-          .findFirst()
+      loadFirst(AccessTokenProviderFactory.class)
           .orElseThrow(() -> new IllegalStateException("No JWTConverter implementation found"));
 
   protected CommonOAuthProvider(WorkflowValueResolver<AccessTokenProvider> tokenProvider) {

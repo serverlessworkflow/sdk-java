@@ -15,6 +15,7 @@
  */
 package io.serverlessworkflow.impl.expressions.jq;
 
+import static io.serverlessworkflow.impl.WorkflowUtils.loadFirst;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.serverlessworkflow.impl.WorkflowContext;
@@ -26,7 +27,6 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.ServiceLoader;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -41,7 +41,7 @@ class JQExpressionFactoryTest {
   void setup() {
     workflowContext = Mockito.mock(WorkflowContext.class);
     factory = new JQExpressionFactory();
-    modelFactory = ServiceLoader.load(WorkflowModelFactory.class).findFirst().orElseThrow();
+    modelFactory = loadFirst(WorkflowModelFactory.class).orElseThrow();
   }
 
   @Test
