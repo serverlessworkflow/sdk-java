@@ -80,7 +80,7 @@
 
         <!-- Dependencies versions, please keep in alphabetical order -->
         <version.awaitility>4.3.0</version.awaitility>
-        <version.ch.qos.logback>1.5.25</version.ch.qos.logback>
+        <version.ch.qos.logback>1.5.26</version.ch.qos.logback>
         <version.com.fasterxml.jackson>2.21.0</version.com.fasterxml.jackson>
         <version.com.fasterxml.jackson.annotations>2.21</version.com.fasterxml.jackson.annotations>
         <version.com.networknt>2.0.0</version.com.networknt>
