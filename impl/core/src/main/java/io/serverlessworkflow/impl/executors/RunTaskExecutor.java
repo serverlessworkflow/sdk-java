@@ -44,6 +44,7 @@ public class RunTaskExecutor extends RegularTaskExecutor<RunTask> {
           runnables.stream()
               .map(Provider::get)
               .filter(r -> r.accept(config.getClass()))
+              .sorted()
               .findFirst()
               .map(r -> r.build(config, definition))
               .orElseThrow(

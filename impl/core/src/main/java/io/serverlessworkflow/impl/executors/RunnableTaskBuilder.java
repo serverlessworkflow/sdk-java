@@ -16,9 +16,10 @@
 package io.serverlessworkflow.impl.executors;
 
 import io.serverlessworkflow.api.types.RunTaskConfiguration;
+import io.serverlessworkflow.impl.ServicePriority;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 
-public interface RunnableTaskBuilder<T extends RunTaskConfiguration> {
+public interface RunnableTaskBuilder<T extends RunTaskConfiguration> extends ServicePriority {
   boolean accept(Class<? extends RunTaskConfiguration> clazz);
 
   CallableTask build(T taskConfiguration, WorkflowDefinition definition);

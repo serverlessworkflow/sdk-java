@@ -39,6 +39,7 @@ import java.time.Duration;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.ServiceLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -303,5 +304,12 @@ public class WorkflowUtils {
               .resolveTemplates(template.getLiteralUriTemplate(), w, t, n);
     }
     throw new IllegalArgumentException("Invalid uritemplate definition " + template);
+  }
+
+  public static <T extends ServicePriority> Optional<T> loadFirst(Class<T> serviceClass) {
+    return ServiceLoader.load(serviceClass).stream()
+        .map(ServiceLoader.Provider::get)
+        .sorted()
+        .findFirst();
   }
 }

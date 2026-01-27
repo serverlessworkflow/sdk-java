@@ -15,8 +15,8 @@
  */
 package io.serverlessworkflow.impl;
 
-import io.serverlessworkflow.api.types.Task;
-import io.serverlessworkflow.impl.resources.ExternalResourceHandler;
-import java.util.function.Function;
-
-public interface FunctionReader extends Function<ExternalResourceHandler, Task>, ServicePriority {}
+public class TopPriority implements ServicePriority {
+  public int priority() {
+    return DEFAULT_PRIORITY - 1;
+  }
+}

@@ -15,9 +15,10 @@
  */
 package io.serverlessworkflow.impl.jackson;
 
+import static io.serverlessworkflow.impl.WorkflowUtils.loadFirst;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.Objects;
-import java.util.ServiceLoader;
 import java.util.function.Supplier;
 
 public class ObjectMapperFactoryProvider implements Supplier<ObjectMapperFactory> {
@@ -40,8 +41,7 @@ public class ObjectMapperFactoryProvider implements Supplier<ObjectMapperFactory
   public ObjectMapperFactory get() {
     return objectMapperFactory != null
         ? objectMapperFactory
-        : ServiceLoader.load(ObjectMapperFactory.class)
-            .findFirst()
+        : loadFirst(ObjectMapperFactory.class)
             .orElseGet(() -> () -> new ObjectMapper().findAndRegisterModules());
   }
 }

@@ -16,6 +16,7 @@
 package io.serverlessworkflow.impl.jackson;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.serverlessworkflow.impl.ServicePriority;
 import java.util.function.Supplier;
 
-public interface ObjectMapperFactory extends Supplier<ObjectMapper> {}
+public interface ObjectMapperFactory extends Supplier<ObjectMapper>, ServicePriority {}

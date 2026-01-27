@@ -15,7 +15,9 @@
  */
 package io.serverlessworkflow.impl.auth;
 
-public interface JWTConverter {
+import io.serverlessworkflow.impl.ServicePriority;
+
+public interface JWTConverter extends ServicePriority {
 
   /**
    * Converts a JWT token string into a JWT object.

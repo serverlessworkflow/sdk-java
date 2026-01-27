@@ -15,6 +15,7 @@
  */
 package io.serverlessworkflow.impl;
 
+import static io.serverlessworkflow.impl.WorkflowUtils.loadFirst;
 import static io.serverlessworkflow.impl.WorkflowUtils.safeClose;
 
 import io.serverlessworkflow.api.types.SchemaInline;
@@ -305,8 +306,7 @@ public class WorkflowApplication implements AutoCloseable {
     public WorkflowApplication build() {
       if (modelFactory == null) {
         modelFactory =
-            ServiceLoader.load(WorkflowModelFactory.class)
-                .findFirst()
+            loadFirst(WorkflowModelFactory.class)
                 .orElseThrow(
                     () ->
                         new IllegalStateException(
@@ -318,21 +318,17 @@ public class WorkflowApplication implements AutoCloseable {
       ServiceLoader.load(ExpressionFactory.class).forEach(exprFactories::add);
       if (schemaValidatorFactory == null) {
         schemaValidatorFactory =
-            ServiceLoader.load(SchemaValidatorFactory.class)
-                .findFirst()
+            loadFirst(SchemaValidatorFactory.class)
                 .orElseGet(() -> EmptySchemaValidatorHolder.instance);
       }
       if (taskFactory == null) {
         taskFactory =
-            ServiceLoader.load(TaskExecutorFactory.class)
-                .findFirst()
-                .orElseGet(() -> DefaultTaskExecutorFactory.get());
+            loadFirst(TaskExecutorFactory.class).orElseGet(() -> DefaultTaskExecutorFactory.get());
       }
       ServiceLoader.load(EventPublisher.class).forEach(e -> eventPublishers.add(e));
       if (eventConsumer == null) {
         eventConsumer =
-            ServiceLoader.load(EventConsumer.class)
-                .findFirst()
+            loadFirst(EventConsumer.class)
                 .orElseGet(
                     () -> {
                       InMemoryEvents inMemory = new InMemoryEvents(executorFactory);
@@ -353,18 +349,14 @@ public class WorkflowApplication implements AutoCloseable {
 
       if (configManager == null) {
         configManager =
-            ServiceLoader.load(ConfigManager.class)
-                .findFirst()
-                .orElseGet(() -> new SystemPropertyConfigManager());
+            loadFirst(ConfigManager.class).orElseGet(() -> new SystemPropertyConfigManager());
       }
       if (secretManager == null) {
         secretManager =
-            ServiceLoader.load(SecretManager.class)
-                .findFirst()
-                .orElseGet(() -> new ConfigSecretManager(configManager));
+            loadFirst(SecretManager.class).orElseGet(() -> new ConfigSecretManager(configManager));
       }
-      templateResolver = ServiceLoader.load(URITemplateResolver.class).findFirst();
-      functionReader = ServiceLoader.load(FunctionReader.class).findFirst();
+      templateResolver = loadFirst(URITemplateResolver.class);
+      functionReader = loadFirst(FunctionReader.class);
       if (defaultCatalogURI == null) {
         defaultCatalogURI = URI.create("https://github.com/serverlessworkflow/catalog");
       }

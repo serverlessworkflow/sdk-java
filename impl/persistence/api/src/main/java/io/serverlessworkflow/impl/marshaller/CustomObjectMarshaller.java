@@ -15,7 +15,9 @@
  */
 package io.serverlessworkflow.impl.marshaller;
 
-public interface CustomObjectMarshaller<T> {
+import io.serverlessworkflow.impl.ServicePriority;
+
+public interface CustomObjectMarshaller<T> extends ServicePriority {
   void write(WorkflowOutputBuffer buffer, T object);
 
   T read(WorkflowInputBuffer buffer);
