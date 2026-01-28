@@ -21,18 +21,27 @@ import io.serverlessworkflow.impl.WorkflowInstanceData;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowStatus;
 import io.serverlessworkflow.impl.executors.AbstractTaskExecutor;
-import io.serverlessworkflow.impl.executors.TaskExecutor;
+import io.serverlessworkflow.impl.executors.TransitionInfo;
+import io.serverlessworkflow.impl.marshaller.TaskStatus;
 import io.serverlessworkflow.impl.marshaller.WorkflowBufferFactory;
+import io.serverlessworkflow.impl.marshaller.WorkflowInputBuffer;
 import io.serverlessworkflow.impl.marshaller.WorkflowOutputBuffer;
+import io.serverlessworkflow.impl.persistence.CompletedTaskInfo;
+import io.serverlessworkflow.impl.persistence.PersistenceInstanceInfo;
+import io.serverlessworkflow.impl.persistence.PersistenceTaskInfo;
+import io.serverlessworkflow.impl.persistence.RetriedTaskInfo;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 
-public class BytesMapInstanceWriter extends BigMapIdInstanceWriter<byte[], byte[], byte[]> {
+public abstract class BytesMapInstanceTransaction
+    extends BigMapInstanceTransaction<byte[], byte[], byte[]> {
+
+  private static final byte VERSION_0 = 0;
+  private static final byte VERSION_1 = 1;
 
   private final WorkflowBufferFactory factory;
 
-  public BytesMapInstanceWriter(
-      BigMapInstanceStore<String, byte[], byte[], byte[]> store, WorkflowBufferFactory factory) {
-    super(store);
+  protected BytesMapInstanceTransaction(WorkflowBufferFactory factory) {
     this.factory = factory;
   }
 
@@ -40,22 +49,21 @@ public class BytesMapInstanceWriter extends BigMapIdInstanceWriter<byte[], byte[
   protected byte[] marshallTaskCompleted(WorkflowContextData contextData, TaskContext taskContext) {
     ByteArrayOutputStream bytes = new ByteArrayOutputStream();
     try (WorkflowOutputBuffer writer = factory.output(bytes)) {
-      writer.writeByte(MarshallingUtils.VERSION_1);
+      writer.writeByte(VERSION_1);
       writer.writeEnum(TaskStatus.COMPLETED);
       writer.writeInstant(taskContext.completedAt());
       writeModel(writer, taskContext.output());
       writeModel(writer, contextData.context());
-      boolean isEndNode = taskContext.transition().isEndNode();
-      writer.writeBoolean(isEndNode);
-      TaskExecutor<?> next = taskContext.transition().next();
+      TransitionInfo transition = taskContext.transition();
+      writer.writeBoolean(transition.isEndNode());
+      AbstractTaskExecutor<?> next = (AbstractTaskExecutor<?>) transition.next();
       if (next == null) {
         writer.writeBoolean(false);
       } else {
         writer.writeBoolean(true);
-        writer.writeString(((AbstractTaskExecutor) next).position().jsonPointer());
+        writer.writeString(next.position().jsonPointer());
       }
     }
-
     return bytes.toByteArray();
   }
 
@@ -63,7 +71,7 @@ public class BytesMapInstanceWriter extends BigMapIdInstanceWriter<byte[], byte[
   protected byte[] marshallStatus(WorkflowStatus status) {
     ByteArrayOutputStream bytes = new ByteArrayOutputStream();
     try (WorkflowOutputBuffer writer = factory.output(bytes)) {
-      writer.writeByte(MarshallingUtils.VERSION_0);
+      writer.writeByte(VERSION_0);
       writer.writeEnum(status);
     }
     return bytes.toByteArray();
@@ -73,7 +81,7 @@ public class BytesMapInstanceWriter extends BigMapIdInstanceWriter<byte[], byte[
   protected byte[] marshallInstance(WorkflowInstanceData instance) {
     ByteArrayOutputStream bytes = new ByteArrayOutputStream();
     try (WorkflowOutputBuffer writer = factory.output(bytes)) {
-      writer.writeByte(MarshallingUtils.VERSION_0);
+      writer.writeByte(VERSION_0);
       writer.writeInstant(instance.startedAt());
       writeModel(writer, instance.input());
     }
@@ -89,10 +97,60 @@ public class BytesMapInstanceWriter extends BigMapIdInstanceWriter<byte[], byte[
       WorkflowContextData workflowContext, TaskContext taskContext) {
     ByteArrayOutputStream bytes = new ByteArrayOutputStream();
     try (WorkflowOutputBuffer writer = factory.output(bytes)) {
-      writer.writeByte(MarshallingUtils.VERSION_1);
+      writer.writeByte(VERSION_1);
       writer.writeEnum(TaskStatus.RETRIED);
       writer.writeShort(taskContext.retryAttempt());
     }
     return bytes.toByteArray();
+  }
+
+  @Override
+  protected PersistenceTaskInfo unmarshallTaskInfo(byte[] taskData) {
+    try (WorkflowInputBuffer buffer = factory.input(new ByteArrayInputStream(taskData))) {
+      byte version = buffer.readByte();
+      switch (version) {
+        case VERSION_0:
+        default:
+          return readVersion0(buffer);
+        case VERSION_1:
+          return readVersion1(buffer);
+      }
+    }
+  }
+
+  private PersistenceTaskInfo readVersion1(WorkflowInputBuffer buffer) {
+    TaskStatus taskStatus = buffer.readEnum(TaskStatus.class);
+    switch (taskStatus) {
+      case COMPLETED:
+      default:
+        return readVersion0(buffer);
+      case RETRIED:
+        return new RetriedTaskInfo(buffer.readShort());
+    }
+  }
+
+  private PersistenceTaskInfo readVersion0(WorkflowInputBuffer buffer) {
+    return new CompletedTaskInfo(
+        buffer.readInstant(),
+        (WorkflowModel) buffer.readObject(),
+        (WorkflowModel) buffer.readObject(),
+        buffer.readBoolean(),
+        buffer.readBoolean() ? buffer.readString() : null);
+  }
+
+  @Override
+  protected PersistenceInstanceInfo unmarshallInstanceInfo(byte[] instanceData) {
+    try (WorkflowInputBuffer buffer = factory.input(new ByteArrayInputStream(instanceData))) {
+      buffer.readByte(); // version byte not used at the moment
+      return new PersistenceInstanceInfo(buffer.readInstant(), (WorkflowModel) buffer.readObject());
+    }
+  }
+
+  @Override
+  protected WorkflowStatus unmarshallStatus(byte[] statusData) {
+    try (WorkflowInputBuffer buffer = factory.input(new ByteArrayInputStream(statusData))) {
+      buffer.readByte(); // version byte not used at the moment
+      return buffer.readEnum(WorkflowStatus.class);
+    }
   }
 }

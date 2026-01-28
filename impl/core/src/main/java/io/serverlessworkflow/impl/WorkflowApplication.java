@@ -58,6 +58,7 @@ import java.util.stream.Collectors;
 
 public class WorkflowApplication implements AutoCloseable {
 
+  private final String id;
   private final TaskExecutorFactory taskFactory;
   private final ExpressionFactory exprFactory;
   private final ResourceLoaderFactory resourceLoaderFactory;
@@ -108,6 +109,7 @@ public class WorkflowApplication implements AutoCloseable {
     this.templateResolver = builder.templateResolver;
     this.functionReader = builder.functionReader;
     this.defaultCatalogURI = builder.defaultCatalogURI;
+    this.id = builder.id;
   }
 
   public TaskExecutorFactory taskFactory() {
@@ -165,6 +167,7 @@ public class WorkflowApplication implements AutoCloseable {
           };
     }
 
+    private String id;
     private TaskExecutorFactory taskFactory;
     private Collection<ExpressionFactory> exprFactories = new HashSet<>();
     private Collection<WorkflowExecutionListener> listeners =
@@ -196,6 +199,11 @@ public class WorkflowApplication implements AutoCloseable {
     private Builder() {
       ServiceLoader.load(NamedWorkflowAdditionalObject.class)
           .forEach(a -> additionalObjects.put(a.name(), a));
+    }
+
+    public Builder withId(String id) {
+      this.id = id;
+      return this;
     }
 
     public Builder withListener(WorkflowExecutionListener listener) {
@@ -304,13 +312,14 @@ public class WorkflowApplication implements AutoCloseable {
     }
 
     public WorkflowApplication build() {
+
       if (modelFactory == null) {
         modelFactory =
             loadFirst(WorkflowModelFactory.class)
                 .orElseThrow(
                     () ->
                         new IllegalStateException(
-                            "WorkflowModelFactory instance has to be set in WorkflowApplication or present in the classpath"));
+                            "WorkflowModelFactory instance has to be set in WorkflowApplication or pr^eesent in the classpath"));
       }
       if (contextFactory == null) {
         contextFactory = modelFactory;
@@ -359,6 +368,9 @@ public class WorkflowApplication implements AutoCloseable {
       functionReader = loadFirst(FunctionReader.class);
       if (defaultCatalogURI == null) {
         defaultCatalogURI = URI.create("https://github.com/serverlessworkflow/catalog");
+      }
+      if (id == null) {
+        id = idFactory.get();
       }
       return new WorkflowApplication(this);
     }
@@ -451,6 +463,10 @@ public class WorkflowApplication implements AutoCloseable {
 
   public URI defaultCatalogURI() {
     return defaultCatalogURI;
+  }
+
+  public String id() {
+    return id;
   }
 
   public <T> Optional<T> additionalObject(

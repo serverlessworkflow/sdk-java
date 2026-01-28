@@ -18,19 +18,20 @@ package io.serverlessworkflow.impl.persistence.mvstore;
 import io.serverlessworkflow.api.types.Document;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.WorkflowDefinitionData;
-import io.serverlessworkflow.impl.persistence.bigmap.BigMapInstanceTransaction;
+import io.serverlessworkflow.impl.marshaller.WorkflowBufferFactory;
+import io.serverlessworkflow.impl.persistence.bigmap.BytesMapInstanceTransaction;
 import java.util.Map;
 import org.h2.mvstore.tx.Transaction;
 import org.h2.mvstore.tx.TransactionMap;
 
-public class MVStoreTransaction
-    implements BigMapInstanceTransaction<String, byte[], byte[], byte[]> {
+public class MVStoreTransaction extends BytesMapInstanceTransaction {
 
   protected static final String ID_SEPARATOR = "-";
 
   private final Transaction transaction;
 
-  public MVStoreTransaction(Transaction transaction) {
+  public MVStoreTransaction(Transaction transaction, WorkflowBufferFactory factory) {
+    super(factory);
     this.transaction = transaction;
   }
 
@@ -55,7 +56,7 @@ public class MVStoreTransaction
   }
 
   @Override
-  public void cleanupTasks(String instanceId) {
+  public void removeTasks(String instanceId) {
     transaction.removeMap(taskMap(instanceId));
   }
 

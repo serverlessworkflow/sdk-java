@@ -13,19 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.persistence.bigmap;
+package io.serverlessworkflow.impl.marshaller;
 
-import io.serverlessworkflow.impl.WorkflowContextData;
-
-public abstract class BigMapIdInstanceWriter<V, T, S>
-    extends BigMapInstanceWriter<String, V, T, S> {
-
-  protected BigMapIdInstanceWriter(BigMapInstanceStore<String, V, T, S> store) {
-    super(store);
-  }
-
-  @Override
-  protected String key(WorkflowContextData workflowContext) {
-    return workflowContext.instanceData().id();
-  }
+public enum TaskStatus {
+  COMPLETED,
+  RETRIED
 }

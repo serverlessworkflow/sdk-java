@@ -18,7 +18,7 @@ package io.serverlessworkflow.impl.persistence;
 import io.serverlessworkflow.impl.TaskContextData;
 import io.serverlessworkflow.impl.WorkflowContextData;
 
-public interface PersistenceInstanceWriter extends AutoCloseable {
+public interface PersistenceInstanceWriter {
 
   void started(WorkflowContextData workflowContext);
 
@@ -37,7 +37,4 @@ public interface PersistenceInstanceWriter extends AutoCloseable {
   void taskStarted(WorkflowContextData workflowContext, TaskContextData taskContext);
 
   void taskCompleted(WorkflowContextData workflowContext, TaskContextData taskContext);
-
-  @Override
-  default void close() {}
 }
