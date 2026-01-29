@@ -41,7 +41,7 @@ public class MVStorePersistenceStore implements PersistenceInstanceStore {
   }
 
   @Override
-  public BigMapInstanceTransaction<byte[], byte[], byte[]> begin() {
+  public BigMapInstanceTransaction<byte[], byte[], byte[], byte[]> begin() {
     return new MVStoreTransaction(mvStore.begin(), factory);
   }
 }

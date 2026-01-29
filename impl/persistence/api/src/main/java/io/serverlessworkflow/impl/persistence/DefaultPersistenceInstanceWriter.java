@@ -30,7 +30,7 @@ public class DefaultPersistenceInstanceWriter implements PersistenceInstanceWrit
 
   @Override
   public void started(WorkflowContextData workflowContext) {
-    doTransaction(t -> t.writeInstanceData(workflowContext));
+    doTransaction(t -> t.writeInstanceData(workflowContext), workflowContext);
   }
 
   @Override
@@ -49,7 +49,7 @@ public class DefaultPersistenceInstanceWriter implements PersistenceInstanceWrit
   }
 
   protected void removeProcessInstance(WorkflowContextData workflowContext) {
-    doTransaction(t -> t.removeProcessInstance(workflowContext));
+    doTransaction(t -> t.removeProcessInstance(workflowContext), workflowContext);
   }
 
   @Override
@@ -59,31 +59,32 @@ public class DefaultPersistenceInstanceWriter implements PersistenceInstanceWrit
 
   @Override
   public void taskRetried(WorkflowContextData workflowContext, TaskContextData taskContext) {
-    doTransaction(t -> t.writeRetryTask(workflowContext, taskContext));
+    doTransaction(t -> t.writeRetryTask(workflowContext, taskContext), workflowContext);
   }
 
   @Override
   public void taskCompleted(WorkflowContextData workflowContext, TaskContextData taskContext) {
-    doTransaction(t -> t.writeCompletedTask(workflowContext, taskContext));
+    doTransaction(t -> t.writeCompletedTask(workflowContext, taskContext), workflowContext);
   }
 
   @Override
   public void suspended(WorkflowContextData workflowContext) {
-    doTransaction(t -> t.writeStatus(workflowContext, WorkflowStatus.SUSPENDED));
+    doTransaction(t -> t.writeStatus(workflowContext, WorkflowStatus.SUSPENDED), workflowContext);
   }
 
   @Override
   public void resumed(WorkflowContextData workflowContext) {
-    doTransaction(t -> t.clearStatus(workflowContext));
+    doTransaction(t -> t.clearStatus(workflowContext), workflowContext);
   }
 
-  private void doTransaction(Consumer<PersistenceInstanceTransaction> operations) {
+  private void doTransaction(
+      Consumer<PersistenceInstanceTransaction> operations, WorkflowContextData context) {
     PersistenceInstanceTransaction transaction = store.begin();
     try {
       operations.accept(transaction);
-      transaction.commit();
+      transaction.commit(context.definition());
     } catch (Exception ex) {
-      transaction.rollback();
+      transaction.rollback(context.definition());
       throw ex;
     }
   }

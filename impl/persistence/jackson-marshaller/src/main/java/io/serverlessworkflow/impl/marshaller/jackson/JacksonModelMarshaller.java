@@ -38,7 +38,8 @@ public class JacksonModelMarshaller implements CustomObjectMarshaller<JacksonMod
   @Override
   public JacksonModel read(WorkflowInputBuffer buffer) {
     try {
-      return JsonUtils.mapper().readValue(buffer.readBytes(), JacksonModel.class);
+      JacksonModel model = JsonUtils.mapper().readValue(buffer.readBytes(), JacksonModel.class);
+      return model == null ? JacksonModel.NULL : model;
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }

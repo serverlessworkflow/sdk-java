@@ -17,7 +17,6 @@ package io.serverlessworkflow.impl.persistence;
 
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowInstance;
-import java.util.Collection;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -30,22 +29,14 @@ public class DefaultPersistenceInstanceReader implements PersistenceInstanceRead
   }
 
   @Override
-  public Stream<WorkflowInstance> scan(
-      WorkflowDefinition definition, Collection<String> instanceIds) {
-    PersistenceInstanceTransaction transaction = store.begin();
-    return instanceIds.stream()
-        .map(id -> read(transaction, definition, id))
-        .flatMap(Optional::stream)
-        .onClose(() -> transaction.commit());
-  }
-
-  @Override
   public Optional<WorkflowInstance> find(WorkflowDefinition definition, String instanceId) {
     PersistenceInstanceTransaction transaction = store.begin();
     try {
-      return read(transaction, definition, instanceId);
+      Optional<WorkflowInstance> instance = read(transaction, definition, instanceId);
+      transaction.commit(definition);
+      return instance;
     } catch (Exception ex) {
-      transaction.rollback();
+      transaction.rollback(definition);
       throw ex;
     }
   }
@@ -57,11 +48,11 @@ public class DefaultPersistenceInstanceReader implements PersistenceInstanceRead
   }
 
   @Override
-  public Stream<WorkflowInstance> scanAll(WorkflowDefinition definition) {
+  public Stream<WorkflowInstance> scanAll(WorkflowDefinition definition, String applicationId) {
     PersistenceInstanceTransaction transaction = store.begin();
     return transaction
-        .scanAll(definition)
-        .onClose(() -> transaction.commit())
+        .scanAll(applicationId, definition)
+        .onClose(() -> transaction.commit(definition))
         .map(v -> new WorkflowPersistenceInstance(definition, v));
   }
 }

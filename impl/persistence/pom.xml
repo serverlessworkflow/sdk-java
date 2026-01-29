@@ -13,5 +13,6 @@
       <module>mvstore</module>
       <module>bigmap</module>
       <module>api</module>
+      <module>tests</module>
     </modules>
 </project>

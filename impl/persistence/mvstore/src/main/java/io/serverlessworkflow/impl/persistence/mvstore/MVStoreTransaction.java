@@ -74,12 +74,17 @@ public class MVStoreTransaction extends BytesMapInstanceTransaction {
   }
 
   @Override
-  public void commit() {
+  public void commit(WorkflowDefinitionData definition) {
     transaction.commit();
   }
 
   @Override
-  public void rollback() {
+  public void rollback(WorkflowDefinitionData definition) {
     transaction.rollback();
+  }
+
+  @Override
+  protected Map<String, byte[]> applicationData() {
+    return transaction.openMap("APPLICATION");
   }
 }

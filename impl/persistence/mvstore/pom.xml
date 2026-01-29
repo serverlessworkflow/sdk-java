@@ -16,5 +16,9 @@
           <groupId>io.serverlessworkflow</groupId>
           <artifactId>serverlessworkflow-persistence-big-map</artifactId>
         </dependency>
+        <dependency>
+          <groupId>io.serverlessworkflow</groupId>
+          <artifactId>serverlessworkflow-persistence-tests</artifactId>
+        </dependency>
     </dependencies>
 </project>

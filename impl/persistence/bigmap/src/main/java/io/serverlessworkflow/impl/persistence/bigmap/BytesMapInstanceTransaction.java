@@ -22,6 +22,7 @@ import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowStatus;
 import io.serverlessworkflow.impl.executors.AbstractTaskExecutor;
 import io.serverlessworkflow.impl.executors.TransitionInfo;
+import io.serverlessworkflow.impl.marshaller.MarshallingUtils;
 import io.serverlessworkflow.impl.marshaller.TaskStatus;
 import io.serverlessworkflow.impl.marshaller.WorkflowBufferFactory;
 import io.serverlessworkflow.impl.marshaller.WorkflowInputBuffer;
@@ -34,7 +35,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 
 public abstract class BytesMapInstanceTransaction
-    extends BigMapInstanceTransaction<byte[], byte[], byte[]> {
+    extends BigMapInstanceTransaction<byte[], byte[], byte[], byte[]> {
 
   private static final byte VERSION_0 = 0;
   private static final byte VERSION_1 = 1;
@@ -90,6 +91,14 @@ public abstract class BytesMapInstanceTransaction
 
   protected void writeModel(WorkflowOutputBuffer writer, WorkflowModel model) {
     writer.writeObject(model);
+  }
+
+  protected byte[] marshallApplicationId(String id) {
+    return MarshallingUtils.writeString(factory, id);
+  }
+
+  protected String unmarshallApplicationId(byte[] value) {
+    return MarshallingUtils.readString(factory, value);
   }
 
   @Override

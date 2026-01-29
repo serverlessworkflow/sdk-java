@@ -18,15 +18,16 @@ package io.serverlessworkflow.impl.persistence;
 import io.serverlessworkflow.impl.TaskContextData;
 import io.serverlessworkflow.impl.WorkflowContextData;
 import io.serverlessworkflow.impl.WorkflowDefinition;
+import io.serverlessworkflow.impl.WorkflowDefinitionData;
 import io.serverlessworkflow.impl.WorkflowStatus;
 import java.util.Optional;
 import java.util.stream.Stream;
 
 public interface PersistenceInstanceTransaction {
 
-  void commit();
+  void commit(WorkflowDefinitionData definition);
 
-  void rollback();
+  void rollback(WorkflowDefinitionData definition);
 
   void writeInstanceData(WorkflowContextData workflowContext);
 
@@ -40,7 +41,7 @@ public interface PersistenceInstanceTransaction {
 
   void clearStatus(WorkflowContextData workflowContext);
 
-  Stream<PersistenceWorkflowInfo> scanAll(WorkflowDefinition definition);
+  Stream<PersistenceWorkflowInfo> scanAll(String applicationId, WorkflowDefinition definition);
 
   Optional<PersistenceWorkflowInfo> readWorkflowInfo(
       WorkflowDefinition definition, String instanceId);

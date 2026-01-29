@@ -17,15 +17,16 @@ package io.serverlessworkflow.impl.persistence;
 
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowInstance;
-import java.util.Collection;
 import java.util.Optional;
 import java.util.stream.Stream;
 
 public interface PersistenceInstanceReader {
 
-  Stream<WorkflowInstance> scanAll(WorkflowDefinition definition);
+  default Stream<WorkflowInstance> scanAll(WorkflowDefinition definition) {
+    return scanAll(definition, definition.application().id());
+  }
 
-  Stream<WorkflowInstance> scan(WorkflowDefinition definition, Collection<String> instanceIds);
+  Stream<WorkflowInstance> scanAll(WorkflowDefinition definition, String applicationId);
 
   Optional<WorkflowInstance> find(WorkflowDefinition definition, String instanceId);
 }

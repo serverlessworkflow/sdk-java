@@ -31,13 +31,13 @@ public class WorkflowPersistenceInstance extends WorkflowMutableInstance {
   public WorkflowPersistenceInstance(WorkflowDefinition definition, PersistenceWorkflowInfo info) {
     super(definition, info.id(), info.input());
     this.info = info;
+    this.startedAt = info.startedAt();
   }
 
   @Override
   public CompletableFuture<WorkflowModel> start() {
     return startExecution(
         () -> {
-          startedAt = info.startedAt();
           if (info.status() == WorkflowStatus.SUSPENDED) {
             internalSuspend();
           }
