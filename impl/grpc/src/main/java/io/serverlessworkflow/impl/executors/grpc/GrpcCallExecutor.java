@@ -19,14 +19,16 @@ import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 @FunctionalInterface
 public interface GrpcCallExecutor {
 
-  WorkflowModel apply(
+  CompletableFuture<WorkflowModel> apply(
       GrpcRequestContext requestContext,
       WorkflowContext workflowContext,
       TaskContext taskContext,
       WorkflowModel model,
-      Map<String, Object> arguments);
+      Map<String, Object> arguments,
+      FileDescriptorContext fileDescriptorContext);
 }

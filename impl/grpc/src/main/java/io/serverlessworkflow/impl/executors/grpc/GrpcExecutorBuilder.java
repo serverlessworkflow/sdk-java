@@ -15,42 +15,24 @@
  */
 package io.serverlessworkflow.impl.executors.grpc;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.NullNode;
-import com.google.protobuf.DescriptorProtos;
-import com.google.protobuf.Descriptors;
-import com.google.protobuf.Descriptors.ServiceDescriptor;
-import com.google.protobuf.DynamicMessage;
-import com.google.protobuf.InvalidProtocolBufferException;
-import com.google.protobuf.Message;
-import io.grpc.CallOptions;
-import io.grpc.Channel;
-import io.grpc.ClientCall;
-import io.grpc.MethodDescriptor;
-import io.grpc.MethodDescriptor.MethodType;
-import io.grpc.protobuf.ProtoUtils;
-import io.grpc.stub.ClientCalls;
 import io.serverlessworkflow.api.types.CallGRPC;
 import io.serverlessworkflow.api.types.ExternalResource;
 import io.serverlessworkflow.api.types.GRPCArguments;
 import io.serverlessworkflow.api.types.TaskBase;
 import io.serverlessworkflow.api.types.WithGRPCService;
-import io.serverlessworkflow.impl.*;
+import io.serverlessworkflow.impl.WorkflowDefinition;
+import io.serverlessworkflow.impl.WorkflowMutablePosition;
+import io.serverlessworkflow.impl.WorkflowUtils;
+import io.serverlessworkflow.impl.WorkflowValueResolver;
 import io.serverlessworkflow.impl.executors.CallableTask;
 import io.serverlessworkflow.impl.executors.CallableTaskBuilder;
-import io.serverlessworkflow.impl.jackson.JsonUtils;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 public class GrpcExecutorBuilder implements CallableTaskBuilder<CallGRPC> {
 
   private ExternalResource proto;
   private GrpcRequestContext grpcRequestContext;
-  private GrpcCallExecutor callExecutor;
+  private FileDescriptorContext fileDescriptorContext;
   private WorkflowValueResolver<Map<String, Object>> arguments;
 
   @Override
@@ -75,156 +57,15 @@ public class GrpcExecutorBuilder implements CallableTaskBuilder<CallGRPC> {
             service.getHost(), service.getPort(), with.getMethod(), service.getName());
 
     FileDescriptorReader fileDescriptorReader = new FileDescriptorReader();
-    FileDescriptorContext fileDescriptorContext =
+    this.fileDescriptorContext =
         definition
             .resourceLoader()
             .loadStatic(with.getProto().getEndpoint(), fileDescriptorReader::readDescriptor);
-
-    this.callExecutor =
-        (requestContext, workflowContext, taskContext, model, arguments) -> {
-          Channel channel =
-              GrpcChannelResolver.channel(workflowContext, taskContext, this.grpcRequestContext);
-          String protoName = fileDescriptorContext.inputProto();
-
-          DescriptorProtos.FileDescriptorProto fileDescriptorProto =
-              fileDescriptorContext.fileDescriptorSet().getFileList().stream()
-                  .filter(
-                      file ->
-                          file.getName()
-                              .equals(
-                                  this.proto.getName() != null ? this.proto.getName() : protoName))
-                  .findFirst()
-                  .orElseThrow(
-                      () -> new IllegalStateException("Proto file not found in descriptor set"));
-
-          try {
-            Descriptors.FileDescriptor fileDescriptor =
-                Descriptors.FileDescriptor.buildFrom(
-                    fileDescriptorProto, new Descriptors.FileDescriptor[] {});
-
-            ServiceDescriptor serviceDescriptor =
-                fileDescriptor.findServiceByName(this.grpcRequestContext.service());
-
-            Objects.requireNonNull(
-                serviceDescriptor, "Service not found: " + this.grpcRequestContext.service());
-
-            Descriptors.MethodDescriptor methodDescriptor =
-                serviceDescriptor.findMethodByName(this.grpcRequestContext.method());
-
-            Objects.requireNonNull(
-                methodDescriptor, "Method not found: " + this.grpcRequestContext.method());
-
-            MethodType methodType = ProtobufMessageUtils.getMethodType(methodDescriptor);
-
-            ClientCall<Message, Message> call =
-                buildClientCall(channel, methodType, serviceDescriptor, methodDescriptor);
-
-            return switch (methodType) {
-              case CLIENT_STREAMING ->
-                  handleClientStreaming(workflowContext, arguments, methodDescriptor, call);
-              case BIDI_STREAMING ->
-                  handleBidiStreaming(workflowContext, arguments, methodDescriptor, call);
-              case SERVER_STREAMING ->
-                  handleServerStreaming(workflowContext, methodDescriptor, arguments, call);
-              case UNARY, UNKNOWN ->
-                  handleBlockingUnary(workflowContext, methodDescriptor, arguments, call);
-            };
-
-          } catch (Descriptors.DescriptorValidationException
-              | InvalidProtocolBufferException
-              | JsonProcessingException e) {
-            throw new WorkflowException(WorkflowError.runtime(taskContext, e).build());
-          }
-        };
-  }
-
-  private static ClientCall<Message, Message> buildClientCall(
-      Channel channel,
-      MethodType methodType,
-      ServiceDescriptor serviceDescriptor,
-      Descriptors.MethodDescriptor methodDescriptor) {
-    return channel.newCall(
-        MethodDescriptor.<Message, Message>newBuilder()
-            .setType(methodType)
-            .setFullMethodName(
-                MethodDescriptor.generateFullMethodName(
-                    serviceDescriptor.getFullName(), methodDescriptor.getName()))
-            .setRequestMarshaller(
-                ProtoUtils.marshaller(
-                    DynamicMessage.newBuilder(methodDescriptor.getInputType()).buildPartial()))
-            .setResponseMarshaller(
-                ProtoUtils.marshaller(
-                    DynamicMessage.newBuilder(methodDescriptor.getOutputType()).buildPartial()))
-            .build(),
-        CallOptions.DEFAULT.withWaitForReady());
-  }
-
-  private static WorkflowModel handleClientStreaming(
-      WorkflowContext workflowContext,
-      Map<String, Object> parameters,
-      Descriptors.MethodDescriptor methodDescriptor,
-      ClientCall<Message, Message> call) {
-    JsonNode jsonNode =
-        ProtobufMessageUtils.asyncStreamingCall(
-            parameters,
-            methodDescriptor,
-            responseObserver -> ClientCalls.asyncClientStreamingCall(call, responseObserver),
-            nodes -> nodes.isEmpty() ? NullNode.instance : nodes.get(0));
-    return workflowContext.definition().application().modelFactory().fromAny(jsonNode);
-  }
-
-  private static WorkflowModel handleServerStreaming(
-      WorkflowContext workflowContext,
-      Descriptors.MethodDescriptor methodDescriptor,
-      Map<String, Object> parameters,
-      ClientCall<Message, Message> call)
-      throws InvalidProtocolBufferException, JsonProcessingException {
-    Message.Builder builder = ProtobufMessageUtils.buildMessage(methodDescriptor, parameters);
-    List<JsonNode> nodes = new ArrayList<>();
-    ClientCalls.blockingServerStreamingCall(call, builder.build())
-        .forEachRemaining(message -> nodes.add(ProtobufMessageUtils.convert(message)));
-    return workflowContext.definition().application().modelFactory().fromAny(nodes);
-  }
-
-  private static WorkflowModel handleBlockingUnary(
-      WorkflowContext workflowContext,
-      Descriptors.MethodDescriptor methodDescriptor,
-      Map<String, Object> parameters,
-      ClientCall<Message, Message> call)
-      throws InvalidProtocolBufferException, JsonProcessingException {
-    Message.Builder builder = ProtobufMessageUtils.buildMessage(methodDescriptor, parameters);
-
-    Message message = ClientCalls.blockingUnaryCall(call, builder.build());
-    return workflowContext
-        .definition()
-        .application()
-        .modelFactory()
-        .fromAny(ProtobufMessageUtils.convert(message));
-  }
-
-  private static WorkflowModel handleBidiStreaming(
-      WorkflowContext workflowContext,
-      Map<String, Object> parameters,
-      Descriptors.MethodDescriptor methodDescriptor,
-      ClientCall<Message, Message> call) {
-    return workflowContext
-        .definition()
-        .application()
-        .modelFactory()
-        .fromAny(
-            ProtobufMessageUtils.asyncStreamingCall(
-                parameters,
-                methodDescriptor,
-                responseObserver -> ClientCalls.asyncBidiStreamingCall(call, responseObserver),
-                v -> {
-                  Collection<JsonNode> nodes = v;
-                  List<JsonNode> list = new ArrayList<>(nodes);
-                  return JsonUtils.fromValue(list);
-                }));
   }
 
   @Override
   public CallableTask build() {
-    return new GrpcExecutor(this.grpcRequestContext, this.callExecutor, this.arguments);
+    return new GrpcExecutor(
+        this.grpcRequestContext, this.arguments, this.fileDescriptorContext, this.proto);
   }
 }

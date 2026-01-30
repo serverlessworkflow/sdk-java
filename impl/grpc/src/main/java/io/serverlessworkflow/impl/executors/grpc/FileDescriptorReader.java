@@ -94,9 +94,6 @@ public class FileDescriptorReader {
 
       int status = Protoc.runProtoc(protocArgs);
 
-      //      ProcessBuilder processBuilder = new ProcessBuilder(protocArgs);
-      //      int status = ScriptUtils.uncheckedStart(processBuilder).waitFor();
-
       if (status != 0) {
         throw new RuntimeException(
             "Unable to generate file descriptor, 'protoc' execution failed with status " + status);
