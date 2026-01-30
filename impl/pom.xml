@@ -18,7 +18,6 @@
         <version.docker.java>3.7.0</version.docker.java>
         <version.org.graalvm.polyglot>25.0.2</version.org.graalvm.polyglot>
         <version.org.graalvm.polyglot>25.0.1</version.org.graalvm.polyglot>
-        <version.com.github.os72.protoc.jar>3.11.4</version.com.github.os72.protoc.jar>
     </properties>
     <dependencyManagement>
         <dependencies>

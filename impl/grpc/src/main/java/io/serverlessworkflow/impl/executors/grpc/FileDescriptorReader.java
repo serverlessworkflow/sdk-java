@@ -15,9 +15,9 @@
  */
 package io.serverlessworkflow.impl.executors.grpc;
 
-import com.github.os72.protocjar.Protoc;
 import com.google.protobuf.DescriptorProtos;
 import io.serverlessworkflow.impl.resources.ExternalResourceHandler;
+import io.serverlessworkflow.impl.scripts.ScriptUtils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
@@ -83,6 +83,7 @@ public class FileDescriptorReader {
   private static void generateFileDescriptor(Path grpcDir, Path protoFile, Path descriptorOutput) {
     String[] protocArgs =
         new String[] {
+          "protoc",
           "--include_imports",
           "--descriptor_set_out=" + descriptorOutput.toAbsolutePath(),
           "-I",
@@ -92,7 +93,10 @@ public class FileDescriptorReader {
 
     try {
 
-      int status = Protoc.runProtoc(protocArgs);
+      ProcessBuilder processBuilder = new ProcessBuilder(protocArgs);
+      int status = ScriptUtils.uncheckedStart(processBuilder).waitFor();
+
+      //      int status = Protoc.runProtoc(protocArgs);
 
       if (status != 0) {
         throw new RuntimeException(
@@ -101,8 +105,10 @@ public class FileDescriptorReader {
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       throw new RuntimeException("Unable to generate file descriptor", e);
-    } catch (IOException e) {
-      throw new UncheckedIOException("Unable to generate file descriptor", e);
     }
+
+    //    catch (IOException e) {
+    //      throw new UncheckedIOException("Unable to generate file descriptor", e);
+    //    }
   }
 }

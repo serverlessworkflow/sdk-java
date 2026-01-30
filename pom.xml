@@ -61,6 +61,8 @@
         <version.checkstyle.plugin>3.6.0</version.checkstyle.plugin>
         <version.com.diffplug.spotless>3.2.0</version.com.diffplug.spotless>
         <version.compiler.plugin>3.14.1</version.compiler.plugin>
+        <version.com.github.os72.protoc.jar>3.11.4</version.com.github.os72.protoc.jar>
+        <version.com.google.protobuf.protobuf.java.util>3.25.8</version.com.google.protobuf.protobuf.java.util>
         <version.deploy.plugin>3.1.4</version.deploy.plugin>
         <version.enforcer.plugin>3.6.2</version.enforcer.plugin>
         <version.failsafe.plugin>3.5.4</version.failsafe.plugin>
@@ -83,7 +85,7 @@
         <version.awaitility>4.3.0</version.awaitility>
         <version.ch.qos.logback>1.5.26</version.ch.qos.logback>
         <version.com.google.protobuf.java>4.32.1</version.com.google.protobuf.java>
-        <version.ch.qos.logback>1.5.25</version.ch.qos.logback>
+        <version.ch.qos.logback>1.5.26</version.ch.qos.logback>
         <version.com.fasterxml.jackson>2.21.0</version.com.fasterxml.jackson>
         <version.com.fasterxml.jackson.annotations>2.21</version.com.fasterxml.jackson.annotations>
         <version.com.networknt>2.0.0</version.com.networknt>
@@ -210,12 +212,7 @@
                 <groupId>io.grpc</groupId>
                 <artifactId>grpc-netty</artifactId>
                 <version>${version.io.grpc.java}</version>
-                <scope>runtime</scope>
-            </dependency>
-            <dependency>
-                <groupId>io.grpc</groupId>
-                <artifactId>grpc-protobuf</artifactId>
-                <version>${version.io.grpc.java}</version>
+                <scope>test</scope>
             </dependency>
             <dependency>
                 <groupId>io.grpc</groupId>
@@ -223,11 +220,20 @@
                 <version>${version.io.grpc.java}</version>
             </dependency>
             <dependency>
-                <groupId>com.google.protobuf</groupId>
-                <artifactId>protobuf-java</artifactId>
-                <version>${version.com.google.protobuf.java}</version>
+                <groupId>io.grpc</groupId>
+                <artifactId>grpc-protobuf</artifactId>
+                <version>${version.io.grpc.java}</version>
             </dependency>
-
+            <dependency>
+                <groupId>com.google.protobuf</groupId>
+                <artifactId>protobuf-java-util</artifactId>
+                <version>${version.com.google.protobuf.protobuf.java.util}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.os72</groupId>
+                <artifactId>protoc-jar</artifactId>
+                <version>${version.com.github.os72.protoc.jar}</version>
+            </dependency>
             <!-- test -->
             <dependency>
                 <groupId>org.junit.jupiter</groupId>
