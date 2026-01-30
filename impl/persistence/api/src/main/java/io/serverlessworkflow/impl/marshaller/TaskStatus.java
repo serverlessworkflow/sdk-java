@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.persistence.bigmap;
+package io.serverlessworkflow.impl.marshaller;
 
-enum TaskStatus {
+public enum TaskStatus {
   COMPLETED,
   RETRIED
 }

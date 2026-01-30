@@ -13,19 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.persistence.bigmap;
+package io.serverlessworkflow.impl.persistence.mvstore;
 
-import io.serverlessworkflow.impl.WorkflowContextData;
+import io.serverlessworkflow.impl.persistence.PersistenceInstanceStore;
+import io.serverlessworkflow.impl.persistence.test.AbstractPersistenceTest;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import org.junit.jupiter.api.AfterEach;
 
-public abstract class BigMapIdInstanceWriter<V, T, S>
-    extends BigMapInstanceWriter<String, V, T, S> {
+class MVStorePersistenceStoreTest extends AbstractPersistenceTest {
 
-  protected BigMapIdInstanceWriter(BigMapInstanceStore<String, V, T, S> store) {
-    super(store);
-  }
+  private static final String DB_NAME = "dbtest.db";
 
   @Override
-  protected String key(WorkflowContextData workflowContext) {
-    return workflowContext.instanceData().id();
+  protected PersistenceInstanceStore persistenceStore() {
+    return new MVStorePersistenceStore(DB_NAME);
+  }
+
+  @AfterEach
+  void destroy() throws IOException {
+    Files.delete(Path.of(DB_NAME));
   }
 }

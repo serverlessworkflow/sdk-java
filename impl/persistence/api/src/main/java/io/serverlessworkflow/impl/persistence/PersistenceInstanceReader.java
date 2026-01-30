@@ -17,17 +17,16 @@ package io.serverlessworkflow.impl.persistence;
 
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowInstance;
-import java.util.Collection;
-import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
-public interface PersistenceInstanceReader extends AutoCloseable {
-  Map<String, WorkflowInstance> readAll(WorkflowDefinition definition);
+public interface PersistenceInstanceReader {
 
-  Map<String, WorkflowInstance> read(WorkflowDefinition definition, Collection<String> instanceIds);
+  default Stream<WorkflowInstance> scanAll(WorkflowDefinition definition) {
+    return scanAll(definition, definition.application().id());
+  }
 
-  Optional<WorkflowInstance> read(WorkflowDefinition definition, String instanceId);
+  Stream<WorkflowInstance> scanAll(WorkflowDefinition definition, String applicationId);
 
-  @Override
-  default void close() {}
+  Optional<WorkflowInstance> find(WorkflowDefinition definition, String instanceId);
 }
