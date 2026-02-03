@@ -1,0 +1,25 @@
+syntax = "proto2";
+
+package person;
+
+message GetPersonRequest {}
+
+message GetPersonResponse {
+  required string name = 1;
+  required int32 id = 2;
+}
+
+message GetCarRequest {}
+
+message GetCarResponse {
+  required string name = 1;
+  required string brand = 2;
+}
+
+service Person {
+  rpc GetPerson(GetPersonRequest) returns (GetPersonResponse);
+}
+
+service Car {
+  rpc GetCar(GetCarRequest) returns (GetCarResponse);
+}

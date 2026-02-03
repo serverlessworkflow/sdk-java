@@ -1,0 +1,18 @@
+document:
+  dsl: '1.0.2'
+  namespace: test
+  name: grpc-example
+  version: '0.1.0'
+do:
+  - greet:
+      call: grpc
+      with:
+        proto:
+          endpoint: workflows-samples/grpc/proto/contributors.proto
+        service:
+          name: BiDirectionalStreaming
+          host: localhost
+          port: 5011
+        method: CreateContributor
+        arguments:
+          github: dependabot[bot]

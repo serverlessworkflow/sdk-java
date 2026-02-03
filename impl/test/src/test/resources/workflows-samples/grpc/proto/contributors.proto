@@ -1,0 +1,27 @@
+syntax = "proto2";
+
+package io.serverlessworkflow.impl.executors.grpc.contributors;
+
+message AddContributionRequest {
+  required string github = 1;
+}
+
+message AddContributionResponse {
+  required string message = 1;
+}
+
+service ClientStreaming {
+  rpc CreateContributor(stream AddContributionRequest) returns (AddContributionResponse) {}
+}
+
+service ServerStreaming {
+  rpc CreateContributor(AddContributionRequest) returns (stream AddContributionResponse) {}
+}
+
+service BiDirectionalStreaming {
+  rpc CreateContributor(stream AddContributionRequest) returns (stream AddContributionResponse) {}
+}
+
+service UnaryArgsExpr {
+  rpc CreateContributor(AddContributionRequest) returns (AddContributionResponse) {}
+}
