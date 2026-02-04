@@ -15,7 +15,9 @@
  */
 package io.serverlessworkflow.impl.lifecycle;
 
-public interface WorkflowExecutionListener extends AutoCloseable {
+import io.serverlessworkflow.impl.ServicePriority;
+
+public interface WorkflowExecutionListener extends AutoCloseable, ServicePriority {
 
   default void onWorkflowStarted(WorkflowStartedEvent ev) {}
 

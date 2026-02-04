@@ -29,6 +29,7 @@ import io.serverlessworkflow.impl.config.SystemPropertyConfigManager;
 import io.serverlessworkflow.impl.events.EventConsumer;
 import io.serverlessworkflow.impl.events.EventPublisher;
 import io.serverlessworkflow.impl.events.InMemoryEvents;
+import io.serverlessworkflow.impl.executors.CallableTaskProxyBuilder;
 import io.serverlessworkflow.impl.executors.DefaultTaskExecutorFactory;
 import io.serverlessworkflow.impl.executors.TaskExecutorFactory;
 import io.serverlessworkflow.impl.expressions.ExpressionFactory;
@@ -48,6 +49,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.ServiceLoader;
@@ -83,6 +85,7 @@ public class WorkflowApplication implements AutoCloseable {
   private final Optional<URITemplateResolver> templateResolver;
   private final Optional<FunctionReader> functionReader;
   private final URI defaultCatalogURI;
+  private final Collection<CallableTaskProxyBuilder> callableProxyBuilders;
 
   private WorkflowApplication(Builder builder) {
     this.taskFactory = builder.taskFactory;
@@ -110,6 +113,7 @@ public class WorkflowApplication implements AutoCloseable {
     this.functionReader = builder.functionReader;
     this.defaultCatalogURI = builder.defaultCatalogURI;
     this.id = builder.id;
+    this.callableProxyBuilders = builder.callableProxyBuilders;
   }
 
   public TaskExecutorFactory taskFactory() {
@@ -170,10 +174,10 @@ public class WorkflowApplication implements AutoCloseable {
     private String id;
     private TaskExecutorFactory taskFactory;
     private Collection<ExpressionFactory> exprFactories = new HashSet<>();
-    private Collection<WorkflowExecutionListener> listeners =
-        ServiceLoader.load(WorkflowExecutionListener.class).stream()
-            .map(Provider::get)
-            .collect(Collectors.toList());
+    private List<WorkflowExecutionListener> listeners =
+        loadFromServiceLoader(WorkflowExecutionListener.class);
+    private List<CallableTaskProxyBuilder> callableProxyBuilders =
+        loadFromServiceLoader(CallableTaskProxyBuilder.class);
     private ResourceLoaderFactory resourceLoaderFactory = DefaultResourceLoaderFactory.get();
     private SchemaValidatorFactory schemaValidatorFactory;
     private WorkflowPositionFactory positionFactory = () -> new QueueWorkflowPosition();
@@ -208,6 +212,11 @@ public class WorkflowApplication implements AutoCloseable {
 
     public Builder withListener(WorkflowExecutionListener listener) {
       listeners.add(listener);
+      return this;
+    }
+
+    public Builder withCallableProxy(CallableTaskProxyBuilder builder) {
+      callableProxyBuilders.add(builder);
       return this;
     }
 
@@ -369,10 +378,16 @@ public class WorkflowApplication implements AutoCloseable {
       if (defaultCatalogURI == null) {
         defaultCatalogURI = URI.create("https://github.com/serverlessworkflow/catalog");
       }
+      Collections.sort(listeners);
+      Collections.sort(callableProxyBuilders);
       if (id == null) {
         id = idFactory.get();
       }
       return new WorkflowApplication(this);
+    }
+
+    private <T> List<T> loadFromServiceLoader(Class<T> clazz) {
+      return ServiceLoader.load(clazz).stream().map(Provider::get).collect(Collectors.toList());
     }
   }
 
@@ -473,5 +488,9 @@ public class WorkflowApplication implements AutoCloseable {
       String name, WorkflowContext workflowContext, TaskContext taskContext) {
     return Optional.ofNullable(additionalObjects.get(name))
         .map(v -> (T) v.apply(workflowContext, taskContext));
+  }
+
+  public Collection<CallableTaskProxyBuilder> callableProxyBuilders() {
+    return callableProxyBuilders;
   }
 }
