@@ -17,16 +17,52 @@ package io.serverlessworkflow.impl.persistence;
 
 import static io.serverlessworkflow.impl.WorkflowUtils.safeClose;
 
+import java.time.Duration;
+import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+
 public class DefaultPersistenceInstanceHandlers extends PersistenceInstanceHandlers {
 
-  private final PersistenceInstanceStore store;
+  public static class Builder {
 
-  public static DefaultPersistenceInstanceHandlers from(PersistenceInstanceStore store) {
-    return new DefaultPersistenceInstanceHandlers(
-        new DefaultPersistenceInstanceWriter(store),
-        new DefaultPersistenceInstanceReader(store),
-        store);
+    private final PersistenceInstanceStore store;
+    private ExecutorService executorService;
+    private Duration closeTimeout;
+
+    private Builder(PersistenceInstanceStore store) {
+      this.store = store;
+    }
+
+    public Builder withExecutorService(ExecutorService executorService) {
+      this.executorService = executorService;
+      return this;
+    }
+
+    public Builder withCloseTimeout(Duration closeTimeout) {
+      this.closeTimeout = closeTimeout;
+      return this;
+    }
+
+    public PersistenceInstanceHandlers build() {
+      return new DefaultPersistenceInstanceHandlers(
+          new DefaultPersistenceInstanceWriter(
+              store,
+              Optional.ofNullable(executorService),
+              closeTimeout == null ? Duration.ofSeconds(1) : closeTimeout),
+          new DefaultPersistenceInstanceReader(store),
+          store);
+    }
   }
+
+  public static Builder builder(PersistenceInstanceStore store) {
+    return new Builder(store);
+  }
+
+  public static PersistenceInstanceHandlers from(PersistenceInstanceStore store) {
+    return new Builder(store).build();
+  }
+
+  private final PersistenceInstanceStore store;
 
   private DefaultPersistenceInstanceHandlers(
       PersistenceInstanceWriter writer,
@@ -38,6 +74,7 @@ public class DefaultPersistenceInstanceHandlers extends PersistenceInstanceHandl
 
   @Override
   public void close() {
+    super.close();
     safeClose(store);
   }
 }
