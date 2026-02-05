@@ -21,6 +21,7 @@ import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowMutablePosition;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public class CallTaskExecutor<T extends TaskBase> extends RegularTaskExecutor<T> {
@@ -29,27 +30,37 @@ public class CallTaskExecutor<T extends TaskBase> extends RegularTaskExecutor<T>
 
   public static class CallTaskExecutorBuilder<T extends TaskBase>
       extends RegularTaskExecutorBuilder<T> {
-    private final CallableTaskBuilder<T> callable;
+    private CallableTaskBuilder<T> callableBuilder;
+    private List<CallableTaskProxyBuilder> callableProxyBuilders;
+    private CallableTask callable;
 
     protected CallTaskExecutorBuilder(
         WorkflowMutablePosition position,
         T task,
         WorkflowDefinition definition,
-        CallableTaskBuilder<T> callable) {
+        CallableTaskBuilder<T> callableBuilder) {
       super(position, task, definition);
-      this.callable = callable;
-      callable.init(task, definition, position);
+      this.callableProxyBuilders =
+          definition.application().callableProxyBuilders().stream()
+              .filter(t -> t.accept(task))
+              .toList();
+      callableBuilder.init(task, definition, position);
+      this.callableBuilder = callableBuilder;
     }
 
     @Override
     public CallTaskExecutor<T> buildInstance() {
+      this.callable = callableBuilder.build();
+      for (CallableTaskProxyBuilder callableBuilder : callableProxyBuilders) {
+        this.callable = callableBuilder.build(callable);
+      }
       return new CallTaskExecutor<>(this);
     }
   }
 
   protected CallTaskExecutor(CallTaskExecutorBuilder<T> builder) {
     super(builder);
-    this.callable = builder.callable.build();
+    this.callable = builder.callable;
   }
 
   @Override

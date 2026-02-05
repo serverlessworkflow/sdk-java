@@ -25,6 +25,7 @@ import io.serverlessworkflow.impl.WorkflowModel;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import mockwebserver3.MockResponse;
 import mockwebserver3.MockWebServer;
@@ -37,15 +38,34 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class HTTPWorkflowDefinitionTest {
 
   private static WorkflowApplication appl;
   private static MockWebServer mockServer;
+  private static final Logger logger = LoggerFactory.getLogger(HTTPWorkflowDefinitionTest.class);
 
   @BeforeAll
   static void init() {
-    appl = WorkflowApplication.builder().build();
+    appl =
+        WorkflowApplication.builder()
+            .withCallableProxy(
+                delegate ->
+                    (w, t, n) -> {
+                      long init = System.currentTimeMillis();
+                      CompletableFuture<WorkflowModel> result = delegate.apply(w, t, n);
+                      if (logger.isDebugEnabled()) {
+                        result.thenAccept(
+                            x ->
+                                logger.debug(
+                                    "Http calls takes {} milliseconds",
+                                    System.currentTimeMillis() - init));
+                      }
+                      return result;
+                    })
+            .build();
   }
 
   @AfterAll
