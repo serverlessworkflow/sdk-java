@@ -17,24 +17,28 @@ package io.serverlessworkflow.impl.persistence;
 
 import io.serverlessworkflow.impl.TaskContextData;
 import io.serverlessworkflow.impl.WorkflowContextData;
+import java.util.concurrent.CompletableFuture;
 
-public interface PersistenceInstanceWriter {
+public interface PersistenceInstanceWriter extends AutoCloseable {
 
-  void started(WorkflowContextData workflowContext);
+  CompletableFuture<Void> started(WorkflowContextData workflowContext);
 
-  void completed(WorkflowContextData workflowContext);
+  CompletableFuture<Void> completed(WorkflowContextData workflowContext);
 
-  void failed(WorkflowContextData workflowContext, Throwable ex);
+  CompletableFuture<Void> failed(WorkflowContextData workflowContext, Throwable ex);
 
-  void aborted(WorkflowContextData workflowContext);
+  CompletableFuture<Void> aborted(WorkflowContextData workflowContext);
 
-  void suspended(WorkflowContextData workflowContext);
+  CompletableFuture<Void> suspended(WorkflowContextData workflowContext);
 
-  void resumed(WorkflowContextData workflowContext);
+  CompletableFuture<Void> resumed(WorkflowContextData workflowContext);
 
-  void taskRetried(WorkflowContextData workflowContext, TaskContextData taskContext);
+  CompletableFuture<Void> taskRetried(
+      WorkflowContextData workflowContext, TaskContextData taskContext);
 
-  void taskStarted(WorkflowContextData workflowContext, TaskContextData taskContext);
+  CompletableFuture<Void> taskStarted(
+      WorkflowContextData workflowContext, TaskContextData taskContext);
 
-  void taskCompleted(WorkflowContextData workflowContext, TaskContextData taskContext);
+  CompletableFuture<Void> taskCompleted(
+      WorkflowContextData workflowContext, TaskContextData taskContext);
 }

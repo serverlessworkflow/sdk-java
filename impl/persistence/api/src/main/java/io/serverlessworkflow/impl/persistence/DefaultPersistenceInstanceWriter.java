@@ -17,75 +17,123 @@ package io.serverlessworkflow.impl.persistence;
 
 import io.serverlessworkflow.impl.TaskContextData;
 import io.serverlessworkflow.impl.WorkflowContextData;
+import io.serverlessworkflow.impl.WorkflowDefinitionData;
 import io.serverlessworkflow.impl.WorkflowStatus;
+import java.time.Duration;
+import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 public class DefaultPersistenceInstanceWriter implements PersistenceInstanceWriter {
 
   private final PersistenceInstanceStore store;
+  private final Map<String, CompletableFuture<Void>> futuresMap = new ConcurrentHashMap<>();
+  private final Optional<ExecutorService> executorService;
+  private final Duration closeTimeout;
 
-  protected DefaultPersistenceInstanceWriter(PersistenceInstanceStore store) {
+  protected DefaultPersistenceInstanceWriter(
+      PersistenceInstanceStore store,
+      Optional<ExecutorService> executorService,
+      Duration closeTimeout) {
     this.store = store;
+    this.executorService = executorService;
+    this.closeTimeout = closeTimeout;
   }
 
   @Override
-  public void started(WorkflowContextData workflowContext) {
-    doTransaction(t -> t.writeInstanceData(workflowContext), workflowContext);
+  public CompletableFuture<Void> started(WorkflowContextData workflowContext) {
+    return doTransaction(t -> t.writeInstanceData(workflowContext), workflowContext);
   }
 
   @Override
-  public void completed(WorkflowContextData workflowContext) {
-    removeProcessInstance(workflowContext);
+  public CompletableFuture<Void> completed(WorkflowContextData workflowContext) {
+    return removeProcessInstance(workflowContext);
   }
 
   @Override
-  public void failed(WorkflowContextData workflowContext, Throwable ex) {
-    removeProcessInstance(workflowContext);
+  public CompletableFuture<Void> failed(WorkflowContextData workflowContext, Throwable ex) {
+    return removeProcessInstance(workflowContext);
   }
 
   @Override
-  public void aborted(WorkflowContextData workflowContext) {
-    removeProcessInstance(workflowContext);
+  public CompletableFuture<Void> aborted(WorkflowContextData workflowContext) {
+    return removeProcessInstance(workflowContext);
   }
 
-  protected void removeProcessInstance(WorkflowContextData workflowContext) {
-    doTransaction(t -> t.removeProcessInstance(workflowContext), workflowContext);
-  }
-
-  @Override
-  public void taskStarted(WorkflowContextData workflowContext, TaskContextData taskContext) {
-    // not recording
+  protected CompletableFuture<Void> removeProcessInstance(WorkflowContextData workflowContext) {
+    return doTransaction(t -> t.removeProcessInstance(workflowContext), workflowContext)
+        .thenRun(() -> futuresMap.remove(workflowContext.instanceData().id()));
   }
 
   @Override
-  public void taskRetried(WorkflowContextData workflowContext, TaskContextData taskContext) {
-    doTransaction(t -> t.writeRetryTask(workflowContext, taskContext), workflowContext);
+  public CompletableFuture<Void> taskStarted(
+      WorkflowContextData workflowContext, TaskContextData taskContext) {
+    return CompletableFuture.completedFuture(null);
   }
 
   @Override
-  public void taskCompleted(WorkflowContextData workflowContext, TaskContextData taskContext) {
-    doTransaction(t -> t.writeCompletedTask(workflowContext, taskContext), workflowContext);
+  public CompletableFuture<Void> taskRetried(
+      WorkflowContextData workflowContext, TaskContextData taskContext) {
+    return doTransaction(t -> t.writeRetryTask(workflowContext, taskContext), workflowContext);
   }
 
   @Override
-  public void suspended(WorkflowContextData workflowContext) {
-    doTransaction(t -> t.writeStatus(workflowContext, WorkflowStatus.SUSPENDED), workflowContext);
+  public CompletableFuture<Void> taskCompleted(
+      WorkflowContextData workflowContext, TaskContextData taskContext) {
+    return doTransaction(t -> t.writeCompletedTask(workflowContext, taskContext), workflowContext);
   }
 
   @Override
-  public void resumed(WorkflowContextData workflowContext) {
-    doTransaction(t -> t.clearStatus(workflowContext), workflowContext);
+  public CompletableFuture<Void> suspended(WorkflowContextData workflowContext) {
+    return doTransaction(
+        t -> t.writeStatus(workflowContext, WorkflowStatus.SUSPENDED), workflowContext);
   }
 
-  private void doTransaction(
-      Consumer<PersistenceInstanceTransaction> operations, WorkflowContextData context) {
+  @Override
+  public CompletableFuture<Void> resumed(WorkflowContextData workflowContext) {
+    return doTransaction(t -> t.clearStatus(workflowContext), workflowContext);
+  }
+
+  private CompletableFuture<Void> doTransaction(
+      Consumer<PersistenceInstanceTransaction> operation, WorkflowContextData context) {
+    final ExecutorService service =
+        this.executorService.orElse(context.definition().application().executorService());
+    final Runnable runnable = () -> executeTransaction(operation, context.definition());
+    return futuresMap.compute(
+        context.instanceData().id(),
+        (k, v) ->
+            v == null
+                ? CompletableFuture.runAsync(runnable, service)
+                : v.thenRunAsync(runnable, service));
+  }
+
+  private void executeTransaction(
+      Consumer<PersistenceInstanceTransaction> operation, WorkflowDefinitionData definition) {
     PersistenceInstanceTransaction transaction = store.begin();
     try {
-      operations.accept(transaction);
-      transaction.commit(context.definition());
+      operation.accept(transaction);
+      transaction.commit(definition);
     } catch (Exception ex) {
-      transaction.rollback(context.definition());
+      transaction.rollback(definition);
       throw ex;
     }
+  }
+
+  @Override
+  public void close() {
+    futuresMap.clear();
+    executorService.ifPresent(
+        e -> {
+          try {
+            e.awaitTermination(closeTimeout.toMillis(), TimeUnit.MILLISECONDS);
+            e.shutdown();
+          } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+          }
+        });
   }
 }

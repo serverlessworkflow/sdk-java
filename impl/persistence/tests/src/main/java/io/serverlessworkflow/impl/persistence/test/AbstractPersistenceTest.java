@@ -41,6 +41,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.Executors;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -67,7 +68,10 @@ public abstract class AbstractPersistenceTest {
 
   @BeforeEach
   void setup() {
-    handlers = DefaultPersistenceInstanceHandlers.from(persistenceStore());
+    handlers =
+        DefaultPersistenceInstanceHandlers.builder(persistenceStore())
+            .withExecutorService(Executors.newSingleThreadExecutor())
+            .build();
     context = app.modelFactory().fromNull();
     workflowContext = mock(WorkflowContext.class);
     workflowInstance = mock(WorkflowInstance.class);
@@ -117,8 +121,8 @@ public abstract class AbstractPersistenceTest {
 
     final Map<String, Object> completedMap = Map.of("name", "fulanito");
 
-    handlers.writer().started(workflowContext);
-    handlers.writer().taskRetried(workflowContext, retriedTaskContext(position, numRetries));
+    handlers.writer().started(workflowContext).join();
+    handlers.writer().taskRetried(workflowContext, retriedTaskContext(position, numRetries)).join();
     Optional<WorkflowInstance> optional = handlers.reader().find(definition, workflowInstance.id());
     assertThat(optional).isPresent();
     WorkflowPersistenceInstance instance = (WorkflowPersistenceInstance) optional.orElseThrow();
@@ -135,7 +139,10 @@ public abstract class AbstractPersistenceTest {
     assertThat(retryAttempt.getValue()).isEqualTo(numRetries);
 
     // task completed
-    handlers.writer().taskCompleted(workflowContext, completedTaskContext(position, completedMap));
+    handlers
+        .writer()
+        .taskCompleted(workflowContext, completedTaskContext(position, completedMap))
+        .join();
     instance =
         (WorkflowPersistenceInstance)
             handlers.reader().find(definition, workflowInstance.id()).orElseThrow();
@@ -157,7 +164,7 @@ public abstract class AbstractPersistenceTest {
     assertThat(transition.getValue().isEndNode()).isTrue();
 
     // workflow completed
-    handlers.writer().completed(workflowContext);
+    handlers.writer().completed(workflowContext).join();
     assertThat(handlers.reader().find(definition, workflowInstance.id())).isEmpty();
   }
 }

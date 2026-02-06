@@ -55,4 +55,7 @@ public class DefaultPersistenceInstanceReader implements PersistenceInstanceRead
         .onClose(() -> transaction.commit(definition))
         .map(v -> new WorkflowPersistenceInstance(definition, v));
   }
+
+  @Override
+  public void close() {}
 }

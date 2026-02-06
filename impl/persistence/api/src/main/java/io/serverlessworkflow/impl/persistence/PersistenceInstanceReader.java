@@ -20,7 +20,7 @@ import io.serverlessworkflow.impl.WorkflowInstance;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-public interface PersistenceInstanceReader {
+public interface PersistenceInstanceReader extends AutoCloseable {
 
   default Stream<WorkflowInstance> scanAll(WorkflowDefinition definition) {
     return scanAll(definition, definition.application().id());

@@ -29,18 +29,23 @@ import io.serverlessworkflow.impl.persistence.mvstore.MVStorePersistenceStore;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.Collection;
 import java.util.Map;
+import java.util.concurrent.Executors;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
 public class MvStorePersistenceTest {
 
   @Test
-  void testSimpleRun() throws IOException {
+  void testSimpleRun() throws Exception {
     final String dbName = "db-samples/simple.db";
     try (PersistenceInstanceHandlers handlers =
-            DefaultPersistenceInstanceHandlers.from(new MVStorePersistenceStore(dbName));
+            DefaultPersistenceInstanceHandlers.builder(new MVStorePersistenceStore(dbName))
+                .withExecutorService(Executors.newSingleThreadExecutor())
+                .withCloseTimeout(Duration.ofMillis(100))
+                .build();
         WorkflowApplication application =
             PersistenceApplicationBuilder.builder(WorkflowApplication.builder(), handlers.writer())
                 .build(); ) {
@@ -49,6 +54,7 @@ public class MvStorePersistenceTest {
               readWorkflowFromClasspath("workflows-samples/simple-expression.yaml"));
       assertNoInstance(handlers, definition);
       definition.instance(Map.of()).start().join();
+      handlers.writer().close();
       assertNoInstance(handlers, definition);
     } finally {
       Files.delete(Path.of(dbName));
