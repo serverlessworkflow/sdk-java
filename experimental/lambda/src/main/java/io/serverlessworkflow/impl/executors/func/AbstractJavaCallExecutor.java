@@ -38,10 +38,11 @@ public abstract class AbstractJavaCallExecutor<T> implements CallableTask {
   @Override
   public CompletableFuture<WorkflowModel> apply(
       WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel input) {
-    Object result = callJavaFunction(workflowContext, taskContext, model2Input(input));
+    Object result =
+        convertResponse(callJavaFunction(workflowContext, taskContext, model2Input(input)));
     WorkflowModelFactory modelFactory = workflowContext.definition().application().modelFactory();
     return result instanceof CompletableFuture future
-        ? future.thenApply(v -> output2Model(modelFactory, input, v))
+        ? future.thenApply(v -> output2Model(modelFactory, input, convertResponse(v)))
         : CompletableFuture.completedFuture(output2Model(modelFactory, input, result));
   }
 
@@ -60,6 +61,6 @@ public abstract class AbstractJavaCallExecutor<T> implements CallableTask {
 
   protected WorkflowModel output2Model(
       WorkflowModelFactory modelFactory, WorkflowModel input, Object result) {
-    return modelFactory.fromAny(input, convertResponse(result));
+    return modelFactory.fromAny(input, result);
   }
 }
