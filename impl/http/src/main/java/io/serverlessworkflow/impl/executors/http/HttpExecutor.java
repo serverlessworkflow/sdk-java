@@ -72,8 +72,6 @@ public class HttpExecutor implements CallableTask {
 
     Client client = HttpClientResolver.client(workflow, taskContext);
 
-    HttpClientResolver.clientRequestFilter(workflow, taskContext).ifPresent(client::register);
-
     WebTarget target = client.target(uri);
 
     for (Entry<String, Object> entry :

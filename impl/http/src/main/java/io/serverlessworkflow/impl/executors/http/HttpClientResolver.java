@@ -20,13 +20,10 @@ import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
-import jakarta.ws.rs.client.ClientRequestFilter;
-import java.util.Optional;
 
 public class HttpClientResolver {
 
   public static final String HTTP_CLIENT_PROVIDER = "httpClientProvider";
-  public static final String HTTP_CLIENT_FILTER_PROVIDER = "httpClientFilterProvider";
 
   private static class DefaultHolder {
     private static final Client client = ClientBuilder.newClient();
@@ -36,13 +33,6 @@ public class HttpClientResolver {
     WorkflowApplication appl = workflowContext.definition().application();
     return appl.<Client>additionalObject(HTTP_CLIENT_PROVIDER, workflowContext, taskContext)
         .orElseGet(() -> DefaultHolder.client);
-  }
-
-  public static Optional<ClientRequestFilter> clientRequestFilter(
-      WorkflowContext workflowContext, TaskContext taskContext) {
-    WorkflowApplication application = workflowContext.definition().application();
-    return application.<ClientRequestFilter>additionalObject(
-        HTTP_CLIENT_FILTER_PROVIDER, workflowContext, taskContext);
   }
 
   private HttpClientResolver() {}
