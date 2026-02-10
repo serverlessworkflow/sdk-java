@@ -65,8 +65,7 @@ public interface ProtobufMessageUtils {
       Map<String, Object> parameters,
       com.google.protobuf.Descriptors.MethodDescriptor methodDescriptor,
       UnaryOperator<StreamObserver<Message>> streamObserverFunction,
-      WorkflowModelFactory modelFactory,
-      Function<WorkflowModelCollection, WorkflowModel> nodesFunction) {
+      WorkflowModelFactory modelFactory) {
     WaitingStreamObserver responseObserver = new WaitingStreamObserver();
     StreamObserver<Message> requestObserver = streamObserverFunction.apply(responseObserver);
 
@@ -89,7 +88,7 @@ public interface ProtobufMessageUtils {
         .map(m -> ProtobufMessageUtils.convert(m, modelFactory))
         .forEach(collection::add);
 
-    return nodesFunction.apply(collection);
+    return collection;
   }
 
   static Message.Builder buildMessage(Object object, Message.Builder builder)

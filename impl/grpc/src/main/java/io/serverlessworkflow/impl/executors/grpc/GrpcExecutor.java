@@ -151,15 +151,15 @@ public class GrpcExecutor implements CallableTask {
       Descriptors.MethodDescriptor methodDescriptor,
       ClientCall<Message, Message> call) {
 
-    return ProtobufMessageUtils.asyncStreamingCall(
-        parameters,
-        methodDescriptor,
-        responseObserver -> ClientCalls.asyncClientStreamingCall(call, responseObserver),
-        workflowContext.definition().application().modelFactory(),
-        nodes ->
-            nodes.isEmpty()
-                ? workflowContext.definition().application().modelFactory().fromNull()
-                : nodes);
+    WorkflowModel workflowModel = ProtobufMessageUtils.asyncStreamingCall(
+            parameters,
+            methodDescriptor,
+            responseObserver -> ClientCalls.asyncClientStreamingCall(call, responseObserver),
+            workflowContext.definition().application().modelFactory());
+
+    return workflowModel.asCollection().isEmpty()
+                    ? workflowContext.definition().application().modelFactory().fromNull()
+                    : (WorkflowModelCollection) workflowModel.asCollection();
   }
 
   private static WorkflowModel handleBidiStreaming(
@@ -172,8 +172,7 @@ public class GrpcExecutor implements CallableTask {
         parameters,
         methodDescriptor,
         responseObserver -> ClientCalls.asyncBidiStreamingCall(call, responseObserver),
-        workflowContext.definition().application().modelFactory(),
-        v -> v);
+        workflowContext.definition().application().modelFactory());
   }
 
   private static WorkflowModel handleServerStreaming(
