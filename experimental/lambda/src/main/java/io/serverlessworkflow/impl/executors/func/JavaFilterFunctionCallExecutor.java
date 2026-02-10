@@ -15,55 +15,24 @@
  */
 package io.serverlessworkflow.impl.executors.func;
 
-import io.serverlessworkflow.api.types.TaskBase;
-import io.serverlessworkflow.api.types.func.CallJava;
-import io.serverlessworkflow.api.types.func.CallJava.CallJavaFilterFunction;
 import io.serverlessworkflow.api.types.func.JavaFilterFunction;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
-import io.serverlessworkflow.impl.WorkflowDefinition;
-import io.serverlessworkflow.impl.WorkflowModel;
-import io.serverlessworkflow.impl.WorkflowMutablePosition;
-import io.serverlessworkflow.impl.executors.CallableTask;
-import io.serverlessworkflow.impl.executors.CallableTaskBuilder;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
-public class JavaFilterFunctionCallExecutor<T, V>
-    implements CallableTaskBuilder<CallJava.CallJavaFilterFunction<T, V>> {
+public class JavaFilterFunctionCallExecutor<T, V> extends AbstractJavaCallExecutor<T> {
 
-  private JavaFilterFunction<T, V> function;
-  private Optional<Class<T>> inputClass;
+  private final JavaFilterFunction<T, V> function;
 
-  private CompletableFuture<WorkflowModel> apply(
-      WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel input) {
-    return CompletableFuture.completedFuture(
-        workflowContext
-            .definition()
-            .application()
-            .modelFactory()
-            .fromAny(
-                input,
-                function.apply(
-                    JavaFuncUtils.convertT(input, inputClass), workflowContext, taskContext)));
+  public JavaFilterFunctionCallExecutor(
+      Optional<Class<T>> inputClass, JavaFilterFunction<T, V> function) {
+    super(inputClass);
+    this.function = function;
   }
 
   @Override
-  public boolean accept(Class<? extends TaskBase> clazz) {
-    return CallJava.CallJavaFilterFunction.class.isAssignableFrom(clazz);
-  }
-
-  @Override
-  public void init(
-      CallJavaFilterFunction<T, V> task,
-      WorkflowDefinition definition,
-      WorkflowMutablePosition position) {
-    this.function = task.function();
-    this.inputClass = task.inputClass();
-  }
-
-  @Override
-  public CallableTask build() {
-    return this::apply;
+  protected Object callJavaFunction(
+      WorkflowContext workflowContext, TaskContext taskContext, T input) {
+    return function.apply(input, workflowContext, taskContext);
   }
 }

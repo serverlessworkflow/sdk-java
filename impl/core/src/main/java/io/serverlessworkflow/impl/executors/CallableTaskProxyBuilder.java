@@ -13,25 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.executors.func;
+package io.serverlessworkflow.impl.executors;
 
-import io.serverlessworkflow.impl.TaskContext;
-import io.serverlessworkflow.impl.WorkflowContext;
-import java.util.Optional;
-import java.util.function.Function;
+import io.serverlessworkflow.api.types.TaskBase;
+import io.serverlessworkflow.impl.ServicePriority;
 
-public class JavaFunctionCallExecutor<T, V> extends AbstractJavaCallExecutor<T> {
+public interface CallableTaskProxyBuilder extends ServicePriority {
 
-  private final Function<T, V> function;
-
-  public JavaFunctionCallExecutor(Optional<Class<T>> inputClass, Function<T, V> function) {
-    super(inputClass);
-    this.function = function;
+  default boolean accept(TaskBase taskBase) {
+    return true;
   }
 
-  @Override
-  protected Object callJavaFunction(
-      WorkflowContext workflowContext, TaskContext taskContext, T input) {
-    return function.apply(input);
-  }
+  CallableTask build(CallableTask delegate);
 }

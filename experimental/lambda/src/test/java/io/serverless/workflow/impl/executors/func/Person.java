@@ -13,20 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.persistence;
+package io.serverless.workflow.impl.executors.func;
 
-import io.serverlessworkflow.impl.WorkflowDefinition;
-import io.serverlessworkflow.impl.WorkflowInstance;
-import java.util.Optional;
-import java.util.stream.Stream;
-
-public interface PersistenceInstanceReader extends AutoCloseable {
-
-  default Stream<WorkflowInstance> scanAll(WorkflowDefinition definition) {
-    return scanAll(definition, definition.application().id());
-  }
-
-  Stream<WorkflowInstance> scanAll(WorkflowDefinition definition, String applicationId);
-
-  Optional<WorkflowInstance> find(WorkflowDefinition definition, String instanceId);
-}
+record Person(String name, int age) {}

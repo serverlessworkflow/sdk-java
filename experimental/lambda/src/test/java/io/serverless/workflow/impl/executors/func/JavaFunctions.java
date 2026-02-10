@@ -13,11 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverless.workflow.impl;
+package io.serverless.workflow.impl.executors.func;
 
 import io.serverlessworkflow.impl.TaskContextData;
 import io.serverlessworkflow.impl.WorkflowContextData;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 public class JavaFunctions {
 
@@ -27,6 +28,16 @@ public class JavaFunctions {
 
   static String getName(Person person) {
     return person.name() + " Javierito";
+  }
+
+  static CompletableFuture<String> getNameFuture(Person person) {
+    return CompletableFuture.completedFuture(getName(person));
+  }
+
+  static CompletableFuture<StringBuilder> getNameStringBuilder(Person person) {
+    StringBuilder sb = new StringBuilder(person.name());
+    sb.append(" Javierito");
+    return CompletableFuture.completedFuture(sb);
   }
 
   static String getFilterName(

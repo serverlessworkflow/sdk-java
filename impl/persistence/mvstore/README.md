@@ -8,14 +8,14 @@ This document explains how to enable persistence using MVStore as underlying per
 To enable MVStore persistence, users should at least do the following things:
 
 - Initialize a  MVStorePersistenceStore instance, passing the path of the file containing the persisted information
-- Pass this MVStorePersitenceStore as argument of BytesMapPersistenceInstanceHandlers.builder. This will create PersistenceInstanceWriter and PersistenceInstanceReader. 
+- Pass this MVStorePersitenceStore as argument of DefaultPersistenceInstanceHandlers.from. This will create PersistenceInstanceWriter and PersistenceInstanceReader. 
 - Use the PersistenceInstanceWriter created in the previous step to decorate the existing WorkflowApplication builder. 
 
 The code will look like this
 
 ----
     try (PersistenceInstanceHandlers handlers =
-            BytesMapPersistenceInstanceHandlers.builder(new MVStorePersistenceStore("test.db"))
+            DefaultPersistenceInstanceHandlers.from(new MVStorePersistenceStore("test.db"))
                 .build();
         WorkflowApplication application =
             PersistenceApplicationBuilder.builder(
@@ -33,7 +33,7 @@ If user wants to resume execution of all previously existing instances (typicall
 Once retrieved, calling `start` method will resume the execution after the latest completed task before the running JVM was stopped. 
 
 ----
-      handlers.reader().readAll(definition).values().forEach(WorkflowInstance::start);
+      handlers.reader().scanAll(definition).forEach(WorkflowInstance::start);
 ----
 
 ---
