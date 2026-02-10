@@ -120,6 +120,7 @@
                     <protocArtifact>com.google.protobuf:protoc:3.25.8:exe:${os.detected.classifier}</protocArtifact>
                     <pluginId>grpc-java</pluginId>
                     <pluginArtifact>io.grpc:protoc-gen-grpc-java:${version.io.grpc.java}:exe:${os.detected.classifier}</pluginArtifact>
+                    <protoTestSourceRoot>${project.basedir}/src/test/resources/workflows-samples/grpc/proto</protoTestSourceRoot>
                 </configuration>
                 <executions>
                     <execution>
