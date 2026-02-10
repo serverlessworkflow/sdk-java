@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverless.workflow.impl;
+package io.serverless.workflow.impl.executors.func;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -38,6 +38,7 @@ import io.serverlessworkflow.impl.WorkflowModel;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import org.junit.jupiter.api.Test;
 
@@ -45,6 +46,21 @@ class CallTest {
 
   @Test
   void testJavaFunction() throws InterruptedException, ExecutionException {
+    internalJavaFunctionTest(JavaFunctions::getName, Person.class);
+  }
+
+  @Test
+  void testJavaFunctionFuture() throws InterruptedException, ExecutionException {
+    internalJavaFunctionTest(JavaFunctions::getNameFuture, Person.class);
+  }
+
+  @Test
+  void testJavaFunctionConverter() throws InterruptedException, ExecutionException {
+    internalJavaFunctionTest(JavaFunctions::getNameStringBuilder, Person.class);
+  }
+
+  private <T, V> void internalJavaFunctionTest(Function<T, V> function, Class<T> clazz)
+      throws InterruptedException, ExecutionException {
     try (WorkflowApplication app = WorkflowApplication.builder().build()) {
       Workflow workflow =
           new Workflow()
@@ -56,8 +72,7 @@ class CallTest {
                           "javaCall",
                           new Task()
                               .withCallTask(
-                                  new CallTaskJava(
-                                      CallJava.function(JavaFunctions::getName, Person.class))))));
+                                  new CallTaskJava(CallJava.function(function, clazz))))));
 
       assertThat(
               app.workflowDefinition(workflow)

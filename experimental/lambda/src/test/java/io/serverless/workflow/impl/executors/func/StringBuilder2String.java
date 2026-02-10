@@ -13,25 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.executors.func;
+package io.serverless.workflow.impl.executors.func;
 
-import io.serverlessworkflow.impl.TaskContext;
-import io.serverlessworkflow.impl.WorkflowContext;
-import java.util.Optional;
-import java.util.function.Function;
+import io.serverlessworkflow.impl.executors.func.DataTypeConverter;
 
-public class JavaFunctionCallExecutor<T, V> extends AbstractJavaCallExecutor<T> {
+public class StringBuilder2String implements DataTypeConverter<StringBuilder, String> {
 
-  private final Function<T, V> function;
-
-  public JavaFunctionCallExecutor(Optional<Class<T>> inputClass, Function<T, V> function) {
-    super(inputClass);
-    this.function = function;
+  @Override
+  public String apply(StringBuilder t) {
+    return t.toString();
   }
 
   @Override
-  protected Object callJavaFunction(
-      WorkflowContext workflowContext, TaskContext taskContext, T input) {
-    return function.apply(input);
+  public Class<StringBuilder> sourceType() {
+    return StringBuilder.class;
   }
 }

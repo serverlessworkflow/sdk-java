@@ -17,50 +17,23 @@ package io.serverlessworkflow.impl.executors.func;
 
 import static io.serverlessworkflow.impl.executors.func.JavaFuncUtils.safeObject;
 
-import io.serverlessworkflow.api.types.TaskBase;
-import io.serverlessworkflow.api.types.func.CallJava;
-import io.serverlessworkflow.api.types.func.CallJava.CallJavaLoopFunction;
 import io.serverlessworkflow.api.types.func.LoopFunction;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
-import io.serverlessworkflow.impl.WorkflowDefinition;
-import io.serverlessworkflow.impl.WorkflowModel;
-import io.serverlessworkflow.impl.WorkflowModelFactory;
-import io.serverlessworkflow.impl.WorkflowMutablePosition;
-import io.serverlessworkflow.impl.executors.CallableTask;
-import io.serverlessworkflow.impl.executors.CallableTaskBuilder;
-import java.util.concurrent.CompletableFuture;
 
-public class JavaLoopFunctionCallExecutor
-    implements CallableTaskBuilder<CallJava.CallJavaLoopFunction> {
+public class JavaLoopFunctionCallExecutor<T, V, R> extends AbstractJavaCallExecutor<T> {
 
-  private LoopFunction function;
-  private String varName;
+  private final LoopFunction<T, V, R> function;
+  private final String varName;
 
-  private CompletableFuture<WorkflowModel> apply(
-      WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel input) {
-    WorkflowModelFactory modelFactory = workflowContext.definition().application().modelFactory();
-    return CompletableFuture.completedFuture(
-        modelFactory.fromAny(
-            input,
-            function.apply(
-                input.asJavaObject(), safeObject(taskContext.variables().get(varName)))));
+  public JavaLoopFunctionCallExecutor(LoopFunction<T, V, R> function, String varName) {
+    this.function = function;
+    this.varName = varName;
   }
 
   @Override
-  public boolean accept(Class<? extends TaskBase> clazz) {
-    return CallJava.CallJavaLoopFunction.class.isAssignableFrom(clazz);
-  }
-
-  @Override
-  public void init(
-      CallJavaLoopFunction task, WorkflowDefinition definition, WorkflowMutablePosition position) {
-    function = task.function();
-    varName = task.varName();
-  }
-
-  @Override
-  public CallableTask build() {
-    return this::apply;
+  protected Object callJavaFunction(
+      WorkflowContext workflowContext, TaskContext taskContext, T input) {
+    return function.apply(input, (V) safeObject(taskContext.variables().get(varName)));
   }
 }
