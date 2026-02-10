@@ -328,7 +328,7 @@ public class WorkflowApplication implements AutoCloseable {
                 .orElseThrow(
                     () ->
                         new IllegalStateException(
-                            "WorkflowModelFactory instance has to be set in WorkflowApplication or pr^eesent in the classpath"));
+                            "WorkflowModelFactory instance has to be set in WorkflowApplication or present in the classpath"));
       }
       if (contextFactory == null) {
         contextFactory = modelFactory;
