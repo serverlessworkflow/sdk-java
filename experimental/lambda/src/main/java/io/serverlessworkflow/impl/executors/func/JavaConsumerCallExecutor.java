@@ -15,47 +15,29 @@
  */
 package io.serverlessworkflow.impl.executors.func;
 
-import io.serverlessworkflow.api.types.TaskBase;
-import io.serverlessworkflow.api.types.func.CallJava;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
-import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowModel;
-import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.executors.CallableTask;
-import io.serverlessworkflow.impl.executors.CallableTaskBuilder;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
-public class JavaConsumerCallExecutor<T>
-    implements CallableTaskBuilder<CallJava.CallJavaConsumer<T>> {
+public class JavaConsumerCallExecutor<T> implements CallableTask {
 
-  private Consumer<T> consumer;
-  private Optional<Class<T>> inputClass;
+  private final Optional<Class<T>> inputClass;
+  private final Consumer<T> consumer;
 
-  public void init(
-      CallJava.CallJavaConsumer<T> task,
-      WorkflowDefinition definition,
-      WorkflowMutablePosition position) {
-    consumer = task.consumer();
-    inputClass = task.inputClass();
+  public JavaConsumerCallExecutor(Optional<Class<T>> inputClass, Consumer<T> consumer) {
+    this.inputClass = inputClass;
+    this.consumer = consumer;
   }
 
-  private CompletableFuture<WorkflowModel> apply(
+  @Override
+  public CompletableFuture<WorkflowModel> apply(
       WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel input) {
     T typed = JavaFuncUtils.convertT(input, inputClass);
     consumer.accept(typed);
     return CompletableFuture.completedFuture(input);
-  }
-
-  @Override
-  public boolean accept(Class<? extends TaskBase> clazz) {
-    return CallJava.CallJavaConsumer.class.isAssignableFrom(clazz);
-  }
-
-  @Override
-  public CallableTask build() {
-    return this::apply;
   }
 }

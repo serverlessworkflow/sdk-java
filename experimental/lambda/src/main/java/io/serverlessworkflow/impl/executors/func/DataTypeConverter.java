@@ -13,6 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverless.workflow.impl;
+package io.serverlessworkflow.impl.executors.func;
 
-record Person(String name, int age) {}
+import io.serverlessworkflow.impl.ServicePriority;
+import java.util.function.Function;
+
+public interface DataTypeConverter<T, V> extends Function<T, V>, ServicePriority {
+  Class<T> sourceType();
+}
