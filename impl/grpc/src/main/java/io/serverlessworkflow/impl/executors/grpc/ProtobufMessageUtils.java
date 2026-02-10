@@ -16,7 +16,6 @@
 package io.serverlessworkflow.impl.executors.grpc;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.google.protobuf.DescriptorProtos;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.DynamicMessage;
@@ -26,21 +25,22 @@ import com.google.protobuf.util.JsonFormat;
 import io.grpc.MethodDescriptor;
 import io.grpc.stub.StreamObserver;
 import io.serverlessworkflow.api.WorkflowFormat;
+import io.serverlessworkflow.impl.WorkflowModel;
+import io.serverlessworkflow.impl.WorkflowModelCollection;
+import io.serverlessworkflow.impl.WorkflowModelFactory;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
-import java.util.stream.Collectors;
 
 public interface ProtobufMessageUtils {
 
-  static JsonNode convert(Message message) {
+  static WorkflowModel convert(Message message, WorkflowModelFactory modelFactory) {
     StringBuilder str = new StringBuilder();
     try {
       JsonFormat.printer().appendTo(message, str);
-      return WorkflowFormat.JSON.mapper().readTree(str.toString());
+      return modelFactory.from(str.toString());
     } catch (IOException e) {
       throw new UncheckedIOException("Error converting protobuf message to JSON", e);
     }
@@ -61,11 +61,12 @@ public interface ProtobufMessageUtils {
     }
   }
 
-  static JsonNode asyncStreamingCall(
+  static WorkflowModel asyncStreamingCall(
       Map<String, Object> parameters,
       com.google.protobuf.Descriptors.MethodDescriptor methodDescriptor,
       UnaryOperator<StreamObserver<Message>> streamObserverFunction,
-      Function<List<JsonNode>, JsonNode> nodesFunction) {
+      WorkflowModelFactory modelFactory,
+      Function<WorkflowModelCollection, WorkflowModel> nodesFunction) {
     WaitingStreamObserver responseObserver = new WaitingStreamObserver();
     StreamObserver<Message> requestObserver = streamObserverFunction.apply(responseObserver);
 
@@ -82,10 +83,13 @@ public interface ProtobufMessageUtils {
     }
     requestObserver.onCompleted();
 
-    return nodesFunction.apply(
-        responseObserver.get().stream()
-            .map(ProtobufMessageUtils::convert)
-            .collect(Collectors.toList()));
+    WorkflowModelCollection collection = modelFactory.createCollection();
+
+    responseObserver.get().stream()
+        .map(m -> ProtobufMessageUtils.convert(m, modelFactory))
+        .forEach(collection::add);
+
+    return nodesFunction.apply(collection);
   }
 
   static Message.Builder buildMessage(Object object, Message.Builder builder)
@@ -98,7 +102,6 @@ public interface ProtobufMessageUtils {
       Descriptors.MethodDescriptor methodDescriptor, Map<String, Object> parameters)
       throws InvalidProtocolBufferException, JsonProcessingException {
     DynamicMessage.Builder builder = DynamicMessage.newBuilder(methodDescriptor.getInputType());
-    JsonFormat.parser().merge(WorkflowFormat.JSON.mapper().writeValueAsString(parameters), builder);
-    return builder;
+    return buildMessage(parameters, builder);
   }
 }

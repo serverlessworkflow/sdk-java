@@ -16,8 +16,6 @@
 package io.serverlessworkflow.impl.executors.grpc;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.NullNode;
 import com.google.protobuf.DescriptorProtos;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.DynamicMessage;
@@ -36,12 +34,9 @@ import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowError;
 import io.serverlessworkflow.impl.WorkflowException;
 import io.serverlessworkflow.impl.WorkflowModel;
+import io.serverlessworkflow.impl.WorkflowModelCollection;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
 import io.serverlessworkflow.impl.executors.CallableTask;
-import io.serverlessworkflow.impl.jackson.JsonUtils;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
@@ -155,13 +150,16 @@ public class GrpcExecutor implements CallableTask {
       Map<String, Object> parameters,
       Descriptors.MethodDescriptor methodDescriptor,
       ClientCall<Message, Message> call) {
-    JsonNode jsonNode =
-        ProtobufMessageUtils.asyncStreamingCall(
-            parameters,
-            methodDescriptor,
-            responseObserver -> ClientCalls.asyncClientStreamingCall(call, responseObserver),
-            nodes -> nodes.isEmpty() ? NullNode.instance : nodes.get(0));
-    return workflowContext.definition().application().modelFactory().fromAny(jsonNode);
+
+    return ProtobufMessageUtils.asyncStreamingCall(
+        parameters,
+        methodDescriptor,
+        responseObserver -> ClientCalls.asyncClientStreamingCall(call, responseObserver),
+        workflowContext.definition().application().modelFactory(),
+        nodes ->
+            nodes.isEmpty()
+                ? workflowContext.definition().application().modelFactory().fromNull()
+                : nodes);
   }
 
   private static WorkflowModel handleBidiStreaming(
@@ -169,20 +167,13 @@ public class GrpcExecutor implements CallableTask {
       Map<String, Object> parameters,
       Descriptors.MethodDescriptor methodDescriptor,
       ClientCall<Message, Message> call) {
-    return workflowContext
-        .definition()
-        .application()
-        .modelFactory()
-        .fromAny(
-            ProtobufMessageUtils.asyncStreamingCall(
-                parameters,
-                methodDescriptor,
-                responseObserver -> ClientCalls.asyncBidiStreamingCall(call, responseObserver),
-                v -> {
-                  Collection<JsonNode> nodes = v;
-                  List<JsonNode> list = new ArrayList<>(nodes);
-                  return JsonUtils.fromValue(list);
-                }));
+
+    return ProtobufMessageUtils.asyncStreamingCall(
+        parameters,
+        methodDescriptor,
+        responseObserver -> ClientCalls.asyncBidiStreamingCall(call, responseObserver),
+        workflowContext.definition().application().modelFactory(),
+        v -> v);
   }
 
   private static WorkflowModel handleServerStreaming(
@@ -192,10 +183,15 @@ public class GrpcExecutor implements CallableTask {
       ClientCall<Message, Message> call)
       throws InvalidProtocolBufferException, JsonProcessingException {
     Message.Builder builder = ProtobufMessageUtils.buildMessage(methodDescriptor, parameters);
-    List<JsonNode> nodes = new ArrayList<>();
+    WorkflowModelCollection modelCollection =
+        workflowContext.definition().application().modelFactory().createCollection();
     ClientCalls.blockingServerStreamingCall(call, builder.build())
-        .forEachRemaining(message -> nodes.add(ProtobufMessageUtils.convert(message)));
-    return workflowContext.definition().application().modelFactory().fromAny(nodes);
+        .forEachRemaining(
+            message ->
+                modelCollection.add(
+                    ProtobufMessageUtils.convert(
+                        message, workflowContext.definition().application().modelFactory())));
+    return modelCollection;
   }
 
   private static CompletableFuture<WorkflowModel> handleAsyncUnary(
@@ -212,15 +208,12 @@ public class GrpcExecutor implements CallableTask {
     ClientCalls.asyncUnaryCall(
         call,
         builder.build(),
-        new StreamObserver<Message>() {
+        new StreamObserver<>() {
           @Override
           public void onNext(Message value) {
             WorkflowModel model =
-                workflowContext
-                    .definition()
-                    .application()
-                    .modelFactory()
-                    .fromAny(ProtobufMessageUtils.convert(value));
+                ProtobufMessageUtils.convert(
+                    value, workflowContext.definition().application().modelFactory());
             future.complete(model);
           }
 
