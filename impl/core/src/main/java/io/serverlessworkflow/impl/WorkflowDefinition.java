@@ -32,6 +32,9 @@ import io.serverlessworkflow.impl.scheduler.ScheduledEventConsumer;
 import io.serverlessworkflow.impl.scheduler.WorkflowScheduler;
 import io.serverlessworkflow.impl.schema.SchemaValidator;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -52,6 +55,7 @@ public class WorkflowDefinition implements AutoCloseable, WorkflowDefinitionData
   private ScheduledEventConsumer scheculedConsumer;
   private Cancellable everySchedule;
   private Cancellable cronSchedule;
+  private Collection<WorkflowInstance> scheduledInstances = new ArrayList<>();
 
   private WorkflowDefinition(
       WorkflowApplication application, Workflow workflow, ResourceLoader resourceLoader) {
@@ -165,6 +169,14 @@ public class WorkflowDefinition implements AutoCloseable, WorkflowDefinitionData
     executors.put(position.jsonPointer(), taskExecutor);
   }
 
+  public Collection<WorkflowInstance> scheduledInstances() {
+    return Collections.unmodifiableCollection(scheduledInstances);
+  }
+
+  public void addScheduledInstance(WorkflowInstance workflowInstance) {
+    scheduledInstances.add(workflowInstance);
+  }
+
   @Override
   public WorkflowDefinitionId id() {
     return definitionId;
@@ -181,6 +193,7 @@ public class WorkflowDefinition implements AutoCloseable, WorkflowDefinitionData
     if (cronSchedule != null) {
       cronSchedule.cancel();
     }
+    scheduledInstances.clear();
   }
 
   @Override

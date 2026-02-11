@@ -40,7 +40,7 @@ public class ScheduledEventConsumer implements AutoCloseable {
   private Map<EventRegistrationBuilder, List<CloudEvent>> correlatedEvents;
   private Collection<EventRegistration> registrations = new ArrayList<>();
 
-  protected ScheduledEventConsumer(
+  public ScheduledEventConsumer(
       WorkflowDefinition definition,
       Function<CloudEvent, WorkflowModel> converter,
       EventRegistrationBuilderInfo builderInfo,

@@ -49,11 +49,11 @@ class SchedulerTest {
     try (WorkflowDefinition def =
         appl.workflowDefinition(readWorkflowFromClasspath("workflows-samples/after-start.yaml"))) {
       def.instance(Map.of()).start().join();
-      assertThat(appl.scheduler().scheduledInstances(def)).isEmpty();
+      assertThat(def.scheduledInstances()).isEmpty();
       await()
           .pollDelay(Duration.ofMillis(50))
           .atMost(Duration.ofMillis(200))
-          .until(() -> appl.scheduler().scheduledInstances(def).size() >= 1);
+          .until(() -> def.scheduledInstances().size() == 1);
     }
   }
 
@@ -64,7 +64,7 @@ class SchedulerTest {
       await()
           .pollDelay(Duration.ofMillis(20))
           .atMost(Duration.ofMillis(200))
-          .until(() -> appl.scheduler().scheduledInstances(def).size() >= 5);
+          .until(() -> def.scheduledInstances().size() >= 5);
     }
   }
 
@@ -75,10 +75,10 @@ class SchedulerTest {
         appl.workflowDefinition(readWorkflowFromClasspath("workflows-samples/cron-start.yaml"))) {
       await()
           .atMost(Duration.ofMinutes(1).plus(Duration.ofSeconds(10)))
-          .until(() -> appl.scheduler().scheduledInstances(def).size() == 1);
+          .until(() -> def.scheduledInstances().size() == 1);
       await()
           .atMost(Duration.ofMinutes(1).plus(Duration.ofSeconds(10)))
-          .until(() -> appl.scheduler().scheduledInstances(def).size() == 2);
+          .until(() -> def.scheduledInstances().size() == 2);
     }
   }
 }

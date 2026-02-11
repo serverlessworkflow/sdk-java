@@ -17,15 +17,12 @@ package io.serverlessworkflow.impl.scheduler;
 
 import io.cloudevents.CloudEvent;
 import io.serverlessworkflow.impl.WorkflowDefinition;
-import io.serverlessworkflow.impl.WorkflowInstance;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.events.EventRegistrationBuilderInfo;
 import java.time.Duration;
-import java.util.Collection;
 import java.util.function.Function;
 
 public interface WorkflowScheduler {
-  Collection<WorkflowInstance> scheduledInstances(WorkflowDefinition def);
 
   ScheduledEventConsumer eventConsumer(
       WorkflowDefinition definition,
