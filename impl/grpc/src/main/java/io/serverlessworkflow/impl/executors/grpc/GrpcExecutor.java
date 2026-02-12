@@ -62,10 +62,7 @@ public class GrpcExecutor implements CallableTask {
   @Override
   public CompletableFuture<WorkflowModel> apply(
       WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel input) {
-
-    Map<String, Object> arguments = this.arguments.apply(workflowContext, taskContext, input);
-
-    return buildGrpcCallExecutor(workflowContext, taskContext, arguments);
+    return buildGrpcCallExecutor(workflowContext, taskContext, this.arguments.apply(workflowContext, taskContext, input));
   }
 
   private CompletableFuture<WorkflowModel> buildGrpcCallExecutor(
