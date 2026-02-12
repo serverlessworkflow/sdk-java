@@ -26,10 +26,9 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.Optional;
 
-public class FileDescriptorReader {
+public interface FileDescriptorReader {
 
-  public static FileDescriptorContext readDescriptor(
-      ExternalResourceHandler externalResourceHandler) {
+  static FileDescriptorContext readDescriptor(ExternalResourceHandler externalResourceHandler) {
     Path grpcDir =
         tryCreateTempGrpcDir()
             .orElseThrow(
@@ -106,6 +105,4 @@ public class FileDescriptorReader {
       throw new UncheckedIOException("Unable to generate file descriptor", e);
     }
   }
-
-  private FileDescriptorReader() {}
 }

@@ -83,7 +83,7 @@ public interface ProtobufMessageUtils {
   static Message.Builder buildMessage(Object object, Message.Builder builder)
       throws InvalidProtocolBufferException {
     try {
-      // lets use Jackson to serialize the object to string for now, although we probably need to
+      // let's use Jackson to serialize the object to string for now, although we probably need to
       // revisit this.
       JsonFormat.parser().merge(JsonUtils.mapper().writeValueAsString(object), builder);
       return builder;
