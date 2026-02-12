@@ -31,7 +31,6 @@ import io.serverlessworkflow.impl.WorkflowModelFactory;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
 public interface ProtobufMessageUtils {
