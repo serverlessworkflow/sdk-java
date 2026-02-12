@@ -28,7 +28,8 @@ import java.util.Optional;
 
 public class FileDescriptorReader {
 
-  public FileDescriptorContext readDescriptor(ExternalResourceHandler externalResourceHandler) {
+  public static FileDescriptorContext readDescriptor(
+      ExternalResourceHandler externalResourceHandler) {
     Path grpcDir =
         tryCreateTempGrpcDir()
             .orElseThrow(
@@ -65,7 +66,7 @@ public class FileDescriptorReader {
     }
   }
 
-  private Optional<Path> tryCreateTempGrpcDir() {
+  private static Optional<Path> tryCreateTempGrpcDir() {
     try {
       return Optional.of(Files.createTempDirectory("serverless-workflow-"));
     } catch (IOException e) {
@@ -105,4 +106,6 @@ public class FileDescriptorReader {
       throw new UncheckedIOException("Unable to generate file descriptor", e);
     }
   }
+
+  private FileDescriptorReader() {}
 }

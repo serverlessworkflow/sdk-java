@@ -18,7 +18,6 @@ package io.serverlessworkflow.impl.executors.grpc;
 import io.grpc.Channel;
 import io.grpc.ManagedChannelBuilder;
 import io.serverlessworkflow.impl.TaskContext;
-import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
 
 public class GrpcChannelResolver {
@@ -29,8 +28,10 @@ public class GrpcChannelResolver {
       WorkflowContext workflowContext,
       TaskContext taskContext,
       GrpcRequestContext grpcRequestContext) {
-    WorkflowApplication appl = workflowContext.definition().application();
-    return appl.<Channel>additionalObject(GRPC_CHANNEL_PROVIDER, workflowContext, taskContext)
+    return workflowContext
+        .definition()
+        .application()
+        .<Channel>additionalObject(GRPC_CHANNEL_PROVIDER, workflowContext, taskContext)
         .orElseGet(
             () ->
                 ManagedChannelBuilder.forAddress(
