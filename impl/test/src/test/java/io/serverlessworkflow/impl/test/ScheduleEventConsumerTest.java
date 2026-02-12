@@ -57,7 +57,7 @@ class ScheduleEventConsumerTest {
     WorkflowDefinition definition =
         appl.workflowDefinition(
             readWorkflowFromClasspath("workflows-samples/listen-start-all.yaml"));
-    Collection<WorkflowInstance> instances = appl.scheduler().scheduledInstances(definition);
+    Collection<WorkflowInstance> instances = definition.scheduledInstances();
     appl.eventPublishers().forEach(p -> p.publish(buildCloudEvent(Map.of("name", "Javierito"))));
     appl.eventPublishers().forEach(p -> p.publish(buildCloudEvent(Map.of("name", "Fulanito"))));
     await()
@@ -77,7 +77,7 @@ class ScheduleEventConsumerTest {
         appl.workflowDefinition(readWorkflowFromClasspath("workflows-samples/listen-start.yaml"));
     appl.eventPublishers().forEach(p -> p.publish(buildCloudEvent(Map.of("name", "Javierito"))));
     appl.eventPublishers().forEach(p -> p.publish(buildCloudEvent(Map.of("name", "Fulanito"))));
-    Collection<WorkflowInstance> instances = appl.scheduler().scheduledInstances(definition);
+    Collection<WorkflowInstance> instances = definition.scheduledInstances();
     await()
         .pollDelay(Duration.ofMillis(20))
         .atMost(Duration.ofMillis(600))
@@ -100,8 +100,8 @@ class ScheduleEventConsumerTest {
             readWorkflowFromClasspath("workflows-samples/listen-start-all.yaml"));
     appl.eventPublishers().forEach(p -> p.publish(buildCloudEvent(Map.of("name", "Javierito"))));
     appl.eventPublishers().forEach(p -> p.publish(buildCloudEvent(Map.of("name", "Fulanito"))));
-    Collection<WorkflowInstance> oneDefInstances = appl.scheduler().scheduledInstances(oneDef);
-    Collection<WorkflowInstance> allDefInstances = appl.scheduler().scheduledInstances(allDef);
+    Collection<WorkflowInstance> oneDefInstances = oneDef.scheduledInstances();
+    Collection<WorkflowInstance> allDefInstances = allDef.scheduledInstances();
     await()
         .pollDelay(Duration.ofMillis(40))
         .atMost(Duration.ofMillis(980))

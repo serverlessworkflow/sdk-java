@@ -15,31 +15,17 @@
  */
 package io.serverlessworkflow.impl.scheduler;
 
-import io.cloudevents.CloudEvent;
 import io.serverlessworkflow.impl.WorkflowDefinition;
-import io.serverlessworkflow.impl.WorkflowInstance;
 import io.serverlessworkflow.impl.WorkflowModel;
-import io.serverlessworkflow.impl.events.EventRegistrationBuilderInfo;
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Function;
 
-public class DefaultWorkflowScheduler implements WorkflowScheduler {
+public class DefaultWorkflowScheduler extends ExecutorServiceWorkflowScheduler {
 
-  private final Map<WorkflowDefinition, Collection<WorkflowInstance>> instances =
-      new ConcurrentHashMap<>();
-
-  private final ScheduledExecutorService service;
   private final CronResolverFactory cronFactory;
 
   public DefaultWorkflowScheduler() {
@@ -48,48 +34,13 @@ public class DefaultWorkflowScheduler implements WorkflowScheduler {
 
   public DefaultWorkflowScheduler(
       ScheduledExecutorService service, CronResolverFactory cronFactory) {
-    this.service = service;
+    super(service);
     this.cronFactory = cronFactory;
-  }
-
-  @Override
-  public Collection<WorkflowInstance> scheduledInstances(WorkflowDefinition definition) {
-    return Collections.unmodifiableCollection(theInstances(definition));
-  }
-
-  @Override
-  public ScheduledEventConsumer eventConsumer(
-      WorkflowDefinition definition,
-      Function<CloudEvent, WorkflowModel> converter,
-      EventRegistrationBuilderInfo builderInfo) {
-    return new ScheduledEventConsumer(
-        definition, converter, builderInfo, new DefaultScheduledInstanceRunner(definition));
-  }
-
-  @Override
-  public Cancellable scheduleAfter(WorkflowDefinition definition, Duration delay) {
-    return new ScheduledServiceCancellable(
-        service.schedule(
-            new DefaultScheduledInstanceRunner(definition),
-            delay.toMillis(),
-            TimeUnit.MILLISECONDS));
-  }
-
-  @Override
-  public Cancellable scheduleEvery(WorkflowDefinition definition, Duration interval) {
-    long delay = interval.toMillis();
-    return new ScheduledServiceCancellable(
-        service.scheduleAtFixedRate(
-            new DefaultScheduledInstanceRunner(definition), delay, delay, TimeUnit.MILLISECONDS));
   }
 
   @Override
   public Cancellable scheduleCron(WorkflowDefinition definition, String cron) {
     return new CronResolverCancellable(definition, cronFactory.parseCron(cron));
-  }
-
-  private Collection<WorkflowInstance> theInstances(WorkflowDefinition definition) {
-    return instances.computeIfAbsent(definition, def -> new ArrayList<>());
   }
 
   private class CronResolverCancellable implements Cancellable {
@@ -126,7 +77,7 @@ public class DefaultWorkflowScheduler implements WorkflowScheduler {
       }
     }
 
-    private class CronResolverIntanceRunner extends DefaultScheduledInstanceRunner {
+    private class CronResolverIntanceRunner extends ScheduledInstanceRunnable {
       protected CronResolverIntanceRunner(WorkflowDefinition definition) {
         super(definition);
       }
@@ -138,17 +89,6 @@ public class DefaultWorkflowScheduler implements WorkflowScheduler {
           super.accept(model);
         }
       }
-    }
-  }
-
-  private class DefaultScheduledInstanceRunner extends ScheduledInstanceRunnable {
-    protected DefaultScheduledInstanceRunner(WorkflowDefinition definition) {
-      super(definition);
-    }
-
-    @Override
-    protected void addScheduledInstance(WorkflowInstance instance) {
-      theInstances(definition).add(instance);
     }
   }
 }

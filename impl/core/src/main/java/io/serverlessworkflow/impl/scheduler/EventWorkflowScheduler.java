@@ -15,18 +15,20 @@
  */
 package io.serverlessworkflow.impl.scheduler;
 
-import java.util.concurrent.ScheduledFuture;
+import io.cloudevents.CloudEvent;
+import io.serverlessworkflow.impl.WorkflowDefinition;
+import io.serverlessworkflow.impl.WorkflowModel;
+import io.serverlessworkflow.impl.events.EventRegistrationBuilderInfo;
+import java.util.function.Function;
 
-public class ScheduledServiceCancellable implements Cancellable {
-
-  private final ScheduledFuture<?> cancellable;
-
-  public ScheduledServiceCancellable(ScheduledFuture<?> cancellable) {
-    this.cancellable = cancellable;
-  }
+public abstract class EventWorkflowScheduler implements WorkflowScheduler {
 
   @Override
-  public void cancel() {
-    cancellable.cancel(true);
+  public ScheduledEventConsumer eventConsumer(
+      WorkflowDefinition definition,
+      Function<CloudEvent, WorkflowModel> converter,
+      EventRegistrationBuilderInfo builderInfo) {
+    return new ScheduledEventConsumer(
+        definition, converter, builderInfo, new ScheduledInstanceRunnable(definition));
   }
 }
