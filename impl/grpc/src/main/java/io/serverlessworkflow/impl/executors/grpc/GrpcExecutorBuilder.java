@@ -16,7 +16,6 @@
 package io.serverlessworkflow.impl.executors.grpc;
 
 import io.serverlessworkflow.api.types.CallGRPC;
-import io.serverlessworkflow.api.types.ExternalResource;
 import io.serverlessworkflow.api.types.GRPCArguments;
 import io.serverlessworkflow.api.types.TaskBase;
 import io.serverlessworkflow.api.types.WithGRPCService;
@@ -30,7 +29,6 @@ import java.util.Map;
 
 public class GrpcExecutorBuilder implements CallableTaskBuilder<CallGRPC> {
 
-  private ExternalResource proto;
   private GrpcRequestContext grpcRequestContext;
   private FileDescriptorContext fileDescriptorContext;
   private WorkflowValueResolver<Map<String, Object>> arguments;
@@ -45,7 +43,6 @@ public class GrpcExecutorBuilder implements CallableTaskBuilder<CallGRPC> {
 
     GRPCArguments with = task.getWith();
     WithGRPCService service = with.getService();
-    this.proto = with.getProto();
 
     this.arguments =
         WorkflowUtils.buildMapResolver(
@@ -56,16 +53,14 @@ public class GrpcExecutorBuilder implements CallableTaskBuilder<CallGRPC> {
         new GrpcRequestContext(
             service.getHost(), service.getPort(), with.getMethod(), service.getName());
 
-    FileDescriptorReader fileDescriptorReader = new FileDescriptorReader();
     this.fileDescriptorContext =
         definition
             .resourceLoader()
-            .loadStatic(with.getProto().getEndpoint(), fileDescriptorReader::readDescriptor);
+            .loadStatic(with.getProto().getEndpoint(), FileDescriptorReader::readDescriptor);
   }
 
   @Override
   public CallableTask build() {
-    return new GrpcExecutor(
-        this.grpcRequestContext, this.arguments, this.fileDescriptorContext, this.proto);
+    return new GrpcExecutor(this.grpcRequestContext, this.arguments, this.fileDescriptorContext);
   }
 }

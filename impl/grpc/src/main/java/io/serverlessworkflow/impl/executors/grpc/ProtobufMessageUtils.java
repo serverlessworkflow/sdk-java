@@ -24,13 +24,13 @@ import com.google.protobuf.Message;
 import com.google.protobuf.util.JsonFormat;
 import io.grpc.MethodDescriptor;
 import io.grpc.stub.StreamObserver;
-import io.serverlessworkflow.api.WorkflowFormat;
 import io.serverlessworkflow.impl.WorkflowModel;
-import io.serverlessworkflow.impl.WorkflowModelCollection;
 import io.serverlessworkflow.impl.WorkflowModelFactory;
+import io.serverlessworkflow.impl.jackson.JsonUtils;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.UnaryOperator;
 
 public interface ProtobufMessageUtils {
@@ -60,45 +60,41 @@ public interface ProtobufMessageUtils {
     }
   }
 
-  static WorkflowModel asyncStreamingCall(
+  static CompletableFuture<WorkflowModel> asyncStreamingCall(
       Map<String, Object> parameters,
       com.google.protobuf.Descriptors.MethodDescriptor methodDescriptor,
       UnaryOperator<StreamObserver<Message>> streamObserverFunction,
       WorkflowModelFactory modelFactory) {
-    WaitingStreamObserver responseObserver = new WaitingStreamObserver();
+    CollectionStreamObserver responseObserver = new CollectionStreamObserver(modelFactory);
     StreamObserver<Message> requestObserver = streamObserverFunction.apply(responseObserver);
-
-    for (var entry : parameters.entrySet()) {
+    for (Object entry : parameters.entrySet()) {
       try {
-        Message message =
-            buildMessage(entry, DynamicMessage.newBuilder(methodDescriptor.getInputType())).build();
-        requestObserver.onNext(message);
-      } catch (Exception e) {
+        requestObserver.onNext(
+            buildMessage(entry, DynamicMessage.newBuilder(methodDescriptor.getInputType()))
+                .build());
+      } catch (InvalidProtocolBufferException e) {
         requestObserver.onError(e);
-        throw new RuntimeException(e);
       }
-      responseObserver.checkForServerStreamErrors();
     }
     requestObserver.onCompleted();
-
-    WorkflowModelCollection collection = modelFactory.createCollection();
-
-    responseObserver.get().stream()
-        .map(m -> ProtobufMessageUtils.convert(m, modelFactory))
-        .forEach(collection::add);
-
-    return collection;
+    return responseObserver.future();
   }
 
   static Message.Builder buildMessage(Object object, Message.Builder builder)
-      throws InvalidProtocolBufferException, JsonProcessingException {
-    JsonFormat.parser().merge(WorkflowFormat.JSON.mapper().writeValueAsString(object), builder);
-    return builder;
+      throws InvalidProtocolBufferException {
+    try {
+      // lets use Jackson to serialize the object to string for now, although we probably need to
+      // revisit this.
+      JsonFormat.parser().merge(JsonUtils.mapper().writeValueAsString(object), builder);
+      return builder;
+    } catch (JsonProcessingException e) {
+      throw new InvalidProtocolBufferException(e);
+    }
   }
 
   static Message.Builder buildMessage(
       Descriptors.MethodDescriptor methodDescriptor, Map<String, Object> parameters)
-      throws InvalidProtocolBufferException, JsonProcessingException {
+      throws InvalidProtocolBufferException {
     DynamicMessage.Builder builder = DynamicMessage.newBuilder(methodDescriptor.getInputType());
     return buildMessage(parameters, builder);
   }
