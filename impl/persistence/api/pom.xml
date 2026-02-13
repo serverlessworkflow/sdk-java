@@ -3,7 +3,7 @@
     <parent>
         <groupId>io.serverlessworkflow</groupId>
         <artifactId>serverlessworkflow-persistence</artifactId>
-        <version>7.13.1.Final</version>
+        <version>8.0.0-SNAPSHOT</version>
     </parent>
     <artifactId>serverlessworkflow-persistence-api</artifactId>
     <name>Serverless Workflow :: Impl :: Persistence:: API</name>
@@ -11,7 +11,7 @@
           <dependency>
             <groupId>io.serverlessworkflow</groupId>
             <artifactId>serverlessworkflow-impl-core</artifactId>
-            <version>7.13.1.Final</version>
+            <version>8.0.0-SNAPSHOT</version>
           </dependency>
     </dependencies>
 </project>
