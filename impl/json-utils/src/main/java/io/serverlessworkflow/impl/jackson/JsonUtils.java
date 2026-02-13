@@ -64,7 +64,7 @@ public class JsonUtils {
     return new Collector<JsonNode, ArrayNode, ArrayNode>() {
       @Override
       public BiConsumer<ArrayNode, JsonNode> accumulator() {
-        return (arrayNode, item) -> arrayNode.add(item);
+        return ArrayNode::add;
       }
 
       @Override
