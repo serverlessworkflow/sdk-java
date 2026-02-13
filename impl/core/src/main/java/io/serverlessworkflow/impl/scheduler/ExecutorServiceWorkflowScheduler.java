@@ -15,14 +15,10 @@
  */
 package io.serverlessworkflow.impl.scheduler;
 
-import io.cloudevents.CloudEvent;
 import io.serverlessworkflow.impl.WorkflowDefinition;
-import io.serverlessworkflow.impl.WorkflowModel;
-import io.serverlessworkflow.impl.events.EventRegistrationBuilderInfo;
 import java.time.Duration;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 
 public abstract class ExecutorServiceWorkflowScheduler extends EventWorkflowScheduler {
 
@@ -30,15 +26,6 @@ public abstract class ExecutorServiceWorkflowScheduler extends EventWorkflowSche
 
   public ExecutorServiceWorkflowScheduler(ScheduledExecutorService service) {
     this.service = service;
-  }
-
-  @Override
-  public ScheduledEventConsumer eventConsumer(
-      WorkflowDefinition definition,
-      Function<CloudEvent, WorkflowModel> converter,
-      EventRegistrationBuilderInfo builderInfo) {
-    return new ScheduledEventConsumer(
-        definition, converter, builderInfo, new ScheduledInstanceRunnable(definition));
   }
 
   @Override
