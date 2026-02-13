@@ -103,6 +103,9 @@ This SDK is modular by design—pull in only what you need:
 * **serverlessworkflow-impl-openapi**
   OpenAPI support
   
+* **serverlessworkflow-impl-grpc**
+  gRPC support
+  
 * **serverlessworkflow-impl-script-python**
   Python support
   
