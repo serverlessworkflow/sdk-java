@@ -33,7 +33,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.UnaryOperator;
 
-public interface ProtobufMessageUtils {
+class ProtobufMessageUtils {
 
   static WorkflowModel convert(Message message, WorkflowModelFactory modelFactory) {
     StringBuilder str = new StringBuilder();
@@ -98,4 +98,6 @@ public interface ProtobufMessageUtils {
     DynamicMessage.Builder builder = DynamicMessage.newBuilder(methodDescriptor.getInputType());
     return buildMessage(parameters, builder);
   }
+
+  private ProtobufMessageUtils() {}
 }

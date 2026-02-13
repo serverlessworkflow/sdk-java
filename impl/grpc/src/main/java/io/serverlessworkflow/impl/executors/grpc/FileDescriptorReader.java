@@ -29,9 +29,9 @@ import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public interface FileDescriptorReader {
+class FileDescriptorReader {
 
-  Logger logger = LoggerFactory.getLogger(FileDescriptorReader.class);
+  private static final Logger logger = LoggerFactory.getLogger(FileDescriptorReader.class);
 
   static FileDescriptorContext readDescriptor(ExternalResourceHandler externalResourceHandler) {
     Path grpcDir =
@@ -140,16 +140,18 @@ public interface FileDescriptorReader {
       int exitCode = process.waitFor();
 
       if (exitCode != 0) {
-        throw new RuntimeException("Unable to generate file descriptor using system protoc.");
+        throw new IllegalStateException(
+            "Unable to generate file descriptor using system protoc. Exit code: " + exitCode);
       }
-
     } catch (IOException e) {
       throw new UncheckedIOException(
           "Unable to execute system protoc. Please ensure 'protoc' is installed and available in your system PATH.",
           e);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
-      throw new RuntimeException("Protoc execution was interrupted", e);
+      throw new IllegalStateException("Protoc execution was interrupted", e);
     }
   }
+
+  private FileDescriptorReader() {}
 }

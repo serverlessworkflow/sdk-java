@@ -15,4 +15,4 @@
  */
 package io.serverlessworkflow.impl.executors.grpc;
 
-public record GrpcRequestContext(String address, int port, String method, String service) {}
+record GrpcRequestContext(String address, int port, String method, String service) {}

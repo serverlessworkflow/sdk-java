@@ -45,10 +45,10 @@ public class GrpcExecutor implements CallableTask {
   private final FileDescriptorContext fileDescriptorContext;
 
   public GrpcExecutor(
-      GrpcRequestContext builder,
+      GrpcRequestContext requestContext,
       WorkflowValueResolver<Map<String, Object>> arguments,
       FileDescriptorContext fileDescriptorContext) {
-    this.requestContext = builder;
+    this.requestContext = requestContext;
     this.arguments = arguments;
     this.fileDescriptorContext = fileDescriptorContext;
   }

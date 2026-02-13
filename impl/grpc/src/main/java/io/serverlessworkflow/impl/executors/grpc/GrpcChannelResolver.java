@@ -20,11 +20,11 @@ import io.grpc.ManagedChannelBuilder;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
 
-public class GrpcChannelResolver {
+class GrpcChannelResolver {
 
-  public static final String GRPC_CHANNEL_PROVIDER = "grpcChannelProvider";
+  static final String GRPC_CHANNEL_PROVIDER = "grpcChannelProvider";
 
-  public static Channel channel(
+  static Channel channel(
       WorkflowContext workflowContext,
       TaskContext taskContext,
       GrpcRequestContext grpcRequestContext) {

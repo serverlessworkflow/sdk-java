@@ -17,5 +17,5 @@ package io.serverlessworkflow.impl.executors.grpc;
 
 import com.google.protobuf.DescriptorProtos;
 
-public record FileDescriptorContext(
+record FileDescriptorContext(
     DescriptorProtos.FileDescriptorSet fileDescriptorSet, String inputProto) {}
