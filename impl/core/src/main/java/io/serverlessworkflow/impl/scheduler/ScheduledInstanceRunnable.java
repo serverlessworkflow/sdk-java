@@ -35,6 +35,10 @@ public class ScheduledInstanceRunnable implements Runnable, Consumer<WorkflowMod
 
   @Override
   public void accept(WorkflowModel model) {
+    runScheduledInstance(definition, model);
+  }
+
+  public static void runScheduledInstance(WorkflowDefinition definition, WorkflowModel model) {
     WorkflowInstance instance = definition.instance(model);
     definition.addScheduledInstance(instance);
     definition.application().executorService().execute(() -> instance.start());
