@@ -30,14 +30,24 @@ public abstract class ExecutorServiceWorkflowScheduler extends EventWorkflowSche
 
   @Override
   public Cancellable scheduleEvery(WorkflowDefinition definition, Duration interval) {
+    return scheduleEvery(service, definition, interval);
+  }
+
+  @Override
+  public Cancellable scheduleAfter(WorkflowDefinition definition, Duration delay) {
+    return scheduleAfter(service, definition, delay);
+  }
+
+  public static Cancellable scheduleEvery(
+      ScheduledExecutorService service, WorkflowDefinition definition, Duration interval) {
     long delay = interval.toMillis();
     return new ScheduledServiceCancellable(
         service.scheduleAtFixedRate(
             new ScheduledInstanceRunnable(definition), delay, delay, TimeUnit.MILLISECONDS));
   }
 
-  @Override
-  public Cancellable scheduleAfter(WorkflowDefinition definition, Duration delay) {
+  public static Cancellable scheduleAfter(
+      ScheduledExecutorService service, WorkflowDefinition definition, Duration delay) {
     return new ScheduledServiceCancellable(
         service.schedule(
             new ScheduledInstanceRunnable(definition), delay.toMillis(), TimeUnit.MILLISECONDS));
