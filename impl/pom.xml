@@ -17,7 +17,7 @@
         <version.com.cronutils>9.2.1</version.com.cronutils>
         <version.docker.java>3.7.0</version.docker.java>
         <version.org.graalvm.polyglot>25.0.2</version.org.graalvm.polyglot>
-        <version.org.graalvm.polyglot>25.0.1</version.org.graalvm.polyglot>
+        <version.org.graalvm.polyglot>25.0.2</version.org.graalvm.polyglot>
     </properties>
     <dependencyManagement>
         <dependencies>
