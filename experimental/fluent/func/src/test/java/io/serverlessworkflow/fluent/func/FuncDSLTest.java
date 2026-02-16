@@ -23,7 +23,6 @@ import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.get;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.http;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.listen;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.toOne;
-import static io.serverlessworkflow.fluent.spec.dsl.DSL.auth;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.use;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -42,6 +41,8 @@ import io.serverlessworkflow.api.types.func.JavaFilterFunction;
 import io.serverlessworkflow.fluent.func.dsl.FuncDSL;
 import io.serverlessworkflow.fluent.func.dsl.FuncEmitSpec;
 import io.serverlessworkflow.fluent.func.dsl.FuncListenSpec;
+import io.serverlessworkflow.impl.WorkflowApplication;
+import io.serverlessworkflow.impl.WorkflowDefinition;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -431,5 +432,22 @@ class FuncDSLTest {
             .getAuthenticationPolicyReference()
             .getUse());
     assertEquals(Map.of("foo", "bar"), http.getWith().getBody());
+  }
+
+  @Test
+  void set_with_map() {
+    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
+      Workflow workflow =
+          FuncWorkflowBuilder.workflow()
+              .tasks(f -> f.set(s -> s.expr(Map.of("message", "hello world!"))))
+              .build();
+
+      WorkflowDefinition workflowDefinition = app.workflowDefinition(workflow);
+
+      Map<String, Object> output =
+          workflowDefinition.instance(Map.of()).start().join().asMap().orElseThrow();
+
+      assertEquals(Map.of("message", "hello world!"), output);
+    }
   }
 }
