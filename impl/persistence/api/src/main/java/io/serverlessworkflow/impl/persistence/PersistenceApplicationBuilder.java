@@ -25,16 +25,14 @@ public class PersistenceApplicationBuilder {
     return new PersistenceApplicationBuilder(builder, writer);
   }
 
-  private final PersistenceInstanceWriter writer;
   private final WorkflowApplication.Builder appBuilder;
 
   protected PersistenceApplicationBuilder(Builder appBuilder, PersistenceInstanceWriter writer) {
     this.appBuilder = appBuilder;
-    this.writer = writer;
+    appBuilder.withListener(new WorkflowPersistenceListener(writer));
   }
 
   public WorkflowApplication build() {
-    appBuilder.withListener(new WorkflowPersistenceListener(writer));
     return appBuilder.build();
   }
 }
