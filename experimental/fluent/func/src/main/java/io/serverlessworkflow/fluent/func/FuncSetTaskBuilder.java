@@ -39,4 +39,9 @@ public class FuncSetTaskBuilder extends SetTaskBuilder
     this.task.getSet().withSetTaskConfiguration(new MapSetTaskConfiguration(map));
     return this;
   }
+
+  @Override
+  public SetTask build() {
+    return this.task;
+  }
 }
