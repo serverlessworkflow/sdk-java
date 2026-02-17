@@ -17,6 +17,7 @@ package io.serverless.workflow.impl.executors.func;
 
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.function;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import io.serverlessworkflow.api.types.FlowDirectiveEnum;
 import io.serverlessworkflow.api.types.Workflow;
@@ -26,6 +27,7 @@ import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowInstance;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import org.junit.jupiter.api.Test;
 
@@ -110,6 +112,23 @@ public class FluentDSLCallTest {
       WorkflowDefinition definition = app.workflowDefinition(workflow);
       assertThat(definition.instance(3).start().get().asNumber().orElseThrow()).isEqualTo(3);
       assertThat(definition.instance(4).start().get().asNumber().orElseThrow()).isEqualTo(0);
+    }
+  }
+
+  @Test
+  void set_with_map() {
+    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
+      Workflow workflow =
+          FuncWorkflowBuilder.workflow()
+              .tasks(f -> f.set(s -> s.expr(Map.of("message", "hello world!"))))
+              .build();
+
+      WorkflowDefinition workflowDefinition = app.workflowDefinition(workflow);
+
+      Map<String, Object> output =
+          workflowDefinition.instance(Map.of()).start().join().asMap().orElseThrow();
+
+      assertEquals(Map.of("message", "hello world!"), output);
     }
   }
 }
