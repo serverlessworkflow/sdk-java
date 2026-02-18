@@ -25,6 +25,8 @@ import io.serverlessworkflow.fluent.func.FuncWorkflowBuilder;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowInstance;
+import io.serverlessworkflow.impl.WorkflowModel;
+import io.serverlessworkflow.impl.jackson.JsonUtils;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -129,6 +131,24 @@ public class FluentDSLCallTest {
           workflowDefinition.instance(Map.of()).start().join().asMap().orElseThrow();
 
       assertEquals(Map.of("message", "hello world!"), output);
+    }
+  }
+
+  @Test
+  void set_with_string() {
+    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
+      Workflow workflow =
+          FuncWorkflowBuilder.workflow()
+              .tasks(f -> f.set(s -> s.expr("{message:\"hello world!\"}")))
+              .build();
+
+      WorkflowDefinition workflowDefinition = app.workflowDefinition(workflow);
+
+      WorkflowModel model = workflowDefinition.instance(Map.of()).start().join();
+
+      assertEquals(
+          JsonUtils.mapper().createObjectNode().put("message", "hello world!"),
+          model.asJavaObject());
     }
   }
 }
