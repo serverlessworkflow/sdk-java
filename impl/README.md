@@ -46,6 +46,7 @@ This reference implementation can run workflows consisting of:
     * Digest auth (via Fluent DSL)
   * **OpenAPI**
   * **Function**
+  * **gRPC**
 * `Run`
   * **Container**
   * **Script**
