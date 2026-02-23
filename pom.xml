@@ -66,7 +66,7 @@
         <version.com.google.protobuf.protobuf.java.util>4.33.5</version.com.google.protobuf.protobuf.java.util>
         <version.deploy.plugin>3.1.4</version.deploy.plugin>
         <version.enforcer.plugin>3.6.2</version.enforcer.plugin>
-        <version.failsafe.plugin>3.5.4</version.failsafe.plugin>
+        <version.failsafe.plugin>3.5.5</version.failsafe.plugin>
         <version.gpg.plugin>3.2.8</version.gpg.plugin>
         <version.io.grpc.java>1.79.0</version.io.grpc.java>
         <version.jar.plugin>3.5.0</version.jar.plugin>
