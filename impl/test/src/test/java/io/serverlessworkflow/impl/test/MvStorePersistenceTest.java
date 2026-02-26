@@ -29,12 +29,13 @@ import io.serverlessworkflow.impl.persistence.mvstore.MVStorePersistenceStore;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
 
 public class MvStorePersistenceTest {
@@ -53,20 +54,20 @@ public class MvStorePersistenceTest {
       WorkflowDefinition definition =
           application.workflowDefinition(
               readWorkflowFromClasspath("workflows-samples/simple-expression.yaml"));
-      assertNoInstance(handlers, definition);
+      assertThat(assertNoInstance(handlers, definition)).isTrue();
       definition.instance(Map.of()).start().join();
-      service.shutdown();
-      service.awaitTermination(500, TimeUnit.MILLISECONDS);
-      assertNoInstance(handlers, definition);
+      Awaitility.await()
+          .atMost(Duration.ofSeconds(1))
+          .until(() -> assertNoInstance(handlers, definition));
     } finally {
       Files.delete(Path.of(dbName));
     }
   }
 
-  private void assertNoInstance(
+  private boolean assertNoInstance(
       PersistenceInstanceHandlers handlers, WorkflowDefinition definition) {
     try (Stream<WorkflowInstance> stream = handlers.reader().scanAll(definition)) {
-      assertThat(stream.count()).isEqualTo(0);
+      return stream.count() == 0;
     }
   }
 
