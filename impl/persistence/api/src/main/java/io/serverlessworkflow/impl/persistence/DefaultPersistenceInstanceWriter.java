@@ -17,7 +17,6 @@ package io.serverlessworkflow.impl.persistence;
 
 import io.serverlessworkflow.impl.WorkflowContextData;
 import io.serverlessworkflow.impl.WorkflowDefinitionData;
-import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -32,18 +31,14 @@ public class DefaultPersistenceInstanceWriter extends AbstractPersistenceInstanc
   private final PersistenceInstanceStore store;
   private final Map<String, CompletableFuture<Void>> futuresMap = new ConcurrentHashMap<>();
   private final Optional<ExecutorService> executorService;
-  private final Duration closeTimeout;
 
   private static final Logger logger =
       LoggerFactory.getLogger(DefaultPersistenceInstanceWriter.class);
 
   protected DefaultPersistenceInstanceWriter(
-      PersistenceInstanceStore store,
-      Optional<ExecutorService> executorService,
-      Duration closeTimeout) {
+      PersistenceInstanceStore store, Optional<ExecutorService> executorService) {
     this.store = store;
     this.executorService = executorService;
-    this.closeTimeout = closeTimeout;
   }
 
   @Override
@@ -76,7 +71,7 @@ public class DefaultPersistenceInstanceWriter extends AbstractPersistenceInstanc
       try {
         transaction.rollback(definition);
       } catch (Exception rollEx) {
-        logger.warn("Exception during rollback. Ignoring it", ex);
+        logger.warn("Exception during rollback. Ignoring it", rollEx);
       }
       throw ex;
     }
