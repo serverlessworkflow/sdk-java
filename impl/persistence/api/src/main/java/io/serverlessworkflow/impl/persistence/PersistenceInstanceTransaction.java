@@ -15,34 +15,11 @@
  */
 package io.serverlessworkflow.impl.persistence;
 
-import io.serverlessworkflow.impl.TaskContextData;
-import io.serverlessworkflow.impl.WorkflowContextData;
-import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowDefinitionData;
-import io.serverlessworkflow.impl.WorkflowStatus;
-import java.util.Optional;
-import java.util.stream.Stream;
 
-public interface PersistenceInstanceTransaction {
+public interface PersistenceInstanceTransaction extends PersistenceInstanceOperations {
 
   void commit(WorkflowDefinitionData definition);
 
   void rollback(WorkflowDefinitionData definition);
-
-  void writeInstanceData(WorkflowContextData workflowContext);
-
-  void writeRetryTask(WorkflowContextData workflowContext, TaskContextData taskContext);
-
-  void writeCompletedTask(WorkflowContextData workflowContext, TaskContextData taskContext);
-
-  void writeStatus(WorkflowContextData workflowContext, WorkflowStatus suspended);
-
-  void removeProcessInstance(WorkflowContextData workflowContext);
-
-  void clearStatus(WorkflowContextData workflowContext);
-
-  Stream<PersistenceWorkflowInfo> scanAll(String applicationId, WorkflowDefinition definition);
-
-  Optional<PersistenceWorkflowInfo> readWorkflowInfo(
-      WorkflowDefinition definition, String instanceId);
 }
