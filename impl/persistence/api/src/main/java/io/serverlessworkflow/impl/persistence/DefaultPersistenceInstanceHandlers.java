@@ -17,7 +17,6 @@ package io.serverlessworkflow.impl.persistence;
 
 import static io.serverlessworkflow.impl.WorkflowUtils.safeClose;
 
-import java.time.Duration;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 
@@ -27,7 +26,6 @@ public class DefaultPersistenceInstanceHandlers extends PersistenceInstanceHandl
 
     private final PersistenceInstanceStore store;
     private ExecutorService executorService;
-    private Duration closeTimeout;
 
     private Builder(PersistenceInstanceStore store) {
       this.store = store;
@@ -38,17 +36,9 @@ public class DefaultPersistenceInstanceHandlers extends PersistenceInstanceHandl
       return this;
     }
 
-    public Builder withCloseTimeout(Duration closeTimeout) {
-      this.closeTimeout = closeTimeout;
-      return this;
-    }
-
     public PersistenceInstanceHandlers build() {
       return new DefaultPersistenceInstanceHandlers(
-          new DefaultPersistenceInstanceWriter(
-              store,
-              Optional.ofNullable(executorService),
-              closeTimeout == null ? Duration.ofSeconds(1) : closeTimeout),
+          new DefaultPersistenceInstanceWriter(store, Optional.ofNullable(executorService)),
           new DefaultPersistenceInstanceReader(store),
           store);
     }
