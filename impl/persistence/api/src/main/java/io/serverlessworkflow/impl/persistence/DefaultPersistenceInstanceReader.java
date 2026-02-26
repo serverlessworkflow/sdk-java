@@ -20,7 +20,7 @@ import io.serverlessworkflow.impl.WorkflowInstance;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-public class DefaultPersistenceInstanceReader implements PersistenceInstanceReader {
+public class DefaultPersistenceInstanceReader extends AbstractPersistenceInstanceReader {
 
   private final PersistenceInstanceStore store;
 
@@ -32,7 +32,7 @@ public class DefaultPersistenceInstanceReader implements PersistenceInstanceRead
   public Optional<WorkflowInstance> find(WorkflowDefinition definition, String instanceId) {
     PersistenceInstanceTransaction transaction = store.begin();
     try {
-      Optional<WorkflowInstance> instance = read(transaction, definition, instanceId);
+      Optional<WorkflowInstance> instance = find(transaction, definition, instanceId);
       transaction.commit(definition);
       return instance;
     } catch (Exception ex) {
@@ -41,21 +41,10 @@ public class DefaultPersistenceInstanceReader implements PersistenceInstanceRead
     }
   }
 
-  private Optional<WorkflowInstance> read(
-      PersistenceInstanceTransaction t, WorkflowDefinition definition, String instanceId) {
-    return t.readWorkflowInfo(definition, instanceId)
-        .map(i -> new WorkflowPersistenceInstance(definition, i));
-  }
-
   @Override
   public Stream<WorkflowInstance> scanAll(WorkflowDefinition definition, String applicationId) {
     PersistenceInstanceTransaction transaction = store.begin();
-    return transaction
-        .scanAll(applicationId, definition)
-        .onClose(() -> transaction.commit(definition))
-        .map(v -> new WorkflowPersistenceInstance(definition, v));
+    return super.scanAll(transaction, definition, applicationId)
+        .onClose(() -> transaction.commit(definition));
   }
-
-  @Override
-  public void close() {}
 }

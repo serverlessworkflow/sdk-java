@@ -15,25 +15,27 @@
  */
 package io.serverlessworkflow.impl.persistence;
 
-import io.serverlessworkflow.impl.TaskContextData;
 import io.serverlessworkflow.impl.WorkflowContextData;
 import io.serverlessworkflow.impl.WorkflowDefinitionData;
-import io.serverlessworkflow.impl.WorkflowStatus;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class DefaultPersistenceInstanceWriter implements PersistenceInstanceWriter {
+public class DefaultPersistenceInstanceWriter extends AbstractPersistenceInstanceWriter {
 
   private final PersistenceInstanceStore store;
   private final Map<String, CompletableFuture<Void>> futuresMap = new ConcurrentHashMap<>();
   private final Optional<ExecutorService> executorService;
   private final Duration closeTimeout;
+
+  private static final Logger logger =
+      LoggerFactory.getLogger(DefaultPersistenceInstanceWriter.class);
 
   protected DefaultPersistenceInstanceWriter(
       PersistenceInstanceStore store,
@@ -45,61 +47,14 @@ public class DefaultPersistenceInstanceWriter implements PersistenceInstanceWrit
   }
 
   @Override
-  public CompletableFuture<Void> started(WorkflowContextData workflowContext) {
-    return doTransaction(t -> t.writeInstanceData(workflowContext), workflowContext);
-  }
-
-  @Override
-  public CompletableFuture<Void> completed(WorkflowContextData workflowContext) {
-    return removeProcessInstance(workflowContext);
-  }
-
-  @Override
-  public CompletableFuture<Void> failed(WorkflowContextData workflowContext, Throwable ex) {
-    return removeProcessInstance(workflowContext);
-  }
-
-  @Override
-  public CompletableFuture<Void> aborted(WorkflowContextData workflowContext) {
-    return removeProcessInstance(workflowContext);
-  }
-
   protected CompletableFuture<Void> removeProcessInstance(WorkflowContextData workflowContext) {
-    return doTransaction(t -> t.removeProcessInstance(workflowContext), workflowContext)
+    return super.removeProcessInstance(workflowContext)
         .thenRun(() -> futuresMap.remove(workflowContext.instanceData().id()));
   }
 
   @Override
-  public CompletableFuture<Void> taskStarted(
-      WorkflowContextData workflowContext, TaskContextData taskContext) {
-    return CompletableFuture.completedFuture(null);
-  }
-
-  @Override
-  public CompletableFuture<Void> taskRetried(
-      WorkflowContextData workflowContext, TaskContextData taskContext) {
-    return doTransaction(t -> t.writeRetryTask(workflowContext, taskContext), workflowContext);
-  }
-
-  @Override
-  public CompletableFuture<Void> taskCompleted(
-      WorkflowContextData workflowContext, TaskContextData taskContext) {
-    return doTransaction(t -> t.writeCompletedTask(workflowContext, taskContext), workflowContext);
-  }
-
-  @Override
-  public CompletableFuture<Void> suspended(WorkflowContextData workflowContext) {
-    return doTransaction(
-        t -> t.writeStatus(workflowContext, WorkflowStatus.SUSPENDED), workflowContext);
-  }
-
-  @Override
-  public CompletableFuture<Void> resumed(WorkflowContextData workflowContext) {
-    return doTransaction(t -> t.clearStatus(workflowContext), workflowContext);
-  }
-
-  private CompletableFuture<Void> doTransaction(
-      Consumer<PersistenceInstanceTransaction> operation, WorkflowContextData context) {
+  protected CompletableFuture<Void> doTransaction(
+      Consumer<PersistenceInstanceOperations> operation, WorkflowContextData context) {
     final ExecutorService service =
         this.executorService.orElse(context.definition().application().executorService());
     final Runnable runnable = () -> executeTransaction(operation, context.definition());
@@ -112,13 +67,17 @@ public class DefaultPersistenceInstanceWriter implements PersistenceInstanceWrit
   }
 
   private void executeTransaction(
-      Consumer<PersistenceInstanceTransaction> operation, WorkflowDefinitionData definition) {
+      Consumer<PersistenceInstanceOperations> operation, WorkflowDefinitionData definition) {
     PersistenceInstanceTransaction transaction = store.begin();
     try {
       operation.accept(transaction);
       transaction.commit(definition);
     } catch (Exception ex) {
-      transaction.rollback(definition);
+      try {
+        transaction.rollback(definition);
+      } catch (Exception rollEx) {
+        logger.warn("Exception during rollback. Ignoring it", ex);
+      }
       throw ex;
     }
   }
@@ -126,14 +85,5 @@ public class DefaultPersistenceInstanceWriter implements PersistenceInstanceWrit
   @Override
   public void close() {
     futuresMap.clear();
-    executorService.ifPresent(
-        e -> {
-          try {
-            e.awaitTermination(closeTimeout.toMillis(), TimeUnit.MILLISECONDS);
-            e.shutdown();
-          } catch (InterruptedException ex) {
-            Thread.currentThread().interrupt();
-          }
-        });
   }
 }
