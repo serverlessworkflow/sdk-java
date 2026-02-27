@@ -15,8 +15,7 @@
  */
 package io.serverlessworkflow.impl.test.junit;
 
-import static io.serverlessworkflow.impl.test.junit.BinaryAvailabilityUtil.isBinaryAvailable;
-
+import java.io.IOException;
 import org.junit.jupiter.api.extension.ConditionEvaluationResult;
 import org.junit.jupiter.api.extension.ExecutionCondition;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -39,6 +38,15 @@ public class BinaryCheckCondition implements ExecutionCondition {
     } else {
       return ConditionEvaluationResult.disabled(
           "Test disabled: " + command[0] + " command not found.");
+    }
+  }
+
+  public boolean isBinaryAvailable(String... command) {
+    try {
+      Process process = new ProcessBuilder(command).start();
+      return process.waitFor() == 0;
+    } catch (IOException | InterruptedException e) {
+      return false;
     }
   }
 }
