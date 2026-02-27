@@ -23,7 +23,7 @@ import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.test.grpc.handlers.ContributorBiDiStreamingHandler;
-import io.serverlessworkflow.impl.test.junit.DisabledIfBinaryUnavailable;
+import io.serverlessworkflow.impl.test.junit.DisabledIfProtocUnavailable;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.Map;
@@ -32,7 +32,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-@DisabledIfBinaryUnavailable({"protoc", "--version"})
+@DisabledIfProtocUnavailable
 public class GrpcBiDirectionalStreamingTest {
 
   private static final int PORT_FOR_EXAMPLES = 5011;
