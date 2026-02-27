@@ -22,6 +22,7 @@ import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.test.grpc.handlers.ContributorUnaryArgsExprHandler;
+import io.serverlessworkflow.impl.test.junit.DisabledIfProtocUnavailable;
 import java.io.IOException;
 import java.util.Map;
 import org.assertj.core.api.Assertions;
@@ -29,6 +30,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+@DisabledIfProtocUnavailable
 public class GrpcUnaryArgsExprTest {
 
   private static final int PORT_FOR_EXAMPLES = 5011;
