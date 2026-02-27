@@ -16,36 +16,51 @@
 package io.serverlessworkflow.impl.test.junit;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.extension.ConditionEvaluationResult;
 import org.junit.jupiter.api.extension.ExecutionCondition;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.junit.platform.commons.util.AnnotationUtils;
 
 public class BinaryCheckCondition implements ExecutionCondition {
 
   @Override
   public ConditionEvaluationResult evaluateExecutionCondition(ExtensionContext context) {
-    String[] command =
-        context
-            .getElement()
-            .map(el -> el.getAnnotation(DisabledIfBinaryUnavailable.class).value())
-            .orElse(null);
-    if (command == null || command.length == 0) {
-      throw new IllegalArgumentException("No @DisabledIfBinaryUnavailable annotation is present");
-    }
-
-    if (isBinaryAvailable(command)) {
-      return ConditionEvaluationResult.enabled(command[0] + " is available on this system.");
-    } else {
-      return ConditionEvaluationResult.disabled(
-          "Test disabled: " + command[0] + " command not found.");
-    }
+    return AnnotationUtils.findAnnotation(context.getElement(), DisabledIfBinaryUnavailable.class)
+        .map(
+            annotation -> {
+              String[] binary = annotation.value();
+              if (binary == null || binary.length == 0) {
+                return ConditionEvaluationResult.enabled(
+                    "No command found in the annotation @DisabledIfBinaryUnavailable");
+              }
+              if (isBinaryAvailable(binary)) {
+                return ConditionEvaluationResult.enabled(binary[0] + " is available.");
+              } else {
+                return ConditionEvaluationResult.disabled(
+                    "Test disabled: " + binary[0] + " not found.");
+              }
+            })
+        .orElse(ConditionEvaluationResult.enabled("No @DisabledIfBinaryUnavailable found."));
   }
 
   public boolean isBinaryAvailable(String... command) {
     try {
-      Process process = new ProcessBuilder(command).start();
-      return process.waitFor() == 0;
+      Process process =
+          new ProcessBuilder(command)
+              .redirectErrorStream(true)
+              .redirectOutput(ProcessBuilder.Redirect.DISCARD)
+              .start();
+      boolean finished = process.waitFor(2, TimeUnit.SECONDS);
+      if (finished) {
+        return process.exitValue() == 0;
+      }
+      process.destroyForcibly();
+      return false;
     } catch (IOException | InterruptedException e) {
+      if (e instanceof InterruptedException) {
+        Thread.currentThread().interrupt();
+      }
       return false;
     }
   }
