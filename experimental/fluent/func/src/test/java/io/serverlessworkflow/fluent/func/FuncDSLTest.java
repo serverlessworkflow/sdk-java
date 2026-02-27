@@ -434,7 +434,7 @@ class FuncDSLTest {
   }
 
   @Test
-  @DisplayName("function(name, fn).then(taskName)")
+  @DisplayName("function(name, fn).then(taskName) sets FlowDirective string on the task")
   void function_step_then_task_name_sets_flow_directive() {
     Workflow wf =
         FuncWorkflowBuilder.workflow("intelligent-newsletter")
@@ -455,9 +455,31 @@ class FuncDSLTest {
   }
 
   @Test
-  @DisplayName("consume(name, Consumer, Class).then(taskName) should jump to otherTask")
-  void consume_step_then_task_name_sets_flow_directive() {
+  @DisplayName("function(name, fn).then(FlowDirectiveEnum.END) sets END directive on the task")
+  void function_step_then_flow_directive_enum_sets_end() {
+    Workflow wf =
+        FuncWorkflowBuilder.workflow("intelligent-newsletter")
+            .tasks(function("myfunction", String::trim, String.class).then(FlowDirectiveEnum.END))
+            .build();
 
+    List<TaskItem> items = wf.getDo();
+    assertEquals(1, items.size());
+
+    Task t = items.get(0).getTask();
+    assertNotNull(t.getCallTask(), "CallTask expected");
+
+    CallJava callJava = (CallJava) t.getCallTask().get();
+    assertNotNull(callJava.getThen(), "then() should be set on the task");
+    assertEquals(
+        FlowDirectiveEnum.END,
+        callJava.getThen().getFlowDirectiveEnum(),
+        "then() should be FlowDirectiveEnum.END");
+  }
+
+  @Test
+  @DisplayName(
+      "consume(name, Consumer, Class).then(taskName) sets FlowDirective string on the task")
+  void consume_step_then_task_name_sets_flow_directive() {
     Workflow wf =
         FuncWorkflowBuilder.workflow("intelligent-newsletter")
             .tasks(
@@ -475,5 +497,30 @@ class FuncDSLTest {
     CallJava callJava = (CallJava) t.getCallTask().get();
     assertNotNull(callJava.getThen(), "then() should be set on the consume task");
     assertEquals("otherTask", callJava.getThen().getString(), "then() should point to 'otherTask'");
+  }
+
+  @Test
+  @DisplayName(
+      "consume(name, Consumer, Class).then(FlowDirectiveEnum.END) sets END directive on the task")
+  void consume_step_then_flow_directive_enum_sets_end() {
+    Workflow wf =
+        FuncWorkflowBuilder.workflow("intelligent-newsletter")
+            .tasks(
+                consume("sendNewsletter", (String s) -> {}, String.class)
+                    .then(FlowDirectiveEnum.END))
+            .build();
+
+    List<TaskItem> items = wf.getDo();
+    assertEquals(1, items.size());
+
+    Task t = items.get(0).getTask();
+    assertNotNull(t.getCallTask(), "CallTask expected for consume step");
+
+    CallJava callJava = (CallJava) t.getCallTask().get();
+    assertNotNull(callJava.getThen(), "then() should be set on the consume task");
+    assertEquals(
+        FlowDirectiveEnum.END,
+        callJava.getThen().getFlowDirectiveEnum(),
+        "then() should be FlowDirectiveEnum.END");
   }
 }

@@ -15,6 +15,7 @@
  */
 package io.serverlessworkflow.fluent.func.dsl;
 
+import io.serverlessworkflow.api.types.FlowDirectiveEnum;
 import io.serverlessworkflow.api.types.func.JavaContextFunction;
 import io.serverlessworkflow.api.types.func.JavaFilterFunction;
 import io.serverlessworkflow.fluent.func.FuncTaskItemListBuilder;
@@ -74,6 +75,21 @@ abstract class Step<SELF extends Step<SELF, B>, B> implements FuncTaskConfigurer
    */
   public SELF then(String taskName) {
     postConfigurers.add(b -> ((TaskBaseBuilder<?>) b).then(taskName));
+    return self();
+  }
+
+  /**
+   * Queue a {@code then(directive)} to be applied on the concrete builder. Directs the workflow
+   * engine to apply the given flow directive after this task completes.
+   *
+   * @param directive the flow directive (e.g., {@link FlowDirectiveEnum#END})
+   * @return this step for further chaining
+   * @see <a
+   *     href="https://github.com/serverlessworkflow/specification/blob/main/dsl-reference.md#task">DSL
+   *     Reference - Task</a>
+   */
+  public SELF then(FlowDirectiveEnum directive) {
+    postConfigurers.add(b -> ((TaskBaseBuilder<?>) b).then(directive));
     return self();
   }
 
