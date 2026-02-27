@@ -21,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowException;
-import io.serverlessworkflow.impl.test.junit.DisabledIfBinaryUnavailable;
+import io.serverlessworkflow.impl.test.junit.DisabledIfPythonUnavailable;
 import java.io.IOException;
 import java.util.Map;
 import org.junit.jupiter.api.AfterAll;
@@ -59,7 +59,7 @@ public class CustomFunctionTest {
         .isEqualTo(404);
   }
 
-  @DisabledIfBinaryUnavailable({"python", "--version"})
+  @DisabledIfPythonUnavailable()
   @ParameterizedTest
   @ValueSource(
       strings = {

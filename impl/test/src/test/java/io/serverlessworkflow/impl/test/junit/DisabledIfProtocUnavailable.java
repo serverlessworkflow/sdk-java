@@ -23,7 +23,5 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
-@ExtendWith(BinaryCheckCondition.class)
-public @interface DisabledIfBinaryUnavailable {
-  String[] value();
-}
+@ExtendWith(ProtocCheckCondition.class)
+public @interface DisabledIfProtocUnavailable {}
