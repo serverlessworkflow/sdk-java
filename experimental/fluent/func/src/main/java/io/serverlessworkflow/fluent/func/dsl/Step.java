@@ -62,6 +62,21 @@ abstract class Step<SELF extends Step<SELF, B>, B> implements FuncTaskConfigurer
     return self();
   }
 
+  /**
+   * Queue a {@code then(taskName)} to be applied on the concrete builder. Directs the workflow
+   * engine to jump to the named task after this one completes.
+   *
+   * @param taskName the name of the next task to execute
+   * @return this step for further chaining
+   * @see <a
+   *     href="https://github.com/serverlessworkflow/specification/blob/main/dsl-reference.md#task">DSL
+   *     Reference - Task</a>
+   */
+  public SELF then(String taskName) {
+    postConfigurers.add(b -> ((TaskBaseBuilder<?>) b).then(taskName));
+    return self();
+  }
+
   // ---------------------------------------------------------------------------
   // FuncTaskTransformations passthroughs: EXPORT (fn/context/filter + JQ)
   // ---------------------------------------------------------------------------
