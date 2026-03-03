@@ -22,6 +22,7 @@ import static io.serverlessworkflow.fluent.spec.dsl.DSL.call;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.error;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.event;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.http;
+import static io.serverlessworkflow.fluent.spec.dsl.DSL.produced;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.secrets;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.to;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -68,7 +69,7 @@ public class DSLTest {
                             to().all(
                                     event().type("org.acme.listen"),
                                     event().type("org.example.listen")))
-                        .emit(e -> e.event(event().type("org.example.emit"))))
+                        .emit(produced("org.example.emit")))
             .build();
 
     // Sanity
