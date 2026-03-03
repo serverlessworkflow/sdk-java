@@ -20,7 +20,6 @@ import io.serverlessworkflow.api.types.FlowDirectiveEnum;
 import io.serverlessworkflow.fluent.func.FuncCallTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncEmitTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncSwitchTaskBuilder;
-import io.serverlessworkflow.fluent.func.configurers.FuncPredicateEventConfigurer;
 import io.serverlessworkflow.fluent.func.configurers.SwitchCaseConfigurer;
 import io.serverlessworkflow.fluent.func.dsl.ReflectionUtils;
 import io.serverlessworkflow.fluent.func.dsl.SwitchCaseSpec;
@@ -63,17 +62,13 @@ public interface CommonFuncOps {
     return s -> s.then(directive);
   }
 
-  default <T> Consumer<FuncEmitTaskBuilder> event(
+  default <T> Consumer<FuncEmitTaskBuilder> emit(
       String type, Function<T, CloudEventData> function) {
     return event -> event.event(e -> e.type(type).data(function));
   }
 
-  default <T> Consumer<FuncEmitTaskBuilder> event(
+  default <T> Consumer<FuncEmitTaskBuilder> emit(
       String type, Function<T, CloudEventData> function, Class<T> clazz) {
     return event -> event.event(e -> e.type(type).data(function, clazz));
-  }
-
-  default FuncPredicateEventConfigurer event(String type) {
-    return e -> e.type(type);
   }
 }

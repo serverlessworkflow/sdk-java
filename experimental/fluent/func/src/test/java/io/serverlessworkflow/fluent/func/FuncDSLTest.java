@@ -17,20 +17,19 @@ package io.serverlessworkflow.fluent.func;
 
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.call;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.emit;
-import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.event;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.function;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.get;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.http;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.listen;
+import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.produced;
+import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.switchWhenOrElse;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.toOne;
-import static io.serverlessworkflow.fluent.spec.dsl.DSL.auth;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.use;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-import io.cloudevents.core.data.BytesCloudEventData;
 import io.serverlessworkflow.api.types.CallHTTP;
 import io.serverlessworkflow.api.types.Export;
 import io.serverlessworkflow.api.types.FlowDirectiveEnum;
@@ -40,10 +39,7 @@ import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.api.types.func.CallJava;
 import io.serverlessworkflow.api.types.func.JavaFilterFunction;
 import io.serverlessworkflow.fluent.func.dsl.FuncDSL;
-import io.serverlessworkflow.fluent.func.dsl.FuncEmitSpec;
-import io.serverlessworkflow.fluent.func.dsl.FuncListenSpec;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
@@ -92,19 +88,15 @@ class FuncDSLTest {
 
   @Test
   void emit_step_exportAs_javaFilter_sets_export() {
-    // Build an emit spec using your DSL (type + data function)
-    FuncEmitSpec spec =
-        new FuncEmitSpec()
-            .type("org.acme.signal")
-            .bytesData((String s) -> s.getBytes(StandardCharsets.UTF_8), String.class);
-
     // JavaFilterFunction<T,R> is (T, WorkflowContextData, TaskContextData) -> R
     JavaFilterFunction<String, Map<String, Object>> jf =
         (val, wfCtx, taskCtx) -> Map.of("wrapped", val, "wfId", wfCtx.instanceData().id());
 
     Workflow wf =
         FuncWorkflowBuilder.workflow("step-emit-export")
-            .tasks(emit("emitWrapped", spec).exportAs(jf)) // chaining on Step
+            .tasks(
+                emit("emitWrapped", produced("org.acme.signal").bytesDataUtf8())
+                    .exportAs(jf)) // chaining on Step
             .build();
 
     List<TaskItem> items = wf.getDo();
@@ -123,11 +115,11 @@ class FuncDSLTest {
   @Test
   @DisplayName("listen(spec).exportAs(Function) sets Export on ListenTask holder")
   void listen_step_exportAs_function_sets_export() {
-    FuncListenSpec spec = toOne("org.acme.review.done"); // using your existing DSL helper
-
     Workflow wf =
         FuncWorkflowBuilder.workflow("step-listen-export")
-            .tasks(listen("waitHumanReview", spec).exportAs((Object e) -> Map.of("seen", true)))
+            .tasks(
+                listen("waitHumanReview", toOne("org.acme.review.done"))
+                    .exportAs((Object e) -> Map.of("seen", true)))
             .build();
 
     List<TaskItem> items = wf.getDo();
@@ -143,13 +135,11 @@ class FuncDSLTest {
   }
 
   @Test
-  @DisplayName("emit(event(type, fn)).when(...) -> still an EmitTask and builds")
+  @DisplayName("emit(consumed(type, fn)).when(...) -> still an EmitTask and builds")
   void emit_step_when_compiles_and_builds() {
     Workflow wf =
         FuncWorkflowBuilder.workflow("step-emit-when")
-            .tasks(
-                emit(event("org.acme.sig", (String s) -> BytesCloudEventData.wrap(s.getBytes())))
-                    .when((Object ctx) -> true))
+            .tasks(emit(produced("org.acme.sig").bytesDataUtf8()).when((Object ctx) -> true))
             .build();
 
     List<TaskItem> items = wf.getDo();
@@ -164,9 +154,7 @@ class FuncDSLTest {
         FuncWorkflowBuilder.workflow("step-mixed")
             .tasks(
                 function(String::strip, String.class).exportAs((String s) -> Map.of("s", s)),
-                emit(event(
-                        "org.acme.kickoff", (String s) -> BytesCloudEventData.wrap(s.getBytes())))
-                    .when((Object ignore) -> true),
+                emit(produced("org.acme.kickoff").bytesDataUtf8()).when((Object ignore) -> true),
                 listen(toOne("org.acme.done")).exportAs((Object e) -> Map.of("ok", true)))
             .build();
 
@@ -190,7 +178,7 @@ class FuncDSLTest {
   void switchWhenOrElse_jq_to_taskName() {
     Workflow wf =
         FuncWorkflowBuilder.workflow("jqSwitch")
-            .tasks(FuncDSL.switchWhenOrElse(".approved", "send", "draft"))
+            .tasks(switchWhenOrElse(".approved", "send", "draft"))
             .build();
     Task switchTask = wf.getDo().get(0).getTask();
     assertNotNull(switchTask.getSwitchTask());
@@ -203,7 +191,7 @@ class FuncDSLTest {
   void switchWhenOrElse_jq_to_directive() {
     Workflow wf =
         FuncWorkflowBuilder.workflow("jqSwitchDir")
-            .tasks(FuncDSL.switchWhenOrElse(".score >= 80", "pass", FlowDirectiveEnum.END))
+            .tasks(switchWhenOrElse(".score >= 80", "pass", FlowDirectiveEnum.END))
             .build();
     Task switchTask = wf.getDo().get(0).getTask();
     var items = switchTask.getSwitchTask().getSwitch();

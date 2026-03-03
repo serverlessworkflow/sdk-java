@@ -17,7 +17,6 @@ package io.serverlessworkflow.fluent.spec.dsl;
 
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.call;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.emit;
-import static io.serverlessworkflow.fluent.spec.dsl.DSL.event;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.http;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.set;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.tryCatch;
@@ -47,7 +46,7 @@ public class TryCatchDslTest {
                             .catches()
                             .when("$.error == true")
                             .errors(Errors.RUNTIME, 500)
-                            .tasks(emit(e -> e.event(event().type("org.acme.failed"))))
+                            .tasks(emit("org.acme.failed"))
                             .retry()
                             .when("$.retries < 3")
                             .limit("PT5S")
@@ -122,7 +121,7 @@ public class TryCatchDslTest {
                             .catches()
                             .exceptWhen("$.code == 502")
                             .errors(errType, 502)
-                            .tasks(emit(e -> e.event(event().type("org.acme.recover"))))
+                            .tasks(emit(("org.acme.recover")))
                             .done() // back to TrySpec
                         ))
             .build();
@@ -175,7 +174,7 @@ public class TryCatchDslTest {
                             .retry()
                             .limit("PT2S")
                             .done()
-                            .tasks(emit(e -> e.event(event().type("org.acme.retrying"))))
+                            .tasks(emit(("org.acme.retrying")))
                             .done()))
             .build();
 
