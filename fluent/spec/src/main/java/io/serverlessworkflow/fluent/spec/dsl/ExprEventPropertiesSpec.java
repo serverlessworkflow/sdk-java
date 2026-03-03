@@ -15,26 +15,22 @@
  */
 package io.serverlessworkflow.fluent.spec.dsl;
 
-import io.serverlessworkflow.fluent.spec.EventPropertiesBuilder;
-import java.util.ArrayList;
+import io.serverlessworkflow.fluent.spec.AbstractEventPropertiesBuilder;
 import java.util.Map;
 
-public abstract class ExprEventFilterSpec<SELF>
-    extends EventFilterSpec<SELF, EventPropertiesBuilder> {
-
-  ExprEventFilterSpec() {
-    super(new ArrayList<>());
-  }
+public abstract class ExprEventPropertiesSpec<
+        SELF, EVENT_PROPS extends AbstractEventPropertiesBuilder<?>>
+    extends EventPropertiesSpec<SELF, EVENT_PROPS> {
 
   /** Sets the event data and the contentType to `application/json` */
   public SELF jsonData(String expr) {
-    addStep(e -> e.data(expr));
+    addPropertyStep(e -> e.data(expr));
     return JSON();
   }
 
   /** Sets the event data and the contentType to `application/json` */
   public SELF jsonData(Map<String, Object> data) {
-    addStep(e -> e.data(data));
+    addPropertyStep(e -> e.data(data));
     return JSON();
   }
 }

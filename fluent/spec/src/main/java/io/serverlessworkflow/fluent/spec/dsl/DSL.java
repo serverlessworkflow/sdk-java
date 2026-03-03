@@ -60,8 +60,7 @@ public final class DSL {
   // ---- Convenient shortcuts ----//
 
   /**
-   * Create a new HTTP call specification to be used with {@link #call(CallHttpConfigurer)} or
-   * {@link #call(io.serverlessworkflow.fluent.func.dsl.FuncCallHttpSpec)}.
+   * Create a new HTTP call specification to be used with {@link #call(CallHttpConfigurer)}
    *
    * <p>Typical usage:
    *
@@ -203,13 +202,13 @@ public final class DSL {
   /**
    * Start building an event emission specification.
    *
-   * <p>Use methods on {@link EventSpec} to define event type and payload, and pass it to {@link
-   * #emit(Consumer)}.
+   * <p>Use methods on {@link EventFilterSpec} to define event type and payload, and pass it to
+   * {@link #emit(Consumer)}.
    *
-   * @return a new {@link EventSpec}
+   * @return a new {@link EventFilterSpec}
    */
-  public static EventSpec event() {
-    return new EventSpec();
+  public static EventFilterSpec event() {
+    return new EventFilterSpec();
   }
 
   /**
@@ -644,13 +643,63 @@ public final class DSL {
   }
 
   /**
-   * Create a {@link TasksConfigurer} that adds an {@code emit} task.
+   * Adds an {@code emit} task to the workflow's task sequence using a custom configurer. *
    *
-   * @param configurer consumer configuring {@link EmitTaskBuilder}
-   * @return a {@link TasksConfigurer} that adds an EmitTask
+   * <p>This method is typically used in conjunction with {@link #produced()} to fluently define the
+   * properties of the event being emitted. *
+   *
+   * <p>Example usage:
+   *
+   * <pre>{@code
+   * emit(produced().type("my.custom.event").source("my/source"))
+   * }</pre>
+   *
+   * @param configurer a consumer, such as an {@link EmitSpec}, that configures the {@link
+   *     EmitTaskBuilder}
+   * @return a {@link TasksConfigurer} to continue building the task list
    */
   public static TasksConfigurer emit(Consumer<EmitTaskBuilder> configurer) {
     return list -> list.emit(configurer);
+  }
+
+  /**
+   * @see #emit(Consumer)
+   */
+  public static TasksConfigurer emit(String name, Consumer<EmitTaskBuilder> configurer) {
+    return list -> list.emit(name, configurer);
+  }
+
+  /**
+   * A convenient shortcut to add an {@code emit} task that only requires a CloudEvent type. *
+   *
+   * <p>Use this method when you only need to specify the {@code type} attribute of the emitted
+   * event and do not need to configure additional properties like data or source.
+   *
+   * @param cloudEventType the {@code type} attribute of the CloudEvent to be emitted
+   * @return a {@link TasksConfigurer} to continue building the task list
+   */
+  public static TasksConfigurer emit(String cloudEventType) {
+    return list -> list.emit(new EmitSpec().type(cloudEventType));
+  }
+
+  /**
+   * Starts building an event emission specification. *
+   *
+   * <p>This creates a new {@link EmitSpec} which acts as a fluent builder for the properties (e.g.,
+   * type, source, data) of the CloudEvent to be emitted. The resulting spec can then be passed
+   * directly to {@link #emit(Consumer)}.
+   *
+   * @return a new {@link EmitSpec} instance for fluent configuration
+   */
+  public static EmitSpec produced() {
+    return new EmitSpec();
+  }
+
+  /**
+   * @see #produced()
+   */
+  public static EmitSpec produced(String cloudEventType) {
+    return new EmitSpec().type(cloudEventType);
   }
 
   /**
