@@ -33,6 +33,7 @@ import org.slf4j.LoggerFactory;
 public class WorkflowThenTest {
 
   private static final Logger log = LoggerFactory.getLogger(WorkflowThenTest.class);
+
   @Test
   void consume_then_skips_next_task_and_jumps_to_target() {
 
