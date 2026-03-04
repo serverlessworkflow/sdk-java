@@ -121,4 +121,16 @@ public class RetryTimeoutTest {
             .orElseThrow();
     assertThat(result.get("message")).isEqualTo("Viva er Beti Balompie");
   }
+
+  @Test
+  void testDoesNotMatch() {
+    assertThatThrownBy(
+            () ->
+                app.workflowDefinition(
+                        readWorkflowFromClasspath("workflows-samples/try-catch-not-match.yaml"))
+                    .instance(Map.of())
+                    .start()
+                    .join())
+        .hasCauseInstanceOf(WorkflowException.class);
+  }
 }

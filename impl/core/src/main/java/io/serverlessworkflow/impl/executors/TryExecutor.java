@@ -189,11 +189,10 @@ public class TryExecutor extends RegularTaskExecutor<TryTask> {
                               .orElse(CompletableFuture.failedFuture(e)))
                   .thenCompose(model -> doIt(workflow, taskContext, model));
         }
+        return completable;
       }
-      return completable;
-    } else {
-      return CompletableFuture.failedFuture(e);
     }
+    return CompletableFuture.failedFuture(e);
   }
 
   private static Optional<Predicate<WorkflowError>> buildErrorFilter(CatchErrors errors) {
