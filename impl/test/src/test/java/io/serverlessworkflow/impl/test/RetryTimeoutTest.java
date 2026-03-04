@@ -122,12 +122,16 @@ public class RetryTimeoutTest {
     assertThat(result.get("message")).isEqualTo("Viva er Beti Balompie");
   }
 
-  @Test
-  void testDoesNotMatch() {
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "workflows-samples/try-catch-not-match.yaml",
+        "workflows-samples/try-catch-not-match-details.yaml"
+      })
+  void testDoesNotMatch(String path) {
     assertThatThrownBy(
             () ->
-                app.workflowDefinition(
-                        readWorkflowFromClasspath("workflows-samples/try-catch-not-match.yaml"))
+                app.workflowDefinition(readWorkflowFromClasspath(path))
                     .instance(Map.of())
                     .start()
                     .join())

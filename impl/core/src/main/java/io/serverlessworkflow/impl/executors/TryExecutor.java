@@ -206,7 +206,7 @@ public class TryExecutor extends RegularTaskExecutor<TryTask> {
         && (errorFilter.getStatus() <= 0 || error.status() == errorFilter.getStatus())
         && compareString(errorFilter.getInstance(), error.instance())
         && compareString(errorFilter.getTitle(), error.title())
-        && compareString(errorFilter.getDetails(), errorFilter.getDetails());
+        && compareString(errorFilter.getDetails(), error.details());
   }
 
   private static boolean compareString(String one, String other) {
