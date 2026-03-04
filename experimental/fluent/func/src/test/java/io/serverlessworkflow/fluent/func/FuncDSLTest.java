@@ -16,6 +16,7 @@
 package io.serverlessworkflow.fluent.func;
 
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.call;
+import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.consume;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.emit;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.event;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.function;
@@ -23,7 +24,6 @@ import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.get;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.http;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.listen;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.toOne;
-import static io.serverlessworkflow.fluent.spec.dsl.DSL.auth;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.use;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -431,5 +431,96 @@ class FuncDSLTest {
             .getAuthenticationPolicyReference()
             .getUse());
     assertEquals(Map.of("foo", "bar"), http.getWith().getBody());
+  }
+
+  @Test
+  @DisplayName("function(name, fn).then(taskName) sets FlowDirective string on the task")
+  void function_step_then_task_name_sets_flow_directive() {
+    Workflow wf =
+        FuncWorkflowBuilder.workflow("intelligent-newsletter")
+            .tasks(
+                function("myfunction", String::trim, String.class).then("otherTask"),
+                function("otherTask", String::strip, String.class))
+            .build();
+
+    List<TaskItem> items = wf.getDo();
+    assertEquals(2, items.size());
+
+    Task t = items.get(0).getTask();
+    assertNotNull(t.getCallTask(), "CallTask expected");
+
+    CallJava callJava = (CallJava) t.getCallTask().get();
+    assertNotNull(callJava.getThen(), "then() should be set on the task");
+    assertEquals("otherTask", callJava.getThen().getString(), "then() should point to 'otherTask'");
+  }
+
+  @Test
+  @DisplayName("function(name, fn).then(FlowDirectiveEnum.END) sets END directive on the task")
+  void function_step_then_flow_directive_enum_sets_end() {
+    Workflow wf =
+        FuncWorkflowBuilder.workflow("intelligent-newsletter")
+            .tasks(function("myfunction", String::trim, String.class).then(FlowDirectiveEnum.END))
+            .build();
+
+    List<TaskItem> items = wf.getDo();
+    assertEquals(1, items.size());
+
+    Task t = items.get(0).getTask();
+    assertNotNull(t.getCallTask(), "CallTask expected");
+
+    CallJava callJava = (CallJava) t.getCallTask().get();
+    assertNotNull(callJava.getThen(), "then() should be set on the task");
+    assertEquals(
+        FlowDirectiveEnum.END,
+        callJava.getThen().getFlowDirectiveEnum(),
+        "then() should be FlowDirectiveEnum.END");
+  }
+
+  @Test
+  @DisplayName(
+      "consume(name, Consumer, Class).then(taskName) sets FlowDirective string on the task")
+  void consume_step_then_task_name_sets_flow_directive() {
+    Workflow wf =
+        FuncWorkflowBuilder.workflow("intelligent-newsletter")
+            .tasks(
+                consume("sendNewsletter", (String s) -> {}, String.class).then("otherTask"),
+                function("nextTask", String::strip, String.class),
+                function("otherTask", String::strip, String.class))
+            .build();
+
+    List<TaskItem> items = wf.getDo();
+    assertEquals(3, items.size());
+
+    Task t = items.get(0).getTask();
+    assertNotNull(t.getCallTask(), "CallTask expected for consume step");
+
+    CallJava callJava = (CallJava) t.getCallTask().get();
+    assertNotNull(callJava.getThen(), "then() should be set on the consume task");
+    assertEquals("otherTask", callJava.getThen().getString(), "then() should point to 'otherTask'");
+  }
+
+  @Test
+  @DisplayName(
+      "consume(name, Consumer, Class).then(FlowDirectiveEnum.END) sets END directive on the task")
+  void consume_step_then_flow_directive_enum_sets_end() {
+    Workflow wf =
+        FuncWorkflowBuilder.workflow("intelligent-newsletter")
+            .tasks(
+                consume("sendNewsletter", (String s) -> {}, String.class)
+                    .then(FlowDirectiveEnum.END))
+            .build();
+
+    List<TaskItem> items = wf.getDo();
+    assertEquals(1, items.size());
+
+    Task t = items.get(0).getTask();
+    assertNotNull(t.getCallTask(), "CallTask expected for consume step");
+
+    CallJava callJava = (CallJava) t.getCallTask().get();
+    assertNotNull(callJava.getThen(), "then() should be set on the consume task");
+    assertEquals(
+        FlowDirectiveEnum.END,
+        callJava.getThen().getFlowDirectiveEnum(),
+        "then() should be FlowDirectiveEnum.END");
   }
 }

@@ -94,6 +94,18 @@
             <artifactId>grpc-netty</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>io.serverlessworkflow</groupId>
+            <artifactId>serverlessworkflow-experimental-fluent-func</artifactId>
+            <scope>test</scope>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.serverlessworkflow</groupId>
+            <artifactId>serverlessworkflow-experimental-lambda</artifactId>
+            <scope>test</scope>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
     <build>
         <resources>
