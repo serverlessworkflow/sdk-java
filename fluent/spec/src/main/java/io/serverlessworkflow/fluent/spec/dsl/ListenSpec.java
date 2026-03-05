@@ -16,26 +16,22 @@
 package io.serverlessworkflow.fluent.spec.dsl;
 
 import io.serverlessworkflow.fluent.spec.AbstractEventConsumptionStrategyBuilder;
-import io.serverlessworkflow.fluent.spec.AbstractEventFilterBuilder;
 import io.serverlessworkflow.fluent.spec.AbstractListenTaskBuilder;
 import io.serverlessworkflow.fluent.spec.EventFilterBuilder;
 import io.serverlessworkflow.fluent.spec.ListenTaskBuilder;
 import io.serverlessworkflow.fluent.spec.ListenToBuilder;
-import io.serverlessworkflow.fluent.spec.configurers.EventConfigurer;
+import io.serverlessworkflow.fluent.spec.configurers.ListenConfigurer;
 import java.util.Objects;
 import java.util.function.Consumer;
 
 public final class ListenSpec
-    extends BaseListenSpec<
-        ListenSpec, ListenTaskBuilder, ListenToBuilder, EventFilterBuilder, EventConfigurer>
-    implements io.serverlessworkflow.fluent.spec.configurers.ListenConfigurer {
+    extends BaseListenSpec<ListenSpec, ListenTaskBuilder, ListenToBuilder, EventFilterBuilder>
+    implements ListenConfigurer {
 
   public ListenSpec() {
     super(
         // toInvoker
         AbstractListenTaskBuilder::to,
-        // withApplier
-        AbstractEventFilterBuilder::with,
         // allApplier
         (tb, filters) -> tb.all(castFilters(filters)),
         // anyApplier

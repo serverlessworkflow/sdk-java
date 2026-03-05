@@ -25,7 +25,6 @@ import io.serverlessworkflow.fluent.func.FuncSwitchTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncTaskItemListBuilder;
 import io.serverlessworkflow.fluent.func.configurers.FuncCallHttpConfigurer;
 import io.serverlessworkflow.fluent.func.configurers.FuncCallOpenAPIConfigurer;
-import io.serverlessworkflow.fluent.func.configurers.FuncPredicateEventConfigurer;
 import io.serverlessworkflow.fluent.func.configurers.FuncTaskConfigurer;
 import io.serverlessworkflow.fluent.func.configurers.SwitchCaseConfigurer;
 import io.serverlessworkflow.fluent.func.dsl.internal.CommonFuncOps;
@@ -59,13 +58,13 @@ import java.util.function.Predicate;
  *
  * <pre>{@code
  * Workflow wf = FuncWorkflowBuilder.workflow("example")
- *   .tasks(
- *     FuncDSL.function(String::trim, String.class),
- *     FuncDSL.emitJson("org.acme.started", MyPayload.class),
- *     FuncDSL.listen(FuncDSL.toAny("type.one", "type.two"))
- *       .outputAs(map -> map.get("value")),
- *     FuncDSL.switchWhenOrElse((Integer v) -> v > 0, "positive", FlowDirectiveEnum.END, Integer.class)
- *   ).build();
+ * .tasks(
+ * FuncDSL.function(String::trim, String.class),
+ * FuncDSL.emit(FuncDSL.produced("org.acme.started").jsonData(MyPayload.class)),
+ * FuncDSL.listen(FuncDSL.toAny("type.one", "type.two"))
+ * .outputAs(map -> map.get("value")),
+ * FuncDSL.switchWhenOrElse((Integer v) -> v > 0, "positive", FlowDirectiveEnum.END, Integer.class)
+ * ).build();
  * }</pre>
  */
 public final class FuncDSL {
@@ -172,7 +171,7 @@ public final class FuncDSL {
    * @return a {@link FuncListenSpec} set to {@code one(type)}
    */
   public static FuncListenSpec toOne(String type) {
-    return new FuncListenSpec().one(e -> e.type(type));
+    return new FuncListenSpec().one(consumed(type));
   }
 
   /**
@@ -182,9 +181,9 @@ public final class FuncDSL {
    * @return a {@link FuncListenSpec} set to {@code all(types...)}
    */
   public static FuncListenSpec toAll(String... types) {
-    FuncPredicateEventConfigurer[] events = new FuncPredicateEventConfigurer[types.length];
+    FuncEventFilterSpec[] events = new FuncEventFilterSpec[types.length];
     for (int i = 0; i < types.length; i++) {
-      events[i] = event(types[i]);
+      events[i] = consumed(types[i]);
     }
     return new FuncListenSpec().all(events);
   }
@@ -196,9 +195,9 @@ public final class FuncDSL {
    * @return a {@link FuncListenSpec} set to {@code any(types...)}
    */
   public static FuncListenSpec toAny(String... types) {
-    FuncPredicateEventConfigurer[] events = new FuncPredicateEventConfigurer[types.length];
+    FuncEventFilterSpec[] events = new FuncEventFilterSpec[types.length];
     for (int i = 0; i < types.length; i++) {
-      events[i] = event(types[i]);
+      events[i] = consumed(types[i]);
     }
     return new FuncListenSpec().any(events);
   }
@@ -212,13 +211,14 @@ public final class FuncDSL {
    * @param <T> input type to the function
    * @return a consumer to configure {@link FuncEmitTaskBuilder}
    */
-  public static <T> Consumer<FuncEmitTaskBuilder> event(
+  public static <T> Consumer<FuncEmitTaskBuilder> produced(
       String type, Function<T, CloudEventData> function) {
-    return OPS.event(type, function);
+    return OPS.emit(type, function);
   }
 
   /**
-   * Same as {@link #event(String, Function)} but with an explicit input class to guide conversion.
+   * Same as {@link #produced(String, Function)} but with an explicit input class to guide
+   * conversion.
    *
    * @param type CloudEvent type
    * @param function function that maps workflow input to {@link CloudEventData}
@@ -226,9 +226,9 @@ public final class FuncDSL {
    * @param <T> input type
    * @return a consumer to configure {@link FuncEmitTaskBuilder}
    */
-  public static <T> Consumer<FuncEmitTaskBuilder> event(
+  public static <T> Consumer<FuncEmitTaskBuilder> produced(
       String type, Function<T, CloudEventData> function, Class<T> clazz) {
-    return OPS.event(type, function, clazz);
+    return OPS.emit(type, function, clazz);
   }
 
   /**
@@ -240,7 +240,7 @@ public final class FuncDSL {
    * @param <T> input type
    * @return a consumer to configure {@link FuncEmitTaskBuilder}
    */
-  public static <T> Consumer<FuncEmitTaskBuilder> eventJson(String type, Class<T> clazz) {
+  public static <T> Consumer<FuncEmitTaskBuilder> producedJson(String type, Class<T> clazz) {
     return b -> new FuncEmitSpec().type(type).jsonData(clazz).accept(b);
   }
 
@@ -253,7 +253,7 @@ public final class FuncDSL {
    * @param <T> input type
    * @return a consumer to configure {@link FuncEmitTaskBuilder}
    */
-  public static <T> Consumer<FuncEmitTaskBuilder> eventBytes(
+  public static <T> Consumer<FuncEmitTaskBuilder> producedBytes(
       String type, Function<T, byte[]> serializer, Class<T> clazz) {
     return b -> new FuncEmitSpec().type(type).bytesData(serializer, clazz).accept(b);
   }
@@ -265,18 +265,32 @@ public final class FuncDSL {
    * @param type CloudEvent type
    * @return a consumer to configure {@link FuncEmitTaskBuilder}
    */
-  public static Consumer<FuncEmitTaskBuilder> eventBytesUtf8(String type) {
+  public static Consumer<FuncEmitTaskBuilder> producedBytesUtf8(String type) {
     return b -> new FuncEmitSpec().type(type).bytesDataUtf8().accept(b);
   }
 
   /**
-   * Create a predicate event configurer for {@code listen} specs.
+   * Starts building an event emission specification with a predefined type.
    *
-   * @param type CloudEvent type
-   * @return predicate event configurer for use in {@link FuncListenSpec}
+   * @param type CloudEvent type to be emitted
+   * @return a new {@link FuncEmitSpec} instance pre-configured with the event type
    */
-  public static FuncPredicateEventConfigurer event(String type) {
-    return OPS.event(type);
+  public static FuncEmitSpec produced(String type) {
+    return new FuncEmitSpec().type(type);
+  }
+
+  /**
+   * Starts building a function-centric event filter specification for a specific CloudEvent type. *
+   *
+   * <p>This creates an empty {@link FuncEventFilterSpec} which acts as a fluent builder for
+   * matching incoming CloudEvents. It is typically passed to a {@code listen} strategy like {@link
+   * #toOne(String)} or {@code to().any(...)}.
+   *
+   * @param type the {@code type} attribute of the CloudEvent to listen for
+   * @return a new {@link FuncEventFilterSpec} instance pre-configured with the event type
+   */
+  public static FuncEventFilterSpec consumed(String type) {
+    return new FuncEventFilterSpec().type(type);
   }
 
   /**
@@ -554,6 +568,19 @@ public final class FuncDSL {
   }
 
   /**
+   * Starts building a function-centric event emission specification.
+   *
+   * <p>This creates an empty {@link FuncEmitSpec} which acts as a fluent builder for the properties
+   * (e.g., type, source, data) of the CloudEvent to be emitted. It is typically passed to the
+   * {@link #emit(Consumer)} step.
+   *
+   * @return a new {@link FuncEmitSpec} instance for fluent configuration
+   */
+  public static FuncEmitSpec produced() {
+    return new FuncEmitSpec();
+  }
+
+  /**
    * Create an {@code emit} step from a low-level {@link FuncEmitTaskBuilder} configurer. Prefer
    * higher-level helpers like {@link #emitJson(String, Class)} where possible.
    *
@@ -584,7 +611,7 @@ public final class FuncDSL {
    * @return an {@link EmitStep}
    */
   public static <T> EmitStep emit(String type, Function<T, CloudEventData> fn) {
-    return new EmitStep(null, event(type, fn));
+    return new EmitStep(null, produced(type, fn));
   }
 
   /**
@@ -597,7 +624,7 @@ public final class FuncDSL {
    * @return a named {@link EmitStep}
    */
   public static <T> EmitStep emit(String name, String type, Function<T, CloudEventData> fn) {
-    return new EmitStep(name, event(type, fn));
+    return new EmitStep(name, produced(type, fn));
   }
 
   /**
@@ -612,7 +639,7 @@ public final class FuncDSL {
    */
   public static <T> EmitStep emit(
       String name, String type, Function<T, byte[]> serializer, Class<T> clazz) {
-    return new EmitStep(name, eventBytes(type, serializer, clazz));
+    return new EmitStep(name, producedBytes(type, serializer, clazz));
   }
 
   /**
@@ -625,7 +652,7 @@ public final class FuncDSL {
    * @return an {@link EmitStep}
    */
   public static <T> EmitStep emit(String type, Function<T, byte[]> serializer, Class<T> clazz) {
-    return new EmitStep(null, eventBytes(type, serializer, clazz));
+    return new EmitStep(null, producedBytes(type, serializer, clazz));
   }
 
   /**
@@ -637,7 +664,7 @@ public final class FuncDSL {
    * @return an {@link EmitStep}
    */
   public static <T> EmitStep emitJson(String type, Class<T> clazz) {
-    return new EmitStep(null, eventJson(type, clazz));
+    return new EmitStep(null, producedJson(type, clazz));
   }
 
   /**
@@ -650,7 +677,7 @@ public final class FuncDSL {
    * @return a named {@link EmitStep}
    */
   public static <T> EmitStep emitJson(String name, String type, Class<T> clazz) {
-    return new EmitStep(name, eventJson(type, clazz));
+    return new EmitStep(name, producedJson(type, clazz));
   }
 
   /**
@@ -739,7 +766,7 @@ public final class FuncDSL {
    * JQ-based condition: if the JQ expression evaluates truthy → jump to {@code thenTask}.
    *
    * <pre>
-   *   switchWhen(".approved == true", "approveOrder")
+   * switchWhen(".approved == true", "approveOrder")
    * </pre>
    *
    * <p>The JQ expression is evaluated against the task input at runtime. When the predicate is
@@ -792,7 +819,7 @@ public final class FuncDSL {
    * follow the {@link FlowDirectiveEnum} given in {@code otherwise}.
    *
    * <pre>
-   *   switchWhenOrElse(".approved == true", "sendEmail", FlowDirectiveEnum.END)
+   * switchWhenOrElse(".approved == true", "sendEmail", FlowDirectiveEnum.END)
    * </pre>
    *
    * <p>The JQ expression is evaluated against the task input at runtime.
@@ -818,7 +845,7 @@ public final class FuncDSL {
    * to {@code otherwiseTask}.
    *
    * <pre>
-   *   switchWhenOrElse(".score >= 80", "pass", "fail")
+   * switchWhenOrElse(".score >= 80", "pass", "fail")
    * </pre>
    *
    * <p>The JQ expression is evaluated against the task input at runtime.
@@ -937,11 +964,11 @@ public final class FuncDSL {
    *
    * <pre>{@code
    * tasks(
-   *   FuncDSL.call(
-   *     FuncDSL.http()
-   *       .GET()
-   *       .endpoint("http://service/api")
-   *   )
+   * FuncDSL.call(
+   * FuncDSL.http()
+   * .GET()
+   * .endpoint("http://service/api")
+   * )
    * );
    * }</pre>
    *
@@ -957,11 +984,11 @@ public final class FuncDSL {
    *
    * <pre>{@code
    * tasks(
-   *   FuncDSL.call("fetchUsers",
-   *     FuncDSL.http()
-   *       .GET()
-   *       .endpoint("http://service/users")
-   *   )
+   * FuncDSL.call("fetchUsers",
+   * FuncDSL.http()
+   * .GET()
+   * .endpoint("http://service/users")
+   * )
    * );
    * }</pre>
    *
@@ -981,14 +1008,14 @@ public final class FuncDSL {
    *
    * <pre>{@code
    * FuncWorkflowBuilder.workflow("openapi-call")
-   *   .tasks(
-   *     FuncDSL.call(
-   *       FuncDSL.openapi()
-   *         .document("https://petstore.swagger.io/v2/swagger.json", DSL.auth("openapi-auth"))
-   *         .operation("getPetById")
-   *     )
-   *   )
-   *   .build();
+   * .tasks(
+   * FuncDSL.call(
+   * FuncDSL.openapi()
+   * .document("https://petstore.swagger.io/v2/swagger.json", DSL.auth("openapi-auth"))
+   * .operation("getPetById")
+   * )
+   * )
+   * .build();
    * }</pre>
    *
    * @param spec fluent OpenAPI spec built via {@link #openapi()}
@@ -1005,16 +1032,16 @@ public final class FuncDSL {
    *
    * <pre>{@code
    * FuncWorkflowBuilder.workflow("openapi-call-named")
-   *   .tasks(
-   *     FuncDSL.call(
-   *       "fetchPet",
-   *       FuncDSL.openapi()
-   *         .document("https://petstore.swagger.io/v2/swagger.json", DSL.auth("openapi-auth"))
-   *         .operation("getPetById")
-   *         .parameter("id", 123)
-   *     )
-   *   )
-   *   .build();
+   * .tasks(
+   * FuncDSL.call(
+   * "fetchPet",
+   * FuncDSL.openapi()
+   * .document("https://petstore.swagger.io/v2/swagger.json", DSL.auth("openapi-auth"))
+   * .operation("getPetById")
+   * .parameter("id", 123)
+   * )
+   * )
+   * .build();
    * }</pre>
    *
    * @param name task name, or {@code null} for an anonymous task
@@ -1060,10 +1087,10 @@ public final class FuncDSL {
    *
    * <pre>{@code
    * FuncDSL.call(
-   *   FuncDSL.openapi()
-   *     .document("https://petstore.swagger.io/v2/swagger.json", DSL.auth("openapi-auth"))
-   *     .operation("getPetById")
-   *     .parameter("id", 123)
+   * FuncDSL.openapi()
+   * .document("https://petstore.swagger.io/v2/swagger.json", DSL.auth("openapi-auth"))
+   * .operation("getPetById")
+   * .parameter("id", 123)
    * );
    * }</pre>
    *
@@ -1095,10 +1122,10 @@ public final class FuncDSL {
    *
    * <pre>{@code
    * FuncDSL.call(
-   *   FuncDSL.http()
-   *     .GET()
-   *     .endpoint("http://service/api")
-   *     .acceptJSON()
+   * FuncDSL.http()
+   * .GET()
+   * .endpoint("http://service/api")
+   * .acceptJSON()
    * );
    * }</pre>
    *
@@ -1123,8 +1150,8 @@ public final class FuncDSL {
    *
    * <pre>{@code
    * FuncDSL.call(
-   *   FuncDSL.http("http://service/api", auth -> auth.use("my-auth"))
-   *     .GET()
+   * FuncDSL.http("http://service/api", auth -> auth.use("my-auth"))
+   * .GET()
    * );
    * }</pre>
    *
@@ -1152,9 +1179,9 @@ public final class FuncDSL {
    *
    * <pre>{@code
    * tasks(
-   *   FuncDSL.call(
-   *     FuncDSL.get("http://service/health")
-   *   )
+   * FuncDSL.call(
+   * FuncDSL.get("http://service/health")
+   * )
    * );
    * }</pre>
    *
@@ -1171,9 +1198,9 @@ public final class FuncDSL {
    *
    * <pre>{@code
    * tasks(
-   *   FuncDSL.call(
-   *     FuncDSL.get("checkHealth", "http://service/health")
-   *   )
+   * FuncDSL.call(
+   * FuncDSL.get("checkHealth", "http://service/health")
+   * )
    * );
    * }</pre>
    *
@@ -1191,9 +1218,9 @@ public final class FuncDSL {
    *
    * <pre>{@code
    * tasks(
-   *   FuncDSL.call(
-   *     FuncDSL.get("http://service/api/users", auth -> auth.use("user-service-auth"))
-   *   )
+   * FuncDSL.call(
+   * FuncDSL.get("http://service/api/users", auth -> auth.use("user-service-auth"))
+   * )
    * );
    * }</pre>
    *
@@ -1266,12 +1293,12 @@ public final class FuncDSL {
    *
    * <pre>{@code
    * tasks(
-   *   FuncDSL.call(
-   *     FuncDSL.post(
-   *       Map.of("name", "Ricardo"),
-   *       "http://service/api/users"
-   *     )
-   *   )
+   * FuncDSL.call(
+   * FuncDSL.post(
+   * Map.of("name", "Ricardo"),
+   * "http://service/api/users"
+   * )
+   * )
    * );
    * }</pre>
    *
