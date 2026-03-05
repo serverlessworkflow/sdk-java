@@ -52,6 +52,7 @@ public class TryExecutor extends RegularTaskExecutor<TryTask> {
   private final TaskExecutor<?> taskExecutor;
   private final Optional<TaskExecutor<?>> catchTaskExecutor;
   private final Optional<RetryExecutor> retryIntervalExecutor;
+  private final String errorVariable;
 
   public static class TryExecutorBuilder extends RegularTaskExecutorBuilder<TryTask> {
 
@@ -61,6 +62,7 @@ public class TryExecutor extends RegularTaskExecutor<TryTask> {
     private final TaskExecutor<?> taskExecutor;
     private final Optional<TaskExecutor<?>> catchTaskExecutor;
     private final Optional<RetryExecutor> retryIntervalExecutor;
+    private String errorVariable;
 
     protected TryExecutorBuilder(
         WorkflowMutablePosition position, TryTask task, WorkflowDefinition definition) {
@@ -73,8 +75,8 @@ public class TryExecutor extends RegularTaskExecutor<TryTask> {
           TaskExecutorHelper.createExecutorList(position, task.getTry(), definition);
       TryTaskCatch catchTask = task.getCatch();
       if (catchTask != null) {
+        this.errorVariable = catchTask.getAs();
         List<TaskItem> catchTaskDo = catchTask.getDo();
-
         this.catchTaskExecutor =
             catchTaskDo != null && !catchTaskDo.isEmpty()
                 ? Optional.of(
@@ -144,6 +146,7 @@ public class TryExecutor extends RegularTaskExecutor<TryTask> {
     this.taskExecutor = builder.taskExecutor;
     this.catchTaskExecutor = builder.catchTaskExecutor;
     this.retryIntervalExecutor = builder.retryIntervalExecutor;
+    this.errorVariable = builder.errorVariable;
   }
 
   @Override
@@ -168,9 +171,17 @@ public class TryExecutor extends RegularTaskExecutor<TryTask> {
       WorkflowException exception = (WorkflowException) e;
       CompletableFuture<WorkflowModel> completable =
           CompletableFuture.completedFuture(taskContext.rawOutput());
-      if (errorFilter.map(f -> f.test(exception.getWorkflowError())).orElse(true)
+      WorkflowError error = exception.getWorkflowError();
+      if (errorFilter.map(f -> f.test(error)).orElse(true)
           && WorkflowUtils.whenExceptTest(
-              whenFilter, exceptFilter, workflow, taskContext, taskContext.rawOutput())) {
+              whenFilter,
+              exceptFilter,
+              workflow,
+              taskContext,
+              workflow.definition().application().modelFactory().fromAny(error))) {
+        if (errorVariable != null) {
+          taskContext.variables().put(errorVariable, error);
+        }
         if (catchTaskExecutor.isPresent()) {
           completable =
               completable.thenCompose(
@@ -189,11 +200,10 @@ public class TryExecutor extends RegularTaskExecutor<TryTask> {
                               .orElse(CompletableFuture.failedFuture(e)))
                   .thenCompose(model -> doIt(workflow, taskContext, model));
         }
+        return completable;
       }
-      return completable;
-    } else {
-      return CompletableFuture.failedFuture(e);
     }
+    return CompletableFuture.failedFuture(e);
   }
 
   private static Optional<Predicate<WorkflowError>> buildErrorFilter(CatchErrors errors) {
@@ -207,7 +217,7 @@ public class TryExecutor extends RegularTaskExecutor<TryTask> {
         && (errorFilter.getStatus() <= 0 || error.status() == errorFilter.getStatus())
         && compareString(errorFilter.getInstance(), error.instance())
         && compareString(errorFilter.getTitle(), error.title())
-        && compareString(errorFilter.getDetails(), errorFilter.getDetails());
+        && compareString(errorFilter.getDetails(), error.details());
   }
 
   private static boolean compareString(String one, String other) {

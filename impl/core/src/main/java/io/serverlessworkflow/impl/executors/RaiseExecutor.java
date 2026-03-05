@@ -16,7 +16,9 @@
 package io.serverlessworkflow.impl.executors;
 
 import io.serverlessworkflow.api.types.Error;
+import io.serverlessworkflow.api.types.ErrorDetails;
 import io.serverlessworkflow.api.types.ErrorInstance;
+import io.serverlessworkflow.api.types.ErrorTitle;
 import io.serverlessworkflow.api.types.ErrorType;
 import io.serverlessworkflow.api.types.RaiseTask;
 import io.serverlessworkflow.api.types.RaiseTaskError;
@@ -25,6 +27,7 @@ import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowError;
+import io.serverlessworkflow.impl.WorkflowError.Builder;
 import io.serverlessworkflow.impl.WorkflowException;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowMutablePosition;
@@ -44,8 +47,8 @@ public class RaiseExecutor extends RegularTaskExecutor<RaiseTask> {
     private final BiFunction<WorkflowContext, TaskContext, WorkflowError> errorBuilder;
     private final WorkflowValueResolver<String> typeFilter;
     private final Optional<WorkflowValueResolver<String>> instanceFilter;
-    private final WorkflowValueResolver<String> titleFilter;
-    private final WorkflowValueResolver<String> detailFilter;
+    private final Optional<WorkflowValueResolver<String>> titleFilter;
+    private final Optional<WorkflowValueResolver<String>> detailFilter;
 
     protected RaiseExecutorBuilder(
         WorkflowMutablePosition position, RaiseTask task, WorkflowDefinition definition) {
@@ -57,30 +60,38 @@ public class RaiseExecutor extends RegularTaskExecutor<RaiseTask> {
               : findError(raiseError.getRaiseErrorReference());
       this.typeFilter = getTypeFunction(application, error.getType());
       this.instanceFilter = getInstanceFunction(application, error.getInstance());
+      ErrorTitle title = error.getTitle();
       this.titleFilter =
-          WorkflowUtils.buildStringFilter(
-              application,
-              error.getTitle().getExpressionErrorTitle(),
-              error.getTitle().getLiteralErrorTitle());
+          title == null
+              ? Optional.empty()
+              : Optional.of(
+                  WorkflowUtils.buildStringFilter(
+                      application, title.getExpressionErrorTitle(), title.getLiteralErrorTitle()));
+      ErrorDetails details = error.getDetail();
       this.detailFilter =
-          WorkflowUtils.buildStringFilter(
-              application,
-              error.getDetail().getExpressionErrorDetails(),
-              error.getTitle().getExpressionErrorTitle());
+          details == null
+              ? Optional.empty()
+              : Optional.of(
+                  WorkflowUtils.buildStringFilter(
+                      application,
+                      details.getExpressionErrorDetails(),
+                      details.getLiteralErrorDetails()));
       this.errorBuilder = (w, t) -> buildError(error, w, t);
     }
 
     private WorkflowError buildError(
         Error error, WorkflowContext context, TaskContext taskContext) {
-      return WorkflowError.error(
-              typeFilter.apply(context, taskContext, taskContext.input()), error.getStatus())
-          .instance(
-              instanceFilter
-                  .map(f -> f.apply(context, taskContext, taskContext.input()))
-                  .orElseGet(() -> taskContext.position().jsonPointer()))
-          .title(titleFilter.apply(context, taskContext, taskContext.input()))
-          .details(detailFilter.apply(context, taskContext, taskContext.input()))
-          .build();
+      Builder builder =
+          WorkflowError.error(
+                  typeFilter.apply(context, taskContext, taskContext.input()), error.getStatus())
+              .instance(
+                  instanceFilter
+                      .map(f -> f.apply(context, taskContext, taskContext.input()))
+                      .orElseGet(() -> taskContext.position().jsonPointer()));
+      titleFilter.ifPresent(f -> builder.title(f.apply(context, taskContext, taskContext.input())));
+      detailFilter.ifPresent(
+          f -> builder.details(f.apply(context, taskContext, taskContext.input())));
+      return builder.build();
     }
 
     private Optional<WorkflowValueResolver<String>> getInstanceFunction(

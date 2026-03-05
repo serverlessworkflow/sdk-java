@@ -121,4 +121,54 @@ public class RetryTimeoutTest {
             .orElseThrow();
     assertThat(result.get("message")).isEqualTo("Viva er Beti Balompie");
   }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "workflows-samples/try-catch-match-when.yaml",
+        "workflows-samples/try-catch-match-status.yaml",
+        "workflows-samples/try-catch-match-details.yaml"
+      })
+  void testDoesMatch(String path) throws IOException {
+    assertThat(
+            app.workflowDefinition(readWorkflowFromClasspath(path))
+                .instance(Map.of())
+                .start()
+                .join()
+                .asMap()
+                .map(m -> m.get("recovered"))
+                .orElseThrow())
+        .isEqualTo(true);
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "workflows-samples/try-catch-not-match-when.yaml",
+        "workflows-samples/try-catch-not-match-status.yaml",
+        "workflows-samples/try-catch-not-match-details.yaml"
+      })
+  void testDoesNotMatch(String path) {
+    assertThatThrownBy(
+            () ->
+                app.workflowDefinition(readWorkflowFromClasspath(path))
+                    .instance(Map.of())
+                    .start()
+                    .join())
+        .hasCauseInstanceOf(WorkflowException.class);
+  }
+
+  @Test
+  void testErrorVariable() throws IOException {
+    assertThat(
+            app.workflowDefinition(
+                    readWorkflowFromClasspath("workflows-samples/try-catch-error-variable.yaml"))
+                .instance(Map.of())
+                .start()
+                .join()
+                .asMap()
+                .map(m -> m.get("errorMessage"))
+                .orElseThrow())
+        .isEqualTo("Javierito was here!");
+  }
 }

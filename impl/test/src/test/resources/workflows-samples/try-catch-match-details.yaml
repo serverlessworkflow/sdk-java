@@ -1,0 +1,24 @@
+document:
+  dsl: '1.0.0'
+  namespace: test
+  name: try-catch-match-details
+  version: '0.1.0'
+do:
+  - attemptTask:
+      try:
+        - failingTask:
+            raise:
+              error:
+                type: https://example.com/errors/transient
+                status: 503
+                detail: Enforcement Failure - invalid email
+      catch:
+        errors:
+          with:
+            type: https://example.com/errors/transient
+            status: 503
+            details: Enforcement Failure - invalid email
+        do:
+          - handleError:
+              set:
+                recovered: true
