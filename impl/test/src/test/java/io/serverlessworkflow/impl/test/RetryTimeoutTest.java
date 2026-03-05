@@ -137,4 +137,18 @@ public class RetryTimeoutTest {
                     .join())
         .hasCauseInstanceOf(WorkflowException.class);
   }
+
+  @Test
+  void testErrorVariable() throws IOException {
+    assertThat(
+            app.workflowDefinition(
+                    readWorkflowFromClasspath("workflows-samples/try-catch-error-variable.yaml"))
+                .instance(Map.of())
+                .start()
+                .join()
+                .asMap()
+                .map(m -> m.get("errorMessage"))
+                .orElseThrow())
+        .isEqualTo("Javierito was here!");
+  }
 }

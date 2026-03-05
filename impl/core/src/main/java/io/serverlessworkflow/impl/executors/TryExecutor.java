@@ -52,6 +52,7 @@ public class TryExecutor extends RegularTaskExecutor<TryTask> {
   private final TaskExecutor<?> taskExecutor;
   private final Optional<TaskExecutor<?>> catchTaskExecutor;
   private final Optional<RetryExecutor> retryIntervalExecutor;
+  private final String errorVariable;
 
   public static class TryExecutorBuilder extends RegularTaskExecutorBuilder<TryTask> {
 
@@ -61,6 +62,7 @@ public class TryExecutor extends RegularTaskExecutor<TryTask> {
     private final TaskExecutor<?> taskExecutor;
     private final Optional<TaskExecutor<?>> catchTaskExecutor;
     private final Optional<RetryExecutor> retryIntervalExecutor;
+    private String errorVariable;
 
     protected TryExecutorBuilder(
         WorkflowMutablePosition position, TryTask task, WorkflowDefinition definition) {
@@ -73,8 +75,8 @@ public class TryExecutor extends RegularTaskExecutor<TryTask> {
           TaskExecutorHelper.createExecutorList(position, task.getTry(), definition);
       TryTaskCatch catchTask = task.getCatch();
       if (catchTask != null) {
+        this.errorVariable = catchTask.getAs();
         List<TaskItem> catchTaskDo = catchTask.getDo();
-
         this.catchTaskExecutor =
             catchTaskDo != null && !catchTaskDo.isEmpty()
                 ? Optional.of(
@@ -144,6 +146,7 @@ public class TryExecutor extends RegularTaskExecutor<TryTask> {
     this.taskExecutor = builder.taskExecutor;
     this.catchTaskExecutor = builder.catchTaskExecutor;
     this.retryIntervalExecutor = builder.retryIntervalExecutor;
+    this.errorVariable = builder.errorVariable;
   }
 
   @Override
@@ -171,6 +174,9 @@ public class TryExecutor extends RegularTaskExecutor<TryTask> {
       if (errorFilter.map(f -> f.test(exception.getWorkflowError())).orElse(true)
           && WorkflowUtils.whenExceptTest(
               whenFilter, exceptFilter, workflow, taskContext, taskContext.rawOutput())) {
+        if (errorVariable != null) {
+          taskContext.variables().put(errorVariable, exception.getWorkflowError());
+        }
         if (catchTaskExecutor.isPresent()) {
           completable =
               completable.thenCompose(
