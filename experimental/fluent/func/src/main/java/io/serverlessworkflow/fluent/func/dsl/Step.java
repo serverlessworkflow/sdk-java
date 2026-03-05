@@ -97,45 +97,134 @@ abstract class Step<SELF extends Step<SELF, B>, B> implements FuncTaskConfigurer
   // FuncTaskTransformations passthroughs: EXPORT (fn/context/filter + JQ)
   // ---------------------------------------------------------------------------
 
-  /** Queue {@code exportAs(fn)} to be applied later. */
+  /**
+   * Shapes what the task exports for downstream consumers using a Java function.
+   *
+   * <p>This method queues an {@code exportAs} transformation to be applied when the step is built.
+   * It allows chaining transformations in a fluent manner.
+   *
+   * <p>{@code exportAs} controls what the task <strong>exports</strong> for downstream consumers
+   * (the next task, events, etc.) without immediately updating global workflow data.
+   *
+   * <p><strong>Example:</strong>
+   *
+   * <pre>{@code
+   * agent("draftNewsletter", drafter::draft, Draft.class)
+   *     .exportAs(draft -> Map.of("draftText", draft.text()))
+   *     .when(condition);
+   * }</pre>
+   *
+   * @param <T> the task result type
+   * @param <V> the export type (what gets forwarded to the next step)
+   * @param function the transformation function
+   * @return this step for method chaining
+   * @see io.serverlessworkflow.fluent.func.spi.FuncTaskTransformations#exportAs(Function)
+   */
   public <T, V> SELF exportAs(Function<T, V> function) {
     postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).exportAs(function));
     return self();
   }
 
-  /** Queue {@code exportAs(fn, argClass)} to be applied later. */
-  public <T, V> SELF exportAs(Function<T, V> function, Class<T> argClass) {
-    postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).exportAs(function, argClass));
+  /**
+   * Shapes what the task exports for downstream consumers using a Java function with explicit input
+   * type.
+   *
+   * <p>This variant allows you to explicitly specify the input type class for better type safety.
+   *
+   * @param <T> the task result type
+   * @param <V> the export type (what gets forwarded to the next step)
+   * @param function the transformation function
+   * @param taskResultClass the class of the task result type
+   * @return this step for method chaining
+   * @see io.serverlessworkflow.fluent.func.spi.FuncTaskTransformations#exportAs(Function, Class)
+   */
+  public <T, V> SELF exportAs(Function<T, V> function, Class<T> taskResultClass) {
+    postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).exportAs(function, taskResultClass));
     return self();
   }
 
-  /** Queue {@code exportAs(filterFn)} to be applied later. */
+  /**
+   * Shapes what the task exports for downstream consumers using a context-aware filter function.
+   *
+   * <p>This variant provides access to both workflow and task context, allowing you to inspect
+   * metadata when shaping the export.
+   *
+   * @param <T> the task result type
+   * @param <V> the export type (what gets forwarded to the next step)
+   * @param function the filter function with workflow and task context
+   * @return this step for method chaining
+   * @see io.serverlessworkflow.fluent.func.spi.FuncTaskTransformations#exportAs(JavaFilterFunction)
+   */
   public <T, V> SELF exportAs(JavaFilterFunction<T, V> function) {
     postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).exportAs(function));
     return self();
   }
 
-  /** Queue {@code exportAs(filterFn, argClass)} to be applied later. */
-  public <T, V> SELF exportAs(JavaFilterFunction<T, V> function, Class<T> argClass) {
-    postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).exportAs(function, argClass));
+  /**
+   * Shapes what the task exports for downstream consumers using a context-aware filter function
+   * with explicit input type.
+   *
+   * @param <T> the task result type
+   * @param <V> the export type (what gets forwarded to the next step)
+   * @param function the filter function with workflow and task context
+   * @param taskResultClass the class of the task result type
+   * @return this step for method chaining
+   * @see io.serverlessworkflow.fluent.func.spi.FuncTaskTransformations#exportAs(JavaFilterFunction,
+   *     Class)
+   */
+  public <T, V> SELF exportAs(JavaFilterFunction<T, V> function, Class<T> taskResultClass) {
+    postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).exportAs(function, taskResultClass));
     return self();
   }
 
-  /** Queue {@code exportAs(ctxFn)} to be applied later. */
+  /**
+   * Shapes what the task exports for downstream consumers using a context-aware function.
+   *
+   * <p>This variant provides access to workflow context, allowing you to inspect workflow metadata
+   * when shaping the export.
+   *
+   * @param <T> the task result type
+   * @param <V> the export type (what gets forwarded to the next step)
+   * @param function the context function with workflow context
+   * @return this step for method chaining
+   * @see io.serverlessworkflow.fluent.func.spi.FuncTaskTransformations#exportAs(JavaContextFunction)
+   */
   public <T, V> SELF exportAs(JavaContextFunction<T, V> function) {
     postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).exportAs(function));
     return self();
   }
 
-  /** Queue {@code exportAs(ctxFn, argClass)} to be applied later. */
-  public <T, V> SELF exportAs(JavaContextFunction<T, V> function, Class<T> argClass) {
-    postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).exportAs(function, argClass));
+  /**
+   * Shapes what the task exports for downstream consumers using a context-aware function with
+   * explicit input type.
+   *
+   * @param <T> the task result type
+   * @param <V> the export type (what gets forwarded to the next step)
+   * @param function the context function with workflow context
+   * @param taskResultClass the class of the task result type
+   * @return this step for method chaining
+   * @see io.serverlessworkflow.fluent.func.spi.FuncTaskTransformations#exportAs(JavaContextFunction,
+   *     Class)
+   */
+  public <T, V> SELF exportAs(JavaContextFunction<T, V> function, Class<T> taskResultClass) {
+    postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).exportAs(function, taskResultClass));
     return self();
   }
 
   /**
-   * Queue {@code exportAs(jqExpression)} (JQ string) to be applied later. Example: {@code
-   * exportAs(FuncDSL.selectFirstStringify())}
+   * Shapes what the task exports for downstream consumers using a JQ expression.
+   *
+   * <p>This variant allows you to use JQ expressions to transform the task result before it's
+   * forwarded to the next step or event.
+   *
+   * <p><strong>Example:</strong>
+   *
+   * <pre>{@code
+   * exportAs("$.username")
+   * }</pre>
+   *
+   * @param jqExpression the JQ expression to transform the export
+   * @return this step for method chaining
    */
   public SELF exportAs(String jqExpression) {
     postConfigurers.add(b -> ((TaskBaseBuilder<?>) b).exportAs(jqExpression));
@@ -146,45 +235,152 @@ abstract class Step<SELF extends Step<SELF, B>, B> implements FuncTaskConfigurer
   // FuncTaskTransformations passthroughs: OUTPUT (fn/context/filter + JQ)
   // ---------------------------------------------------------------------------
 
-  /** Queue {@code outputAs(fn)} to be applied later. */
+  /**
+   * Shapes what gets written back into the workflow data document using a Java function.
+   *
+   * <p>This method queues an {@code outputAs} transformation to be applied when the step is built.
+   * It allows chaining transformations in a fluent manner.
+   *
+   * <p>{@code outputAs} controls what gets written back into the workflow data document. Use this
+   * when you want to rename fields, drop internal details, or construct a composite DTO.
+   *
+   * <p><strong>Example:</strong>
+   *
+   * <pre>{@code
+   * agent("investmentAnalyst", analyst::analyse, InvestmentMemo.class)
+   *     .outputAs(memo -> Map.of("memo", memo))
+   *     .when(condition);
+   * }</pre>
+   *
+   * @param <T> the task result type
+   * @param <V> the output type (what gets written to workflow data)
+   * @param function the transformation function
+   * @return this step for method chaining
+   * @see io.serverlessworkflow.fluent.func.spi.FuncTransformations#outputAs(Function)
+   */
   public <T, V> SELF outputAs(Function<T, V> function) {
     postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).outputAs(function));
     return self();
   }
 
-  /** Queue {@code outputAs(fn, argClass)} to be applied later. */
-  public <T, V> SELF outputAs(Function<T, V> function, Class<T> argClass) {
-    postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).outputAs(function, argClass));
+  /**
+   * Shapes what gets written back into the workflow data document using a Java function with
+   * explicit input type.
+   *
+   * <p>This variant allows you to explicitly specify the input type class for better type safety.
+   *
+   * @param <T> the task result type
+   * @param <V> the output type (what gets written to workflow data)
+   * @param function the transformation function
+   * @param taskResultClass the class of the task result type
+   * @return this step for method chaining
+   * @see io.serverlessworkflow.fluent.func.spi.FuncTransformations#outputAs(Function, Class)
+   */
+  public <T, V> SELF outputAs(Function<T, V> function, Class<T> taskResultClass) {
+    postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).outputAs(function, taskResultClass));
     return self();
   }
 
-  /** Queue {@code outputAs(filterFn)} to be applied later. */
+  /**
+   * Shapes what gets written back into the workflow data document using a context-aware filter
+   * function.
+   *
+   * <p>This variant provides access to both workflow and task context, allowing you to inspect
+   * metadata, task input, and raw output when shaping the committed output.
+   *
+   * <p><strong>Example:</strong>
+   *
+   * <pre>{@code
+   * get("fetchMarketData", "http://localhost:8081/market-data/{ticker}")
+   *     .outputAs((MarketDataSnapshot snapshot,
+   *                WorkflowContextData wf,
+   *                TaskContextData task) -> {
+   *         var input = task.input().asMap().orElseThrow();
+   *         var rawBody = task.rawOutput().asText().orElseThrow();
+   *         return new InvestmentPrompt(
+   *             snapshot.ticker(),
+   *             input.get("objective").toString(),
+   *             rawBody
+   *         );
+   *     }, MarketDataSnapshot.class);
+   * }</pre>
+   *
+   * @param <T> the task result type
+   * @param <V> the output type (what gets written to workflow data)
+   * @param function the filter function with workflow and task context
+   * @return this step for method chaining
+   * @see io.serverlessworkflow.fluent.func.spi.FuncTransformations#outputAs(JavaFilterFunction)
+   */
   public <T, V> SELF outputAs(JavaFilterFunction<T, V> function) {
     postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).outputAs(function));
     return self();
   }
 
-  /** Queue {@code outputAs(filterFn, argClass)} to be applied later. */
-  public <T, V> SELF outputAs(JavaFilterFunction<T, V> function, Class<T> argClass) {
-    postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).outputAs(function, argClass));
+  /**
+   * Shapes what gets written back into the workflow data document using a context-aware filter
+   * function with explicit input type.
+   *
+   * @param <T> the task result type
+   * @param <V> the output type (what gets written to workflow data)
+   * @param function the filter function with workflow and task context
+   * @param taskResultClass the class of the task result type
+   * @return this step for method chaining
+   * @see io.serverlessworkflow.fluent.func.spi.FuncTransformations#outputAs(JavaFilterFunction,
+   *     Class)
+   */
+  public <T, V> SELF outputAs(JavaFilterFunction<T, V> function, Class<T> taskResultClass) {
+    postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).outputAs(function, taskResultClass));
     return self();
   }
 
-  /** Queue {@code outputAs(ctxFn)} to be applied later. */
+  /**
+   * Shapes what gets written back into the workflow data document using a context-aware function.
+   *
+   * <p>This variant provides access to workflow context, allowing you to inspect workflow metadata
+   * when shaping the committed output.
+   *
+   * @param <T> the task result type
+   * @param <V> the output type (what gets written to workflow data)
+   * @param function the context function with workflow context
+   * @return this step for method chaining
+   * @see io.serverlessworkflow.fluent.func.spi.FuncTransformations#outputAs(JavaContextFunction)
+   */
   public <T, V> SELF outputAs(JavaContextFunction<T, V> function) {
     postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).outputAs(function));
     return self();
   }
 
-  /** Queue {@code outputAs(ctxFn, argClass)} to be applied later. */
+  /**
+   * Shapes what gets written back into the workflow data document using a context-aware function
+   * with explicit input type.
+   *
+   * @param <T> the task result type
+   * @param <V> the output type (what gets written to workflow data)
+   * @param function the context function with workflow context
+   * @param argClass the class of the task result type
+   * @return this step for method chaining
+   * @see io.serverlessworkflow.fluent.func.spi.FuncTransformations#outputAs(JavaContextFunction,
+   *     Class)
+   */
   public <T, V> SELF outputAs(JavaContextFunction<T, V> function, Class<T> argClass) {
     postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).outputAs(function, argClass));
     return self();
   }
 
   /**
-   * Queue {@code outputAs(jqExpression)} (JQ string) to be applied later. Example: {@code
-   * outputAs(FuncDSL.selectFirstStringify())}
+   * Shapes what gets written back into the workflow data document using a JQ expression.
+   *
+   * <p>This variant allows you to use JQ expressions to project the task result into the workflow
+   * data.
+   *
+   * <p><strong>Example:</strong>
+   *
+   * <pre>{@code
+   * outputAs("$.username")
+   * }</pre>
+   *
+   * @param jqExpression the JQ expression to transform the output
+   * @return this step for method chaining
    */
   public SELF outputAs(String jqExpression) {
     postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).outputAs(jqExpression));
@@ -195,45 +391,166 @@ abstract class Step<SELF extends Step<SELF, B>, B> implements FuncTaskConfigurer
   // FuncTaskTransformations passthroughs: INPUT (fn/context/filter + JQ)
   // ---------------------------------------------------------------------------
 
-  /** Queue {@code inputFrom(fn)} to be applied later. */
+  /**
+   * Shapes the task input using a Java function.
+   *
+   * <p>This method queues an {@code inputFrom} transformation to be applied when the step is built.
+   * It allows chaining transformations in a fluent manner.
+   *
+   * <p>Without transformations, a task sees the <strong>whole workflow data</strong> as its input.
+   * Use {@code inputFrom} to give it a smaller, focused view.
+   *
+   * <p><strong>Example:</strong>
+   *
+   * <pre>{@code
+   * function(...)
+   *     .inputFrom((MyData data) -> Map.of("seed", data.seed()));
+   * }</pre>
+   *
+   * @param <T> the input type (workflow data or task input)
+   * @param <V> the result type (what the task will see as input)
+   * @param function the transformation function
+   * @return this step for method chaining
+   * @see io.serverlessworkflow.fluent.func.spi.FuncTransformations#inputFrom(Function)
+   */
   public <T, V> SELF inputFrom(Function<T, V> function) {
     postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).inputFrom(function));
     return self();
   }
 
-  /** Queue {@code inputFrom(fn, argClass)} to be applied later. */
-  public <T, V> SELF inputFrom(Function<T, V> function, Class<T> argClass) {
-    postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).inputFrom(function, argClass));
+  /**
+   * Shapes the task input using a Java function with explicit input type.
+   *
+   * <p>This variant allows you to explicitly specify the input type class for better type safety.
+   *
+   * <p><strong>Example:</strong>
+   *
+   * <pre>{@code
+   * inputFrom((InvestmentRequest in) ->
+   *         Map.of("ticker", in.ticker().toUpperCase()),
+   *     InvestmentRequest.class);
+   * }</pre>
+   *
+   * @param <T> the input type (workflow data or task input)
+   * @param <V> the result type (what the task will see as input)
+   * @param function the transformation function
+   * @param inputClass the class of the input type
+   * @return this step for method chaining
+   * @see io.serverlessworkflow.fluent.func.spi.FuncTransformations#inputFrom(Function, Class)
+   */
+  public <T, V> SELF inputFrom(Function<T, V> function, Class<T> inputClass) {
+    postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).inputFrom(function, inputClass));
     return self();
   }
 
-  /** Queue {@code inputFrom(filterFn)} to be applied later. */
+  /**
+   * Shapes the task input using a context-aware filter function with access to workflow and task
+   * context.
+   *
+   * <p>This variant provides access to both the workflow context ({@code WorkflowContextData}) and
+   * task context ({@code TaskContextData}), allowing you to inspect workflow metadata, task
+   * position, and other contextual information.
+   *
+   * <p><strong>Example:</strong>
+   *
+   * <pre>{@code
+   * inputFrom((InvestmentRequest in,
+   *            WorkflowContextData wf,
+   *            TaskContextData task) -> Map.of(
+   *         "ticker", in.ticker(),
+   *         "objective", in.objective(),
+   *         "taskPos", task.position().jsonPointer() // e.g. /do/0/task
+   *     ));
+   * }</pre>
+   *
+   * @param <T> the input type (workflow data or task input)
+   * @param <V> the result type (what the task will see as input)
+   * @param function the filter function with workflow and task context
+   * @return this step for method chaining
+   * @see io.serverlessworkflow.fluent.func.spi.FuncTransformations#inputFrom(JavaFilterFunction)
+   */
   public <T, V> SELF inputFrom(JavaFilterFunction<T, V> function) {
     postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).inputFrom(function));
     return self();
   }
 
-  /** Queue {@code inputFrom(filterFn, argClass)} to be applied later. */
-  public <T, V> SELF inputFrom(JavaFilterFunction<T, V> function, Class<T> argClass) {
-    postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).inputFrom(function, argClass));
+  /**
+   * Shapes the task input using a context-aware filter function with explicit input type.
+   *
+   * <p>This variant combines the benefits of {@link #inputFrom(JavaFilterFunction)} with explicit
+   * type specification.
+   *
+   * @param <T> the input type (workflow data or task input)
+   * @param <V> the result type (what the task will see as input)
+   * @param function the filter function with workflow and task context
+   * @param inputClass the class of the input type
+   * @return this step for method chaining
+   * @see io.serverlessworkflow.fluent.func.spi.FuncTransformations#inputFrom(JavaFilterFunction,
+   *     Class)
+   */
+  public <T, V> SELF inputFrom(JavaFilterFunction<T, V> function, Class<T> inputClass) {
+    postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).inputFrom(function, inputClass));
     return self();
   }
 
-  /** Queue {@code inputFrom(ctxFn)} to be applied later. */
+  /**
+   * Shapes the task input using a context-aware function with access to workflow context.
+   *
+   * <p>This variant provides access to the workflow context ({@code WorkflowContextData}),
+   * allowing you to inspect workflow metadata and current data.
+   *
+   * @param <T> the input type (workflow data or task input)
+   * @param <V> the result type (what the task will see as input)
+   * @param function the context function with workflow context
+   * @return this step for method chaining
+   * @see io.serverlessworkflow.fluent.func.spi.FuncTransformations#inputFrom(JavaContextFunction)
+   */
   public <T, V> SELF inputFrom(JavaContextFunction<T, V> function) {
     postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).inputFrom(function));
     return self();
   }
 
-  /** Queue {@code inputFrom(ctxFn, argClass)} to be applied later. */
-  public <T, V> SELF inputFrom(JavaContextFunction<T, V> function, Class<T> argClass) {
-    postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).inputFrom(function, argClass));
+  /**
+   * Shapes the task input using a context-aware function with explicit input type.
+   *
+   * <p>This variant combines the benefits of {@link #inputFrom(JavaContextFunction)} with explicit
+   * type specification.
+   *
+   * @param <T> the input type (workflow data or task input)
+   * @param <V> the result type (what the task will see as input)
+   * @param function the context function with workflow context
+   * @param inputClass the class of the input type
+   * @return this step for method chaining
+   * @see io.serverlessworkflow.fluent.func.spi.FuncTransformations#inputFrom(JavaContextFunction,
+   *     Class)
+   */
+  public <T, V> SELF inputFrom(JavaContextFunction<T, V> function, Class<T> inputClass) {
+    postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).inputFrom(function, inputClass));
     return self();
   }
 
   /**
-   * Queue {@code inputFrom(jqExpression)} (JQ string) to be applied later. Example: {@code
-   * inputFrom(".payload")}
+   * Shapes the task input using a JQ expression.
+   *
+   * <p>This variant allows you to use JQ expressions to slice and transform the workflow data
+   * before it reaches the task.
+   *
+   * <p><strong>Example:</strong>
+   *
+   * <pre>{@code
+   * // Only pass the "seed" field into this task:
+   * function(...)
+   *     .inputFrom("$.seed");
+   * }</pre>
+   *
+   * <p>Or using a helper:
+   *
+   * <pre>{@code
+   * inputFrom(".payload")
+   * }</pre>
+   *
+   * @param jqExpression the JQ expression to transform the input
+   * @return this step for method chaining
    */
   public SELF inputFrom(String jqExpression) {
     postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).inputFrom(jqExpression));
