@@ -171,11 +171,16 @@ public class TryExecutor extends RegularTaskExecutor<TryTask> {
       WorkflowException exception = (WorkflowException) e;
       CompletableFuture<WorkflowModel> completable =
           CompletableFuture.completedFuture(taskContext.rawOutput());
-      if (errorFilter.map(f -> f.test(exception.getWorkflowError())).orElse(true)
+      WorkflowError error = exception.getWorkflowError();
+      if (errorFilter.map(f -> f.test(error)).orElse(true)
           && WorkflowUtils.whenExceptTest(
-              whenFilter, exceptFilter, workflow, taskContext, taskContext.rawOutput())) {
+              whenFilter,
+              exceptFilter,
+              workflow,
+              taskContext,
+              workflow.definition().application().modelFactory().fromAny(error))) {
         if (errorVariable != null) {
-          taskContext.variables().put(errorVariable, exception.getWorkflowError());
+          taskContext.variables().put(errorVariable, error);
         }
         if (catchTaskExecutor.isPresent()) {
           completable =

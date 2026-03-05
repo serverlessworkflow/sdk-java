@@ -1,7 +1,7 @@
 document:
   dsl: '1.0.0'
   namespace: test
-  name: try-catch-not-match
+  name: try-catch-match-when
   version: '0.1.0'
 do:
   - attemptTask:
@@ -12,7 +12,7 @@ do:
                           type: https://example.com/errors/transient
                           status: 503
       catch:
-          when: ${ .status == 400 }
+          when: ${ .status == 503 }
           do:
               - handleError:
                       set:

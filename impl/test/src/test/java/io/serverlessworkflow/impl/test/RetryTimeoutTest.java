@@ -125,7 +125,27 @@ public class RetryTimeoutTest {
   @ParameterizedTest
   @ValueSource(
       strings = {
-        "workflows-samples/try-catch-not-match.yaml",
+        "workflows-samples/try-catch-match-when.yaml",
+        "workflows-samples/try-catch-match-status.yaml",
+        "workflows-samples/try-catch-match-details.yaml"
+      })
+  void testDoesMatch(String path) throws IOException {
+    assertThat(
+            app.workflowDefinition(readWorkflowFromClasspath(path))
+                .instance(Map.of())
+                .start()
+                .join()
+                .asMap()
+                .map(m -> m.get("recovered"))
+                .orElseThrow())
+        .isEqualTo(true);
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "workflows-samples/try-catch-not-match-when.yaml",
+        "workflows-samples/try-catch-not-match-status.yaml",
         "workflows-samples/try-catch-not-match-details.yaml"
       })
   void testDoesNotMatch(String path) {

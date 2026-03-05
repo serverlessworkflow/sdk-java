@@ -6,16 +6,15 @@ document:
 do:
     - attemptTask:
         try:
-            - failingTask:
-                    raise:
-                        error:
-                            type: https://example.com/errors/security
-                            status: 403
-                            detail: Enforcement Failure - invalid email
+          - failingTask:
+              raise:
+                error:
+                    type: https://example.com/errors/security
+                    status: 403
+                    detail: Enforcement Failure - invalid email
         catch:
             errors:
                 with:
                     type: https://example.com/errors/security
                     status: 403
                     details: User not found in tenant catalog
- 
