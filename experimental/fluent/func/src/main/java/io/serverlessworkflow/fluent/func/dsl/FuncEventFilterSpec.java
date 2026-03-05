@@ -15,7 +15,7 @@
  */
 package io.serverlessworkflow.fluent.func.dsl;
 
-import io.cloudevents.CloudEventData;
+import io.cloudevents.CloudEvent;
 import io.serverlessworkflow.fluent.func.FuncEventFilterBuilder;
 import io.serverlessworkflow.fluent.func.FuncEventPropertiesBuilder;
 import io.serverlessworkflow.fluent.spec.dsl.AbstractEventFilterSpec;
@@ -34,8 +34,17 @@ public final class FuncEventFilterSpec
    * Configures the filter to match incoming event data based on a Predicate. This is the Listen
    * counterpart to Emit's jsonData(Function).
    */
-  public FuncEventFilterSpec dataMatches(Predicate<CloudEventData> predicate) {
+  public FuncEventFilterSpec dataMatches(Predicate<CloudEvent> predicate) {
     addPropertyStep(e -> e.data(predicate));
+    return this;
+  }
+
+  public FuncEventFilterSpec onThisInstance(String extensionName) {
+    return this;
+  }
+
+  public FuncEventFilterSpec byExtension(String extensionName, String extensionValue) {
+    addPropertyStep(e -> e.raw(ce -> ce.getExtension(extensionName) == extensionValue));
     return this;
   }
 }

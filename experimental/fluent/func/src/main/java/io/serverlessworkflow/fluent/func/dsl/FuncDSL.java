@@ -174,6 +174,10 @@ public final class FuncDSL {
     return new FuncListenSpec().one(consumed(type));
   }
 
+  public static FuncListenSpec toOne(FuncEventFilterSpec filter) {
+    return new FuncListenSpec().one(filter);
+  }
+
   /**
    * Convenience to listen for all the given event types (logical AND).
    *
