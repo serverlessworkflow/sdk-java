@@ -17,6 +17,7 @@ package io.serverlessworkflow.fluent.func;
 
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.call;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.consume;
+import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.consumed;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.emit;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.function;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.get;
@@ -24,14 +25,17 @@ import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.http;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.listen;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.produced;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.switchWhenOrElse;
+import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.to;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.toOne;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.use;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 import io.serverlessworkflow.api.types.CallHTTP;
+import io.serverlessworkflow.api.types.EventFilter;
 import io.serverlessworkflow.api.types.Export;
 import io.serverlessworkflow.api.types.FlowDirectiveEnum;
 import io.serverlessworkflow.api.types.Task;
@@ -136,7 +140,7 @@ class FuncDSLTest {
   }
 
   @Test
-  @DisplayName("emit(consumed(type, fn)).when(...) -> still an EmitTask and builds")
+  @DisplayName("emit(produced(type, fn)).when(...) -> still an EmitTask and builds")
   void emit_step_when_compiles_and_builds() {
     Workflow wf =
         FuncWorkflowBuilder.workflow("step-emit-when")
@@ -173,6 +177,49 @@ class FuncDSLTest {
     assertNotNull(
         ((CallJava) t0.getCallTask().get()).getExport(), "function step should carry export");
     assertNotNull(t2.getListenTask().getExport(), "listen step should carry export");
+  }
+
+  @Test
+  @DisplayName("listen with consumed().correlate() populates EventFilter correlation properties")
+  void listen_with_consumed_and_correlate_populates_event_filter() {
+    Workflow wf =
+        FuncWorkflowBuilder.workflow("listen-correlate")
+            .tasks(
+                listen(
+                    "waitPayment",
+                    to().all(
+                            consumed("org.acme.payment.success")
+                                .correlate("orderId", c -> c.from("${ .orderId }")))))
+            .build();
+
+    List<TaskItem> items = wf.getDo();
+    assertEquals(1, items.size());
+
+    Task t = items.get(0).getTask();
+    assertNotNull(t.getListenTask(), "ListenTask expected");
+
+    // Retrieve the generated filter. Assuming typical generated API classes where
+    // ListenTask has a 'with' property containing the 'one' filter.
+    List<EventFilter> filter =
+        t.getListenTask().getListen().getTo().getAllEventConsumptionStrategy().getAll();
+    assertNotNull(filter, "EventFilter should be populated by the 'all' strategy");
+    assertFalse(filter.isEmpty());
+
+    // Assert the properties map
+    assertEquals(
+        "org.acme.payment.success",
+        filter.get(0).getWith().getType(),
+        "CloudEvent type should match");
+
+    // Assert the correlation structure we built
+    assertNotNull(filter.get(0).getCorrelate(), "Correlate block should be generated");
+    assertNotNull(
+        filter.get(0).getCorrelate().getAdditionalProperties().get("orderId"),
+        "Correlation should contain 'orderId' key");
+    assertEquals(
+        "${ .orderId }",
+        filter.get(0).getCorrelate().getAdditionalProperties().get("orderId").getFrom(),
+        "Correlation should contain 'orderId' key");
   }
 
   @Test
