@@ -534,7 +534,8 @@ public final class FuncDSL {
    * @param <R> output type
    * @return a named call step
    */
-  public static <T, R> FuncCallStep<T, R> function(String name, Function<T, R> fn, Class<T> inputClass) {
+  public static <T, R> FuncCallStep<T, R> function(
+      String name, Function<T, R> fn, Class<T> inputClass) {
     return new FuncCallStep<>(name, fn, inputClass);
   }
 
@@ -624,7 +625,8 @@ public final class FuncDSL {
    * @param <T> input type
    * @return an {@link EmitStep}
    */
-  public static <T> EmitStep emit(String type, Function<T, byte[]> serializer, Class<T> inputClass) {
+  public static <T> EmitStep emit(
+      String type, Function<T, byte[]> serializer, Class<T> inputClass) {
     return new EmitStep(null, eventBytes(type, serializer, inputClass));
   }
 
