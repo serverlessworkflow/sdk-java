@@ -18,7 +18,6 @@ package io.serverlessworkflow.impl.test.junit;
 import static io.serverlessworkflow.impl.test.junit.BinaryCheckUtil.isBinaryAvailable;
 
 import com.github.os72.protocjar.Protoc;
-import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.extension.ConditionEvaluationResult;
 import org.junit.jupiter.api.extension.ExecutionCondition;
 import org.junit.jupiter.api.extension.ExtensionContext;
@@ -26,41 +25,29 @@ import org.junit.platform.commons.util.AnnotationUtils;
 
 public class ProtocCheckCondition implements ExecutionCondition {
 
-  private static final AtomicReference<Boolean> protocAvailable = new AtomicReference<>(null);
+  private static boolean protocAvailable = false;
+
+  static {
+    try {
+      protocAvailable = Protoc.runProtoc(new String[] {"--version"}) == 0;
+    } catch (Exception e) {
+      // ignore
+    }
+    if (!protocAvailable) {
+      protocAvailable = isBinaryAvailable("protoc", "--version");
+    }
+  }
 
   @Override
   public ConditionEvaluationResult evaluateExecutionCondition(ExtensionContext context) {
     return AnnotationUtils.findAnnotation(context.getElement(), DisabledIfProtocUnavailable.class)
         .map(
-            annotation -> {
-              if (isProtocAvailable()) {
-                return ConditionEvaluationResult.enabled(
-                    "Protoc is available for the current platform.");
-              } else {
-                return ConditionEvaluationResult.disabled(
-                    "Test disabled: Protoc not currently available not found.");
-              }
-            })
+            annotation ->
+                protocAvailable
+                    ? ConditionEvaluationResult.enabled(
+                        "Protoc is available for the current platform.")
+                    : ConditionEvaluationResult.disabled(
+                        "Test disabled: Protoc not currently available not found."))
         .orElse(ConditionEvaluationResult.enabled("No @DisabledIfProtocUnavailable found."));
-  }
-
-  private boolean isProtocAvailable() {
-    Boolean cached = protocAvailable.get();
-    if (cached != null) {
-      return cached;
-    }
-
-    boolean found = false;
-    try {
-      if (Protoc.runProtoc(new String[] {"--version"}) == 0) found = true;
-    } catch (Exception e) {
-      // ignore
-    }
-
-    if (!found) found = isBinaryAvailable("protoc", "--version");
-
-    protocAvailable.compareAndSet(null, found);
-
-    return protocAvailable.get();
   }
 }

@@ -22,31 +22,31 @@ import java.util.concurrent.TimeUnit;
 
 public final class BinaryCheckUtil {
 
-  private BinaryCheckUtil() {}
-
   private static final ConcurrentMap<String, Boolean> BINARY_CHECKS = new ConcurrentHashMap<>();
+
+  private BinaryCheckUtil() {}
 
   public static boolean isBinaryAvailable(String... command) {
     return BINARY_CHECKS.computeIfAbsent(
         String.join(" ", command),
         __ -> {
+          Process process;
           try {
-            Process process =
+            process =
                 new ProcessBuilder(command)
                     .redirectErrorStream(true)
                     .redirectOutput(ProcessBuilder.Redirect.DISCARD)
                     .start();
-            boolean finished = process.waitFor(2, TimeUnit.SECONDS);
-            if (finished) {
-              return process.exitValue() == 0;
-            }
+          } catch (IOException e) {
+            return false;
+          }
+          try {
+            return process.waitFor(2, TimeUnit.SECONDS) && process.exitValue() == 0;
+          } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return false;
+          } finally {
             process.destroyForcibly();
-            return false;
-          } catch (IOException | InterruptedException e) {
-            if (e instanceof InterruptedException) {
-              Thread.currentThread().interrupt();
-            }
-            return false;
           }
         });
   }
