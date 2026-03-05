@@ -17,16 +17,12 @@ package io.serverlessworkflow.impl.test.junit;
 
 import static io.serverlessworkflow.impl.test.junit.BinaryCheckUtil.isBinaryAvailable;
 
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import org.junit.jupiter.api.extension.ConditionEvaluationResult;
 import org.junit.jupiter.api.extension.ExecutionCondition;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.platform.commons.util.AnnotationUtils;
 
 public class PythonCheckCondition implements ExecutionCondition {
-
-  private static final ConcurrentMap<String, Boolean> BINARY_CHECKS = new ConcurrentHashMap<>();
 
   @Override
   public ConditionEvaluationResult evaluateExecutionCondition(ExtensionContext context) {
