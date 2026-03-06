@@ -68,24 +68,29 @@ public class JavaModel extends AbstractWorkflowModel {
 
   @Override
   protected <N extends Number> Optional<N> asNumber(Class<N> targetNumberClass) {
-    if (!(object instanceof Number num)) {
-      return Optional.empty();
+
+    if (object instanceof Number num) {
+      if (targetNumberClass.isInstance(object)) {
+        return Optional.of(targetNumberClass.cast(object));
+      } else if (targetNumberClass == Integer.class) {
+        return Optional.of(targetNumberClass.cast(num.intValue()));
+      } else if (targetNumberClass == Long.class) {
+        return Optional.of(targetNumberClass.cast(num.longValue()));
+      } else if (targetNumberClass == Double.class) {
+        return Optional.of(targetNumberClass.cast(num.doubleValue()));
+      } else if (targetNumberClass == Float.class) {
+        return Optional.of(targetNumberClass.cast(num.floatValue()));
+      } else if (targetNumberClass == Short.class) {
+        return Optional.of(targetNumberClass.cast(num.shortValue()));
+      } else if (targetNumberClass == Byte.class) {
+        return Optional.of(targetNumberClass.cast(num.byteValue()));
+      } else if (targetNumberClass == BigDecimal.class) {
+        return Optional.of(targetNumberClass.cast(BigDecimal.valueOf(num.doubleValue())));
+      } else if (targetNumberClass == BigInteger.class) {
+        return Optional.of(targetNumberClass.cast(BigInteger.valueOf(num.longValue())));
+      }
     }
-    if (targetNumberClass == Integer.class || targetNumberClass == BigInteger.class) {
-      return Optional.of(targetNumberClass.cast(num.intValue()));
-    } else if (targetNumberClass == Long.class) {
-      return Optional.of(targetNumberClass.cast(num.longValue()));
-    } else if (targetNumberClass == Double.class || targetNumberClass == BigDecimal.class) {
-      return Optional.of(targetNumberClass.cast(num.doubleValue()));
-    } else if (targetNumberClass == Float.class) {
-      return Optional.of(targetNumberClass.cast(num.floatValue()));
-    } else if (targetNumberClass == Short.class) {
-      return Optional.of(targetNumberClass.cast(num.shortValue()));
-    } else if (targetNumberClass == Byte.class) {
-      return Optional.of(targetNumberClass.cast(num.byteValue()));
-    } else {
-      return Optional.of(targetNumberClass.cast(num));
-    }
+    return Optional.empty();
   }
 
   @Override
