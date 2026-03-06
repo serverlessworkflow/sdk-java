@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.test;
+package io.serverless.workflow.impl.executors.func;
 
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.consume;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.function;
