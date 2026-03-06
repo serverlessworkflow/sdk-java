@@ -16,8 +16,14 @@
 package io.serverlessworkflow.impl.events;
 
 import io.cloudevents.CloudEvent;
+import io.serverlessworkflow.impl.TaskContext;
+import io.serverlessworkflow.impl.WorkflowContext;
 import java.util.function.Consumer;
 
 public record TypeEventRegistration(
-    String type, Consumer<CloudEvent> consumer, CloudEventPredicate predicate)
+    String type,
+    Consumer<CloudEvent> consumer,
+    CloudEventPredicate predicate,
+    WorkflowContext workflow,
+    TaskContext task)
     implements EventRegistration {}

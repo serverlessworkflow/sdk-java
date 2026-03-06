@@ -121,19 +121,18 @@ public abstract class ListenExecutor extends RegularTaskExecutor<ListenTask> {
 
     @Override
     protected <T> EventRegistrationInfo buildInfo(
-        BiConsumer<CloudEvent, CompletableFuture<T>> consumer) {
-      EventRegistrationInfo info = super.buildInfo(consumer);
+        BiConsumer<CloudEvent, CompletableFuture<T>> consumer,
+        WorkflowContext workflow,
+        TaskContext task) {
+      EventRegistrationInfo info = super.buildInfo(consumer, workflow, task);
       if (untilRegBuilders != null) {
         EventRegistrationInfo untilInfo =
             EventRegistrationInfo.build(
-                untilRegBuilders, (ce, f) -> f.complete(null), eventConsumer);
+                untilRegBuilders, (ce, f) -> f.complete(null), eventConsumer, workflow, task);
         untilInfo
             .completableFuture()
-            .thenAccept(
-                v -> {
-                  info.completableFuture().complete(null);
-                  untilInfo.registrations().forEach(reg -> eventConsumer.unregister(reg));
-                });
+            .whenComplete((__, e) -> untilInfo.registrations().forEach(eventConsumer::unregister))
+            .thenAccept(__ -> info.completableFuture().complete(null));
       }
       return info;
     }
@@ -171,19 +170,20 @@ public abstract class ListenExecutor extends RegularTaskExecutor<ListenTask> {
         buildInfo(
             (BiConsumer<CloudEvent, CompletableFuture<WorkflowModel>>)
                 ((ce, future) ->
-                    processCe(converter.apply(ce), output, workflow, taskContext, future)));
+                    processCe(converter.apply(ce), output, workflow, taskContext, future)),
+            workflow,
+            taskContext);
     return info.completableFuture()
-        .thenApply(
-            v -> {
-              info.registrations().forEach(eventConsumer::unregister);
-              return output;
-            });
+        .whenComplete((__, e) -> info.registrations().forEach(eventConsumer::unregister))
+        .thenApply(__ -> output);
   }
 
   protected <T> EventRegistrationInfo buildInfo(
-      BiConsumer<CloudEvent, CompletableFuture<T>> consumer) {
+      BiConsumer<CloudEvent, CompletableFuture<T>> consumer,
+      WorkflowContext workflow,
+      TaskContext task) {
     return EventRegistrationInfo.build(
-        builderRegistrationInfo.registrations(), consumer, eventConsumer);
+        builderRegistrationInfo.registrations(), consumer, eventConsumer, workflow, task);
   }
 
   private void processCe(

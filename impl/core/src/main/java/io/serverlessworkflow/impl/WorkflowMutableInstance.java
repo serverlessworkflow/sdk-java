@@ -280,6 +280,7 @@ public class WorkflowMutableInstance implements WorkflowInstance {
     try {
       statusLock.lock();
       if (TaskExecutorHelper.isActive(status.get())) {
+        futureRef.get().cancel(true);
         status(WorkflowStatus.CANCELLED);
         publishEvent(
             workflowContext,

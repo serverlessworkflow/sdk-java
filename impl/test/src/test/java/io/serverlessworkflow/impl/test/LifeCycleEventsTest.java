@@ -45,6 +45,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -168,7 +169,7 @@ class LifeCycleEventsTest {
             .instance(Map.of());
     CompletableFuture<WorkflowModel> future = instance.start();
     instance.cancel();
-    assertThat(catchThrowableOfType(ExecutionException.class, () -> future.get().asMap()))
+    assertThat(catchThrowableOfType(CancellationException.class, () -> future.get().asMap()))
         .isNotNull();
     assertThat(instance.status()).isEqualTo(WorkflowStatus.CANCELLED);
     assertPojoInCE("io.serverlessworkflow.task.cancelled.v1", TaskCancelledCEData.class);

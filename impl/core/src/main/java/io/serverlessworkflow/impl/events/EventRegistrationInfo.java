@@ -16,6 +16,8 @@
 package io.serverlessworkflow.impl.events;
 
 import io.cloudevents.CloudEvent;
+import io.serverlessworkflow.impl.TaskContext;
+import io.serverlessworkflow.impl.WorkflowContext;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
@@ -27,11 +29,13 @@ public record EventRegistrationInfo(
   public static final <T> EventRegistrationInfo build(
       EventRegistrationBuilderCollection builderInfo,
       BiConsumer<CloudEvent, CompletableFuture<T>> consumer,
-      EventConsumer eventConsumer) {
-    Collection<EventRegistration> registrations = new ArrayList();
+      EventConsumer eventConsumer,
+      WorkflowContext workflow,
+      TaskContext task) {
+    Collection<EventRegistration> registrations = new ArrayList<>();
     CompletableFuture<T>[] futures =
         builderInfo.registrations().stream()
-            .map(reg -> toCompletable(reg, registrations, consumer, eventConsumer))
+            .map(reg -> toCompletable(reg, registrations, consumer, eventConsumer, workflow, task))
             .toArray(size -> new CompletableFuture[size]);
     return new EventRegistrationInfo(
         builderInfo.isAnd() ? CompletableFuture.allOf(futures) : CompletableFuture.anyOf(futures),
@@ -42,10 +46,13 @@ public record EventRegistrationInfo(
       EventRegistrationBuilder regBuilder,
       Collection<EventRegistration> registrations,
       BiConsumer<CloudEvent, CompletableFuture<T>> ceConsumer,
-      EventConsumer eventConsumer) {
+      EventConsumer eventConsumer,
+      WorkflowContext workflow,
+      TaskContext task) {
     final CompletableFuture<T> future = new CompletableFuture<>();
     registrations.add(
-        eventConsumer.register(regBuilder, ce -> ceConsumer.accept((CloudEvent) ce, future)));
+        eventConsumer.register(
+            regBuilder, ce -> ceConsumer.accept((CloudEvent) ce, future), workflow, task));
     return future;
   }
 }

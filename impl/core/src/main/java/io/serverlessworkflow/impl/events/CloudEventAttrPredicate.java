@@ -15,7 +15,10 @@
  */
 package io.serverlessworkflow.impl.events;
 
+import io.serverlessworkflow.impl.TaskContext;
+import io.serverlessworkflow.impl.WorkflowContext;
+
 @FunctionalInterface
 public interface CloudEventAttrPredicate<T> {
-  boolean test(T value);
+  boolean test(T value, WorkflowContext workflow, TaskContext task);
 }
