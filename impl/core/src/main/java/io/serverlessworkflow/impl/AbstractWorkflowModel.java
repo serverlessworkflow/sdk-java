@@ -24,6 +24,8 @@ public abstract class AbstractWorkflowModel implements WorkflowModel {
 
   protected abstract <T> Optional<T> convert(Class<T> clazz);
 
+  protected abstract <N extends Number> Optional<N> asNumber(Class<N> targetNumberClass);
+
   @Override
   public <T> Optional<T> as(Class<T> clazz) {
     if (WorkflowModel.class.isAssignableFrom(clazz)) {
@@ -35,7 +37,7 @@ public abstract class AbstractWorkflowModel implements WorkflowModel {
     } else if (OffsetDateTime.class.isAssignableFrom(clazz)) {
       return (Optional<T>) asDate();
     } else if (Number.class.isAssignableFrom(clazz)) {
-      return (Optional<T>) asNumber();
+      return (Optional<T>) asNumber(clazz.asSubclass(Number.class));
     } else if (Collection.class.isAssignableFrom(clazz)) {
       Collection<?> collection = asCollection();
       return collection.isEmpty() ? Optional.empty() : (Optional<T>) Optional.of(collection);

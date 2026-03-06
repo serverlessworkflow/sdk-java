@@ -17,6 +17,8 @@ package io.serverlessworkflow.impl.model.func;
 
 import io.serverlessworkflow.impl.AbstractWorkflowModel;
 import io.serverlessworkflow.impl.WorkflowModel;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.Collections;
@@ -62,6 +64,28 @@ public class JavaModel extends AbstractWorkflowModel {
   @Override
   public Optional<Number> asNumber() {
     return object instanceof Number value ? Optional.of(value) : Optional.empty();
+  }
+
+  @Override
+  protected <N extends Number> Optional<N> asNumber(Class<N> targetNumberClass) {
+    if (!(object instanceof Number num)) {
+      return Optional.empty();
+    }
+    if (targetNumberClass == Integer.class || targetNumberClass == BigInteger.class) {
+      return Optional.of(targetNumberClass.cast(num.intValue()));
+    } else if (targetNumberClass == Long.class) {
+      return Optional.of(targetNumberClass.cast(num.longValue()));
+    } else if (targetNumberClass == Double.class || targetNumberClass == BigDecimal.class) {
+      return Optional.of(targetNumberClass.cast(num.doubleValue()));
+    } else if (targetNumberClass == Float.class) {
+      return Optional.of(targetNumberClass.cast(num.floatValue()));
+    } else if (targetNumberClass == Short.class) {
+      return Optional.of(targetNumberClass.cast(num.shortValue()));
+    } else if (targetNumberClass == Byte.class) {
+      return Optional.of(targetNumberClass.cast(num.byteValue()));
+    } else {
+      return Optional.of(targetNumberClass.cast(num));
+    }
   }
 
   @Override
