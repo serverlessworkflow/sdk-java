@@ -1322,4 +1322,109 @@ public final class FuncDSL {
 
     return http(name).POST().endpoint(endpoint, auth).body(body);
   }
+
+  /**
+   * Extracts and deserializes the workflow input data into the specified type from a workflow
+   * context.
+   *
+   * <p>This utility method provides type-safe access to the workflow's initial input.
+   *
+   * <p>Use this method when you have access to the {@link WorkflowContextData} and need to retrieve
+   * the original input that was provided when the workflow instance was started.
+   *
+   * <p><b>Usage Example:</b>
+   *
+   * <pre>{@code
+   * inputFrom((object, WorkflowContextData workflowContext) -> {
+   *   OrderRequest order = input(workflowContext, OrderRequest.class);
+   *   return new Input(order);
+   * });
+   * }</pre>
+   *
+   * @param <T> the type to deserialize the input into
+   * @param context the workflow context containing instance data and input
+   * @param inputClass the class object representing the target type for deserialization
+   * @return the deserialized workflow input object of type T
+   */
+  public static <T> T input(WorkflowContextData context, Class<T> inputClass) {
+    return context
+        .instanceData()
+        .input()
+        .as(inputClass)
+        .orElseThrow(
+            () ->
+                new IllegalStateException(
+                    "Workflow input is missing or cannot be deserialized into type "
+                        + inputClass.getName()
+                        + " when calling FuncDSL.input(WorkflowContextData, Class<T>)."));
+  }
+
+  /**
+   * Extracts and deserializes the task input data into the specified type from a task context.
+   *
+   * <p>This utility method provides type-safe access to a task's input.
+   *
+   * <p>Use this method when you have access to the {@link TaskContextData} and need to retrieve the
+   * input provided to that task.
+   *
+   * <p><b>Usage Example:</b>
+   *
+   * <pre>{@code
+   * inputFrom((Object obj, TaskContextData taskContextData) -> {
+   *   OrderRequest order = input(taskContextData, OrderRequest.class);
+   *   return order;
+   * });
+   * }</pre>
+   *
+   * @param <T> the type to deserialize the input into
+   * @param taskContextData the task context from which to retrieve the task input
+   * @param inputClass the class object representing the target type for deserialization
+   * @return the deserialized task input object of type T
+   */
+  public static <T> T input(TaskContextData taskContextData, Class<T> inputClass) {
+    return taskContextData
+        .input()
+        .as(inputClass)
+        .orElseThrow(
+            () ->
+                new IllegalStateException(
+                    "Workflow input is missing or cannot be deserialized into type "
+                        + inputClass.getName()
+                        + " when calling FuncDSL.input(TaskContextData, Class<T>)."));
+  }
+
+  /**
+   * Extracts and deserializes the output data from a task into the specified type.
+   *
+   * <p>This utility method provides type-safe access to a task's output.
+   *
+   * <p>Use this method when you need to access the result/output produced by a task execution. This
+   * is particularly useful in subsequent tasks that need to process or transform the output of a
+   * previous task in the workflow.
+   *
+   * <p><b>Usage Example:</b>
+   *
+   * <pre>{@code
+   * .exportAs((object, workflowContext, taskContextData) -> {
+   *     Long output = output(taskContextData, Long.class);
+   *     return output * 2;
+   *  })
+   * }</pre>
+   *
+   * @param <T> the type to deserialize the task output into
+   * @param taskContextData the task context containing the output data
+   * @param outputClass the class object representing the target type for deserialization
+   * @return the deserialized task output object of type T
+   */
+  public static <T> T output(TaskContextData taskContextData, Class<T> outputClass) {
+    return taskContextData
+        .output()
+        .as(outputClass)
+        .orElseThrow(
+            () ->
+                new IllegalStateException(
+                    "Task output is missing or cannot be deserialized into type "
+                        + outputClass.getName()
+                        + " when calling FuncDSL.output(TaskContextData, Class<T>)."));
+  }
 }
