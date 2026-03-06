@@ -24,6 +24,8 @@ import com.fasterxml.jackson.databind.node.NullNode;
 import io.serverlessworkflow.impl.AbstractWorkflowModel;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.jackson.JsonUtils;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.Collections;
@@ -67,6 +69,32 @@ public class JacksonModel extends AbstractWorkflowModel {
   @Override
   public Optional<Number> asNumber() {
     return node.isNumber() ? Optional.of(node.asLong()) : Optional.empty();
+  }
+
+  @Override
+  protected <N extends Number> Optional<N> asNumber(Class<N> targetNumberClass) {
+    if (!node.isNumber()) {
+      return Optional.empty();
+    }
+    if (targetNumberClass == Integer.class) {
+      return Optional.of(targetNumberClass.cast(node.asInt()));
+    } else if (targetNumberClass == Long.class) {
+      return Optional.of(targetNumberClass.cast(node.asLong()));
+    } else if (targetNumberClass == Double.class) {
+      return Optional.of(targetNumberClass.cast(node.asDouble()));
+    } else if (targetNumberClass == Float.class) {
+      return Optional.of(targetNumberClass.cast((float) node.asDouble()));
+    } else if (targetNumberClass == Short.class) {
+      return Optional.of(targetNumberClass.cast((short) node.asInt()));
+    } else if (targetNumberClass == Byte.class) {
+      return Optional.of(targetNumberClass.cast((byte) node.asInt()));
+    } else if (targetNumberClass == BigDecimal.class) {
+      return Optional.of(targetNumberClass.cast(node.decimalValue()));
+    } else if (targetNumberClass == BigInteger.class) {
+      return Optional.of(targetNumberClass.cast(node.bigIntegerValue()));
+    } else {
+      return Optional.of(targetNumberClass.cast(node.numberValue()));
+    }
   }
 
   @Override
