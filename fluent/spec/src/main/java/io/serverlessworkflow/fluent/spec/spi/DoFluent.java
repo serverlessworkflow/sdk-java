@@ -26,6 +26,7 @@ import io.serverlessworkflow.fluent.spec.SetTaskBuilder;
 import io.serverlessworkflow.fluent.spec.SwitchTaskBuilder;
 import io.serverlessworkflow.fluent.spec.TaskItemListBuilder;
 import io.serverlessworkflow.fluent.spec.TryTaskBuilder;
+import io.serverlessworkflow.fluent.spec.WorkflowTaskBuilder;
 
 /**
  * Documents the exposed fluent `do` DSL.
@@ -44,4 +45,5 @@ public interface DoFluent<T>
         ForkFluent<ForkTaskBuilder, T>,
         ListenFluent<ListenTaskBuilder, T>,
         RaiseFluent<RaiseTaskBuilder, T>,
-        CallOpenAPIFluent<CallOpenAPITaskBuilder, T> {}
+        CallOpenAPIFluent<CallOpenAPITaskBuilder, T>,
+        WorkflowFluent<WorkflowTaskBuilder, T> {}

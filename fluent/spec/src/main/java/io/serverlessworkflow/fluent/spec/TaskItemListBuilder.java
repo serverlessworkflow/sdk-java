@@ -146,4 +146,17 @@ public class TaskItemListBuilder extends BaseTaskItemListBuilder<TaskItemListBui
 
     return addTaskItem(new TaskItem(name, task));
   }
+
+  @Override
+  public TaskItemListBuilder workflow(String name, Consumer<WorkflowTaskBuilder> itemsConfigurer) {
+    name = defaultNameAndRequireConfig(name, itemsConfigurer);
+
+    final WorkflowTaskBuilder workflowTaskBuilder = new WorkflowTaskBuilder();
+    itemsConfigurer.accept(workflowTaskBuilder);
+
+    final Task task = new Task();
+    task.setRunTask(workflowTaskBuilder.build());
+
+    return addTaskItem(new TaskItem(name, task));
+  }
 }
