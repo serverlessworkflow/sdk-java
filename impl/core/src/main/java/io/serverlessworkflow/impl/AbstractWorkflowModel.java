@@ -15,6 +15,8 @@
  */
 package io.serverlessworkflow.impl;
 
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.Map;
@@ -24,7 +26,33 @@ public abstract class AbstractWorkflowModel implements WorkflowModel {
 
   protected abstract <T> Optional<T> convert(Class<T> clazz);
 
-  protected abstract <N extends Number> Optional<N> asNumber(Class<N> targetNumberClass);
+  protected final <N extends Number> Optional<N> asSubclass(
+      Number num, Class<N> targetNumberClass) {
+    if (targetNumberClass.isInstance(num)) {
+      return Optional.of(targetNumberClass.cast(num));
+    } else if (targetNumberClass == Integer.class) {
+      return Optional.of(targetNumberClass.cast(num.intValue()));
+    } else if (targetNumberClass == Long.class) {
+      return Optional.of(targetNumberClass.cast(num.longValue()));
+    } else if (targetNumberClass == Double.class) {
+      return Optional.of(targetNumberClass.cast(num.doubleValue()));
+    } else if (targetNumberClass == Float.class) {
+      return Optional.of(targetNumberClass.cast(num.floatValue()));
+    } else if (targetNumberClass == Short.class) {
+      return Optional.of(targetNumberClass.cast(num.shortValue()));
+    } else if (targetNumberClass == Byte.class) {
+      return Optional.of(targetNumberClass.cast(num.byteValue()));
+    } else if (targetNumberClass == BigDecimal.class) {
+      return Optional.of(targetNumberClass.cast(BigDecimal.valueOf(num.doubleValue())));
+    } else if (targetNumberClass == BigInteger.class) {
+      return Optional.of(targetNumberClass.cast(BigInteger.valueOf(num.longValue())));
+    }
+    return Optional.empty();
+  }
+
+  protected <N extends Number> Optional<N> asNumber(Class<N> targetNumberClass) {
+    return asNumber().flatMap(n -> asSubclass(n, targetNumberClass));
+  }
 
   @Override
   public <T> Optional<T> as(Class<T> clazz) {

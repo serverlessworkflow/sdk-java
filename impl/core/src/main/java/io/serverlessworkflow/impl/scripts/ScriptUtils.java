@@ -47,9 +47,9 @@ public class ScriptUtils {
       case ALL ->
           modelFactory.fromAny(
               new ProcessResult(
-                  0, streamSuppliers.outputStream().get(), streamSuppliers.errorStream().get()));
+                  code, streamSuppliers.outputStream().get(), streamSuppliers.errorStream().get()));
       case NONE -> model;
-      case CODE -> modelFactory.from(0);
+      case CODE -> modelFactory.from(code);
       case STDOUT -> modelFactory.from(streamSuppliers.outputStream().get());
       case STDERR -> modelFactory.from(streamSuppliers.errorStream().get());
     };
