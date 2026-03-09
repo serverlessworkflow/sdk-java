@@ -40,7 +40,7 @@ public class WorkflowThenTest {
     Workflow wf =
         FuncWorkflowBuilder.workflow("intelligent-newsletter")
             .tasks(
-                consume("sendNewsletter", input -> log.debug("Consuming: {}", input), Object.class)
+                consume("sendNewsletter", input -> log.debug("Consuming: {}", input))
                     .then("otherTask"),
                 function("nextTask", v -> "nextTask: " + v, String.class),
                 function("otherTask", v -> "otherTask: " + v, String.class))

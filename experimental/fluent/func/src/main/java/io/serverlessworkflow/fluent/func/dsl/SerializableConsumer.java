@@ -13,13 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.api.types.func;
+package io.serverlessworkflow.fluent.func.dsl;
 
-import io.serverlessworkflow.impl.TaskContextData;
-import io.serverlessworkflow.impl.WorkflowContextData;
 import java.io.Serializable;
+import java.util.function.Consumer;
 
 @FunctionalInterface
-public interface JavaFilterFunction<T, R> extends Serializable {
-  R apply(T object, WorkflowContextData workflowContext, TaskContextData taskContext);
-}
+public interface SerializableConsumer<T> extends Consumer<T>, Serializable {}

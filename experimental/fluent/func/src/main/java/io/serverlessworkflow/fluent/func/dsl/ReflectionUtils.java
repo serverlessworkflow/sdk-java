@@ -15,27 +15,65 @@
  */
 package io.serverlessworkflow.fluent.func.dsl;
 
+import io.serverlessworkflow.api.types.func.JavaContextFunction;
+import io.serverlessworkflow.api.types.func.JavaFilterFunction;
 import java.lang.invoke.MethodHandleInfo;
 import java.lang.invoke.MethodType;
+import java.lang.invoke.SerializedLambda;
 import java.lang.reflect.Method;
-import java.util.Optional;
 import java.util.function.Function;
+
+// Don't make this class public the ReflectionUtils must be accessed only by the DSL classes.
 
 /**
  * Specially used by {@link Function} parameters in the Java Function.
  *
  * @see <a href="https://www.baeldung.com/java-serialize-lambda">Serialize a Lambda in Java</a>
  */
-public final class ReflectionUtils {
+final class ReflectionUtils {
 
   private ReflectionUtils() {}
 
   @SuppressWarnings("unchecked")
-  static <T> Optional<Class<T>> safeInferInputType(Function<T, ?> fn) {
+  static <T> Class<T> inferInputType(JavaContextFunction<T, ?> fn) {
+    return throwIllegalStateIfNull((Class<T>) inferInputTypeFromAny(fn));
+  }
+
+  @SuppressWarnings("unchecked")
+  static <T> Class<T> inferInputType(JavaFilterFunction<T, ?> fn) {
+    return throwIllegalStateIfNull((Class<T>) inferInputTypeFromAny(fn));
+  }
+
+  @SuppressWarnings("unchecked")
+  static <T> Class<T> inferInputType(SerializableFunction<T, ?> fn) {
+    return throwIllegalStateIfNull((Class<T>) inferInputTypeFromAny(fn));
+  }
+
+  @SuppressWarnings("unchecked")
+  static <T> Class<T> inferInputType(SerializablePredicate<T> fn) {
+    return throwIllegalStateIfNull((Class<T>) inferInputTypeFromAny(fn));
+  }
+
+  @SuppressWarnings("unchecked")
+  static <T> Class<T> inferInputType(InstanceIdBiFunction<T, ?> fn) {
+    return throwIllegalStateIfNull((Class<T>) inferInputTypeFromAny(fn));
+  }
+
+  @SuppressWarnings("unchecked")
+  static <T> Class<T> inferInputType(UniqueIdBiFunction<T, ?> fn) {
+    return throwIllegalStateIfNull((Class<T>) inferInputTypeFromAny(fn));
+  }
+
+  @SuppressWarnings("unchecked")
+  static <T> Class<T> inferInputType(SerializableConsumer<T> fn) {
+    return throwIllegalStateIfNull((Class<T>) inferInputTypeFromAny(fn));
+  }
+
+  private static Class<?> inferInputTypeFromAny(Object fn) {
     try {
       Method m = fn.getClass().getDeclaredMethod("writeReplace");
       m.setAccessible(true);
-      java.lang.invoke.SerializedLambda sl = (java.lang.invoke.SerializedLambda) m.invoke(fn);
+      SerializedLambda sl = (SerializedLambda) m.invoke(fn);
 
       // Owner class of the referenced implementation
       String ownerName = sl.getImplClass().replace('/', '.');
@@ -51,7 +89,7 @@ public final class ReflectionUtils {
         case MethodHandleInfo.REF_invokeStatic:
         case MethodHandleInfo.REF_newInvokeSpecial:
           // static method or constructor: T is the first parameter
-          return params.length >= 1 ? Optional.of((Class<T>) params[0]) : Optional.empty();
+          return params.length >= 1 ? params[0] : null;
 
         case MethodHandleInfo.REF_invokeVirtual:
         case MethodHandleInfo.REF_invokeInterface:
@@ -60,23 +98,21 @@ public final class ReflectionUtils {
           // For Function<T,R>, if bar has no params, T is the receiver type (owner).
           // If bar has one param, that pattern would usually map to BiFunction, not Function,
           // but keep a defensive branch anyway:
-          return (params.length == 0)
-              ? Optional.of((Class<T>) owner)
-              : Optional.of((Class<T>) params[0]);
+          return (params.length == 0) ? owner : params[0];
 
         default:
-          return Optional.empty();
+          return null;
       }
     } catch (Exception ignore) {
-      return Optional.empty();
+      return null;
     }
   }
 
-  public static <T> Class<T> inferInputType(Function<T, ?> fn) {
-    return safeInferInputType(fn)
-        .orElseThrow(
-            () ->
-                new IllegalStateException(
-                    "Cannot infer input type from lambda. Pass Class<T> or use a method reference."));
+  private static <T> Class<T> throwIllegalStateIfNull(Class<T> clazz) {
+    if (clazz == null) {
+      throw new IllegalStateException(
+          "Cannot infer input type from lambda. Pass Class<T> or use a method reference.");
+    }
+    return clazz;
   }
 }
