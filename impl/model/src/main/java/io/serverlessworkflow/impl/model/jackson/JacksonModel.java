@@ -68,7 +68,7 @@ public class JacksonModel extends AbstractWorkflowModel {
 
   @Override
   public Optional<Number> asNumber() {
-    return node.isNumber() ? Optional.of(node.asLong()) : Optional.empty();
+    return node.isNumber() ? Optional.of(node.numberValue()) : Optional.empty();
   }
 
   @Override
