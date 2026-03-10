@@ -106,18 +106,17 @@ public class FuncDSLReflectionsTest {
             .tasks(
                 // Infers String.class for the payload (the second parameter)
                 agent(
-                    (String uniqueId, String payload) ->
+                    (String uniqueId, Integer payload) ->
                         "ID=[" + uniqueId + "] Payload=[" + payload + "]"))
             .build();
 
     try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-      Optional<String> output =
-          app.workflowDefinition(wf).instance("Agent Data").start().join().asText();
+      Optional<String> output = app.workflowDefinition(wf).instance(123).start().join().asText();
 
       assertTrue(output.isPresent());
       // The uniqueId should contain the workflow instance ID and the JSON pointer
       assertTrue(output.get().contains("ID=["));
-      assertTrue(output.get().contains("] Payload=[Agent Data]"));
+      assertTrue(output.get().contains("] Payload=[123]"));
     }
   }
 
@@ -158,7 +157,7 @@ public class FuncDSLReflectionsTest {
 
       assertTrue(output.isPresent());
       // It should append the task JSON pointer (likely "/tasks/0" or similar depending on spec)
-      assertTrue(output.get().contains("Filter Data at position do/"));
+      assertTrue(output.get().startsWith("Filter Data at position do/"));
     }
   }
 }

@@ -24,6 +24,6 @@ import java.io.Serializable;
  * @param <R> The task result output
  */
 @FunctionalInterface
-public interface InstanceIdBiFunction<T, R> extends Serializable {
+public interface InstanceIdFunction<T, R> extends Serializable {
   R apply(String instanceId, T payload);
 }

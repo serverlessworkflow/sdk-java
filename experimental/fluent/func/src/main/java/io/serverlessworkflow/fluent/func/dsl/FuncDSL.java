@@ -311,8 +311,7 @@ public final class FuncDSL {
    * @param <R> result type
    * @return a call step
    */
-  public static <T, R> FuncCallStep<T, R> withInstanceId(
-      InstanceIdBiFunction<T, R> fn, Class<T> in) {
+  public static <T, R> FuncCallStep<T, R> withInstanceId(InstanceIdFunction<T, R> fn, Class<T> in) {
     return withInstanceId(null, fn, in);
   }
 
@@ -376,7 +375,7 @@ public final class FuncDSL {
   }
 
   /**
-   * Named variant of {@link #withInstanceId(InstanceIdBiFunction, Class)}.
+   * Named variant of {@link #withInstanceId(InstanceIdFunction, Class)}.
    *
    * @param name task name
    * @param fn instance-id-aware function
@@ -386,13 +385,12 @@ public final class FuncDSL {
    * @return a named call step
    */
   public static <T, R> FuncCallStep<T, R> withInstanceId(
-      String name, InstanceIdBiFunction<T, R> fn, Class<T> in) {
+      String name, InstanceIdFunction<T, R> fn, Class<T> in) {
     JavaContextFunction<T, R> jcf = (payload, wctx) -> fn.apply(wctx.instanceData().id(), payload);
     return new FuncCallStep<>(name, jcf, in);
   }
 
-  public static <T, R> FuncCallStep<T, R> withInstanceId(
-      String name, InstanceIdBiFunction<T, R> fn) {
+  public static <T, R> FuncCallStep<T, R> withInstanceId(String name, InstanceIdFunction<T, R> fn) {
     return withInstanceId(name, fn, ReflectionUtils.inferInputType(fn));
   }
 
