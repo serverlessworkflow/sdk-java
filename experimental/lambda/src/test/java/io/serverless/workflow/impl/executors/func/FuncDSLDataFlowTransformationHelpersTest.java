@@ -19,7 +19,6 @@ import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.function;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.input;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.output;
 
-import io.serverlessworkflow.api.types.Task;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.fluent.func.FuncWorkflowBuilder;
 import io.serverlessworkflow.impl.TaskContextData;
@@ -116,14 +115,16 @@ public class FuncDSLDataFlowTransformationHelpersTest {
                         (Long input) -> {
                           softly.assertThat(input).isEqualTo(10L);
                           return input + 5;
-                        }, Long.class)
+                        },
+                        Long.class)
                     .exportAs(
-                        (Long object, WorkflowContextData workflowContext, TaskContextData taskContextData) -> {
+                        (Long object,
+                            WorkflowContextData workflowContext,
+                            TaskContextData taskContextData) -> {
                           Long taskOutput = output(taskContextData, Long.class);
                           softly.assertThat(taskOutput).isEqualTo(15L);
                           return taskOutput * 2;
-                        },
-                        Object.class))
+                        }))
             .build();
 
     try (WorkflowApplication app = WorkflowApplication.builder().build()) {
