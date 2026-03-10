@@ -23,7 +23,9 @@ import io.serverlessworkflow.api.types.EventProperties;
 import io.serverlessworkflow.api.types.EventSource;
 import io.serverlessworkflow.api.types.EventTime;
 import io.serverlessworkflow.api.types.UriTemplate;
+import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
+import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModelFactory;
 import io.serverlessworkflow.impl.WorkflowPredicate;
 import io.serverlessworkflow.impl.expressions.ExpressionDescriptor;
@@ -45,7 +47,7 @@ public class DefaultCloudEventPredicate implements CloudEventPredicate {
   private final CloudEventAttrPredicate<Map<String, Object>> additionalFilter;
 
   private static final <T> CloudEventAttrPredicate<T> isTrue() {
-    return x -> true;
+    return (x, w, t) -> true;
   }
 
   public DefaultCloudEventPredicate(EventProperties properties, WorkflowApplication app) {
@@ -72,12 +74,12 @@ public class DefaultCloudEventPredicate implements CloudEventPredicate {
 
   private CloudEventAttrPredicate<CloudEventData> fromCloudEvent(
       WorkflowModelFactory workflowModelFactory, WorkflowPredicate filter) {
-    return d -> filter.test(null, null, workflowModelFactory.from(d));
+    return (d, w, t) -> filter.test(w, t, workflowModelFactory.from(d));
   }
 
   private CloudEventAttrPredicate<Map<String, Object>> fromMap(
       WorkflowModelFactory workflowModelFactory, WorkflowPredicate filter) {
-    return d -> filter.test(null, null, workflowModelFactory.from(d));
+    return (d, w, t) -> filter.test(w, t, workflowModelFactory.from(d));
   }
 
   private CloudEventAttrPredicate<CloudEventData> dataFilter(
@@ -98,9 +100,9 @@ public class DefaultCloudEventPredicate implements CloudEventPredicate {
         final WorkflowPredicate expr =
             app.expressionFactory()
                 .buildPredicate(ExpressionDescriptor.from(time.getRuntimeExpression()));
-        return s -> evalExpr(app.modelFactory(), expr, s);
+        return (s, w, t) -> evalExpr(app.modelFactory(), expr, s, w, t);
       } else if (time.getLiteralTime() != null) {
-        return s -> Objects.equals(s, CloudEventUtils.toOffset(time.getLiteralTime()));
+        return (s, w, t) -> Objects.equals(s, CloudEventUtils.toOffset(time.getLiteralTime()));
       }
     }
     return isTrue();
@@ -113,7 +115,7 @@ public class DefaultCloudEventPredicate implements CloudEventPredicate {
         final WorkflowPredicate expr =
             app.expressionFactory()
                 .buildPredicate(ExpressionDescriptor.from(dataSchema.getExpressionDataSchema()));
-        return s -> evalExpr(app.modelFactory(), expr, toString(s));
+        return (s, w, t) -> evalExpr(app.modelFactory(), expr, toString(s), w, t);
       } else if (dataSchema.getLiteralDataSchema() != null) {
         return templateFilter(dataSchema.getLiteralDataSchema());
       }
@@ -122,7 +124,7 @@ public class DefaultCloudEventPredicate implements CloudEventPredicate {
   }
 
   private CloudEventAttrPredicate<String> stringFilter(String str) {
-    return str == null ? isTrue() : x -> x.equals(str);
+    return str == null ? isTrue() : (x, w, t) -> str.equals(x);
   }
 
   private CloudEventAttrPredicate<URI> sourceFilter(EventSource source, WorkflowApplication app) {
@@ -131,7 +133,7 @@ public class DefaultCloudEventPredicate implements CloudEventPredicate {
         final WorkflowPredicate expr =
             app.expressionFactory()
                 .buildPredicate(ExpressionDescriptor.from(source.getRuntimeExpression()));
-        return s -> evalExpr(app.modelFactory(), expr, toString(s));
+        return (s, w, t) -> evalExpr(app.modelFactory(), expr, toString(s), w, t);
       } else if (source.getUriTemplate() != null) {
         return templateFilter(source.getUriTemplate());
       }
@@ -141,7 +143,7 @@ public class DefaultCloudEventPredicate implements CloudEventPredicate {
 
   private CloudEventAttrPredicate<URI> templateFilter(UriTemplate template) {
     if (template.getLiteralUri() != null) {
-      return u -> Objects.equals(u, template.getLiteralUri());
+      return (u, w, t) -> Objects.equals(u, template.getLiteralUri());
     }
     throw new UnsupportedOperationException("Template not supported here yet");
   }
@@ -151,25 +153,33 @@ public class DefaultCloudEventPredicate implements CloudEventPredicate {
   }
 
   private boolean evalExpr(
-      WorkflowModelFactory modelFactory, WorkflowPredicate expr, String value) {
-    return expr.test(null, null, modelFactory.from(value));
+      WorkflowModelFactory modelFactory,
+      WorkflowPredicate expr,
+      String value,
+      WorkflowContext workflow,
+      TaskContext task) {
+    return expr.test(workflow, task, modelFactory.from(value));
   }
 
   private boolean evalExpr(
-      WorkflowModelFactory modelFactory, WorkflowPredicate expr, OffsetDateTime value) {
-    return expr.test(null, null, modelFactory.from(value));
+      WorkflowModelFactory modelFactory,
+      WorkflowPredicate expr,
+      OffsetDateTime value,
+      WorkflowContext workflow,
+      TaskContext task) {
+    return expr.test(workflow, task, modelFactory.from(value));
   }
 
   @Override
-  public boolean test(CloudEvent event) {
-    return idFilter.test(event.getId())
-        && sourceFilter.test(event.getSource())
-        && subjectFilter.test(event.getSubject())
-        && contentTypeFilter.test(event.getDataContentType())
-        && typeFilter.test(event.getType())
-        && dataSchemaFilter.test(event.getDataSchema())
-        && timeFilter.test(event.getTime())
-        && dataFilter.test(event.getData())
-        && additionalFilter.test(CloudEventUtils.extensions(event));
+  public boolean test(CloudEvent event, WorkflowContext workflow, TaskContext task) {
+    return idFilter.test(event.getId(), workflow, task)
+        && sourceFilter.test(event.getSource(), workflow, task)
+        && subjectFilter.test(event.getSubject(), workflow, task)
+        && contentTypeFilter.test(event.getDataContentType(), workflow, task)
+        && typeFilter.test(event.getType(), workflow, task)
+        && dataSchemaFilter.test(event.getDataSchema(), workflow, task)
+        && timeFilter.test(event.getTime(), workflow, task)
+        && dataFilter.test(event.getData(), workflow, task)
+        && additionalFilter.test(CloudEventUtils.extensions(event), workflow, task);
   }
 }

@@ -18,7 +18,9 @@ package io.serverlessworkflow.impl.events;
 import io.cloudevents.CloudEvent;
 import io.serverlessworkflow.api.types.EventFilter;
 import io.serverlessworkflow.impl.ServicePriority;
+import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
+import io.serverlessworkflow.impl.WorkflowContext;
 import java.util.Collection;
 import java.util.function.Consumer;
 
@@ -29,7 +31,11 @@ public interface EventConsumer<T extends EventRegistration, V extends EventRegis
 
   Collection<V> listenToAll(WorkflowApplication workflowApplication);
 
-  T register(V builder, Consumer<CloudEvent> consumer);
+  default T register(V builder, Consumer<CloudEvent> consumer) {
+    return register(builder, consumer, null, null);
+  }
+
+  T register(V builder, Consumer<CloudEvent> consumer, WorkflowContext workflow, TaskContext task);
 
   void unregister(T register);
 }

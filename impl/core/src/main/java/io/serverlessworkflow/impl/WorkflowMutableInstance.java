@@ -26,6 +26,8 @@ import io.serverlessworkflow.impl.lifecycle.WorkflowStartedEvent;
 import io.serverlessworkflow.impl.lifecycle.WorkflowStatusEvent;
 import io.serverlessworkflow.impl.lifecycle.WorkflowSuspendedEvent;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CancellationException;
@@ -53,6 +55,8 @@ public class WorkflowMutableInstance implements WorkflowInstance {
 
   private Lock statusLock = new ReentrantLock();
   private Map<CompletableFuture<TaskContext>, TaskContext> suspended;
+
+  private Collection<CompletableFuture<?>> cancelables = new ArrayList<>();
 
   protected WorkflowMutableInstance(WorkflowDefinition definition, String id, WorkflowModel input) {
     this.id = id;
@@ -226,22 +230,28 @@ public class WorkflowMutableInstance implements WorkflowInstance {
 
   @Override
   public boolean resume() {
+    boolean result;
     try {
       statusLock.lock();
       if (TaskExecutorHelper.isActive(status.get()) && suspended != null) {
-        publishEvent(
-            workflowContext, l -> l.onWorkflowResumed(new WorkflowResumedEvent(workflowContext)));
+
         suspended.forEach(
             (k, v) -> {
               k.complete(v);
             });
         suspended = null;
-        return true;
+        result = true;
+      } else {
+        result = false;
       }
     } finally {
       statusLock.unlock();
     }
-    return false;
+    if (result) {
+      publishEvent(
+          workflowContext, l -> l.onWorkflowResumed(new WorkflowResumedEvent(workflowContext)));
+    }
+    return result;
   }
 
   public CompletableFuture<TaskContext> cancelCheck(TaskContext t) {
@@ -277,19 +287,48 @@ public class WorkflowMutableInstance implements WorkflowInstance {
 
   @Override
   public boolean cancel() {
+    boolean result;
+    Collection<CompletableFuture<?>> toCancel = null;
     try {
       statusLock.lock();
       if (TaskExecutorHelper.isActive(status.get())) {
+        toCancel = new ArrayList<>(cancelables);
+        cancelables.clear();
         status(WorkflowStatus.CANCELLED);
-        publishEvent(
-            workflowContext,
-            l -> l.onWorkflowCancelled(new WorkflowCancelledEvent(workflowContext)));
-        return true;
+        result = true;
       } else {
-        return false;
+        result = false;
       }
     } finally {
       statusLock.unlock();
+    }
+    if (result) {
+      publishEvent(
+          workflowContext, l -> l.onWorkflowCancelled(new WorkflowCancelledEvent(workflowContext)));
+      if (toCancel != null) {
+        toCancel.forEach(t -> t.cancel(true));
+      }
+    }
+    return result;
+  }
+
+  public void addCancelable(CompletableFuture<?> cancelable) {
+    statusLock.lock();
+    if (status.get() == WorkflowStatus.CANCELLED) {
+      statusLock.unlock();
+      cancelable.cancel(true);
+    } else {
+      cancelables.add(cancelable);
+      statusLock.unlock();
+      cancelable.thenAccept(
+          __ -> {
+            try {
+              statusLock.lock();
+              cancelables.remove(cancelable);
+            } finally {
+              statusLock.unlock();
+            }
+          });
     }
   }
 
