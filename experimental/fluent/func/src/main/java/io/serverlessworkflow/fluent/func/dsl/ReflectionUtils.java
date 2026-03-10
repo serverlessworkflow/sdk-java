@@ -22,8 +22,6 @@ import java.lang.invoke.SerializedLambda;
 import java.lang.reflect.Method;
 import java.util.function.Function;
 
-// Don't make this class public the ReflectionUtils must be accessed only by the DSL classes.
-
 /**
  * Specially used by {@link Function} parameters in the Java Function.
  *
