@@ -25,6 +25,7 @@ import io.serverlessworkflow.api.types.func.TypedFunction;
 import io.serverlessworkflow.api.types.func.TypedJavaContextFunction;
 import io.serverlessworkflow.api.types.func.TypedJavaFilterFunction;
 import io.serverlessworkflow.api.types.func.TypedPredicate;
+import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowPredicate;
 import io.serverlessworkflow.impl.expressions.AbstractExpressionFactory;
 import io.serverlessworkflow.impl.expressions.ExpressionDescriptor;
@@ -44,18 +45,29 @@ public class JavaExpressionFactory extends AbstractExpressionFactory {
     if (value instanceof Function func) {
       return (w, t, n) -> func.apply(n.asJavaObject());
     } else if (value instanceof TypedFunction func) {
-      return (w, t, n) -> func.function().apply(n.as(func.argClass()).orElseThrow());
+      return (w, t, n) -> func.function().apply(convert(n, func.argClass()));
     } else if (value instanceof JavaFilterFunction func) {
       return (w, t, n) -> func.apply(n.asJavaObject(), w, t);
     } else if (value instanceof TypedJavaFilterFunction func) {
-      return (w, t, n) -> func.function().apply(n.as(func.argClass()).orElseThrow(), w, t);
+      return (w, t, n) -> func.function().apply(convert(n, func.argClass()), w, t);
     } else if (value instanceof JavaContextFunction func) {
       return (w, t, n) -> func.apply(n.asJavaObject(), w);
     } else if (value instanceof TypedJavaContextFunction func) {
-      return (w, t, n) -> func.function().apply(n.as(func.argClass()).orElseThrow(), w);
+      return (w, t, n) -> func.function().apply(convert(n, func.argClass()), w);
     } else {
       return (w, t, n) -> value;
     }
+  }
+
+  private <T> T convert(WorkflowModel model, Class<T> argClass) {
+    return model.isNull()
+        ? null
+        : model
+            .as(argClass)
+            .orElseThrow(
+                () ->
+                    new IllegalArgumentException(
+                        "Cannot convert model " + model.asJavaObject() + " to class" + argClass));
   }
 
   @Override

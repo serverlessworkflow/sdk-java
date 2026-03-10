@@ -39,4 +39,8 @@ public interface WorkflowModel {
   Class<?> objectClass();
 
   <T> Optional<T> as(Class<T> clazz);
+
+  default boolean isNull() {
+    return asJavaObject() == null;
+  }
 }

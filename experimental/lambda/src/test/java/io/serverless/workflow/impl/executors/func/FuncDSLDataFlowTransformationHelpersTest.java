@@ -122,7 +122,8 @@ public class FuncDSLDataFlowTransformationHelpersTest {
                           Long taskOutput = output(taskContextData, Long.class);
                           softly.assertThat(taskOutput).isEqualTo(15L);
                           return taskOutput * 2;
-                        }))
+                        },
+                        Object.class))
             .build();
 
     try (WorkflowApplication app = WorkflowApplication.builder().build()) {
