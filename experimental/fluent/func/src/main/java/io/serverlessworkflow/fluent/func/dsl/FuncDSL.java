@@ -28,7 +28,6 @@ import io.serverlessworkflow.fluent.func.configurers.FuncCallOpenAPIConfigurer;
 import io.serverlessworkflow.fluent.func.configurers.FuncPredicateEventConfigurer;
 import io.serverlessworkflow.fluent.func.configurers.FuncTaskConfigurer;
 import io.serverlessworkflow.fluent.func.configurers.SwitchCaseConfigurer;
-import io.serverlessworkflow.fluent.func.dsl.internal.CommonFuncOps;
 import io.serverlessworkflow.fluent.spec.configurers.AuthenticationConfigurer;
 import io.serverlessworkflow.impl.TaskContextData;
 import io.serverlessworkflow.impl.WorkflowContextData;
@@ -97,15 +96,15 @@ public final class FuncDSL {
    * @param <V> output type
    * @return a consumer that configures a {@code FuncCallTaskBuilder}
    */
-  public static <T, V> Consumer<FuncCallTaskBuilder> fn(Function<T, V> function) {
-    return f -> f.function(function);
+  public static <T, V> Consumer<FuncCallTaskBuilder> fn(SerializableFunction<T, V> function) {
+    return f -> f.function(function, ReflectionUtils.inferInputType(function));
   }
 
   /**
    * Compose multiple switch cases into a single configurer for {@link FuncSwitchTaskBuilder}.
    *
-   * @param cases one or more {@link SwitchCaseConfigurer} built via {@link #caseOf(Predicate)} or
-   *     {@link #caseDefault(String)}
+   * @param cases one or more {@link SwitchCaseConfigurer} built via {@link
+   *     #caseOf(SerializablePredicate)} or {@link #caseDefault(String)}
    * @return a consumer to apply on a switch task builder
    */
   public static Consumer<FuncSwitchTaskBuilder> cases(SwitchCaseConfigurer... cases) {
@@ -131,7 +130,7 @@ public final class FuncDSL {
    * @param <T> predicate input type
    * @return a fluent builder to set the consequent action (e.g., {@code then("taskName")})
    */
-  public static <T> SwitchCaseSpec<T> caseOf(Predicate<T> when) {
+  public static <T> SwitchCaseSpec<T> caseOf(SerializablePredicate<T> when) {
     return OPS.caseOf(when);
   }
 
@@ -213,12 +212,13 @@ public final class FuncDSL {
    * @return a consumer to configure {@link FuncEmitTaskBuilder}
    */
   public static <T> Consumer<FuncEmitTaskBuilder> event(
-      String type, Function<T, CloudEventData> function) {
-    return OPS.event(type, function);
+      String type, SerializableFunction<T, CloudEventData> function) {
+    return OPS.event(type, function, ReflectionUtils.inferInputType(function));
   }
 
   /**
-   * Same as {@link #event(String, Function)} but with an explicit input class to guide conversion.
+   * Same as {@link #event(String, SerializableFunction)} but with an explicit input class to guide
+   * conversion.
    *
    * @param type CloudEvent type
    * @param function function that maps workflow input to {@link CloudEventData}
@@ -280,20 +280,6 @@ public final class FuncDSL {
   }
 
   /**
-   * Create a {@link FuncCallStep} that calls a simple Java {@link Function} with explicit input
-   * type.
-   *
-   * @param fn the function to execute at runtime
-   * @param inputClass expected input class for model conversion
-   * @param <T> input type
-   * @param <R> result type
-   * @return a call step which supports chaining (e.g., {@code .exportAs(...).when(...)})
-   */
-  public static <T, R> FuncCallStep<T, R> function(Function<T, R> fn, Class<T> inputClass) {
-    return new FuncCallStep<>(fn, inputClass);
-  }
-
-  /**
    * Build a call step for functions that need {@link WorkflowContextData} as the first parameter.
    * The DSL wraps it as a {@link JavaContextFunction} and injects the runtime context.
    *
@@ -309,21 +295,8 @@ public final class FuncDSL {
     return withContext(null, fn, in);
   }
 
-  /**
-   * Build a call step for functions that expect the workflow instance ID as the first parameter.
-   * The instance ID is extracted from the runtime context.
-   *
-   * <p>Signature expected: {@code (instanceId, payload) -> result}
-   *
-   * @param fn instance-id-aware function
-   * @param in payload input class
-   * @param <T> input type
-   * @param <R> result type
-   * @return a call step
-   */
-  public static <T, R> FuncCallStep<T, R> withInstanceId(
-      InstanceIdBiFunction<T, R> fn, Class<T> in) {
-    return withInstanceId(null, fn, in);
+  public static <T, R> FuncCallStep<T, R> withContext(JavaContextFunction<T, R> fn) {
+    return withContext(null, fn, ReflectionUtils.inferInputType(fn));
   }
 
   /**
@@ -339,6 +312,10 @@ public final class FuncDSL {
   public static <T, R> FuncCallStep<T, R> withContext(
       String name, JavaContextFunction<T, R> fn, Class<T> in) {
     return new FuncCallStep<>(name, fn, in);
+  }
+
+  public static <T, R> FuncCallStep<T, R> withContext(String name, JavaContextFunction<T, R> fn) {
+    return new FuncCallStep<>(name, fn, ReflectionUtils.inferInputType(fn));
   }
 
   /**
@@ -373,8 +350,16 @@ public final class FuncDSL {
     return new FuncCallStep<>(name, fn, in);
   }
 
+  public static <T, R> FuncCallStep<T, R> withFilter(JavaFilterFunction<T, R> fn) {
+    return withFilter(null, fn, ReflectionUtils.inferInputType(fn));
+  }
+
+  public static <T, R> FuncCallStep<T, R> withFilter(String name, JavaFilterFunction<T, R> fn) {
+    return withFilter(name, fn, ReflectionUtils.inferInputType(fn));
+  }
+
   /**
-   * Named variant of {@link #withInstanceId(InstanceIdBiFunction, Class)}.
+   * Named variant of {@link #withInstanceId(InstanceIdFunction, Class)}.
    *
    * @param name task name
    * @param fn instance-id-aware function
@@ -384,9 +369,33 @@ public final class FuncDSL {
    * @return a named call step
    */
   public static <T, R> FuncCallStep<T, R> withInstanceId(
-      String name, InstanceIdBiFunction<T, R> fn, Class<T> in) {
+      String name, InstanceIdFunction<T, R> fn, Class<T> in) {
     JavaContextFunction<T, R> jcf = (payload, wctx) -> fn.apply(wctx.instanceData().id(), payload);
     return new FuncCallStep<>(name, jcf, in);
+  }
+
+  /**
+   * Build a call step for functions that expect the workflow instance ID as the first parameter.
+   * The instance ID is extracted from the runtime context.
+   *
+   * <p>Signature expected: {@code (instanceId, payload) -> result}
+   *
+   * @param fn instance-id-aware function
+   * @param in payload input class
+   * @param <T> input type
+   * @param <R> result type
+   * @return a call step
+   */
+  public static <T, R> FuncCallStep<T, R> withInstanceId(InstanceIdFunction<T, R> fn, Class<T> in) {
+    return withInstanceId(null, fn, in);
+  }
+
+  public static <T, R> FuncCallStep<T, R> withInstanceId(String name, InstanceIdFunction<T, R> fn) {
+    return withInstanceId(name, fn, ReflectionUtils.inferInputType(fn));
+  }
+
+  public static <T, R> FuncCallStep<T, R> withInstanceId(InstanceIdFunction<T, R> fn) {
+    return withInstanceId(null, fn, ReflectionUtils.inferInputType(fn));
   }
 
   /**
@@ -422,6 +431,10 @@ public final class FuncDSL {
     return new FuncCallStep<>(name, jff, in);
   }
 
+  public static <T, R> FuncCallStep<T, R> withUniqueId(String name, UniqueIdBiFunction<T, R> fn) {
+    return withUniqueId(name, fn, ReflectionUtils.inferInputType(fn));
+  }
+
   /**
    * Variant of {@link #withUniqueId(String, UniqueIdBiFunction, Class)} without an explicit task
    * name.
@@ -434,6 +447,10 @@ public final class FuncDSL {
    */
   public static <T, R> FuncCallStep<T, R> withUniqueId(UniqueIdBiFunction<T, R> fn, Class<T> in) {
     return withUniqueId(null, fn, in);
+  }
+
+  public static <T, R> FuncCallStep<T, R> withUniqueId(UniqueIdBiFunction<T, R> fn) {
+    return withUniqueId(null, fn, ReflectionUtils.inferInputType(fn));
   }
 
   /**
@@ -449,6 +466,10 @@ public final class FuncDSL {
     return new ConsumeStep<>(consumer, inputClass);
   }
 
+  public static <T> ConsumeStep<T> consume(SerializableConsumer<T> consumer) {
+    return consume(consumer, ReflectionUtils.inferInputType(consumer));
+  }
+
   /**
    * Named variant of {@link #consume(Consumer, Class)}.
    *
@@ -460,6 +481,10 @@ public final class FuncDSL {
    */
   public static <T> ConsumeStep<T> consume(String name, Consumer<T> consumer, Class<T> inputClass) {
     return new ConsumeStep<>(name, consumer, inputClass);
+  }
+
+  public static <T> ConsumeStep<T> consume(String name, SerializableConsumer<T> consumer) {
+    return consume(name, consumer, ReflectionUtils.inferInputType(consumer));
   }
 
   /**
@@ -479,6 +504,10 @@ public final class FuncDSL {
     return withUniqueId(fn, in);
   }
 
+  public static <T, R> FuncCallStep<T, R> agent(UniqueIdBiFunction<T, R> fn) {
+    return withUniqueId(fn, ReflectionUtils.inferInputType(fn));
+  }
+
   /**
    * Named agent-style sugar. See {@link #agent(UniqueIdBiFunction, Class)}.
    *
@@ -496,6 +525,24 @@ public final class FuncDSL {
     return withUniqueId(name, fn, in);
   }
 
+  public static <T, R> FuncCallStep<T, R> agent(String name, UniqueIdBiFunction<T, R> fn) {
+    return withUniqueId(name, fn, ReflectionUtils.inferInputType(fn));
+  }
+
+  /**
+   * Create a {@link FuncCallStep} that calls a simple Java {@link Function} with explicit input
+   * type.
+   *
+   * @param fn the function to execute at runtime
+   * @param inputClass expected input class for model conversion
+   * @param <T> input type
+   * @param <R> result type
+   * @return a call step which supports chaining (e.g., {@code .exportAs(...).when(...)})
+   */
+  public static <T, R> FuncCallStep<T, R> function(Function<T, R> fn, Class<T> inputClass) {
+    return new FuncCallStep<>(fn, inputClass);
+  }
+
   /**
    * Create a {@link FuncCallStep} that invokes a plain Java {@link Function} with inferred input
    * type.
@@ -505,13 +552,13 @@ public final class FuncDSL {
    * @param <R> output type
    * @return a call step
    */
-  public static <T, R> FuncCallStep<T, R> function(Function<T, R> fn) {
+  public static <T, R> FuncCallStep<T, R> function(SerializableFunction<T, R> fn) {
     Class<T> inputClass = ReflectionUtils.inferInputType(fn);
     return new FuncCallStep<>(fn, inputClass);
   }
 
   /**
-   * Named variant of {@link #function(Function)} with inferred input type.
+   * Named variant of {@link #function(SerializableFunction)} with inferred input type.
    *
    * @param name task name
    * @param fn the function to execute
@@ -519,7 +566,7 @@ public final class FuncDSL {
    * @param <R> output type
    * @return a named call step
    */
-  public static <T, R> FuncCallStep<T, R> function(String name, Function<T, R> fn) {
+  public static <T, R> FuncCallStep<T, R> function(String name, SerializableFunction<T, R> fn) {
     Class<T> inputClass = ReflectionUtils.inferInputType(fn);
     return new FuncCallStep<>(name, fn, inputClass);
   }
@@ -584,12 +631,12 @@ public final class FuncDSL {
    * @param <T> input type
    * @return an {@link EmitStep}
    */
-  public static <T> EmitStep emit(String type, Function<T, CloudEventData> fn) {
+  public static <T> EmitStep emit(String type, SerializableFunction<T, CloudEventData> fn) {
     return new EmitStep(null, event(type, fn));
   }
 
   /**
-   * Named variant of {@link #emit(String, Function)}.
+   * Named variant of {@link #emit(String, SerializableFunction)}.
    *
    * @param name task name
    * @param type CloudEvent type
@@ -597,7 +644,8 @@ public final class FuncDSL {
    * @param <T> input type
    * @return a named {@link EmitStep}
    */
-  public static <T> EmitStep emit(String name, String type, Function<T, CloudEventData> fn) {
+  public static <T> EmitStep emit(
+      String name, String type, SerializableFunction<T, CloudEventData> fn) {
     return new EmitStep(name, event(type, fn));
   }
 
@@ -678,7 +726,7 @@ public final class FuncDSL {
 
   /**
    * Low-level switch case configurer using a custom builder consumer. Prefer the {@link
-   * #caseOf(Predicate)} helpers when possible.
+   * #caseOf(SerializablePredicate)} helpers when possible.
    *
    * @param taskName optional task name
    * @param switchCase consumer to configure the {@link FuncSwitchTaskBuilder}
@@ -701,7 +749,7 @@ public final class FuncDSL {
 
   /**
    * Convenience to apply multiple {@link SwitchCaseConfigurer} built via {@link
-   * #caseOf(Predicate)}.
+   * #caseOf(SerializablePredicate)}.
    *
    * @param cases case configurers
    * @return list configurer
@@ -773,6 +821,11 @@ public final class FuncDSL {
             FuncDSL.cases(caseOf(pred, predClass).then(thenTask), caseDefault(otherwise)));
   }
 
+  public static <T> FuncTaskConfigurer switchWhenOrElse(
+      SerializablePredicate<T> pred, String thenTask, FlowDirectiveEnum otherwise) {
+    return switchWhenOrElse(pred, thenTask, otherwise, ReflectionUtils.inferInputType(pred));
+  }
+
   /**
    * Sugar for a single-case switch with a default task fallback.
    *
@@ -787,6 +840,11 @@ public final class FuncDSL {
       Predicate<T> pred, String thenTask, String otherwiseTask, Class<T> predClass) {
     return list ->
         list.switchCase(cases(caseOf(pred, predClass).then(thenTask), caseDefault(otherwiseTask)));
+  }
+
+  public static <T> FuncTaskConfigurer switchWhenOrElse(
+      SerializablePredicate<T> pred, String thenTask, String otherwiseTask) {
+    return switchWhenOrElse(pred, thenTask, otherwiseTask, ReflectionUtils.inferInputType(pred));
   }
 
   /**

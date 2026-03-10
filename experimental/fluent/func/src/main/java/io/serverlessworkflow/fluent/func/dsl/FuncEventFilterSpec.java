@@ -34,7 +34,7 @@ public abstract class FuncEventFilterSpec<SELF>
   }
 
   /** Sets the event data and the contentType to `application/json` */
-  public <T> SELF jsonData(Function<T, CloudEventData> function) {
+  public <T> SELF jsonData(SerializableFunction<T, CloudEventData> function) {
     Class<T> clazz = ReflectionUtils.inferInputType(function);
     addStep(e -> e.data(new EventDataFunction().withFunction(function, clazz)));
     return JSON();

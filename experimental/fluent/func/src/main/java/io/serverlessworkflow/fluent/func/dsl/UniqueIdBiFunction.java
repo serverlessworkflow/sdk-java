@@ -15,6 +15,7 @@
  */
 package io.serverlessworkflow.fluent.func.dsl;
 
+import java.io.Serializable;
 import java.util.function.BiFunction;
 
 /**
@@ -25,6 +26,6 @@ import java.util.function.BiFunction;
  * @param <R> The task result output
  */
 @FunctionalInterface
-public interface UniqueIdBiFunction<T, R> extends BiFunction<String, T, R> {
+public interface UniqueIdBiFunction<T, R> extends BiFunction<String, T, R>, Serializable {
   R apply(String uniqueId, T object);
 }

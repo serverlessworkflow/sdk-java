@@ -13,13 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.api.types.func;
+package io.serverlessworkflow.fluent.func.dsl;
 
-import io.serverlessworkflow.impl.TaskContextData;
-import io.serverlessworkflow.impl.WorkflowContextData;
 import java.io.Serializable;
+import java.util.function.Function;
 
+/**
+ * Alternative to Function for our DSL to discover the input parameter class in runtime via
+ * reflection.
+ *
+ * @param <T>
+ * @param <R>
+ */
 @FunctionalInterface
-public interface JavaFilterFunction<T, R> extends Serializable {
-  R apply(T object, WorkflowContextData workflowContext, TaskContextData taskContext);
-}
+public interface SerializableFunction<T, R> extends Function<T, R>, Serializable {}

@@ -53,7 +53,7 @@ class FuncDSLUniqueIdTest {
   @Test
   @DisplayName(
       "withUniqueId(name, fn, in) composes uniqueId = instanceId-jsonPointer and passes it")
-  void withUniqueId_uses_json_pointer_for_unique_id() throws Exception {
+  void withUniqueId_uses_json_pointer_for_unique_id() {
     AtomicReference<String> receivedUniqueId = new AtomicReference<>();
     AtomicReference<String> receivedPayload = new AtomicReference<>();
 
@@ -104,7 +104,7 @@ class FuncDSLUniqueIdTest {
 
   @Test
   @DisplayName("agent(fn, in) composes uniqueId = instanceId-jsonPointer and passes it")
-  void agent_uses_json_pointer_for_unique_id() throws Exception {
+  void agent_uses_json_pointer_for_unique_id() {
     AtomicReference<String> receivedUniqueId = new AtomicReference<>();
     AtomicReference<Integer> receivedPayload = new AtomicReference<>();
 

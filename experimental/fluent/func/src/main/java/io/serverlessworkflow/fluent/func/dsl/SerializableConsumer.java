@@ -15,13 +15,8 @@
  */
 package io.serverlessworkflow.fluent.func.dsl;
 
-/**
- * Functions that expect a workflow instance ID injection in runtime
- *
- * @param <T> The task payload input
- * @param <R> The task result output
- */
+import java.io.Serializable;
+import java.util.function.Consumer;
+
 @FunctionalInterface
-public interface InstanceIdBiFunction<T, R> {
-  R apply(String instanceId, T payload);
-}
+public interface SerializableConsumer<T> extends Consumer<T>, Serializable {}

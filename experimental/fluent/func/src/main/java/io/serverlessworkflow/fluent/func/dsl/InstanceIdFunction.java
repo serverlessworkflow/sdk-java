@@ -13,13 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.api.types.func;
+package io.serverlessworkflow.fluent.func.dsl;
 
-import io.serverlessworkflow.impl.TaskContextData;
-import io.serverlessworkflow.impl.WorkflowContextData;
 import java.io.Serializable;
 
+/**
+ * Functions that expect a workflow instance ID injection in runtime
+ *
+ * @param <T> The task payload input
+ * @param <R> The task result output
+ */
 @FunctionalInterface
-public interface JavaFilterFunction<T, R> extends Serializable {
-  R apply(T object, WorkflowContextData workflowContext, TaskContextData taskContext);
+public interface InstanceIdFunction<T, R> extends Serializable {
+  R apply(String instanceId, T payload);
 }

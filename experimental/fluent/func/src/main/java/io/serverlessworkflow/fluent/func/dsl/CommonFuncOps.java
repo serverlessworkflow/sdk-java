@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.fluent.func.dsl.internal;
+package io.serverlessworkflow.fluent.func.dsl;
 
 import io.cloudevents.CloudEventData;
 import io.serverlessworkflow.api.types.FlowDirectiveEnum;
@@ -22,19 +22,17 @@ import io.serverlessworkflow.fluent.func.FuncEmitTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncSwitchTaskBuilder;
 import io.serverlessworkflow.fluent.func.configurers.FuncPredicateEventConfigurer;
 import io.serverlessworkflow.fluent.func.configurers.SwitchCaseConfigurer;
-import io.serverlessworkflow.fluent.func.dsl.ReflectionUtils;
-import io.serverlessworkflow.fluent.func.dsl.SwitchCaseSpec;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-public interface CommonFuncOps {
+interface CommonFuncOps {
 
   default <T, V> Consumer<FuncCallTaskBuilder> fn(Function<T, V> function, Class<T> argClass) {
     return f -> f.function(function, argClass);
   }
 
-  default <T, V> Consumer<FuncCallTaskBuilder> fn(Function<T, V> function) {
+  default <T, V> Consumer<FuncCallTaskBuilder> fn(SerializableFunction<T, V> function) {
     Class<T> clazz = ReflectionUtils.inferInputType(function);
     return f -> f.function(function, clazz);
   }
@@ -51,8 +49,8 @@ public interface CommonFuncOps {
     return new SwitchCaseSpec<T>().when(when, whenClass);
   }
 
-  default <T> SwitchCaseSpec<T> caseOf(Predicate<T> when) {
-    return new SwitchCaseSpec<T>().when(when);
+  default <T> SwitchCaseSpec<T> caseOf(SerializablePredicate<T> when) {
+    return new SwitchCaseSpec<T>().when(when, ReflectionUtils.inferInputType(when));
   }
 
   default SwitchCaseConfigurer caseDefault(String task) {
