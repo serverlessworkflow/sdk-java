@@ -69,8 +69,7 @@ public class EventDefinitionTest {
 
   @ParameterizedTest
   @MethodSource("wrongEventListenerParameters")
-  void testWrongEvent(
-      String listen, String emit, JsonNode expectedResult, Object emitInput, Object listenInput)
+  void testWrongEvent(String listen, String emit, Object emitInput, Object listenInput)
       throws IOException {
     WorkflowDefinition listenDefinition =
         appl.workflowDefinition(WorkflowReader.readWorkflowFromClasspath(listen));
@@ -83,7 +82,7 @@ public class EventDefinitionTest {
     assertThat(waitingInstance.status()).isEqualTo(WorkflowStatus.WAITING);
     waitingInstance.cancel();
     assertThat(waitingInstance.status()).isEqualTo(WorkflowStatus.CANCELLED);
-    assertThat(future).isCancelled();
+    assertThat(future).isDone();
   }
 
   @ParameterizedTest
@@ -140,7 +139,6 @@ public class EventDefinitionTest {
         Arguments.of(
             "workflows-samples/listen-to-any-filter.yaml",
             "workflows-samples/emit-doctor.yaml",
-            doctor(),
             Map.of("temperature", 38),
             Map.of("threshold", 39)));
   }

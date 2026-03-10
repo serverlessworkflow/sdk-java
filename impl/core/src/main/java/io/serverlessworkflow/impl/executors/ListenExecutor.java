@@ -131,8 +131,15 @@ public abstract class ListenExecutor extends RegularTaskExecutor<ListenTask> {
                 untilRegBuilders, (ce, f) -> f.complete(null), eventConsumer, workflow, task);
         untilInfo
             .completableFuture()
-            .whenComplete((__, e) -> untilInfo.registrations().forEach(eventConsumer::unregister))
-            .thenAccept(__ -> info.completableFuture().complete(null));
+            .whenComplete(
+                (__, e) -> {
+                  untilInfo.registrations().forEach(eventConsumer::unregister);
+                  if (e == null) {
+                    info.completableFuture().complete(null);
+                  } else {
+                    info.completableFuture().completeExceptionally(e);
+                  }
+                });
       }
       return info;
     }
@@ -173,6 +180,7 @@ public abstract class ListenExecutor extends RegularTaskExecutor<ListenTask> {
                     processCe(converter.apply(ce), output, workflow, taskContext, future)),
             workflow,
             taskContext);
+    workflow.instance().addCancelable(info.completableFuture());
     return info.completableFuture()
         .whenComplete((__, e) -> info.registrations().forEach(eventConsumer::unregister))
         .thenApply(__ -> output);
