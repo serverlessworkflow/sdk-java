@@ -300,22 +300,6 @@ public final class FuncDSL {
   }
 
   /**
-   * Build a call step for functions that expect the workflow instance ID as the first parameter.
-   * The instance ID is extracted from the runtime context.
-   *
-   * <p>Signature expected: {@code (instanceId, payload) -> result}
-   *
-   * @param fn instance-id-aware function
-   * @param in payload input class
-   * @param <T> input type
-   * @param <R> result type
-   * @return a call step
-   */
-  public static <T, R> FuncCallStep<T, R> withInstanceId(InstanceIdFunction<T, R> fn, Class<T> in) {
-    return withInstanceId(null, fn, in);
-  }
-
-  /**
    * Named variant of {@link #withContext(JavaContextFunction, Class)}.
    *
    * @param name task name
@@ -390,8 +374,28 @@ public final class FuncDSL {
     return new FuncCallStep<>(name, jcf, in);
   }
 
+  /**
+   * Build a call step for functions that expect the workflow instance ID as the first parameter.
+   * The instance ID is extracted from the runtime context.
+   *
+   * <p>Signature expected: {@code (instanceId, payload) -> result}
+   *
+   * @param fn instance-id-aware function
+   * @param in payload input class
+   * @param <T> input type
+   * @param <R> result type
+   * @return a call step
+   */
+  public static <T, R> FuncCallStep<T, R> withInstanceId(InstanceIdFunction<T, R> fn, Class<T> in) {
+    return withInstanceId(null, fn, in);
+  }
+
   public static <T, R> FuncCallStep<T, R> withInstanceId(String name, InstanceIdFunction<T, R> fn) {
     return withInstanceId(name, fn, ReflectionUtils.inferInputType(fn));
+  }
+
+  public static <T, R> FuncCallStep<T, R> withInstanceId(InstanceIdFunction<T, R> fn) {
+    return withInstanceId(null, fn, ReflectionUtils.inferInputType(fn));
   }
 
   /**

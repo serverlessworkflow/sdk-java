@@ -55,7 +55,7 @@ final class ReflectionUtils {
 
   @SuppressWarnings("unchecked")
   static <T> Class<T> inferInputType(InstanceIdFunction<T, ?> fn) {
-    return throwIllegalStateIfNull((Class<T>) inferInputTypeFromAny(fn, 0));
+    return throwIllegalStateIfNull((Class<T>) inferInputTypeFromAny(fn, 1));
   }
 
   @SuppressWarnings("unchecked")

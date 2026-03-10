@@ -20,6 +20,7 @@ import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.function;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.switchWhenOrElse;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.withContext;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.withFilter;
+import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.withInstanceId;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -158,6 +159,28 @@ public class FuncDSLReflectionsTest {
       assertTrue(output.isPresent());
       // It should append the task JSON pointer (likely "/tasks/0" or similar depending on spec)
       assertTrue(output.get().startsWith("Filter Data at position do/"));
+    }
+  }
+
+  @Test
+  void check_serializable_instance_id_function() {
+    Workflow wf =
+        FuncWorkflowBuilder.workflow("instance-id-test")
+            .tasks(
+                // Infers Integer.class for the payload (the second parameter)
+                withInstanceId(
+                    "",
+                    (String instanceId, Integer payload) ->
+                        "Instance=[" + instanceId + "] Payload=[" + payload + "]"))
+            .build();
+
+    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
+      Optional<String> output = app.workflowDefinition(wf).instance(456).start().join().asText();
+
+      assertTrue(output.isPresent());
+      // The instanceId should be populated automatically by the workflow runtime
+      assertTrue(output.get().contains("Instance=["));
+      assertTrue(output.get().contains("] Payload=[456]"));
     }
   }
 }
