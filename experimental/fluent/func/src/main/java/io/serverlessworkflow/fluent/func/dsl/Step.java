@@ -340,7 +340,7 @@ abstract class Step<SELF extends Step<SELF, B>, B> implements FuncTaskConfigurer
    * Shapes what gets written back into the workflow data document using a context-aware filter
    * function with explicit input type.
    *
-   * @param <T> the task result typeßßß
+   * @param <T> the task result type
    * @param <R> the output type (what gets written to workflow data)
    * @param function the filter function with workflow and task context
    * @param taskResultClass the class of the task result type
