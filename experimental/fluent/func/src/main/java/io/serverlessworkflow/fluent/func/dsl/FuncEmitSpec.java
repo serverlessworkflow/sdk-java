@@ -37,7 +37,7 @@ public final class FuncEmitSpec
   }
 
   /** Sets the event data and the contentType to `application/json` */
-  public <T> FuncEmitSpec jsonData(Function<T, CloudEventData> function) {
+  public <T> FuncEmitSpec jsonData(SerializableFunction<T, CloudEventData> function) {
     Class<T> clazz = ReflectionUtils.inferInputType(function);
     addPropertyStep(e -> e.data(new EventDataFunction().withFunction(function, clazz)));
     return JSON();

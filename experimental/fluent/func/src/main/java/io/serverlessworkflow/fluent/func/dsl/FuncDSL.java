@@ -220,8 +220,8 @@ public final class FuncDSL {
   }
 
   /**
-   * Same as {@link #produced(String, SerializableFunction)} but with an explicit input class to guide
-   * conversion.
+   * Same as {@link #produced(String, SerializableFunction)} but with an explicit input class to
+   * guide conversion.
    *
    * @param type CloudEvent type
    * @param function function that maps workflow input to {@link CloudEventData}
@@ -674,7 +674,8 @@ public final class FuncDSL {
    * @param <T> input type
    * @return a named {@link EmitStep}
    */
-  public static <T> EmitStep emit(String name, String type, SerializableFunction<T, CloudEventData> fn) {
+  public static <T> EmitStep emit(
+      String name, String type, SerializableFunction<T, CloudEventData> fn) {
     return new EmitStep(name, produced(type, fn));
   }
 
@@ -702,7 +703,8 @@ public final class FuncDSL {
    * @param <T> input type
    * @return an {@link EmitStep}
    */
-  public static <T> EmitStep emit(String type, Function<T, byte[]> serializer, Class<T> inputClass) {
+  public static <T> EmitStep emit(
+      String type, Function<T, byte[]> serializer, Class<T> inputClass) {
     return new EmitStep(null, producedBytes(type, serializer, inputClass));
   }
 
