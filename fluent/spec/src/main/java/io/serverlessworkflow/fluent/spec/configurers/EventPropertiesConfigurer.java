@@ -19,4 +19,4 @@ import io.serverlessworkflow.fluent.spec.EventPropertiesBuilder;
 import java.util.function.Consumer;
 
 @FunctionalInterface
-public interface EventConfigurer extends Consumer<EventPropertiesBuilder> {}
+public interface EventPropertiesConfigurer extends Consumer<EventPropertiesBuilder> {}

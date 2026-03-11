@@ -15,16 +15,29 @@
  */
 package io.serverlessworkflow.fluent.func;
 
+import io.cloudevents.CloudEvent;
 import io.cloudevents.CloudEventData;
 import io.serverlessworkflow.api.types.func.EventDataFunction;
+import io.serverlessworkflow.api.types.func.EventDataPredicate;
 import io.serverlessworkflow.fluent.spec.AbstractEventPropertiesBuilder;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 public class FuncEventPropertiesBuilder
     extends AbstractEventPropertiesBuilder<FuncEventPropertiesBuilder> {
 
   @Override
   protected FuncEventPropertiesBuilder self() {
+    return this;
+  }
+
+  public <T> FuncEventPropertiesBuilder raw(Function<T, CloudEvent> function, Class<T> clazz) {
+    this.eventProperties.setData(new EventDataFunction().withFunction(function, clazz));
+    return this;
+  }
+
+  public FuncEventPropertiesBuilder raw(Predicate<CloudEvent> predicate) {
+    this.eventProperties.setData(new EventDataPredicate().withPredicate(predicate));
     return this;
   }
 
@@ -35,6 +48,11 @@ public class FuncEventPropertiesBuilder
 
   public <T> FuncEventPropertiesBuilder data(Function<T, CloudEventData> function, Class<T> clazz) {
     this.eventProperties.setData(new EventDataFunction().withFunction(function, clazz));
+    return this;
+  }
+
+  public FuncEventPropertiesBuilder data(Predicate<CloudEventData> predicate) {
+    this.eventProperties.setData(new EventDataPredicate().withPredicate(predicate));
     return this;
   }
 }

@@ -15,56 +15,35 @@
  */
 package io.serverlessworkflow.fluent.func.dsl;
 
-import io.cloudevents.CloudEventData;
-import io.cloudevents.core.data.BytesCloudEventData;
-import io.cloudevents.core.data.PojoCloudEventData;
-import io.serverlessworkflow.api.types.func.EventDataFunction;
+import io.cloudevents.CloudEvent;
+import io.serverlessworkflow.fluent.func.FuncEventFilterBuilder;
 import io.serverlessworkflow.fluent.func.FuncEventPropertiesBuilder;
-import io.serverlessworkflow.fluent.spec.dsl.EventFilterSpec;
-import io.serverlessworkflow.impl.jackson.JsonUtils;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.function.Function;
+import io.serverlessworkflow.fluent.spec.dsl.AbstractEventFilterSpec;
 
-public abstract class FuncEventFilterSpec<SELF>
-    extends EventFilterSpec<SELF, FuncEventPropertiesBuilder> {
+public final class FuncEventFilterSpec
+    extends AbstractEventFilterSpec<
+        FuncEventFilterSpec, FuncEventPropertiesBuilder, FuncEventFilterBuilder> {
 
-  FuncEventFilterSpec() {
-    super(new ArrayList<>());
+  @Override
+  protected FuncEventFilterSpec self() {
+    return this;
   }
 
-  /** Sets the event data and the contentType to `application/json` */
-  public <T> SELF jsonData(SerializableFunction<T, CloudEventData> function) {
-    Class<T> clazz = ReflectionUtils.inferInputType(function);
-    addStep(e -> e.data(new EventDataFunction().withFunction(function, clazz)));
-    return JSON();
+  /**
+   * Configures the filter to match incoming event data based on a Predicate. This is the Listen
+   * counterpart to Emit's jsonData(Function).
+   */
+  public FuncEventFilterSpec dataMatches(SerializablePredicate<CloudEvent> predicate) {
+    addPropertyStep(e -> e.data(predicate));
+    return this;
   }
 
-  /** Sets the event data and the contentType to `application/octet-stream` */
-  public <T> SELF bytesData(Function<T, byte[]> serializer, Class<T> clazz) {
-    addStep(e -> e.data(payload -> BytesCloudEventData.wrap(serializer.apply(payload)), clazz));
-    return OCTET_STREAM();
+  public FuncEventFilterSpec onThisInstance(String extensionName) {
+    return this;
   }
 
-  public SELF bytesDataUtf8() {
-    return bytesData((String s) -> s.getBytes(StandardCharsets.UTF_8), String.class);
-  }
-
-  /** Sets the event data and the contentType to `application/json` */
-  public <T> SELF jsonData(Function<T, CloudEventData> function, Class<T> clazz) {
-    addStep(e -> e.data(new EventDataFunction().withFunction(function, clazz)));
-    return JSON();
-  }
-
-  /** JSON with default mapper (PojoCloudEventData + application/json). */
-  public <T> SELF jsonData(Class<T> clazz) {
-    addStep(
-        e ->
-            e.data(
-                payload ->
-                    PojoCloudEventData.wrap(
-                        payload, p -> JsonUtils.mapper().writeValueAsString(p).getBytes()),
-                clazz));
-    return JSON();
+  public FuncEventFilterSpec byExtension(String extensionName, String extensionValue) {
+    addPropertyStep(e -> e.raw(ce -> ce.getExtension(extensionName) == extensionValue));
+    return this;
   }
 }

@@ -17,8 +17,11 @@ package io.serverlessworkflow.fluent.func;
 
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.agent;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.withUniqueId;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import io.serverlessworkflow.api.types.Task;
 import io.serverlessworkflow.api.types.TaskItem;

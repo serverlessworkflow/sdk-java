@@ -21,52 +21,43 @@ import java.util.function.Consumer;
 /**
  * Generic base for Listen specs.
  *
- * <p>Type params: SELF - fluent self type (the concrete spec) LB - ListenTaskBuilder type (e.g.,
- * ListenTaskBuilder, AgentListenTaskBuilder, FuncListenTaskBuilder) TB - ListenToBuilder type
- * (e.g., ListenToBuilder, FuncListenToBuilder) FB - EventFilterBuilder type (e.g.,
- * EventFilterBuilder, FuncEventFilterBuilder) EC - Event configurer type (e.g., EventConfigurer,
- * FuncPredicateEventConfigurer)
+ * <p>Type params: SELF - fluent self type (the concrete spec) LISTEN_TASK - {@link
+ * io.serverlessworkflow.fluent.spec.ListenTaskBuilder} type LISTEN_TO - {@link
+ * io.serverlessworkflow.fluent.spec.ListenToBuilder} type EVENT_FILTER - {@link
+ * io.serverlessworkflow.fluent.spec.EventFilterBuilder} type
  */
-public abstract class BaseListenSpec<SELF, LB, TB, FB, EC> {
+public abstract class BaseListenSpec<SELF, LISTEN_TASK, LISTEN_TO, EVENT_FILTER> {
 
   @FunctionalInterface
-  public interface ToInvoker<LB, TB> {
-    void to(LB listenTaskBuilder, Consumer<TB> toStep);
+  public interface ToInvoker<LISTEN_TASK, LISTEN_TO> {
+    void to(LISTEN_TASK listenTaskBuilder, Consumer<LISTEN_TO> toStep);
   }
 
   @FunctionalInterface
-  public interface WithApplier<FB, EC> {
-    void with(FB filterBuilder, EC eventConfigurer);
+  public interface FiltersApplier<LISTEN_TO, EVENT_FILTER> {
+    void apply(LISTEN_TO toBuilder, @SuppressWarnings("rawtypes") Consumer[] filters);
   }
 
   @FunctionalInterface
-  public interface FiltersApplier<TB, FB> {
-    void apply(TB toBuilder, @SuppressWarnings("rawtypes") Consumer[] filters);
+  public interface OneFilterApplier<LISTEN_TO, EVENT_FILTER> {
+    void apply(LISTEN_TO toBuilder, Consumer<EVENT_FILTER> filter);
   }
 
-  @FunctionalInterface
-  public interface OneFilterApplier<TB, FB> {
-    void apply(TB toBuilder, Consumer<FB> filter);
-  }
+  private final ToInvoker<LISTEN_TASK, LISTEN_TO> toInvoker;
+  private final FiltersApplier<LISTEN_TO, EVENT_FILTER> allApplier;
+  private final FiltersApplier<LISTEN_TO, EVENT_FILTER> anyApplier;
+  private final OneFilterApplier<LISTEN_TO, EVENT_FILTER> oneApplier;
 
-  private final ToInvoker<LB, TB> toInvoker;
-  private final WithApplier<FB, EC> withApplier;
-  private final FiltersApplier<TB, FB> allApplier;
-  private final FiltersApplier<TB, FB> anyApplier;
-  private final OneFilterApplier<TB, FB> oneApplier;
-
-  private Consumer<TB> strategyStep;
-  private Consumer<TB> untilStep;
+  private Consumer<LISTEN_TO> strategyStep;
+  private Consumer<LISTEN_TO> untilStep;
 
   protected BaseListenSpec(
-      ToInvoker<LB, TB> toInvoker,
-      WithApplier<FB, EC> withApplier,
-      FiltersApplier<TB, FB> allApplier,
-      FiltersApplier<TB, FB> anyApplier,
-      OneFilterApplier<TB, FB> oneApplier) {
+      ToInvoker<LISTEN_TASK, LISTEN_TO> toInvoker,
+      FiltersApplier<LISTEN_TO, EVENT_FILTER> allApplier,
+      FiltersApplier<LISTEN_TO, EVENT_FILTER> anyApplier,
+      OneFilterApplier<LISTEN_TO, EVENT_FILTER> oneApplier) {
 
     this.toInvoker = Objects.requireNonNull(toInvoker, "toInvoker");
-    this.withApplier = Objects.requireNonNull(withApplier, "withApplier");
     this.allApplier = Objects.requireNonNull(allApplier, "allApplier");
     this.anyApplier = Objects.requireNonNull(anyApplier, "anyApplier");
     this.oneApplier = Objects.requireNonNull(oneApplier, "oneApplier");
@@ -74,42 +65,31 @@ public abstract class BaseListenSpec<SELF, LB, TB, FB, EC> {
 
   protected abstract SELF self();
 
-  protected final void setUntilStep(Consumer<TB> untilStep) {
+  protected final void setUntilStep(Consumer<LISTEN_TO> untilStep) {
     this.untilStep = untilStep;
   }
 
-  /** Convert EC[] -> Consumer<FB>[] that call `filterBuilder.with(event)` */
-  @SuppressWarnings("unchecked")
-  protected final Consumer<FB>[] asFilters(EC... events) {
-    Objects.requireNonNull(events, "events");
-    Consumer<FB>[] filters = new Consumer[events.length];
-    for (int i = 0; i < events.length; i++) {
-      EC ev = Objects.requireNonNull(events[i], "events[" + i + "]");
-      filters[i] = fb -> withApplier.with(fb, ev);
-    }
-    return filters;
-  }
-
   @SafeVarargs
-  public final SELF all(EC... events) {
-    strategyStep = t -> allApplier.apply(t, asFilters(events));
+  public final SELF all(Consumer<EVENT_FILTER>... filters) {
+    Objects.requireNonNull(filters, "filters");
+    strategyStep = t -> allApplier.apply(t, filters);
     return self();
   }
 
   @SafeVarargs
-  public final SELF any(EC... events) {
-    strategyStep = t -> anyApplier.apply(t, asFilters(events));
+  public final SELF any(Consumer<EVENT_FILTER>... filters) {
+    Objects.requireNonNull(filters, "filters");
+    strategyStep = t -> anyApplier.apply(t, filters);
     return self();
   }
 
-  public final SELF one(EC event) {
-    Objects.requireNonNull(event, "event");
-    strategyStep = t -> oneApplier.apply(t, fb -> withApplier.with(fb, event));
+  public final SELF one(Consumer<EVENT_FILTER> filter) {
+    Objects.requireNonNull(filter, "filter");
+    strategyStep = t -> oneApplier.apply(t, filter);
     return self();
   }
 
-  /** Concrete 'accept' should delegate here with its concrete LB. */
-  protected final void acceptInto(LB listenTaskBuilder) {
+  protected final void acceptInto(LISTEN_TASK listenTaskBuilder) {
     Objects.requireNonNull(strategyStep, "listening strategy must be set (all/any/one)");
     toInvoker.to(
         listenTaskBuilder,
