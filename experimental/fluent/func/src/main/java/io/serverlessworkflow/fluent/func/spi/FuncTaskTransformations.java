@@ -16,9 +16,9 @@
 package io.serverlessworkflow.fluent.func.spi;
 
 import io.serverlessworkflow.api.types.Export;
+import io.serverlessworkflow.api.types.func.ContextFunction;
 import io.serverlessworkflow.api.types.func.ExportAsFunction;
-import io.serverlessworkflow.api.types.func.JavaContextFunction;
-import io.serverlessworkflow.api.types.func.JavaFilterFunction;
+import io.serverlessworkflow.api.types.func.FilterFunction;
 import io.serverlessworkflow.fluent.spec.spi.TaskTransformationHandlers;
 import java.util.function.Function;
 
@@ -38,25 +38,25 @@ public interface FuncTaskTransformations<SELF extends FuncTaskTransformations<SE
   }
 
   @SuppressWarnings("unchecked")
-  default <T, V> SELF exportAs(JavaFilterFunction<T, V> function) {
+  default <T, V> SELF exportAs(FilterFunction<T, V> function) {
     setExport(new Export().withAs(new ExportAsFunction().withFunction(function)));
     return (SELF) this;
   }
 
   @SuppressWarnings("unchecked")
-  default <T, V> SELF exportAs(JavaFilterFunction<T, V> function, Class<T> argClass) {
+  default <T, V> SELF exportAs(FilterFunction<T, V> function, Class<T> argClass) {
     setExport(new Export().withAs(new ExportAsFunction().withFunction(function, argClass)));
     return (SELF) this;
   }
 
   @SuppressWarnings("unchecked")
-  default <T, V> SELF exportAs(JavaContextFunction<T, V> function) {
+  default <T, V> SELF exportAs(ContextFunction<T, V> function) {
     setExport(new Export().withAs(new ExportAsFunction().withFunction(function)));
     return (SELF) this;
   }
 
   @SuppressWarnings("unchecked")
-  default <T, V> SELF exportAs(JavaContextFunction<T, V> function, Class<T> argClass) {
+  default <T, V> SELF exportAs(ContextFunction<T, V> function, Class<T> argClass) {
     setExport(new Export().withAs(new ExportAsFunction().withFunction(function, argClass)));
     return (SELF) this;
   }

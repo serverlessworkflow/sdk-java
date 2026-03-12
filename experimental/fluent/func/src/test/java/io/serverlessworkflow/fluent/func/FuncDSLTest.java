@@ -38,7 +38,7 @@ import io.serverlessworkflow.api.types.Task;
 import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.api.types.func.CallJava;
-import io.serverlessworkflow.api.types.func.JavaFilterFunction;
+import io.serverlessworkflow.api.types.func.FilterFunction;
 import io.serverlessworkflow.fluent.func.dsl.FuncDSL;
 import io.serverlessworkflow.fluent.func.dsl.FuncEmitSpec;
 import io.serverlessworkflow.fluent.func.dsl.FuncListenSpec;
@@ -99,7 +99,7 @@ class FuncDSLTest {
             .bytesData((String s) -> s.getBytes(StandardCharsets.UTF_8), String.class);
 
     // JavaFilterFunction<T,R> is (T, WorkflowContextData, TaskContextData) -> R
-    JavaFilterFunction<String, Map<String, Object>> jf =
+    FilterFunction<String, Map<String, Object>> jf =
         (val, wfCtx, taskCtx) -> Map.of("wrapped", val, "wfId", wfCtx.instanceData().id());
 
     Workflow wf =

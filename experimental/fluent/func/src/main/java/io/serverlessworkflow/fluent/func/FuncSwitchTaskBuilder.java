@@ -20,7 +20,7 @@ import io.serverlessworkflow.api.types.FlowDirectiveEnum;
 import io.serverlessworkflow.api.types.SwitchCase;
 import io.serverlessworkflow.api.types.SwitchItem;
 import io.serverlessworkflow.api.types.SwitchTask;
-import io.serverlessworkflow.api.types.func.SwitchCaseFunction;
+import io.serverlessworkflow.api.types.func.SwitchCasePredicate;
 import io.serverlessworkflow.fluent.func.spi.ConditionalTaskBuilder;
 import io.serverlessworkflow.fluent.func.spi.FuncTaskTransformations;
 import io.serverlessworkflow.fluent.spec.TaskBaseBuilder;
@@ -59,7 +59,7 @@ public class FuncSwitchTaskBuilder extends TaskBaseBuilder<FuncSwitchTaskBuilder
       String name, Consumer<SwitchCasePredicateBuilder> consumer) {
     final SwitchCasePredicateBuilder switchCase = new SwitchCasePredicateBuilder();
     consumer.accept(switchCase);
-    final SwitchCaseFunction switchCaseValue = (SwitchCaseFunction) switchCase.build();
+    final SwitchCasePredicate switchCaseValue = (SwitchCasePredicate) switchCase.build();
 
     // Handling default cases
     if (switchCaseValue.predicate() == null) {
@@ -89,10 +89,10 @@ public class FuncSwitchTaskBuilder extends TaskBaseBuilder<FuncSwitchTaskBuilder
   }
 
   public static final class SwitchCasePredicateBuilder {
-    private final SwitchCaseFunction switchCase;
+    private final SwitchCasePredicate switchCase;
 
     SwitchCasePredicateBuilder() {
-      this.switchCase = new SwitchCaseFunction();
+      this.switchCase = new SwitchCasePredicate();
     }
 
     public <T> SwitchCasePredicateBuilder when(Predicate<T> when) {

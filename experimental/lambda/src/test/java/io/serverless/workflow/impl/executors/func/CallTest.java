@@ -30,7 +30,7 @@ import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.api.types.func.CallJava;
 import io.serverlessworkflow.api.types.func.CallTaskJava;
 import io.serverlessworkflow.api.types.func.ForTaskFunction;
-import io.serverlessworkflow.api.types.func.SwitchCaseFunction;
+import io.serverlessworkflow.api.types.func.SwitchCasePredicate;
 import io.serverlessworkflow.api.types.func.TaskMetadataKeys;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowDefinition;
@@ -143,7 +143,7 @@ class CallTest {
                                           List.of(
                                               new SwitchItem(
                                                   "odd",
-                                                  new SwitchCaseFunction()
+                                                  new SwitchCasePredicate()
                                                       .withPredicate(CallTest::isOdd, Integer.class)
                                                       .withThen(
                                                           new FlowDirective()

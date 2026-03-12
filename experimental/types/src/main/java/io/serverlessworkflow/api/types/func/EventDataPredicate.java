@@ -31,4 +31,26 @@ public class EventDataPredicate extends EventData {
     setObject(new TypedPredicate<>(predicate, clazz));
     return this;
   }
+
+  public <T> EventDataPredicate withPredicate(ContextPredicate<T> predicate) {
+    setObject(predicate);
+    return this;
+  }
+
+  public <T> EventDataPredicate withPredicate(ContextPredicate<T> predicate, Class<T> clazz) {
+    Objects.requireNonNull(clazz);
+    setObject(new TypedContextPredicate<>(predicate, clazz));
+    return this;
+  }
+
+  public <T> EventDataPredicate withPredicate(FilterPredicate<T> predicate) {
+    setObject(predicate);
+    return this;
+  }
+
+  public <T> EventDataPredicate withPredicate(FilterPredicate<T> predicate, Class<T> clazz) {
+    Objects.requireNonNull(clazz);
+    setObject(new TypedFilterPredicate<>(predicate, clazz));
+    return this;
+  }
 }

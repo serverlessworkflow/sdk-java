@@ -23,7 +23,7 @@ import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.api.types.func.CallJava;
 import io.serverlessworkflow.api.types.func.CallTaskJava;
-import io.serverlessworkflow.api.types.func.JavaContextFunction;
+import io.serverlessworkflow.api.types.func.ContextFunction;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -38,7 +38,7 @@ class CallJavaContextFunctionTest {
   void testJavaContextFunction_simple() throws InterruptedException, ExecutionException {
     try (WorkflowApplication app = WorkflowApplication.builder().build()) {
       var ctxFn =
-          (JavaContextFunction<Person, String>)
+          (ContextFunction<Person, String>)
               (person, workflowContext) ->
                   person.name
                       + "@"

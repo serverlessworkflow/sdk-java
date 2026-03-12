@@ -15,17 +15,17 @@
  */
 package io.serverlessworkflow.impl.executors.func;
 
-import io.serverlessworkflow.api.types.func.JavaFilterFunction;
+import io.serverlessworkflow.api.types.func.FilterFunction;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
 import java.util.Optional;
 
 public class JavaFilterFunctionCallExecutor<T, V> extends AbstractJavaCallExecutor<T> {
 
-  private final JavaFilterFunction<T, V> function;
+  private final FilterFunction<T, V> function;
 
   public JavaFilterFunctionCallExecutor(
-      Optional<Class<T>> inputClass, JavaFilterFunction<T, V> function) {
+      Optional<Class<T>> inputClass, FilterFunction<T, V> function) {
     super(inputClass);
     this.function = function;
   }

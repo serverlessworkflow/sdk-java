@@ -24,7 +24,7 @@ import io.serverlessworkflow.api.types.Task;
 import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.api.types.func.CallJava;
-import io.serverlessworkflow.api.types.func.JavaFilterFunction;
+import io.serverlessworkflow.api.types.func.FilterFunction;
 import io.serverlessworkflow.fluent.func.dsl.UniqueIdBiFunction;
 import io.serverlessworkflow.impl.TaskContextData;
 import io.serverlessworkflow.impl.WorkflowContextData;
@@ -42,9 +42,9 @@ import org.junit.jupiter.api.Test;
 class FuncDSLUniqueIdTest {
 
   @SuppressWarnings("unchecked")
-  private static JavaFilterFunction<Object, Object> extractJavaFilterFunction(CallJava callJava) {
+  private static FilterFunction<Object, Object> extractJavaFilterFunction(CallJava callJava) {
     if (callJava instanceof CallJava.CallJavaFilterFunction<?, ?> f) {
-      return (JavaFilterFunction<Object, Object>) f.function();
+      return (FilterFunction<Object, Object>) f.function();
     }
     fail("CallTask is not a CallJavaFilterFunction; DSL contract may have changed.");
     return null; // unreachable

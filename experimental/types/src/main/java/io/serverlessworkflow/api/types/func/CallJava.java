@@ -50,11 +50,11 @@ public abstract class CallJava extends TaskBase {
     return new CallJavaLoopFunction<>(function, varName);
   }
 
-  public static <V, T> CallJava function(JavaContextFunction<T, V> function, Class<T> inputClass) {
+  public static <V, T> CallJava function(ContextFunction<T, V> function, Class<T> inputClass) {
     return new CallJavaContextFunction<>(function, Optional.ofNullable(inputClass));
   }
 
-  public static <V, T> CallJava function(JavaFilterFunction<T, V> function, Class<T> inputClass) {
+  public static <V, T> CallJava function(FilterFunction<T, V> function, Class<T> inputClass) {
     return new CallJavaFilterFunction<>(function, Optional.ofNullable(inputClass));
   }
 
@@ -99,16 +99,15 @@ public abstract class CallJava extends TaskBase {
 
   public static class CallJavaContextFunction<T, V> extends CallJava {
     private static final long serialVersionUID = 1L;
-    private final JavaContextFunction<T, V> function;
+    private final ContextFunction<T, V> function;
     private final Optional<Class<T>> inputClass;
 
-    public CallJavaContextFunction(
-        JavaContextFunction<T, V> function, Optional<Class<T>> inputClass) {
+    public CallJavaContextFunction(ContextFunction<T, V> function, Optional<Class<T>> inputClass) {
       this.function = function;
       this.inputClass = inputClass;
     }
 
-    public JavaContextFunction<T, V> function() {
+    public ContextFunction<T, V> function() {
       return function;
     }
 
@@ -119,16 +118,15 @@ public abstract class CallJava extends TaskBase {
 
   public static class CallJavaFilterFunction<T, V> extends CallJava {
     private static final long serialVersionUID = 1L;
-    private final JavaFilterFunction<T, V> function;
+    private final FilterFunction<T, V> function;
     private final Optional<Class<T>> inputClass;
 
-    public CallJavaFilterFunction(
-        JavaFilterFunction<T, V> function, Optional<Class<T>> inputClass) {
+    public CallJavaFilterFunction(FilterFunction<T, V> function, Optional<Class<T>> inputClass) {
       this.function = function;
       this.inputClass = inputClass;
     }
 
-    public JavaFilterFunction<T, V> function() {
+    public FilterFunction<T, V> function() {
       return function;
     }
 

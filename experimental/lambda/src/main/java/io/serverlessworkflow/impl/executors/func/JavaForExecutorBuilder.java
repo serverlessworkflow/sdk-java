@@ -19,7 +19,7 @@ import static io.serverlessworkflow.impl.executors.func.JavaFuncUtils.safeObject
 
 import io.serverlessworkflow.api.types.ForTask;
 import io.serverlessworkflow.api.types.func.ForTaskFunction;
-import io.serverlessworkflow.api.types.func.LoopPredicateIndex;
+import io.serverlessworkflow.api.types.func.LoopPredicateIndexFilter;
 import io.serverlessworkflow.api.types.func.TypedFunction;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowMutablePosition;
@@ -40,7 +40,7 @@ public class JavaForExecutorBuilder extends ForExecutorBuilder {
   @Override
   protected Optional<WorkflowPredicate> buildWhileFilter() {
     if (task instanceof ForTaskFunction taskFunctions) {
-      final LoopPredicateIndex whilePred = taskFunctions.getWhilePredicate();
+      final LoopPredicateIndexFilter whilePred = taskFunctions.getWhilePredicate();
       Optional<Class<?>> whileClass = taskFunctions.getWhileClass();
       String varName = task.getFor().getEach();
       String indexName = task.getFor().getAt();
@@ -51,7 +51,9 @@ public class JavaForExecutorBuilder extends ForExecutorBuilder {
               return whilePred.test(
                   JavaFuncUtils.convert(n, whileClass),
                   item,
-                  (Integer) safeObject(t.variables().get(indexName)));
+                  (Integer) safeObject(t.variables().get(indexName)),
+                  w,
+                  t);
             });
       }
     }

@@ -15,17 +15,17 @@
  */
 package io.serverlessworkflow.impl.executors.func;
 
-import io.serverlessworkflow.api.types.func.JavaContextFunction;
+import io.serverlessworkflow.api.types.func.ContextFunction;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
 import java.util.Optional;
 
 public class JavaContextFunctionCallExecutor<T, V> extends AbstractJavaCallExecutor<T> {
 
-  private final JavaContextFunction<T, V> function;
+  private final ContextFunction<T, V> function;
 
   public JavaContextFunctionCallExecutor(
-      Optional<Class<T>> inputClass, JavaContextFunction<T, V> function) {
+      Optional<Class<T>> inputClass, ContextFunction<T, V> function) {
     super(inputClass);
     this.function = function;
   }
