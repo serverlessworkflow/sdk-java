@@ -36,19 +36,24 @@ public class JavaFuncUtils {
   }
 
   static <T> T convertT(WorkflowModel model, Optional<Class<T>> inputClass) {
-    return inputClass
-        .map(
-            c ->
-                model
-                    .as(c)
-                    .orElseThrow(
-                        () ->
-                            new IllegalArgumentException(
-                                "Model " + model + " cannot be converted to type " + c)))
-        .orElseGet(() -> (T) model.asJavaObject());
+    return model.isNull()
+        ? null
+        : inputClass
+            .map(
+                c ->
+                    model
+                        .as(c)
+                        .orElseThrow(
+                            () ->
+                                new IllegalArgumentException(
+                                    "Model " + model + " cannot be converted to type " + c)))
+            .orElseGet(() -> (T) model.asJavaObject());
   }
 
   static Object convert(WorkflowModel model, Optional<Class<?>> inputClass) {
+    if (model.isNull()) {
+      return null;
+    }
     return inputClass.isPresent()
         ? model
             .as(inputClass.orElseThrow())
