@@ -97,4 +97,10 @@ public class DoTaskBuilder extends BaseDoTaskBuilder<DoTaskBuilder, TaskItemList
     this.listBuilder().openapi(name, itemsConfigurer);
     return this;
   }
+
+  @Override
+  public DoTaskBuilder workflow(String name, Consumer<WorkflowTaskBuilder> itemsConfigurer) {
+    this.listBuilder().workflow(name, itemsConfigurer);
+    return this;
+  }
 }
