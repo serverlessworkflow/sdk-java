@@ -98,7 +98,6 @@ class FuncDSLTest {
             .type("org.acme.signal")
             .bytesData((String s) -> s.getBytes(StandardCharsets.UTF_8), String.class);
 
-    // JavaFilterFunction<T,R> is (T, WorkflowContextData, TaskContextData) -> R
     FilterFunction<String, Map<String, Object>> jf =
         (val, wfCtx, taskCtx) -> Map.of("wrapped", val, "wfId", wfCtx.instanceData().id());
 

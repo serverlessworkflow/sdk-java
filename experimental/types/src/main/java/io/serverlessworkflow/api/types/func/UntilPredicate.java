@@ -27,8 +27,9 @@ public class UntilPredicate extends Until implements PredicateContainer {
     return this;
   }
 
-  public <T> UntilPredicate withPredicate(Predicate<T> predicate, Class<T> clazz) {
-    this.predicate = new TypedPredicate<>(predicate, clazz);
+  public <T> UntilPredicate withPredicate(Predicate<T> predicate, Class<T> predicateClass) {
+    this.predicate =
+        predicateClass == null ? predicate : new TypedPredicate<>(predicate, predicateClass);
     return this;
   }
 
@@ -37,8 +38,9 @@ public class UntilPredicate extends Until implements PredicateContainer {
     return this;
   }
 
-  public <T> UntilPredicate withPredicate(ContextPredicate<T> predicate, Class<T> clazz) {
-    this.predicate = new TypedContextPredicate<>(predicate, clazz);
+  public <T> UntilPredicate withPredicate(ContextPredicate<T> predicate, Class<T> predicateClass) {
+    this.predicate =
+        predicateClass == null ? predicate : new TypedContextPredicate<>(predicate, predicateClass);
     return this;
   }
 
@@ -47,8 +49,9 @@ public class UntilPredicate extends Until implements PredicateContainer {
     return this;
   }
 
-  public <T> UntilPredicate withPredicate(FilterPredicate<T> predicate, Class<T> clazz) {
-    this.predicate = new TypedFilterPredicate<>(predicate, clazz);
+  public <T> UntilPredicate withPredicate(FilterPredicate<T> predicate, Class<T> predicateClass) {
+    this.predicate =
+        predicateClass == null ? predicate : new TypedFilterPredicate<>(predicate, predicateClass);
     return this;
   }
 

@@ -55,7 +55,9 @@ public class ForTaskFunction extends ForTask {
   public <T, V> ForTaskFunction withWhile(
       LoopPredicateIndex<T, V> whilePredicate, Class<T> modelClass, Class<V> itemClass) {
     return withWhile(
-        toPredicate(whilePredicate), Optional.ofNullable(modelClass), Optional.of(itemClass));
+        toPredicate(whilePredicate),
+        Optional.ofNullable(modelClass),
+        Optional.ofNullable(itemClass));
   }
 
   public <T, V> ForTaskFunction withWhile(LoopPredicateIndexContext<T, V> whilePredicate) {
@@ -71,7 +73,9 @@ public class ForTaskFunction extends ForTask {
   public <T, V> ForTaskFunction withWhile(
       LoopPredicateIndexContext<T, V> whilePredicate, Class<T> modelClass, Class<V> itemClass) {
     return withWhile(
-        toPredicate(whilePredicate), Optional.ofNullable(modelClass), Optional.of(itemClass));
+        toPredicate(whilePredicate),
+        Optional.ofNullable(modelClass),
+        Optional.ofNullable(itemClass));
   }
 
   public <T, V> ForTaskFunction withWhile(LoopPredicateIndexFilter<T, V> whilePredicate) {
@@ -85,7 +89,8 @@ public class ForTaskFunction extends ForTask {
 
   public <T, V> ForTaskFunction withWhile(
       LoopPredicateIndexFilter<T, V> whilePredicate, Class<T> modelClass, Class<V> itemClass) {
-    return withWhile(whilePredicate, Optional.ofNullable(modelClass), Optional.of(itemClass));
+    return withWhile(
+        whilePredicate, Optional.ofNullable(modelClass), Optional.ofNullable(itemClass));
   }
 
   private <T, V> LoopPredicateIndexFilter<T, V> toPredicate(LoopPredicate<T, V> whilePredicate) {

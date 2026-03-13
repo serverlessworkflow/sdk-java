@@ -29,7 +29,8 @@ public class SwitchCasePredicate extends SwitchCase implements PredicateContaine
   }
 
   public <T> SwitchCasePredicate withPredicate(Predicate<T> predicate, Class<T> predicateClass) {
-    this.predicate = new TypedPredicate<>(predicate, predicateClass);
+    this.predicate =
+        predicateClass == null ? predicate : new TypedPredicate<>(predicate, predicateClass);
     return this;
   }
 
@@ -38,8 +39,10 @@ public class SwitchCasePredicate extends SwitchCase implements PredicateContaine
     return this;
   }
 
-  public <T> SwitchCasePredicate withPredicate(ContextPredicate<T> predicate, Class<T> clazz) {
-    this.predicate = new TypedContextPredicate<>(predicate, clazz);
+  public <T> SwitchCasePredicate withPredicate(
+      ContextPredicate<T> predicate, Class<T> predicateClass) {
+    this.predicate =
+        predicateClass == null ? predicate : new TypedContextPredicate<>(predicate, predicateClass);
     return this;
   }
 
@@ -48,8 +51,10 @@ public class SwitchCasePredicate extends SwitchCase implements PredicateContaine
     return this;
   }
 
-  public <T> SwitchCasePredicate withPredicate(FilterPredicate<T> predicate, Class<T> clazz) {
-    this.predicate = new TypedFilterPredicate<>(predicate, clazz);
+  public <T> SwitchCasePredicate withPredicate(
+      FilterPredicate<T> predicate, Class<T> predicateClass) {
+    this.predicate =
+        predicateClass == null ? predicate : new TypedFilterPredicate<>(predicate, predicateClass);
     return this;
   }
 

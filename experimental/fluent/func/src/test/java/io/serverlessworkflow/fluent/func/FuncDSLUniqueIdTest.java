@@ -42,7 +42,7 @@ import org.junit.jupiter.api.Test;
 class FuncDSLUniqueIdTest {
 
   @SuppressWarnings("unchecked")
-  private static FilterFunction<Object, Object> extractJavaFilterFunction(CallJava callJava) {
+  private static FilterFunction<Object, Object> extractFilterFunction(CallJava callJava) {
     if (callJava instanceof CallJava.CallJavaFilterFunction<?, ?> f) {
       return (FilterFunction<Object, Object>) f.function();
     }
@@ -75,7 +75,7 @@ class FuncDSLUniqueIdTest {
     assertNotNull(t.getCallTask(), "CallTask expected");
 
     CallJava cj = (CallJava) t.getCallTask().get();
-    var jff = extractJavaFilterFunction(cj);
+    var jff = extractFilterFunction(cj);
     assertNotNull(jff, "JavaFilterFunction must be present for withUniqueId");
 
     // Mockito stubs for runtime contexts
@@ -123,7 +123,7 @@ class FuncDSLUniqueIdTest {
     assertNotNull(t.getCallTask(), "CallTask expected");
 
     CallJava cj = (CallJava) t.getCallTask().get();
-    var jff = extractJavaFilterFunction(cj);
+    var jff = extractFilterFunction(cj);
     assertNotNull(jff, "JavaFilterFunction must be present for agent/withUniqueId");
 
     WorkflowInstanceData inst = mock(WorkflowInstanceData.class);

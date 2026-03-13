@@ -32,7 +32,7 @@ public class JavaListenExecutorBuilder extends ListenExecutorBuilder {
 
   @Override
   protected WorkflowPredicate buildUntilPredicate(Until until) {
-    return until instanceof UntilPredicate untilPred
+    return until instanceof UntilPredicate untilPred && untilPred.predicate() != null
         ? JavaFuncUtils.from(application, untilPred)
         : super.buildUntilPredicate(until);
   }

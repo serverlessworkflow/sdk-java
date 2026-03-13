@@ -44,12 +44,12 @@ public final class FuncCallStep<T, R> extends Step<FuncCallStep<T, R>, FuncCallT
     this.argClass = argClass;
   }
 
-  /** JavaContextFunction<T,R> variant (unnamed). */
+  /** ContextFunction<T,R> variant (unnamed). */
   FuncCallStep(ContextFunction<T, R> ctxFn, Class<T> argClass) {
     this(null, ctxFn, argClass);
   }
 
-  /** JavaContextFunction<T,R> variant (named). */
+  /** ContextFunction<T,R> variant (named). */
   FuncCallStep(String name, ContextFunction<T, R> ctxFn, Class<T> argClass) {
     this.name = name;
     this.fn = null;
@@ -58,12 +58,12 @@ public final class FuncCallStep<T, R> extends Step<FuncCallStep<T, R>, FuncCallT
     this.argClass = argClass;
   }
 
-  /** JavaFilterFunction<T,R> variant (unnamed). */
+  /** FilterFunction<T,R> variant (unnamed). */
   FuncCallStep(FilterFunction<T, R> filterFn, Class<T> argClass) {
     this(null, filterFn, argClass);
   }
 
-  /** JavaFilterFunction<T,R> variant (named). */
+  /** FilterFunction<T,R> variant (named). */
   FuncCallStep(String name, FilterFunction<T, R> filterFn, Class<T> argClass) {
     this.name = name;
     this.fn = null;

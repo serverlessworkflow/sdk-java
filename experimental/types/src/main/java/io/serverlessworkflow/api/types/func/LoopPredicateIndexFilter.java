@@ -20,5 +20,5 @@ import io.serverlessworkflow.impl.WorkflowContextData;
 
 @FunctionalInterface
 public interface LoopPredicateIndexFilter<T, V> {
-  boolean test(T model, V item, Integer index, WorkflowContextData workfklow, TaskContextData task);
+  boolean test(T model, V item, Integer index, WorkflowContextData workflow, TaskContextData task);
 }

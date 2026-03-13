@@ -29,6 +29,7 @@ public class JavaFuncUtils {
   }
 
   static WorkflowPredicate from(WorkflowApplication application, PredicateContainer source) {
+    assert (source.predicate() != null);
     return application
         .expressionFactory()
         .buildPredicate(ExpressionDescriptor.object(source.predicate()));
