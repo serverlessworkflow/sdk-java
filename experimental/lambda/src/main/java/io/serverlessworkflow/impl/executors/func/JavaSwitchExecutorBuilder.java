@@ -15,16 +15,13 @@
  */
 package io.serverlessworkflow.impl.executors.func;
 
-import static io.serverlessworkflow.impl.executors.func.JavaFuncUtils.predObject;
-
 import io.serverlessworkflow.api.types.SwitchCase;
 import io.serverlessworkflow.api.types.SwitchTask;
-import io.serverlessworkflow.api.types.func.SwitchCaseFunction;
+import io.serverlessworkflow.api.types.func.SwitchCasePredicate;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.WorkflowPredicate;
 import io.serverlessworkflow.impl.executors.SwitchExecutor.SwitchExecutorBuilder;
-import io.serverlessworkflow.impl.expressions.ExpressionDescriptor;
 import java.util.Optional;
 
 public class JavaSwitchExecutorBuilder extends SwitchExecutorBuilder {
@@ -36,13 +33,8 @@ public class JavaSwitchExecutorBuilder extends SwitchExecutorBuilder {
 
   @Override
   protected Optional<WorkflowPredicate> buildFilter(SwitchCase switchCase) {
-    return switchCase instanceof SwitchCaseFunction function
-        ? Optional.of(
-            application
-                .expressionFactory()
-                .buildPredicate(
-                    ExpressionDescriptor.object(
-                        predObject(function.predicate(), function.predicateClass()))))
+    return switchCase instanceof SwitchCasePredicate predicate && predicate.predicate() != null
+        ? Optional.of(JavaFuncUtils.from(application, predicate))
         : super.buildFilter(switchCase);
   }
 }

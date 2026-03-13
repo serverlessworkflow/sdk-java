@@ -32,23 +32,23 @@ public class OutputAsFunction extends OutputAs {
     return this;
   }
 
-  public <T, V> OutputAs withFunction(JavaFilterFunction<T, V> value) {
+  public <T, V> OutputAs withFunction(FilterFunction<T, V> value) {
     setObject(value);
     return this;
   }
 
-  public <T, V> OutputAs withFunction(JavaFilterFunction<T, V> value, Class<T> argClass) {
-    setObject(new TypedJavaFilterFunction<>(value, argClass));
+  public <T, V> OutputAs withFunction(FilterFunction<T, V> value, Class<T> argClass) {
+    setObject(new TypedFilterFunction<>(value, argClass));
     return this;
   }
 
-  public <T, V> OutputAs withFunction(JavaContextFunction<T, V> value) {
+  public <T, V> OutputAs withFunction(ContextFunction<T, V> value) {
     setObject(value);
     return this;
   }
 
-  public <T, V> OutputAs withFunction(JavaContextFunction<T, V> value, Class<T> argClass) {
-    setObject(new TypedJavaContextFunction<>(value, argClass));
+  public <T, V> OutputAs withFunction(ContextFunction<T, V> value, Class<T> argClass) {
+    setObject(new TypedContextFunction<>(value, argClass));
     return this;
   }
 }

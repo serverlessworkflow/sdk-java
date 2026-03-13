@@ -23,45 +23,92 @@ import java.util.function.Function;
 public class ForTaskFunction extends ForTask {
 
   private static final long serialVersionUID = 1L;
-  private LoopPredicateIndex<?, ?> whilePredicate;
+  private LoopPredicateIndexFilter<?, ?> whilePredicate;
   private Optional<Class<?>> whileClass;
   private Optional<Class<?>> itemClass;
   private Optional<Class<?>> forClass;
   private Function<?, Collection<?>> collection;
 
   public <T, V> ForTaskFunction withWhile(LoopPredicate<T, V> whilePredicate) {
-    return withWhile(toPredicateIndex(whilePredicate));
+    return withWhile(toPredicate(whilePredicate));
   }
 
   public <T, V> ForTaskFunction withWhile(LoopPredicate<T, V> whilePredicate, Class<T> modelClass) {
-    return withWhile(toPredicateIndex(whilePredicate), modelClass);
+    return withWhile(toPredicate(whilePredicate), modelClass);
   }
 
   public <T, V> ForTaskFunction withWhile(
       LoopPredicate<T, V> whilePredicate, Class<T> modelClass, Class<V> itemClass) {
-    return withWhile(toPredicateIndex(whilePredicate), modelClass, itemClass);
-  }
-
-  private <T, V> LoopPredicateIndex<T, V> toPredicateIndex(LoopPredicate<T, V> whilePredicate) {
-    return (model, item, index) -> whilePredicate.test(model, item);
+    return withWhile(toPredicate(whilePredicate), modelClass, itemClass);
   }
 
   public <T, V> ForTaskFunction withWhile(LoopPredicateIndex<T, V> whilePredicate) {
-    return withWhile(whilePredicate, Optional.empty(), Optional.empty());
+    return withWhile(toPredicate(whilePredicate), Optional.empty(), Optional.empty());
   }
 
   public <T, V> ForTaskFunction withWhile(
       LoopPredicateIndex<T, V> whilePredicate, Class<T> modelClass) {
-    return withWhile(whilePredicate, Optional.ofNullable(modelClass), Optional.empty());
+    return withWhile(
+        toPredicate(whilePredicate), Optional.ofNullable(modelClass), Optional.empty());
   }
 
   public <T, V> ForTaskFunction withWhile(
       LoopPredicateIndex<T, V> whilePredicate, Class<T> modelClass, Class<V> itemClass) {
-    return withWhile(whilePredicate, Optional.ofNullable(modelClass), Optional.of(itemClass));
+    return withWhile(
+        toPredicate(whilePredicate),
+        Optional.ofNullable(modelClass),
+        Optional.ofNullable(itemClass));
+  }
+
+  public <T, V> ForTaskFunction withWhile(LoopPredicateIndexContext<T, V> whilePredicate) {
+    return withWhile(toPredicate(whilePredicate), Optional.empty(), Optional.empty());
+  }
+
+  public <T, V> ForTaskFunction withWhile(
+      LoopPredicateIndexContext<T, V> whilePredicate, Class<T> modelClass) {
+    return withWhile(
+        toPredicate(whilePredicate), Optional.ofNullable(modelClass), Optional.empty());
+  }
+
+  public <T, V> ForTaskFunction withWhile(
+      LoopPredicateIndexContext<T, V> whilePredicate, Class<T> modelClass, Class<V> itemClass) {
+    return withWhile(
+        toPredicate(whilePredicate),
+        Optional.ofNullable(modelClass),
+        Optional.ofNullable(itemClass));
+  }
+
+  public <T, V> ForTaskFunction withWhile(LoopPredicateIndexFilter<T, V> whilePredicate) {
+    return withWhile(whilePredicate, Optional.empty(), Optional.empty());
+  }
+
+  public <T, V> ForTaskFunction withWhile(
+      LoopPredicateIndexFilter<T, V> whilePredicate, Class<T> modelClass) {
+    return withWhile(whilePredicate, Optional.ofNullable(modelClass), Optional.empty());
+  }
+
+  public <T, V> ForTaskFunction withWhile(
+      LoopPredicateIndexFilter<T, V> whilePredicate, Class<T> modelClass, Class<V> itemClass) {
+    return withWhile(
+        whilePredicate, Optional.ofNullable(modelClass), Optional.ofNullable(itemClass));
+  }
+
+  private <T, V> LoopPredicateIndexFilter<T, V> toPredicate(LoopPredicate<T, V> whilePredicate) {
+    return (model, item, index, w, t) -> whilePredicate.test(model, item);
+  }
+
+  private <T, V> LoopPredicateIndexFilter<T, V> toPredicate(
+      LoopPredicateIndex<T, V> whilePredicate) {
+    return (model, item, index, w, t) -> whilePredicate.test(model, item, index);
+  }
+
+  private <T, V> LoopPredicateIndexFilter<T, V> toPredicate(
+      LoopPredicateIndexContext<T, V> whilePredicate) {
+    return (model, item, index, w, t) -> whilePredicate.test(model, item, index, w);
   }
 
   private <T, V> ForTaskFunction withWhile(
-      LoopPredicateIndex<T, V> whilePredicate,
+      LoopPredicateIndexFilter<T, V> whilePredicate,
       Optional<Class<?>> modelClass,
       Optional<Class<?>> itemClass) {
     this.whilePredicate = whilePredicate;
@@ -81,7 +128,7 @@ public class ForTaskFunction extends ForTask {
     return this;
   }
 
-  public LoopPredicateIndex<?, ?> getWhilePredicate() {
+  public LoopPredicateIndexFilter<?, ?> getWhilePredicate() {
     return whilePredicate;
   }
 

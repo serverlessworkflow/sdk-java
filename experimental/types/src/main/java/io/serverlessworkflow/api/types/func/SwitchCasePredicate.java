@@ -15,41 +15,44 @@
  */
 package io.serverlessworkflow.api.types.func;
 
-import io.serverlessworkflow.api.types.Until;
+import io.serverlessworkflow.api.types.SwitchCase;
 import java.util.function.Predicate;
 
-public class UntilPredicate extends Until implements PredicateContainer {
+public class SwitchCasePredicate extends SwitchCase implements PredicateContainer {
 
+  private static final long serialVersionUID = 1L;
   private Object predicate;
 
-  public <T> UntilPredicate withPredicate(Predicate<T> predicate) {
+  public <T> SwitchCasePredicate withPredicate(Predicate<T> predicate) {
     this.predicate = predicate;
     return this;
   }
 
-  public <T> UntilPredicate withPredicate(Predicate<T> predicate, Class<T> predicateClass) {
+  public <T> SwitchCasePredicate withPredicate(Predicate<T> predicate, Class<T> predicateClass) {
     this.predicate =
         predicateClass == null ? predicate : new TypedPredicate<>(predicate, predicateClass);
     return this;
   }
 
-  public <T> UntilPredicate withPredicate(ContextPredicate<T> predicate) {
+  public <T> SwitchCasePredicate withPredicate(ContextPredicate<T> predicate) {
     this.predicate = predicate;
     return this;
   }
 
-  public <T> UntilPredicate withPredicate(ContextPredicate<T> predicate, Class<T> predicateClass) {
+  public <T> SwitchCasePredicate withPredicate(
+      ContextPredicate<T> predicate, Class<T> predicateClass) {
     this.predicate =
         predicateClass == null ? predicate : new TypedContextPredicate<>(predicate, predicateClass);
     return this;
   }
 
-  public <T> UntilPredicate withPredicate(FilterPredicate<T> predicate) {
+  public <T> SwitchCasePredicate withPredicate(FilterPredicate<T> predicate) {
     this.predicate = predicate;
     return this;
   }
 
-  public <T> UntilPredicate withPredicate(FilterPredicate<T> predicate, Class<T> predicateClass) {
+  public <T> SwitchCasePredicate withPredicate(
+      FilterPredicate<T> predicate, Class<T> predicateClass) {
     this.predicate =
         predicateClass == null ? predicate : new TypedFilterPredicate<>(predicate, predicateClass);
     return this;

@@ -17,8 +17,8 @@ package io.serverlessworkflow.fluent.func.dsl;
 
 import io.cloudevents.CloudEventData;
 import io.serverlessworkflow.api.types.FlowDirectiveEnum;
-import io.serverlessworkflow.api.types.func.JavaContextFunction;
-import io.serverlessworkflow.api.types.func.JavaFilterFunction;
+import io.serverlessworkflow.api.types.func.ContextFunction;
+import io.serverlessworkflow.api.types.func.FilterFunction;
 import io.serverlessworkflow.fluent.func.FuncCallTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncEmitTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncSwitchTaskBuilder;
@@ -281,7 +281,7 @@ public final class FuncDSL {
 
   /**
    * Build a call step for functions that need {@link WorkflowContextData} as the first parameter.
-   * The DSL wraps it as a {@link JavaContextFunction} and injects the runtime context.
+   * The DSL wraps it as a {@link ContextFunction} and injects the runtime context.
    *
    * <p>Signature expected: {@code (ctx, payload) -> result}
    *
@@ -291,16 +291,16 @@ public final class FuncDSL {
    * @param <R> result type
    * @return a call step
    */
-  public static <T, R> FuncCallStep<T, R> withContext(JavaContextFunction<T, R> fn, Class<T> in) {
+  public static <T, R> FuncCallStep<T, R> withContext(ContextFunction<T, R> fn, Class<T> in) {
     return withContext(null, fn, in);
   }
 
-  public static <T, R> FuncCallStep<T, R> withContext(JavaContextFunction<T, R> fn) {
+  public static <T, R> FuncCallStep<T, R> withContext(ContextFunction<T, R> fn) {
     return withContext(null, fn, ReflectionUtils.inferInputType(fn));
   }
 
   /**
-   * Named variant of {@link #withContext(JavaContextFunction, Class)}.
+   * Named variant of {@link #withContext(ContextFunction, Class)}.
    *
    * @param name task name
    * @param fn context-aware function
@@ -310,18 +310,18 @@ public final class FuncDSL {
    * @return a named call step
    */
   public static <T, R> FuncCallStep<T, R> withContext(
-      String name, JavaContextFunction<T, R> fn, Class<T> in) {
+      String name, ContextFunction<T, R> fn, Class<T> in) {
     return new FuncCallStep<>(name, fn, in);
   }
 
-  public static <T, R> FuncCallStep<T, R> withContext(String name, JavaContextFunction<T, R> fn) {
+  public static <T, R> FuncCallStep<T, R> withContext(String name, ContextFunction<T, R> fn) {
     return new FuncCallStep<>(name, fn, ReflectionUtils.inferInputType(fn));
   }
 
   /**
    * Build a call step for functions that need {@link WorkflowContextData} and {@link
    * TaskContextData} as the first and second parameter. The DSL wraps it as a {@link
-   * JavaFilterFunction} and injects the runtime context.
+   * FilterFunction} and injects the runtime context.
    *
    * <p>Signature expected: {@code (payload, wctx, tctx) -> result}
    *
@@ -331,12 +331,12 @@ public final class FuncDSL {
    * @param <R> result type
    * @return a call step
    */
-  public static <T, R> FuncCallStep<T, R> withFilter(JavaFilterFunction<T, R> fn, Class<T> in) {
+  public static <T, R> FuncCallStep<T, R> withFilter(FilterFunction<T, R> fn, Class<T> in) {
     return withFilter(null, fn, in);
   }
 
   /**
-   * Named variant of {@link #withFilter(JavaFilterFunction, Class)}.
+   * Named variant of {@link #withFilter(FilterFunction, Class)}.
    *
    * @param name task name
    * @param fn context-aware filter function
@@ -346,15 +346,15 @@ public final class FuncDSL {
    * @return a named call step
    */
   public static <T, R> FuncCallStep<T, R> withFilter(
-      String name, JavaFilterFunction<T, R> fn, Class<T> in) {
+      String name, FilterFunction<T, R> fn, Class<T> in) {
     return new FuncCallStep<>(name, fn, in);
   }
 
-  public static <T, R> FuncCallStep<T, R> withFilter(JavaFilterFunction<T, R> fn) {
+  public static <T, R> FuncCallStep<T, R> withFilter(FilterFunction<T, R> fn) {
     return withFilter(null, fn, ReflectionUtils.inferInputType(fn));
   }
 
-  public static <T, R> FuncCallStep<T, R> withFilter(String name, JavaFilterFunction<T, R> fn) {
+  public static <T, R> FuncCallStep<T, R> withFilter(String name, FilterFunction<T, R> fn) {
     return withFilter(name, fn, ReflectionUtils.inferInputType(fn));
   }
 
@@ -370,7 +370,7 @@ public final class FuncDSL {
    */
   public static <T, R> FuncCallStep<T, R> withInstanceId(
       String name, InstanceIdFunction<T, R> fn, Class<T> in) {
-    JavaContextFunction<T, R> jcf = (payload, wctx) -> fn.apply(wctx.instanceData().id(), payload);
+    ContextFunction<T, R> jcf = (payload, wctx) -> fn.apply(wctx.instanceData().id(), payload);
     return new FuncCallStep<>(name, jcf, in);
   }
 
@@ -426,7 +426,7 @@ public final class FuncDSL {
    */
   public static <T, R> FuncCallStep<T, R> withUniqueId(
       String name, UniqueIdBiFunction<T, R> fn, Class<T> in) {
-    JavaFilterFunction<T, R> jff =
+    FilterFunction<T, R> jff =
         (payload, wctx, tctx) -> fn.apply(defaultUniqueId(wctx, tctx), payload);
     return new FuncCallStep<>(name, jff, in);
   }

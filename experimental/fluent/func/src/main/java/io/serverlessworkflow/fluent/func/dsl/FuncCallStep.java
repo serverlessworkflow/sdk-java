@@ -15,8 +15,8 @@
  */
 package io.serverlessworkflow.fluent.func.dsl;
 
-import io.serverlessworkflow.api.types.func.JavaContextFunction;
-import io.serverlessworkflow.api.types.func.JavaFilterFunction;
+import io.serverlessworkflow.api.types.func.ContextFunction;
+import io.serverlessworkflow.api.types.func.FilterFunction;
 import io.serverlessworkflow.fluent.func.FuncCallTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncTaskItemListBuilder;
 import java.util.function.Consumer;
@@ -26,8 +26,8 @@ public final class FuncCallStep<T, R> extends Step<FuncCallStep<T, R>, FuncCallT
 
   private final String name;
   private final Function<T, R> fn;
-  private final JavaContextFunction<T, R> ctxFn;
-  private final JavaFilterFunction<T, R> filterFn;
+  private final ContextFunction<T, R> ctxFn;
+  private final FilterFunction<T, R> filterFn;
   private final Class<T> argClass;
 
   /** Function<T,R> variant (unnamed). */
@@ -44,13 +44,13 @@ public final class FuncCallStep<T, R> extends Step<FuncCallStep<T, R>, FuncCallT
     this.argClass = argClass;
   }
 
-  /** JavaContextFunction<T,R> variant (unnamed). */
-  FuncCallStep(JavaContextFunction<T, R> ctxFn, Class<T> argClass) {
+  /** ContextFunction<T,R> variant (unnamed). */
+  FuncCallStep(ContextFunction<T, R> ctxFn, Class<T> argClass) {
     this(null, ctxFn, argClass);
   }
 
-  /** JavaContextFunction<T,R> variant (named). */
-  FuncCallStep(String name, JavaContextFunction<T, R> ctxFn, Class<T> argClass) {
+  /** ContextFunction<T,R> variant (named). */
+  FuncCallStep(String name, ContextFunction<T, R> ctxFn, Class<T> argClass) {
     this.name = name;
     this.fn = null;
     this.ctxFn = ctxFn;
@@ -58,13 +58,13 @@ public final class FuncCallStep<T, R> extends Step<FuncCallStep<T, R>, FuncCallT
     this.argClass = argClass;
   }
 
-  /** JavaFilterFunction<T,R> variant (unnamed). */
-  FuncCallStep(JavaFilterFunction<T, R> filterFn, Class<T> argClass) {
+  /** FilterFunction<T,R> variant (unnamed). */
+  FuncCallStep(FilterFunction<T, R> filterFn, Class<T> argClass) {
     this(null, filterFn, argClass);
   }
 
-  /** JavaFilterFunction<T,R> variant (named). */
-  FuncCallStep(String name, JavaFilterFunction<T, R> filterFn, Class<T> argClass) {
+  /** FilterFunction<T,R> variant (named). */
+  FuncCallStep(String name, FilterFunction<T, R> filterFn, Class<T> argClass) {
     this.name = name;
     this.fn = null;
     this.ctxFn = null;

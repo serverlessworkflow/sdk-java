@@ -15,5 +15,6 @@
  */
 package io.serverlessworkflow.api.types.func;
 
-public record TypedJavaContextFunction<T, V>(
-    JavaContextFunction<T, V> function, Class<T> argClass) {}
+public interface PredicateContainer {
+  Object predicate();
+}

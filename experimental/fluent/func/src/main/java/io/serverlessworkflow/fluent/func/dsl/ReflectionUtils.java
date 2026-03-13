@@ -15,8 +15,8 @@
  */
 package io.serverlessworkflow.fluent.func.dsl;
 
-import io.serverlessworkflow.api.types.func.JavaContextFunction;
-import io.serverlessworkflow.api.types.func.JavaFilterFunction;
+import io.serverlessworkflow.api.types.func.ContextFunction;
+import io.serverlessworkflow.api.types.func.FilterFunction;
 import java.lang.invoke.MethodType;
 import java.lang.invoke.SerializedLambda;
 import java.lang.reflect.Method;
@@ -32,12 +32,12 @@ final class ReflectionUtils {
   private ReflectionUtils() {}
 
   @SuppressWarnings("unchecked")
-  static <T> Class<T> inferInputType(JavaContextFunction<T, ?> fn) {
+  static <T> Class<T> inferInputType(ContextFunction<T, ?> fn) {
     return throwIllegalStateIfNull((Class<T>) inferInputTypeFromAny(fn, 0));
   }
 
   @SuppressWarnings("unchecked")
-  static <T> Class<T> inferInputType(JavaFilterFunction<T, ?> fn) {
+  static <T> Class<T> inferInputType(FilterFunction<T, ?> fn) {
     return throwIllegalStateIfNull((Class<T>) inferInputTypeFromAny(fn, 0));
   }
 

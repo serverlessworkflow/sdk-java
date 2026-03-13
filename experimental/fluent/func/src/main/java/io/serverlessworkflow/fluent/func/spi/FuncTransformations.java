@@ -19,9 +19,9 @@ import io.serverlessworkflow.api.types.Input;
 import io.serverlessworkflow.api.types.InputFrom;
 import io.serverlessworkflow.api.types.Output;
 import io.serverlessworkflow.api.types.OutputAs;
+import io.serverlessworkflow.api.types.func.ContextFunction;
+import io.serverlessworkflow.api.types.func.FilterFunction;
 import io.serverlessworkflow.api.types.func.InputFromFunction;
-import io.serverlessworkflow.api.types.func.JavaContextFunction;
-import io.serverlessworkflow.api.types.func.JavaFilterFunction;
 import io.serverlessworkflow.api.types.func.OutputAsFunction;
 import io.serverlessworkflow.fluent.spec.spi.TransformationHandlers;
 import java.util.function.Function;
@@ -42,25 +42,25 @@ public interface FuncTransformations<SELF extends FuncTransformations<SELF>>
   }
 
   @SuppressWarnings("unchecked")
-  default <T, V> SELF inputFrom(JavaFilterFunction<T, V> function) {
+  default <T, V> SELF inputFrom(FilterFunction<T, V> function) {
     setInput(new Input().withFrom(new InputFromFunction().withFunction(function)));
     return (SELF) this;
   }
 
   @SuppressWarnings("unchecked")
-  default <T, V> SELF inputFrom(JavaFilterFunction<T, V> function, Class<T> argClass) {
+  default <T, V> SELF inputFrom(FilterFunction<T, V> function, Class<T> argClass) {
     setInput(new Input().withFrom(new InputFromFunction().withFunction(function, argClass)));
     return (SELF) this;
   }
 
   @SuppressWarnings("unchecked")
-  default <T, V> SELF inputFrom(JavaContextFunction<T, V> function) {
+  default <T, V> SELF inputFrom(ContextFunction<T, V> function) {
     setInput(new Input().withFrom(new InputFromFunction().withFunction(function)));
     return (SELF) this;
   }
 
   @SuppressWarnings("unchecked")
-  default <T, V> SELF inputFrom(JavaContextFunction<T, V> function, Class<T> argClass) {
+  default <T, V> SELF inputFrom(ContextFunction<T, V> function, Class<T> argClass) {
     setInput(new Input().withFrom(new InputFromFunction().withFunction(function, argClass)));
     return (SELF) this;
   }
@@ -84,25 +84,25 @@ public interface FuncTransformations<SELF extends FuncTransformations<SELF>>
   }
 
   @SuppressWarnings("unchecked")
-  default <T, V> SELF outputAs(JavaFilterFunction<T, V> function) {
+  default <T, V> SELF outputAs(FilterFunction<T, V> function) {
     setOutput(new Output().withAs(new OutputAsFunction().withFunction(function)));
     return (SELF) this;
   }
 
   @SuppressWarnings("unchecked")
-  default <T, V> SELF outputAs(JavaFilterFunction<T, V> function, Class<T> argClass) {
+  default <T, V> SELF outputAs(FilterFunction<T, V> function, Class<T> argClass) {
     setOutput(new Output().withAs(new OutputAsFunction().withFunction(function, argClass)));
     return (SELF) this;
   }
 
   @SuppressWarnings("unchecked")
-  default <T, V> SELF outputAs(JavaContextFunction<T, V> function) {
+  default <T, V> SELF outputAs(ContextFunction<T, V> function) {
     setOutput(new Output().withAs(new OutputAsFunction().withFunction(function)));
     return (SELF) this;
   }
 
   @SuppressWarnings("unchecked")
-  default <T, V> SELF outputAs(JavaContextFunction<T, V> function, Class<T> argClass) {
+  default <T, V> SELF outputAs(ContextFunction<T, V> function, Class<T> argClass) {
     setOutput(new Output().withAs(new OutputAsFunction().withFunction(function, argClass)));
     return (SELF) this;
   }

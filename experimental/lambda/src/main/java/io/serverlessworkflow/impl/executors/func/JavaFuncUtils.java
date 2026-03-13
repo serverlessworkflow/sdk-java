@@ -15,10 +15,12 @@
  */
 package io.serverlessworkflow.impl.executors.func;
 
-import io.serverlessworkflow.api.types.func.TypedPredicate;
+import io.serverlessworkflow.api.types.func.PredicateContainer;
+import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowModel;
+import io.serverlessworkflow.impl.WorkflowPredicate;
+import io.serverlessworkflow.impl.expressions.ExpressionDescriptor;
 import java.util.Optional;
-import java.util.function.Predicate;
 
 public class JavaFuncUtils {
 
@@ -26,9 +28,11 @@ public class JavaFuncUtils {
     return obj instanceof WorkflowModel model ? model.asJavaObject() : obj;
   }
 
-  @SuppressWarnings({"unchecked", "rawtypes"})
-  static Object predObject(Predicate<?> pred, Optional<Class<?>> predClass) {
-    return predClass.isPresent() ? new TypedPredicate(pred, predClass.orElseThrow()) : pred;
+  static WorkflowPredicate from(WorkflowApplication application, PredicateContainer source) {
+    assert (source.predicate() != null);
+    return application
+        .expressionFactory()
+        .buildPredicate(ExpressionDescriptor.object(source.predicate()));
   }
 
   static <T> T convertT(WorkflowModel model, Optional<Class<T>> inputClass) {
