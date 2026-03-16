@@ -15,21 +15,16 @@
  */
 package io.serverlessworkflow.impl.persistence;
 
-import io.serverlessworkflow.impl.WorkflowContextData;
 import io.serverlessworkflow.impl.WorkflowDefinitionData;
-import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class DefaultPersistenceInstanceWriter extends AbstractPersistenceInstanceWriter {
+public class DefaultPersistenceInstanceWriter extends AsyncPersistenceInstanceWriter {
 
   private final PersistenceInstanceStore store;
-  private final Map<String, CompletableFuture<Void>> futuresMap = new ConcurrentHashMap<>();
   private final Optional<ExecutorService> executorService;
 
   private static final Logger logger =
@@ -37,31 +32,12 @@ public class DefaultPersistenceInstanceWriter extends AbstractPersistenceInstanc
 
   protected DefaultPersistenceInstanceWriter(
       PersistenceInstanceStore store, Optional<ExecutorService> executorService) {
-    this.store = store;
     this.executorService = executorService;
+    this.store = store;
   }
 
   @Override
-  protected CompletableFuture<Void> removeProcessInstance(WorkflowContextData workflowContext) {
-    return super.removeProcessInstance(workflowContext)
-        .thenRun(() -> futuresMap.remove(workflowContext.instanceData().id()));
-  }
-
-  @Override
-  protected CompletableFuture<Void> doTransaction(
-      Consumer<PersistenceInstanceOperations> operation, WorkflowContextData context) {
-    final ExecutorService service =
-        this.executorService.orElse(context.definition().application().executorService());
-    final Runnable runnable = () -> executeTransaction(operation, context.definition());
-    return futuresMap.compute(
-        context.instanceData().id(),
-        (k, v) ->
-            v == null
-                ? CompletableFuture.runAsync(runnable, service)
-                : v.thenRunAsync(runnable, service));
-  }
-
-  private void executeTransaction(
+  protected void doTransaction(
       Consumer<PersistenceInstanceOperations> operation, WorkflowDefinitionData definition) {
     PersistenceInstanceTransaction transaction = store.begin();
     try {
@@ -78,7 +54,7 @@ public class DefaultPersistenceInstanceWriter extends AbstractPersistenceInstanc
   }
 
   @Override
-  public void close() {
-    futuresMap.clear();
+  protected Optional<ExecutorService> executorService() {
+    return executorService;
   }
 }
