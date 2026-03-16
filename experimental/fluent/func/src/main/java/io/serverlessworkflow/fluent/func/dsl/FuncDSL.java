@@ -15,6 +15,7 @@
  */
 package io.serverlessworkflow.fluent.func.dsl;
 
+import io.cloudevents.CloudEvent;
 import io.cloudevents.CloudEventData;
 import io.serverlessworkflow.api.types.FlowDirectiveEnum;
 import io.serverlessworkflow.api.types.func.ContextFunction;
@@ -654,7 +655,7 @@ public final class FuncDSL {
   }
 
   /**
-   * Convenience for emitting a CloudEvent using a function that builds {@link CloudEventData}.
+   * Convenience for emitting a CloudEvent using a function that builds {@link CloudEvent}.
    *
    * @param type CloudEvent type
    * @param fn function that produces event data from the input
@@ -670,7 +671,7 @@ public final class FuncDSL {
    *
    * @param name task name
    * @param type CloudEvent type
-   * @param fn function producing {@link CloudEventData}
+   * @param fn function producing {@link CloudEvent}
    * @param <T> input type
    * @return a named {@link EmitStep}
    */

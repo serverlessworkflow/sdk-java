@@ -17,13 +17,14 @@ package io.serverlessworkflow.fluent.spec.dsl;
 
 import io.serverlessworkflow.fluent.spec.AbstractEventPropertiesBuilder;
 import java.net.URI;
-import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 import java.util.function.Consumer;
 
+/**
+ * Base class for defining events properties used either on filter (consume) use cases or emit
+ * (produce).
+ */
 public abstract class EventPropertiesSpec<
     SELF, EVENT_PROPS extends AbstractEventPropertiesBuilder<?>> {
 
@@ -44,31 +45,9 @@ public abstract class EventPropertiesSpec<
     return self();
   }
 
-  /** Sets the CloudEvent id to a random UUID */
-  public SELF randomId() {
-    propertySteps.add(e -> e.id(UUID.randomUUID().toString()));
-    return self();
-  }
-
-  /** Sets the CloudEvent time to the current system time */
-  public SELF now() {
-    propertySteps.add(e -> e.time(Date.from(Instant.now())));
-    return self();
-  }
-
-  public SELF contentType(String ct) {
-    propertySteps.add(e -> e.dataContentType(ct));
-    return self();
-  }
-
   /** Sets the CloudEvent dataContentType to `application/json` */
   public SELF JSON() {
     propertySteps.add(e -> e.dataContentType("application/json"));
-    return self();
-  }
-
-  public SELF OCTET_STREAM() {
-    propertySteps.add(e -> e.dataContentType("application/octet-stream"));
     return self();
   }
 

@@ -61,11 +61,6 @@ interface CommonFuncOps {
   }
 
   default <T> Consumer<FuncEmitTaskBuilder> emit(
-      String type, Function<T, CloudEventData> function) {
-    return event -> event.event(e -> e.type(type).data(function));
-  }
-
-  default <T> Consumer<FuncEmitTaskBuilder> emit(
       String type, Function<T, CloudEventData> function, Class<T> clazz) {
     return event -> event.event(e -> e.type(type).data(function, clazz));
   }

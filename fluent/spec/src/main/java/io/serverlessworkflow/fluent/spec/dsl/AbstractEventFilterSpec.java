@@ -26,7 +26,7 @@ public abstract class AbstractEventFilterSpec<
         SELF,
         EVENT_PROPS extends AbstractEventPropertiesBuilder<?>,
         EVENT_FILTER extends AbstractEventFilterBuilder<?, EVENT_PROPS>>
-    extends ExprEventPropertiesSpec<SELF, EVENT_PROPS> implements Consumer<EVENT_FILTER> {
+    extends ExprEventFilterSpec<SELF, EVENT_PROPS> implements Consumer<EVENT_FILTER> {
 
   private final List<Consumer<EVENT_FILTER>> filterSteps = new ArrayList<>();
 

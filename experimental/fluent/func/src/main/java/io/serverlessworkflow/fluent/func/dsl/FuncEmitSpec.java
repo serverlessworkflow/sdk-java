@@ -19,16 +19,16 @@ import io.cloudevents.CloudEventData;
 import io.cloudevents.core.data.BytesCloudEventData;
 import io.cloudevents.core.data.PojoCloudEventData;
 import io.serverlessworkflow.api.types.func.EventDataFunction;
+import io.serverlessworkflow.fluent.func.FuncEmitEventPropertiesBuilder;
 import io.serverlessworkflow.fluent.func.FuncEmitTaskBuilder;
-import io.serverlessworkflow.fluent.func.FuncEventPropertiesBuilder;
 import io.serverlessworkflow.fluent.func.configurers.FuncEmitConfigurer;
-import io.serverlessworkflow.fluent.spec.dsl.EventPropertiesSpec;
+import io.serverlessworkflow.fluent.spec.dsl.EventEmitPropertiesSpec;
 import io.serverlessworkflow.impl.jackson.JsonUtils;
 import java.nio.charset.StandardCharsets;
 import java.util.function.Function;
 
 public final class FuncEmitSpec
-    extends EventPropertiesSpec<FuncEmitSpec, FuncEventPropertiesBuilder>
+    extends EventEmitPropertiesSpec<FuncEmitSpec, FuncEmitEventPropertiesBuilder>
     implements FuncEmitConfigurer {
 
   @Override

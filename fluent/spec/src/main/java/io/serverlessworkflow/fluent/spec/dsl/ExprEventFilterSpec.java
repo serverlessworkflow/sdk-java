@@ -13,10 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.fluent.func.configurers;
+package io.serverlessworkflow.fluent.spec.dsl;
 
-import io.serverlessworkflow.fluent.func.FuncEventPropertiesBuilder;
-import java.util.function.Consumer;
+import io.serverlessworkflow.fluent.spec.AbstractEventPropertiesBuilder;
 
-@FunctionalInterface
-public interface FuncEventPropertiesConfigurer extends Consumer<FuncEventPropertiesBuilder> {}
+public abstract class ExprEventFilterSpec<
+        SELF, EVENT_PROPS extends AbstractEventPropertiesBuilder<?>>
+    extends EventPropertiesSpec<SELF, EVENT_PROPS> {
+
+  /** Filters events with `application/json` content type */
+  public SELF jsonData(String expr) {
+    addPropertyStep(e -> e.data(expr));
+    return JSON();
+  }
+}
