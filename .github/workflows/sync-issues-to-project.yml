@@ -1,0 +1,536 @@
+#
+# Copyright 2021-Present The Serverless Workflow Specification Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+name: Sync Issues to Target GitHub Project
+
+on:
+  issues:
+    types: [opened, closed]
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || (vars.PSYNC_ENABLED != 'false' && vars.PSYNC_ENABLED != 'off')
+    steps:
+      - name: Parse target project
+        id: parse
+        run: |
+          VALUE="${{ vars.PSYNC_TARGET }}"
+          if ! [[ "$VALUE" =~ ^[^:]+:[0-9]+$ ]]; then
+            echo "Error: PSYNC_TARGET value '$VALUE' is invalid. Expected format: org:project_number (e.g. my-org:1)"
+            exit 1
+          fi
+          ORG="${VALUE%%:*}"
+          NUMBER="${VALUE##*:}"
+          echo "org=$ORG" >> "$GITHUB_OUTPUT"
+          echo "number=$NUMBER" >> "$GITHUB_OUTPUT"
+
+      - name: Check author filter
+        id: author_filter
+        if: github.event_name == 'issues'
+        run: |
+          FILTER="${{ vars.PSYNC_AUTHORS_FILTER }}"
+          if [ -z "$FILTER" ]; then
+            echo "allowed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          AUTHOR="${{ github.event.issue.user.login }}"
+          if echo "$FILTER" | tr ',' '\n' | xargs -I{} echo {} | xargs | tr ' ' '\n' | grep -qx "$AUTHOR"; then
+            echo "allowed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Issue author '$AUTHOR' is not in PSYNC_AUTHORS_FILTER — skipping."
+            echo "allowed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Get project ID
+        id: project
+        if: github.event_name == 'workflow_dispatch' || (vars.PSYNC_ENABLED != 'false' && vars.PSYNC_ENABLED != 'off' && steps.author_filter.outputs.allowed != 'false')
+        env:
+          GH_TOKEN: ${{ secrets.PSYNC_PAT }}
+        run: |
+          PROJECT_ID=$(gh api graphql -f query='
+            query($org: String!, $number: Int!) {
+              organization(login: $org) {
+                projectV2(number: $number) {
+                  id
+                }
+              }
+            }' \
+            -f org="${{ steps.parse.outputs.org }}" \
+            -F number=${{ steps.parse.outputs.number }} \
+            --jq '.data.organization.projectV2.id')
+          if [ -z "$PROJECT_ID" ] || [ "$PROJECT_ID" = "null" ]; then
+            echo "Error: could not resolve project ID for '${{ steps.parse.outputs.org }}' project number ${{ steps.parse.outputs.number }}. Check PSYNC_TARGET and that PSYNC_PAT has access to the target org's project."
+            exit 1
+          fi
+          echo "id=$PROJECT_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Write apply-fields helper
+        if: github.event_name == 'workflow_dispatch' || (github.event.action == 'opened' && vars.PSYNC_ENABLED != 'false' && vars.PSYNC_ENABLED != 'off' && steps.author_filter.outputs.allowed != 'false')
+        run: |
+          cat > "$RUNNER_TEMP/psync_apply_fields.sh" << 'PSYNC_HELPER_EOF'
+          # apply_fields ITEM_ID ISSUE_NUMBER
+          # Required env: PSYNC_PROJECT_ID, PSYNC_FIELDS_JSON (nodes array), PSYNC_INITIAL_VALUES, PSYNC_REPO
+          apply_fields() {
+            local ITEM_ID="$1"
+            local ISSUE_NUMBER="$2"
+            while IFS= read -r PAIR; do
+              PAIR=$(echo "$PAIR" | xargs)
+              [ -z "$PAIR" ] && continue
+              KEY=$(echo "$PAIR" | cut -d= -f1 | xargs)
+              VALUE=$(echo "$PAIR" | cut -d= -f2- | xargs)
+              if [ "$KEY" = "Assignees" ]; then
+                ASSIGNEES_JSON=$(echo "$VALUE" | tr ' ' '\n' | jq -R . | jq -s '[.[] | select(length > 0)]')
+                [ "$(echo "$ASSIGNEES_JSON" | jq 'length')" -eq 0 ] && continue
+                echo "{\"assignees\": $ASSIGNEES_JSON}" | \
+                  gh api "repos/$PSYNC_REPO/issues/$ISSUE_NUMBER/assignees" \
+                  --method POST --input -
+              else
+                FIELD_ID=$(echo "$PSYNC_FIELDS_JSON" | jq -r \
+                  --arg name "$KEY" \
+                  '.[] | select(.name == $name) | .id // empty' | head -1)
+                [ -z "$FIELD_ID" ] && echo "Warning: field '$KEY' not found in project fields. Available fields: $(echo "$PSYNC_FIELDS_JSON" | jq -r '[.[] | .name // empty] | join(", ")'). Skipping." && continue
+                DATA_TYPE=$(echo "$PSYNC_FIELDS_JSON" | jq -r \
+                  --arg name "$KEY" \
+                  '.[] | select(.name == $name) | .dataType // empty' | head -1)
+                OPTION_ID=$(echo "$PSYNC_FIELDS_JSON" | jq -r \
+                  --arg name "$KEY" --arg val "$VALUE" \
+                  '.[] | select(.name == $name) | .options[]? | select(.name == $val) | .id // empty')
+                echo "Debug: field='$KEY' value='$VALUE' field_id='$FIELD_ID' data_type='${DATA_TYPE:-single-select}' option_id='${OPTION_ID:-none}'"
+                if [ -n "$OPTION_ID" ]; then
+                  gh api graphql -f query='
+                    mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
+                      updateProjectV2ItemFieldValue(input: {
+                        projectId: $projectId
+                        itemId: $itemId
+                        fieldId: $fieldId
+                        value: { singleSelectOptionId: $optionId }
+                      }) { projectV2Item { id } }
+                    }' \
+                    -f projectId="$PSYNC_PROJECT_ID" -f itemId="$ITEM_ID" \
+                    -f fieldId="$FIELD_ID" -f optionId="$OPTION_ID"
+                elif [ "$DATA_TYPE" = "TEXT" ]; then
+                  gh api graphql -f query='
+                    mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $text: String!) {
+                      updateProjectV2ItemFieldValue(input: {
+                        projectId: $projectId
+                        itemId: $itemId
+                        fieldId: $fieldId
+                        value: { text: $text }
+                      }) { projectV2Item { id } }
+                    }' \
+                    -f projectId="$PSYNC_PROJECT_ID" -f itemId="$ITEM_ID" \
+                    -f fieldId="$FIELD_ID" -f text="$VALUE"
+                else
+                  echo "Warning: field '$KEY' has unsupported type '${DATA_TYPE:-single-select}' — only TEXT and single-select fields are supported. Skipping."
+                fi
+              fi
+            done < <(echo "$PSYNC_INITIAL_VALUES" | tr ',' '\n')
+          }
+          PSYNC_HELPER_EOF
+
+      - name: Import existing repo issues
+        if: github.event_name == 'workflow_dispatch' && (vars.PSYNC_IMPORT_EXISTING) == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.PSYNC_PAT }}
+        run: |
+          PROJECT_ID="${{ steps.project.outputs.id }}"
+          INITIAL_VALUES="${{ vars.PSYNC_INITIAL_VALUES }}"
+
+          # Fetch project fields once if initial values are configured
+          FIELDS_JSON="[]"
+          if [ -n "$INITIAL_VALUES" ]; then
+            FIELDS_JSON=$(gh api graphql -f query='
+              query($projectId: ID!) {
+                node(id: $projectId) {
+                  ... on ProjectV2 {
+                    fields(first: 20) {
+                      nodes {
+                        ... on ProjectV2SingleSelectField {
+                          id
+                          name
+                          options { id name }
+                        }
+                        ... on ProjectV2Field {
+                          id
+                          name
+                          dataType
+                        }
+                      }
+                    }
+                  }
+                }
+              }' \
+              -f projectId="$PROJECT_ID" \
+              --jq '.data.node.fields.nodes')
+          fi
+
+          # Source shared apply-fields helper
+          # shellcheck source=/dev/null
+          source "$RUNNER_TEMP/psync_apply_fields.sh"
+          export PSYNC_PROJECT_ID="$PROJECT_ID"
+          export PSYNC_FIELDS_JSON="$FIELDS_JSON"
+          export PSYNC_INITIAL_VALUES="$INITIAL_VALUES"
+          export PSYNC_REPO="${{ github.repository }}"
+
+          # Fetch all open repo issues (node_id + number + author)
+          REPO_ISSUES=$(gh api "repos/${{ github.repository }}/issues" \
+            --paginate | jq -s '[ .[][] | select(.pull_request == null) | {node_id, number, author: .user.login} ]')
+
+          # Filter by author if PSYNC_AUTHORS_FILTER is set
+          AUTHORS_FILTER="${{ vars.PSYNC_AUTHORS_FILTER }}"
+          if [ -n "$AUTHORS_FILTER" ]; then
+            AUTHORS_JSON=$(echo "$AUTHORS_FILTER" | tr ',' '\n' | xargs -I{} echo {} | jq -R . | jq -s '.')
+            REPO_ISSUES=$(echo "$REPO_ISSUES" | jq --argjson authors "$AUTHORS_JSON" \
+              '[ .[] | select(.author | IN($authors[])) ]')
+          fi
+
+          # Fetch all existing project content node IDs (paginated)
+          PROJECT_IDS=""
+          CURSOR=""
+          while true; do
+            if [ -z "$CURSOR" ]; then
+              PAGE=$(gh api graphql -f query='
+                query($projectId: ID!) {
+                  node(id: $projectId) {
+                    ... on ProjectV2 {
+                      items(first: 100) {
+                        pageInfo { hasNextPage endCursor }
+                        nodes { content { ... on Issue { id } } }
+                      }
+                    }
+                  }
+                }' \
+                -f projectId="$PROJECT_ID")
+            else
+              PAGE=$(gh api graphql -f query='
+                query($projectId: ID!, $cursor: String!) {
+                  node(id: $projectId) {
+                    ... on ProjectV2 {
+                      items(first: 100, after: $cursor) {
+                        pageInfo { hasNextPage endCursor }
+                        nodes { content { ... on Issue { id } } }
+                      }
+                    }
+                  }
+                }' \
+                -f projectId="$PROJECT_ID" -f cursor="$CURSOR")
+            fi
+            PROJECT_IDS="$PROJECT_IDS"$'\n'"$(echo "$PAGE" | jq -r '.data.node.items.nodes[].content.id // empty')"
+            HAS_NEXT=$(echo "$PAGE" | jq -r '.data.node.items.pageInfo.hasNextPage')
+            [ "$HAS_NEXT" != "true" ] && break
+            CURSOR=$(echo "$PAGE" | jq -r '.data.node.items.pageInfo.endCursor')
+          done
+
+          PROJECT_IDS_JSON=$(echo "$PROJECT_IDS" | grep -v '^$' | jq -R . | jq -s '.') || PROJECT_IDS_JSON='[]'
+
+          # Find issues not yet in the project
+          MISSING=$(echo "$REPO_ISSUES" | jq -c \
+            --argjson existing "$PROJECT_IDS_JSON" \
+            '.[] | select(.node_id | IN($existing[]) | not)')
+
+          if [ -z "$MISSING" ]; then
+            echo "No new issues to import."
+            exit 0
+          fi
+
+          IMPORTED=0
+          FAILED=0
+          while IFS= read -r ISSUE; do
+            NODE_ID=$(echo "$ISSUE" | jq -r '.node_id')
+            ISSUE_NUMBER=$(echo "$ISSUE" | jq -r '.number')
+
+            ITEM_ID=$(gh api graphql -f query='
+              mutation($projectId: ID!, $contentId: ID!) {
+                addProjectV2ItemById(input: {projectId: $projectId, contentId: $contentId}) {
+                  item { id }
+                }
+              }' \
+              -f projectId="$PROJECT_ID" \
+              -f contentId="$NODE_ID" \
+              --jq '.data.addProjectV2ItemById.item.id') || ITEM_ID=""
+
+            if [ -z "$ITEM_ID" ] || [ "$ITEM_ID" = "null" ]; then
+              echo "Warning: failed to add issue #$ISSUE_NUMBER"
+              FAILED=$((FAILED + 1))
+              continue
+            fi
+
+            [ -n "$INITIAL_VALUES" ] && apply_fields "$ITEM_ID" "$ISSUE_NUMBER"
+            IMPORTED=$((IMPORTED + 1))
+            echo "Imported issue #$ISSUE_NUMBER"
+          done <<< "$MISSING"
+
+          echo "Done. Imported: $IMPORTED, Failed: $FAILED"
+
+      - name: Add issue to project
+        id: add_item
+        if: github.event.action == 'opened' && vars.PSYNC_ENABLED != 'false' && vars.PSYNC_ENABLED != 'off' && steps.author_filter.outputs.allowed != 'false'
+        env:
+          GH_TOKEN: ${{ secrets.PSYNC_PAT }}
+        run: |
+          ITEM_ID=$(gh api graphql -f query='
+            mutation($projectId: ID!, $contentId: ID!) {
+              addProjectV2ItemById(input: {projectId: $projectId, contentId: $contentId}) {
+                item { id }
+              }
+            }' \
+            -f projectId="${{ steps.project.outputs.id }}" \
+            -f contentId="${{ github.event.issue.node_id }}" \
+            --jq '.data.addProjectV2ItemById.item.id' || true)
+
+          if [ -z "$ITEM_ID" ] || [ "$ITEM_ID" = "null" ]; then
+            echo "Issue already exists in project or add failed — searching for existing item ID."
+            CURSOR=""
+            while true; do
+              if [ -z "$CURSOR" ]; then
+                PAGE_RESULT=$(gh api graphql -f query='
+                  query($projectId: ID!) {
+                    node(id: $projectId) {
+                      ... on ProjectV2 {
+                        items(first: 100) {
+                          pageInfo { hasNextPage endCursor }
+                          nodes {
+                            id
+                            content { ... on Issue { id } }
+                          }
+                        }
+                      }
+                    }
+                  }' \
+                  -f projectId="${{ steps.project.outputs.id }}")
+              else
+                PAGE_RESULT=$(gh api graphql -f query='
+                  query($projectId: ID!, $cursor: String!) {
+                    node(id: $projectId) {
+                      ... on ProjectV2 {
+                        items(first: 100, after: $cursor) {
+                          pageInfo { hasNextPage endCursor }
+                          nodes {
+                            id
+                            content { ... on Issue { id } }
+                          }
+                        }
+                      }
+                    }
+                  }' \
+                  -f projectId="${{ steps.project.outputs.id }}" \
+                  -f cursor="$CURSOR")
+              fi
+
+              ITEM_ID=$(echo "$PAGE_RESULT" | jq -r \
+                --arg issueId "${{ github.event.issue.node_id }}" \
+                '.data.node.items.nodes[] | select(.content.id == $issueId) | .id')
+
+              [ -n "$ITEM_ID" ] && break
+
+              HAS_NEXT=$(echo "$PAGE_RESULT" | jq -r '.data.node.items.pageInfo.hasNextPage')
+              [ "$HAS_NEXT" != "true" ] && break
+
+              CURSOR=$(echo "$PAGE_RESULT" | jq -r '.data.node.items.pageInfo.endCursor')
+            done
+
+            if [ -z "$ITEM_ID" ]; then
+              echo "Error: failed to add issue to project and could not find an existing item — the PAT may lack access."
+              exit 1
+            fi
+            echo "Found existing project item: $ITEM_ID"
+          fi
+          echo "item_id=$ITEM_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Set initial field values
+        if: github.event.action == 'opened' && vars.PSYNC_ENABLED != 'false' && vars.PSYNC_ENABLED != 'off' && steps.author_filter.outputs.allowed != 'false'
+        env:
+          GH_TOKEN: ${{ secrets.PSYNC_PAT }}
+        run: |
+          INITIAL_VALUES="${{ vars.PSYNC_INITIAL_VALUES }}"
+          [ -z "$INITIAL_VALUES" ] && exit 0
+
+          PSYNC_FIELDS_JSON=$(gh api graphql -f query='
+            query($projectId: ID!) {
+              node(id: $projectId) {
+                ... on ProjectV2 {
+                  fields(first: 20) {
+                    nodes {
+                      ... on ProjectV2SingleSelectField {
+                        id
+                        name
+                        options { id name }
+                      }
+                      ... on ProjectV2Field {
+                        id
+                        name
+                        dataType
+                      }
+                    }
+                  }
+                }
+              }
+            }' \
+            -f projectId="${{ steps.project.outputs.id }}" \
+            --jq '.data.node.fields.nodes')
+
+          export PSYNC_PROJECT_ID="${{ steps.project.outputs.id }}"
+          export PSYNC_FIELDS_JSON
+          export PSYNC_INITIAL_VALUES="$INITIAL_VALUES"
+          export PSYNC_REPO="${{ github.repository }}"
+
+          # shellcheck source=/dev/null
+          source "$RUNNER_TEMP/psync_apply_fields.sh"
+          apply_fields "${{ steps.add_item.outputs.item_id }}" "${{ github.event.issue.number }}"
+
+      - name: Get item ID and close Status option ID
+        id: find_item
+        if: github.event.action == 'closed' && vars.PSYNC_ENABLED != 'false' && vars.PSYNC_ENABLED != 'off' && steps.author_filter.outputs.allowed != 'false'
+        env:
+          GH_TOKEN: ${{ secrets.PSYNC_PAT }}
+        run: |
+          CLOSE_STATUS="${{ vars.PSYNC_CLOSE_STATUS }}"
+          CLOSE_STATUS="${CLOSE_STATUS:-Done}"
+
+          # Fetch Status field info once
+          FIELDS_RESULT=$(gh api graphql -f query='
+            query($projectId: ID!) {
+              node(id: $projectId) {
+                ... on ProjectV2 {
+                  fields(first: 20) {
+                    nodes {
+                      ... on ProjectV2SingleSelectField {
+                        id
+                        name
+                        options { id name }
+                      }
+                    }
+                  }
+                }
+              }
+            }' \
+            -f projectId="${{ steps.project.outputs.id }}")
+
+          FIELD_ID=$(echo "$FIELDS_RESULT" | jq -r \
+            '.data.node.fields.nodes[] | select(.name == "Status") | .id // empty')
+
+          if [ -z "$FIELD_ID" ]; then
+            echo "Error: Status field not found in the target project. Ensure the project has a single-select field named exactly 'Status' (case-sensitive)."
+            exit 1
+          fi
+
+          CLOSE_OPTION_ID=$(echo "$FIELDS_RESULT" | jq -r \
+            --arg status "$CLOSE_STATUS" \
+            '.data.node.fields.nodes[] | select(.name == "Status") | .options[] | select(.name == $status) | .id // empty')
+
+          if [ -z "$CLOSE_OPTION_ID" ]; then
+            echo "Error: Status option '$CLOSE_STATUS' not found in the target project. Check PSYNC_CLOSE_STATUS (default: Done) — value must match a Status option exactly (case-sensitive)."
+            exit 1
+          fi
+
+          # Paginate items until the matching issue is found
+          ITEM_ID=""
+          CURSOR=""
+          while true; do
+            if [ -z "$CURSOR" ]; then
+              PAGE_RESULT=$(gh api graphql -f query='
+                query($projectId: ID!) {
+                  node(id: $projectId) {
+                    ... on ProjectV2 {
+                      items(first: 100) {
+                        pageInfo { hasNextPage endCursor }
+                        nodes {
+                          id
+                          content { ... on Issue { id } }
+                        }
+                      }
+                    }
+                  }
+                }' \
+                -f projectId="${{ steps.project.outputs.id }}")
+            else
+              PAGE_RESULT=$(gh api graphql -f query='
+                query($projectId: ID!, $cursor: String!) {
+                  node(id: $projectId) {
+                    ... on ProjectV2 {
+                      items(first: 100, after: $cursor) {
+                        pageInfo { hasNextPage endCursor }
+                        nodes {
+                          id
+                          content { ... on Issue { id } }
+                        }
+                      }
+                    }
+                  }
+                }' \
+                -f projectId="${{ steps.project.outputs.id }}" \
+                -f cursor="$CURSOR")
+            fi
+
+            ITEM_ID=$(echo "$PAGE_RESULT" | jq -r \
+              --arg issueId "${{ github.event.issue.node_id }}" \
+              '.data.node.items.nodes[] | select(.content.id == $issueId) | .id')
+
+            [ -n "$ITEM_ID" ] && break
+
+            HAS_NEXT=$(echo "$PAGE_RESULT" | jq -r '.data.node.items.pageInfo.hasNextPage')
+            [ "$HAS_NEXT" != "true" ] && break
+
+            CURSOR=$(echo "$PAGE_RESULT" | jq -r '.data.node.items.pageInfo.endCursor')
+          done
+
+          # If not found, add the issue now (handles race where closed fires before opened)
+          if [ -z "$ITEM_ID" ]; then
+            echo "Issue not yet in project — adding it now before setting close Status."
+            ITEM_ID=$(gh api graphql -f query='
+              mutation($projectId: ID!, $contentId: ID!) {
+                addProjectV2ItemById(input: { projectId: $projectId, contentId: $contentId }) {
+                  item { id }
+                }
+              }' \
+              -f projectId="${{ steps.project.outputs.id }}" \
+              -f contentId="${{ github.event.issue.node_id }}" \
+              --jq '.data.addProjectV2ItemById.item.id')
+            if [ -z "$ITEM_ID" ] || [ "$ITEM_ID" = "null" ]; then
+              echo "Error: failed to add issue to project. Cannot set close Status."
+              exit 1
+            fi
+          fi
+
+          echo "item_id=$ITEM_ID" >> "$GITHUB_OUTPUT"
+          echo "field_id=$FIELD_ID" >> "$GITHUB_OUTPUT"
+          echo "close_option_id=$CLOSE_OPTION_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Set item close Status
+        if: github.event.action == 'closed' && vars.PSYNC_ENABLED != 'false' && vars.PSYNC_ENABLED != 'off' && steps.author_filter.outputs.allowed != 'false'
+        env:
+          GH_TOKEN: ${{ secrets.PSYNC_PAT }}
+        run: |
+          ITEM_ID="${{ steps.find_item.outputs.item_id }}"
+          OPTION_ID="${{ steps.find_item.outputs.close_option_id }}"
+
+          gh api graphql -f query='
+            mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $optionId: String!) {
+              updateProjectV2ItemFieldValue(input: {
+                projectId: $projectId
+                itemId: $itemId
+                fieldId: $fieldId
+                value: { singleSelectOptionId: $optionId }
+              }) {
+                projectV2Item { id }
+              }
+            }' \
+            -f projectId="${{ steps.project.outputs.id }}" \
+            -f itemId="$ITEM_ID" \
+            -f fieldId="${{ steps.find_item.outputs.field_id }}" \
+            -f optionId="$OPTION_ID"
