@@ -245,7 +245,7 @@ abstract class Step<SELF extends Step<SELF, B>, B> implements FuncTaskConfigurer
    * <p><strong>Example:</strong>
    *
    * <pre>{@code
-   * // Giving that your context has this attribute already
+   * // Given that your context has this attribute already
    * exportAs("$.username")
    * }</pre>
    *
