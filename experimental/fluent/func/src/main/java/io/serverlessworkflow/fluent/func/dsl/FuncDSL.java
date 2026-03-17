@@ -15,7 +15,6 @@
  */
 package io.serverlessworkflow.fluent.func.dsl;
 
-import io.cloudevents.CloudEvent;
 import io.cloudevents.CloudEventData;
 import io.serverlessworkflow.api.types.FlowDirectiveEnum;
 import io.serverlessworkflow.api.types.func.ContextFunction;
