@@ -668,7 +668,7 @@ public final class FuncDSL {
   }
 
   /**
-   * Convenience for emitting a CloudEvent using a function that builds {@link CloudEvent}.
+   * Convenience for emitting a CloudEvent using a function that builds {@link CloudEventData}.
    *
    * @param type CloudEvent type
    * @param fn function that produces event data from the input
@@ -684,7 +684,7 @@ public final class FuncDSL {
    *
    * @param name task name
    * @param type CloudEvent type
-   * @param fn function producing {@link CloudEvent}
+   * @param fn function producing {@link CloudEventData}
    * @param <T> input type
    * @return a named {@link EmitStep}
    */
