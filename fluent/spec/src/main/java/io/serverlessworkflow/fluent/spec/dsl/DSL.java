@@ -202,10 +202,10 @@ public final class DSL {
   /**
    * Start building an event specification for use with {@code emit} tasks.
    *
-   * <p>This method returns an {@link EventFilterSpec}, which is primarily used for event
-   * filtering (for {@code listen} tasks) but is also reused here as a filter-like description
-   * of the event that will be emitted. Configure the event type, source, and payload using
-   * {@link EventFilterSpec} methods, then pass the resulting spec to {@link #emit(Consumer)}.
+   * <p>This method returns an {@link EventFilterSpec}, which is primarily used for event filtering
+   * (for {@code listen} tasks) but is also reused here as a filter-like description of the event
+   * that will be emitted. Configure the event type, source, and payload using {@link
+   * EventFilterSpec} methods, then pass the resulting spec to {@link #emit(Consumer)}.
    *
    * @return a new {@link EventFilterSpec} instance for event emission
    */

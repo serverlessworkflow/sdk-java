@@ -121,7 +121,7 @@ public class TryCatchDslTest {
                             .catches()
                             .exceptWhen("$.code == 502")
                             .errors(errType, 502)
-                            .tasks(emit(("org.acme.recover")))
+                            .tasks(emit("org.acme.recover"))
                             .done() // back to TrySpec
                         ))
             .build();
@@ -174,7 +174,7 @@ public class TryCatchDslTest {
                             .retry()
                             .limit("PT2S")
                             .done()
-                            .tasks(emit(("org.acme.retrying")))
+                            .tasks(emit("org.acme.retrying"))
                             .done()))
             .build();
 
