@@ -49,19 +49,19 @@ public class FuncEventFilterPropertiesBuilder
     return this;
   }
 
-  public FuncEventFilterPropertiesBuilder dataCE(Predicate<CloudEvent> predicate) {
+  public FuncEventFilterPropertiesBuilder envelope(Predicate<CloudEvent> predicate) {
     this.eventProperties.setData(
         new EventDataPredicate().withPredicate(predicate, CloudEvent.class));
     return this;
   }
 
-  public FuncEventFilterPropertiesBuilder dataCE(ContextPredicate<CloudEvent> predicate) {
+  public FuncEventFilterPropertiesBuilder envelope(ContextPredicate<CloudEvent> predicate) {
     this.eventProperties.setData(
         new EventDataPredicate().withPredicate(predicate, CloudEvent.class));
     return this;
   }
 
-  public FuncEventFilterPropertiesBuilder dataCE(FilterPredicate<CloudEvent> predicate) {
+  public FuncEventFilterPropertiesBuilder envelope(FilterPredicate<CloudEvent> predicate) {
     this.eventProperties.setData(
         new EventDataPredicate().withPredicate(predicate, CloudEvent.class));
     return this;

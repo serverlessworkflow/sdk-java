@@ -217,7 +217,8 @@ public final class FuncDSL {
    */
   public static <T> Consumer<FuncEmitTaskBuilder> produced(
       String type, SerializableFunction<T, CloudEventData> function) {
-    return OPS.emit(type, function, ReflectionUtils.inferInputType(function));
+    return event ->
+        event.event(e -> e.type(type).data(function, ReflectionUtils.inferInputType(function)));
   }
 
   /**
@@ -232,7 +233,19 @@ public final class FuncDSL {
    */
   public static <T> Consumer<FuncEmitTaskBuilder> produced(
       String type, Function<T, CloudEventData> function, Class<T> inputClass) {
-    return OPS.emit(type, function, inputClass);
+    return event -> event.event(e -> e.type(type).data(function, inputClass));
+  }
+
+  public static <T> Consumer<FuncEmitTaskBuilder> produced(
+      String type, ContextFunction<T, CloudEventData> function) {
+    return event ->
+        event.event(e -> e.type(type).data(function, ReflectionUtils.inferInputType(function)));
+  }
+
+  public static <T> Consumer<FuncEmitTaskBuilder> produced(
+      String type, FilterFunction<T, CloudEventData> function) {
+    return event ->
+        event.event(e -> e.type(type).data(function, ReflectionUtils.inferInputType(function)));
   }
 
   /**

@@ -107,7 +107,7 @@ abstract class Step<SELF extends Step<SELF, B>, B> implements FuncTaskConfigurer
    * It allows chaining transformations in a fluent manner.
    *
    * <p>{@code exportAs} controls what the task <strong>exports</strong> for downstream consumers
-   * (the next task, events, etc.) without immediately updating global workflow data.
+   * (the next task, events, etc.), immediately updating the workflow context.
    *
    * <p><strong>Example:</strong>
    *
@@ -117,8 +117,8 @@ abstract class Step<SELF extends Step<SELF, B>, B> implements FuncTaskConfigurer
    *     .when(condition);
    * }</pre>
    *
-   * @param <T> the task result type
-   * @param <R> the export type (what gets forwarded to the next step)
+   * @param <T> the context type
+   * @param <R> the export type (what gets written in the workflow context)
    * @param function the transformation function
    * @return this step for method chaining
    * @see io.serverlessworkflow.fluent.func.spi.FuncTaskTransformations#exportAs(Function)
@@ -132,15 +132,15 @@ abstract class Step<SELF extends Step<SELF, B>, B> implements FuncTaskConfigurer
   }
 
   /**
-   * Shapes what the task exports for downstream consumers using a Java function with explicit input
-   * type.
+   * Shapes what the task exports for downstream consumers using a Java function with explicit
+   * context input type.
    *
    * <p>This variant allows you to explicitly specify the input type class for better type safety.
    *
-   * @param <T> the task result type
-   * @param <R> the export type (what gets forwarded to the next step)
+   * @param <T> the workflow context type
+   * @param <R> the export type (what gets written in the context)
    * @param function the transformation function
-   * @param taskResultClass the class of the task result type
+   * @param taskResultClass the class of the workflow context type
    * @return this step for method chaining
    * @see io.serverlessworkflow.fluent.func.spi.FuncTaskTransformations#exportAs(Function, Class)
    */
@@ -155,8 +155,8 @@ abstract class Step<SELF extends Step<SELF, B>, B> implements FuncTaskConfigurer
    * <p>This variant provides access to both workflow and task context, allowing you to inspect
    * metadata when shaping the export.
    *
-   * @param <T> the task result type
-   * @param <R> the export type (what gets forwarded to the next step)
+   * @param <T> the workflow context type
+   * @param <R> the export type (what gets written in the context)
    * @param function the filter function with workflow and task context
    * @return this step for method chaining
    * @see io.serverlessworkflow.fluent.func.spi.FuncTaskTransformations#exportAs(FilterFunction)
@@ -173,10 +173,10 @@ abstract class Step<SELF extends Step<SELF, B>, B> implements FuncTaskConfigurer
    * Shapes what the task exports for downstream consumers using a context-aware filter function
    * with explicit input type.
    *
-   * @param <T> the task result type
-   * @param <V> the export type (what gets forwarded to the next step)
+   * @param <T> the workflow context type
+   * @param <R> the export type (what gets written in the context)
    * @param function the filter function with workflow and task context
-   * @param taskResultClass the class of the task result type
+   * @param taskResultClass the class of the workflow context type
    * @return this step for method chaining
    * @see io.serverlessworkflow.fluent.func.spi.FuncTaskTransformations#exportAs(FilterFunction,
    *     Class)
@@ -192,8 +192,8 @@ abstract class Step<SELF extends Step<SELF, B>, B> implements FuncTaskConfigurer
    * <p>This variant provides access to workflow context, allowing you to inspect workflow metadata
    * when shaping the export.
    *
-   * @param <T> the task result type
-   * @param <R> the export type (what gets forwarded to the next step)
+   * @param <T> the workflow context type
+   * @param <R> the export type (what gets written in the context)
    * @param function the context function with workflow context
    * @return this step for method chaining
    * @see io.serverlessworkflow.fluent.func.spi.FuncTaskTransformations#exportAs(ContextFunction)
@@ -210,16 +210,29 @@ abstract class Step<SELF extends Step<SELF, B>, B> implements FuncTaskConfigurer
    * Shapes what the task exports for downstream consumers using a context-aware function with
    * explicit input type.
    *
-   * @param <T> the task result type
-   * @param <R> the export type (what gets forwarded to the next step)
+   * @param <T> the workflow context type
+   * @param <R> the export type (what gets written in the context)
    * @param function the context function with workflow context
-   * @param taskResultClass the class of the task result type
+   * @param taskResultClass the class of the workflow context type
    * @return this step for method chaining
    * @see io.serverlessworkflow.fluent.func.spi.FuncTaskTransformations#exportAs(ContextFunction,
    *     Class)
    */
   public <T, R> SELF exportAs(ContextFunction<T, R> function, Class<T> taskResultClass) {
     postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).exportAs(function, taskResultClass));
+    return self();
+  }
+
+  /**
+   * Overrides the workflow context with the current task output.
+   *
+   * @return this step for method chaining
+   */
+  public SELF exportAsTaskOutput() {
+    postConfigurers.add(
+        b ->
+            ((FuncTaskTransformations<?>) b)
+                .exportAs((context, workflowContext, taskContext) -> taskContext.output()));
     return self();
   }
 
@@ -232,6 +245,7 @@ abstract class Step<SELF extends Step<SELF, B>, B> implements FuncTaskConfigurer
    * <p><strong>Example:</strong>
    *
    * <pre>{@code
+   * // Giving that your context has this attribute already
    * exportAs("$.username")
    * }</pre>
    *

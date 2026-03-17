@@ -15,10 +15,8 @@
  */
 package io.serverlessworkflow.fluent.func.dsl;
 
-import io.cloudevents.CloudEventData;
 import io.serverlessworkflow.api.types.FlowDirectiveEnum;
 import io.serverlessworkflow.fluent.func.FuncCallTaskBuilder;
-import io.serverlessworkflow.fluent.func.FuncEmitTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncSwitchTaskBuilder;
 import io.serverlessworkflow.fluent.func.configurers.SwitchCaseConfigurer;
 import java.util.function.Consumer;
@@ -58,10 +56,5 @@ interface CommonFuncOps {
 
   default SwitchCaseConfigurer caseDefault(FlowDirectiveEnum directive) {
     return s -> s.then(directive);
-  }
-
-  default <T> Consumer<FuncEmitTaskBuilder> emit(
-      String type, Function<T, CloudEventData> function, Class<T> clazz) {
-    return event -> event.event(e -> e.type(type).data(function, clazz));
   }
 }

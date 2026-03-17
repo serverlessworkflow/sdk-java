@@ -18,6 +18,7 @@ package io.serverlessworkflow.fluent.func.dsl;
 import io.cloudevents.CloudEventData;
 import io.cloudevents.core.data.BytesCloudEventData;
 import io.cloudevents.core.data.PojoCloudEventData;
+import io.serverlessworkflow.api.types.func.ContextFunction;
 import io.serverlessworkflow.api.types.func.EventDataFunction;
 import io.serverlessworkflow.fluent.func.FuncEmitEventPropertiesBuilder;
 import io.serverlessworkflow.fluent.func.FuncEmitTaskBuilder;
@@ -62,6 +63,17 @@ public final class FuncEmitSpec
 
   /** JSON with default mapper (PojoCloudEventData + application/json). */
   public <T> FuncEmitSpec jsonData(Class<T> clazz) {
+    addPropertyStep(
+        e ->
+            e.data(
+                payload ->
+                    PojoCloudEventData.wrap(
+                        payload, p -> JsonUtils.mapper().writeValueAsString(p).getBytes()),
+                clazz));
+    return JSON();
+  }
+
+  public <T> FuncEmitSpec jsonData(ContextFunction<T, CloudEventData> function, Class<T> clazz) {
     addPropertyStep(
         e ->
             e.data(
