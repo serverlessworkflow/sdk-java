@@ -82,4 +82,9 @@ public class JavaModelFactory implements WorkflowModelFactory {
   public WorkflowModel fromOther(Object obj) {
     return new JavaModel(obj);
   }
+
+  @Override
+  public int priority() {
+    return DEFAULT_PRIORITY + 10;
+  }
 }
