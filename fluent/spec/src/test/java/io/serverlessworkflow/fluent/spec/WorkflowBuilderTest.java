@@ -17,8 +17,9 @@ package io.serverlessworkflow.fluent.spec;
 
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.basic;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.cases;
-import static io.serverlessworkflow.fluent.spec.dsl.DSL.event;
+import static io.serverlessworkflow.fluent.spec.dsl.DSL.emit;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.http;
+import static io.serverlessworkflow.fluent.spec.dsl.DSL.produced;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -28,8 +29,11 @@ import io.serverlessworkflow.api.types.AuthenticationPolicyUnion;
 import io.serverlessworkflow.api.types.CallHTTP;
 import io.serverlessworkflow.api.types.CatchErrors;
 import io.serverlessworkflow.api.types.Document;
+import io.serverlessworkflow.api.types.EmitEventDefinition;
+import io.serverlessworkflow.api.types.EmitTask;
 import io.serverlessworkflow.api.types.ErrorFilter;
 import io.serverlessworkflow.api.types.EventFilter;
+import io.serverlessworkflow.api.types.EventProperties;
 import io.serverlessworkflow.api.types.FlowDirectiveEnum;
 import io.serverlessworkflow.api.types.HTTPArguments;
 import io.serverlessworkflow.api.types.HTTPHeaders;
@@ -209,23 +213,17 @@ public class WorkflowBuilderTest {
     Workflow wf =
         WorkflowBuilder.workflow("flowEmit")
             .tasks(
-                d ->
-                    d.emit(
-                        "emitEvent",
-                        e ->
-                            e.event(
-                                event()
-                                    .type("com.petstore.order.placed.v1")
-                                    .source(URI.create("https://petstore.com"))
-                                    .jsonData(
-                                        Map.of(
-                                            "client",
-                                                Map.of(
-                                                    "firstName", "Cruella", "lastName", "de Vil"),
-                                            "items",
-                                                List.of(
-                                                    Map.of(
-                                                        "breed", "dalmatian", "quantity", 101)))))))
+                emit(
+                    "emitEvent",
+                    produced()
+                        .type("com.petstore.order.placed.v1")
+                        .source(URI.create("https://petstore.com"))
+                        .jsonData(
+                            Map.of(
+                                "client",
+                                Map.of("firstName", "Cruella", "lastName", "de Vil"),
+                                "items",
+                                List.of(Map.of("breed", "dalmatian", "quantity", 101))))))
             .build();
 
     List<TaskItem> items = wf.getDo();
@@ -234,12 +232,12 @@ public class WorkflowBuilderTest {
 
     TaskItem item = items.get(0);
     assertEquals("emitEvent", item.getName(), "TaskItem name should match");
-    io.serverlessworkflow.api.types.EmitTask et = item.getTask().getEmitTask();
+    EmitTask et = item.getTask().getEmitTask();
     assertNotNull(et, "EmitTask should be present");
 
-    io.serverlessworkflow.api.types.EmitEventDefinition ed = et.getEmit().getEvent();
+    EmitEventDefinition ed = et.getEmit().getEvent();
     assertNotNull(ed, "EmitEventDefinition should be present");
-    io.serverlessworkflow.api.types.EventProperties props = ed.getWith();
+    EventProperties props = ed.getWith();
     assertEquals(
         "https://petstore.com",
         props.getSource().getUriTemplate().getLiteralUri().toString(),

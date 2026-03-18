@@ -17,20 +17,17 @@ package io.serverlessworkflow.fluent.func.dsl;
 
 import io.serverlessworkflow.fluent.func.FuncEventFilterBuilder;
 import io.serverlessworkflow.fluent.func.FuncListenToBuilder;
-import io.serverlessworkflow.fluent.func.configurers.FuncPredicateEventConfigurer;
 import io.serverlessworkflow.fluent.spec.dsl.BaseListenSpec;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 public abstract class BaseFuncListenSpec<SELF, LB>
-    extends BaseListenSpec<
-        SELF, LB, FuncListenToBuilder, FuncEventFilterBuilder, FuncPredicateEventConfigurer> {
+    extends BaseListenSpec<SELF, LB, FuncListenToBuilder, FuncEventFilterBuilder> {
 
   protected BaseFuncListenSpec(ToInvoker<LB, FuncListenToBuilder> toInvoker) {
     super(
         toInvoker,
-        FuncEventFilterBuilder::with,
         // allApplier
         (tb, filters) -> tb.all(castFilters(filters)),
         // anyApplier

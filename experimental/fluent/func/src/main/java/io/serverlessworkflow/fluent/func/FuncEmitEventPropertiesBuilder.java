@@ -16,24 +16,40 @@
 package io.serverlessworkflow.fluent.func;
 
 import io.cloudevents.CloudEventData;
+import io.serverlessworkflow.api.types.func.ContextFunction;
 import io.serverlessworkflow.api.types.func.EventDataFunction;
+import io.serverlessworkflow.api.types.func.FilterFunction;
+import io.serverlessworkflow.fluent.func.dsl.SerializableFunction;
 import io.serverlessworkflow.fluent.spec.AbstractEventPropertiesBuilder;
 import java.util.function.Function;
 
-public class FuncEventPropertiesBuilder
-    extends AbstractEventPropertiesBuilder<FuncEventPropertiesBuilder> {
+public class FuncEmitEventPropertiesBuilder
+    extends AbstractEventPropertiesBuilder<FuncEmitEventPropertiesBuilder> {
 
   @Override
-  protected FuncEventPropertiesBuilder self() {
+  protected FuncEmitEventPropertiesBuilder self() {
     return this;
   }
 
-  public <T> FuncEventPropertiesBuilder data(Function<T, CloudEventData> function) {
+  public <T> FuncEmitEventPropertiesBuilder data(SerializableFunction<T, CloudEventData> function) {
     this.eventProperties.setData(new EventDataFunction().withFunction(function));
     return this;
   }
 
-  public <T> FuncEventPropertiesBuilder data(Function<T, CloudEventData> function, Class<T> clazz) {
+  public <T> FuncEmitEventPropertiesBuilder data(
+      Function<T, CloudEventData> function, Class<T> clazz) {
+    this.eventProperties.setData(new EventDataFunction().withFunction(function, clazz));
+    return this;
+  }
+
+  public <T> FuncEmitEventPropertiesBuilder data(
+      ContextFunction<T, CloudEventData> function, Class<T> clazz) {
+    this.eventProperties.setData(new EventDataFunction().withFunction(function, clazz));
+    return this;
+  }
+
+  public <T> FuncEmitEventPropertiesBuilder data(
+      FilterFunction<T, CloudEventData> function, Class<T> clazz) {
     this.eventProperties.setData(new EventDataFunction().withFunction(function, clazz));
     return this;
   }

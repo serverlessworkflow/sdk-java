@@ -16,14 +16,34 @@
 package io.serverlessworkflow.fluent.spec.dsl;
 
 import io.serverlessworkflow.fluent.spec.AbstractEventPropertiesBuilder;
+import java.time.Instant;
+import java.util.Date;
+import java.util.UUID;
 
-public abstract class ExprEventFilterSpec<
+/** Event properties handlers for emit tasks (setting attributes). */
+public abstract class EventEmitPropertiesSpec<
         SELF, EVENT_PROPS extends AbstractEventPropertiesBuilder<?>>
     extends EventPropertiesSpec<SELF, EVENT_PROPS> {
 
-  /** Filters events with `application/json` content type */
-  public SELF jsonData(String expr) {
-    addPropertyStep(e -> e.data(expr));
-    return JSON();
+  /** Sets the CloudEvent id to a random UUID */
+  public SELF randomId() {
+    addPropertyStep(e -> e.id(UUID.randomUUID().toString()));
+    return self();
+  }
+
+  /** Sets the CloudEvent time to the current system time */
+  public SELF now() {
+    addPropertyStep(e -> e.time(Date.from(Instant.now())));
+    return self();
+  }
+
+  public SELF contentType(String ct) {
+    addPropertyStep(e -> e.dataContentType(ct));
+    return self();
+  }
+
+  public SELF OCTET_STREAM() {
+    addPropertyStep(e -> e.dataContentType("application/octet-stream"));
+    return self();
   }
 }

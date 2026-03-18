@@ -35,8 +35,7 @@ public final class ConsumeStep<T> extends Step<ConsumeStep<T>, FuncCallTaskBuild
   }
 
   @Override
-  protected void configure(
-      FuncTaskItemListBuilder list, java.util.function.Consumer<FuncCallTaskBuilder> post) {
+  protected void configure(FuncTaskItemListBuilder list, Consumer<FuncCallTaskBuilder> post) {
     if (name == null) {
       list.function(
           cb -> {
