@@ -16,7 +16,10 @@
 package io.serverlessworkflow.fluent.spec;
 
 import io.serverlessworkflow.api.types.SubscriptionIterator;
+import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.fluent.spec.spi.SubscriptionIteratorFluent;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
 
 public class SubscriptionIteratorBuilder<T extends BaseTaskItemListBuilder<T>>
@@ -44,9 +47,22 @@ public class SubscriptionIteratorBuilder<T extends BaseTaskItemListBuilder<T>>
 
   @Override
   public SubscriptionIteratorBuilder<T> tasks(Consumer<T> doBuilderConsumer) {
-    final T taskItemListBuilder = this.taskItemListBuilder.newItemListBuilder();
-    doBuilderConsumer.accept(taskItemListBuilder);
-    this.subscriptionIterator.setDo(taskItemListBuilder.build());
+    List<TaskItem> existingTasks = this.subscriptionIterator.getDo();
+
+    int currentOffset = (existingTasks == null) ? 0 : existingTasks.size();
+
+    final T listBuilder = this.taskItemListBuilder.newItemListBuilder(currentOffset);
+    doBuilderConsumer.accept(listBuilder);
+
+    List<TaskItem> newTasks = listBuilder.build();
+    if (existingTasks == null || existingTasks.isEmpty()) {
+      this.subscriptionIterator.setDo(newTasks);
+    } else {
+      List<TaskItem> merged = new ArrayList<>(existingTasks);
+      merged.addAll(newTasks);
+      this.subscriptionIterator.setDo(merged);
+    }
+
     return this;
   }
 

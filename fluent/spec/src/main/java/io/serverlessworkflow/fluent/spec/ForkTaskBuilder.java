@@ -17,7 +17,9 @@ package io.serverlessworkflow.fluent.spec;
 
 import io.serverlessworkflow.api.types.ForkTask;
 import io.serverlessworkflow.api.types.ForkTaskConfiguration;
+import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.fluent.spec.spi.ForkTaskFluent;
+import java.util.List;
 import java.util.function.Consumer;
 
 public class ForkTaskBuilder extends TaskBaseBuilder<ForkTaskBuilder>
@@ -45,9 +47,22 @@ public class ForkTaskBuilder extends TaskBaseBuilder<ForkTaskBuilder>
 
   @Override
   public ForkTaskBuilder branches(Consumer<TaskItemListBuilder> branchesConsumer) {
-    final TaskItemListBuilder doTaskBuilder = new TaskItemListBuilder();
+    List<TaskItem> existingBranches = this.forkTaskConfiguration.getBranches();
+
+    int currentOffset = (existingBranches == null) ? 0 : existingBranches.size();
+
+    final TaskItemListBuilder doTaskBuilder = new TaskItemListBuilder(currentOffset);
     branchesConsumer.accept(doTaskBuilder);
-    this.forkTaskConfiguration.setBranches(doTaskBuilder.build());
+
+    List<TaskItem> newBranches = doTaskBuilder.build();
+    if (existingBranches == null || existingBranches.isEmpty()) {
+      this.forkTaskConfiguration.setBranches(newBranches);
+    } else {
+      List<TaskItem> merged = new java.util.ArrayList<>(existingBranches);
+      merged.addAll(newBranches);
+      this.forkTaskConfiguration.setBranches(merged);
+    }
+
     return this;
   }
 

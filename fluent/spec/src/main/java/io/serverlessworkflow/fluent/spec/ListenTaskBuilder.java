@@ -23,7 +23,7 @@ public class ListenTaskBuilder
     extends AbstractListenTaskBuilder<TaskItemListBuilder, ListenToBuilder> {
 
   protected ListenTaskBuilder() {
-    super(new TaskItemListBuilder());
+    super(new TaskItemListBuilder(0));
   }
 
   @Override

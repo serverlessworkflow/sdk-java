@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import io.serverlessworkflow.api.types.ForkTaskConfiguration;
 import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.api.types.TryTask;
+import io.serverlessworkflow.api.types.TryTaskCatch;
 import io.serverlessworkflow.api.types.Workflow;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -42,7 +43,7 @@ public class TaskItemDefaultNamingTest {
                         .http(null, http().GET().endpoint("http://example.com"))
                         .emit("", e -> e.event(ev -> ev.type("test.event")))
                         .set("explicitName", s -> s.expr("$.x = 1")) // Explicit name should be kept
-                        .fork(null, ForkTaskBuilder::build) // No-op fork to check index 4
+                        .fork(null, fb -> {}) // No-op fork to check index 4
                 )
             .build();
 
@@ -208,5 +209,183 @@ public class TaskItemDefaultNamingTest {
 
     assertEquals("set-0", nestedName1, "Nested task should reset to 0-based index");
     assertEquals(nestedName1, nestedName2, "Nested task names must match exactly across instances");
+  }
+
+  @Test
+  void testMultipleTasksAppendsMaintainOffset() {
+    Workflow wf =
+        WorkflowBuilder.workflow("flowMultipleAppends")
+            // First invocation: list is empty, offset is 0
+            .tasks(
+                d ->
+                    d.set(null, s -> s.expr("$.a = 1"))
+                        .http(null, http().GET().endpoint("http://a")))
+            // Second invocation: list has 2 items, offset passed to builder should be 2
+            .tasks(
+                d ->
+                    d.set(null, s -> s.expr("$.b = 2"))
+                        .emit("", e -> e.event(ev -> ev.type("test.event"))))
+            .build();
+
+    List<TaskItem> items = wf.getDo();
+    assertNotNull(items, "Do list must not be null");
+    assertEquals(4, items.size(), "All tasks from multiple appends should be merged");
+
+    // Verify the first invocation used 0 and 1
+    assertEquals("set-0", items.get(0).getName());
+    assertEquals("http-1", items.get(1).getName());
+
+    // Verify the second invocation picked up the offset correctly (2 and 3)
+    assertEquals("set-2", items.get(2).getName(), "Offset should prevent resetting to set-0");
+    assertEquals("emit-3", items.get(3).getName(), "Offset should continue the sequence to 3");
+  }
+
+  @Test
+  void testForkTaskMultipleBranchesAppends() {
+    Workflow wf =
+        WorkflowBuilder.workflow("flowForkMultipleAppends")
+            .tasks(
+                d ->
+                    d.fork(
+                        null,
+                        f ->
+                            // 1. First call: list is empty, offset is 0
+                            f.branches(b -> b.set(null, s -> s.expr("$.a = 1")))
+                                // 2. Second call: list has 1 item, offset should be 1
+                                .branches(b -> b.set(null, s -> s.expr("$.b = 2")))
+                                // 3. Third call: list has 2 items, offset should be 2
+                                .branches(b -> b.http(null, http().GET().endpoint("http://test")))))
+            .build();
+
+    List<TaskItem> topItems = wf.getDo();
+    assertEquals(1, topItems.size(), "Should have exactly one top-level task");
+    assertEquals("fork-0", topItems.get(0).getName(), "Top level fork should be fork-0");
+
+    // Extract the branches from the fork task
+    ForkTaskConfiguration forkConfig = topItems.get(0).getTask().getForkTask().getFork();
+    List<TaskItem> branches = forkConfig.getBranches();
+
+    assertNotNull(branches, "Branches list must not be null");
+    assertEquals(
+        3, branches.size(), "All branches from multiple calls must be appended and merged");
+
+    // Verify the naming offset correctly tracked the appends
+    assertEquals("set-0", branches.get(0).getName(), "First branches() call starts at 0");
+    assertEquals("set-1", branches.get(1).getName(), "Second branches() call picks up index 1");
+    assertEquals("http-2", branches.get(2).getName(), "Third branches() call picks up index 2");
+  }
+
+  @Test
+  void testForEachTaskMultipleTasksAppends() {
+    Workflow wf =
+        WorkflowBuilder.workflow("flowForMultipleAppends")
+            .tasks(
+                d ->
+                    d.forEach(
+                        null,
+                        f ->
+                            f.each("item")
+                                .in("$.list")
+                                // 1. First call: list is empty, offset is 0
+                                .tasks(tb -> tb.set(null, s -> s.expr("$.a = 1")))
+                                // 2. Second call: list has 1 item, offset should be 1
+                                .tasks(tb -> tb.set(null, s -> s.expr("$.b = 2")))
+                                // 3. Third call: list has 2 items, offset should be 2
+                                .tasks(tb -> tb.http(null, http().GET().endpoint("http://test")))))
+            .build();
+
+    List<TaskItem> topItems = wf.getDo();
+    assertEquals(1, topItems.size());
+    assertEquals("for-0", topItems.get(0).getName());
+
+    // Extract the do tasks from the forEach loop
+    List<TaskItem> nestedTasks = topItems.get(0).getTask().getForTask().getDo();
+
+    assertNotNull(nestedTasks, "Nested tasks list must not be null");
+    assertEquals(
+        3, nestedTasks.size(), "All tasks from multiple calls must be appended and merged");
+
+    // Verify the naming offset correctly tracked the appends
+    assertEquals("set-0", nestedTasks.get(0).getName(), "First tasks() call starts at 0");
+    assertEquals("set-1", nestedTasks.get(1).getName(), "Second tasks() call picks up index 1");
+    assertEquals("http-2", nestedTasks.get(2).getName(), "Third tasks() call picks up index 2");
+  }
+
+  @Test
+  void testSubscriptionIteratorMultipleTasksAppends() {
+    // We need a root builder to satisfy the generic <T> requirement
+    TaskItemListBuilder rootBuilder = new TaskItemListBuilder(0);
+    SubscriptionIteratorBuilder<TaskItemListBuilder> subBuilder =
+        new SubscriptionIteratorBuilder<>(rootBuilder);
+
+    // 1. First call: list is empty, offset is 0
+    subBuilder.tasks(tb -> tb.set(null, s -> s.expr("$.a = 1")));
+
+    // 2. Second call: list has 1 item, offset should be 1
+    subBuilder.tasks(tb -> tb.set(null, s -> s.expr("$.b = 2")));
+
+    // 3. Third call: list has 2 items, offset should be 2
+    subBuilder.tasks(tb -> tb.http(null, http().GET().endpoint("http://test")));
+
+    // Build and verify
+    List<TaskItem> nestedTasks = subBuilder.build().getDo();
+
+    assertNotNull(nestedTasks, "Nested tasks list must not be null");
+    assertEquals(
+        3, nestedTasks.size(), "All tasks from multiple calls must be appended and merged");
+
+    // Verify the naming offset correctly tracked the appends
+    assertEquals("set-0", nestedTasks.get(0).getName(), "First tasks() call starts at 0");
+    assertEquals("set-1", nestedTasks.get(1).getName(), "Second tasks() call picks up index 1");
+    assertEquals("http-2", nestedTasks.get(2).getName(), "Third tasks() call picks up index 2");
+  }
+
+  @Test
+  void testTryCatchMultipleTasksAppends() {
+    Workflow wf =
+        WorkflowBuilder.workflow("flowTryCatchMultipleAppends")
+            .tasks(
+                d ->
+                    d.tryCatch(
+                        null,
+                        t ->
+                            // Multiple tryHandler calls
+                            t.tryHandler(tb -> tb.set(null, s -> s.expr("$.a = 1")))
+                                .tryHandler(tb -> tb.set(null, s -> s.expr("$.b = 2")))
+                                .catchHandler(
+                                    c ->
+                                        c.errorsWith(eb -> eb.type("CustomError"))
+                                            // Multiple doTasks calls inside the catch
+                                            .doTasks(cb -> cb.set(null, s -> s.expr("$.c = 3")))
+                                            .doTasks(
+                                                cb ->
+                                                    cb.http(
+                                                        null,
+                                                        http().GET().endpoint("http://test"))))))
+            .build();
+
+    List<TaskItem> topItems = wf.getDo();
+    assertEquals(1, topItems.size());
+    assertEquals("try-0", topItems.get(0).getName());
+
+    TryTask tryTask = topItems.get(0).getTask().getTryTask();
+
+    // 1. Verify the TRY block
+    List<TaskItem> tryTasks = tryTask.getTry();
+    assertNotNull(tryTasks, "Try tasks list must not be null");
+    assertEquals(2, tryTasks.size(), "Both tryHandler calls must be appended");
+    assertEquals("set-0", tryTasks.get(0).getName(), "First tryHandler starts at 0");
+    assertEquals("set-1", tryTasks.get(1).getName(), "Second tryHandler picks up index 1");
+
+    // 2. Verify the CATCH block
+    TryTaskCatch catchBlock = tryTask.getCatch();
+    assertNotNull(catchBlock, "Catch block must be present");
+
+    List<TaskItem> catchTasks = catchBlock.getDo();
+    assertNotNull(catchTasks, "Catch tasks list must not be null");
+    assertEquals(2, catchTasks.size(), "Both doTasks calls inside catch must be appended");
+    assertEquals("set-0", catchTasks.get(0).getName(), "First doTasks inside catch starts at 0");
+    assertEquals(
+        "http-1", catchTasks.get(1).getName(), "Second doTasks inside catch picks up index 1");
   }
 }
