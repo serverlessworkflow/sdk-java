@@ -27,7 +27,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 /**
- * * Unit tests to verify that TaskItems without explicit names are automatically assigned a
+ * Unit tests to verify that TaskItems without explicit names are automatically assigned a
  * deterministic name in the format "taskType-index" (e.g., "set-0", "http-1").
  */
 public class TaskItemDefaultNamingTest {
@@ -159,5 +159,54 @@ public class TaskItemDefaultNamingTest {
     assertEquals("set-0", branches.get(0).getName(), "First branch should be set-0");
     assertEquals("set-1", branches.get(1).getName(), "Second branch should be set-1");
     assertEquals("http-2", branches.get(2).getName(), "Third branch should be http-2");
+  }
+
+  @Test
+  void testDeterministicNamingAcrossInstances() {
+    // Build the first workflow instance
+    Workflow wf1 =
+        WorkflowBuilder.workflow("workflowOne")
+            .tasks(
+                d ->
+                    d.set(null, s -> s.expr("$.a = 1"))
+                        .http(null, http().GET().endpoint("http://example.com"))
+                        .emit("customEmit", e -> e.event(ev -> ev.type("test")))
+                        .tryCatch(
+                            null, t -> t.tryHandler(tb -> tb.set(null, s -> s.expr("$.b = 2")))))
+            .build();
+
+    // Build the second workflow instance with the exact same task structure
+    Workflow wf2 =
+        WorkflowBuilder.workflow("workflowTwo")
+            .tasks(
+                d ->
+                    d.set(null, s -> s.expr("$.a = 1"))
+                        .http(null, http().GET().endpoint("http://example.com"))
+                        .emit("customEmit", e -> e.event(ev -> ev.type("test")))
+                        .tryCatch(
+                            null, t -> t.tryHandler(tb -> tb.set(null, s -> s.expr("$.b = 2")))))
+            .build();
+
+    List<TaskItem> tasks1 = wf1.getDo();
+    List<TaskItem> tasks2 = wf2.getDo();
+
+    assertEquals(4, tasks1.size(), "Should have exactly 4 tasks");
+    assertEquals(
+        tasks1.size(), tasks2.size(), "Both workflows should have the same number of tasks");
+
+    // Verify all top-level task names match exactly between the two instances
+    for (int i = 0; i < tasks1.size(); i++) {
+      assertEquals(
+          tasks1.get(i).getName(),
+          tasks2.get(i).getName(),
+          "Task names at index " + i + " must match exactly across instances");
+    }
+
+    // Double-check the nested task inside the tryCatch block to ensure deep determinism
+    String nestedName1 = tasks1.get(3).getTask().getTryTask().getTry().get(0).getName();
+    String nestedName2 = tasks2.get(3).getTask().getTryTask().getTry().get(0).getName();
+
+    assertEquals("set-0", nestedName1, "Nested task should reset to 0-based index");
+    assertEquals(nestedName1, nestedName2, "Nested task names must match exactly across instances");
   }
 }
