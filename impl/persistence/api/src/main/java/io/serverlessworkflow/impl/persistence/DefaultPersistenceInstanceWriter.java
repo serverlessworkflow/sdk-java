@@ -16,24 +16,23 @@
 package io.serverlessworkflow.impl.persistence;
 
 import io.serverlessworkflow.impl.WorkflowDefinitionData;
-import java.util.Optional;
-import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class DefaultPersistenceInstanceWriter extends AsyncPersistenceInstanceWriter {
+public class DefaultPersistenceInstanceWriter extends TransactedPersistenceInstanceWriter {
 
   private final PersistenceInstanceStore store;
-  private final Optional<ExecutorService> executorService;
+
+  private final PersistenceExecutor persistenceExecutor;
 
   private static final Logger logger =
       LoggerFactory.getLogger(DefaultPersistenceInstanceWriter.class);
 
   protected DefaultPersistenceInstanceWriter(
-      PersistenceInstanceStore store, Optional<ExecutorService> executorService) {
-    this.executorService = executorService;
+      PersistenceInstanceStore store, PersistenceExecutor persistenceExecutor) {
     this.store = store;
+    this.persistenceExecutor = persistenceExecutor;
   }
 
   @Override
@@ -54,7 +53,7 @@ public class DefaultPersistenceInstanceWriter extends AsyncPersistenceInstanceWr
   }
 
   @Override
-  protected Optional<ExecutorService> executorService() {
-    return executorService;
+  protected PersistenceExecutor persistenceExecutor() {
+    return persistenceExecutor;
   }
 }

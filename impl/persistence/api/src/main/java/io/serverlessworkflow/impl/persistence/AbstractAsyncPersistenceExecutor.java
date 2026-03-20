@@ -16,30 +16,26 @@
 package io.serverlessworkflow.impl.persistence;
 
 import io.serverlessworkflow.impl.WorkflowContextData;
-import io.serverlessworkflow.impl.WorkflowDefinitionData;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public abstract class AsyncPersistenceInstanceWriter extends AbstractPersistenceInstanceWriter {
+public abstract class AbstractAsyncPersistenceExecutor implements PersistenceExecutor {
 
   private static final Logger logger =
-      LoggerFactory.getLogger(AsyncPersistenceInstanceWriter.class);
+      LoggerFactory.getLogger(AbstractAsyncPersistenceExecutor.class);
 
   private final Map<String, CompletableFuture<Void>> futuresMap = new ConcurrentHashMap<>();
 
   @Override
-  protected CompletableFuture<Void> doTransaction(
-      Consumer<PersistenceInstanceOperations> operation, WorkflowContextData context) {
+  public CompletableFuture<Void> execute(Runnable runnable, WorkflowContextData context) {
     final ExecutorService service =
         executorService().orElse(context.definition().application().executorService());
-    final Runnable runnable = () -> doTransaction(operation, context.definition());
     return futuresMap.compute(
         context.instanceData().id(),
         (k, v) ->
@@ -49,16 +45,20 @@ public abstract class AsyncPersistenceInstanceWriter extends AbstractPersistence
   }
 
   @Override
-  protected CompletableFuture<Void> removeProcessInstance(WorkflowContextData workflowContext) {
-    return super.removeProcessInstance(workflowContext)
-        .thenRun(() -> futuresMap.remove(workflowContext.instanceData().id()));
+  public CompletableFuture<Void> startInstance(Runnable runnable, WorkflowContextData context) {
+    return SyncPersistenceExecutor.execute(runnable);
   }
 
-  protected abstract void doTransaction(
-      Consumer<PersistenceInstanceOperations> operation, WorkflowDefinitionData definition);
-
-  protected Optional<ExecutorService> executorService() {
-    return Optional.empty();
+  @Override
+  public CompletableFuture<Void> deleteInstance(Runnable runnable, WorkflowContextData context) {
+    CompletableFuture<Void> completable = futuresMap.remove(context.instanceData().id());
+    if (completable != null) {
+      CompletableFuture<Void> result = completable.whenComplete((__, ___) -> runnable.run());
+      completable.cancel(true);
+      return result;
+    } else {
+      return CompletableFuture.completedFuture(null);
+    }
   }
 
   @Override
@@ -75,4 +75,6 @@ public abstract class AsyncPersistenceInstanceWriter extends AbstractPersistence
     }
     futuresMap.clear();
   }
+
+  protected abstract Optional<ExecutorService> executorService();
 }
