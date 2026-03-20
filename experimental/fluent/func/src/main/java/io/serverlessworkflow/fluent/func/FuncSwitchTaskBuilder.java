@@ -28,7 +28,6 @@ import io.serverlessworkflow.fluent.spec.spi.SwitchTaskFluent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -52,7 +51,7 @@ public class FuncSwitchTaskBuilder extends TaskBaseBuilder<FuncSwitchTaskBuilder
   }
 
   public FuncSwitchTaskBuilder onPredicate(Consumer<SwitchCasePredicateBuilder> consumer) {
-    return this.onPredicate(UUID.randomUUID().toString(), consumer);
+    return this.onPredicate(null, consumer);
   }
 
   public FuncSwitchTaskBuilder onPredicate(
@@ -71,6 +70,9 @@ public class FuncSwitchTaskBuilder extends TaskBaseBuilder<FuncSwitchTaskBuilder
       }
     }
 
+    if (name == null || name.isBlank()) {
+      name = "switch-item-" + this.switchItems.size();
+    }
     this.switchItems.add(new SwitchItem(name, switchCase.build()));
     return this;
   }

@@ -20,14 +20,13 @@ import io.serverlessworkflow.api.types.FlowDirectiveEnum;
 import io.serverlessworkflow.api.types.SwitchCase;
 import io.serverlessworkflow.api.types.SwitchTask;
 import io.serverlessworkflow.fluent.spec.TaskBaseBuilder;
-import java.util.UUID;
 import java.util.function.Consumer;
 
 public interface SwitchTaskFluent<SELF extends TaskBaseBuilder<SELF>> {
   String DEFAULT_CASE = "default";
 
   default SELF on(Consumer<SwitchTaskFluent.SwitchCaseBuilder> switchCaseConsumer) {
-    return this.on(UUID.randomUUID().toString(), switchCaseConsumer);
+    return this.on(null, switchCaseConsumer);
   }
 
   SELF on(final String name, Consumer<SwitchTaskFluent.SwitchCaseBuilder> switchCaseConsumer);

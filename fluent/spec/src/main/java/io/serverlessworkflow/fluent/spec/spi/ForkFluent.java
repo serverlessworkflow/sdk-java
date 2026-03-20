@@ -16,7 +16,6 @@
 package io.serverlessworkflow.fluent.spec.spi;
 
 import io.serverlessworkflow.fluent.spec.TaskBaseBuilder;
-import java.util.UUID;
 import java.util.function.Consumer;
 
 public interface ForkFluent<SELF extends TaskBaseBuilder<SELF>, LIST> {
@@ -24,6 +23,6 @@ public interface ForkFluent<SELF extends TaskBaseBuilder<SELF>, LIST> {
   LIST fork(String name, Consumer<SELF> itemsConfigurer);
 
   default LIST fork(Consumer<SELF> itemsConfigurer) {
-    return this.fork(UUID.randomUUID().toString(), itemsConfigurer);
+    return this.fork(null, itemsConfigurer);
   }
 }

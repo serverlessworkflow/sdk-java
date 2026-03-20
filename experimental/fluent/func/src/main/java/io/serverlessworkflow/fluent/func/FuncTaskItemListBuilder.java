@@ -23,11 +23,12 @@ import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.fluent.func.spi.FuncDoFluent;
 import io.serverlessworkflow.fluent.spec.BaseTaskItemListBuilder;
 import java.util.List;
-import java.util.UUID;
 import java.util.function.Consumer;
 
 public class FuncTaskItemListBuilder extends BaseTaskItemListBuilder<FuncTaskItemListBuilder>
     implements FuncDoFluent<FuncTaskItemListBuilder> {
+
+  public static final String TYPE_FUNCTION = "function";
 
   public FuncTaskItemListBuilder() {
     super();
@@ -49,7 +50,7 @@ public class FuncTaskItemListBuilder extends BaseTaskItemListBuilder<FuncTaskIte
 
   @Override
   public FuncTaskItemListBuilder function(String name, Consumer<FuncCallTaskBuilder> consumer) {
-    name = this.defaultNameAndRequireConfig(name, consumer);
+    name = this.defaultNameAndRequireConfig(name, consumer, TYPE_FUNCTION);
     final FuncCallTaskBuilder callTaskJavaBuilder = new FuncCallTaskBuilder();
     consumer.accept(callTaskJavaBuilder);
     return addTaskItem(new TaskItem(name, new Task().withCallTask(callTaskJavaBuilder.build())));
@@ -57,12 +58,12 @@ public class FuncTaskItemListBuilder extends BaseTaskItemListBuilder<FuncTaskIte
 
   @Override
   public FuncTaskItemListBuilder function(Consumer<FuncCallTaskBuilder> consumer) {
-    return this.function(UUID.randomUUID().toString(), consumer);
+    return this.function(null, consumer);
   }
 
   @Override
   public FuncTaskItemListBuilder set(String name, Consumer<FuncSetTaskBuilder> itemsConfigurer) {
-    name = this.defaultNameAndRequireConfig(name, itemsConfigurer);
+    name = this.defaultNameAndRequireConfig(name, itemsConfigurer, TYPE_SET);
     final FuncSetTaskBuilder funcSetTaskBuilder = new FuncSetTaskBuilder();
     itemsConfigurer.accept(funcSetTaskBuilder);
     return this.addTaskItem(new TaskItem(name, new Task().withSetTask(funcSetTaskBuilder.build())));
@@ -75,7 +76,7 @@ public class FuncTaskItemListBuilder extends BaseTaskItemListBuilder<FuncTaskIte
 
   @Override
   public FuncTaskItemListBuilder emit(String name, Consumer<FuncEmitTaskBuilder> itemsConfigurer) {
-    name = this.defaultNameAndRequireConfig(name, itemsConfigurer);
+    name = this.defaultNameAndRequireConfig(name, itemsConfigurer, TYPE_EMIT);
     final FuncEmitTaskBuilder emitTaskJavaBuilder = new FuncEmitTaskBuilder();
     itemsConfigurer.accept(emitTaskJavaBuilder);
     return this.addTaskItem(
@@ -85,7 +86,7 @@ public class FuncTaskItemListBuilder extends BaseTaskItemListBuilder<FuncTaskIte
   @Override
   public FuncTaskItemListBuilder listen(
       String name, Consumer<FuncListenTaskBuilder> itemsConfigurer) {
-    name = this.defaultNameAndRequireConfig(name, itemsConfigurer);
+    name = this.defaultNameAndRequireConfig(name, itemsConfigurer, TYPE_LISTEN);
     final FuncListenTaskBuilder listenTaskJavaBuilder = new FuncListenTaskBuilder();
     itemsConfigurer.accept(listenTaskJavaBuilder);
     return this.addTaskItem(
@@ -95,7 +96,7 @@ public class FuncTaskItemListBuilder extends BaseTaskItemListBuilder<FuncTaskIte
   @Override
   public FuncTaskItemListBuilder forEach(
       String name, Consumer<FuncForTaskBuilder> itemsConfigurer) {
-    name = this.defaultNameAndRequireConfig(name, itemsConfigurer);
+    name = this.defaultNameAndRequireConfig(name, itemsConfigurer, TYPE_FOR);
     final FuncForTaskBuilder forTaskJavaBuilder = new FuncForTaskBuilder();
     itemsConfigurer.accept(forTaskJavaBuilder);
     return this.addTaskItem(new TaskItem(name, new Task().withForTask(forTaskJavaBuilder.build())));
@@ -104,7 +105,7 @@ public class FuncTaskItemListBuilder extends BaseTaskItemListBuilder<FuncTaskIte
   @Override
   public FuncTaskItemListBuilder switchCase(
       String name, Consumer<FuncSwitchTaskBuilder> itemsConfigurer) {
-    name = this.defaultNameAndRequireConfig(name, itemsConfigurer);
+    name = this.defaultNameAndRequireConfig(name, itemsConfigurer, TYPE_SWITCH);
     final FuncSwitchTaskBuilder funcSwitchTaskBuilder = new FuncSwitchTaskBuilder();
     itemsConfigurer.accept(funcSwitchTaskBuilder);
     return this.addTaskItem(
@@ -113,7 +114,7 @@ public class FuncTaskItemListBuilder extends BaseTaskItemListBuilder<FuncTaskIte
 
   @Override
   public FuncTaskItemListBuilder fork(String name, Consumer<FuncForkTaskBuilder> itemsConfigurer) {
-    name = this.defaultNameAndRequireConfig(name, itemsConfigurer);
+    name = this.defaultNameAndRequireConfig(name, itemsConfigurer, TYPE_FORK);
     final FuncForkTaskBuilder forkTaskJavaBuilder = new FuncForkTaskBuilder();
     itemsConfigurer.accept(forkTaskJavaBuilder);
     return this.addTaskItem(
@@ -123,7 +124,7 @@ public class FuncTaskItemListBuilder extends BaseTaskItemListBuilder<FuncTaskIte
   @Override
   public FuncTaskItemListBuilder http(
       String name, Consumer<FuncCallHttpTaskBuilder> itemsConfigurer) {
-    name = this.defaultNameAndRequireConfig(name, itemsConfigurer);
+    name = this.defaultNameAndRequireConfig(name, itemsConfigurer, TYPE_HTTP);
 
     final FuncCallHttpTaskBuilder httpTaskJavaBuilder = new FuncCallHttpTaskBuilder();
     itemsConfigurer.accept(httpTaskJavaBuilder);
@@ -140,7 +141,7 @@ public class FuncTaskItemListBuilder extends BaseTaskItemListBuilder<FuncTaskIte
   @Override
   public FuncTaskItemListBuilder openapi(
       String name, Consumer<FuncCallOpenAPITaskBuilder> itemsConfigurer) {
-    name = this.defaultNameAndRequireConfig(name, itemsConfigurer);
+    name = this.defaultNameAndRequireConfig(name, itemsConfigurer, TYPE_OPENAPI);
 
     final FuncCallOpenAPITaskBuilder openAPITaskBuilder = new FuncCallOpenAPITaskBuilder();
     itemsConfigurer.accept(openAPITaskBuilder);

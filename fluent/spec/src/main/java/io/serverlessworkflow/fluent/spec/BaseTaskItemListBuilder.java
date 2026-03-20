@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 import java.util.function.Consumer;
 
 /**
@@ -34,6 +33,17 @@ import java.util.function.Consumer;
  * @param <SELF> the concrete builder type
  */
 public abstract class BaseTaskItemListBuilder<SELF extends BaseTaskItemListBuilder<SELF>> {
+
+  public final String TYPE_SET = "set";
+  public final String TYPE_FOR = "for";
+  public final String TYPE_SWITCH = "switch";
+  public final String TYPE_RAISE = "raise";
+  public final String TYPE_FORK = "fork";
+  public final String TYPE_LISTEN = "listen";
+  public final String TYPE_EMIT = "emit";
+  public final String TYPE_TRY = "try";
+  public final String TYPE_HTTP = "http";
+  public final String TYPE_OPENAPI = "openapi";
 
   private final List<TaskItem> list;
 
@@ -59,11 +69,14 @@ public abstract class BaseTaskItemListBuilder<SELF extends BaseTaskItemListBuild
     return self();
   }
 
-  protected final String defaultNameAndRequireConfig(String name, Consumer<?> cfg) {
-    if (name == null || name.isBlank()) {
-      name = UUID.randomUUID().toString();
-    }
+  protected final String defaultNameAndRequireConfig(
+      String name, Consumer<?> cfg, String taskType) {
     Objects.requireNonNull(cfg, "Configurer must not be null");
+
+    if (name == null || name.isBlank()) {
+      return taskType + "-" + this.list.size();
+    }
+
     return name;
   }
 

@@ -16,7 +16,6 @@
 package io.serverlessworkflow.fluent.spec.spi;
 
 import io.serverlessworkflow.fluent.spec.TaskBaseBuilder;
-import java.util.UUID;
 import java.util.function.Consumer;
 
 public interface SwitchFluent<SELF extends TaskBaseBuilder<SELF>, LIST> {
@@ -24,6 +23,6 @@ public interface SwitchFluent<SELF extends TaskBaseBuilder<SELF>, LIST> {
   LIST switchCase(String name, Consumer<SELF> itemsConfigurer);
 
   default LIST switchCase(Consumer<SELF> itemsConfigurer) {
-    return this.switchCase(UUID.randomUUID().toString(), itemsConfigurer);
+    return this.switchCase(null, itemsConfigurer);
   }
 }

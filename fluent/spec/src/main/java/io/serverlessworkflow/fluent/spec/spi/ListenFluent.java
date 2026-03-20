@@ -16,7 +16,6 @@
 package io.serverlessworkflow.fluent.spec.spi;
 
 import io.serverlessworkflow.fluent.spec.TaskBaseBuilder;
-import java.util.UUID;
 import java.util.function.Consumer;
 
 public interface ListenFluent<SELF extends TaskBaseBuilder<?>, LIST> {
@@ -24,6 +23,6 @@ public interface ListenFluent<SELF extends TaskBaseBuilder<?>, LIST> {
   LIST listen(String name, Consumer<SELF> itemsConfigurer);
 
   default LIST listen(Consumer<SELF> itemsConfigurer) {
-    return this.listen(UUID.randomUUID().toString(), itemsConfigurer);
+    return this.listen(null, itemsConfigurer);
   }
 }
