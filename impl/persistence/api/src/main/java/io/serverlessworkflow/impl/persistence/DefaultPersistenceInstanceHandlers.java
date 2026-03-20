@@ -17,7 +17,6 @@ package io.serverlessworkflow.impl.persistence;
 
 import static io.serverlessworkflow.impl.WorkflowUtils.safeClose;
 
-import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 
 public class DefaultPersistenceInstanceHandlers extends PersistenceInstanceHandlers {
@@ -25,20 +24,26 @@ public class DefaultPersistenceInstanceHandlers extends PersistenceInstanceHandl
   public static class Builder {
 
     private final PersistenceInstanceStore store;
-    private ExecutorService executorService;
+    private PersistenceExecutor executor;
 
     private Builder(PersistenceInstanceStore store) {
       this.store = store;
     }
 
     public Builder withExecutorService(ExecutorService executorService) {
-      this.executorService = executorService;
+      this.executor = new AsyncPersistenceExecutor(executorService);
+      return this;
+    }
+
+    public Builder withPersistenceExecutor(PersistenceExecutor executor) {
+      this.executor = executor;
       return this;
     }
 
     public PersistenceInstanceHandlers build() {
       return new DefaultPersistenceInstanceHandlers(
-          new DefaultPersistenceInstanceWriter(store, Optional.ofNullable(executorService)),
+          new DefaultPersistenceInstanceWriter(
+              store, executor == null ? new SyncPersistenceExecutor() : executor),
           new DefaultPersistenceInstanceReader(store),
           store);
     }
