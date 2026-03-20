@@ -77,6 +77,12 @@ public abstract class AbstractPersistenceInstanceWriter implements PersistenceIn
   }
 
   @Override
+  public CompletableFuture<Void> statusChanged(
+      WorkflowContextData workflowContext, WorkflowStatus status) {
+    return doTransaction(t -> t.writeStatus(workflowContext, status), workflowContext);
+  }
+
+  @Override
   public void close() throws Exception {}
 
   protected abstract CompletableFuture<Void> doTransaction(

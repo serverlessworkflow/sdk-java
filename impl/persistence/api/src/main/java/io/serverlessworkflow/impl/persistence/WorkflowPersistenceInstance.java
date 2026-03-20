@@ -40,6 +40,8 @@ public class WorkflowPersistenceInstance extends WorkflowMutableInstance {
         () -> {
           if (info.status() == WorkflowStatus.SUSPENDED) {
             internalSuspend();
+          } else if (info.status() == WorkflowStatus.WAITING) {
+            status(WorkflowStatus.WAITING);
           }
         });
   }

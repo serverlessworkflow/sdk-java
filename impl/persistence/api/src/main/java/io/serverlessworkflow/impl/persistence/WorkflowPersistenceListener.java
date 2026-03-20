@@ -15,6 +15,7 @@
  */
 package io.serverlessworkflow.impl.persistence;
 
+import io.serverlessworkflow.impl.WorkflowStatus;
 import io.serverlessworkflow.impl.lifecycle.TaskCompletedEvent;
 import io.serverlessworkflow.impl.lifecycle.TaskRetriedEvent;
 import io.serverlessworkflow.impl.lifecycle.TaskStartedEvent;
@@ -24,6 +25,7 @@ import io.serverlessworkflow.impl.lifecycle.WorkflowExecutionListener;
 import io.serverlessworkflow.impl.lifecycle.WorkflowFailedEvent;
 import io.serverlessworkflow.impl.lifecycle.WorkflowResumedEvent;
 import io.serverlessworkflow.impl.lifecycle.WorkflowStartedEvent;
+import io.serverlessworkflow.impl.lifecycle.WorkflowStatusEvent;
 import io.serverlessworkflow.impl.lifecycle.WorkflowSuspendedEvent;
 
 public class WorkflowPersistenceListener implements WorkflowExecutionListener {
@@ -77,5 +79,13 @@ public class WorkflowPersistenceListener implements WorkflowExecutionListener {
   @Override
   public void onTaskRetried(TaskRetriedEvent ev) {
     persistenceWriter.taskRetried(ev.workflowContext(), ev.taskContext());
+  }
+
+  @Override
+  public void onWorkflowStatusChanged(WorkflowStatusEvent ev) {
+    if (ev.status() == WorkflowStatus.WAITING) {
+      // Only persist WAITING for now
+      persistenceWriter.statusChanged(ev.workflowContext(), ev.status());
+    }
   }
 }
