@@ -607,6 +607,18 @@ public final class DSL {
   }
 
   /**
+   * Create a {@link TasksConfigurer} that adds an HTTP call task with an explicit name using a
+   * low-level HTTP configurer.
+   *
+   * @param name the task name
+   * @param configurer low-level HTTP configurer
+   * @return a {@link TasksConfigurer} that adds a CallHTTP task
+   */
+  public static TasksConfigurer call(String name, CallHttpConfigurer configurer) {
+    return list -> list.http(name, configurer);
+  }
+
+  /**
    * Create a {@link TasksConfigurer} that adds an OpenAPI call task.
    *
    * <p>Example:
@@ -625,6 +637,17 @@ public final class DSL {
   }
 
   /**
+   * Create a {@link TasksConfigurer} that adds an OpenAPI call task with an explicit name.
+   *
+   * @param name the task name
+   * @param configurer OpenAPI configurer
+   * @return a {@link TasksConfigurer} that adds a CallOpenAPI task
+   */
+  public static TasksConfigurer call(String name, CallOpenAPIConfigurer configurer) {
+    return list -> list.openapi(name, configurer);
+  }
+
+  /**
    * Create a {@link TasksConfigurer} that adds a {@code set} task using a low-level configurer.
    *
    * @param configurer configurer for the set task
@@ -635,6 +658,18 @@ public final class DSL {
   }
 
   /**
+   * Create a {@link TasksConfigurer} that adds a {@code set} task with an explicit name using a
+   * low-level configurer.
+   *
+   * @param name the task name
+   * @param configurer configurer for the set task
+   * @return a {@link TasksConfigurer} that adds a SetTask
+   */
+  public static TasksConfigurer set(String name, SetConfigurer configurer) {
+    return list -> list.set(name, configurer);
+  }
+
+  /**
    * Create a {@link TasksConfigurer} that adds a {@code set} task using a raw expression.
    *
    * @param expr expression to apply in the set task
@@ -642,6 +677,18 @@ public final class DSL {
    */
   public static TasksConfigurer set(String expr) {
     return list -> list.set(expr);
+  }
+
+  /**
+   * Create a {@link TasksConfigurer} that adds a {@code set} task with an explicit name using a raw
+   * expression.
+   *
+   * @param name the task name
+   * @param expr expression to apply in the set task
+   * @return a {@link TasksConfigurer} that adds a SetTask
+   */
+  public static TasksConfigurer set(String name, String expr) {
+    return list -> list.set(name, expr);
   }
 
   /**
@@ -662,13 +709,6 @@ public final class DSL {
    */
   public static TasksConfigurer emit(Consumer<EmitTaskBuilder> configurer) {
     return list -> list.emit(configurer);
-  }
-
-  /**
-   * @see #emit(Consumer)
-   */
-  public static TasksConfigurer emit(String name, Consumer<EmitTaskBuilder> configurer) {
-    return list -> list.emit(name, configurer);
   }
 
   /**
@@ -705,6 +745,17 @@ public final class DSL {
   }
 
   /**
+   * Create a {@link TasksConfigurer} that adds an {@code emit} task with an explicit name.
+   *
+   * @param name the task name
+   * @param configurer consumer configuring {@link EmitTaskBuilder}
+   * @return a {@link TasksConfigurer} that adds an EmitTask
+   */
+  public static TasksConfigurer emit(String name, Consumer<EmitTaskBuilder> configurer) {
+    return list -> list.emit(name, configurer);
+  }
+
+  /**
    * Create a {@link TasksConfigurer} that adds a {@code listen} task.
    *
    * @param configurer listen configurer
@@ -712,6 +763,17 @@ public final class DSL {
    */
   public static TasksConfigurer listen(ListenConfigurer configurer) {
     return list -> list.listen(configurer);
+  }
+
+  /**
+   * Create a {@link TasksConfigurer} that adds a {@code listen} task with an explicit name.
+   *
+   * @param name the task name
+   * @param configurer listen configurer
+   * @return a {@link TasksConfigurer} that adds a ListenTask
+   */
+  public static TasksConfigurer listen(String name, ListenConfigurer configurer) {
+    return list -> list.listen(name, configurer);
   }
 
   /**
@@ -725,6 +787,17 @@ public final class DSL {
   }
 
   /**
+   * Create a {@link TasksConfigurer} that adds a {@code forEach} task with an explicit name.
+   *
+   * @param name the task name
+   * @param configurer for-each configurer
+   * @return a {@link TasksConfigurer} that adds a ForEachTask
+   */
+  public static TasksConfigurer forEach(String name, ForEachConfigurer configurer) {
+    return list -> list.forEach(name, configurer);
+  }
+
+  /**
    * Create a {@link TasksConfigurer} that adds a {@code fork} task.
    *
    * @param configurer consumer configuring {@link ForkTaskBuilder}
@@ -732,6 +805,17 @@ public final class DSL {
    */
   public static TasksConfigurer fork(Consumer<ForkTaskBuilder> configurer) {
     return list -> list.fork(configurer);
+  }
+
+  /**
+   * Create a {@link TasksConfigurer} that adds a {@code fork} task with an explicit name.
+   *
+   * @param name the task name
+   * @param configurer consumer configuring {@link ForkTaskBuilder}
+   * @return a {@link TasksConfigurer} that adds a ForkTask
+   */
+  public static TasksConfigurer fork(String name, Consumer<ForkTaskBuilder> configurer) {
+    return list -> list.fork(name, configurer);
   }
 
   /**
@@ -745,6 +829,17 @@ public final class DSL {
   }
 
   /**
+   * Create a {@link TasksConfigurer} that adds a {@code switch} task with an explicit name.
+   *
+   * @param name the task name
+   * @param configurer switch configurer
+   * @return a {@link TasksConfigurer} that adds a SwitchTask
+   */
+  public static TasksConfigurer switchCase(String name, SwitchConfigurer configurer) {
+    return list -> list.switchCase(name, configurer);
+  }
+
+  /**
    * Create a {@link TasksConfigurer} that adds a {@code raise} task.
    *
    * @param configurer raise configurer
@@ -755,6 +850,17 @@ public final class DSL {
   }
 
   /**
+   * Create a {@link TasksConfigurer} that adds a {@code raise} task with an explicit name.
+   *
+   * @param name the task name
+   * @param configurer raise configurer
+   * @return a {@link TasksConfigurer} that adds a RaiseTask
+   */
+  public static TasksConfigurer raise(String name, RaiseConfigurer configurer) {
+    return list -> list.raise(name, configurer);
+  }
+
+  /**
    * Create a {@link TasksConfigurer} that adds a {@code try/catch} task.
    *
    * @param configurer try/catch configurer
@@ -762,6 +868,17 @@ public final class DSL {
    */
   public static TasksConfigurer tryCatch(TryConfigurer configurer) {
     return list -> list.tryCatch(configurer);
+  }
+
+  /**
+   * Create a {@link TasksConfigurer} that adds a {@code try/catch} task with an explicit name.
+   *
+   * @param name the task name
+   * @param configurer try/catch configurer
+   * @return a {@link TasksConfigurer} that adds a TryTask
+   */
+  public static TasksConfigurer tryCatch(String name, TryConfigurer configurer) {
+    return list -> list.tryCatch(name, configurer);
   }
 
   // ----- Tasks that requires tasks list --//

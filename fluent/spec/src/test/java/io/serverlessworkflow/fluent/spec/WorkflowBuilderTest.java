@@ -16,10 +16,19 @@
 package io.serverlessworkflow.fluent.spec;
 
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.basic;
+import static io.serverlessworkflow.fluent.spec.dsl.DSL.call;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.cases;
+import static io.serverlessworkflow.fluent.spec.dsl.DSL.doTasks;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.emit;
+import static io.serverlessworkflow.fluent.spec.dsl.DSL.forEach;
+import static io.serverlessworkflow.fluent.spec.dsl.DSL.fork;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.http;
+import static io.serverlessworkflow.fluent.spec.dsl.DSL.listen;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.produced;
+import static io.serverlessworkflow.fluent.spec.dsl.DSL.raise;
+import static io.serverlessworkflow.fluent.spec.dsl.DSL.set;
+import static io.serverlessworkflow.fluent.spec.dsl.DSL.switchCase;
+import static io.serverlessworkflow.fluent.spec.dsl.DSL.tryCatch;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -123,6 +132,117 @@ public class WorkflowBuilderTest {
     TaskItem forItem = items.get(1);
     assertEquals("item", forItem.getName());
     assertNotNull(forItem.getTask().getForTask(), "ForTask should be present");
+  }
+
+  @Test
+  void testTaskNamedSet() {
+    // Test that we can now name a task "set" using the DSL
+    Workflow wf =
+        WorkflowBuilder.workflow("flowWithSetTask")
+            .tasks(
+                d ->
+                    d.set("set", "$.value = 'test'").set("set", s -> s.expr("$.another = 'value'")))
+            .build();
+
+    List<TaskItem> items = wf.getDo();
+    assertNotNull(items, "Do list must not be null");
+    assertEquals(2, items.size(), "There should be two tasks");
+
+    // First task named "set" with string expression
+    TaskItem firstSetItem = items.get(0);
+    assertEquals("set", firstSetItem.getName(), "First task should be named 'set'");
+    SetTask firstSetTask = firstSetItem.getTask().getSetTask();
+    assertNotNull(firstSetTask, "SetTask should be present");
+    assertEquals("$.value = 'test'", firstSetTask.getSet().getString());
+
+    // Second task also named "set" with configurer
+    TaskItem secondSetItem = items.get(1);
+    assertEquals("set", secondSetItem.getName(), "Second task should be named 'set'");
+    SetTask secondSetTask = secondSetItem.getTask().getSetTask();
+    assertNotNull(secondSetTask, "SetTask should be present");
+    assertEquals("$.another = 'value'", secondSetTask.getSet().getString());
+  }
+
+  @Test
+  void testTaskNamedSetUsingDSLStaticImport() {
+    Workflow wf =
+        WorkflowBuilder.workflow("flowWithDSLSet")
+            .tasks(
+                doTasks(
+                    set("set", "$.initialized = true"), set("set", s -> s.expr("$.ready = true"))))
+            .build();
+
+    List<TaskItem> items = wf.getDo();
+    assertNotNull(items, "Do list must not be null");
+    assertEquals(2, items.size(), "There should be two tasks");
+
+    TaskItem firstItem = items.get(0);
+    assertEquals("set", firstItem.getName(), "First task should be named 'set'");
+    SetTask firstTask = firstItem.getTask().getSetTask();
+    assertNotNull(firstTask, "SetTask should be present");
+    assertEquals("$.initialized = true", firstTask.getSet().getString());
+
+    TaskItem secondItem = items.get(1);
+    assertEquals("set", secondItem.getName(), "Second task should be named 'set'");
+    SetTask secondTask = secondItem.getTask().getSetTask();
+    assertNotNull(secondTask, "SetTask should be present");
+    assertEquals("$.ready = true", secondTask.getSet().getString());
+  }
+
+  @Test
+  void testAllTasksWithExplicitNames() {
+    Workflow wf =
+        WorkflowBuilder.workflow("flowWithExplicitNames")
+            .tasks(
+                doTasks(
+                    set("set", "$.initialized = true"),
+                    call("call", http().GET().endpoint("http://example.com")),
+                    emit("emit", e -> e.event(p -> p.type("test.event"))),
+                    listen(
+                        "listen",
+                        l ->
+                            l.to(
+                                to ->
+                                    to.one(
+                                        f ->
+                                            f.with(p -> p.type("com.test.event").source("test"))))),
+                    forEach("forEach", f -> f.each("item").in("$.items")),
+                    fork("fork", f -> f.compete(false)),
+                    switchCase("switch", cases().onDefault(FlowDirectiveEnum.CONTINUE)),
+                    raise("raise", r -> r.error(e -> e.type("test.error").status(500))),
+                    tryCatch("try", t -> t.tryHandler(inner -> inner.set("inner", "$.value = 1")))))
+            .build();
+
+    List<TaskItem> items = wf.getDo();
+    assertNotNull(items, "Do list must not be null");
+    assertEquals(9, items.size(), "There should be nine tasks");
+
+    assertEquals("set", items.get(0).getName());
+    assertNotNull(items.get(0).getTask().getSetTask());
+
+    assertEquals("call", items.get(1).getName());
+    assertNotNull(items.get(1).getTask().getCallTask());
+
+    assertEquals("emit", items.get(2).getName());
+    assertNotNull(items.get(2).getTask().getEmitTask());
+
+    assertEquals("listen", items.get(3).getName());
+    assertNotNull(items.get(3).getTask().getListenTask());
+
+    assertEquals("forEach", items.get(4).getName());
+    assertNotNull(items.get(4).getTask().getForTask());
+
+    assertEquals("fork", items.get(5).getName());
+    assertNotNull(items.get(5).getTask().getForkTask());
+
+    assertEquals("switch", items.get(6).getName());
+    assertNotNull(items.get(6).getTask().getSwitchTask());
+
+    assertEquals("raise", items.get(7).getName());
+    assertNotNull(items.get(7).getTask().getRaiseTask());
+
+    assertEquals("try", items.get(8).getName());
+    assertNotNull(items.get(8).getTask().getTryTask());
   }
 
   @Test
