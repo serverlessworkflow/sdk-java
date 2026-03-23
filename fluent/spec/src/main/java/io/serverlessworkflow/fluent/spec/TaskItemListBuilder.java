@@ -25,8 +25,8 @@ import java.util.function.Consumer;
 public class TaskItemListBuilder extends BaseTaskItemListBuilder<TaskItemListBuilder>
     implements DoFluent<TaskItemListBuilder> {
 
-  public TaskItemListBuilder() {
-    super();
+  public TaskItemListBuilder(int listOffsetSize) {
+    super(listOffsetSize);
   }
 
   public TaskItemListBuilder(List<TaskItem> list) {
@@ -39,8 +39,8 @@ public class TaskItemListBuilder extends BaseTaskItemListBuilder<TaskItemListBui
   }
 
   @Override
-  protected TaskItemListBuilder newItemListBuilder() {
-    return new TaskItemListBuilder();
+  protected TaskItemListBuilder newItemListBuilder(int listOffsetSize) {
+    return new TaskItemListBuilder(listOffsetSize);
   }
 
   @Override
@@ -60,8 +60,7 @@ public class TaskItemListBuilder extends BaseTaskItemListBuilder<TaskItemListBui
   public TaskItemListBuilder forEach(
       String name, Consumer<ForEachTaskBuilder<TaskItemListBuilder>> itemsConfigurer) {
     name = defaultNameAndRequireConfig(name, itemsConfigurer, TYPE_FOR);
-    final ForEachTaskBuilder<TaskItemListBuilder> forBuilder =
-        new ForEachTaskBuilder<>(newItemListBuilder());
+    final ForEachTaskBuilder<TaskItemListBuilder> forBuilder = new ForEachTaskBuilder<>(this);
     itemsConfigurer.accept(forBuilder);
     return addTaskItem(new TaskItem(name, new Task().withForTask(forBuilder.build())));
   }
@@ -93,7 +92,7 @@ public class TaskItemListBuilder extends BaseTaskItemListBuilder<TaskItemListBui
   @Override
   public TaskItemListBuilder listen(String name, Consumer<ListenTaskBuilder> itemsConfigurer) {
     name = defaultNameAndRequireConfig(name, itemsConfigurer, TYPE_LISTEN);
-    final ListenTaskBuilder listenBuilder = new ListenTaskBuilder();
+    final ListenTaskBuilder listenBuilder = new ListenTaskBuilder(this);
     itemsConfigurer.accept(listenBuilder);
     return addTaskItem(new TaskItem(name, new Task().withListenTask(listenBuilder.build())));
   }
@@ -110,8 +109,7 @@ public class TaskItemListBuilder extends BaseTaskItemListBuilder<TaskItemListBui
   public TaskItemListBuilder tryCatch(
       String name, Consumer<TryTaskBuilder<TaskItemListBuilder>> itemsConfigurer) {
     name = defaultNameAndRequireConfig(name, itemsConfigurer, TYPE_TRY);
-    final TryTaskBuilder<TaskItemListBuilder> tryBuilder =
-        new TryTaskBuilder<>(this.newItemListBuilder());
+    final TryTaskBuilder<TaskItemListBuilder> tryBuilder = new TryTaskBuilder<>(this);
     itemsConfigurer.accept(tryBuilder);
     return addTaskItem(new TaskItem(name, new Task().withTryTask(tryBuilder.build())));
   }

@@ -30,8 +30,8 @@ public class FuncTaskItemListBuilder extends BaseTaskItemListBuilder<FuncTaskIte
 
   protected static final String TYPE_FUNCTION = "function";
 
-  public FuncTaskItemListBuilder() {
-    super();
+  public FuncTaskItemListBuilder(final int listOffsetSize) {
+    super(listOffsetSize);
   }
 
   public FuncTaskItemListBuilder(final List<TaskItem> list) {
@@ -44,8 +44,8 @@ public class FuncTaskItemListBuilder extends BaseTaskItemListBuilder<FuncTaskIte
   }
 
   @Override
-  protected FuncTaskItemListBuilder newItemListBuilder() {
-    return new FuncTaskItemListBuilder();
+  protected FuncTaskItemListBuilder newItemListBuilder(int listOffsetSize) {
+    return new FuncTaskItemListBuilder(listOffsetSize);
   }
 
   @Override
@@ -87,7 +87,7 @@ public class FuncTaskItemListBuilder extends BaseTaskItemListBuilder<FuncTaskIte
   public FuncTaskItemListBuilder listen(
       String name, Consumer<FuncListenTaskBuilder> itemsConfigurer) {
     name = this.defaultNameAndRequireConfig(name, itemsConfigurer, TYPE_LISTEN);
-    final FuncListenTaskBuilder listenTaskJavaBuilder = new FuncListenTaskBuilder();
+    final FuncListenTaskBuilder listenTaskJavaBuilder = new FuncListenTaskBuilder(this);
     itemsConfigurer.accept(listenTaskJavaBuilder);
     return this.addTaskItem(
         new TaskItem(name, new Task().withListenTask(listenTaskJavaBuilder.build())));

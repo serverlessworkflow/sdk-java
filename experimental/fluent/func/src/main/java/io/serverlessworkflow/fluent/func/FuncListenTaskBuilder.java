@@ -30,8 +30,8 @@ public class FuncListenTaskBuilder
 
   private UntilPredicate untilPredicate;
 
-  FuncListenTaskBuilder() {
-    super(new FuncTaskItemListBuilder());
+  FuncListenTaskBuilder(FuncTaskItemListBuilder factory) {
+    super(factory);
   }
 
   public <T> FuncListenTaskBuilder until(Predicate<T> predicate, Class<T> predClass) {

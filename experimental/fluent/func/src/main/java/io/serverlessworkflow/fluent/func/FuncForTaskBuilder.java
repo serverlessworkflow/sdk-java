@@ -113,7 +113,7 @@ public class FuncForTaskBuilder extends TaskBaseBuilder<FuncForTaskBuilder>
   }
 
   public FuncForTaskBuilder tasks(Consumer<FuncTaskItemListBuilder> consumer) {
-    final FuncTaskItemListBuilder builder = new FuncTaskItemListBuilder();
+    final FuncTaskItemListBuilder builder = new FuncTaskItemListBuilder(this.items.size());
     consumer.accept(builder);
     this.items.addAll(builder.build());
     return this;

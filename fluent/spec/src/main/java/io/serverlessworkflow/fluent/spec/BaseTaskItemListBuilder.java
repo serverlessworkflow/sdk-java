@@ -46,18 +46,32 @@ public abstract class BaseTaskItemListBuilder<SELF extends BaseTaskItemListBuild
   protected final String TYPE_OPENAPI = "openapi";
 
   private final List<TaskItem> list;
+  private final int offset;
 
-  public BaseTaskItemListBuilder() {
+  /**
+   * Constructs a new list builder with a specified offset for task indexing. *
+   *
+   * <p>The offset ensures deterministic and continuous auto-naming when appending tasks to an
+   * already existing list (e.g., calling {@code .tasks(...)} multiple times on a workflow builder).
+   * Without this offset, every new builder would restart its internal counter at 0, resulting in
+   * duplicate generated names (e.g., multiple "set-0" tasks).
+   *
+   * @param listSizeOffset the starting index for auto-generated task names (usually the current
+   *     size of the task list, or 0 for nested scopes like loops).
+   */
+  public BaseTaskItemListBuilder(int listSizeOffset) {
     this.list = new ArrayList<>();
+    this.offset = listSizeOffset;
   }
 
   public BaseTaskItemListBuilder(final List<TaskItem> list) {
     this.list = list;
+    this.offset = 0;
   }
 
   protected abstract SELF self();
 
-  protected abstract SELF newItemListBuilder();
+  protected abstract SELF newItemListBuilder(int listSizeOffset);
 
   protected final List<TaskItem> mutableList() {
     return this.list;
@@ -74,9 +88,8 @@ public abstract class BaseTaskItemListBuilder<SELF extends BaseTaskItemListBuild
     Objects.requireNonNull(cfg, "Configurer must not be null");
 
     if (name == null || name.isBlank()) {
-      return taskType + "-" + this.list.size();
+      return taskType + "-" + (this.list.size() + offset);
     }
-
     return name;
   }
 

@@ -25,8 +25,8 @@ public class WorkflowBuilder
   }
 
   @Override
-  protected DoTaskBuilder newDo() {
-    return new DoTaskBuilder();
+  protected DoTaskBuilder newDo(int listSizeOffset) {
+    return new DoTaskBuilder(listSizeOffset);
   }
 
   public static WorkflowBuilder workflow(

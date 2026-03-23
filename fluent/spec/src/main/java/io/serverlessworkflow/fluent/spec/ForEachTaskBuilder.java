@@ -17,7 +17,9 @@ package io.serverlessworkflow.fluent.spec;
 
 import io.serverlessworkflow.api.types.ForTask;
 import io.serverlessworkflow.api.types.ForTaskConfiguration;
+import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.fluent.spec.spi.ForEachTaskFluent;
+import java.util.List;
 import java.util.function.Consumer;
 
 public class ForEachTaskBuilder<T extends BaseTaskItemListBuilder<T>>
@@ -61,9 +63,22 @@ public class ForEachTaskBuilder<T extends BaseTaskItemListBuilder<T>>
   }
 
   public ForEachTaskBuilder<T> tasks(Consumer<T> doBuilderConsumer) {
-    final T taskItemListBuilder = this.taskItemListBuilder.newItemListBuilder();
-    doBuilderConsumer.accept(taskItemListBuilder);
-    this.forTask.setDo(taskItemListBuilder.build());
+    List<TaskItem> existingTasks = this.forTask.getDo();
+
+    int currentOffset = (existingTasks == null) ? 0 : existingTasks.size();
+
+    final T listBuilder = this.taskItemListBuilder.newItemListBuilder(currentOffset);
+    doBuilderConsumer.accept(listBuilder);
+
+    List<TaskItem> newTasks = listBuilder.build();
+    if (existingTasks == null || existingTasks.isEmpty()) {
+      this.forTask.setDo(newTasks);
+    } else {
+      List<TaskItem> merged = new java.util.ArrayList<>(existingTasks);
+      merged.addAll(newTasks);
+      this.forTask.setDo(merged);
+    }
+
     return this;
   }
 
