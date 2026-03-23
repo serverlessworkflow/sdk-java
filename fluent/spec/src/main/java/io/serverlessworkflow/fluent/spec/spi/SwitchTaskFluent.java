@@ -39,6 +39,15 @@ public interface SwitchTaskFluent<SELF extends TaskBaseBuilder<SELF>> {
     return this.on(DEFAULT_CASE, c -> c.then(directiveEnum));
   }
 
+  int switchItemCount();
+
+  default String defaultItemNameIfBlank(String name) {
+    if (name == null || name.isBlank()) {
+      return "switch-item-" + switchItemCount();
+    }
+    return name;
+  }
+
   SwitchTask build();
 
   final class SwitchCaseBuilder {

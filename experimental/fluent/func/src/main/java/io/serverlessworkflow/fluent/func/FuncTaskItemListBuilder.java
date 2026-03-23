@@ -28,7 +28,7 @@ import java.util.function.Consumer;
 public class FuncTaskItemListBuilder extends BaseTaskItemListBuilder<FuncTaskItemListBuilder>
     implements FuncDoFluent<FuncTaskItemListBuilder> {
 
-  public static final String TYPE_FUNCTION = "function";
+  protected static final String TYPE_FUNCTION = "function";
 
   public FuncTaskItemListBuilder() {
     super();

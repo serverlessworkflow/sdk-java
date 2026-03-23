@@ -34,16 +34,16 @@ import java.util.function.Consumer;
  */
 public abstract class BaseTaskItemListBuilder<SELF extends BaseTaskItemListBuilder<SELF>> {
 
-  public final String TYPE_SET = "set";
-  public final String TYPE_FOR = "for";
-  public final String TYPE_SWITCH = "switch";
-  public final String TYPE_RAISE = "raise";
-  public final String TYPE_FORK = "fork";
-  public final String TYPE_LISTEN = "listen";
-  public final String TYPE_EMIT = "emit";
-  public final String TYPE_TRY = "try";
-  public final String TYPE_HTTP = "http";
-  public final String TYPE_OPENAPI = "openapi";
+  protected final String TYPE_SET = "set";
+  protected final String TYPE_FOR = "for";
+  protected final String TYPE_SWITCH = "switch";
+  protected final String TYPE_RAISE = "raise";
+  protected final String TYPE_FORK = "fork";
+  protected final String TYPE_LISTEN = "listen";
+  protected final String TYPE_EMIT = "emit";
+  protected final String TYPE_TRY = "try";
+  protected final String TYPE_HTTP = "http";
+  protected final String TYPE_OPENAPI = "openapi";
 
   private final List<TaskItem> list;
 

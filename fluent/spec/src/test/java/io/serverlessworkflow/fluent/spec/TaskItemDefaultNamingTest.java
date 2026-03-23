@@ -80,7 +80,7 @@ public class TaskItemDefaultNamingTest {
 
     List<TaskItem> topItems = wf.getDo();
     assertEquals(1, topItems.size());
-    assertEquals("try-0", topItems.get(0).getName(), "Top level tryCatch should be tryCatch-0");
+    assertEquals("try-0", topItems.get(0).getName(), "Top level tryCatch should be try-0");
 
     TryTask tryTask = topItems.get(0).getTask().getTryTask();
     assertNotNull(tryTask, "TryTask should be present");
@@ -106,7 +106,7 @@ public class TaskItemDefaultNamingTest {
                         f ->
                             f.each("item")
                                 .in("$.list")
-                                // Assuming the DSL exposes `do_` or `tasks` for inner ForEach logic
+                                // Define tasks to be executed for each item in the forEach loop
                                 .tasks(
                                     tb ->
                                         tb.http(null, http().POST().endpoint("http://test"))

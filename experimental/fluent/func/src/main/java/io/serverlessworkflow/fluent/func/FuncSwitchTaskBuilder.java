@@ -69,11 +69,7 @@ public class FuncSwitchTaskBuilder extends TaskBaseBuilder<FuncSwitchTaskBuilder
         return this.onDefault(switchCaseValue.getThen().getString());
       }
     }
-
-    if (name == null || name.isBlank()) {
-      name = "switch-item-" + this.switchItems.size();
-    }
-    this.switchItems.add(new SwitchItem(name, switchCase.build()));
+    this.switchItems.add(new SwitchItem(defaultItemNameIfBlank(name), switchCase.build()));
     return this;
   }
 
@@ -81,8 +77,13 @@ public class FuncSwitchTaskBuilder extends TaskBaseBuilder<FuncSwitchTaskBuilder
   public FuncSwitchTaskBuilder on(String name, Consumer<SwitchCaseBuilder> switchCaseConsumer) {
     final SwitchCaseBuilder switchCase = new SwitchCaseBuilder();
     switchCaseConsumer.accept(switchCase);
-    this.switchItems.add(new SwitchItem(name, switchCase.build()));
+    this.switchItems.add(new SwitchItem(defaultItemNameIfBlank(name), switchCase.build()));
     return this;
+  }
+
+  @Override
+  public int switchItemCount() {
+    return this.switchItems.size();
   }
 
   public SwitchTask build() {
