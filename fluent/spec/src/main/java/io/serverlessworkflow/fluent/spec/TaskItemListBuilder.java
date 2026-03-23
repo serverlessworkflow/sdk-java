@@ -92,7 +92,7 @@ public class TaskItemListBuilder extends BaseTaskItemListBuilder<TaskItemListBui
   @Override
   public TaskItemListBuilder listen(String name, Consumer<ListenTaskBuilder> itemsConfigurer) {
     name = defaultNameAndRequireConfig(name, itemsConfigurer, TYPE_LISTEN);
-    final ListenTaskBuilder listenBuilder = new ListenTaskBuilder();
+    final ListenTaskBuilder listenBuilder = new ListenTaskBuilder(this);
     itemsConfigurer.accept(listenBuilder);
     return addTaskItem(new TaskItem(name, new Task().withListenTask(listenBuilder.build())));
   }

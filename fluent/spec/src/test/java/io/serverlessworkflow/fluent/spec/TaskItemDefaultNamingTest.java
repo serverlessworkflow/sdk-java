@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import io.serverlessworkflow.api.types.ForkTaskConfiguration;
+import io.serverlessworkflow.api.types.SubscriptionIterator;
 import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.api.types.TryTask;
 import io.serverlessworkflow.api.types.TryTaskCatch;
@@ -387,5 +388,48 @@ public class TaskItemDefaultNamingTest {
     assertEquals("set-0", catchTasks.get(0).getName(), "First doTasks inside catch starts at 0");
     assertEquals(
         "http-1", catchTasks.get(1).getName(), "Second doTasks inside catch picks up index 1");
+  }
+
+  @Test
+  void testListenTaskSubscriptionIteratorMultipleTasksAppends() {
+    Workflow wf =
+        WorkflowBuilder.workflow("flowListenMultipleAppends")
+            .tasks(
+                d ->
+                    d.listen(
+                        null, // Auto-names the listen task
+                        l ->
+                            l.forEach(
+                                sub ->
+                                    // 1. First call: list is empty, offset is 0
+                                    sub.tasks(tb -> tb.set(null, s -> s.expr("$.a = 1")))
+                                        // 2. Second call: list has 1 item, offset should be 1
+                                        .tasks(tb -> tb.set(null, s -> s.expr("$.b = 2")))
+                                        // 3. Third call: list has 2 items, offset should be 2
+                                        .tasks(
+                                            tb ->
+                                                tb.http(
+                                                    null, http().GET().endpoint("http://test"))))))
+            .build();
+
+    List<TaskItem> topItems = wf.getDo();
+    assertEquals(1, topItems.size(), "Should have exactly one top-level task");
+    assertEquals("listen-0", topItems.get(0).getName(), "Top level listen should be listen-0");
+
+    // Extract the SubscriptionIterator from the listen task's foreach block
+    SubscriptionIterator iterator = topItems.get(0).getTask().getListenTask().getForeach();
+
+    assertNotNull(iterator, "SubscriptionIterator (foreach) must not be null");
+
+    // Extract the tasks from the iterator
+    List<TaskItem> nestedTasks = iterator.getDo();
+    assertNotNull(nestedTasks, "Nested tasks list must not be null");
+    assertEquals(
+        3, nestedTasks.size(), "All tasks from multiple calls must be appended and merged");
+
+    // Verify the naming offset correctly tracked the appends through the entire factory chain
+    assertEquals("set-0", nestedTasks.get(0).getName(), "First tasks() call starts at 0");
+    assertEquals("set-1", nestedTasks.get(1).getName(), "Second tasks() call picks up index 1");
+    assertEquals("http-2", nestedTasks.get(2).getName(), "Third tasks() call picks up index 2");
   }
 }
