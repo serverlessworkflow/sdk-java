@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.fluent.spec.configurers;
+package io.serverlessworkflow.fluent.func.dsl;
 
-import io.serverlessworkflow.fluent.spec.EventPropertiesBuilder;
+import java.io.Serializable;
 import java.util.function.Consumer;
 
 @FunctionalInterface
-public interface EventConfigurer extends Consumer<EventPropertiesBuilder> {}
+public interface SerializableConsumer<T> extends Consumer<T>, Serializable {}

@@ -10,7 +10,7 @@ do:
           any:
           - with:
               type: com.fake-hospital.vitals.measurements.temperature
-              data: ${ .temperature > 38 }
+              data: ${ .temperature > $input.threshold }
           - with:
               type: com.fake-hospital.vitals.measurements.bpm
               data: ${ .bpm < 60 or .bpm > 100 }

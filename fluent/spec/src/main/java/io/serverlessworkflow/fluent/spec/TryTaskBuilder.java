@@ -29,9 +29,12 @@ import io.serverlessworkflow.api.types.RetryLimit;
 import io.serverlessworkflow.api.types.RetryLimitAttempt;
 import io.serverlessworkflow.api.types.RetryPolicy;
 import io.serverlessworkflow.api.types.RetryPolicyJitter;
+import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.api.types.TimeoutAfter;
 import io.serverlessworkflow.api.types.TryTask;
 import io.serverlessworkflow.api.types.TryTaskCatch;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
 
 public class TryTaskBuilder<T extends BaseTaskItemListBuilder<T>>
@@ -51,9 +54,22 @@ public class TryTaskBuilder<T extends BaseTaskItemListBuilder<T>>
   }
 
   public TryTaskBuilder<T> tryHandler(Consumer<T> consumer) {
-    final T taskItemListBuilder = this.doTaskBuilderFactory.newItemListBuilder();
+    List<TaskItem> existingTasks = this.tryTask.getTry();
+
+    int currentOffset = (existingTasks == null) ? 0 : existingTasks.size();
+
+    final T taskItemListBuilder = this.doTaskBuilderFactory.newItemListBuilder(currentOffset);
     consumer.accept(taskItemListBuilder);
-    this.tryTask.setTry(taskItemListBuilder.build());
+
+    List<TaskItem> newTasks = taskItemListBuilder.build();
+    if (existingTasks == null || existingTasks.isEmpty()) {
+      this.tryTask.setTry(newTasks);
+    } else {
+      List<TaskItem> merged = new ArrayList<>(existingTasks);
+      merged.addAll(newTasks);
+      this.tryTask.setTry(merged);
+    }
+
     return this;
   }
 
@@ -108,9 +124,22 @@ public class TryTaskBuilder<T extends BaseTaskItemListBuilder<T>>
     }
 
     public TryTaskCatchBuilder<T> doTasks(Consumer<T> consumer) {
-      final T taskItemListBuilder = this.doTaskBuilderFactory.newItemListBuilder();
+      List<TaskItem> existingTasks = this.tryTaskCatch.getDo();
+
+      int currentOffset = (existingTasks == null) ? 0 : existingTasks.size();
+
+      final T taskItemListBuilder = this.doTaskBuilderFactory.newItemListBuilder(currentOffset);
       consumer.accept(taskItemListBuilder);
-      this.tryTaskCatch.setDo(taskItemListBuilder.build());
+
+      List<TaskItem> newTasks = taskItemListBuilder.build();
+      if (existingTasks == null || existingTasks.isEmpty()) {
+        this.tryTaskCatch.setDo(newTasks);
+      } else {
+        List<TaskItem> merged = new ArrayList<>(existingTasks);
+        merged.addAll(newTasks);
+        this.tryTaskCatch.setDo(merged);
+      }
+
       return this;
     }
 

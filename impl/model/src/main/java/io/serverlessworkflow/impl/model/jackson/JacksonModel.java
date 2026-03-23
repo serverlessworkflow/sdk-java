@@ -47,6 +47,11 @@ public class JacksonModel extends AbstractWorkflowModel {
   }
 
   @Override
+  public boolean isNull() {
+    return node.isNull();
+  }
+
+  @Override
   public Optional<Boolean> asBoolean() {
     return node.isBoolean() ? Optional.of(node.asBoolean()) : Optional.empty();
   }
@@ -68,7 +73,7 @@ public class JacksonModel extends AbstractWorkflowModel {
 
   @Override
   public Optional<Number> asNumber() {
-    return node.isNumber() ? Optional.of(node.asLong()) : Optional.empty();
+    return node.isNumber() ? Optional.of(node.numberValue()) : Optional.empty();
   }
 
   @Override

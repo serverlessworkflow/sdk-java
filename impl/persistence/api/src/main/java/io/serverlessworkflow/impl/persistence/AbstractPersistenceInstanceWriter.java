@@ -25,7 +25,7 @@ public abstract class AbstractPersistenceInstanceWriter implements PersistenceIn
 
   @Override
   public CompletableFuture<Void> started(WorkflowContextData workflowContext) {
-    return doTransaction(t -> t.writeInstanceData(workflowContext), workflowContext);
+    return doStartInstance(t -> t.writeInstanceData(workflowContext), workflowContext);
   }
 
   @Override
@@ -44,7 +44,7 @@ public abstract class AbstractPersistenceInstanceWriter implements PersistenceIn
   }
 
   protected CompletableFuture<Void> removeProcessInstance(WorkflowContextData workflowContext) {
-    return doTransaction(t -> t.removeProcessInstance(workflowContext), workflowContext);
+    return doCompleteInstance(t -> t.removeProcessInstance(workflowContext), workflowContext);
   }
 
   @Override
@@ -81,4 +81,14 @@ public abstract class AbstractPersistenceInstanceWriter implements PersistenceIn
 
   protected abstract CompletableFuture<Void> doTransaction(
       Consumer<PersistenceInstanceOperations> operation, WorkflowContextData context);
+
+  protected CompletableFuture<Void> doCompleteInstance(
+      Consumer<PersistenceInstanceOperations> operation, WorkflowContextData workflowContext) {
+    return doTransaction(operation, workflowContext);
+  }
+
+  protected CompletableFuture<Void> doStartInstance(
+      Consumer<PersistenceInstanceOperations> operation, WorkflowContextData workflowContext) {
+    return doTransaction(operation, workflowContext);
+  }
 }

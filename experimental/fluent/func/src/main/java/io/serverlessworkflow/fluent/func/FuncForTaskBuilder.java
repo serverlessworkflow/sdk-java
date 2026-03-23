@@ -31,7 +31,6 @@ import io.serverlessworkflow.fluent.spec.spi.ForEachTaskFluent;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -71,6 +70,9 @@ public class FuncForTaskBuilder extends TaskBaseBuilder<FuncForTaskBuilder>
   }
 
   public <T, V, R> FuncForTaskBuilder tasks(String name, LoopFunction<T, V, R> function) {
+    if (name == null || name.isBlank()) {
+      name = "for-task-" + this.items.size();
+    }
     this.items.add(
         new TaskItem(
             name,
@@ -83,7 +85,7 @@ public class FuncForTaskBuilder extends TaskBaseBuilder<FuncForTaskBuilder>
   }
 
   public <T, V, R> FuncForTaskBuilder tasks(LoopFunction<T, V, R> function) {
-    return this.tasks(UUID.randomUUID().toString(), function);
+    return this.tasks(null, function);
   }
 
   @Override
@@ -111,7 +113,7 @@ public class FuncForTaskBuilder extends TaskBaseBuilder<FuncForTaskBuilder>
   }
 
   public FuncForTaskBuilder tasks(Consumer<FuncTaskItemListBuilder> consumer) {
-    final FuncTaskItemListBuilder builder = new FuncTaskItemListBuilder();
+    final FuncTaskItemListBuilder builder = new FuncTaskItemListBuilder(this.items.size());
     consumer.accept(builder);
     this.items.addAll(builder.build());
     return this;

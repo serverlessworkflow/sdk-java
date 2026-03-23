@@ -13,23 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.fluent.func;
+package io.serverlessworkflow.fluent.spec.dsl;
 
-import io.cloudevents.CloudEventData;
-import io.serverlessworkflow.api.types.func.EventDataPredicate;
 import io.serverlessworkflow.fluent.spec.AbstractEventPropertiesBuilder;
-import java.util.function.Predicate;
+import java.util.Map;
 
-public class FuncPredicateEventPropertiesBuilder
-    extends AbstractEventPropertiesBuilder<FuncPredicateEventPropertiesBuilder> {
+public abstract class ExprEventEmitPropertiesSpec<
+        SELF, EVENT_PROPS extends AbstractEventPropertiesBuilder<?>>
+    extends EventEmitPropertiesSpec<SELF, EVENT_PROPS> {
 
-  @Override
-  protected FuncPredicateEventPropertiesBuilder self() {
-    return this;
+  /** Sets the event data and the contentType to `application/json` */
+  public SELF jsonData(String expr) {
+    addPropertyStep(e -> e.data(expr));
+    return JSON();
   }
 
-  public FuncPredicateEventPropertiesBuilder data(Predicate<CloudEventData> predicate) {
-    this.eventProperties.setData(new EventDataPredicate().withPredicate(predicate));
-    return this;
+  /** Sets the event data and the contentType to `application/json` */
+  public SELF jsonData(Map<String, Object> data) {
+    addPropertyStep(e -> e.data(data));
+    return JSON();
   }
 }

@@ -15,9 +15,6 @@
  */
 package io.serverlessworkflow.api.types.func;
 
-import io.serverlessworkflow.impl.WorkflowContextData;
-
-@FunctionalInterface
-public interface JavaContextFunction<T, R> {
-  R apply(T object, WorkflowContextData workflowContext);
+public interface PredicateContainer {
+  Object predicate();
 }

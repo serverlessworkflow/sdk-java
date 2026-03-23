@@ -16,31 +16,46 @@
 package io.serverlessworkflow.api.types.func;
 
 import io.serverlessworkflow.api.types.Until;
-import java.util.Optional;
 import java.util.function.Predicate;
 
-public class UntilPredicate extends Until {
+public class UntilPredicate extends Until implements PredicateContainer {
 
-  private Predicate<?> predicate;
-  private Optional<Class<?>> predicateClass;
+  private Object predicate;
 
   public <T> UntilPredicate withPredicate(Predicate<T> predicate) {
     this.predicate = predicate;
-    this.predicateClass = Optional.empty();
     return this;
   }
 
-  public <T> UntilPredicate withPredicate(Predicate<T> predicate, Class<T> clazz) {
+  public <T> UntilPredicate withPredicate(Predicate<T> predicate, Class<T> predicateClass) {
+    this.predicate =
+        predicateClass == null ? predicate : new TypedPredicate<>(predicate, predicateClass);
+    return this;
+  }
+
+  public <T> UntilPredicate withPredicate(ContextPredicate<T> predicate) {
     this.predicate = predicate;
-    this.predicateClass = Optional.ofNullable(clazz);
     return this;
   }
 
-  public Predicate<?> predicate() {
-    return predicate;
+  public <T> UntilPredicate withPredicate(ContextPredicate<T> predicate, Class<T> predicateClass) {
+    this.predicate =
+        predicateClass == null ? predicate : new TypedContextPredicate<>(predicate, predicateClass);
+    return this;
   }
 
-  public Optional<Class<?>> predicateClass() {
-    return predicateClass;
+  public <T> UntilPredicate withPredicate(FilterPredicate<T> predicate) {
+    this.predicate = predicate;
+    return this;
+  }
+
+  public <T> UntilPredicate withPredicate(FilterPredicate<T> predicate, Class<T> predicateClass) {
+    this.predicate =
+        predicateClass == null ? predicate : new TypedFilterPredicate<>(predicate, predicateClass);
+    return this;
+  }
+
+  public Object predicate() {
+    return predicate;
   }
 }

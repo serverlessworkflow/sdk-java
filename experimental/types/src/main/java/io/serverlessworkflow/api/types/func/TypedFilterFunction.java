@@ -13,11 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.fluent.func.configurers;
+package io.serverlessworkflow.api.types.func;
 
-import io.serverlessworkflow.fluent.func.FuncPredicateEventPropertiesBuilder;
-import java.util.function.Consumer;
-
-@FunctionalInterface
-public interface FuncPredicateEventConfigurer
-    extends Consumer<FuncPredicateEventPropertiesBuilder> {}
+public record TypedFilterFunction<T, V>(FilterFunction<T, V> function, Class<T> argClass) {}

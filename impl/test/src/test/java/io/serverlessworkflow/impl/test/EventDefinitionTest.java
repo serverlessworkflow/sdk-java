@@ -51,19 +51,38 @@ public class EventDefinitionTest {
 
   @ParameterizedTest
   @MethodSource("eventListenerParameters")
-  void testEventListened(String listen, String emit, JsonNode expectedResult, Object emitInput)
+  void testEventListened(
+      String listen, String emit, JsonNode expectedResult, Object emitInput, Object listenInput)
       throws IOException {
     WorkflowDefinition listenDefinition =
         appl.workflowDefinition(WorkflowReader.readWorkflowFromClasspath(listen));
     WorkflowDefinition emitDefinition =
         appl.workflowDefinition(WorkflowReader.readWorkflowFromClasspath(emit));
-    WorkflowInstance waitingInstance = listenDefinition.instance(Map.of());
+    WorkflowInstance waitingInstance = listenDefinition.instance(listenInput);
     CompletableFuture<WorkflowModel> future = waitingInstance.start();
     assertThat(waitingInstance.status()).isEqualTo(WorkflowStatus.WAITING);
     emitDefinition.instance(emitInput).start().join();
     assertThat(future).isCompleted();
     assertThat(waitingInstance.status()).isEqualTo(WorkflowStatus.COMPLETED);
     assertThat(waitingInstance.outputAs(JsonNode.class)).isEqualTo(expectedResult);
+  }
+
+  @ParameterizedTest
+  @MethodSource("wrongEventListenerParameters")
+  void testWrongEvent(String listen, String emit, Object emitInput, Object listenInput)
+      throws IOException {
+    WorkflowDefinition listenDefinition =
+        appl.workflowDefinition(WorkflowReader.readWorkflowFromClasspath(listen));
+    WorkflowDefinition emitDefinition =
+        appl.workflowDefinition(WorkflowReader.readWorkflowFromClasspath(emit));
+    WorkflowInstance waitingInstance = listenDefinition.instance(listenInput);
+    CompletableFuture<WorkflowModel> future = waitingInstance.start();
+    assertThat(waitingInstance.status()).isEqualTo(WorkflowStatus.WAITING);
+    emitDefinition.instance(emitInput).start().join();
+    assertThat(waitingInstance.status()).isEqualTo(WorkflowStatus.WAITING);
+    waitingInstance.cancel();
+    assertThat(waitingInstance.status()).isEqualTo(WorkflowStatus.CANCELLED);
+    assertThat(future).isDone();
   }
 
   @ParameterizedTest
@@ -115,18 +134,29 @@ public class EventDefinitionTest {
     return Instant.ofEpochSecond(result.get(index).get("time").asLong());
   }
 
+  private static Stream<Arguments> wrongEventListenerParameters() {
+    return Stream.of(
+        Arguments.of(
+            "workflows-samples/listen-to-any-filter.yaml",
+            "workflows-samples/emit-doctor.yaml",
+            Map.of("temperature", 38),
+            Map.of("threshold", 39)));
+  }
+
   private static Stream<Arguments> eventListenerParameters() {
     return Stream.of(
         Arguments.of(
             "workflows-samples/listen-to-any.yaml",
             "workflows-samples/emit.yaml",
             array(cruellaDeVil()),
+            Map.of(),
             Map.of()),
         Arguments.of(
             "workflows-samples/listen-to-any-filter.yaml",
             "workflows-samples/emit-doctor.yaml",
             doctor(),
-            Map.of("temperature", 39)));
+            Map.of("temperature", 39),
+            Map.of("threshold", 38)));
   }
 
   private static Stream<Arguments> eventsListenerParameters() {

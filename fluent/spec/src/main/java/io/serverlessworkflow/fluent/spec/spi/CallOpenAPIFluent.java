@@ -16,7 +16,6 @@
 package io.serverlessworkflow.fluent.spec.spi;
 
 import io.serverlessworkflow.fluent.spec.TaskBaseBuilder;
-import java.util.UUID;
 import java.util.function.Consumer;
 
 public interface CallOpenAPIFluent<SELF extends TaskBaseBuilder<SELF>, LIST> {
@@ -24,6 +23,6 @@ public interface CallOpenAPIFluent<SELF extends TaskBaseBuilder<SELF>, LIST> {
   LIST openapi(String name, Consumer<SELF> itemsConfigurer);
 
   default LIST openapi(Consumer<SELF> itemsConfigurer) {
-    return this.openapi(UUID.randomUUID().toString(), itemsConfigurer);
+    return this.openapi(null, itemsConfigurer);
   }
 }

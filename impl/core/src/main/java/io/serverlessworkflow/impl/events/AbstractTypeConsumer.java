@@ -18,7 +18,9 @@ package io.serverlessworkflow.impl.events;
 import io.cloudevents.CloudEvent;
 import io.serverlessworkflow.api.types.EventFilter;
 import io.serverlessworkflow.api.types.EventProperties;
+import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
+import io.serverlessworkflow.impl.WorkflowContext;
 import java.util.AbstractCollection;
 import java.util.Collection;
 import java.util.Iterator;
@@ -67,7 +69,7 @@ public abstract class AbstractTypeConsumer
     public void accept(CloudEvent ce) {
       logger.debug("Received cloud event {}", ce);
       for (TypeEventRegistration registration : registrations) {
-        if (registration.predicate().test(ce)) {
+        if (registration.predicate().test(ce, registration.workflow(), registration.task())) {
           registration.consumer().accept(ce);
         }
       }
@@ -94,14 +96,18 @@ public abstract class AbstractTypeConsumer
     }
   }
 
+  @Override
   public TypeEventRegistration register(
-      TypeEventRegistrationBuilder builder, Consumer<CloudEvent> ce) {
+      TypeEventRegistrationBuilder builder,
+      Consumer<CloudEvent> ce,
+      WorkflowContext workflow,
+      TaskContext task) {
     if (builder.type() == null) {
       registerToAll(ce);
-      return new TypeEventRegistration(null, ce, null);
+      return new TypeEventRegistration(null, ce, null, workflow, task);
     } else {
       TypeEventRegistration registration =
-          new TypeEventRegistration(builder.type(), ce, builder.cePredicate());
+          new TypeEventRegistration(builder.type(), ce, builder.cePredicate(), workflow, task);
       registrations
           .computeIfAbsent(
               registration.type(),

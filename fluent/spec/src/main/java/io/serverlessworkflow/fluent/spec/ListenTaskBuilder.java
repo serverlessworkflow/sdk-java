@@ -22,8 +22,8 @@ package io.serverlessworkflow.fluent.spec;
 public class ListenTaskBuilder
     extends AbstractListenTaskBuilder<TaskItemListBuilder, ListenToBuilder> {
 
-  protected ListenTaskBuilder() {
-    super(new TaskItemListBuilder());
+  protected ListenTaskBuilder(TaskItemListBuilder factory) {
+    super(factory);
   }
 
   @Override

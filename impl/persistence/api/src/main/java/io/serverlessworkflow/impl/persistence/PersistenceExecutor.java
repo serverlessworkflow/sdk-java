@@ -13,7 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.api.types.func;
+package io.serverlessworkflow.impl.persistence;
 
-public record TypedJavaContextFunction<T, V>(
-    JavaContextFunction<T, V> function, Class<T> argClass) {}
+import io.serverlessworkflow.impl.WorkflowContextData;
+import java.util.concurrent.CompletableFuture;
+
+public interface PersistenceExecutor extends AutoCloseable {
+  CompletableFuture<Void> execute(Runnable runnable, WorkflowContextData context);
+
+  default CompletableFuture<Void> startInstance(Runnable runnable, WorkflowContextData context) {
+    return execute(runnable, context);
+  }
+
+  default CompletableFuture<Void> deleteInstance(Runnable runnable, WorkflowContextData context) {
+    return execute(runnable, context);
+  }
+
+  default void close() {}
+}

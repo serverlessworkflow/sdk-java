@@ -26,8 +26,8 @@ public class FuncDoTaskBuilder extends BaseDoTaskBuilder<FuncDoTaskBuilder, Func
         ConditionalTaskBuilder<FuncDoTaskBuilder>,
         FuncDoFluent<FuncDoTaskBuilder> {
 
-  public FuncDoTaskBuilder() {
-    super(new FuncTaskItemListBuilder());
+  public FuncDoTaskBuilder(int listSizeOffset) {
+    super(new FuncTaskItemListBuilder(listSizeOffset));
   }
 
   @Override

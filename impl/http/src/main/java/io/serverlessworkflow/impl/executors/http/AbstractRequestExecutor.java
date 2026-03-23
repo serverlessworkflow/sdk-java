@@ -25,6 +25,8 @@ import io.serverlessworkflow.impl.WorkflowException;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.auth.AuthProvider;
 import io.serverlessworkflow.impl.auth.AuthUtils;
+import io.serverlessworkflow.types.Errors;
+import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.client.Invocation.Builder;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status.Family;
@@ -48,13 +50,21 @@ abstract class AbstractRequestExecutor implements RequestExecutor {
       Builder request, URI uri, WorkflowContext workflow, TaskContext task, WorkflowModel model) {
     HttpModelConverter converter = HttpConverterResolver.converter(workflow, task);
     authProvider.ifPresent(auth -> addAuthHeader(auth, uri, request, workflow, task, model));
-    Response response = invokeRequest(request, converter, workflow, task, model);
-    validateStatus(task, response, converter);
-    return workflow
-        .definition()
-        .application()
-        .modelFactory()
-        .fromAny(response.readEntity(converter.responseType()));
+    try (Response response = invokeRequest(request, converter, workflow, task, model)) {
+      validateStatus(task, response, converter);
+      return workflow
+          .definition()
+          .application()
+          .modelFactory()
+          .fromAny(response.readEntity(converter.responseType()));
+    } catch (ProcessingException | IllegalStateException ex) {
+      throw new WorkflowException(
+          WorkflowError.error(Errors.DATA.toString(), Errors.DATA.status())
+              .details(ex.getMessage())
+              .instance(task.position().jsonPointer())
+              .build(),
+          ex);
+    }
   }
 
   private void validateStatus(TaskContext task, Response response, HttpModelConverter converter) {

@@ -61,8 +61,7 @@ public final class DSL {
   // ---- Convenient shortcuts ----//
 
   /**
-   * Create a new HTTP call specification to be used with {@link #call(CallHttpConfigurer)} or
-   * {@link #call(io.serverlessworkflow.fluent.func.dsl.FuncCallHttpSpec)}.
+   * Create a new HTTP call specification to be used with {@link #call(CallHttpConfigurer)}
    *
    * <p>Typical usage:
    *
@@ -214,15 +213,17 @@ public final class DSL {
   }
 
   /**
-   * Start building an event emission specification.
+   * Start building an event specification for use with {@code emit} tasks.
    *
-   * <p>Use methods on {@link EventSpec} to define event type and payload, and pass it to {@link
-   * #emit(Consumer)}.
+   * <p>This method returns an {@link EventFilterSpec}, which is primarily used for event filtering
+   * (for {@code listen} tasks) but is also reused here as a filter-like description of the event
+   * that will be emitted. Configure the event type, source, and payload using {@link
+   * EventFilterSpec} methods, then pass the resulting spec to {@link #emit(Consumer)}.
    *
-   * @return a new {@link EventSpec}
+   * @return a new {@link EventFilterSpec} instance for event emission
    */
-  public static EventSpec event() {
-    return new EventSpec();
+  public static EventFilterSpec event() {
+    return new EventFilterSpec();
   }
 
   /**
@@ -619,6 +620,18 @@ public final class DSL {
   }
 
   /**
+   * Create a {@link TasksConfigurer} that adds an HTTP call task with an explicit name using a
+   * low-level HTTP configurer.
+   *
+   * @param name the task name
+   * @param configurer low-level HTTP configurer
+   * @return a {@link TasksConfigurer} that adds a CallHTTP task
+   */
+  public static TasksConfigurer call(String name, CallHttpConfigurer configurer) {
+    return list -> list.http(name, configurer);
+  }
+
+  /**
    * Create a {@link TasksConfigurer} that adds an OpenAPI call task.
    *
    * <p>Example:
@@ -641,6 +654,17 @@ public final class DSL {
   }
 
   /**
+   * Create a {@link TasksConfigurer} that adds an OpenAPI call task with an explicit name.
+   *
+   * @param name the task name
+   * @param configurer OpenAPI configurer
+   * @return a {@link TasksConfigurer} that adds a CallOpenAPI task
+   */
+  public static TasksConfigurer call(String name, CallOpenAPIConfigurer configurer) {
+    return list -> list.openapi(name, configurer);
+  }
+
+  /**
    * Create a {@link TasksConfigurer} that adds a {@code set} task using a low-level configurer.
    *
    * @param configurer configurer for the set task
@@ -648,6 +672,18 @@ public final class DSL {
    */
   public static TasksConfigurer set(SetConfigurer configurer) {
     return list -> list.set(configurer);
+  }
+
+  /**
+   * Create a {@link TasksConfigurer} that adds a {@code set} task with an explicit name using a
+   * low-level configurer.
+   *
+   * @param name the task name
+   * @param configurer configurer for the set task
+   * @return a {@link TasksConfigurer} that adds a SetTask
+   */
+  public static TasksConfigurer set(String name, SetConfigurer configurer) {
+    return list -> list.set(name, configurer);
   }
 
   /**
@@ -661,13 +697,79 @@ public final class DSL {
   }
 
   /**
-   * Create a {@link TasksConfigurer} that adds an {@code emit} task.
+   * Create a {@link TasksConfigurer} that adds a {@code set} task with an explicit name using a raw
+   * expression.
    *
-   * @param configurer consumer configuring {@link EmitTaskBuilder}
-   * @return a {@link TasksConfigurer} that adds an EmitTask
+   * @param name the task name
+   * @param expr expression to apply in the set task
+   * @return a {@link TasksConfigurer} that adds a SetTask
+   */
+  public static TasksConfigurer set(String name, String expr) {
+    return list -> list.set(name, expr);
+  }
+
+  /**
+   * Adds an {@code emit} task to the workflow's task sequence using a custom configurer. *
+   *
+   * <p>This method is typically used in conjunction with {@link #produced()} to fluently define the
+   * properties of the event being emitted. *
+   *
+   * <p>Example usage:
+   *
+   * <pre>{@code
+   * emit(produced().type("my.custom.event").source("my/source"))
+   * }</pre>
+   *
+   * @param configurer a consumer, such as an {@link EmitSpec}, that configures the {@link
+   *     EmitTaskBuilder}
+   * @return a {@link TasksConfigurer} to continue building the task list
    */
   public static TasksConfigurer emit(Consumer<EmitTaskBuilder> configurer) {
     return list -> list.emit(configurer);
+  }
+
+  /**
+   * A convenient shortcut to add an {@code emit} task that only requires a CloudEvent type. *
+   *
+   * <p>Use this method when you only need to specify the {@code type} attribute of the emitted
+   * event and do not need to configure additional properties like data or source.
+   *
+   * @param cloudEventType the {@code type} attribute of the CloudEvent to be emitted
+   * @return a {@link TasksConfigurer} to continue building the task list
+   */
+  public static TasksConfigurer emit(String cloudEventType) {
+    return list -> list.emit(new EmitSpec().type(cloudEventType));
+  }
+
+  /**
+   * Starts building an event emission specification. *
+   *
+   * <p>This creates a new {@link EmitSpec} which acts as a fluent builder for the properties (e.g.,
+   * type, source, data) of the CloudEvent to be emitted. The resulting spec can then be passed
+   * directly to {@link #emit(Consumer)}.
+   *
+   * @return a new {@link EmitSpec} instance for fluent configuration
+   */
+  public static EmitSpec produced() {
+    return new EmitSpec();
+  }
+
+  /**
+   * @see #produced()
+   */
+  public static EmitSpec produced(String cloudEventType) {
+    return new EmitSpec().type(cloudEventType);
+  }
+
+  /**
+   * Create a {@link TasksConfigurer} that adds an {@code emit} task with an explicit name.
+   *
+   * @param name the task name
+   * @param configurer consumer configuring {@link EmitTaskBuilder}
+   * @return a {@link TasksConfigurer} that adds an EmitTask
+   */
+  public static TasksConfigurer emit(String name, Consumer<EmitTaskBuilder> configurer) {
+    return list -> list.emit(name, configurer);
   }
 
   /**
@@ -681,6 +783,17 @@ public final class DSL {
   }
 
   /**
+   * Create a {@link TasksConfigurer} that adds a {@code listen} task with an explicit name.
+   *
+   * @param name the task name
+   * @param configurer listen configurer
+   * @return a {@link TasksConfigurer} that adds a ListenTask
+   */
+  public static TasksConfigurer listen(String name, ListenConfigurer configurer) {
+    return list -> list.listen(name, configurer);
+  }
+
+  /**
    * Create a {@link TasksConfigurer} that adds a {@code forEach} task.
    *
    * @param configurer for-each configurer
@@ -688,6 +801,17 @@ public final class DSL {
    */
   public static TasksConfigurer forEach(ForEachConfigurer configurer) {
     return list -> list.forEach(configurer);
+  }
+
+  /**
+   * Create a {@link TasksConfigurer} that adds a {@code forEach} task with an explicit name.
+   *
+   * @param name the task name
+   * @param configurer for-each configurer
+   * @return a {@link TasksConfigurer} that adds a ForEachTask
+   */
+  public static TasksConfigurer forEach(String name, ForEachConfigurer configurer) {
+    return list -> list.forEach(name, configurer);
   }
 
   /**
@@ -701,6 +825,17 @@ public final class DSL {
   }
 
   /**
+   * Create a {@link TasksConfigurer} that adds a {@code fork} task with an explicit name.
+   *
+   * @param name the task name
+   * @param configurer consumer configuring {@link ForkTaskBuilder}
+   * @return a {@link TasksConfigurer} that adds a ForkTask
+   */
+  public static TasksConfigurer fork(String name, Consumer<ForkTaskBuilder> configurer) {
+    return list -> list.fork(name, configurer);
+  }
+
+  /**
    * Create a {@link TasksConfigurer} that adds a {@code switch} task.
    *
    * @param configurer switch configurer
@@ -708,6 +843,17 @@ public final class DSL {
    */
   public static TasksConfigurer switchCase(SwitchConfigurer configurer) {
     return list -> list.switchCase(configurer);
+  }
+
+  /**
+   * Create a {@link TasksConfigurer} that adds a {@code switch} task with an explicit name.
+   *
+   * @param name the task name
+   * @param configurer switch configurer
+   * @return a {@link TasksConfigurer} that adds a SwitchTask
+   */
+  public static TasksConfigurer switchCase(String name, SwitchConfigurer configurer) {
+    return list -> list.switchCase(name, configurer);
   }
 
   /**
@@ -721,6 +867,17 @@ public final class DSL {
   }
 
   /**
+   * Create a {@link TasksConfigurer} that adds a {@code raise} task with an explicit name.
+   *
+   * @param name the task name
+   * @param configurer raise configurer
+   * @return a {@link TasksConfigurer} that adds a RaiseTask
+   */
+  public static TasksConfigurer raise(String name, RaiseConfigurer configurer) {
+    return list -> list.raise(name, configurer);
+  }
+
+  /**
    * Create a {@link TasksConfigurer} that adds a {@code try/catch} task.
    *
    * @param configurer try/catch configurer
@@ -728,6 +885,17 @@ public final class DSL {
    */
   public static TasksConfigurer tryCatch(TryConfigurer configurer) {
     return list -> list.tryCatch(configurer);
+  }
+
+  /**
+   * Create a {@link TasksConfigurer} that adds a {@code try/catch} task with an explicit name.
+   *
+   * @param name the task name
+   * @param configurer try/catch configurer
+   * @return a {@link TasksConfigurer} that adds a TryTask
+   */
+  public static TasksConfigurer tryCatch(String name, TryConfigurer configurer) {
+    return list -> list.tryCatch(name, configurer);
   }
 
   // ----- Tasks that requires tasks list --//

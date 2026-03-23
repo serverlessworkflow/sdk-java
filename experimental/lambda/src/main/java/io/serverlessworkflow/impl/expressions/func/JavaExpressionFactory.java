@@ -18,13 +18,18 @@ package io.serverlessworkflow.impl.expressions.func;
 import io.cloudevents.CloudEventData;
 import io.serverlessworkflow.api.types.TaskBase;
 import io.serverlessworkflow.api.types.TaskMetadata;
-import io.serverlessworkflow.api.types.func.JavaContextFunction;
-import io.serverlessworkflow.api.types.func.JavaFilterFunction;
+import io.serverlessworkflow.api.types.func.ContextFunction;
+import io.serverlessworkflow.api.types.func.ContextPredicate;
+import io.serverlessworkflow.api.types.func.FilterFunction;
+import io.serverlessworkflow.api.types.func.FilterPredicate;
 import io.serverlessworkflow.api.types.func.TaskMetadataKeys;
+import io.serverlessworkflow.api.types.func.TypedContextFunction;
+import io.serverlessworkflow.api.types.func.TypedContextPredicate;
+import io.serverlessworkflow.api.types.func.TypedFilterFunction;
+import io.serverlessworkflow.api.types.func.TypedFilterPredicate;
 import io.serverlessworkflow.api.types.func.TypedFunction;
-import io.serverlessworkflow.api.types.func.TypedJavaContextFunction;
-import io.serverlessworkflow.api.types.func.TypedJavaFilterFunction;
 import io.serverlessworkflow.api.types.func.TypedPredicate;
+import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowPredicate;
 import io.serverlessworkflow.impl.expressions.AbstractExpressionFactory;
 import io.serverlessworkflow.impl.expressions.ExpressionDescriptor;
@@ -44,18 +49,29 @@ public class JavaExpressionFactory extends AbstractExpressionFactory {
     if (value instanceof Function func) {
       return (w, t, n) -> func.apply(n.asJavaObject());
     } else if (value instanceof TypedFunction func) {
-      return (w, t, n) -> func.function().apply(n.as(func.argClass()).orElseThrow());
-    } else if (value instanceof JavaFilterFunction func) {
+      return (w, t, n) -> func.function().apply(convert(n, func.argClass()));
+    } else if (value instanceof FilterFunction func) {
       return (w, t, n) -> func.apply(n.asJavaObject(), w, t);
-    } else if (value instanceof TypedJavaFilterFunction func) {
-      return (w, t, n) -> func.function().apply(n.as(func.argClass()).orElseThrow(), w, t);
-    } else if (value instanceof JavaContextFunction func) {
+    } else if (value instanceof TypedFilterFunction func) {
+      return (w, t, n) -> func.function().apply(convert(n, func.argClass()), w, t);
+    } else if (value instanceof ContextFunction func) {
       return (w, t, n) -> func.apply(n.asJavaObject(), w);
-    } else if (value instanceof TypedJavaContextFunction func) {
-      return (w, t, n) -> func.function().apply(n.as(func.argClass()).orElseThrow(), w);
+    } else if (value instanceof TypedContextFunction func) {
+      return (w, t, n) -> func.function().apply(convert(n, func.argClass()), w);
     } else {
       return (w, t, n) -> value;
     }
+  }
+
+  private <T> T convert(WorkflowModel model, Class<T> argClass) {
+    return model.isNull()
+        ? null
+        : model
+            .as(argClass)
+            .orElseThrow(
+                () ->
+                    new IllegalArgumentException(
+                        "Cannot convert model " + model.asJavaObject() + " to class" + argClass));
   }
 
   @Override
@@ -63,12 +79,16 @@ public class JavaExpressionFactory extends AbstractExpressionFactory {
     Object value = descriptor.asObject();
     if (value instanceof Function
         || value instanceof TypedFunction
-        || value instanceof JavaFilterFunction
-        || value instanceof TypedJavaFilterFunction
-        || value instanceof JavaContextFunction
-        || value instanceof TypedJavaContextFunction
+        || value instanceof FilterFunction
+        || value instanceof TypedFilterFunction
+        || value instanceof ContextFunction
+        || value instanceof TypedContextFunction
         || value instanceof Predicate
         || value instanceof TypedPredicate
+        || value instanceof ContextPredicate
+        || value instanceof TypedContextPredicate
+        || value instanceof FilterPredicate
+        || value instanceof TypedFilterPredicate
         || value instanceof Boolean) {
       return DEFAULT_PRIORITY - 500;
     } else if (descriptor.asString() == null) {
@@ -85,7 +105,23 @@ public class JavaExpressionFactory extends AbstractExpressionFactory {
 
   @SuppressWarnings({"rawtypes", "unchecked"})
   private WorkflowPredicate fromPredicate(TypedPredicate pred) {
-    return (w, t, n) -> pred.pred().test(n.as(pred.argClass()).orElseThrow());
+    return (w, t, n) -> pred.pred().test(convert(n, pred.argClass()));
+  }
+
+  private WorkflowPredicate fromPredicate(ContextPredicate pred) {
+    return (w, t, n) -> pred.test(n.asJavaObject(), w);
+  }
+
+  private WorkflowPredicate fromPredicate(TypedContextPredicate pred) {
+    return (w, t, n) -> pred.predicate().test(convert(n, pred.argClass()), w);
+  }
+
+  private WorkflowPredicate fromPredicate(FilterPredicate pred) {
+    return (w, t, n) -> pred.test(n.asJavaObject(), w, t);
+  }
+
+  private WorkflowPredicate fromPredicate(TypedFilterPredicate pred) {
+    return (w, t, n) -> pred.predicate().test(convert(n, pred.argClass()), w, t);
   }
 
   @Override
@@ -96,6 +132,14 @@ public class JavaExpressionFactory extends AbstractExpressionFactory {
       if (obj instanceof Predicate pred) {
         return Optional.of(fromPredicate(pred));
       } else if (obj instanceof TypedPredicate pred) {
+        return Optional.of(fromPredicate(pred));
+      } else if (obj instanceof ContextPredicate pred) {
+        return Optional.of(fromPredicate(pred));
+      } else if (obj instanceof TypedContextPredicate pred) {
+        return Optional.of(fromPredicate(pred));
+      } else if (obj instanceof FilterPredicate pred) {
+        return Optional.of(fromPredicate(pred));
+      } else if (obj instanceof TypedFilterPredicate pred) {
         return Optional.of(fromPredicate(pred));
       }
     }
@@ -108,6 +152,14 @@ public class JavaExpressionFactory extends AbstractExpressionFactory {
     if (value instanceof Predicate pred) {
       return fromPredicate(pred);
     } else if (value instanceof TypedPredicate pred) {
+      return fromPredicate(pred);
+    } else if (value instanceof ContextPredicate pred) {
+      return fromPredicate(pred);
+    } else if (value instanceof TypedContextPredicate pred) {
+      return fromPredicate(pred);
+    } else if (value instanceof FilterPredicate pred) {
+      return fromPredicate(pred);
+    } else if (value instanceof TypedFilterPredicate pred) {
       return fromPredicate(pred);
     } else if (value instanceof Boolean bool) {
       return (w, f, n) -> bool;

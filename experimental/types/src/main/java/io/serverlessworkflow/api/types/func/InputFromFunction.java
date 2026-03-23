@@ -32,23 +32,23 @@ public class InputFromFunction extends InputFrom {
     return this;
   }
 
-  public <T, V> InputFrom withFunction(JavaFilterFunction<T, V> value) {
+  public <T, V> InputFrom withFunction(FilterFunction<T, V> value) {
     setObject(value);
     return this;
   }
 
-  public <T, V> InputFrom withFunction(JavaFilterFunction<T, V> value, Class<T> argClass) {
-    setObject(new TypedJavaFilterFunction<>(value, argClass));
+  public <T, V> InputFrom withFunction(FilterFunction<T, V> value, Class<T> argClass) {
+    setObject(new TypedFilterFunction<>(value, argClass));
     return this;
   }
 
-  public <T, V> InputFrom withFunction(JavaContextFunction<T, V> value) {
+  public <T, V> InputFrom withFunction(ContextFunction<T, V> value) {
     setObject(value);
     return this;
   }
 
-  public <T, V> InputFrom withFunction(JavaContextFunction<T, V> value, Class<T> argClass) {
-    setObject(new TypedJavaContextFunction<>(value, argClass));
+  public <T, V> InputFrom withFunction(ContextFunction<T, V> value, Class<T> argClass) {
+    setObject(new TypedContextFunction<>(value, argClass));
     return this;
   }
 }

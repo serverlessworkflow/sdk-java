@@ -21,8 +21,8 @@ import java.util.function.Consumer;
 public class DoTaskBuilder extends BaseDoTaskBuilder<DoTaskBuilder, TaskItemListBuilder>
     implements DoFluent<DoTaskBuilder> {
 
-  DoTaskBuilder() {
-    super(new TaskItemListBuilder());
+  DoTaskBuilder(int listSizeOffset) {
+    super(new TaskItemListBuilder(listSizeOffset));
   }
 
   @Override

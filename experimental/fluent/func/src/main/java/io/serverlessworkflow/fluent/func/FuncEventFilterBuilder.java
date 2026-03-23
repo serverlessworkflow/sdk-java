@@ -18,8 +18,7 @@ package io.serverlessworkflow.fluent.func;
 import io.serverlessworkflow.fluent.spec.AbstractEventFilterBuilder;
 
 public class FuncEventFilterBuilder
-    extends AbstractEventFilterBuilder<
-        FuncEventFilterBuilder, FuncPredicateEventPropertiesBuilder> {
+    extends AbstractEventFilterBuilder<FuncEventFilterBuilder, FuncEventFilterPropertiesBuilder> {
 
   @Override
   protected FuncEventFilterBuilder self() {
@@ -27,7 +26,7 @@ public class FuncEventFilterBuilder
   }
 
   @Override
-  protected FuncPredicateEventPropertiesBuilder newEventPropertiesBuilder() {
-    return new FuncPredicateEventPropertiesBuilder();
+  protected FuncEventFilterPropertiesBuilder newEventPropertiesBuilder() {
+    return new FuncEventFilterPropertiesBuilder();
   }
 }

@@ -13,12 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.api.types.func;
+package io.serverlessworkflow.fluent.spec.configurers;
 
-import io.serverlessworkflow.impl.TaskContextData;
-import io.serverlessworkflow.impl.WorkflowContextData;
+import io.serverlessworkflow.fluent.spec.EventPropertiesBuilder;
+import java.util.function.Consumer;
 
 @FunctionalInterface
-public interface JavaFilterFunction<T, R> {
-  R apply(T object, WorkflowContextData workflowContext, TaskContextData taskContext);
-}
+public interface EventPropertiesConfigurer extends Consumer<EventPropertiesBuilder> {}

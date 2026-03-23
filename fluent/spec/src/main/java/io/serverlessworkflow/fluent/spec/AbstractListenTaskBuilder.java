@@ -70,12 +70,12 @@ public abstract class AbstractListenTaskBuilder<
   public static final class CorrelatePropertyBuilder {
     private final CorrelateProperty prop = new CorrelateProperty();
 
-    public ListenTaskBuilder.CorrelatePropertyBuilder from(String expr) {
+    public CorrelatePropertyBuilder from(String expr) {
       prop.setFrom(expr);
       return this;
     }
 
-    public ListenTaskBuilder.CorrelatePropertyBuilder expect(String val) {
+    public CorrelatePropertyBuilder expect(String val) {
       prop.setExpect(val);
       return this;
     }

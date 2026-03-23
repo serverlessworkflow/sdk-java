@@ -13,15 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.fluent.func.dsl;
+package io.serverlessworkflow.api.types.func;
 
-/**
- * Functions that expect a workflow instance ID injection in runtime
- *
- * @param <T> The task payload input
- * @param <R> The task result output
- */
+import io.serverlessworkflow.impl.WorkflowContextData;
+
 @FunctionalInterface
-public interface InstanceIdBiFunction<T, R> {
-  R apply(String instanceId, T payload);
+public interface LoopPredicateIndexContext<T, V> {
+  boolean test(T model, V item, Integer index, WorkflowContextData context);
 }

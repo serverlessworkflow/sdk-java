@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 import java.util.function.Consumer;
 
 /**
@@ -35,19 +34,44 @@ import java.util.function.Consumer;
  */
 public abstract class BaseTaskItemListBuilder<SELF extends BaseTaskItemListBuilder<SELF>> {
 
-  private final List<TaskItem> list;
+  protected final String TYPE_SET = "set";
+  protected final String TYPE_FOR = "for";
+  protected final String TYPE_SWITCH = "switch";
+  protected final String TYPE_RAISE = "raise";
+  protected final String TYPE_FORK = "fork";
+  protected final String TYPE_LISTEN = "listen";
+  protected final String TYPE_EMIT = "emit";
+  protected final String TYPE_TRY = "try";
+  protected final String TYPE_HTTP = "http";
+  protected final String TYPE_OPENAPI = "openapi";
 
-  public BaseTaskItemListBuilder() {
+  private final List<TaskItem> list;
+  private final int offset;
+
+  /**
+   * Constructs a new list builder with a specified offset for task indexing. *
+   *
+   * <p>The offset ensures deterministic and continuous auto-naming when appending tasks to an
+   * already existing list (e.g., calling {@code .tasks(...)} multiple times on a workflow builder).
+   * Without this offset, every new builder would restart its internal counter at 0, resulting in
+   * duplicate generated names (e.g., multiple "set-0" tasks).
+   *
+   * @param listSizeOffset the starting index for auto-generated task names (usually the current
+   *     size of the task list, or 0 for nested scopes like loops).
+   */
+  public BaseTaskItemListBuilder(int listSizeOffset) {
     this.list = new ArrayList<>();
+    this.offset = listSizeOffset;
   }
 
   public BaseTaskItemListBuilder(final List<TaskItem> list) {
     this.list = list;
+    this.offset = 0;
   }
 
   protected abstract SELF self();
 
-  protected abstract SELF newItemListBuilder();
+  protected abstract SELF newItemListBuilder(int listSizeOffset);
 
   protected final List<TaskItem> mutableList() {
     return this.list;
@@ -59,11 +83,13 @@ public abstract class BaseTaskItemListBuilder<SELF extends BaseTaskItemListBuild
     return self();
   }
 
-  protected final String defaultNameAndRequireConfig(String name, Consumer<?> cfg) {
-    if (name == null || name.isBlank()) {
-      name = UUID.randomUUID().toString();
-    }
+  protected final String defaultNameAndRequireConfig(
+      String name, Consumer<?> cfg, String taskType) {
     Objects.requireNonNull(cfg, "Configurer must not be null");
+
+    if (name == null || name.isBlank()) {
+      return taskType + "-" + (this.list.size() + offset);
+    }
     return name;
   }
 

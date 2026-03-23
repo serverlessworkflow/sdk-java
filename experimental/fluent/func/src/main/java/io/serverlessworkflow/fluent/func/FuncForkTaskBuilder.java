@@ -27,7 +27,6 @@ import io.serverlessworkflow.fluent.spec.TaskBaseBuilder;
 import io.serverlessworkflow.fluent.spec.spi.ForkTaskFluent;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -57,6 +56,9 @@ public class FuncForkTaskBuilder extends TaskBaseBuilder<FuncForkTaskBuilder>
 
   public <T, V> FuncForkTaskBuilder branch(
       String name, Function<T, V> function, Class<T> argParam) {
+    if (name == null || name.isBlank()) {
+      name = "branch-" + this.items.size();
+    }
     this.items.add(
         new TaskItem(
             name,
@@ -65,12 +67,12 @@ public class FuncForkTaskBuilder extends TaskBaseBuilder<FuncForkTaskBuilder>
   }
 
   public <T, V> FuncForkTaskBuilder branch(Function<T, V> function) {
-    return this.branch(UUID.randomUUID().toString(), function);
+    return this.branch(null, function);
   }
 
   @Override
   public FuncForkTaskBuilder branches(Consumer<FuncTaskItemListBuilder> consumer) {
-    final FuncTaskItemListBuilder builder = new FuncTaskItemListBuilder();
+    final FuncTaskItemListBuilder builder = new FuncTaskItemListBuilder(this.items.size());
     consumer.accept(builder);
     this.items.addAll(builder.build());
     return this;

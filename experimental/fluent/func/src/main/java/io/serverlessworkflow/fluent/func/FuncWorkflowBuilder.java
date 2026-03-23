@@ -41,8 +41,8 @@ public class FuncWorkflowBuilder
   }
 
   @Override
-  protected FuncDoTaskBuilder newDo() {
-    return new FuncDoTaskBuilder();
+  protected FuncDoTaskBuilder newDo(int listSizeOffset) {
+    return new FuncDoTaskBuilder(listSizeOffset);
   }
 
   @Override

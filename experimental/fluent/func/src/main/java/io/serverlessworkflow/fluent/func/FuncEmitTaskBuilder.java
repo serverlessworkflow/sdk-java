@@ -20,7 +20,7 @@ import io.serverlessworkflow.fluent.func.spi.FuncTaskTransformations;
 import io.serverlessworkflow.fluent.spec.AbstractEmitTaskBuilder;
 
 public class FuncEmitTaskBuilder
-    extends AbstractEmitTaskBuilder<FuncEmitTaskBuilder, FuncEventPropertiesBuilder>
+    extends AbstractEmitTaskBuilder<FuncEmitTaskBuilder, FuncEmitEventPropertiesBuilder>
     implements ConditionalTaskBuilder<FuncEmitTaskBuilder>,
         FuncTaskTransformations<FuncEmitTaskBuilder> {
   FuncEmitTaskBuilder() {
@@ -33,7 +33,7 @@ public class FuncEmitTaskBuilder
   }
 
   @Override
-  protected FuncEventPropertiesBuilder newEventPropertiesBuilder() {
-    return new FuncEventPropertiesBuilder();
+  protected FuncEmitEventPropertiesBuilder newEventPropertiesBuilder() {
+    return new FuncEmitEventPropertiesBuilder();
   }
 }

@@ -13,10 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.fluent.func.configurers;
+package io.serverlessworkflow.impl.persistence;
 
-import io.serverlessworkflow.fluent.func.FuncEventPropertiesBuilder;
-import java.util.function.Consumer;
+import java.util.Optional;
+import java.util.concurrent.ExecutorService;
 
-@FunctionalInterface
-public interface FuncEventConfigurer extends Consumer<FuncEventPropertiesBuilder> {}
+public class AsyncPersistenceExecutor extends AbstractAsyncPersistenceExecutor {
+
+  private final Optional<ExecutorService> service;
+
+  protected AsyncPersistenceExecutor(ExecutorService service) {
+    this.service = Optional.ofNullable(service);
+  }
+
+  @Override
+  protected Optional<ExecutorService> executorService() {
+    return service;
+  }
+}

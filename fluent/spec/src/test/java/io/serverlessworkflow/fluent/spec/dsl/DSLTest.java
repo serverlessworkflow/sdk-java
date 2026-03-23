@@ -22,6 +22,8 @@ import static io.serverlessworkflow.fluent.spec.dsl.DSL.call;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.error;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.event;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.http;
+import static io.serverlessworkflow.fluent.spec.dsl.DSL.openapi;
+import static io.serverlessworkflow.fluent.spec.dsl.DSL.produced;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.secrets;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.to;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.workflow;
@@ -71,7 +73,7 @@ public class DSLTest {
                             to().all(
                                     event().type("org.acme.listen"),
                                     event().type("org.example.listen")))
-                        .emit(e -> e.event(event().type("org.example.emit"))))
+                        .emit(produced("org.example.emit")))
             .build();
 
     // Sanity
@@ -328,5 +330,27 @@ public class DSLTest {
     assertThat(run.getWorkflow().getInput().getAdditionalProperties().get("extra")).isEqualTo(true);
     assertThat(run.isAwait()).isTrue();
     assertThat(run.getReturn()).isEqualTo(RunTaskConfiguration.ProcessReturnType.NONE);
+  public void when_call_openapi_with_explicit_name() {
+    Workflow wf =
+        WorkflowBuilder.workflow("myFlow", "myNs", "1.2.3")
+            .tasks(
+                call(
+                    "myOpenAPICall",
+                    openapi()
+                        .document("https://petstore.swagger.io/v2/swagger.json")
+                        .operation("getPetById")))
+            .build();
+
+    assertThat(wf.getDo()).hasSize(1);
+    assertThat(wf.getDo().get(0).getName()).isEqualTo("myOpenAPICall");
+
+    var task = wf.getDo().get(0).getTask();
+    assertThat(task.getCallTask()).isNotNull();
+    assertThat(task.getCallTask().getCallOpenAPI()).isNotNull();
+
+    var openAPIArgs = task.getCallTask().getCallOpenAPI().getWith();
+    assertThat(openAPIArgs).isNotNull();
+    assertThat(openAPIArgs.getDocument()).isNotNull();
+    assertThat(openAPIArgs.getOperationId()).isEqualTo("getPetById");
   }
 }

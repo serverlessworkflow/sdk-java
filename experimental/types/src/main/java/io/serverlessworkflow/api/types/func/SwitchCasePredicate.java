@@ -1,0 +1,64 @@
+/*
+ * Copyright 2020-Present The Serverless Workflow Specification Authors
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package io.serverlessworkflow.api.types.func;
+
+import io.serverlessworkflow.api.types.SwitchCase;
+import java.util.function.Predicate;
+
+public class SwitchCasePredicate extends SwitchCase implements PredicateContainer {
+
+  private static final long serialVersionUID = 1L;
+  private Object predicate;
+
+  public <T> SwitchCasePredicate withPredicate(Predicate<T> predicate) {
+    this.predicate = predicate;
+    return this;
+  }
+
+  public <T> SwitchCasePredicate withPredicate(Predicate<T> predicate, Class<T> predicateClass) {
+    this.predicate =
+        predicateClass == null ? predicate : new TypedPredicate<>(predicate, predicateClass);
+    return this;
+  }
+
+  public <T> SwitchCasePredicate withPredicate(ContextPredicate<T> predicate) {
+    this.predicate = predicate;
+    return this;
+  }
+
+  public <T> SwitchCasePredicate withPredicate(
+      ContextPredicate<T> predicate, Class<T> predicateClass) {
+    this.predicate =
+        predicateClass == null ? predicate : new TypedContextPredicate<>(predicate, predicateClass);
+    return this;
+  }
+
+  public <T> SwitchCasePredicate withPredicate(FilterPredicate<T> predicate) {
+    this.predicate = predicate;
+    return this;
+  }
+
+  public <T> SwitchCasePredicate withPredicate(
+      FilterPredicate<T> predicate, Class<T> predicateClass) {
+    this.predicate =
+        predicateClass == null ? predicate : new TypedFilterPredicate<>(predicate, predicateClass);
+    return this;
+  }
+
+  public Object predicate() {
+    return predicate;
+  }
+}

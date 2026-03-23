@@ -49,6 +49,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -96,7 +97,7 @@ public class WorkflowApplication implements AutoCloseable {
     this.idFactory = builder.idFactory;
     this.runtimeDescriptorFactory = builder.descriptorFactory;
     this.executorFactory = builder.executorFactory;
-    this.listeners = builder.listeners;
+    this.listeners = new LinkedHashSet<>(builder.listeners);
     this.definitions = new ConcurrentHashMap<>();
     this.eventConsumer = builder.eventConsumer;
     this.eventPublishers = builder.eventPublishers;

@@ -52,7 +52,19 @@ public abstract class BaseWorkflowBuilder<
     this.workflow.setDocument(this.document);
   }
 
-  protected abstract DBuilder newDo();
+  /**
+   * Creates a new task list builder initialized with the specified starting offset. *
+   *
+   * <p>This method allows the workflow builder to pass its current task count down to the list
+   * builder. This ensures that when new tasks are appended to the workflow via subsequent {@code
+   * .tasks(...)} invocations, the auto-generated task names continue sequentially (e.g., "set-2")
+   * rather than resetting and causing duplicates.
+   *
+   * @param listSizeOffset the current number of tasks already present in the workflow's {@code do}
+   *     list.
+   * @return a new builder instance configured with the correct naming offset.
+   */
+  protected abstract DBuilder newDo(int listSizeOffset);
 
   protected abstract SELF self();
 
@@ -117,7 +129,9 @@ public abstract class BaseWorkflowBuilder<
   private SELF appendDo(Consumer<DBuilder> configurer) {
     if (configurer == null) return self();
 
-    final DBuilder doBuilder = newDo();
+    int currentOffset = this.workflow.getDo() != null ? this.workflow.getDo().size() : 0;
+
+    final DBuilder doBuilder = newDo(currentOffset);
     configurer.accept(doBuilder);
 
     final List<TaskItem> newItems = doBuilder.build().getDo();

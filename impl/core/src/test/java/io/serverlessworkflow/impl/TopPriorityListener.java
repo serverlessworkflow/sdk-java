@@ -13,6 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.api.types.func;
+package io.serverlessworkflow.impl;
 
-public record TypedJavaFilterFunction<T, V>(JavaFilterFunction<T, V> function, Class<T> argClass) {}
+import io.serverlessworkflow.impl.lifecycle.WorkflowExecutionListener;
+
+public class TopPriorityListener implements WorkflowExecutionListener {
+  public int priority() {
+    return DEFAULT_PRIORITY - 1;
+  }
+}
