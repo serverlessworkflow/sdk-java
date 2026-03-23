@@ -16,13 +16,12 @@
 package io.serverlessworkflow.fluent.spec.spi;
 
 import io.serverlessworkflow.fluent.spec.TaskBaseBuilder;
-import java.util.UUID;
 import java.util.function.Consumer;
 
 public interface TryCatchFluent<SELF extends TaskBaseBuilder<SELF>, LIST> {
   LIST tryCatch(String name, Consumer<SELF> itemsConfigurer);
 
   default LIST tryCatch(Consumer<SELF> itemsConfigurer) {
-    return this.tryCatch(UUID.randomUUID().toString(), itemsConfigurer);
+    return this.tryCatch(null, itemsConfigurer);
   }
 }

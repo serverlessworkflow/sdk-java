@@ -16,7 +16,6 @@
 package io.serverlessworkflow.fluent.func.spi;
 
 import io.serverlessworkflow.fluent.spec.TaskBaseBuilder;
-import java.util.UUID;
 import java.util.function.Consumer;
 
 public interface CallFnFluent<SELF extends TaskBaseBuilder<?>, LIST> {
@@ -24,6 +23,6 @@ public interface CallFnFluent<SELF extends TaskBaseBuilder<?>, LIST> {
   LIST function(String name, Consumer<SELF> cfg);
 
   default LIST function(Consumer<SELF> cfg) {
-    return this.function(UUID.randomUUID().toString(), cfg);
+    return this.function(null, cfg);
   }
 }

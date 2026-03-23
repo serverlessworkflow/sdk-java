@@ -16,7 +16,6 @@
 package io.serverlessworkflow.fluent.spec.spi;
 
 import io.serverlessworkflow.fluent.spec.TaskBaseBuilder;
-import java.util.UUID;
 import java.util.function.Consumer;
 
 public interface EmitFluent<SELF extends TaskBaseBuilder<?>, LIST> {
@@ -24,6 +23,6 @@ public interface EmitFluent<SELF extends TaskBaseBuilder<?>, LIST> {
   LIST emit(String name, Consumer<SELF> itemsConfigurer);
 
   default LIST emit(Consumer<SELF> itemsConfigurer) {
-    return emit(UUID.randomUUID().toString(), itemsConfigurer);
+    return emit(null, itemsConfigurer);
   }
 }

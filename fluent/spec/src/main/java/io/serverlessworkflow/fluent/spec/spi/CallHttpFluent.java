@@ -16,7 +16,6 @@
 package io.serverlessworkflow.fluent.spec.spi;
 
 import io.serverlessworkflow.fluent.spec.TaskBaseBuilder;
-import java.util.UUID;
 import java.util.function.Consumer;
 
 public interface CallHttpFluent<SELF extends TaskBaseBuilder<SELF>, LIST> {
@@ -24,6 +23,6 @@ public interface CallHttpFluent<SELF extends TaskBaseBuilder<SELF>, LIST> {
   LIST http(String name, Consumer<SELF> itemsConfigurer);
 
   default LIST http(Consumer<SELF> itemsConfigurer) {
-    return this.http(UUID.randomUUID().toString(), itemsConfigurer);
+    return this.http(null, itemsConfigurer);
   }
 }
