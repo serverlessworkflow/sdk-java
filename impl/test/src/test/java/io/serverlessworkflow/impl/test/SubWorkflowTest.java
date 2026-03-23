@@ -19,6 +19,8 @@ import static io.serverlessworkflow.api.WorkflowReader.readWorkflowFromClasspath
 import static org.junit.Assert.assertEquals;
 
 import io.serverlessworkflow.api.types.Workflow;
+import io.serverlessworkflow.fluent.spec.WorkflowBuilder;
+import io.serverlessworkflow.fluent.spec.dsl.DSL;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import java.io.IOException;
 import java.util.Map;
@@ -139,6 +141,32 @@ public class SubWorkflowTest {
       assertEquals("userId_1_tested", result.get("userId"));
       assertEquals("test_tested", result.get("username"));
       assertEquals("test_tested", result.get("password"));
+    } catch (Exception e) {
+      throw new RuntimeException("Workflow execution failed", e);
+    }
+  }
+
+  @Test
+  public void runSubWorkflowFromDslTest() {
+    Workflow child =
+        WorkflowBuilder.workflow("childFlow", "org.acme", "1.0.0")
+            .tasks(d -> d.set("update", s -> s.put("counter", 1).put("greeting", "helloWorld")))
+            .build();
+
+    Workflow parent =
+        WorkflowBuilder.workflow("parentFlow", "org.acme", "1.0.0")
+            .tasks(
+                DSL.workflow(
+                    DSL.workflow("org.acme", "childFlow", "1.0.0")
+                        .input(Map.of("id", 42, "region", "us-east"))))
+            .build();
+
+    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
+      app.workflowDefinition(child);
+      Map<String, Object> result =
+          app.workflowDefinition(parent).instance(Map.of()).start().get().asMap().orElseThrow();
+      assertEquals("1", result.get("counter").toString());
+      assertEquals("helloWorld", result.get("greeting").toString());
     } catch (Exception e) {
       throw new RuntimeException("Workflow execution failed", e);
     }

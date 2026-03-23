@@ -17,6 +17,12 @@
             <artifactId>serverlessworkflow-api</artifactId>
         </dependency>
         <dependency>
+            <groupId>io.serverlessworkflow</groupId>
+            <artifactId>serverlessworkflow-fluent-spec</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
           <groupId>io.serverlessworkflow</groupId>
           <artifactId>serverlessworkflow-persistence-mvstore</artifactId>
         </dependency>

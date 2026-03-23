@@ -25,6 +25,7 @@ import io.serverlessworkflow.impl.TaskContextData;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContextData;
 import io.serverlessworkflow.impl.WorkflowDefinition;
+import io.serverlessworkflow.impl.WorkflowInstance;
 import io.serverlessworkflow.impl.WorkflowModel;
 import org.assertj.core.api.SoftAssertions;
 import org.junit.jupiter.api.Test;
@@ -154,6 +155,84 @@ public class FuncDSLDataFlowTransformationHelpersTest {
       WorkflowDefinition def = app.workflowDefinition(workflow);
       WorkflowModel model = def.instance(10L).start().join();
       Number number = model.asNumber().orElseThrow();
+
+      softly.assertThat(number.longValue()).isEqualTo(25L);
+    }
+
+    softly.assertAll();
+  }
+
+  @Test
+  void test_output_with_outputAs() {
+
+    SoftAssertions softly = new SoftAssertions();
+
+    Workflow workflow =
+        FuncWorkflowBuilder.workflow("enrichOutputWithTaskOutputTest")
+            .tasks(
+                function(
+                        "add5",
+                        (Long input) -> {
+                          softly.assertThat(input).isEqualTo(10L);
+                          return input + 5;
+                        },
+                        Long.class)
+                    .outputAs(
+                        (object, workflowContext, taskContextData) -> {
+                          Long taskOutput = output(taskContextData, Long.class);
+                          softly.assertThat(taskOutput).isEqualTo(15L);
+                          Long input = input(workflowContext, Long.class);
+                          softly.assertThat(input).isEqualTo(10L);
+                          return input + taskOutput;
+                        },
+                        Long.class))
+            .build();
+
+    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
+      WorkflowDefinition def = app.workflowDefinition(workflow);
+
+      WorkflowModel model = def.instance(10L).start().join();
+      Number number = model.asNumber().orElseThrow();
+
+      softly.assertThat(number.longValue()).isEqualTo(25L);
+    }
+
+    softly.assertAll();
+  }
+
+  @Test
+  void test_input_with_exportAs() {
+
+    SoftAssertions softly = new SoftAssertions();
+
+    Workflow workflow =
+        FuncWorkflowBuilder.workflow("enrichExportWithInputTest")
+            .tasks(
+                function(
+                        "add5",
+                        (Long input) -> {
+                          softly.assertThat(input).isEqualTo(10L);
+                          return input + 5;
+                        },
+                        Long.class)
+                    .exportAs(
+                        (Long object,
+                            WorkflowContextData workflowContext,
+                            TaskContextData taskContextData) -> {
+                          Long taskOutput = output(taskContextData, Long.class);
+                          softly.assertThat(taskOutput).isEqualTo(15L);
+                          Long input = input(workflowContext, Long.class);
+                          softly.assertThat(input).isEqualTo(10L);
+                          return input + taskOutput;
+                        }))
+            .build();
+
+    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
+      WorkflowDefinition def = app.workflowDefinition(workflow);
+
+      WorkflowInstance instance = def.instance(10L);
+      instance.start().join();
+      Number number = instance.context().asNumber().orElseThrow();
 
       softly.assertThat(number.longValue()).isEqualTo(25L);
     }

@@ -330,6 +330,9 @@ public class DSLTest {
     assertThat(run.getWorkflow().getInput().getAdditionalProperties().get("extra")).isEqualTo(true);
     assertThat(run.isAwait()).isTrue();
     assertThat(run.getReturn()).isEqualTo(RunTaskConfiguration.ProcessReturnType.NONE);
+  }
+
+  @Test
   public void when_call_openapi_with_explicit_name() {
     Workflow wf =
         WorkflowBuilder.workflow("myFlow", "myNs", "1.2.3")
