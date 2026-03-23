@@ -22,6 +22,7 @@ import static io.serverlessworkflow.fluent.spec.dsl.DSL.call;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.error;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.event;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.http;
+import static io.serverlessworkflow.fluent.spec.dsl.DSL.openapi;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.produced;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.secrets;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.to;
@@ -281,5 +282,30 @@ public class DSLTest {
     assertThat(use.getSecrets()).containsExactly("s1", "s2");
     assertThat(use.getAuthentications().getAdditionalProperties().keySet())
         .containsExactly("basic-auth", "bearer-auth");
+  }
+
+  @Test
+  public void when_call_openapi_with_explicit_name() {
+    Workflow wf =
+        WorkflowBuilder.workflow("myFlow", "myNs", "1.2.3")
+            .tasks(
+                call(
+                    "myOpenAPICall",
+                    openapi()
+                        .document("https://petstore.swagger.io/v2/swagger.json")
+                        .operation("getPetById")))
+            .build();
+
+    assertThat(wf.getDo()).hasSize(1);
+    assertThat(wf.getDo().get(0).getName()).isEqualTo("myOpenAPICall");
+
+    var task = wf.getDo().get(0).getTask();
+    assertThat(task.getCallTask()).isNotNull();
+    assertThat(task.getCallTask().getCallOpenAPI()).isNotNull();
+
+    var openAPIArgs = task.getCallTask().getCallOpenAPI().getWith();
+    assertThat(openAPIArgs).isNotNull();
+    assertThat(openAPIArgs.getDocument()).isNotNull();
+    assertThat(openAPIArgs.getOperationId()).isEqualTo("getPetById");
   }
 }
