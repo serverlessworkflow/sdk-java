@@ -39,6 +39,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
@@ -142,6 +143,9 @@ public abstract class AbstractHandlerPersistenceTest {
         .writer()
         .taskCompleted(workflowContext, completedTaskContext(position2, completedMap))
         .join();
+    try (Stream<WorkflowInstance> stream = handlers.reader().scanAll(definition)) {
+      assertThat(stream.count()).isEqualTo(1);
+    }
     instance =
         (WorkflowPersistenceInstance)
             handlers.reader().find(definition, workflowInstance.id()).orElseThrow();
@@ -165,5 +169,8 @@ public abstract class AbstractHandlerPersistenceTest {
     // workflow completed
     handlers.writer().completed(workflowContext).join();
     assertThat(handlers.reader().find(definition, workflowInstance.id())).isEmpty();
+    try (Stream<WorkflowInstance> stream = handlers.reader().scanAll(definition)) {
+      assertThat(stream.count()).isEqualTo(0);
+    }
   }
 }
