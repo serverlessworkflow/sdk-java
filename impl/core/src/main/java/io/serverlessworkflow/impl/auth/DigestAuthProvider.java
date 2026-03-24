@@ -29,6 +29,7 @@ import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
+import io.serverlessworkflow.impl.utils.RandomFactory;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.HttpURLConnection;
@@ -36,6 +37,7 @@ import java.net.URI;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Optional;
+import java.util.Random;
 import java.util.StringTokenizer;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
@@ -110,9 +112,11 @@ class DigestAuthProvider implements AuthProvider {
     AUTH_INT,
   };
 
+  private static final String HEX = "%08x";
   private final WorkflowValueResolver<String> userFilter;
   private final WorkflowValueResolver<String> passwordFilter;
   private final String method;
+  private final Random random = RandomFactory.getRandom();
 
   public DigestAuthProvider(
       WorkflowApplication app,
@@ -155,8 +159,8 @@ class DigestAuthProvider implements AuthProvider {
         String nonceCount;
         String clientNonce;
         if (serverInfo.qop.isPresent() || serverInfo.algorithm == Algorithm.MD5SESSS) {
-          nonceCount = String.format("%08x", nc.getAndIncrement());
-          clientNonce = AuthUtils.getRandomHexString();
+          nonceCount = String.format(HEX, nc.getAndIncrement());
+          clientNonce = String.format(HEX, random.nextInt());
         } else {
           nonceCount = null;
           clientNonce = null;

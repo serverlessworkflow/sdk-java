@@ -20,19 +20,37 @@ import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
 import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientBuilder;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class HttpClientResolver {
 
   public static final String HTTP_CLIENT_PROVIDER = "httpClientProvider";
 
   private static class DefaultHolder {
-    private static final Client client = ClientBuilder.newClient();
+
+    private static final Lock clientLock = new ReentrantLock();
+    private static volatile Client client;
+
+    private static final Client client() {
+      if (client == null) {
+        clientLock.lock();
+        try {
+          if (client == null) {
+            client = ClientBuilder.newClient();
+          }
+        } finally {
+          clientLock.unlock();
+        }
+      }
+      return client;
+    }
   }
 
   public static Client client(WorkflowContext workflowContext, TaskContext taskContext) {
     WorkflowApplication appl = workflowContext.definition().application();
     return appl.<Client>additionalObject(HTTP_CLIENT_PROVIDER, workflowContext, taskContext)
-        .orElseGet(() -> DefaultHolder.client);
+        .orElseGet(() -> DefaultHolder.client());
   }
 
   private HttpClientResolver() {}

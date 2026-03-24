@@ -41,20 +41,10 @@ import java.util.Collection;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
 class ContainerRunner implements CallableTask {
-
-  private static final DefaultDockerClientConfig DEFAULT_CONFIG =
-      DefaultDockerClientConfig.createDefaultConfigBuilder().build();
-
-  private static class DockerClientHolder {
-    private static final DockerClient dockerClient =
-        DockerClientImpl.getInstance(
-            DEFAULT_CONFIG,
-            new ApacheDockerHttpClient.Builder()
-                .dockerHost(DEFAULT_CONFIG.getDockerHost())
-                .build());
-  }
 
   private final Collection<ContainerPropertySetter> propertySetters;
   private final Optional<WorkflowValueResolver<Duration>> timeout;
@@ -82,7 +72,8 @@ class ContainerRunner implements CallableTask {
 
   private WorkflowModel startSync(
       WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel input) {
-    Integer exit = executeContainer(workflowContext, taskContext, input);
+    Integer exit =
+        executeContainer(workflowContext, taskContext, input, DockerClientHolder.client());
     if (exit == null || exit == 0) {
       return input;
     } else {
@@ -91,14 +82,20 @@ class ContainerRunner implements CallableTask {
   }
 
   private Integer executeContainer(
-      WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel input) {
+      WorkflowContext workflowContext,
+      TaskContext taskContext,
+      WorkflowModel input,
+      DockerClient dockerClient) {
     try {
-      pullImageIfNeeded(containerImage);
-      CreateContainerCmd containerCommand =
-          DockerClientHolder.dockerClient.createContainerCmd(containerImage);
+      pullImageIfNeeded(containerImage, dockerClient);
+      CreateContainerCmd containerCommand = dockerClient.createContainerCmd(containerImage);
       propertySetters.forEach(p -> p.accept(containerCommand, workflowContext, taskContext, input));
       return waitAccordingToLifetime(
-          createAndStartContainer(containerCommand), workflowContext, taskContext, input);
+          createAndStartContainer(containerCommand, dockerClient),
+          workflowContext,
+          taskContext,
+          input,
+          dockerClient);
     } catch (InterruptedException ie) {
       Thread.currentThread().interrupt();
       throw failed("Container execution failed with exit code " + ie.getMessage());
@@ -107,32 +104,35 @@ class ContainerRunner implements CallableTask {
     }
   }
 
-  private void pullImageIfNeeded(String imageRef) throws InterruptedException {
+  private void pullImageIfNeeded(String imageRef, DockerClient dockerClient)
+      throws InterruptedException {
     NameParser.ReposTag rt = NameParser.parseRepositoryTag(imageRef);
-    DockerClientHolder.dockerClient
+    dockerClient
         .pullImageCmd(NameParser.resolveRepositoryName(imageRef).reposName)
         .withTag(WorkflowUtils.isValid(rt.tag) ? rt.tag : "latest")
         .start()
         .awaitCompletion();
   }
 
-  private String createAndStartContainer(CreateContainerCmd containerCommand) {
+  private String createAndStartContainer(
+      CreateContainerCmd containerCommand, DockerClient dockerClient) {
     CreateContainerResponse resp = containerCommand.exec();
     String id = resp.getId();
     if (!isValid(id)) {
       throw new IllegalStateException("Container creation failed: empty ID");
     }
-    DockerClientHolder.dockerClient.startContainerCmd(id).exec();
+    dockerClient.startContainerCmd(id).exec();
     return id;
   }
 
   private Integer waitAccordingToLifetime(
-      String id, WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel input)
+      String id,
+      WorkflowContext workflowContext,
+      TaskContext taskContext,
+      WorkflowModel input,
+      DockerClient dockerClient)
       throws IOException {
-    try (var cb =
-        DockerClientHolder.dockerClient
-            .waitContainerCmd(id)
-            .exec(new WaitContainerResultCallback())) {
+    try (var cb = dockerClient.waitContainerCmd(id).exec(new WaitContainerResultCallback())) {
       if (policy == ContainerCleanupPolicy.EVENTUALLY) {
         Duration timeout =
             this.timeout
@@ -140,10 +140,10 @@ class ContainerRunner implements CallableTask {
                 .orElse(Duration.ZERO);
         try {
           Integer exit = cb.awaitStatusCode(timeout.toMillis(), TimeUnit.MILLISECONDS);
-          safeStop(id);
+          safeStop(id, dockerClient);
           return exit;
         } catch (DockerClientException timeoutOrOther) {
-          safeStop(id);
+          safeStop(id, dockerClient);
         }
       } else {
         return cb.awaitStatusCode();
@@ -154,47 +154,41 @@ class ContainerRunner implements CallableTask {
     return 0;
   }
 
-  private boolean isRunning(String id) {
+  private boolean isRunning(String id, DockerClient dockerClient) {
     try {
-      var st = DockerClientHolder.dockerClient.inspectContainerCmd(id).exec().getState();
+      var st = dockerClient.inspectContainerCmd(id).exec().getState();
       return st != null && Boolean.TRUE.equals(st.getRunning());
     } catch (Exception e) {
       return false; // must be already removed
     }
   }
 
-  private void safeStop(String id) {
-    if (isRunning(id)) {
-      safeStop(id, Duration.ofSeconds(10));
-      try (var cb2 =
-          DockerClientHolder.dockerClient
-              .waitContainerCmd(id)
-              .exec(new WaitContainerResultCallback())) {
+  private void safeStop(String id, DockerClient dockerClient) {
+    if (isRunning(id, dockerClient)) {
+      safeStop(id, Duration.ofSeconds(10), dockerClient);
+      try (var cb2 = dockerClient.waitContainerCmd(id).exec(new WaitContainerResultCallback())) {
         cb2.awaitStatusCode();
-        safeRemove(id);
+        safeRemove(id, dockerClient);
       } catch (Exception ignore) {
         // we can ignore this
       }
     } else {
-      safeRemove(id);
+      safeRemove(id, dockerClient);
     }
   }
 
-  private void safeStop(String id, Duration timeout) {
+  private void safeStop(String id, Duration timeout, DockerClient dockerClient) {
     try {
-      DockerClientHolder.dockerClient
-          .stopContainerCmd(id)
-          .withTimeout((int) Math.max(1, timeout.toSeconds()))
-          .exec();
+      dockerClient.stopContainerCmd(id).withTimeout((int) Math.max(1, timeout.toSeconds())).exec();
     } catch (Exception ignore) {
       // we can ignore this
     }
   }
 
   // must be removed because of withAutoRemove(true), but just in case
-  private void safeRemove(String id) {
+  private void safeRemove(String id, DockerClient dockerClient) {
     try {
-      DockerClientHolder.dockerClient.removeContainerCmd(id).withForce(true).exec();
+      dockerClient.removeContainerCmd(id).withForce(true).exec();
     } catch (Exception ignore) {
       // we can ignore this
     }
@@ -216,5 +210,31 @@ class ContainerRunner implements CallableTask {
 
   private static RuntimeException failed(String message) {
     return new RuntimeException(message);
+  }
+
+  private static class DockerClientHolder {
+    private static volatile DockerClient client;
+    private static final Lock dockerLock = new ReentrantLock();
+
+    private static DockerClient client() {
+      if (client == null) {
+        dockerLock.lock();
+        try {
+          if (client == null) {
+            DefaultDockerClientConfig config =
+                DefaultDockerClientConfig.createDefaultConfigBuilder().build();
+            client =
+                DockerClientImpl.getInstance(
+                    config,
+                    new ApacheDockerHttpClient.Builder()
+                        .dockerHost(config.getDockerHost())
+                        .build());
+          }
+        } finally {
+          dockerLock.unlock();
+        }
+      }
+      return client;
+    }
   }
 }

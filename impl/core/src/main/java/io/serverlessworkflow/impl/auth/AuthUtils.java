@@ -15,8 +15,6 @@
  */
 package io.serverlessworkflow.impl.auth;
 
-import java.util.Random;
-
 public class AuthUtils {
 
   private AuthUtils() {}
@@ -40,15 +38,7 @@ public class AuthUtils {
 
   private static final String AUTH_HEADER_FORMAT = "%s %s";
 
-  private static class RandomHolder {
-    private static final Random random = new Random();
-  }
-
   public static String authHeaderValue(String scheme, String parameter) {
     return String.format(AUTH_HEADER_FORMAT, scheme, parameter);
-  }
-
-  public static String getRandomHexString() {
-    return String.format("%08x", RandomHolder.random.nextInt());
   }
 }
