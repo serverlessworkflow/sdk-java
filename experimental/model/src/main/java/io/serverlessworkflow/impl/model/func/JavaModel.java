@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -103,5 +104,19 @@ public class JavaModel extends AbstractWorkflowModel {
     return object != null && clazz.isAssignableFrom(object.getClass())
         ? Optional.of(clazz.cast(object))
         : Optional.empty();
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(object);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) return true;
+    if (obj == null) return false;
+    if (getClass() != obj.getClass()) return false;
+    JavaModel other = (JavaModel) obj;
+    return Objects.equals(object, other.object);
   }
 }

@@ -30,6 +30,7 @@ import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 @JsonSerialize(using = JacksonModelSerializer.class)
@@ -130,5 +131,19 @@ public class JacksonModel extends AbstractWorkflowModel {
     return clazz.isAssignableFrom(node.getClass())
         ? Optional.of(clazz.cast(node))
         : Optional.of(JsonUtils.mapper().convertValue(node, clazz));
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(node);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) return true;
+    if (obj == null) return false;
+    if (getClass() != obj.getClass()) return false;
+    JacksonModel other = (JacksonModel) obj;
+    return Objects.equals(node, other.node);
   }
 }
