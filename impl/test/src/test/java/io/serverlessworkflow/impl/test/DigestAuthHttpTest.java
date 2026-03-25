@@ -20,16 +20,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mockStatic;
 
 import io.serverlessworkflow.api.types.Workflow;
-import io.serverlessworkflow.impl.ExecutorServiceFactory;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowInstance;
-import io.serverlessworkflow.impl.auth.AuthUtils;
 import io.serverlessworkflow.impl.jackson.JsonUtils;
+import io.serverlessworkflow.impl.utils.RandomFactory;
 import java.io.IOException;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
+import java.util.Random;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.AfterAll;
@@ -38,6 +35,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
+import org.mockito.Mockito;
 
 public class DigestAuthHttpTest {
   private static WorkflowApplication app;
@@ -47,40 +45,6 @@ public class DigestAuthHttpTest {
   static void init() {
     app =
         WorkflowApplication.builder()
-            .withExecutorFactory(
-                new ExecutorServiceFactory() {
-                  private ExecutorService service =
-                      Executors.newFixedThreadPool(
-                          1,
-                          new ThreadFactory() {
-                            @Override
-                            public Thread newThread(Runnable r) {
-                              return new Thread(
-                                  new Runnable() {
-                                    @Override
-                                    public void run() {
-                                      try (MockedStatic<AuthUtils> mocked =
-                                          mockStatic(AuthUtils.class)) {
-                                        mocked
-                                            .when(AuthUtils::getRandomHexString)
-                                            .thenReturn("0a4f113b");
-                                        r.run();
-                                      }
-                                    }
-                                  });
-                            }
-                          });
-
-                  @Override
-                  public void close() throws Exception {
-                    service.shutdownNow();
-                  }
-
-                  @Override
-                  public ExecutorService get() {
-                    return service;
-                  }
-                })
             .withSecretManager(
                 k ->
                     k.equals("mySecret")
@@ -119,18 +83,23 @@ public class DigestAuthHttpTest {
   @Test
   void testDigest() throws IOException {
     Workflow workflow = readWorkflowFromClasspath("workflows-samples/digest-properties-auth.yaml");
-    WorkflowInstance instance = app.workflowDefinition(workflow).instance(Map.of());
-    instance.start().join();
-    assertThat(instance.context()).isNotNull();
-    Map<String, Object> authInfo =
-        (Map<String, Object>) instance.context().asMap().orElseThrow().get("info");
+    Random random = Mockito.mock(Random.class);
+    Mockito.when(random.nextInt()).thenReturn(172953915);
+    try (MockedStatic<RandomFactory> mocked = mockStatic(RandomFactory.class)) {
+      mocked.when(RandomFactory::getRandom).thenReturn(random);
+      WorkflowInstance instance = app.workflowDefinition(workflow).instance(Map.of());
+      instance.start().join();
+      assertThat(instance.context()).isNotNull();
+      Map<String, Object> authInfo =
+          (Map<String, Object>) instance.context().asMap().orElseThrow().get("info");
 
-    assertThat(authInfo.get("scheme")).isEqualTo("Digest");
-    assertThat(((String) authInfo.get("parameter")))
-        .isEqualTo(
-            "username=\"Mufasa\",realm=\"testrealm@host.com\",nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\",uri=\"/dir/index.html\",qop=auth,nc=00000001,"
-                + "cnonce=\"0a4f113b\","
-                + "response=\"6629fae49393a05397450978507c4ef1\","
-                + "opaque=\"5ccc069c403ebaf9f0171e9517f40e41\"");
+      assertThat(authInfo.get("scheme")).isEqualTo("Digest");
+      assertThat(((String) authInfo.get("parameter")))
+          .isEqualTo(
+              "username=\"Mufasa\",realm=\"testrealm@host.com\",nonce=\"dcd98b7102dd2f0e8b11d0f600bfb0c093\",uri=\"/dir/index.html\",qop=auth,nc=00000001,"
+                  + "cnonce=\"0a4f113b\","
+                  + "response=\"6629fae49393a05397450978507c4ef1\","
+                  + "opaque=\"5ccc069c403ebaf9f0171e9517f40e41\"");
+    }
   }
 }
