@@ -1,0 +1,2 @@
+io.serverlessworkflow.impl.model.func.JavaModelMarshaller
+io.serverlessworkflow.impl.model.func.SerializableObjectMarshaller

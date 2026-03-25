@@ -29,6 +29,7 @@ public class DefaultBufferFactory implements WorkflowBufferFactory {
         new DefaultBufferFactory(
             ServiceLoader.load(CustomObjectMarshaller.class).stream()
                 .map(ServiceLoader.Provider::get)
+                .sorted()
                 .toList());
   }
 

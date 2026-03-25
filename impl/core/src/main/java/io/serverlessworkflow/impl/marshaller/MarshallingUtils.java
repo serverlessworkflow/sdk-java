@@ -19,6 +19,7 @@ import io.serverlessworkflow.impl.WorkflowModel;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -94,5 +95,33 @@ public class MarshallingUtils {
     try (WorkflowInputBuffer buffer = factory.input(bytesIn)) {
       return valueConsumer.apply(buffer);
     }
+  }
+
+  /**
+   * Retrieve more proper marshaler for the given class. Collection is assumed to be already sorted
+   * by priority. No matter which priority is given, if the object class is equal to the marshaler
+   * class, it should have precedence over an object class which is assignable to the marshaler
+   * class.
+   *
+   * @param marshallers Priority Sorted collection of marshalers available on classpath
+   * @param clazz The class of the object being marshaled
+   * @return The most suitable marshaler for that object class
+   * @throws IllegalArgumentException if no marshaler is found for that object class
+   */
+  @SuppressWarnings({"rawtypes", "unchecked"})
+  public static CustomObjectMarshaller getCustomMarshaller(
+      Collection<CustomObjectMarshaller> marshallers, Class clazz) {
+    CustomObjectMarshaller assignable = null;
+    for (CustomObjectMarshaller marshaller : marshallers) {
+      if (marshaller.getObjectClass().equals(clazz)) {
+        return marshaller;
+      } else if (marshaller.getObjectClass().isAssignableFrom(clazz) && assignable == null) {
+        assignable = marshaller;
+      }
+    }
+    if (assignable == null) {
+      throw new IllegalArgumentException("Cannot find proper marshaler for class " + clazz);
+    }
+    return assignable;
   }
 }

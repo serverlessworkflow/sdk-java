@@ -83,11 +83,6 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
-                <groupId>io.serverlessworkflow</groupId>
-                <artifactId>serverlessworkflow-persistence-jackson-marshaller</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
               <groupId>io.serverlessworkflow</groupId>
               <artifactId>serverlessworkflow-persistence-mvstore</artifactId>
               <version>${project.version}</version>

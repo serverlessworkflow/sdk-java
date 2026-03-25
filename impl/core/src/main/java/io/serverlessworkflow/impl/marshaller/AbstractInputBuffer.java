@@ -131,10 +131,7 @@ public abstract class AbstractInputBuffer implements WorkflowInputBuffer {
 
   protected Object readCustomObject() {
     Class<?> objectClass = readClass();
-    return customMarshallers.stream()
-        .filter(m -> m.getObjectClass().isAssignableFrom(objectClass))
-        .findFirst()
-        .map(m -> m.read(this))
-        .orElseThrow(() -> new IllegalArgumentException("Unsupported type " + objectClass));
+    return MarshallingUtils.getCustomMarshaller(customMarshallers, objectClass)
+        .read(this, objectClass);
   }
 }

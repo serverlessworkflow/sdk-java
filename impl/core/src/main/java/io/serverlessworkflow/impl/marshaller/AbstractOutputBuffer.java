@@ -73,7 +73,7 @@ public abstract class AbstractOutputBuffer implements WorkflowOutputBuffer {
       writeLong(number);
     } else if (object instanceof Byte number) {
       writeType(Type.BYTE);
-      writeLong(number);
+      writeByte(number);
     } else if (object instanceof Float number) {
       writeType(Type.FLOAT);
       writeFloat(number);
@@ -109,14 +109,11 @@ public abstract class AbstractOutputBuffer implements WorkflowOutputBuffer {
     writeString(objectClass.getCanonicalName());
   }
 
+  @SuppressWarnings({"rawtypes", "unchecked"})
   protected void writeCustomObject(Object object) {
     CustomObjectMarshaller marshaller =
-        customMarshallers.stream()
-            .filter(m -> m.getObjectClass().isAssignableFrom(object.getClass()))
-            .findFirst()
-            .orElseThrow(
-                () -> new IllegalArgumentException("Unsupported type " + object.getClass()));
-    writeClass(marshaller.getObjectClass());
+        MarshallingUtils.getCustomMarshaller(customMarshallers, object.getClass());
+    writeClass(object.getClass());
     marshaller.write(this, marshaller.getObjectClass().cast(object));
   }
 

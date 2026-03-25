@@ -13,21 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.marshaller.jackson;
+package io.serverlessworkflow.impl.model.jackson;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.serverlessworkflow.impl.jackson.JsonUtils;
 import io.serverlessworkflow.impl.marshaller.CustomObjectMarshaller;
 import io.serverlessworkflow.impl.marshaller.WorkflowInputBuffer;
 import io.serverlessworkflow.impl.marshaller.WorkflowOutputBuffer;
-import io.serverlessworkflow.impl.model.jackson.JacksonModel;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 
-public class JacksonModelMarshaller implements CustomObjectMarshaller<JacksonModel> {
+abstract class AbstractJacksonMarshaller<T> implements CustomObjectMarshaller<T> {
 
   @Override
-  public void write(WorkflowOutputBuffer buffer, JacksonModel object) {
+  public void write(WorkflowOutputBuffer buffer, T object) {
     try {
       buffer.writeBytes(JsonUtils.mapper().writeValueAsBytes(object));
     } catch (JsonProcessingException e) {
@@ -36,17 +35,11 @@ public class JacksonModelMarshaller implements CustomObjectMarshaller<JacksonMod
   }
 
   @Override
-  public JacksonModel read(WorkflowInputBuffer buffer) {
+  public T read(WorkflowInputBuffer buffer, Class<? extends T> clazz) {
     try {
-      JacksonModel model = JsonUtils.mapper().readValue(buffer.readBytes(), JacksonModel.class);
-      return model == null ? JacksonModel.NULL : model;
+      return JsonUtils.mapper().readValue(buffer.readBytes(), clazz);
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
-  }
-
-  @Override
-  public Class<JacksonModel> getObjectClass() {
-    return JacksonModel.class;
   }
 }

@@ -9,7 +9,6 @@
     <name>Serverless Workflow :: Implementation:: Persistence</name>
     <packaging>pom</packaging>
     <modules> 
-      <module>jackson-marshaller</module>
       <module>mvstore</module>
       <module>bigmap</module>
       <module>api</module>
