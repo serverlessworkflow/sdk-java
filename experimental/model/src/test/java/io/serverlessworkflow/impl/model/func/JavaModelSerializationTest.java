@@ -23,13 +23,12 @@ import io.serverlessworkflow.impl.marshaller.WorkflowInputBuffer;
 import io.serverlessworkflow.impl.marshaller.WorkflowOutputBuffer;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import org.junit.jupiter.api.Test;
 
 class JavaModelSerializationTest {
 
   @Test
-  void testSerializableJavaModel() throws IOException {
+  void testSerializableJavaModel() {
     testMarshallUnMarshall(
         new JavaModel(new Person("Pepe Gotera", 32, new Address("Rue del Percebe", 13))));
   }

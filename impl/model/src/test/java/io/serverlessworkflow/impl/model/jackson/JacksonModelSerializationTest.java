@@ -24,18 +24,17 @@ import io.serverlessworkflow.impl.marshaller.WorkflowInputBuffer;
 import io.serverlessworkflow.impl.marshaller.WorkflowOutputBuffer;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import org.junit.jupiter.api.Test;
 
 class JacksonModelSerializationTest {
 
   @Test
-  void testObject() throws IOException {
+  void testObject() {
     testMarshallUnMarshall(new Employee("Mortadelo", "TIA"));
   }
 
   @Test
-  void testModel() throws IOException {
+  void testModel() {
     testMarshallUnMarshall(
         new JacksonModel(JsonUtils.mapper().createObjectNode().put("Mortadelo", "TIA")));
   }
