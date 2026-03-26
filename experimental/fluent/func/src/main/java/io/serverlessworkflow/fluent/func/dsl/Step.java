@@ -23,6 +23,7 @@ import io.serverlessworkflow.fluent.func.configurers.FuncTaskConfigurer;
 import io.serverlessworkflow.fluent.func.spi.ConditionalTaskBuilder;
 import io.serverlessworkflow.fluent.func.spi.FuncTaskTransformations;
 import io.serverlessworkflow.fluent.spec.TaskBaseBuilder;
+import io.serverlessworkflow.fluent.spec.TimeoutBuilder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -589,6 +590,16 @@ abstract class Step<SELF extends Step<SELF, B>, B> implements FuncTaskConfigurer
    */
   public SELF inputFrom(String jqExpression) {
     postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).inputFrom(jqExpression));
+    return self();
+  }
+
+  public SELF timeout(String durationExpression) {
+    this.postConfigurers.add(b -> ((TaskBaseBuilder<?>) b).timeout(durationExpression));
+    return self();
+  }
+
+  public SELF timeout(Consumer<TimeoutBuilder> timeout) {
+    this.postConfigurers.add(b -> ((TaskBaseBuilder<?>) b).timeout(timeout));
     return self();
   }
 

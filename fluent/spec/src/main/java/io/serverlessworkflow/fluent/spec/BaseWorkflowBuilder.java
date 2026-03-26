@@ -15,10 +15,13 @@
  */
 package io.serverlessworkflow.fluent.spec;
 
+import io.serverlessworkflow.api.types.DoTimeout;
 import io.serverlessworkflow.api.types.Document;
 import io.serverlessworkflow.api.types.Input;
 import io.serverlessworkflow.api.types.Output;
 import io.serverlessworkflow.api.types.TaskItem;
+import io.serverlessworkflow.api.types.Timeout;
+import io.serverlessworkflow.api.types.TimeoutAfter;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.fluent.spec.spi.TransformationHandlers;
 import java.util.ArrayList;
@@ -156,6 +159,30 @@ public abstract class BaseWorkflowBuilder<
     final OutputBuilder outputBuilder = new OutputBuilder();
     outputBuilderConsumer.accept(outputBuilder);
     this.workflow.setOutput(outputBuilder.build());
+    return self();
+  }
+
+  public SELF timeout(String afterDurationExpression) {
+    this.workflow.setTimeout(
+        new DoTimeout()
+            .withTimeoutDefinition(
+                new Timeout()
+                    .withAfter(
+                        new TimeoutAfter().withDurationExpression(afterDurationExpression))));
+    return self();
+  }
+
+  public SELF timeout(Consumer<TimeoutBuilder> timeoutBuilderConsumer) {
+    final TimeoutBuilder timeoutBuilder = new TimeoutBuilder();
+    timeoutBuilderConsumer.accept(timeoutBuilder);
+    this.workflow.setTimeout(new DoTimeout().withTimeoutDefinition(timeoutBuilder.build()));
+    return self();
+  }
+
+  public SELF schedule(Consumer<ScheduleBuilder> scheduleBuilderConsumer) {
+    final ScheduleBuilder scheduleBuilder = new ScheduleBuilder();
+    scheduleBuilderConsumer.accept(scheduleBuilder);
+    this.workflow.setSchedule(scheduleBuilder.build());
     return self();
   }
 

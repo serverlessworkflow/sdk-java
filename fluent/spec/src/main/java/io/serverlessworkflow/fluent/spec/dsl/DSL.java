@@ -16,10 +16,14 @@
 package io.serverlessworkflow.fluent.spec.dsl;
 
 import io.serverlessworkflow.api.types.OAuth2AuthenticationData;
+import io.serverlessworkflow.fluent.spec.AbstractEventConsumptionStrategyBuilder;
 import io.serverlessworkflow.fluent.spec.DoTaskBuilder;
 import io.serverlessworkflow.fluent.spec.EmitTaskBuilder;
+import io.serverlessworkflow.fluent.spec.EventFilterBuilder;
 import io.serverlessworkflow.fluent.spec.ForkTaskBuilder;
+import io.serverlessworkflow.fluent.spec.ScheduleBuilder;
 import io.serverlessworkflow.fluent.spec.TaskItemListBuilder;
+import io.serverlessworkflow.fluent.spec.TimeoutBuilder;
 import io.serverlessworkflow.fluent.spec.TryTaskBuilder;
 import io.serverlessworkflow.fluent.spec.configurers.AuthenticationConfigurer;
 import io.serverlessworkflow.fluent.spec.configurers.CallHttpConfigurer;
@@ -948,5 +952,188 @@ public final class DSL {
   public static Consumer<ForkTaskBuilder> branches(TasksConfigurer... steps) {
     final Consumer<TaskItemListBuilder> tasks = DSL.tasks(steps);
     return f -> f.compete(false).branches(tasks);
+  }
+
+  /**
+   * Shortcut to configure a timeout in days.
+   *
+   * <p>Example: {@code timeout(timeoutDays(2))}
+   *
+   * @param days timeout duration in days
+   * @return a consumer configuring {@link TimeoutBuilder}
+   */
+  public static Consumer<TimeoutBuilder> timeoutDays(int days) {
+    return t -> t.duration(d -> d.days(days));
+  }
+
+  /**
+   * Shortcut to configure a timeout in hours.
+   *
+   * <p>Example: {@code timeout(timeoutHours(1))}
+   *
+   * @param hours timeout duration in hours
+   * @return a consumer configuring {@link TimeoutBuilder}
+   */
+  public static Consumer<TimeoutBuilder> timeoutHours(int hours) {
+    return t -> t.duration(d -> d.hours(hours));
+  }
+
+  /**
+   * Shortcut to configure a timeout in minutes.
+   *
+   * <p>Example: {@code timeout(timeoutMinutes(15))}
+   *
+   * @param minutes timeout duration in minutes
+   * @return a consumer configuring {@link TimeoutBuilder}
+   */
+  public static Consumer<TimeoutBuilder> timeoutMinutes(int minutes) {
+    return t -> t.duration(d -> d.minutes(minutes));
+  }
+
+  /**
+   * Shortcut to configure a timeout in seconds.
+   *
+   * <p>Example: {@code timeout(timeoutSeconds(30))}
+   *
+   * @param seconds timeout duration in seconds
+   * @return a consumer configuring {@link TimeoutBuilder}
+   */
+  public static Consumer<TimeoutBuilder> timeoutSeconds(int seconds) {
+    return t -> t.duration(d -> d.seconds(seconds));
+  }
+
+  /**
+   * Shortcut to configure a timeout in milliseconds.
+   *
+   * <p>Example: {@code timeout(timeoutMillis(500))}
+   *
+   * @param milliseconds timeout duration in milliseconds
+   * @return a consumer configuring {@link TimeoutBuilder}
+   */
+  public static Consumer<TimeoutBuilder> timeoutMillis(int milliseconds) {
+    return t -> t.duration(d -> d.milliseconds(milliseconds));
+  }
+
+  // ---- Schedules ----//
+
+  /**
+   * Shortcut to configure a schedule using an 'every' inline duration.
+   *
+   * <p>Example: {@code schedule(every(timeoutMinutes(15)))}
+   *
+   * @param duration consumer configuring the timeout (e.g., from {@link #timeoutMinutes(int)})
+   * @return a consumer configuring {@link ScheduleBuilder}
+   */
+  public static Consumer<ScheduleBuilder> every(Consumer<TimeoutBuilder> duration) {
+    return s -> s.every(duration);
+  }
+
+  /**
+   * Shortcut to configure a schedule using an 'every' duration expression.
+   *
+   * <p>Example: {@code schedule(every("PT15M"))}
+   *
+   * @param durationExpression duration string expression
+   * @return a consumer configuring {@link ScheduleBuilder}
+   */
+  public static Consumer<ScheduleBuilder> every(String durationExpression) {
+    return s -> s.every(durationExpression);
+  }
+
+  /**
+   * Shortcut to configure a schedule using a CRON expression.
+   *
+   * <p>Example: {@code schedule(cron("0 0 * * *"))}
+   *
+   * @param cron cron string expression
+   * @return a consumer configuring {@link ScheduleBuilder}
+   */
+  public static Consumer<ScheduleBuilder> cron(String cron) {
+    return s -> s.cron(cron);
+  }
+
+  /**
+   * Shortcut to configure a schedule using an 'after' inline duration.
+   *
+   * <p>Example: {@code schedule(after(timeoutHours(1)))}
+   *
+   * @param duration consumer configuring the timeout (e.g., from {@link #timeoutHours(int)})
+   * @return a consumer configuring {@link ScheduleBuilder}
+   */
+  public static Consumer<ScheduleBuilder> after(Consumer<TimeoutBuilder> duration) {
+    return s -> s.after(duration);
+  }
+
+  /**
+   * Shortcut to configure a schedule using an 'after' duration expression.
+   *
+   * <p>Example: {@code schedule(after("PT1H"))}
+   *
+   * @param durationExpression duration string expression
+   * @return a consumer configuring {@link ScheduleBuilder}
+   */
+  public static Consumer<ScheduleBuilder> after(String durationExpression) {
+    return s -> s.after(durationExpression);
+  }
+
+  /**
+   * Shortcut to configure a schedule using an 'on' event consumption strategy.
+   *
+   * <p>Example: {@code schedule(on(one("my.event")))}
+   *
+   * @param strategy consumer configuring the event strategy
+   * @return a consumer configuring {@link ScheduleBuilder}
+   */
+  public static Consumer<ScheduleBuilder> on(
+      Consumer<AbstractEventConsumptionStrategyBuilder<?, ?, ?>> strategy) {
+    return s -> s.on(strategy);
+  }
+
+  /**
+   * Creates a 'one' event consumption strategy using a specific event type string.
+   *
+   * @param eventType the event type
+   * @return a consumer configuring the event strategy builder
+   */
+  public static Consumer<AbstractEventConsumptionStrategyBuilder<?, ?, ?>> one(String eventType) {
+    return one(event().type(eventType));
+  }
+
+  /**
+   * Creates a 'one' event consumption strategy.
+   *
+   * @param filter consumer configuring the event filter
+   * @return a consumer configuring the event strategy builder
+   */
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  public static Consumer<AbstractEventConsumptionStrategyBuilder<?, ?, ?>> one(
+      Consumer<EventFilterBuilder> filter) {
+    return b -> ((AbstractEventConsumptionStrategyBuilder) b).one(filter);
+  }
+
+  /**
+   * Creates an 'all' event consumption strategy.
+   *
+   * @param filters consumers configuring the event filters
+   * @return a consumer configuring the event strategy builder
+   */
+  @SafeVarargs
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  public static Consumer<AbstractEventConsumptionStrategyBuilder<?, ?, ?>> all(
+      Consumer<EventFilterBuilder>... filters) {
+    return b -> ((AbstractEventConsumptionStrategyBuilder) b).all(filters);
+  }
+
+  /**
+   * Creates an 'any' event consumption strategy.
+   *
+   * @param filters consumers configuring the event filters
+   * @return a consumer configuring the event strategy builder
+   */
+  @SafeVarargs
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  public static Consumer<AbstractEventConsumptionStrategyBuilder<?, ?, ?>> any(
+      Consumer<EventFilterBuilder>... filters) {
+    return b -> ((AbstractEventConsumptionStrategyBuilder) b).any(filters);
   }
 }

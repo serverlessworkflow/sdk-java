@@ -89,6 +89,18 @@ public abstract class BaseListenSpec<SELF, LISTEN_TASK, LISTEN_TO, EVENT_FILTER>
     return self();
   }
 
+  /**
+   * Applies the configured event consumption strategy to a raw builder. This is useful when the
+   * strategy needs to be used outside of a listen task, such as in a workflow schedule.
+   */
+  public final void acceptStrategyInto(LISTEN_TO toBuilder) {
+    Objects.requireNonNull(strategyStep, "listening strategy must be set (all/any/one)");
+    strategyStep.accept(toBuilder);
+    if (untilStep != null) {
+      untilStep.accept(toBuilder);
+    }
+  }
+
   protected final void acceptInto(LISTEN_TASK listenTaskBuilder) {
     Objects.requireNonNull(strategyStep, "listening strategy must be set (all/any/one)");
     toInvoker.to(

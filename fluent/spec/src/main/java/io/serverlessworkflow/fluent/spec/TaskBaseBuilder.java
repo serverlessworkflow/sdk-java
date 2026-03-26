@@ -21,6 +21,9 @@ import io.serverlessworkflow.api.types.FlowDirectiveEnum;
 import io.serverlessworkflow.api.types.Input;
 import io.serverlessworkflow.api.types.Output;
 import io.serverlessworkflow.api.types.TaskBase;
+import io.serverlessworkflow.api.types.TaskTimeout;
+import io.serverlessworkflow.api.types.Timeout;
+import io.serverlessworkflow.api.types.TimeoutAfter;
 import io.serverlessworkflow.fluent.spec.spi.OutputFluent;
 import io.serverlessworkflow.fluent.spec.spi.TaskTransformationHandlers;
 import java.util.function.Consumer;
@@ -106,6 +109,19 @@ public abstract class TaskBaseBuilder<T extends TaskBaseBuilder<T>>
     return self();
   }
 
-  // TODO: add timeout, metadata
+  public T timeout(String durationExpression) {
+    this.task.setTimeout(
+        new TaskTimeout()
+            .withTaskTimeoutDefinition(
+                new Timeout()
+                    .withAfter(new TimeoutAfter().withDurationExpression(durationExpression))));
+    return self();
+  }
 
+  public T timeout(Consumer<TimeoutBuilder> timeoutConsumer) {
+    final TimeoutBuilder timeoutBuilder = new TimeoutBuilder();
+    timeoutConsumer.accept(timeoutBuilder);
+    this.task.setTimeout(new TaskTimeout().withTaskTimeoutDefinition(timeoutBuilder.build()));
+    return self();
+  }
 }
