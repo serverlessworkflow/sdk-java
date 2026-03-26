@@ -18,10 +18,12 @@ package io.serverlessworkflow.impl.marshaller;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class AbstractOutputBuffer implements WorkflowOutputBuffer {
 
   private final Collection<CustomObjectMarshaller> customMarshallers;
+  private final Map<Class, CustomObjectMarshaller> marshallerMap = new ConcurrentHashMap<>();
 
   protected AbstractOutputBuffer(Collection<CustomObjectMarshaller> customMarshallers) {
     this.customMarshallers = customMarshallers;
@@ -111,9 +113,11 @@ public abstract class AbstractOutputBuffer implements WorkflowOutputBuffer {
 
   @SuppressWarnings({"rawtypes", "unchecked"})
   protected void writeCustomObject(Object object) {
+    Class<?> objectClass = object.getClass();
     CustomObjectMarshaller marshaller =
-        MarshallingUtils.getCustomMarshaller(customMarshallers, object.getClass());
-    writeClass(object.getClass());
+        marshallerMap.computeIfAbsent(
+            objectClass, o -> MarshallingUtils.getCustomMarshaller(customMarshallers, o));
+    writeClass(objectClass);
     marshaller.write(this, marshaller.getObjectClass().cast(object));
   }
 

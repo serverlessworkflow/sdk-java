@@ -18,12 +18,19 @@ package io.serverlessworkflow.impl.marshaller;
 import io.serverlessworkflow.impl.WorkflowModel;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.lang.reflect.Modifier;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MarshallingUtils {
+
+  private static final Logger logger = LoggerFactory.getLogger(MarshallingUtils.class);
 
   private MarshallingUtils() {}
 
@@ -104,24 +111,75 @@ public class MarshallingUtils {
    * class.
    *
    * @param marshallers Priority Sorted collection of marshalers available on classpath
-   * @param clazz The class of the object being marshaled
+   * @param objectClass The class of the object being marshaled
    * @return The most suitable marshaler for that object class
    * @throws IllegalArgumentException if no marshaler is found for that object class
    */
   @SuppressWarnings({"rawtypes", "unchecked"})
   public static CustomObjectMarshaller getCustomMarshaller(
-      Collection<CustomObjectMarshaller> marshallers, Class clazz) {
-    CustomObjectMarshaller assignable = null;
+      Collection<CustomObjectMarshaller> marshallers, Class objectClass) {
+    List<CustomObjectMarshaller> assignables = new ArrayList<>();
+    int minorClassDistance = Integer.MAX_VALUE;
+    int minorPriority = Integer.MAX_VALUE;
     for (CustomObjectMarshaller marshaller : marshallers) {
-      if (marshaller.getObjectClass().equals(clazz)) {
+      Class marshallerClass = marshaller.getObjectClass();
+      if (marshallerClass.equals(objectClass)) {
         return marshaller;
-      } else if (marshaller.getObjectClass().isAssignableFrom(clazz) && assignable == null) {
-        assignable = marshaller;
+      } else if (marshallerClass.isAssignableFrom(objectClass)) {
+        int classDistance = 0;
+        Class childClass = objectClass;
+        boolean found = false;
+        do {
+          classDistance++;
+          for (Class<?> candidate : childClass.getInterfaces()) {
+            if (candidate.equals(marshallerClass)) {
+              found = true;
+            }
+          }
+          if (!found) {
+            childClass = childClass.getSuperclass();
+            if (childClass == null) {
+              break;
+            } else {
+              found = childClass.equals(marshallerClass);
+            }
+          }
+        } while (!found && classDistance < minorClassDistance);
+        if (found) {
+          if (classDistance < minorClassDistance) {
+            assignables.clear();
+            assignables.add(marshaller);
+            minorClassDistance = classDistance;
+            minorPriority = marshaller.priority();
+          } else if (classDistance == minorClassDistance
+              && marshaller.priority() == minorPriority) {
+            assignables.add(marshaller);
+          }
+        }
       }
     }
-    if (assignable == null) {
-      throw new IllegalArgumentException("Cannot find proper marshaler for class " + clazz);
+    if (assignables.isEmpty()) {
+      throw new IllegalArgumentException("Cannot find proper marshaler for class " + objectClass);
     }
-    return assignable;
+    return assignables.size() == 1 ? assignables.get(0) : chooseBetweenEquals(assignables);
+  }
+
+  @SuppressWarnings("rawtypes")
+  private static CustomObjectMarshaller chooseBetweenEquals(
+      List<CustomObjectMarshaller> marshallers) {
+    logger.debug("Several marshaling candidates with same priority {}", marshallers);
+    for (CustomObjectMarshaller marshaller : marshallers) {
+      Class marshallerClass = marshaller.getObjectClass();
+      if (!Modifier.isAbstract(marshallerClass.getModifiers())
+          && !marshallerClass.equals(Object.class)) {
+        return marshaller;
+      }
+    }
+    for (CustomObjectMarshaller marshaller : marshallers) {
+      if (Modifier.isAbstract(marshaller.getObjectClass().getModifiers())) {
+        return marshaller;
+      }
+    }
+    return marshallers.get(0);
   }
 }

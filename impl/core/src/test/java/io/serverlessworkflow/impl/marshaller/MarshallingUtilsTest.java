@@ -17,6 +17,7 @@ package io.serverlessworkflow.impl.marshaller;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -34,22 +35,46 @@ class MarshallingUtilsTest {
     Mockito.when(employeeMarshaller.priority()).thenReturn(2);
     Mockito.when(employeeMarshaller.getObjectClass()).thenReturn(Employee.class);
     CustomObjectMarshaller objectMarshaller = Mockito.spy(CustomObjectMarshaller.class);
-    Mockito.when(objectMarshaller.priority()).thenReturn(3);
+    Mockito.when(objectMarshaller.priority()).thenReturn(1);
     Mockito.when(objectMarshaller.getObjectClass()).thenReturn(Object.class);
+    CustomObjectMarshaller ignoredMarshaller = Mockito.spy(CustomObjectMarshaller.class);
+    Mockito.when(ignoredMarshaller.priority()).thenReturn(2);
+    Mockito.when(ignoredMarshaller.getObjectClass()).thenReturn(Employee.class);
+    CustomObjectMarshaller serializableMarshaller = Mockito.spy(CustomObjectMarshaller.class);
+    Mockito.when(serializableMarshaller.priority()).thenReturn(1);
+    Mockito.when(serializableMarshaller.getObjectClass()).thenReturn(Serializable.class);
+
     Object employee = new Employee();
+    Object student = new Student();
     Object person = new Person();
-    Object other = new byte[2];
+    Object serializable = new SerializableClass();
+    Object other = new NonSerializableClass();
 
     List<CustomObjectMarshaller> marshallers =
-        Stream.of(objectMarshaller, employeeMarshaller, personMarshaller)
+        Stream.of(
+                objectMarshaller,
+                employeeMarshaller,
+                ignoredMarshaller,
+                personMarshaller,
+                serializableMarshaller)
             .sorted()
             .collect(Collectors.toList());
-    assertThat(marshallers).containsExactly(personMarshaller, employeeMarshaller, objectMarshaller);
+    assertThat(marshallers)
+        .containsExactly(
+            objectMarshaller,
+            personMarshaller,
+            serializableMarshaller,
+            employeeMarshaller,
+            ignoredMarshaller);
     assertThat(MarshallingUtils.getCustomMarshaller(marshallers, employee.getClass()))
         .isEqualTo(employeeMarshaller);
     assertThat(MarshallingUtils.getCustomMarshaller(marshallers, person.getClass()))
         .isEqualTo(personMarshaller);
     assertThat(MarshallingUtils.getCustomMarshaller(marshallers, other.getClass()))
         .isEqualTo(objectMarshaller);
+    assertThat(MarshallingUtils.getCustomMarshaller(marshallers, student.getClass()))
+        .isEqualTo(employeeMarshaller);
+    assertThat(MarshallingUtils.getCustomMarshaller(marshallers, serializable.getClass()))
+        .isEqualTo(serializableMarshaller);
   }
 }
