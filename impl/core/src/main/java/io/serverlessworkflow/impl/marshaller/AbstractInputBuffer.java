@@ -20,10 +20,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class AbstractInputBuffer implements WorkflowInputBuffer {
-
   private final Collection<CustomObjectMarshaller> customMarshallers;
+  private final Map<Class<?>, CustomObjectMarshaller> marshallerMap = new ConcurrentHashMap<>();
 
   protected AbstractInputBuffer(Collection<CustomObjectMarshaller> customMarshallers) {
     this.customMarshallers = customMarshallers;
@@ -129,9 +130,12 @@ public abstract class AbstractInputBuffer implements WorkflowInputBuffer {
     return Class.forName(className);
   }
 
+  @SuppressWarnings("unchecked")
   protected Object readCustomObject() {
     Class<?> objectClass = readClass();
-    return MarshallingUtils.getCustomMarshaller(customMarshallers, objectClass)
+    return marshallerMap
+        .computeIfAbsent(
+            objectClass, o -> MarshallingUtils.getCustomMarshaller(customMarshallers, o))
         .read(this, objectClass);
   }
 }
