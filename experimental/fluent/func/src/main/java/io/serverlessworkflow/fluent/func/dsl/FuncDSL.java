@@ -17,6 +17,7 @@ package io.serverlessworkflow.fluent.func.dsl;
 
 import io.cloudevents.CloudEventData;
 import io.serverlessworkflow.api.types.FlowDirectiveEnum;
+import io.serverlessworkflow.api.types.OAuth2AuthenticationData;
 import io.serverlessworkflow.api.types.func.ContextFunction;
 import io.serverlessworkflow.api.types.func.FilterFunction;
 import io.serverlessworkflow.fluent.func.FuncCallTaskBuilder;
@@ -27,7 +28,13 @@ import io.serverlessworkflow.fluent.func.configurers.FuncCallHttpConfigurer;
 import io.serverlessworkflow.fluent.func.configurers.FuncCallOpenAPIConfigurer;
 import io.serverlessworkflow.fluent.func.configurers.FuncTaskConfigurer;
 import io.serverlessworkflow.fluent.func.configurers.SwitchCaseConfigurer;
+import io.serverlessworkflow.fluent.spec.AbstractEventConsumptionStrategyBuilder;
+import io.serverlessworkflow.fluent.spec.EventFilterBuilder;
+import io.serverlessworkflow.fluent.spec.ScheduleBuilder;
+import io.serverlessworkflow.fluent.spec.TimeoutBuilder;
 import io.serverlessworkflow.fluent.spec.configurers.AuthenticationConfigurer;
+import io.serverlessworkflow.fluent.spec.dsl.DSL;
+import io.serverlessworkflow.fluent.spec.dsl.UseSpec;
 import io.serverlessworkflow.impl.TaskContextData;
 import io.serverlessworkflow.impl.WorkflowContextData;
 import java.net.URI;
@@ -1039,13 +1046,7 @@ public final class FuncDSL {
    * <p>This overload creates an unnamed HTTP task.
    *
    * <pre>{@code
-   * tasks(
-   * FuncDSL.call(
-   * FuncDSL.http()
-   * .GET()
-   * .endpoint("http://service/api")
-   * )
-   * );
+   * tasks(FuncDSL.call(FuncDSL.http().GET().endpoint("http://service/api")));
    * }</pre>
    *
    * @param spec fluent HTTP spec built via {@link #http()}
@@ -1059,13 +1060,7 @@ public final class FuncDSL {
    * HTTP call using a fluent {@link FuncCallHttpStep} with explicit task name.
    *
    * <pre>{@code
-   * tasks(
-   * FuncDSL.call("fetchUsers",
-   * FuncDSL.http()
-   * .GET()
-   * .endpoint("http://service/users")
-   * )
-   * );
+   * tasks(FuncDSL.call("fetchUsers", FuncDSL.http().GET().endpoint("http://service/users")));
    * }</pre>
    *
    * @param name task name, or {@code null} for an anonymous task
@@ -1084,12 +1079,7 @@ public final class FuncDSL {
    *
    * <pre>{@code
    * FuncWorkflowBuilder.workflow("openapi-call")
-   * .tasks(
-   * FuncDSL.call(
-   * FuncDSL.openapi()
-   * .document("https://petstore.swagger.io/v2/swagger.json", DSL.auth("openapi-auth"))
-   * .operation("getPetById")
-   * )
+   *   .tasks(call(openapi().document("https://petstore.swagger.io/v2/swagger.json", auth("openapi-auth")).operation("getPetById"))
    * )
    * .build();
    * }</pre>
@@ -1162,12 +1152,7 @@ public final class FuncDSL {
    * <p>Typical usage:
    *
    * <pre>{@code
-   * FuncDSL.call(
-   * FuncDSL.openapi()
-   * .document("https://petstore.swagger.io/v2/swagger.json", DSL.auth("openapi-auth"))
-   * .operation("getPetById")
-   * .parameter("id", 123)
-   * );
+   * FuncDSL.call(openapi().document("https://petstore.swagger.io/v2/swagger.json", DSL.auth("openapi-auth")).operation("getPetById").parameter("id", 123));
    * }</pre>
    *
    * <p>The returned spec is a fluent builder that records operations (document, operation,
@@ -1197,12 +1182,7 @@ public final class FuncDSL {
    * <p>Typical usage:
    *
    * <pre>{@code
-   * FuncDSL.call(
-   * FuncDSL.http()
-   * .GET()
-   * .endpoint("http://service/api")
-   * .acceptJSON()
-   * );
+   * FuncDSL.call(http().GET().endpoint("http://service/api").acceptJSON());
    * }</pre>
    *
    * @return a new {@link FuncCallHttpStep}
@@ -1474,8 +1454,8 @@ public final class FuncDSL {
    *
    * <pre>{@code
    * inputFrom((Object obj, TaskContextData taskContextData) -> {
-   *   OrderRequest order = input(taskContextData, OrderRequest.class);
-   *   return order;
+   * OrderRequest order = input(taskContextData, OrderRequest.class);
+   * return order;
    * });
    * }</pre>
    *
@@ -1509,9 +1489,9 @@ public final class FuncDSL {
    *
    * <pre>{@code
    * .exportAs((object, workflowContext, taskContextData) -> {
-   *     Long output = output(taskContextData, Long.class);
-   *     return output * 2;
-   *  })
+   * Long output = output(taskContextData, Long.class);
+   * return output * 2;
+   * })
    * }</pre>
    *
    * @param <T> the type to deserialize the task output into
@@ -1529,5 +1509,272 @@ public final class FuncDSL {
                     "Task output is missing or cannot be deserialized into type "
                         + outputClass.getName()
                         + " when calling FuncDSL.output(TaskContextData, Class<T>)."));
+  }
+
+  // ---------------------------------------------------------------------------
+  // Facades to base DSL (Timeouts, Schedules, Event Strategies)
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Shortcut to configure a timeout in days.
+   *
+   * @see DSL#timeoutDays(int)
+   */
+  public static Consumer<TimeoutBuilder> timeoutDays(int days) {
+    return DSL.timeoutDays(days);
+  }
+
+  /**
+   * Shortcut to configure a timeout in hours.
+   *
+   * @see DSL#timeoutHours(int)
+   */
+  public static Consumer<TimeoutBuilder> timeoutHours(int hours) {
+    return DSL.timeoutHours(hours);
+  }
+
+  /**
+   * Shortcut to configure a timeout in minutes.
+   *
+   * @see DSL#timeoutMinutes(int)
+   */
+  public static Consumer<TimeoutBuilder> timeoutMinutes(int minutes) {
+    return DSL.timeoutMinutes(minutes);
+  }
+
+  /**
+   * Shortcut to configure a timeout in seconds.
+   *
+   * @see DSL#timeoutSeconds(int)
+   */
+  public static Consumer<TimeoutBuilder> timeoutSeconds(int seconds) {
+    return DSL.timeoutSeconds(seconds);
+  }
+
+  /**
+   * Shortcut to configure a timeout in milliseconds.
+   *
+   * @see DSL#timeoutMillis(int)
+   */
+  public static Consumer<TimeoutBuilder> timeoutMillis(int milliseconds) {
+    return DSL.timeoutMillis(milliseconds);
+  }
+
+  // ---- Schedules ----//
+
+  /**
+   * @see DSL#every(Consumer)
+   */
+  public static Consumer<ScheduleBuilder> every(Consumer<TimeoutBuilder> duration) {
+    return DSL.every(duration);
+  }
+
+  /**
+   * @see DSL#every(String)
+   */
+  public static Consumer<ScheduleBuilder> every(String durationExpression) {
+    return DSL.every(durationExpression);
+  }
+
+  /**
+   * @see DSL#cron(String)
+   */
+  public static Consumer<ScheduleBuilder> cron(String cron) {
+    return DSL.cron(cron);
+  }
+
+  /**
+   * @see DSL#after(Consumer)
+   */
+  public static Consumer<ScheduleBuilder> after(Consumer<TimeoutBuilder> duration) {
+    return DSL.after(duration);
+  }
+
+  /**
+   * @see DSL#after(String)
+   */
+  public static Consumer<ScheduleBuilder> after(String durationExpression) {
+    return DSL.after(durationExpression);
+  }
+
+  /**
+   * @see DSL#on(Consumer)
+   */
+  public static Consumer<ScheduleBuilder> on(
+      Consumer<AbstractEventConsumptionStrategyBuilder<?, ?, ?>> strategy) {
+    return DSL.on(strategy);
+  }
+
+  // ---- Schedule Event Strategies ----//
+
+  /**
+   * @see DSL#one(String)
+   */
+  public static Consumer<AbstractEventConsumptionStrategyBuilder<?, ?, ?>> one(String eventType) {
+    return DSL.one(eventType);
+  }
+
+  /**
+   * @see DSL#one(Consumer)
+   */
+  public static Consumer<AbstractEventConsumptionStrategyBuilder<?, ?, ?>> one(
+      Consumer<EventFilterBuilder> filter) {
+    return DSL.one(filter);
+  }
+
+  /**
+   * @see DSL#all(Consumer[])
+   */
+  @SafeVarargs
+  public static Consumer<AbstractEventConsumptionStrategyBuilder<?, ?, ?>> all(
+      Consumer<EventFilterBuilder>... filters) {
+    return DSL.all(filters);
+  }
+
+  /**
+   * @see DSL#any(Consumer[])
+   */
+  @SafeVarargs
+  public static Consumer<AbstractEventConsumptionStrategyBuilder<?, ?, ?>> any(
+      Consumer<EventFilterBuilder>... filters) {
+    return DSL.any(filters);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Facades to base DSL (Use, Secrets, and Authentication)
+  // ---------------------------------------------------------------------------
+
+  /**
+   * @see DSL#secret(String)
+   */
+  public static UseSpec secret(String secret) {
+    return DSL.secret(secret);
+  }
+
+  /**
+   * @see DSL#secrets(String...)
+   */
+  public static UseSpec secrets(String... secret) {
+    return DSL.secrets(secret);
+  }
+
+  /**
+   * @see DSL#auth(String, AuthenticationConfigurer)
+   */
+  public static UseSpec auth(String name, AuthenticationConfigurer auth) {
+    return DSL.auth(name, auth);
+  }
+
+  /**
+   * @see DSL#use()
+   */
+  public static UseSpec use() {
+    return DSL.use();
+  }
+
+  /**
+   * @see DSL#use(String)
+   */
+  public static AuthenticationConfigurer use(String authName) {
+    return DSL.use(authName);
+  }
+
+  /**
+   * @see DSL#basic(String, String)
+   */
+  public static AuthenticationConfigurer basic(String username, String password) {
+    return DSL.basic(username, password);
+  }
+
+  /**
+   * @see DSL#basic(String)
+   */
+  public static AuthenticationConfigurer basic(String secret) {
+    return DSL.basic(secret);
+  }
+
+  /**
+   * @see DSL#bearer(String)
+   */
+  public static AuthenticationConfigurer bearer(String token) {
+    return DSL.bearer(token);
+  }
+
+  /**
+   * @see DSL#bearerUse(String)
+   */
+  public static AuthenticationConfigurer bearerUse(String secret) {
+    return DSL.bearerUse(secret);
+  }
+
+  /**
+   * @see DSL#digest(String, String)
+   */
+  public static AuthenticationConfigurer digest(String username, String password) {
+    return DSL.digest(username, password);
+  }
+
+  /**
+   * @see DSL#digest(String)
+   */
+  public static AuthenticationConfigurer digest(String secret) {
+    return DSL.digest(secret);
+  }
+
+  /**
+   * @see DSL#oidc(String, OAuth2AuthenticationData.OAuth2AuthenticationDataGrant)
+   */
+  public static AuthenticationConfigurer oidc(
+      String authority, OAuth2AuthenticationData.OAuth2AuthenticationDataGrant grant) {
+    return DSL.oidc(authority, grant);
+  }
+
+  /**
+   * @see DSL#oidc(String, OAuth2AuthenticationData.OAuth2AuthenticationDataGrant, String, String)
+   */
+  public static AuthenticationConfigurer oidc(
+      String authority,
+      OAuth2AuthenticationData.OAuth2AuthenticationDataGrant grant,
+      String clientId,
+      String clientSecret) {
+    return DSL.oidc(authority, grant, clientId, clientSecret);
+  }
+
+  /**
+   * @see DSL#oidc(String)
+   */
+  public static AuthenticationConfigurer oidc(String secret) {
+    return DSL.oidc(secret);
+  }
+
+  /**
+   * @see DSL#oauth2(String,
+   *     io.serverlessworkflow.api.types.OAuth2AuthenticationData.OAuth2AuthenticationDataGrant)
+   */
+  public static AuthenticationConfigurer oauth2(
+      String authority,
+      io.serverlessworkflow.api.types.OAuth2AuthenticationData.OAuth2AuthenticationDataGrant
+          grant) {
+    return DSL.oauth2(authority, grant);
+  }
+
+  /**
+   * @see DSL#oauth2(String,
+   *     io.serverlessworkflow.api.types.OAuth2AuthenticationData.OAuth2AuthenticationDataGrant,
+   *     String, String)
+   */
+  public static AuthenticationConfigurer oauth2(
+      String authority,
+      io.serverlessworkflow.api.types.OAuth2AuthenticationData.OAuth2AuthenticationDataGrant grant,
+      String clientId,
+      String clientSecret) {
+    return DSL.oauth2(authority, grant, clientId, clientSecret);
+  }
+
+  /**
+   * @see DSL#oauth2(String)
+   */
+  public static AuthenticationConfigurer oauth2(String secret) {
+    return DSL.oauth2(secret);
   }
 }
