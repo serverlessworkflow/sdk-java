@@ -60,5 +60,6 @@
 
     <modules>
         <module>func</module>
+        <module>flex-processes</module>
     </modules>
 </project>

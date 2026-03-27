@@ -78,7 +78,7 @@ public abstract class BaseTaskItemListBuilder<SELF extends BaseTaskItemListBuild
     return this.list;
   }
 
-  protected final SELF addTaskItem(TaskItem taskItem) {
+  public final SELF addTaskItem(TaskItem taskItem) {
     Objects.requireNonNull(taskItem, "taskItem must not be null");
     list.add(taskItem);
     return self();
