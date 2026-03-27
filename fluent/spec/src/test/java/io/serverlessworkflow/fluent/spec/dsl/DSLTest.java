@@ -26,14 +26,17 @@ import static io.serverlessworkflow.fluent.spec.dsl.DSL.openapi;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.produced;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.secrets;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.to;
+import static io.serverlessworkflow.fluent.spec.dsl.DSL.workflow;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.serverlessworkflow.api.types.HTTPArguments;
 import io.serverlessworkflow.api.types.ListenTaskConfiguration;
+import io.serverlessworkflow.api.types.RunTaskConfiguration;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.fluent.spec.WorkflowBuilder;
 import io.serverlessworkflow.types.Errors;
 import java.net.URI;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 
 public class DSLTest {
@@ -282,6 +285,51 @@ public class DSLTest {
     assertThat(use.getSecrets()).containsExactly("s1", "s2");
     assertThat(use.getAuthentications().getAdditionalProperties().keySet())
         .containsExactly("basic-auth", "bearer-auth");
+  }
+
+  @Test
+  void when_dsl_subflow_workflow_task() {
+    Workflow wf =
+        WorkflowBuilder.workflow("parent", "ns", "1")
+            .tasks(
+                workflow(
+                    workflow("child.ns", "child-flow", "2.3.4")
+                        .input("id", 99)
+                        .await(false)
+                        .returnType(RunTaskConfiguration.ProcessReturnType.NONE)))
+            .build();
+
+    var run = wf.getDo().get(0).getTask().getRunTask().getRun().getRunWorkflow();
+    assertThat(run).isNotNull();
+    assertThat(run.getWorkflow().getNamespace()).isEqualTo("child.ns");
+    assertThat(run.getWorkflow().getName()).isEqualTo("child-flow");
+    assertThat(run.getWorkflow().getVersion()).isEqualTo("2.3.4");
+    assertThat(run.getWorkflow().getInput().getAdditionalProperties().get("id")).isEqualTo(99);
+    assertThat(run.isAwait()).isFalse();
+    assertThat(run.getReturn()).isEqualTo(RunTaskConfiguration.ProcessReturnType.NONE);
+  }
+
+  @Test
+  void when_dsl_subflow_workflow_task_with_map_input() {
+    Workflow wf =
+        WorkflowBuilder.workflow("parent", "ns", "1")
+            .tasks(
+                workflow(
+                    workflow("child.ns", "child-flow", "2.3.4")
+                        .input(Map.of("id", 7, "region", "eu"))
+                        .input("extra", true)
+                        .await(true)
+                        .returnType(RunTaskConfiguration.ProcessReturnType.NONE)))
+            .build();
+
+    var run = wf.getDo().get(0).getTask().getRunTask().getRun().getRunWorkflow();
+    assertThat(run).isNotNull();
+    assertThat(run.getWorkflow().getInput().getAdditionalProperties().get("id")).isEqualTo(7);
+    assertThat(run.getWorkflow().getInput().getAdditionalProperties().get("region"))
+        .isEqualTo("eu");
+    assertThat(run.getWorkflow().getInput().getAdditionalProperties().get("extra")).isEqualTo(true);
+    assertThat(run.isAwait()).isTrue();
+    assertThat(run.getReturn()).isEqualTo(RunTaskConfiguration.ProcessReturnType.NONE);
   }
 
   @Test

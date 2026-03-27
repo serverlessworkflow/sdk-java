@@ -51,6 +51,7 @@ import io.serverlessworkflow.api.types.ListenTask;
 import io.serverlessworkflow.api.types.OneEventConsumptionStrategy;
 import io.serverlessworkflow.api.types.RetryLimitAttempt;
 import io.serverlessworkflow.api.types.RetryPolicy;
+import io.serverlessworkflow.api.types.RunTaskConfiguration;
 import io.serverlessworkflow.api.types.SetTask;
 import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.api.types.TryTask;
@@ -634,5 +635,52 @@ public class WorkflowBuilderTest {
         HTTPArguments.HTTPOutput.RESPONSE,
         call.getWith().getOutput(),
         "Output should be overridden");
+  }
+
+  @Test
+  void testDoTaskRunWorkflow() {
+    Workflow wf =
+        WorkflowBuilder.workflow("parentFlow")
+            .tasks(
+                d ->
+                    d.workflow(
+                        "runChild",
+                        w ->
+                            w.namespace("org.acme")
+                                .name("childFlow")
+                                .version("1.0.0")
+                                .input(Map.of("id", 42, "region", "us-east"))
+                                .await(false)
+                                .returnType(RunTaskConfiguration.ProcessReturnType.NONE)))
+            .build();
+
+    var runTask = wf.getDo().get(0).getTask().getRunTask();
+    assertNotNull(runTask, "RunTask should be present");
+    assertNotNull(runTask.getRun(), "RunTask configuration should be present");
+    assertNotNull(runTask.getRun().getRunWorkflow(), "RunWorkflow should be selected");
+    assertEquals("org.acme", runTask.getRun().getRunWorkflow().getWorkflow().getNamespace());
+    assertEquals("childFlow", runTask.getRun().getRunWorkflow().getWorkflow().getName());
+    assertEquals("1.0.0", runTask.getRun().getRunWorkflow().getWorkflow().getVersion());
+    assertEquals(
+        42,
+        runTask
+            .getRun()
+            .getRunWorkflow()
+            .getWorkflow()
+            .getInput()
+            .getAdditionalProperties()
+            .get("id"));
+    assertEquals(
+        "us-east",
+        runTask
+            .getRun()
+            .getRunWorkflow()
+            .getWorkflow()
+            .getInput()
+            .getAdditionalProperties()
+            .get("region"));
+    assertEquals(
+        RunTaskConfiguration.ProcessReturnType.NONE, runTask.getRun().getRunWorkflow().getReturn());
+    assertEquals(false, runTask.getRun().getRunWorkflow().isAwait());
   }
 }

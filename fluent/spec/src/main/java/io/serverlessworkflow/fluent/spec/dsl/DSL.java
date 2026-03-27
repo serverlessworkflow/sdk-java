@@ -37,6 +37,7 @@ import io.serverlessworkflow.fluent.spec.configurers.SwitchConfigurer;
 import io.serverlessworkflow.fluent.spec.configurers.TasksConfigurer;
 import io.serverlessworkflow.fluent.spec.configurers.TryCatchConfigurer;
 import io.serverlessworkflow.fluent.spec.configurers.TryConfigurer;
+import io.serverlessworkflow.fluent.spec.configurers.WorkflowConfigurer;
 import io.serverlessworkflow.types.Errors;
 import java.net.URI;
 import java.util.List;
@@ -103,6 +104,18 @@ public final class DSL {
    */
   public static CallOpenAPISpec openapi() {
     return new CallOpenAPISpec();
+  }
+
+  public static WorkflowSpec workflow(String namespace, String name, String version) {
+    return new WorkflowSpec().namespace(namespace).name(name).version(version);
+  }
+
+  public static WorkflowSpec workflow(String namespace, String name) {
+    return new WorkflowSpec().namespace(namespace).name(name);
+  }
+
+  public static WorkflowSpec workflow() {
+    return new WorkflowSpec();
   }
 
   /**
@@ -638,6 +651,10 @@ public final class DSL {
    */
   public static TasksConfigurer call(CallOpenAPIConfigurer configurer) {
     return list -> list.openapi(configurer);
+  }
+
+  public static TasksConfigurer workflow(WorkflowConfigurer configurer) {
+    return list -> list.workflow(configurer);
   }
 
   /**

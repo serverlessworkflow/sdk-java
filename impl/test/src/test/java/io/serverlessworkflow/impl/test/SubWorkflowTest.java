@@ -16,11 +16,14 @@
 package io.serverlessworkflow.impl.test;
 
 import static io.serverlessworkflow.api.WorkflowReader.readWorkflowFromClasspath;
-import static org.junit.Assert.assertEquals;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.is;
 
 import io.serverlessworkflow.api.types.Workflow;
+import io.serverlessworkflow.fluent.spec.WorkflowBuilder;
+import io.serverlessworkflow.fluent.spec.dsl.DSL;
 import io.serverlessworkflow.impl.WorkflowApplication;
-import java.io.IOException;
 import java.util.Map;
 import org.junit.Test;
 
@@ -29,7 +32,7 @@ public class SubWorkflowTest {
   private static final String WORKFLOW_TEST_PATH = "workflows-samples/sub-workflow/";
 
   @Test
-  public void setTest() throws IOException {
+  public void setTest() throws Exception {
     Workflow workflowParent =
         readWorkflowFromClasspath(WORKFLOW_TEST_PATH + "sub-workflow-parent.yaml");
     Workflow workflowChild =
@@ -41,18 +44,16 @@ public class SubWorkflowTest {
           app.workflowDefinition(workflowParent)
               .instance(Map.of())
               .start()
-              .get()
+              .join()
               .asMap()
               .orElseThrow();
-      assertEquals("1", result.get("counter").toString());
-      assertEquals("helloWorld", result.get("greeting").toString());
-    } catch (Exception e) {
-      throw new RuntimeException("Workflow execution failed", e);
+      assertThat(result.get("counter"), is(equalTo(1)));
+      assertThat(result.get("greeting"), is(equalTo("helloWorld")));
     }
   }
 
   @Test
-  public void setBlankInputTest() throws IOException {
+  public void setBlankInputTest() throws Exception {
     Workflow workflowParent =
         readWorkflowFromClasspath(WORKFLOW_TEST_PATH + "sub-workflow-parent.yaml");
     Workflow workflowChild =
@@ -64,18 +65,16 @@ public class SubWorkflowTest {
           app.workflowDefinition(workflowParent)
               .instance(Map.of())
               .start()
-              .get()
+              .join()
               .asMap()
               .orElseThrow();
-      assertEquals("1", result.get("counter").toString());
-      assertEquals("helloWorld", result.get("greeting").toString());
-    } catch (Exception e) {
-      throw new RuntimeException("Workflow execution failed", e);
+      assertThat(result.get("counter"), is(equalTo(1)));
+      assertThat(result.get("greeting"), is(equalTo("helloWorld")));
     }
   }
 
   @Test
-  public void setStringInputTest() throws IOException {
+  public void setStringInputTest() throws Exception {
     Workflow workflowParent =
         readWorkflowFromClasspath(WORKFLOW_TEST_PATH + "sub-workflow-parent.yaml");
     Workflow workflowChild =
@@ -87,18 +86,16 @@ public class SubWorkflowTest {
           app.workflowDefinition(workflowParent)
               .instance("Tested")
               .start()
-              .get()
+              .join()
               .asMap()
               .orElseThrow();
-      assertEquals("1", result.get("counter").toString());
-      assertEquals("helloWorld", result.get("greeting").toString());
-    } catch (Exception e) {
-      throw new RuntimeException("Workflow execution failed", e);
+      assertThat(result.get("counter"), is(equalTo(1)));
+      assertThat(result.get("greeting"), is(equalTo("helloWorld")));
     }
   }
 
   @Test
-  public void readContextAndSetTest() throws IOException {
+  public void readContextAndSetTest() throws Exception {
     Workflow workflowParent =
         readWorkflowFromClasspath(
             WORKFLOW_TEST_PATH + "read-context-and-set-sub-workflow-parent.yaml");
@@ -110,20 +107,19 @@ public class SubWorkflowTest {
     try (WorkflowApplication app = WorkflowApplication.builder().build()) {
       app.workflowDefinition(workflowChild);
       Map<String, Object> result =
-          app.workflowDefinition(workflowParent).instance(map).start().get().asMap().orElseThrow();
+          app.workflowDefinition(workflowParent).instance(map).start().join().asMap().orElseThrow();
       Map<String, String> updated = (Map<String, String>) result.get("updated");
-      assertEquals("userId_1_tested", updated.get("userId"));
-      assertEquals("test_tested", updated.get("username"));
-      assertEquals("test_tested", updated.get("password"));
-      assertEquals(
-          "The workflow set-into-context:1.0.0 updated user in context", result.get("detail"));
-    } catch (Exception e) {
-      throw new RuntimeException("Workflow execution failed", e);
+      assertThat(updated.get("userId"), is(equalTo("userId_1_tested")));
+      assertThat(updated.get("username"), is(equalTo("test_tested")));
+      assertThat(updated.get("password"), is(equalTo("test_tested")));
+      assertThat(
+          result.get("detail"),
+          is(equalTo("The workflow set-into-context:1.0.0 updated user in context")));
     }
   }
 
   @Test
-  public void outputExportContextAndSetTest() throws IOException {
+  public void outputExportContextAndSetTest() throws Exception {
     Workflow workflowParent =
         readWorkflowFromClasspath(
             WORKFLOW_TEST_PATH + "output-export-and-set-sub-workflow-parent.yaml");
@@ -135,12 +131,34 @@ public class SubWorkflowTest {
     try (WorkflowApplication app = WorkflowApplication.builder().build()) {
       app.workflowDefinition(workflowChild);
       Map<String, Object> result =
-          app.workflowDefinition(workflowParent).instance(map).start().get().asMap().orElseThrow();
-      assertEquals("userId_1_tested", result.get("userId"));
-      assertEquals("test_tested", result.get("username"));
-      assertEquals("test_tested", result.get("password"));
-    } catch (Exception e) {
-      throw new RuntimeException("Workflow execution failed", e);
+          app.workflowDefinition(workflowParent).instance(map).start().join().asMap().orElseThrow();
+      assertThat(result.get("userId"), is(equalTo("userId_1_tested")));
+      assertThat(result.get("username"), is(equalTo("test_tested")));
+      assertThat(result.get("password"), is(equalTo("test_tested")));
+    }
+  }
+
+  @Test
+  public void runSubWorkflowFromDslTest() throws Exception {
+    Workflow child =
+        WorkflowBuilder.workflow("childFlow", "org.acme", "1.0.0")
+            .tasks(d -> d.set("update", s -> s.put("counter", 1).put("greeting", "helloWorld")))
+            .build();
+
+    Workflow parent =
+        WorkflowBuilder.workflow("parentFlow", "org.acme", "1.0.0")
+            .tasks(
+                DSL.workflow(
+                    DSL.workflow("org.acme", "childFlow", "1.0.0")
+                        .input(Map.of("id", 42, "region", "us-east"))))
+            .build();
+
+    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
+      app.workflowDefinition(child);
+      Map<String, Object> result =
+          app.workflowDefinition(parent).instance(Map.of()).start().join().asMap().orElseThrow();
+      assertThat(result.get("counter"), is(equalTo(1)));
+      assertThat(result.get("greeting"), is(equalTo("helloWorld")));
     }
   }
 }
