@@ -15,6 +15,7 @@
  */
 package io.serverlessworkflow.impl.model.jackson;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -48,6 +49,7 @@ public class JacksonModel extends AbstractWorkflowModel {
   }
 
   @Override
+  @JsonIgnore
   public boolean isNull() {
     return node.isNull();
   }
