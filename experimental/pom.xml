@@ -49,5 +49,6 @@
     <module>lambda-fluent</module>
     <module>fluent</module>
     <module>model</module>
+    <module>test</module>
   </modules>
 </project>

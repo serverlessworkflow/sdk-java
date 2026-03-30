@@ -38,6 +38,9 @@ public class JacksonModelCollection implements WorkflowModelCollection {
 
   @Override
   public <T> Optional<T> as(Class<T> clazz) {
+    if (clazz.equals(Collection.class)) {
+      return Optional.of(clazz.cast(this));
+    }
     return clazz.isAssignableFrom(ArrayNode.class)
         ? Optional.of(clazz.cast(node))
         : Optional.empty();
