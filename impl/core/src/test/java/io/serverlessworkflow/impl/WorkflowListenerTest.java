@@ -17,7 +17,7 @@ package io.serverlessworkflow.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.serverlessworkflow.impl.lifecycle.WorkflowExecutionListener;
+import io.serverlessworkflow.impl.lifecycle.WorkflowExecutionCompletableListener;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -33,10 +33,10 @@ public class WorkflowListenerTest {
 
   @Test
   void testSorted() {
-    WorkflowExecutionListener mediumPrio = new MediumPriorityListener("javi");
-    WorkflowExecutionListener lowestPrio = new LowestPriorityListener();
-    WorkflowExecutionListener topPrio = new TopPriorityListener();
-    WorkflowExecutionListener anotherMediumPrio = new MediumPriorityListener("javier");
+    WorkflowExecutionCompletableListener mediumPrio = new MediumPriorityListener("javi");
+    WorkflowExecutionCompletableListener lowestPrio = new LowestPriorityListener();
+    WorkflowExecutionCompletableListener topPrio = new TopPriorityListener();
+    WorkflowExecutionCompletableListener anotherMediumPrio = new MediumPriorityListener("javier");
 
     WorkflowApplication app =
         WorkflowApplication.builder()
@@ -54,10 +54,10 @@ public class WorkflowListenerTest {
 
   @Test
   void testNotDuplicated() {
-    WorkflowExecutionListener mediumPrio = new MediumPriorityListener("javi");
-    WorkflowExecutionListener lowestPrio = new LowestPriorityListener();
-    WorkflowExecutionListener topPrio = new TopPriorityListener();
-    WorkflowExecutionListener anotherMediumPrio = new MediumPriorityListener("javi");
+    WorkflowExecutionCompletableListener mediumPrio = new MediumPriorityListener("javi");
+    WorkflowExecutionCompletableListener lowestPrio = new LowestPriorityListener();
+    WorkflowExecutionCompletableListener topPrio = new TopPriorityListener();
+    WorkflowExecutionCompletableListener anotherMediumPrio = new MediumPriorityListener("javi");
 
     WorkflowApplication app =
         WorkflowApplication.builder()

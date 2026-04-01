@@ -70,30 +70,43 @@ public class WorkflowMutableInstance implements WorkflowInstance {
     return startExecution(
         () -> {
           startedAt = Instant.now();
-          publishEvent(
+          return publishEvent(
               workflowContext, l -> l.onWorkflowStarted(new WorkflowStartedEvent(workflowContext)));
         });
   }
 
-  protected final CompletableFuture<WorkflowModel> startExecution(Runnable runnable) {
+  protected final CompletableFuture<WorkflowModel> startExecution(
+      Supplier<CompletableFuture<?>> runnable) {
     CompletableFuture<WorkflowModel> future = futureRef.get();
     if (future != null) {
       return future;
     }
     status(WorkflowStatus.RUNNING);
-    runnable.run();
+
     future =
-        TaskExecutorHelper.processTaskList(
-                workflowContext.definition().startTask(),
-                workflowContext,
-                Optional.empty(),
-                workflowContext
-                    .definition()
-                    .inputFilter()
-                    .map(f -> f.apply(workflowContext, null, input))
-                    .orElse(input))
-            .whenComplete(this::whenCompleted)
-            .thenApply(this::whenSuccess);
+        runnable
+            .get()
+            .thenCompose(
+                v ->
+                    TaskExecutorHelper.processTaskList(
+                            workflowContext.definition().startTask(),
+                            workflowContext,
+                            Optional.empty(),
+                            workflowContext
+                                .definition()
+                                .inputFilter()
+                                .map(f -> f.apply(workflowContext, null, input))
+                                .orElse(input))
+                        .whenComplete(this::whenCompleted)
+                        .thenApply(this::whenSuccess)
+                        .thenCompose(
+                            model ->
+                                publishEvent(
+                                        workflowContext,
+                                        l ->
+                                            l.onWorkflowCompleted(
+                                                new WorkflowCompletedEvent(workflowContext, model)))
+                                    .thenApply(__ -> model)));
     futureRef.set(future);
     return future;
   }
@@ -126,9 +139,6 @@ public class WorkflowMutableInstance implements WorkflowInstance {
             .orElse(node);
     workflowContext.definition().outputSchemaValidator().ifPresent(v -> v.validate(output));
     status(WorkflowStatus.COMPLETED);
-    publishEvent(
-        workflowContext,
-        l -> l.onWorkflowCompleted(new WorkflowCompletedEvent(workflowContext, output)));
     return output;
   }
 

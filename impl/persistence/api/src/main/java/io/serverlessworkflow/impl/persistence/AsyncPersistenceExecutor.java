@@ -22,7 +22,11 @@ public class AsyncPersistenceExecutor extends AbstractAsyncPersistenceExecutor {
 
   private final Optional<ExecutorService> service;
 
-  protected AsyncPersistenceExecutor(ExecutorService service) {
+  public AsyncPersistenceExecutor() {
+    this.service = Optional.empty();
+  }
+
+  public AsyncPersistenceExecutor(ExecutorService service) {
     this.service = Optional.ofNullable(service);
   }
 

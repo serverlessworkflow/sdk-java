@@ -41,6 +41,7 @@ public class WorkflowPersistenceInstance extends WorkflowMutableInstance {
           if (info.status() == WorkflowStatus.SUSPENDED) {
             internalSuspend();
           }
+          return CompletableFuture.completedFuture(null);
         });
   }
 

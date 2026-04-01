@@ -34,7 +34,9 @@ import io.serverlessworkflow.impl.executors.DefaultTaskExecutorFactory;
 import io.serverlessworkflow.impl.executors.TaskExecutorFactory;
 import io.serverlessworkflow.impl.expressions.ExpressionFactory;
 import io.serverlessworkflow.impl.expressions.RuntimeDescriptor;
+import io.serverlessworkflow.impl.lifecycle.WorkflowExecutionCompletableListener;
 import io.serverlessworkflow.impl.lifecycle.WorkflowExecutionListener;
+import io.serverlessworkflow.impl.lifecycle.WorkflowExecutionListenerAdapter;
 import io.serverlessworkflow.impl.resources.DefaultResourceLoaderFactory;
 import io.serverlessworkflow.impl.resources.ExternalResourceHandler;
 import io.serverlessworkflow.impl.resources.ResourceLoaderFactory;
@@ -67,7 +69,7 @@ public class WorkflowApplication implements AutoCloseable {
   private final ResourceLoaderFactory resourceLoaderFactory;
   private final SchemaValidatorFactory schemaValidatorFactory;
   private final WorkflowInstanceIdFactory idFactory;
-  private final Collection<WorkflowExecutionListener> listeners;
+  private final Collection<WorkflowExecutionCompletableListener> listeners;
   private final Map<WorkflowDefinitionId, WorkflowDefinition> definitions;
   private final WorkflowPositionFactory positionFactory;
   private final ExecutorServiceFactory executorFactory;
@@ -137,7 +139,7 @@ public class WorkflowApplication implements AutoCloseable {
     return resourceLoaderFactory;
   }
 
-  public Collection<WorkflowExecutionListener> listeners() {
+  public Collection<WorkflowExecutionCompletableListener> listeners() {
     return listeners;
   }
 
@@ -175,8 +177,10 @@ public class WorkflowApplication implements AutoCloseable {
     private String id;
     private TaskExecutorFactory taskFactory;
     private Collection<ExpressionFactory> exprFactories = new HashSet<>();
-    private List<WorkflowExecutionListener> listeners =
-        loadFromServiceLoader(WorkflowExecutionListener.class);
+    private List<WorkflowExecutionCompletableListener> listeners =
+        ServiceLoader.load(WorkflowExecutionListener.class).stream()
+            .map(v -> new WorkflowExecutionListenerAdapter(v.get()))
+            .collect(Collectors.toList());
     private List<CallableTaskProxyBuilder> callableProxyBuilders =
         loadFromServiceLoader(CallableTaskProxyBuilder.class);
     private ResourceLoaderFactory resourceLoaderFactory = DefaultResourceLoaderFactory.get();
@@ -212,6 +216,11 @@ public class WorkflowApplication implements AutoCloseable {
     }
 
     public Builder withListener(WorkflowExecutionListener listener) {
+      listeners.add(new WorkflowExecutionListenerAdapter(listener));
+      return this;
+    }
+
+    public Builder withListener(WorkflowExecutionCompletableListener listener) {
       listeners.add(listener);
       return this;
     }
@@ -414,7 +423,7 @@ public class WorkflowApplication implements AutoCloseable {
     }
     definitions.clear();
 
-    for (WorkflowExecutionListener listener : listeners) {
+    for (WorkflowExecutionCompletableListener listener : listeners) {
       safeClose(listener);
     }
     listeners.clear();

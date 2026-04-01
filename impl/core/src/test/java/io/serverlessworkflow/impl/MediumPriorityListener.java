@@ -15,10 +15,10 @@
  */
 package io.serverlessworkflow.impl;
 
-import io.serverlessworkflow.impl.lifecycle.WorkflowExecutionListener;
+import io.serverlessworkflow.impl.lifecycle.WorkflowExecutionCompletableListener;
 import java.util.Objects;
 
-public class MediumPriorityListener implements WorkflowExecutionListener {
+public class MediumPriorityListener implements WorkflowExecutionCompletableListener {
 
   private final String id;
 

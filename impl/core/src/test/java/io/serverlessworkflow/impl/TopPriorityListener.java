@@ -15,9 +15,9 @@
  */
 package io.serverlessworkflow.impl;
 
-import io.serverlessworkflow.impl.lifecycle.WorkflowExecutionListener;
+import io.serverlessworkflow.impl.lifecycle.WorkflowExecutionCompletableListener;
 
-public class TopPriorityListener implements WorkflowExecutionListener {
+public class TopPriorityListener implements WorkflowExecutionCompletableListener {
   public int priority() {
     return DEFAULT_PRIORITY - 1;
   }

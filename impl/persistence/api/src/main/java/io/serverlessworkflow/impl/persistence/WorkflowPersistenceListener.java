@@ -20,13 +20,14 @@ import io.serverlessworkflow.impl.lifecycle.TaskRetriedEvent;
 import io.serverlessworkflow.impl.lifecycle.TaskStartedEvent;
 import io.serverlessworkflow.impl.lifecycle.WorkflowCancelledEvent;
 import io.serverlessworkflow.impl.lifecycle.WorkflowCompletedEvent;
-import io.serverlessworkflow.impl.lifecycle.WorkflowExecutionListener;
+import io.serverlessworkflow.impl.lifecycle.WorkflowExecutionCompletableListener;
 import io.serverlessworkflow.impl.lifecycle.WorkflowFailedEvent;
 import io.serverlessworkflow.impl.lifecycle.WorkflowResumedEvent;
 import io.serverlessworkflow.impl.lifecycle.WorkflowStartedEvent;
 import io.serverlessworkflow.impl.lifecycle.WorkflowSuspendedEvent;
+import java.util.concurrent.CompletableFuture;
 
-public class WorkflowPersistenceListener implements WorkflowExecutionListener {
+public class WorkflowPersistenceListener implements WorkflowExecutionCompletableListener {
 
   private final PersistenceInstanceWriter persistenceWriter;
 
@@ -35,47 +36,47 @@ public class WorkflowPersistenceListener implements WorkflowExecutionListener {
   }
 
   @Override
-  public void onWorkflowStarted(WorkflowStartedEvent ev) {
-    persistenceWriter.started(ev.workflowContext());
+  public CompletableFuture<?> onWorkflowStarted(WorkflowStartedEvent ev) {
+    return persistenceWriter.started(ev.workflowContext());
   }
 
   @Override
-  public void onWorkflowFailed(WorkflowFailedEvent ev) {
-    persistenceWriter.failed(ev.workflowContext(), ev.cause());
+  public CompletableFuture<?> onWorkflowFailed(WorkflowFailedEvent ev) {
+    return persistenceWriter.failed(ev.workflowContext(), ev.cause());
   }
 
   @Override
-  public void onWorkflowCancelled(WorkflowCancelledEvent ev) {
-    persistenceWriter.aborted(ev.workflowContext());
+  public CompletableFuture<?> onWorkflowCancelled(WorkflowCancelledEvent ev) {
+    return persistenceWriter.aborted(ev.workflowContext());
   }
 
   @Override
-  public void onWorkflowSuspended(WorkflowSuspendedEvent ev) {
-    persistenceWriter.suspended(ev.workflowContext());
+  public CompletableFuture<?> onWorkflowSuspended(WorkflowSuspendedEvent ev) {
+    return persistenceWriter.suspended(ev.workflowContext());
   }
 
   @Override
-  public void onWorkflowResumed(WorkflowResumedEvent ev) {
-    persistenceWriter.resumed(ev.workflowContext());
+  public CompletableFuture<?> onWorkflowResumed(WorkflowResumedEvent ev) {
+    return persistenceWriter.resumed(ev.workflowContext());
   }
 
   @Override
-  public void onWorkflowCompleted(WorkflowCompletedEvent ev) {
-    persistenceWriter.completed(ev.workflowContext());
+  public CompletableFuture<?> onWorkflowCompleted(WorkflowCompletedEvent ev) {
+    return persistenceWriter.completed(ev.workflowContext());
   }
 
   @Override
-  public void onTaskStarted(TaskStartedEvent ev) {
-    persistenceWriter.taskStarted(ev.workflowContext(), ev.taskContext());
+  public CompletableFuture<?> onTaskStarted(TaskStartedEvent ev) {
+    return persistenceWriter.taskStarted(ev.workflowContext(), ev.taskContext());
   }
 
   @Override
-  public void onTaskCompleted(TaskCompletedEvent ev) {
-    persistenceWriter.taskCompleted(ev.workflowContext(), ev.taskContext());
+  public CompletableFuture<?> onTaskCompleted(TaskCompletedEvent ev) {
+    return persistenceWriter.taskCompleted(ev.workflowContext(), ev.taskContext());
   }
 
   @Override
-  public void onTaskRetried(TaskRetriedEvent ev) {
-    persistenceWriter.taskRetried(ev.workflowContext(), ev.taskContext());
+  public CompletableFuture<?> onTaskRetried(TaskRetriedEvent ev) {
+    return persistenceWriter.taskRetried(ev.workflowContext(), ev.taskContext());
   }
 }

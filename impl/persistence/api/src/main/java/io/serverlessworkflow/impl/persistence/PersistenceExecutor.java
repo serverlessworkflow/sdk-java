@@ -21,13 +21,5 @@ import java.util.concurrent.CompletableFuture;
 public interface PersistenceExecutor extends AutoCloseable {
   CompletableFuture<Void> execute(Runnable runnable, WorkflowContextData context);
 
-  default CompletableFuture<Void> startInstance(Runnable runnable, WorkflowContextData context) {
-    return execute(runnable, context);
-  }
-
-  default CompletableFuture<Void> deleteInstance(Runnable runnable, WorkflowContextData context) {
-    return execute(runnable, context);
-  }
-
   default void close() {}
 }

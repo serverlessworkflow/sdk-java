@@ -16,14 +16,15 @@
 package io.serverlessworkflow.impl;
 
 import io.serverlessworkflow.impl.lifecycle.WorkflowCompletedEvent;
-import io.serverlessworkflow.impl.lifecycle.WorkflowExecutionListener;
+import io.serverlessworkflow.impl.lifecycle.WorkflowExecutionCompletableListener;
 import io.serverlessworkflow.impl.scheduler.Cancellable;
 import io.serverlessworkflow.impl.scheduler.WorkflowScheduler;
 import java.time.Duration;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
-class SchedulerListener implements WorkflowExecutionListener, AutoCloseable {
+class SchedulerListener implements WorkflowExecutionCompletableListener {
 
   private final WorkflowScheduler scheduler;
   private final Map<WorkflowDefinition, WorkflowValueResolver<Duration>> afterMap =
@@ -39,7 +40,7 @@ class SchedulerListener implements WorkflowExecutionListener, AutoCloseable {
   }
 
   @Override
-  public void onWorkflowCompleted(WorkflowCompletedEvent ev) {
+  public CompletableFuture<?> onWorkflowCompleted(WorkflowCompletedEvent ev) {
     WorkflowDefinition workflowDefinition = (WorkflowDefinition) ev.workflowContext().definition();
     WorkflowValueResolver<Duration> after = afterMap.get(workflowDefinition);
     if (after != null) {
@@ -49,6 +50,7 @@ class SchedulerListener implements WorkflowExecutionListener, AutoCloseable {
               workflowDefinition,
               after.apply((WorkflowContext) ev.workflowContext(), null, ev.output())));
     }
+    return CompletableFuture.completedFuture(null);
   }
 
   public void removeAfter(WorkflowDefinition definition) {

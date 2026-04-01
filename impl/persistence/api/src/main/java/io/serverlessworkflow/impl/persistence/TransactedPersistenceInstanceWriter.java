@@ -34,14 +34,14 @@ public abstract class TransactedPersistenceInstanceWriter
   protected CompletableFuture<Void> doStartInstance(
       Consumer<PersistenceInstanceOperations> operation, WorkflowContextData context) {
     return persistenceExecutor()
-        .startInstance(() -> doTransaction(operation, context.definition()), context);
+        .execute(() -> doTransaction(operation, context.definition()), context);
   }
 
   @Override
   protected CompletableFuture<Void> doCompleteInstance(
       Consumer<PersistenceInstanceOperations> operation, WorkflowContextData context) {
     return persistenceExecutor()
-        .deleteInstance(() -> doTransaction(operation, context.definition()), context);
+        .execute(() -> doTransaction(operation, context.definition()), context);
   }
 
   protected abstract void doTransaction(

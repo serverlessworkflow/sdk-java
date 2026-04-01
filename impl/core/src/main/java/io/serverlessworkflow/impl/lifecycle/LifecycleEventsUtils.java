@@ -16,29 +16,31 @@
 package io.serverlessworkflow.impl.lifecycle;
 
 import io.serverlessworkflow.impl.WorkflowContext;
-import java.util.function.Consumer;
+import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class LifecycleEventsUtils {
 
-  private LifecycleEventsUtils() {}
-
   private static final Logger logger = LoggerFactory.getLogger(LifecycleEventsUtils.class);
 
-  public static <T extends TaskEvent> void publishEvent(
-      WorkflowContext workflowContext, Consumer<WorkflowExecutionListener> consumer) {
-    workflowContext
-        .definition()
-        .application()
-        .listeners()
-        .forEach(
-            v -> {
-              try {
-                consumer.accept(v);
-              } catch (Exception ex) {
-                logger.error("Error processing listener. Ignoring and going on", ex);
-              }
-            });
+  private LifecycleEventsUtils() {}
+
+  public static CompletableFuture<?> publishEvent(
+      WorkflowContext workflowContext,
+      Function<WorkflowExecutionCompletableListener, CompletableFuture<?>> function) {
+    return CompletableFuture.allOf(
+        workflowContext.definition().application().listeners().stream()
+            .map(
+                v ->
+                    function
+                        .apply(v)
+                        .exceptionally(
+                            ex -> {
+                              logger.error("Error while executing listener", ex);
+                              return null;
+                            }))
+            .toArray(CompletableFuture[]::new));
   }
 }

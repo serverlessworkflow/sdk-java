@@ -43,7 +43,7 @@ public class DefaultPersistenceInstanceHandlers extends PersistenceInstanceHandl
     public PersistenceInstanceHandlers build() {
       return new DefaultPersistenceInstanceHandlers(
           new DefaultPersistenceInstanceWriter(
-              store, executor == null ? new SyncPersistenceExecutor() : executor),
+              store, executor == null ? new AsyncPersistenceExecutor() : executor),
           new DefaultPersistenceInstanceReader(store),
           store);
     }

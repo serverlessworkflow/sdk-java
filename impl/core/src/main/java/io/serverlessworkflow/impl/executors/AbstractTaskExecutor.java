@@ -213,17 +213,24 @@ public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskEx
       completable =
           completable
               .thenCompose(workflowContext.instance()::suspendedCheck)
+              .thenCompose(
+                  t -> {
+                    CompletableFuture<?> events =
+                        t.isRetrying()
+                            ? publishEvent(
+                                workflowContext,
+                                l ->
+                                    l.onTaskRetried(
+                                        new TaskRetriedEvent(workflowContext, taskContext)))
+                            : publishEvent(
+                                workflowContext,
+                                l ->
+                                    l.onTaskStarted(
+                                        new TaskStartedEvent(workflowContext, taskContext)));
+                    return events.thenApply(v -> t);
+                  })
               .thenApply(
                   t -> {
-                    if (t.isRetrying()) {
-                      publishEvent(
-                          workflowContext,
-                          l -> l.onTaskRetried(new TaskRetriedEvent(workflowContext, taskContext)));
-                    } else {
-                      publishEvent(
-                          workflowContext,
-                          l -> l.onTaskStarted(new TaskStartedEvent(workflowContext, taskContext)));
-                    }
                     inputSchemaValidator.ifPresent(s -> s.validate(t.rawInput()));
                     inputProcessor.ifPresent(
                         p -> taskContext.input(p.apply(workflowContext, t, t.rawInput())));
@@ -251,13 +258,16 @@ public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskEx
                                 p.apply(workflowContext, t, workflowContext.context())));
                     contextSchemaValidator.ifPresent(s -> s.validate(workflowContext.context()));
                     t.completedAt(Instant.now());
-                    publishEvent(
-                        workflowContext,
-                        l ->
-                            l.onTaskCompleted(
-                                new TaskCompletedEvent(workflowContext, taskContext)));
                     return t;
-                  });
+                  })
+              .thenCompose(
+                  t ->
+                      publishEvent(
+                              workflowContext,
+                              l ->
+                                  l.onTaskCompleted(
+                                      new TaskCompletedEvent(workflowContext, taskContext)))
+                          .thenApply(__ -> t));
       if (timeout.isPresent()) {
         completable =
             completable
