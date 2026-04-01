@@ -20,4 +20,6 @@ import java.util.function.Function;
 
 public interface DataTypeConverter<T, V> extends Function<T, V>, ServicePriority {
   Class<T> sourceType();
+
+  Class<V> targetType();
 }

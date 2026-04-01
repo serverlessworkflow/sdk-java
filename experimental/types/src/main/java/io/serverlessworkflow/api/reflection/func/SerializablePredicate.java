@@ -13,17 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.fluent.func.dsl;
+package io.serverlessworkflow.api.reflection.func;
 
 import java.io.Serializable;
-import java.util.function.Function;
+import java.util.function.Predicate;
 
-/**
- * Alternative to Function for our DSL to discover the input parameter class in runtime via
- * reflection.
- *
- * @param <T>
- * @param <R>
- */
 @FunctionalInterface
-public interface SerializableFunction<T, R> extends Function<T, R>, Serializable {}
+public interface SerializablePredicate<T> extends Predicate<T>, Serializable {}

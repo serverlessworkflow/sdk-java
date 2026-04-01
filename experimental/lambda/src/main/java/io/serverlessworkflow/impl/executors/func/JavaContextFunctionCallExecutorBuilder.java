@@ -30,6 +30,7 @@ public class JavaContextFunctionCallExecutorBuilder<T, V>
 
   protected ContextFunction<T, V> function;
   protected Optional<Class<T>> inputClass;
+  protected Optional<Class<V>> outputClass;
 
   @Override
   public boolean accept(Class<? extends TaskBase> clazz) {
@@ -43,10 +44,11 @@ public class JavaContextFunctionCallExecutorBuilder<T, V>
       WorkflowMutablePosition position) {
     this.function = task.function();
     this.inputClass = task.inputClass();
+    this.outputClass = task.outputClass();
   }
 
   @Override
   public CallableTask build() {
-    return new JavaContextFunctionCallExecutor<T, V>(inputClass, function);
+    return new JavaContextFunctionCallExecutor<T, V>(inputClass, outputClass, function);
   }
 }

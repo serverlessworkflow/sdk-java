@@ -15,6 +15,9 @@
  */
 package io.serverlessworkflow.fluent.func.dsl;
 
+import io.serverlessworkflow.api.reflection.func.ReflectionUtils;
+import io.serverlessworkflow.api.reflection.func.SerializableFunction;
+import io.serverlessworkflow.api.reflection.func.SerializablePredicate;
 import io.serverlessworkflow.api.types.FlowDirectiveEnum;
 import io.serverlessworkflow.fluent.func.FuncCallTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncSwitchTaskBuilder;

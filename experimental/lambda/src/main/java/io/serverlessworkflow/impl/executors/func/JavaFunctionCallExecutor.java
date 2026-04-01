@@ -20,18 +20,18 @@ import io.serverlessworkflow.impl.WorkflowContext;
 import java.util.Optional;
 import java.util.function.Function;
 
-public class JavaFunctionCallExecutor<T, V> extends AbstractJavaCallExecutor<T> {
+public class JavaFunctionCallExecutor<T, V> extends AbstractJavaCallExecutor<T, V> {
 
   private final Function<T, V> function;
 
-  public JavaFunctionCallExecutor(Optional<Class<T>> inputClass, Function<T, V> function) {
-    super(inputClass);
+  public JavaFunctionCallExecutor(
+      Optional<Class<T>> inputClass, Optional<Class<V>> outputClass, Function<T, V> function) {
+    super(inputClass, outputClass);
     this.function = function;
   }
 
   @Override
-  protected Object callJavaFunction(
-      WorkflowContext workflowContext, TaskContext taskContext, T input) {
+  protected V callJavaFunction(WorkflowContext workflowContext, TaskContext taskContext, T input) {
     return function.apply(input);
   }
 }

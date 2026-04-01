@@ -56,13 +56,20 @@ public class FuncForkTaskBuilder extends TaskBaseBuilder<FuncForkTaskBuilder>
 
   public <T, V> FuncForkTaskBuilder branch(
       String name, Function<T, V> function, Class<T> argParam) {
+    return branch(name, function, argParam, null);
+  }
+
+  public <T, V> FuncForkTaskBuilder branch(
+      String name, Function<T, V> function, Class<T> argParam, Class<V> returnClass) {
     if (name == null || name.isBlank()) {
       name = "branch-" + this.items.size();
     }
     this.items.add(
         new TaskItem(
             name,
-            new Task().withCallTask(new CallTaskJava(CallJava.function(function, argParam)))));
+            new Task()
+                .withCallTask(
+                    new CallTaskJava(CallJava.function(function, argParam, returnClass)))));
     return this;
   }
 

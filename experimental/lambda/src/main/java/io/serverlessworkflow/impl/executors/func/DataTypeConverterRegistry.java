@@ -43,7 +43,7 @@ public class DataTypeConverterRegistry {
   }
 
   @SuppressWarnings("rawtypes")
-  public Optional<DataTypeConverter> find(Class clazz) {
+  public Optional<DataTypeConverter> find(Class<?> clazz) {
     return convertersMap.computeIfAbsent(clazz, this::searchConverter);
   }
 

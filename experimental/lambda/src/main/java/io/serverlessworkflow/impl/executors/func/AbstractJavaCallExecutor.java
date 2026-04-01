@@ -23,39 +23,70 @@ import io.serverlessworkflow.impl.executors.CallableTask;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-public abstract class AbstractJavaCallExecutor<T> implements CallableTask {
+public abstract class AbstractJavaCallExecutor<T, V> implements CallableTask {
 
   protected final Optional<Class<T>> inputClass;
+  private final Optional<Class<V>> outputClass;
+  private final Optional<DataTypeConverter> typeConverter;
+  private final boolean directCompletable;
+  private final boolean convertedCompletable;
 
   protected AbstractJavaCallExecutor() {
-    this(Optional.empty());
+    this(Optional.empty(), Optional.empty());
   }
 
-  protected AbstractJavaCallExecutor(Optional<Class<T>> inputClass) {
+  protected AbstractJavaCallExecutor(
+      Optional<Class<T>> inputClass, Optional<Class<V>> outputClass) {
     this.inputClass = inputClass;
+    this.outputClass = outputClass;
+    this.typeConverter = outputClass.flatMap(DataTypeConverterRegistry.get()::find);
+    this.directCompletable = outputClass.filter(c -> c.equals(CompletableFuture.class)).isPresent();
+    this.convertedCompletable =
+        typeConverter.filter(c -> c.targetType().equals(CompletableFuture.class)).isPresent();
   }
 
   @Override
   public CompletableFuture<WorkflowModel> apply(
       WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel input) {
-    Object result =
-        convertResponse(callJavaFunction(workflowContext, taskContext, model2Input(input)));
     WorkflowModelFactory modelFactory = workflowContext.definition().application().modelFactory();
-    return result instanceof CompletableFuture future
-        ? future.thenApply(v -> output2Model(modelFactory, input, convertResponse(v)))
-        : CompletableFuture.completedFuture(output2Model(modelFactory, input, result));
+
+    if (directCompletable) {
+      return ((CompletableFuture<?>)
+              callJavaFunction(workflowContext, taskContext, model2Input(input)))
+          .thenApply(v -> output2Model(modelFactory, input, convertResponse(v)));
+    } else if (convertedCompletable) {
+      return ((CompletableFuture<?>)
+              convertTypedResponse(
+                  callJavaFunction(workflowContext, taskContext, model2Input(input))))
+          .thenApply(v -> output2Model(modelFactory, input, convertResponse(v)));
+    } else if (outputClass.isPresent()) {
+      return CompletableFuture.supplyAsync(
+              () -> callJavaFunction(workflowContext, taskContext, model2Input(input)),
+              workflowContext.definition().application().executorService())
+          .thenApply(v -> output2Model(modelFactory, input, convertTypedResponse(v)));
+    } else {
+      Object result =
+          convertResponse(callJavaFunction(workflowContext, taskContext, model2Input(input)));
+      return result instanceof CompletableFuture future
+          ? future.thenApply(v -> output2Model(modelFactory, input, convertResponse(v)))
+          : CompletableFuture.completedFuture(output2Model(modelFactory, input, result));
+    }
   }
 
-  protected abstract Object callJavaFunction(
+  protected abstract V callJavaFunction(
       WorkflowContext workflowContext, TaskContext taskContext, T input);
 
   protected T model2Input(WorkflowModel model) {
     return JavaFuncUtils.convertT(model, inputClass);
   }
 
+  protected Object convertTypedResponse(V obj) {
+    return obj == null ? null : typeConverter.map(c -> c.apply(obj)).orElse(obj);
+  }
+
   protected Object convertResponse(Object obj) {
-    return obj == null
-        ? null
+    return obj == null || obj instanceof CompletableFuture
+        ? obj
         : DataTypeConverterRegistry.get().find(obj.getClass()).map(c -> c.apply(obj)).orElse(obj);
   }
 

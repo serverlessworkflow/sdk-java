@@ -28,4 +28,9 @@ public class StringBuilder2String implements DataTypeConverter<StringBuilder, St
   public Class<StringBuilder> sourceType() {
     return StringBuilder.class;
   }
+
+  @Override
+  public Class<String> targetType() {
+    return String.class;
+  }
 }

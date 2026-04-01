@@ -21,22 +21,21 @@ import io.serverlessworkflow.api.types.func.LoopFunctionIndex;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
 
-public class JavaLoopFunctionIndexCallExecutor<T, V, R> extends AbstractJavaCallExecutor<T> {
+public class JavaLoopFunctionIndexCallExecutor<T, V, R> extends AbstractJavaCallExecutor<T, R> {
 
-  private final LoopFunctionIndex<T, V, Integer> function;
+  private final LoopFunctionIndex<T, V, R> function;
   private final String varName;
   private final String indexName;
 
   public JavaLoopFunctionIndexCallExecutor(
-      LoopFunctionIndex<T, V, Integer> function, String varName, String indexName) {
+      LoopFunctionIndex<T, V, R> function, String varName, String indexName) {
     this.function = function;
     this.varName = varName;
     this.indexName = indexName;
   }
 
   @Override
-  protected Object callJavaFunction(
-      WorkflowContext workflowContext, TaskContext taskContext, T input) {
+  protected R callJavaFunction(WorkflowContext workflowContext, TaskContext taskContext, T input) {
     return function.apply(
         input,
         (V) safeObject(taskContext.variables().get(varName)),

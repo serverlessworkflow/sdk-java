@@ -30,6 +30,7 @@ public class JavaFunctionCallExecutorBuilder<T, V>
 
   protected Function<T, V> function;
   protected Optional<Class<T>> inputClass;
+  protected Optional<Class<V>> outputClass;
 
   @Override
   public boolean accept(Class<? extends TaskBase> clazz) {
@@ -43,10 +44,11 @@ public class JavaFunctionCallExecutorBuilder<T, V>
       WorkflowMutablePosition position) {
     function = task.function();
     inputClass = task.inputClass();
+    outputClass = task.outputClass();
   }
 
   @Override
   public CallableTask build() {
-    return new JavaFunctionCallExecutor<>(inputClass, function);
+    return new JavaFunctionCallExecutor<>(inputClass, outputClass, function);
   }
 }

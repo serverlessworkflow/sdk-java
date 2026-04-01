@@ -21,7 +21,7 @@ import io.serverlessworkflow.api.types.func.LoopFunction;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
 
-public class JavaLoopFunctionCallExecutor<T, V, R> extends AbstractJavaCallExecutor<T> {
+public class JavaLoopFunctionCallExecutor<T, V, R> extends AbstractJavaCallExecutor<T, R> {
 
   private final LoopFunction<T, V, R> function;
   private final String varName;
@@ -32,8 +32,7 @@ public class JavaLoopFunctionCallExecutor<T, V, R> extends AbstractJavaCallExecu
   }
 
   @Override
-  protected Object callJavaFunction(
-      WorkflowContext workflowContext, TaskContext taskContext, T input) {
+  protected R callJavaFunction(WorkflowContext workflowContext, TaskContext taskContext, T input) {
     return function.apply(input, (V) safeObject(taskContext.variables().get(varName)));
   }
 }

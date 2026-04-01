@@ -16,6 +16,12 @@
 package io.serverlessworkflow.fluent.func.dsl;
 
 import io.cloudevents.CloudEventData;
+import io.serverlessworkflow.api.reflection.func.InstanceIdFunction;
+import io.serverlessworkflow.api.reflection.func.ReflectionUtils;
+import io.serverlessworkflow.api.reflection.func.SerializableConsumer;
+import io.serverlessworkflow.api.reflection.func.SerializableFunction;
+import io.serverlessworkflow.api.reflection.func.SerializablePredicate;
+import io.serverlessworkflow.api.reflection.func.UniqueIdBiFunction;
 import io.serverlessworkflow.api.types.FlowDirectiveEnum;
 import io.serverlessworkflow.api.types.OAuth2AuthenticationData;
 import io.serverlessworkflow.api.types.func.ContextFunction;
@@ -103,7 +109,11 @@ public final class FuncDSL {
    * @return a consumer that configures a {@code FuncCallTaskBuilder}
    */
   public static <T, V> Consumer<FuncCallTaskBuilder> fn(SerializableFunction<T, V> function) {
-    return f -> f.function(function, ReflectionUtils.inferInputType(function));
+    return f ->
+        f.function(
+            function,
+            ReflectionUtils.inferInputType(function),
+            ReflectionUtils.inferResultType(function));
   }
 
   /**
@@ -348,11 +358,16 @@ public final class FuncDSL {
    */
   public static <T, R> FuncCallStep<T, R> withContext(
       String name, ContextFunction<T, R> fn, Class<T> in) {
-    return new FuncCallStep<>(name, fn, in);
+    return withContext(name, fn, in, ReflectionUtils.inferResultType(fn));
+  }
+
+  public static <T, R> FuncCallStep<T, R> withContext(
+      String name, ContextFunction<T, R> fn, Class<T> in, Class<R> out) {
+    return new FuncCallStep<>(name, fn, in, out);
   }
 
   public static <T, R> FuncCallStep<T, R> withContext(String name, ContextFunction<T, R> fn) {
-    return new FuncCallStep<>(name, fn, ReflectionUtils.inferInputType(fn));
+    return withContext(name, fn, ReflectionUtils.inferInputType(fn));
   }
 
   /**
@@ -384,7 +399,12 @@ public final class FuncDSL {
    */
   public static <T, R> FuncCallStep<T, R> withFilter(
       String name, FilterFunction<T, R> fn, Class<T> in) {
-    return new FuncCallStep<>(name, fn, in);
+    return withFilter(name, fn, in, ReflectionUtils.inferResultType(fn));
+  }
+
+  public static <T, R> FuncCallStep<T, R> withFilter(
+      String name, FilterFunction<T, R> fn, Class<T> in, Class<R> out) {
+    return new FuncCallStep<>(name, fn, in, out);
   }
 
   public static <T, R> FuncCallStep<T, R> withFilter(FilterFunction<T, R> fn) {
@@ -407,8 +427,13 @@ public final class FuncDSL {
    */
   public static <T, R> FuncCallStep<T, R> withInstanceId(
       String name, InstanceIdFunction<T, R> fn, Class<T> in) {
+    return withInstanceId(name, fn, in, ReflectionUtils.inferResultType(fn));
+  }
+
+  public static <T, R> FuncCallStep<T, R> withInstanceId(
+      String name, InstanceIdFunction<T, R> fn, Class<T> in, Class<R> out) {
     ContextFunction<T, R> jcf = (payload, wctx) -> fn.apply(wctx.instanceData().id(), payload);
-    return new FuncCallStep<>(name, jcf, in);
+    return new FuncCallStep<>(name, jcf, in, out);
   }
 
   /**
@@ -463,9 +488,14 @@ public final class FuncDSL {
    */
   public static <T, R> FuncCallStep<T, R> withUniqueId(
       String name, UniqueIdBiFunction<T, R> fn, Class<T> in) {
+    return withUniqueId(name, fn, in, ReflectionUtils.inferResultType(fn));
+  }
+
+  public static <T, R> FuncCallStep<T, R> withUniqueId(
+      String name, UniqueIdBiFunction<T, R> fn, Class<T> in, Class<R> out) {
     FilterFunction<T, R> jff =
         (payload, wctx, tctx) -> fn.apply(defaultUniqueId(wctx, tctx), payload);
-    return new FuncCallStep<>(name, jff, in);
+    return new FuncCallStep<>(name, jff, in, out);
   }
 
   public static <T, R> FuncCallStep<T, R> withUniqueId(String name, UniqueIdBiFunction<T, R> fn) {
@@ -577,7 +607,23 @@ public final class FuncDSL {
    * @return a call step which supports chaining (e.g., {@code .exportAs(...).when(...)})
    */
   public static <T, R> FuncCallStep<T, R> function(Function<T, R> fn, Class<T> inputClass) {
-    return new FuncCallStep<>(fn, inputClass);
+    return function(fn, inputClass, null);
+  }
+
+  /**
+   * Create a {@link FuncCallStep} that calls a simple Java {@link Function} with explicit input
+   * type.
+   *
+   * @param fn the function to execute at runtime
+   * @param inputClass expected input class for model conversion
+   * @param outputClass expected outputClass class for model conversion
+   * @param <T> input type
+   * @param <R> result type
+   * @return a call step which supports chaining (e.g., {@code .exportAs(...).when(...)})
+   */
+  public static <T, R> FuncCallStep<T, R> function(
+      Function<T, R> fn, Class<T> inputClass, Class<R> outputClass) {
+    return new FuncCallStep<>(fn, inputClass, outputClass);
   }
 
   /**
@@ -590,8 +636,8 @@ public final class FuncDSL {
    * @return a call step
    */
   public static <T, R> FuncCallStep<T, R> function(SerializableFunction<T, R> fn) {
-    Class<T> inputClass = ReflectionUtils.inferInputType(fn);
-    return new FuncCallStep<>(fn, inputClass);
+    return new FuncCallStep<>(
+        fn, ReflectionUtils.inferInputType(fn), ReflectionUtils.inferResultType(fn));
   }
 
   /**
@@ -604,8 +650,8 @@ public final class FuncDSL {
    * @return a named call step
    */
   public static <T, R> FuncCallStep<T, R> function(String name, SerializableFunction<T, R> fn) {
-    Class<T> inputClass = ReflectionUtils.inferInputType(fn);
-    return new FuncCallStep<>(name, fn, inputClass);
+    return new FuncCallStep<>(
+        name, fn, ReflectionUtils.inferInputType(fn), ReflectionUtils.inferResultType(fn));
   }
 
   /**
@@ -620,7 +666,23 @@ public final class FuncDSL {
    */
   public static <T, R> FuncCallStep<T, R> function(
       String name, Function<T, R> fn, Class<T> inputClass) {
-    return new FuncCallStep<>(name, fn, inputClass);
+    return new FuncCallStep<>(name, fn, inputClass, null);
+  }
+
+  /**
+   * Named variant of {@link #function(Function, Class)} with explicit input type.
+   *
+   * @param name task name
+   * @param fn the function to execute
+   * @param inputClass expected input class
+   * @param outputClass expected output class
+   * @param <T> input type
+   * @param <R> output type
+   * @return a named call step
+   */
+  public static <T, R> FuncCallStep<T, R> function(
+      String name, Function<T, R> fn, Class<T> inputClass, Class<R> outputClass) {
+    return new FuncCallStep<>(name, fn, inputClass, outputClass);
   }
 
   // ------------------  tasks ---------------- //

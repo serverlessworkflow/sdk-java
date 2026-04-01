@@ -30,6 +30,7 @@ public class JavaFilterFunctionCallExecutorBuilder<T, V>
 
   private FilterFunction<T, V> function;
   private Optional<Class<T>> inputClass;
+  private Optional<Class<V>> outputClass;
 
   @Override
   public boolean accept(Class<? extends TaskBase> clazz) {
@@ -43,10 +44,11 @@ public class JavaFilterFunctionCallExecutorBuilder<T, V>
       WorkflowMutablePosition position) {
     this.function = task.function();
     this.inputClass = task.inputClass();
+    this.outputClass = task.outputClass();
   }
 
   @Override
   public CallableTask build() {
-    return new JavaFilterFunctionCallExecutor<>(inputClass, function);
+    return new JavaFilterFunctionCallExecutor<>(inputClass, outputClass, function);
   }
 }

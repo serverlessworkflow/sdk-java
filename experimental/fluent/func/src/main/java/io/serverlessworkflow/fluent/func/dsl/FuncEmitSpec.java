@@ -18,6 +18,8 @@ package io.serverlessworkflow.fluent.func.dsl;
 import io.cloudevents.CloudEventData;
 import io.cloudevents.core.data.BytesCloudEventData;
 import io.cloudevents.core.data.PojoCloudEventData;
+import io.serverlessworkflow.api.reflection.func.ReflectionUtils;
+import io.serverlessworkflow.api.reflection.func.SerializableFunction;
 import io.serverlessworkflow.api.types.func.ContextFunction;
 import io.serverlessworkflow.api.types.func.EventDataFunction;
 import io.serverlessworkflow.fluent.func.FuncEmitEventPropertiesBuilder;

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.fluent.func.dsl;
+package io.serverlessworkflow.api.reflection.func;
 
 import io.serverlessworkflow.api.types.func.ContextFunction;
 import io.serverlessworkflow.api.types.func.FilterFunction;
@@ -27,43 +27,48 @@ import java.util.function.Function;
  *
  * @see <a href="https://www.baeldung.com/java-serialize-lambda">Serialize a Lambda in Java</a>
  */
-final class ReflectionUtils {
+public final class ReflectionUtils {
 
   private ReflectionUtils() {}
 
   @SuppressWarnings("unchecked")
-  static <T> Class<T> inferInputType(ContextFunction<T, ?> fn) {
-    return throwIllegalStateIfNull((Class<T>) inferInputTypeFromAny(fn, 0));
+  public static <T> Class<T> inferInputType(ContextFunction<T, ?> fn) {
+    return (Class<T>) inferInputTypeFromAny(fn, 0);
   }
 
   @SuppressWarnings("unchecked")
-  static <T> Class<T> inferInputType(FilterFunction<T, ?> fn) {
-    return throwIllegalStateIfNull((Class<T>) inferInputTypeFromAny(fn, 0));
+  public static <T> Class<T> inferInputType(FilterFunction<T, ?> fn) {
+    return (Class<T>) inferInputTypeFromAny(fn, 0);
   }
 
   @SuppressWarnings("unchecked")
-  static <T> Class<T> inferInputType(SerializableFunction<T, ?> fn) {
-    return throwIllegalStateIfNull((Class<T>) inferInputTypeFromAny(fn, 0));
+  public static <T> Class<T> inferInputType(SerializableFunction<T, ?> fn) {
+    return (Class<T>) inferInputTypeFromAny(fn, 0);
   }
 
   @SuppressWarnings("unchecked")
-  static <T> Class<T> inferInputType(SerializablePredicate<T> fn) {
-    return throwIllegalStateIfNull((Class<T>) inferInputTypeFromAny(fn, 0));
+  public static <T> Class<T> inferInputType(SerializablePredicate<T> fn) {
+    return (Class<T>) inferInputTypeFromAny(fn, 0);
   }
 
   @SuppressWarnings("unchecked")
-  static <T> Class<T> inferInputType(InstanceIdFunction<T, ?> fn) {
-    return throwIllegalStateIfNull((Class<T>) inferInputTypeFromAny(fn, 1));
+  public static <T> Class<T> inferInputType(InstanceIdFunction<T, ?> fn) {
+    return (Class<T>) inferInputTypeFromAny(fn, 1);
   }
 
   @SuppressWarnings("unchecked")
-  static <T> Class<T> inferInputType(UniqueIdBiFunction<T, ?> fn) {
-    return throwIllegalStateIfNull((Class<T>) inferInputTypeFromAny(fn, 1));
+  public static <T> Class<T> inferInputType(UniqueIdBiFunction<T, ?> fn) {
+    return (Class<T>) inferInputTypeFromAny(fn, 1);
   }
 
   @SuppressWarnings("unchecked")
-  static <T> Class<T> inferInputType(SerializableConsumer<T> fn) {
-    return throwIllegalStateIfNull((Class<T>) inferInputTypeFromAny(fn, 0));
+  public static <T> Class<T> inferInputType(SerializableConsumer<T> fn) {
+    return (Class<T>) inferInputTypeFromAny(fn, 0);
+  }
+
+  @SuppressWarnings("unchecked")
+  public static <T> Class<T> inferResultType(Object fn) {
+    return (Class<T>) inferMethodType(fn).returnType();
   }
 
   /**
@@ -72,7 +77,11 @@ final class ReflectionUtils {
    *
    * @param lambdaParamIndex The index of the payload parameter in the interface's apply method
    */
-  private static Class<?> inferInputTypeFromAny(Object fn, int lambdaParamIndex) {
+  public static Class<?> inferInputTypeFromAny(Object fn, int lambdaParamIndex) {
+    return inferMethodType(fn).parameterArray()[lambdaParamIndex];
+  }
+
+  private static MethodType inferMethodType(Object fn) {
     try {
       Method m = fn.getClass().getDeclaredMethod("writeReplace");
       m.setAccessible(true);
@@ -82,20 +91,11 @@ final class ReflectionUtils {
 
       // getInstantiatedMethodType() provides the exact generic signature resolved
       // by the compiler, completely bypassing captured variables and method kind switches!
-      MethodType mt = MethodType.fromMethodDescriptorString(sl.getInstantiatedMethodType(), cl);
 
-      return mt.parameterArray()[lambdaParamIndex];
-
-    } catch (Exception ignore) {
-      return null;
-    }
-  }
-
-  private static <T> Class<T> throwIllegalStateIfNull(Class<T> clazz) {
-    if (clazz == null) {
+      return MethodType.fromMethodDescriptorString(sl.getInstantiatedMethodType(), cl);
+    } catch (ReflectiveOperationException ex) {
       throw new IllegalStateException(
-          "Cannot infer input type from lambda. Pass Class<T> or use a method reference.");
+          "Cannot infer type from lambda. Pass Class<T> or use a method reference.", ex);
     }
-    return clazz;
   }
 }

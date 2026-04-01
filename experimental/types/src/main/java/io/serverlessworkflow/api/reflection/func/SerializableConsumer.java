@@ -13,6 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.fluent.test;
+package io.serverlessworkflow.api.reflection.func;
 
-record Review(String title, String description, int rating) {}
+import java.io.Serializable;
+import java.util.function.Consumer;
+
+@FunctionalInterface
+public interface SerializableConsumer<T> extends Consumer<T>, Serializable {}

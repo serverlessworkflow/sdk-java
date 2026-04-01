@@ -21,6 +21,7 @@ import io.cloudevents.CloudEventData;
 import io.cloudevents.core.CloudEventUtils;
 import io.cloudevents.core.data.PojoCloudEventData;
 import io.cloudevents.jackson.PojoCloudEventDataMapper;
+import io.serverlessworkflow.api.reflection.func.SerializablePredicate;
 import io.serverlessworkflow.api.types.func.ContextPredicate;
 import io.serverlessworkflow.api.types.func.FilterPredicate;
 import io.serverlessworkflow.fluent.func.FuncEventFilterBuilder;

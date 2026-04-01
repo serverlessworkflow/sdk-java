@@ -13,10 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.fluent.func.dsl;
+package io.serverlessworkflow.api.types.func;
 
-import java.io.Serializable;
-import java.util.function.Predicate;
+import java.util.Optional;
 
-@FunctionalInterface
-public interface SerializablePredicate<T> extends Predicate<T>, Serializable {}
+public abstract class CallAbstractJavaFunction<T, V> extends CallJava<T> {
+
+  private static final long serialVersionUID = 1L;
+
+  private final Optional<Class<V>> outputClass;
+
+  protected CallAbstractJavaFunction() {
+    this(Optional.empty(), Optional.empty());
+  }
+
+  protected CallAbstractJavaFunction(
+      Optional<Class<T>> inputClass, Optional<Class<V>> outputClass) {
+    super(inputClass);
+    this.outputClass = outputClass;
+  }
+
+  public Optional<Class<V>> outputClass() {
+    return outputClass;
+  }
+}

@@ -16,10 +16,10 @@
 package io.serverlessworkflow.fluent.func;
 
 import io.cloudevents.CloudEventData;
+import io.serverlessworkflow.api.reflection.func.SerializableFunction;
 import io.serverlessworkflow.api.types.func.ContextFunction;
 import io.serverlessworkflow.api.types.func.EventDataFunction;
 import io.serverlessworkflow.api.types.func.FilterFunction;
-import io.serverlessworkflow.fluent.func.dsl.SerializableFunction;
 import io.serverlessworkflow.fluent.spec.AbstractEventPropertiesBuilder;
 import java.util.function.Function;
 

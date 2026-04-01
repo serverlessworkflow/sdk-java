@@ -46,7 +46,12 @@ public class FuncCallTaskBuilder extends TaskBaseBuilder<FuncCallTaskBuilder>
   }
 
   public <T, V> FuncCallTaskBuilder function(Function<T, V> function, Class<T> argClass) {
-    this.callTaskJava = new CallTaskJava(CallJava.function(function, argClass));
+    return function(function, argClass, null);
+  }
+
+  public <T, V> FuncCallTaskBuilder function(
+      Function<T, V> function, Class<T> argClass, Class<V> returnClass) {
+    this.callTaskJava = new CallTaskJava(CallJava.function(function, argClass, returnClass));
     super.setTask(this.callTaskJava.getCallJava());
     return this;
   }
@@ -56,7 +61,12 @@ public class FuncCallTaskBuilder extends TaskBaseBuilder<FuncCallTaskBuilder>
   }
 
   public <T, V> FuncCallTaskBuilder function(ContextFunction<T, V> function, Class<T> argClass) {
-    this.callTaskJava = new CallTaskJava(CallJava.function(function, argClass));
+    return function(function, argClass, null);
+  }
+
+  public <T, V> FuncCallTaskBuilder function(
+      ContextFunction<T, V> function, Class<T> argClass, Class<V> returnClass) {
+    this.callTaskJava = new CallTaskJava(CallJava.function(function, argClass, returnClass));
     super.setTask(this.callTaskJava.getCallJava());
     return this;
   }
@@ -66,7 +76,12 @@ public class FuncCallTaskBuilder extends TaskBaseBuilder<FuncCallTaskBuilder>
   }
 
   public <T, V> FuncCallTaskBuilder function(FilterFunction<T, V> function, Class<T> argClass) {
-    this.callTaskJava = new CallTaskJava(CallJava.function(function, argClass));
+    return function(function, argClass, null);
+  }
+
+  public <T, V> FuncCallTaskBuilder function(
+      FilterFunction<T, V> function, Class<T> argClass, Class<V> outputClass) {
+    this.callTaskJava = new CallTaskJava(CallJava.function(function, argClass, outputClass));
     super.setTask(this.callTaskJava.getCallJava());
     return this;
   }

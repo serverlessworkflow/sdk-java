@@ -13,10 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.fluent.func.dsl;
+package io.serverlessworkflow.api.reflection.func;
 
 import java.io.Serializable;
-import java.util.function.Consumer;
 
+/**
+ * Functions that expect a workflow instance ID injection in runtime
+ *
+ * @param <T> The task payload input
+ * @param <R> The task result output
+ */
 @FunctionalInterface
-public interface SerializableConsumer<T> extends Consumer<T>, Serializable {}
+public interface InstanceIdFunction<T, R> extends Serializable {
+  R apply(String instanceId, T payload);
+}

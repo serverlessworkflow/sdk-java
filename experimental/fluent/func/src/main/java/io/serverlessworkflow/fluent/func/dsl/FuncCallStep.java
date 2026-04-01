@@ -29,47 +29,52 @@ public final class FuncCallStep<T, R> extends Step<FuncCallStep<T, R>, FuncCallT
   private final ContextFunction<T, R> ctxFn;
   private final FilterFunction<T, R> filterFn;
   private final Class<T> argClass;
+  private final Class<R> returnClass;
 
   /** Function<T,R> variant (unnamed). */
-  FuncCallStep(Function<T, R> fn, Class<T> argClass) {
-    this(null, fn, argClass);
+  FuncCallStep(Function<T, R> fn, Class<T> argClass, Class<R> returnClass) {
+    this(null, fn, argClass, returnClass);
   }
 
   /** Function<T,R> variant (named). */
-  FuncCallStep(String name, Function<T, R> fn, Class<T> argClass) {
+  FuncCallStep(String name, Function<T, R> fn, Class<T> argClass, Class<R> returnClass) {
     this.name = name;
     this.fn = fn;
     this.ctxFn = null;
     this.filterFn = null;
     this.argClass = argClass;
+    this.returnClass = returnClass;
   }
 
   /** ContextFunction<T,R> variant (unnamed). */
-  FuncCallStep(ContextFunction<T, R> ctxFn, Class<T> argClass) {
-    this(null, ctxFn, argClass);
+  FuncCallStep(ContextFunction<T, R> ctxFn, Class<T> argClass, Class<R> returnClass) {
+    this(null, ctxFn, argClass, returnClass);
   }
 
   /** ContextFunction<T,R> variant (named). */
-  FuncCallStep(String name, ContextFunction<T, R> ctxFn, Class<T> argClass) {
+  FuncCallStep(String name, ContextFunction<T, R> ctxFn, Class<T> argClass, Class<R> returnClass) {
     this.name = name;
     this.fn = null;
     this.ctxFn = ctxFn;
     this.filterFn = null;
     this.argClass = argClass;
+    this.returnClass = returnClass;
   }
 
   /** FilterFunction<T,R> variant (unnamed). */
-  FuncCallStep(FilterFunction<T, R> filterFn, Class<T> argClass) {
-    this(null, filterFn, argClass);
+  FuncCallStep(FilterFunction<T, R> filterFn, Class<T> argClass, Class<R> returnClass) {
+    this(null, filterFn, argClass, returnClass);
   }
 
   /** FilterFunction<T,R> variant (named). */
-  FuncCallStep(String name, FilterFunction<T, R> filterFn, Class<T> argClass) {
+  FuncCallStep(
+      String name, FilterFunction<T, R> filterFn, Class<T> argClass, Class<R> returnClass) {
     this.name = name;
     this.fn = null;
     this.ctxFn = null;
     this.filterFn = filterFn;
     this.argClass = argClass;
+    this.returnClass = returnClass;
   }
 
   @Override
@@ -77,11 +82,11 @@ public final class FuncCallStep<T, R> extends Step<FuncCallStep<T, R>, FuncCallT
     final Consumer<FuncCallTaskBuilder> apply =
         cb -> {
           if (ctxFn != null) {
-            cb.function(ctxFn, argClass);
+            cb.function(ctxFn, argClass, returnClass);
           } else if (filterFn != null) {
-            cb.function(filterFn, argClass);
+            cb.function(filterFn, argClass, returnClass);
           } else {
-            cb.function(fn, argClass);
+            cb.function(fn, argClass, returnClass);
           }
           post.accept(cb);
         };
