@@ -24,9 +24,9 @@ public class ForTaskFunction extends ForTask {
 
   private static final long serialVersionUID = 1L;
   private LoopPredicateIndexFilter<?, ?> whilePredicate;
-  private Optional<Class<?>> whileClass;
-  private Optional<Class<?>> itemClass;
-  private Optional<Class<?>> forClass;
+  private Optional<Class<?>> whileClass = Optional.empty();
+  private Optional<Class<?>> itemClass = Optional.empty();
+  private Optional<Class<?>> forClass = Optional.empty();
   private Function<?, Collection<?>> collection;
 
   public <T, V> ForTaskFunction withWhile(LoopPredicate<T, V> whilePredicate) {

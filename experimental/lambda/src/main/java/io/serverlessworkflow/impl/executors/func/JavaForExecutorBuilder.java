@@ -69,7 +69,7 @@ public class JavaForExecutorBuilder extends ForExecutorBuilder {
   }
 
   private Object collectionFilterObject(ForTaskFunction taskFunctions) {
-    return taskFunctions.getForClass().isPresent()
+    return taskFunctions.getForClass() != null && taskFunctions.getForClass().isPresent()
         ? new TypedFunction(
             taskFunctions.getCollection(), taskFunctions.getForClass().orElseThrow())
         : taskFunctions.getCollection();
