@@ -16,6 +16,8 @@
 package io.serverlessworkflow.api.types.func;
 
 import io.serverlessworkflow.api.types.ForTask;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.function.Function;
@@ -28,6 +30,10 @@ public class ForTaskFunction extends ForTask {
   private Optional<Class<?>> itemClass = Optional.empty();
   private Optional<Class<?>> forClass = Optional.empty();
   private Function<?, Collection<?>> collection;
+
+  public ForTaskFunction() {
+    normalizeOptionalFields();
+  }
 
   public <T, V> ForTaskFunction withWhile(LoopPredicate<T, V> whilePredicate) {
     return withWhile(toPredicate(whilePredicate));
@@ -112,8 +118,8 @@ public class ForTaskFunction extends ForTask {
       Optional<Class<?>> modelClass,
       Optional<Class<?>> itemClass) {
     this.whilePredicate = whilePredicate;
-    this.whileClass = modelClass;
-    this.itemClass = itemClass;
+    this.whileClass = modelClass != null ? modelClass : Optional.empty();
+    this.itemClass = itemClass != null ? itemClass : Optional.empty();
     return this;
   }
 
@@ -146,5 +152,22 @@ public class ForTaskFunction extends ForTask {
 
   public Function<?, Collection<?>> getCollection() {
     return collection;
+  }
+
+  private void normalizeOptionalFields() {
+    if (whileClass == null) {
+      whileClass = Optional.empty();
+    }
+    if (itemClass == null) {
+      itemClass = Optional.empty();
+    }
+    if (forClass == null) {
+      forClass = Optional.empty();
+    }
+  }
+
+  private void readObject(ObjectInputStream input) throws IOException, ClassNotFoundException {
+    input.defaultReadObject();
+    normalizeOptionalFields();
   }
 }
