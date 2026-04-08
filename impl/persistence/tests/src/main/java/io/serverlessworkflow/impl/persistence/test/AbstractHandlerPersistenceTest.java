@@ -36,6 +36,7 @@ import io.serverlessworkflow.impl.executors.TransitionInfo;
 import io.serverlessworkflow.impl.persistence.PersistenceInstanceHandlers;
 import io.serverlessworkflow.impl.persistence.WorkflowPersistenceInstance;
 import java.io.IOException;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Optional;
@@ -55,6 +56,7 @@ public abstract class AbstractHandlerPersistenceTest {
   protected WorkflowModel context;
   protected WorkflowInstanceData workflowInstance;
   protected WorkflowContextData workflowContext;
+  private Instant beforeStart;
 
   @BeforeAll()
   static void init() throws IOException {
@@ -64,6 +66,7 @@ public abstract class AbstractHandlerPersistenceTest {
 
   @BeforeEach
   void setup() {
+    beforeStart = Instant.now();
     handlers = getPersistenceHandlers();
     context = app.modelFactory().fromNull();
     workflowContext = mock(WorkflowContext.class);
@@ -71,7 +74,7 @@ public abstract class AbstractHandlerPersistenceTest {
     when(workflowContext.context()).thenReturn(context);
     when(workflowContext.definition()).thenReturn(definition);
     when(workflowContext.instanceData()).thenReturn(workflowInstance);
-    when(workflowInstance.startedAt()).thenReturn(Instant.now());
+    when(workflowInstance.startedAt()).thenReturn(beforeStart.plus(Duration.ofMillis(1)));
     when(workflowInstance.context()).thenReturn(context);
     when(workflowInstance.id()).thenReturn(app.idFactory().get());
     when(workflowInstance.input()).thenReturn(app.modelFactory().from(Map.of("name", "Javierito")));
@@ -127,7 +130,10 @@ public abstract class AbstractHandlerPersistenceTest {
     assertThat(optional).isPresent();
     WorkflowPersistenceInstance instance = (WorkflowPersistenceInstance) optional.orElseThrow();
     assertThat(instance.input().asMap().orElseThrow()).isEqualTo(Map.of("name", "Javierito"));
-    assertThat(instance.startedAt()).isNotNull().isBefore(Instant.now());
+    assertThat(instance.startedAt())
+        .isNotNull()
+        .isBefore(Instant.now())
+        .isAfterOrEqualTo(beforeStart);
 
     // task retry
     WorkflowContext updateWContext = mock(WorkflowContext.class);

@@ -31,7 +31,7 @@ public abstract class AbstractOutputBuffer implements WorkflowOutputBuffer {
 
   @Override
   public WorkflowOutputBuffer writeInstant(Instant instant) {
-    writeLong(instant.getEpochSecond());
+    writeLong(instant.toEpochMilli());
     return this;
   }
 
