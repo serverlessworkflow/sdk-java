@@ -57,6 +57,14 @@ public class TaskItemListBuilder extends BaseTaskItemListBuilder<TaskItemListBui
   }
 
   @Override
+  public TaskItemListBuilder wait(String name, Consumer<WaitTaskBuilder> itemsConfigurer) {
+    name = defaultNameAndRequireConfig(name, itemsConfigurer, TYPE_WAIT);
+    final WaitTaskBuilder waitBuilder = new WaitTaskBuilder();
+    itemsConfigurer.accept(waitBuilder);
+    return addTaskItem(new TaskItem(name, new Task().withWaitTask(waitBuilder.build())));
+  }
+
+  @Override
   public TaskItemListBuilder forEach(
       String name, Consumer<ForEachTaskBuilder<TaskItemListBuilder>> itemsConfigurer) {
     name = defaultNameAndRequireConfig(name, itemsConfigurer, TYPE_FOR);

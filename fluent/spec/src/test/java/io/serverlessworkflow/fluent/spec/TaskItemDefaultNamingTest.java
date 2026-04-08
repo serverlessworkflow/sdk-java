@@ -25,6 +25,7 @@ import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.api.types.TryTask;
 import io.serverlessworkflow.api.types.TryTaskCatch;
 import io.serverlessworkflow.api.types.Workflow;
+import java.time.Duration;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -126,6 +127,23 @@ public class TaskItemDefaultNamingTest {
 
     assertEquals("http-0", nestedForItems.get(0).getName());
     assertEquals("set-1", nestedForItems.get(1).getName());
+  }
+
+  @Test
+  void testWaitTaskAutoNamingAndDuration() {
+    Workflow wf =
+        WorkflowBuilder.workflow("flowAutoNameWait")
+            .tasks(d -> d.wait(null, w -> w.wait(Duration.ofSeconds(2).plusMillis(250))))
+            .build();
+
+    List<TaskItem> items = wf.getDo();
+    assertNotNull(items, "Do list must not be null");
+    assertEquals(1, items.size(), "There should be one wait task");
+    assertEquals("wait-0", items.get(0).getName(), "Wait task should be wait-0");
+    assertEquals(
+        2, items.get(0).getTask().getWaitTask().getWait().getDurationInline().getSeconds());
+    assertEquals(
+        250, items.get(0).getTask().getWaitTask().getWait().getDurationInline().getMilliseconds());
   }
 
   @Test

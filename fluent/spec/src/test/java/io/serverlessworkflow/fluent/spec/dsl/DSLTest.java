@@ -117,6 +117,22 @@ public class DSLTest {
   }
 
   @Test
+  public void when_wait_task_from_dsl_helpers() {
+    Workflow wf =
+        WorkflowBuilder.workflow("myFlow", "myNs", "1.2.3")
+            .tasks(DSL.wait("PT5S"), DSL.wait("pause", DSL.timeoutSeconds(2)))
+            .build();
+
+    assertThat(wf.getDo()).hasSize(2);
+    assertThat(wf.getDo().get(0).getTask().getWaitTask()).isNotNull();
+    assertThat(wf.getDo().get(0).getTask().getWaitTask().getWait().getDurationExpression())
+        .isEqualTo("PT5S");
+    assertThat(wf.getDo().get(1).getName()).isEqualTo("pause");
+    assertThat(wf.getDo().get(1).getTask().getWaitTask().getWait().getDurationInline().getSeconds())
+        .isEqualTo(2);
+  }
+
+  @Test
   public void when_listen_any_with_until() {
     final String untilExpr = "$.count > 0";
 

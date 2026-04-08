@@ -798,6 +798,52 @@ public final class DSL {
   }
 
   /**
+   * Create a {@link TasksConfigurer} that adds a {@code wait} task configured with an inline
+   * duration builder.
+   *
+   * @param duration timeout builder consumer
+   * @return a {@link TasksConfigurer} that adds a WaitTask
+   */
+  public static TasksConfigurer wait(Consumer<TimeoutBuilder> duration) {
+    return list -> list.wait(w -> w.wait(duration));
+  }
+
+  /**
+   * Create a {@link TasksConfigurer} that adds a named {@code wait} task configured with an inline
+   * duration builder.
+   *
+   * @param name task name
+   * @param duration timeout builder consumer
+   * @return a {@link TasksConfigurer} that adds a WaitTask
+   */
+  public static TasksConfigurer wait(String name, Consumer<TimeoutBuilder> duration) {
+    return list -> list.wait(name, w -> w.wait(duration));
+  }
+
+  /**
+   * Create a {@link TasksConfigurer} that adds a {@code wait} task configured with a duration
+   * expression.
+   *
+   * @param durationExpression duration expression
+   * @return a {@link TasksConfigurer} that adds a WaitTask
+   */
+  public static TasksConfigurer wait(String durationExpression) {
+    return list -> list.wait(w -> w.wait(durationExpression));
+  }
+
+  /**
+   * Create a {@link TasksConfigurer} that adds a named {@code wait} task configured with a duration
+   * expression.
+   *
+   * @param name task name
+   * @param durationExpression duration expression
+   * @return a {@link TasksConfigurer} that adds a WaitTask
+   */
+  public static TasksConfigurer wait(String name, String durationExpression) {
+    return list -> list.wait(name, w -> w.wait(durationExpression));
+  }
+
+  /**
    * Create a {@link TasksConfigurer} that adds a {@code forEach} task.
    *
    * @param configurer for-each configurer

@@ -45,12 +45,11 @@ public class WaitExecutor extends RegularTaskExecutor<WaitTask> {
     }
 
     private Duration toLong(DurationInline durationInline) {
-      Duration duration = Duration.ofMillis(durationInline.getMilliseconds());
-      duration.plus(Duration.ofSeconds(durationInline.getSeconds()));
-      duration.plus(Duration.ofMinutes(durationInline.getMinutes()));
-      duration.plus(Duration.ofHours(durationInline.getHours()));
-      duration.plus(Duration.ofDays(durationInline.getDays()));
-      return duration;
+      return Duration.ofMillis(durationInline.getMilliseconds())
+          .plusSeconds(durationInline.getSeconds())
+          .plusMinutes(durationInline.getMinutes())
+          .plusHours(durationInline.getHours())
+          .plusDays(durationInline.getDays());
     }
 
     @Override

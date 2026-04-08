@@ -80,6 +80,12 @@ public class DoTaskBuilder extends BaseDoTaskBuilder<DoTaskBuilder, TaskItemList
   }
 
   @Override
+  public DoTaskBuilder wait(String name, Consumer<WaitTaskBuilder> itemsConfigurer) {
+    this.listBuilder().wait(name, itemsConfigurer);
+    return this;
+  }
+
+  @Override
   public DoTaskBuilder switchCase(String name, Consumer<SwitchTaskBuilder> itemsConfigurer) {
     this.listBuilder().switchCase(name, itemsConfigurer);
     return this;

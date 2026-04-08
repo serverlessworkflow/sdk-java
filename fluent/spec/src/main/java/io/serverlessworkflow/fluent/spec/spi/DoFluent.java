@@ -26,6 +26,7 @@ import io.serverlessworkflow.fluent.spec.SetTaskBuilder;
 import io.serverlessworkflow.fluent.spec.SwitchTaskBuilder;
 import io.serverlessworkflow.fluent.spec.TaskItemListBuilder;
 import io.serverlessworkflow.fluent.spec.TryTaskBuilder;
+import io.serverlessworkflow.fluent.spec.WaitTaskBuilder;
 import io.serverlessworkflow.fluent.spec.WorkflowTaskBuilder;
 
 /**
@@ -44,6 +45,7 @@ public interface DoFluent<T>
         ForEachFluent<ForEachTaskBuilder<TaskItemListBuilder>, T>,
         ForkFluent<ForkTaskBuilder, T>,
         ListenFluent<ListenTaskBuilder, T>,
+        WaitFluent<WaitTaskBuilder, T>,
         RaiseFluent<RaiseTaskBuilder, T>,
         CallOpenAPIFluent<CallOpenAPITaskBuilder, T>,
         WorkflowFluent<WorkflowTaskBuilder, T> {}
