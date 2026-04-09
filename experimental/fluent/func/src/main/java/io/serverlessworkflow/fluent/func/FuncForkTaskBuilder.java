@@ -15,6 +15,7 @@
  */
 package io.serverlessworkflow.fluent.func;
 
+import io.serverlessworkflow.api.types.DoTask;
 import io.serverlessworkflow.api.types.ForkTask;
 import io.serverlessworkflow.api.types.ForkTaskConfiguration;
 import io.serverlessworkflow.api.types.Task;
@@ -61,14 +62,12 @@ public class FuncForkTaskBuilder extends TaskBaseBuilder<FuncForkTaskBuilder>
 
   @Override
   public FuncForkTaskBuilder branch(String name, Consumer<FuncTaskItemListBuilder> branchConsumer) {
-    FuncTaskItemListBuilder branchItems = new FuncTaskItemListBuilder(0);
-    branchConsumer.accept(branchItems);
-    List<TaskItem> builtBranchItems = branchItems.build();
-    if (builtBranchItems.isEmpty()) {
-      return this;
+    if (name == null || name.isBlank()) {
+      name = "branch-" + this.items.size();
     }
-    String branchName = (name == null || name.isBlank()) ? "branch-" + this.items.size() : name;
-    this.items.add(new TaskItem(branchName, builtBranchItems.get(0).getTask()));
+    final FuncTaskItemListBuilder branchItems = new FuncTaskItemListBuilder(this.items);
+    this.items.add(
+        new TaskItem(name, new Task().withDoTask(new DoTask().withDo(branchItems.build()))));
     return this;
   }
 
