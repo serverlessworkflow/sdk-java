@@ -27,5 +27,11 @@ public interface ForkTaskFluent<
 
   SELF branches(Consumer<L> branchesConsumer);
 
+  default SELF branch(Consumer<L> branchConsumer) {
+    return branch(null, branchConsumer);
+  }
+
+  SELF branch(String name, Consumer<L> branchConsumer);
+
   ForkTask build();
 }

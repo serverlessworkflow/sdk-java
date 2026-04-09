@@ -23,6 +23,7 @@ import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.fluent.spec.WorkflowBuilder;
 import io.serverlessworkflow.fluent.spec.dsl.DSL;
 import io.serverlessworkflow.impl.WorkflowApplication;
+import io.serverlessworkflow.impl.WorkflowDefinitionId;
 import io.serverlessworkflow.impl.WorkflowInstance;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowStatus;
@@ -55,16 +56,14 @@ class ForkWaitTest {
 
   @ParameterizedTest(name = "{0}")
   @MethodSource("forkWaitWorkflowSources")
-  void testForkWait(String sourceName, WorkflowSource source) throws IOException {
-    assertModel(
-        appl.workflowDefinition(forkWaitWorkflow(source)).instance(Map.of()).start().join());
+  void testForkWait(String sourceName, Workflow workflow) {
+    assertModel(appl.workflowDefinition(workflow).instance(Map.of()).start().join());
   }
 
   @ParameterizedTest(name = "{0}")
   @MethodSource("forkWaitWorkflowSources")
-  void testForkWaitWithSuspend(String sourceName, WorkflowSource source) throws IOException {
-    WorkflowInstance instance =
-        appl.workflowDefinition(forkWaitWorkflow(source)).instance(Map.of());
+  void testForkWaitWithSuspend(String sourceName, Workflow workflow) {
+    WorkflowInstance instance = appl.workflowDefinition(workflow).instance(Map.of());
     CompletableFuture<WorkflowModel> future = instance.start();
     await()
         .pollDelay(Duration.ofMillis(5))
@@ -78,40 +77,36 @@ class ForkWaitTest {
     assertModel(model);
   }
 
-  private static Stream<Arguments> forkWaitWorkflowSources() {
+  private static Stream<Arguments> forkWaitWorkflowSources() throws IOException {
     return Stream.of(
-        Arguments.of("yaml", WorkflowSource.YAML), Arguments.of("dsl", WorkflowSource.DSL));
-  }
-
-  private static Workflow forkWaitWorkflow(WorkflowSource source) throws IOException {
-    if (source == WorkflowSource.DSL) {
-      return forkWaitWorkflow();
-    }
-    return readWorkflowFromClasspath("workflows-samples/fork-wait.yaml");
+            readWorkflowFromClasspath("workflows-samples/fork-wait.yaml"), forkWaitWorkflow())
+        .map(workflow -> Arguments.of(WorkflowDefinitionId.of(workflow).toString(":"), workflow));
   }
 
   private static Workflow forkWaitWorkflow() {
-    return WorkflowBuilder.workflow("fork-wait", "test", "0.1.0")
+    return WorkflowBuilder.workflow("fork-wait-java-dsl", "test", "0.1.0")
         .tasks(
             DSL.fork(
                 "incrParallel",
                 forkTaskBuilder ->
                     forkTaskBuilder
                         .compete(false)
-                        .branches(
+                        .branch(
+                            "helloBranch",
                             b ->
                                 b.wait(
                                         "waitABit",
                                         waitTaskBuilder ->
                                             waitTaskBuilder.wait(Duration.ofMillis(90)))
-                                    .set("helloBranch", s -> s.put("value", 1)))
-                        .branches(
+                                    .set("set", s -> s.put("value", 1)))
+                        .branch(
+                            "byeBranch",
                             b ->
                                 b.wait(
                                         "waitABit",
                                         waitTaskBuilder ->
                                             waitTaskBuilder.wait(Duration.ofMillis(90)))
-                                    .set("byeBranch", s -> s.put("value", 2)))))
+                                    .set("set", s -> s.put("value", 2)))))
         .build();
   }
 
@@ -121,10 +116,5 @@ class ForkWaitTest {
             List.of(
                 Map.of("helloBranch", Map.of("value", 1)),
                 Map.of("byeBranch", Map.of("value", 2))));
-  }
-
-  private enum WorkflowSource {
-    YAML,
-    DSL
   }
 }

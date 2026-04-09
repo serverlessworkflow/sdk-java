@@ -15,11 +15,15 @@
  */
 package io.serverlessworkflow.fluent.spec;
 
+import io.serverlessworkflow.api.types.DoTask;
 import io.serverlessworkflow.api.types.ForkTask;
 import io.serverlessworkflow.api.types.ForkTaskConfiguration;
+import io.serverlessworkflow.api.types.Task;
 import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.fluent.spec.spi.ForkTaskFluent;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 public class ForkTaskBuilder extends TaskBaseBuilder<ForkTaskBuilder>
@@ -58,8 +62,33 @@ public class ForkTaskBuilder extends TaskBaseBuilder<ForkTaskBuilder>
     if (existingBranches == null || existingBranches.isEmpty()) {
       this.forkTaskConfiguration.setBranches(newBranches);
     } else {
-      List<TaskItem> merged = new java.util.ArrayList<>(existingBranches);
+      List<TaskItem> merged = new ArrayList<>(existingBranches);
       merged.addAll(newBranches);
+      this.forkTaskConfiguration.setBranches(merged);
+    }
+
+    return this;
+  }
+
+  @Override
+  public ForkTaskBuilder branch(String name, Consumer<TaskItemListBuilder> branchConsumer) {
+    Objects.requireNonNull(branchConsumer, "Branch consumer must not be null");
+
+    List<TaskItem> existingBranches = this.forkTaskConfiguration.getBranches();
+    int currentOffset = (existingBranches == null) ? 0 : existingBranches.size();
+    String branchName = (name == null || name.isBlank()) ? "branch-" + currentOffset : name;
+
+    TaskItemListBuilder branchItems = new TaskItemListBuilder(0);
+    branchConsumer.accept(branchItems);
+
+    TaskItem branchItem =
+        new TaskItem(branchName, new Task().withDoTask(new DoTask().withDo(branchItems.build())));
+
+    if (existingBranches == null || existingBranches.isEmpty()) {
+      this.forkTaskConfiguration.setBranches(List.of(branchItem));
+    } else {
+      List<TaskItem> merged = new ArrayList<>(existingBranches);
+      merged.add(branchItem);
       this.forkTaskConfiguration.setBranches(merged);
     }
 
