@@ -260,9 +260,4 @@ class LifeCycleEventsTest {
             DSL.set("useExpression", setTaskBuilder -> setTaskBuilder.put("name", "Javierito")))
         .build();
   }
-
-  private enum WorkflowSource {
-    DSL,
-    YAML
-  }
 }
