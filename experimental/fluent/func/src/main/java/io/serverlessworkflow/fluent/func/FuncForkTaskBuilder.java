@@ -59,6 +59,19 @@ public class FuncForkTaskBuilder extends TaskBaseBuilder<FuncForkTaskBuilder>
     return branch(name, function, argParam, null);
   }
 
+  @Override
+  public FuncForkTaskBuilder branch(String name, Consumer<FuncTaskItemListBuilder> branchConsumer) {
+    FuncTaskItemListBuilder branchItems = new FuncTaskItemListBuilder(0);
+    branchConsumer.accept(branchItems);
+    List<TaskItem> builtBranchItems = branchItems.build();
+    if (builtBranchItems.isEmpty()) {
+      return this;
+    }
+    String branchName = (name == null || name.isBlank()) ? "branch-" + this.items.size() : name;
+    this.items.add(new TaskItem(branchName, builtBranchItems.get(0).getTask()));
+    return this;
+  }
+
   public <T, V> FuncForkTaskBuilder branch(
       String name, Function<T, V> function, Class<T> argParam, Class<V> returnClass) {
     if (name == null || name.isBlank()) {
