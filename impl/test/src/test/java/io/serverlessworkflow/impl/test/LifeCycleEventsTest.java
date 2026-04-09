@@ -128,20 +128,7 @@ class LifeCycleEventsTest {
 
   private static Stream<Arguments> waitSetWorkflowSources() {
     return Stream.of(
-        Arguments.of("dsl", WorkflowSource.DSL),
-        Arguments.of("yaml", WorkflowSource.YAML));
-  }
-
-  private static Workflow waitTestWorkflow() {
-    return WorkflowBuilder.workflow("wait-test", "test", "0.1.0")
-        .tasks(
-            // wait 500 ms
-            DSL.wait(
-                "waitABit",
-                timeoutBuilder ->
-                    timeoutBuilder.duration(durationBuilder -> durationBuilder.milliseconds(500))),
-            DSL.set("useExpression", setTaskBuilder -> setTaskBuilder.put("name", "Javierito")))
-        .build();
+        Arguments.of("dsl", WorkflowSource.DSL), Arguments.of("yaml", WorkflowSource.YAML));
   }
 
   private void doTestSuspendResumeNotWait(WorkflowInstance instance)
@@ -171,8 +158,7 @@ class LifeCycleEventsTest {
 
   private static Stream<Arguments> waitSetWorkflowSourcesForSuspendResumeWait() {
     return Stream.of(
-        Arguments.of("dsl", WorkflowSource.DSL),
-        Arguments.of("yaml", WorkflowSource.YAML));
+        Arguments.of("dsl", WorkflowSource.DSL), Arguments.of("yaml", WorkflowSource.YAML));
   }
 
   private void doTestSuspendResumeWait(WorkflowInstance instance)
@@ -202,8 +188,7 @@ class LifeCycleEventsTest {
 
   private static Stream<Arguments> waitSetWorkflowSourcesForCancel() {
     return Stream.of(
-        Arguments.of("dsl", WorkflowSource.DSL),
-        Arguments.of("yaml", WorkflowSource.YAML));
+        Arguments.of("dsl", WorkflowSource.DSL), Arguments.of("yaml", WorkflowSource.YAML));
   }
 
   private void doTestCancel(WorkflowInstance instance) {
@@ -224,8 +209,7 @@ class LifeCycleEventsTest {
 
   private static Stream<Arguments> waitSetWorkflowSourcesForSuspendResumeTimeout() {
     return Stream.of(
-        Arguments.of("dsl", WorkflowSource.DSL),
-        Arguments.of("yaml", WorkflowSource.YAML));
+        Arguments.of("dsl", WorkflowSource.DSL), Arguments.of("yaml", WorkflowSource.YAML));
   }
 
   private static void doTestSuspendResumeTimeout(WorkflowInstance instance) {
@@ -271,10 +255,23 @@ class LifeCycleEventsTest {
   private static WorkflowInstance waitSetInstance(WorkflowSource source) throws IOException {
     return switch (source) {
       case DSL -> appl.workflowDefinition(waitTestWorkflow()).instance(Map.of());
-      case YAML -> appl.workflowDefinition(
-                      WorkflowReader.readWorkflowFromClasspath("workflows-samples/wait-set.yaml"))
+      case YAML ->
+          appl.workflowDefinition(
+                  WorkflowReader.readWorkflowFromClasspath("workflows-samples/wait-set.yaml"))
               .instance(Map.of());
     };
+  }
+
+  private static Workflow waitTestWorkflow() {
+    return WorkflowBuilder.workflow("wait-test", "test", "0.1.0")
+        .tasks(
+            // wait 500 ms
+            DSL.wait(
+                "waitABit",
+                timeoutBuilder ->
+                    timeoutBuilder.duration(durationBuilder -> durationBuilder.milliseconds(500))),
+            DSL.set("useExpression", setTaskBuilder -> setTaskBuilder.put("name", "Javierito")))
+        .build();
   }
 
   private enum WorkflowSource {

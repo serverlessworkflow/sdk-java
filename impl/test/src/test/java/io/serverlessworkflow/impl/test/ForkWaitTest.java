@@ -20,6 +20,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 import io.serverlessworkflow.api.types.Workflow;
+import io.serverlessworkflow.fluent.spec.WorkflowBuilder;
+import io.serverlessworkflow.fluent.spec.dsl.DSL;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowInstance;
 import io.serverlessworkflow.impl.WorkflowModel;
@@ -30,38 +32,39 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class ForkWaitTest {
 
   private static WorkflowApplication appl;
 
   @BeforeAll
-  static void init() throws IOException {
+  static void init() {
     appl = WorkflowApplication.builder().build();
   }
 
   @AfterAll
-  static void tearDown() throws IOException {
+  static void tearDown() {
     appl.close();
   }
 
-  @Test
-  void testForkWait() throws IOException, InterruptedException, ExecutionException {
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("forkWaitWorkflowSources")
+  void testForkWait(String sourceName, WorkflowSource source) throws IOException {
     assertModel(
-        appl.workflowDefinition(readWorkflowFromClasspath("workflows-samples/fork-wait.yaml"))
-            .instance(Map.of())
-            .start()
-            .join());
+        appl.workflowDefinition(forkWaitWorkflow(source)).instance(Map.of()).start().join());
   }
 
-  @Test
-  void testForkWaitWithSuspend() throws IOException, InterruptedException {
-    Workflow workflow = readWorkflowFromClasspath("workflows-samples/fork-wait.yaml");
-    WorkflowInstance instance = appl.workflowDefinition(workflow).instance(Map.of());
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("forkWaitWorkflowSources")
+  void testForkWaitWithSuspend(String sourceName, WorkflowSource source) throws IOException {
+    WorkflowInstance instance =
+        appl.workflowDefinition(forkWaitWorkflow(source)).instance(Map.of());
     CompletableFuture<WorkflowModel> future = instance.start();
     await()
         .pollDelay(Duration.ofMillis(5))
@@ -75,11 +78,53 @@ class ForkWaitTest {
     assertModel(model);
   }
 
+  private static Stream<Arguments> forkWaitWorkflowSources() {
+    return Stream.of(
+        Arguments.of("yaml", WorkflowSource.YAML), Arguments.of("dsl", WorkflowSource.DSL));
+  }
+
+  private static Workflow forkWaitWorkflow(WorkflowSource source) throws IOException {
+    if (source == WorkflowSource.DSL) {
+      return forkWaitWorkflow();
+    }
+    return readWorkflowFromClasspath("workflows-samples/fork-wait.yaml");
+  }
+
+  private static Workflow forkWaitWorkflow() {
+    return WorkflowBuilder.workflow("fork-wait", "test", "0.1.0")
+        .tasks(
+            DSL.fork(
+                "incrParallel",
+                forkTaskBuilder ->
+                    forkTaskBuilder
+                        .compete(false)
+                        .branches(
+                            b ->
+                                b.wait(
+                                        "waitABit",
+                                        waitTaskBuilder ->
+                                            waitTaskBuilder.wait(Duration.ofMillis(90)))
+                                    .set("helloBranch", s -> s.put("value", 1)))
+                        .branches(
+                            b ->
+                                b.wait(
+                                        "waitABit",
+                                        waitTaskBuilder ->
+                                            waitTaskBuilder.wait(Duration.ofMillis(90)))
+                                    .set("byeBranch", s -> s.put("value", 2)))))
+        .build();
+  }
+
   private void assertModel(WorkflowModel current) {
     assertThat((Collection<Map<String, Object>>) current.asJavaObject())
         .containsExactlyInAnyOrderElementsOf(
             List.of(
                 Map.of("helloBranch", Map.of("value", 1)),
                 Map.of("byeBranch", Map.of("value", 2))));
+  }
+
+  private enum WorkflowSource {
+    YAML,
+    DSL
   }
 }
