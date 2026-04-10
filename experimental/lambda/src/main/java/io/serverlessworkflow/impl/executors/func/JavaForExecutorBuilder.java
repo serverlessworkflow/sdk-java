@@ -71,8 +71,7 @@ public class JavaForExecutorBuilder extends ForExecutorBuilder {
   private Object collectionFilterObject(ForTaskFunction taskFunctions) {
     return taskFunctions
         .getForClass()
-        .<Object>map(
-            forClass -> (Object) new TypedFunction(taskFunctions.getCollection(), (Class) forClass))
+        .map(forClass -> new TypedFunction(taskFunctions.getCollection(), forClass))
         .orElse(taskFunctions.getCollection());
   }
 }

@@ -31,10 +31,6 @@ public class ForTaskFunction extends ForTask {
   private Optional<Class<?>> forClass = Optional.empty();
   private Function<?, Collection<?>> collection;
 
-  public ForTaskFunction() {
-    normalizeOptionalFields();
-  }
-
   public <T, V> ForTaskFunction withWhile(LoopPredicate<T, V> whilePredicate) {
     return withWhile(toPredicate(whilePredicate));
   }
@@ -118,8 +114,8 @@ public class ForTaskFunction extends ForTask {
       Optional<Class<?>> modelClass,
       Optional<Class<?>> itemClass) {
     this.whilePredicate = whilePredicate;
-    this.whileClass = modelClass != null ? modelClass : Optional.empty();
-    this.itemClass = itemClass != null ? itemClass : Optional.empty();
+    this.whileClass = modelClass;
+    this.itemClass = itemClass;
     return this;
   }
 
@@ -168,6 +164,7 @@ public class ForTaskFunction extends ForTask {
 
   private void readObject(ObjectInputStream input) throws IOException, ClassNotFoundException {
     input.defaultReadObject();
+    // Preserve compatibility with older serialized instances that may have null optionals.
     normalizeOptionalFields();
   }
 }
