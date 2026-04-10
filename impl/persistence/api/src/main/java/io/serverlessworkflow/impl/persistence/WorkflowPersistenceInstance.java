@@ -18,6 +18,7 @@ package io.serverlessworkflow.impl.persistence;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowDefinition;
+import io.serverlessworkflow.impl.WorkflowInstance;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowMutableInstance;
 import io.serverlessworkflow.impl.WorkflowStatus;
@@ -28,7 +29,13 @@ public class WorkflowPersistenceInstance extends WorkflowMutableInstance {
 
   private final PersistenceWorkflowInfo info;
 
-  public WorkflowPersistenceInstance(WorkflowDefinition definition, PersistenceWorkflowInfo info) {
+  public static WorkflowInstance of(WorkflowDefinition definition, PersistenceWorkflowInfo info) {
+    return definition
+        .activeInstance(info.id())
+        .orElseGet(() -> new WorkflowPersistenceInstance(definition, info));
+  }
+
+  private WorkflowPersistenceInstance(WorkflowDefinition definition, PersistenceWorkflowInfo info) {
     super(definition, info.id(), info.input());
     this.info = info;
     this.startedAt = info.startedAt();

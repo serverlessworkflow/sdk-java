@@ -28,14 +28,14 @@ public abstract class AbstractPersistenceInstanceReader implements PersistenceIn
       String applicationId) {
     return operations
         .scanAll(applicationId, definition)
-        .map(v -> new WorkflowPersistenceInstance(definition, v));
+        .map(v -> WorkflowPersistenceInstance.of(definition, v));
   }
 
   protected final Optional<WorkflowInstance> find(
       PersistenceInstanceOperations operations, WorkflowDefinition definition, String instanceId) {
     return operations
         .readWorkflowInfo(definition, instanceId)
-        .map(i -> new WorkflowPersistenceInstance(definition, i));
+        .map(i -> WorkflowPersistenceInstance.of(definition, i));
   }
 
   @Override

@@ -63,6 +63,7 @@ public class WorkflowMutableInstance implements WorkflowInstance {
     this.input = input;
     this.status = new AtomicReference<>(WorkflowStatus.PENDING);
     this.workflowContext = new WorkflowContext(definition, this);
+    definition.addInstance(this);
   }
 
   @Override
@@ -120,6 +121,7 @@ public class WorkflowMutableInstance implements WorkflowInstance {
     if (ex != null) {
       handleException(ex instanceof CompletionException ? ex = ex.getCause() : ex);
     }
+    workflowContext.definition().removeInstance(this);
   }
 
   private void handleException(Throwable ex) {

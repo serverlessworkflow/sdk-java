@@ -39,6 +39,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class WorkflowDefinition implements AutoCloseable, WorkflowDefinitionData {
 
@@ -56,6 +57,7 @@ public class WorkflowDefinition implements AutoCloseable, WorkflowDefinitionData
   private Cancellable everySchedule;
   private Cancellable cronSchedule;
   private Collection<WorkflowInstance> scheduledInstances = new ArrayList<>();
+  private Map<String, WorkflowInstance> activeInstances = new ConcurrentHashMap<>();
 
   private WorkflowDefinition(
       WorkflowApplication application, Workflow workflow, ResourceLoader resourceLoader) {
@@ -177,6 +179,18 @@ public class WorkflowDefinition implements AutoCloseable, WorkflowDefinitionData
     scheduledInstances.add(workflowInstance);
   }
 
+  void removeInstance(WorkflowInstance instance) {
+    activeInstances.remove(instance.id());
+  }
+
+  void addInstance(WorkflowInstance instance) {
+    activeInstances.put(instance.id(), instance);
+  }
+
+  public Optional<WorkflowInstance> activeInstance(String instanceId) {
+    return Optional.ofNullable(activeInstances.get(instanceId));
+  }
+
   @Override
   public WorkflowDefinitionId id() {
     return definitionId;
@@ -194,6 +208,7 @@ public class WorkflowDefinition implements AutoCloseable, WorkflowDefinitionData
       cronSchedule.cancel();
     }
     scheduledInstances.clear();
+    activeInstances.clear();
   }
 
   @Override
