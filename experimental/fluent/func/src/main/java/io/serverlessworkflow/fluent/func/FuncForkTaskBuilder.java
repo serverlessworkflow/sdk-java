@@ -23,7 +23,6 @@ import io.serverlessworkflow.fluent.func.spi.ConditionalTaskBuilder;
 import io.serverlessworkflow.fluent.func.spi.FuncTaskTransformations;
 import io.serverlessworkflow.fluent.spec.AbstractForkTaskBuilder;
 import io.serverlessworkflow.fluent.spec.spi.ForkTaskFluent;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class FuncForkTaskBuilder
@@ -68,10 +67,5 @@ public class FuncForkTaskBuilder
 
   public <T, V> FuncForkTaskBuilder branch(Function<T, V> function) {
     return this.branch(null, function);
-  }
-
-  @Override
-  public FuncForkTaskBuilder branches(Consumer<FuncTaskItemListBuilder> consumer) {
-    return super.branches(consumer);
   }
 }
