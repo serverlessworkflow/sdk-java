@@ -15,40 +15,36 @@
  */
 package io.serverlessworkflow.fluent.func;
 
-import io.serverlessworkflow.api.types.DoTask;
 import io.serverlessworkflow.api.types.ForkTask;
-import io.serverlessworkflow.api.types.ForkTaskConfiguration;
 import io.serverlessworkflow.api.types.Task;
 import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.api.types.func.CallJava;
 import io.serverlessworkflow.api.types.func.CallTaskJava;
 import io.serverlessworkflow.fluent.func.spi.ConditionalTaskBuilder;
 import io.serverlessworkflow.fluent.func.spi.FuncTaskTransformations;
-import io.serverlessworkflow.fluent.spec.TaskBaseBuilder;
+import io.serverlessworkflow.fluent.spec.AbstractForkTaskBuilder;
 import io.serverlessworkflow.fluent.spec.spi.ForkTaskFluent;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-public class FuncForkTaskBuilder extends TaskBaseBuilder<FuncForkTaskBuilder>
+public class FuncForkTaskBuilder
+    extends AbstractForkTaskBuilder<FuncForkTaskBuilder, FuncTaskItemListBuilder>
     implements FuncTaskTransformations<FuncForkTaskBuilder>,
         ConditionalTaskBuilder<FuncForkTaskBuilder>,
         ForkTaskFluent<FuncForkTaskBuilder, FuncTaskItemListBuilder> {
 
-  private final ForkTask forkTask;
-  private final List<TaskItem> items;
-
   FuncForkTaskBuilder() {
-    this.forkTask = new ForkTask();
-    this.forkTask.setFork(new ForkTaskConfiguration());
-    this.items = new ArrayList<>();
-    this.setTask(forkTask);
+    super();
   }
 
   @Override
   protected FuncForkTaskBuilder self() {
     return this;
+  }
+
+  @Override
+  protected FuncTaskItemListBuilder newTaskItemListBuilder(int listOffsetSize) {
+    return new FuncTaskItemListBuilder(listOffsetSize);
   }
 
   public <T, V> FuncForkTaskBuilder branch(String name, Function<T, V> function) {
@@ -62,23 +58,14 @@ public class FuncForkTaskBuilder extends TaskBaseBuilder<FuncForkTaskBuilder>
 
   @Override
   public FuncForkTaskBuilder branch(String name, Consumer<FuncTaskItemListBuilder> branchConsumer) {
-    if (name == null || name.isBlank()) {
-      name = "branch-" + this.items.size();
-    }
-    final FuncTaskItemListBuilder branchItems = new FuncTaskItemListBuilder(this.items);
-    this.items.add(
-        new TaskItem(name, new Task().withDoTask(new DoTask().withDo(branchItems.build()))));
-    return this;
+    return super.branch(name, branchConsumer);
   }
 
   public <T, V> FuncForkTaskBuilder branch(
       String name, Function<T, V> function, Class<T> argParam, Class<V> returnClass) {
-    if (name == null || name.isBlank()) {
-      name = "branch-" + this.items.size();
-    }
-    this.items.add(
+    this.appendBranch(
         new TaskItem(
-            name,
+            this.defaultBranchName(name, this.currentOffset()),
             new Task()
                 .withCallTask(
                     new CallTaskJava(CallJava.function(function, argParam, returnClass)))));
@@ -91,21 +78,11 @@ public class FuncForkTaskBuilder extends TaskBaseBuilder<FuncForkTaskBuilder>
 
   @Override
   public FuncForkTaskBuilder branches(Consumer<FuncTaskItemListBuilder> consumer) {
-    final FuncTaskItemListBuilder builder = new FuncTaskItemListBuilder(this.items.size());
-    consumer.accept(builder);
-    this.items.addAll(builder.build());
-    return this;
-  }
-
-  @Override
-  public FuncForkTaskBuilder compete(boolean compete) {
-    this.forkTask.getFork().setCompete(compete);
-    return this;
+    return super.branches(consumer);
   }
 
   @Override
   public ForkTask build() {
-    this.forkTask.getFork().setBranches(this.items);
-    return forkTask;
+    return super.build();
   }
 }
