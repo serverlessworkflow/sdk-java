@@ -653,7 +653,7 @@ public final class DSL {
     return list -> list.openapi(configurer);
   }
 
-  public static TasksConfigurer workflow(WorkflowConfigurer configurer) {
+  public static TasksConfigurer subflow(WorkflowConfigurer configurer) {
     return list -> list.workflow(configurer);
   }
 

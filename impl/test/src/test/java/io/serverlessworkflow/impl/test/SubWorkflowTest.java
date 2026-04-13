@@ -148,7 +148,7 @@ public class SubWorkflowTest {
     Workflow parent =
         WorkflowBuilder.workflow("parentFlow", "org.acme", "1.0.0")
             .tasks(
-                DSL.workflow(
+                DSL.subflow(
                     DSL.workflow("org.acme", "childFlow", "1.0.0")
                         .input(Map.of("id", 42, "region", "us-east"))))
             .build();

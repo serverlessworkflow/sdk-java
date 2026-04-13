@@ -25,6 +25,7 @@ import static io.serverlessworkflow.fluent.spec.dsl.DSL.http;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.openapi;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.produced;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.secrets;
+import static io.serverlessworkflow.fluent.spec.dsl.DSL.subflow;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.to;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.workflow;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -308,7 +309,7 @@ public class DSLTest {
     Workflow wf =
         WorkflowBuilder.workflow("parent", "ns", "1")
             .tasks(
-                workflow(
+                subflow(
                     workflow("child.ns", "child-flow", "2.3.4")
                         .input("id", 99)
                         .await(false)
@@ -330,7 +331,7 @@ public class DSLTest {
     Workflow wf =
         WorkflowBuilder.workflow("parent", "ns", "1")
             .tasks(
-                workflow(
+                subflow(
                     workflow("child.ns", "child-flow", "2.3.4")
                         .input(Map.of("id", 7, "region", "eu"))
                         .input("extra", true)
