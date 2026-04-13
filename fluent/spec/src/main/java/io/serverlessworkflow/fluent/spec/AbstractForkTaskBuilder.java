@@ -42,7 +42,7 @@ public abstract class AbstractForkTaskBuilder<
   protected abstract L newTaskItemListBuilder(int listOffsetSize);
 
   protected String defaultBranchName(String name, int currentOffset) {
-    return (name == null || name.isBlank()) ? "branch-" + currentOffset : name;
+    return name == null || name.isBlank() ? "branch-" + currentOffset : name;
   }
 
   protected TaskItem createDoBranchTaskItem(String name, List<TaskItem> items) {
@@ -51,7 +51,7 @@ public abstract class AbstractForkTaskBuilder<
 
   protected int currentOffset() {
     List<TaskItem> existingBranches = this.forkTaskConfiguration.getBranches();
-    return (existingBranches == null) ? 0 : existingBranches.size();
+    return existingBranches == null ? 0 : existingBranches.size();
   }
 
   protected void appendBranches(List<TaskItem> newBranches) {

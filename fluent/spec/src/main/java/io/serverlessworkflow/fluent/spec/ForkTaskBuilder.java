@@ -20,10 +20,6 @@ import io.serverlessworkflow.fluent.spec.spi.ForkTaskFluent;
 public class ForkTaskBuilder extends AbstractForkTaskBuilder<ForkTaskBuilder, TaskItemListBuilder>
     implements ForkTaskFluent<ForkTaskBuilder, TaskItemListBuilder> {
 
-  ForkTaskBuilder() {
-    super();
-  }
-
   @Override
   protected ForkTaskBuilder self() {
     return this;

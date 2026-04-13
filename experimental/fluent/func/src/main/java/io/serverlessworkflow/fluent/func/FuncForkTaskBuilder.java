@@ -15,7 +15,6 @@
  */
 package io.serverlessworkflow.fluent.func;
 
-import io.serverlessworkflow.api.types.ForkTask;
 import io.serverlessworkflow.api.types.Task;
 import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.api.types.func.CallJava;
@@ -56,11 +55,6 @@ public class FuncForkTaskBuilder
     return branch(name, function, argParam, null);
   }
 
-  @Override
-  public FuncForkTaskBuilder branch(String name, Consumer<FuncTaskItemListBuilder> branchConsumer) {
-    return super.branch(name, branchConsumer);
-  }
-
   public <T, V> FuncForkTaskBuilder branch(
       String name, Function<T, V> function, Class<T> argParam, Class<V> returnClass) {
     this.appendBranch(
@@ -79,10 +73,5 @@ public class FuncForkTaskBuilder
   @Override
   public FuncForkTaskBuilder branches(Consumer<FuncTaskItemListBuilder> consumer) {
     return super.branches(consumer);
-  }
-
-  @Override
-  public ForkTask build() {
-    return super.build();
   }
 }
