@@ -54,7 +54,7 @@ public class FuncHttpTest {
   }
 
   private RecordedRequest takeRequestOrFail() throws Exception {
-    RecordedRequest request = mockServer.takeRequest(300, TimeUnit.MILLISECONDS);
+    RecordedRequest request = mockServer.takeRequest(150, TimeUnit.MILLISECONDS);
     assertThat(request)
         .as("Expected an HTTP request to be received by MockWebServer within 300 ms")
         .isNotNull();
