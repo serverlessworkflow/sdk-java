@@ -107,6 +107,21 @@ public interface BaseCallHttpSpec<SELF extends BaseCallHttpSpec<SELF>> {
     return self();
   }
 
+  default SELF query(String queryExpr) {
+    steps().add(c -> c.query(queryExpr));
+    return self();
+  }
+
+  default SELF query(Map<String, String> query) {
+    steps().add(c -> c.query(query));
+    return self();
+  }
+
+  default SELF query(String name, String value) {
+    steps().add(c -> c.query(q -> q.query(name, value)));
+    return self();
+  }
+
   default void accept(CallHttpTaskFluent<?> b) {
     for (var s : steps()) {
       s.accept(b);

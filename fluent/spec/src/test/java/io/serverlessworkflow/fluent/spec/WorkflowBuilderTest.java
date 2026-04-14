@@ -613,6 +613,21 @@ public class WorkflowBuilderTest {
             .getHTTPQuery();
     assertEquals("x", hq2.getAdditionalProperties().get("q1"));
     assertEquals("y", hq2.getAdditionalProperties().get("q2"));
+
+    Workflow wf3 =
+        WorkflowBuilder.workflow("flowCallQuerySingle")
+            .tasks(d -> d.http("qryOne", http().GET().endpoint("http://uri").query("id", "42")))
+            .build();
+    HTTPQuery hq3 =
+        wf3.getDo()
+            .get(0)
+            .getTask()
+            .getCallTask()
+            .getCallHTTP()
+            .getWith()
+            .getQuery()
+            .getHTTPQuery();
+    assertEquals("42", hq3.getAdditionalProperties().get("id"));
   }
 
   @Test

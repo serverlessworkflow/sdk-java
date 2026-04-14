@@ -148,17 +148,28 @@ public interface CallHttpTaskFluent<SELF extends TaskBaseBuilder<SELF>> {
   }
 
   default SELF query(Consumer<HTTPQueryBuilder> consumer) {
-    HTTPQueryBuilder queryBuilder = new HTTPQueryBuilder();
+    HTTPQueryBuilder queryBuilder = createHttpQueryFromExisting();
     consumer.accept(queryBuilder);
     ((CallHTTP) this.self().getTask()).getWith().setQuery(queryBuilder.build());
     return self();
   }
 
   default SELF query(Map<String, String> query) {
-    HTTPQueryBuilder httpQueryBuilder = new HTTPQueryBuilder();
+    HTTPQueryBuilder httpQueryBuilder = createHttpQueryFromExisting();
     httpQueryBuilder.queries(query);
     ((CallHTTP) this.self().getTask()).getWith().setQuery(httpQueryBuilder.build());
     return self();
+  }
+
+  private HTTPQueryBuilder createHttpQueryFromExisting() {
+    HTTPQueryBuilder httpQueryBuilder = new HTTPQueryBuilder();
+    Query existingQuery = ((CallHTTP) this.self().getTask()).getWith().getQuery();
+    if (existingQuery != null
+        && existingQuery.getHTTPQuery() != null
+        && existingQuery.getHTTPQuery().getAdditionalProperties() != null) {
+      existingQuery.getHTTPQuery().getAdditionalProperties().forEach(httpQueryBuilder::query);
+    }
+    return httpQueryBuilder;
   }
 
   default SELF redirect(boolean redirect) {
