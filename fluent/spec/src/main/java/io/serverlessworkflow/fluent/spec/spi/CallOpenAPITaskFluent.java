@@ -50,14 +50,7 @@ public interface CallOpenAPITaskFluent<SELF extends TaskBaseBuilder<SELF>> {
    * @see #document(String, AuthenticationConfigurer) for setting a document with authentication
    */
   default SELF document(String uri) {
-    if (EndpointUtil.isJqExpr(uri)) {
-      ((CallOpenAPI) this.self().getTask())
-          .getWith()
-          .withDocument(
-              new ExternalResource().withEndpoint(new Endpoint().withRuntimeExpression(uri)));
-    } else {
-      return document(URI.create(uri));
-    }
+    ((CallOpenAPI) this.self().getTask()).getWith().setDocument(EndpointUtil.externalResource(uri));
     return self();
   }
 
@@ -81,8 +74,8 @@ public interface CallOpenAPITaskFluent<SELF extends TaskBaseBuilder<SELF>> {
         .setDocument(
             new ExternalResource()
                 .withEndpoint(
-                    new Endpoint()
-                        .withRuntimeExpression(uri)
+                    EndpointUtil.externalResource(uri)
+                        .getEndpoint()
                         .withEndpointConfiguration(
                             new EndpointConfiguration()
                                 .withUri(new EndpointUri().withExpressionEndpointURI(uri))

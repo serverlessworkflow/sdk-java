@@ -16,6 +16,7 @@
 package io.serverlessworkflow.fluent.spec.spi;
 
 import io.serverlessworkflow.api.types.Endpoint;
+import io.serverlessworkflow.api.types.ExternalResource;
 import io.serverlessworkflow.api.types.UriTemplate;
 import java.net.URI;
 import java.util.Objects;
@@ -64,7 +65,7 @@ public final class EndpointUtil {
     return true;
   }
 
-  public static boolean isJqExpr(String expr) {
-    return expr != null && expr.startsWith("${");
+  public static ExternalResource externalResource(String expr) {
+    return new ExternalResource().withEndpoint(fromString(expr));
   }
 }
