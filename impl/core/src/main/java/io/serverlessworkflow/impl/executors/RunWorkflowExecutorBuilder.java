@@ -18,19 +18,22 @@ package io.serverlessworkflow.impl.executors;
 import io.serverlessworkflow.api.types.RunTaskConfiguration;
 import io.serverlessworkflow.api.types.RunWorkflow;
 import io.serverlessworkflow.api.types.SubflowConfiguration;
+import io.serverlessworkflow.api.types.SubflowInput;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowDefinitionId;
 import io.serverlessworkflow.impl.WorkflowUtils;
+import java.util.Map;
 
 public class RunWorkflowExecutorBuilder implements RunnableTaskBuilder<RunWorkflow> {
 
   public CallableTask build(RunWorkflow taskConfiguration, WorkflowDefinition definition) {
     SubflowConfiguration workflowConfig = taskConfiguration.getWorkflow();
+    SubflowInput input = workflowConfig.getInput();
     return new RunWorkflowExecutor(
         new WorkflowDefinitionId(
             workflowConfig.getNamespace(), workflowConfig.getName(), workflowConfig.getVersion()),
         WorkflowUtils.buildMapResolver(
-            definition.application(), workflowConfig.getInput().getAdditionalProperties()));
+            definition.application(), input != null ? input.getAdditionalProperties() : Map.of()));
   }
 
   @Override

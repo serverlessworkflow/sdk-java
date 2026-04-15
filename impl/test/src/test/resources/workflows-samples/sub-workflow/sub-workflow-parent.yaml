@@ -1,15 +1,13 @@
 document:
   dsl: '1.0.0'
-  namespace: default
-  name: parent
+  namespace: test
+  name: hello-world-parent
   version: '1.0.0'
 
 do:
   - sayHello:
       run:
         workflow:
-          namespace: default
-          name: set-into-context
+          namespace: test
+          name: hello-world-child
           version: '1.0.0'
-          input:
-            foo: bar

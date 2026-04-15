@@ -25,7 +25,7 @@ import io.serverlessworkflow.fluent.spec.WorkflowBuilder;
 import io.serverlessworkflow.fluent.spec.dsl.DSL;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import java.util.Map;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class SubWorkflowTest {
 
@@ -114,7 +114,7 @@ public class SubWorkflowTest {
       assertThat(updated.get("password"), is(equalTo("test_tested")));
       assertThat(
           result.get("detail"),
-          is(equalTo("The workflow set-into-context:1.0.0 updated user in context")));
+          is(equalTo("The workflow read-set-into-context:1.0.0 updated user in context")));
     }
   }
 
@@ -147,10 +147,7 @@ public class SubWorkflowTest {
 
     Workflow parent =
         WorkflowBuilder.workflow("parentFlow", "org.acme", "1.0.0")
-            .tasks(
-                DSL.subflow(
-                    DSL.workflow("org.acme", "childFlow", "1.0.0")
-                        .input(Map.of("id", 42, "region", "us-east"))))
+            .tasks(DSL.subflow(DSL.workflow("org.acme", "childFlow", "1.0.0")))
             .build();
 
     try (WorkflowApplication app = WorkflowApplication.builder().build()) {
@@ -158,6 +155,34 @@ public class SubWorkflowTest {
       Map<String, Object> result =
           app.workflowDefinition(parent).instance(Map.of()).start().join().asMap().orElseThrow();
       assertThat(result.get("counter"), is(equalTo(1)));
+      assertThat(result.get("greeting"), is(equalTo("helloWorld")));
+    }
+  }
+
+  @Test
+  public void runSubWorkflowsFromDslTest() throws Exception {
+    Workflow child =
+        WorkflowBuilder.workflow("childFlow", "org.acme", "1.0.0")
+            .tasks(d -> d.set("update", s -> s.put("counter", 1).put("greeting", "helloWorld")))
+            .build();
+
+    Workflow update =
+        WorkflowBuilder.workflow("updateFlow", "org.acme", "1.0.0")
+            .tasks(d -> d.set("update", s -> s.expr("$input+{counter:.counter+1}")))
+            .build();
+
+    Workflow parent =
+        WorkflowBuilder.workflow("parentFlow", "org.acme", "1.0.0")
+            .tasks(DSL.subflow(DSL.workflow("org.acme", "childFlow", "1.0.0")))
+            .tasks(DSL.subflow(DSL.workflow("org.acme", "updateFlow", "1.0.0")))
+            .build();
+
+    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
+      app.workflowDefinition(child);
+      app.workflowDefinition(update);
+      Map<String, Object> result =
+          app.workflowDefinition(parent).instance(Map.of()).start().join().asMap().orElseThrow();
+      assertThat(result.get("counter"), is(equalTo(2)));
       assertThat(result.get("greeting"), is(equalTo("helloWorld")));
     }
   }

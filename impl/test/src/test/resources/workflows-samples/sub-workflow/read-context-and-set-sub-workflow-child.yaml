@@ -1,7 +1,7 @@
 document:
   dsl: '1.0.0'
-  namespace: default
-  name: set-into-context
+  namespace: test
+  name: read-set-into-context
   version: '1.0.0'
 
 do:
