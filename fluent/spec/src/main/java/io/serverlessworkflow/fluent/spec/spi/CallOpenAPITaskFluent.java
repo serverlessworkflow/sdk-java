@@ -40,11 +40,24 @@ public interface CallOpenAPITaskFluent<SELF extends TaskBaseBuilder<SELF>> {
 
   SELF self();
 
+  /**
+   * Sets the OpenAPI document location. This method automatically detects whether the provided
+   * string is a literal URI or a JQ runtime expression.
+   *
+   * @param uri the OpenAPI document location as either a literal URI string or a JQ expression
+   * @return this builder instance for method chaining
+   * @see #document(URI) for setting a literal URI directly
+   * @see #document(String, AuthenticationConfigurer) for setting a document with authentication
+   */
   default SELF document(String uri) {
-    ((CallOpenAPI) this.self().getTask())
-        .getWith()
-        .withDocument(
-            new ExternalResource().withEndpoint(new Endpoint().withRuntimeExpression(uri)));
+    if (EndpointUtil.isJqExpr(uri)) {
+      ((CallOpenAPI) this.self().getTask())
+          .getWith()
+          .withDocument(
+              new ExternalResource().withEndpoint(new Endpoint().withRuntimeExpression(uri)));
+    } else {
+      return document(URI.create(uri));
+    }
     return self();
   }
 

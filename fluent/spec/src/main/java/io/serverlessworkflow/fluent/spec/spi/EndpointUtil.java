@@ -63,4 +63,8 @@ public final class EndpointUtil {
     }
     return true;
   }
+
+  public static boolean isJqExpr(String expr) {
+    return expr != null && expr.startsWith("${");
+  }
 }

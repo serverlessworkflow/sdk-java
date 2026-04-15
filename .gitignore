@@ -30,3 +30,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Bob-Shell
+.bob/notes/
