@@ -15,8 +15,8 @@
  */
 package io.serverlessworkflow.impl.lifecycle.ce;
 
+import static io.serverlessworkflow.impl.WorkflowError.error;
 import static io.serverlessworkflow.impl.lifecycle.ce.WorkflowDefinitionCEData.ref;
-import static io.serverlessworkflow.impl.lifecycle.ce.WorkflowErrorCEData.error;
 
 import io.cloudevents.CloudEvent;
 import io.cloudevents.CloudEventData;

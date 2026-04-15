@@ -15,10 +15,13 @@
  */
 package io.serverlessworkflow.impl;
 
+import io.serverlessworkflow.impl.lifecycle.TaskFailedEvent;
+import io.serverlessworkflow.impl.lifecycle.WorkflowFailedEvent;
 import io.serverlessworkflow.types.Errors;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
-public record WorkflowError(
-    String type, int status, String instance, String title, String details) {
+public record WorkflowError(String type, int status, String instance, String title, String detail) {
 
   public static Builder error(String type, int status) {
     return new Builder(type, status);
@@ -63,6 +66,38 @@ public record WorkflowError(
 
   public static Builder timeout() {
     return error(Errors.TIMEOUT.toString(), Errors.TIMEOUT.status());
+  }
+
+  public static WorkflowError error(TaskFailedEvent ev) {
+    return error(ev.cause(), ev.taskContext().position());
+  }
+
+  public static WorkflowError error(WorkflowFailedEvent ev) {
+    return error(ev.cause(), null);
+  }
+
+  private static WorkflowError error(Throwable cause, WorkflowPosition position) {
+    return cause instanceof WorkflowException ex
+        ? ex.getWorkflowError()
+        : commonError(cause, position);
+  }
+
+  private static WorkflowError commonError(Throwable cause, WorkflowPosition position) {
+    StringWriter stackTrace = new StringWriter();
+    try (PrintWriter writer = new PrintWriter(stackTrace)) {
+      cause.printStackTrace(writer);
+      return new WorkflowError(
+          cause.getClass().getTypeName(),
+          500,
+          position == null ? null : position.jsonPointer(),
+          cause.getMessage(),
+          stackTrace.toString());
+    }
+  }
+
+  @Deprecated
+  public String details() {
+    return detail;
   }
 
   public static class Builder {

@@ -28,6 +28,7 @@ import io.serverlessworkflow.fluent.spec.dsl.DSL;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowDefinitionId;
+import io.serverlessworkflow.impl.WorkflowError;
 import io.serverlessworkflow.impl.WorkflowInstance;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowStatus;
@@ -38,7 +39,6 @@ import io.serverlessworkflow.impl.lifecycle.ce.TaskCompletedCEData;
 import io.serverlessworkflow.impl.lifecycle.ce.TaskStartedCEData;
 import io.serverlessworkflow.impl.lifecycle.ce.WorkflowCancelledCEData;
 import io.serverlessworkflow.impl.lifecycle.ce.WorkflowCompletedCEData;
-import io.serverlessworkflow.impl.lifecycle.ce.WorkflowErrorCEData;
 import io.serverlessworkflow.impl.lifecycle.ce.WorkflowFailedCEData;
 import io.serverlessworkflow.impl.lifecycle.ce.WorkflowResumedCEData;
 import io.serverlessworkflow.impl.lifecycle.ce.WorkflowStartedCEData;
@@ -225,7 +225,7 @@ class LifeCycleEventsTest {
                 CompletionException.class,
                 () -> appl.workflowDefinition(workflow).instance(Map.of()).start().join()))
         .isNotNull();
-    WorkflowErrorCEData error =
+    WorkflowError error =
         assertPojoInCE("io.serverlessworkflow.workflow.faulted.v1", WorkflowFailedCEData.class)
             .error();
     assertThat(error.type()).isEqualTo("https://serverlessworkflow.io/errors/not-implemented");

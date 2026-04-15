@@ -15,10 +15,11 @@
  */
 package io.serverlessworkflow.impl.lifecycle.ce;
 
+import io.serverlessworkflow.impl.WorkflowError;
 import java.time.OffsetDateTime;
 
 public record WorkflowFailedCEData(
     String name,
     WorkflowDefinitionCEData definition,
     OffsetDateTime faultedAt,
-    WorkflowErrorCEData error) {}
+    WorkflowError error) {}

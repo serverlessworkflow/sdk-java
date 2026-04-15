@@ -204,7 +204,7 @@ public class WorkflowDefinitionTest {
         .isEqualTo("https://serverlessworkflow.io/errors/not-implemented");
     assertThat(ex.getWorkflowError().status()).isEqualTo(500);
     assertThat(ex.getWorkflowError().title()).isEqualTo("Not Implemented");
-    assertThat(ex.getWorkflowError().details()).contains("raise-not-implemented");
+    assertThat(ex.getWorkflowError().detail()).contains("raise-not-implemented");
     assertThat(ex.getWorkflowError().instance()).isEqualTo("do/0/notImplemented");
   }
 
