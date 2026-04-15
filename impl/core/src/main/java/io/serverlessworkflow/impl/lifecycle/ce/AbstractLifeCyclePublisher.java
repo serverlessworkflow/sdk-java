@@ -15,6 +15,20 @@
  */
 package io.serverlessworkflow.impl.lifecycle.ce;
 
+import static io.serverlessworkflow.impl.LifecycleEvents.TASK_CANCELLED;
+import static io.serverlessworkflow.impl.LifecycleEvents.TASK_COMPLETED;
+import static io.serverlessworkflow.impl.LifecycleEvents.TASK_FAULTED;
+import static io.serverlessworkflow.impl.LifecycleEvents.TASK_RESUMED;
+import static io.serverlessworkflow.impl.LifecycleEvents.TASK_RETRIED;
+import static io.serverlessworkflow.impl.LifecycleEvents.TASK_STARTED;
+import static io.serverlessworkflow.impl.LifecycleEvents.TASK_SUSPENDED;
+import static io.serverlessworkflow.impl.LifecycleEvents.WORKFLOW_CANCELLED;
+import static io.serverlessworkflow.impl.LifecycleEvents.WORKFLOW_COMPLETED;
+import static io.serverlessworkflow.impl.LifecycleEvents.WORKFLOW_FAULTED;
+import static io.serverlessworkflow.impl.LifecycleEvents.WORKFLOW_RESUMED;
+import static io.serverlessworkflow.impl.LifecycleEvents.WORKFLOW_STARTED;
+import static io.serverlessworkflow.impl.LifecycleEvents.WORKFLOW_STATUS_CHANGED;
+import static io.serverlessworkflow.impl.LifecycleEvents.WORKFLOW_SUSPENDED;
 import static io.serverlessworkflow.impl.WorkflowError.error;
 import static io.serverlessworkflow.impl.lifecycle.ce.WorkflowDefinitionCEData.ref;
 
@@ -49,23 +63,6 @@ import java.util.Set;
 import java.util.function.Function;
 
 public abstract class AbstractLifeCyclePublisher implements WorkflowExecutionListener {
-
-  private static final String TASK_STARTED = "io.serverlessworkflow.task.started.v1";
-  private static final String TASK_COMPLETED = "io.serverlessworkflow.task.completed.v1";
-  private static final String TASK_SUSPENDED = "io.serverlessworkflow.task.suspended.v1";
-  private static final String TASK_RESUMED = "io.serverlessworkflow.task.resumed.v1";
-  private static final String TASK_FAULTED = "io.serverlessworkflow.task.faulted.v1";
-  private static final String TASK_CANCELLED = "io.serverlessworkflow.task.cancelled.v1";
-  private static final String TASK_RETRIED = "io.serverlessworkflow.task.retried.v1";
-
-  private static final String WORKFLOW_STARTED = "io.serverlessworkflow.workflow.started.v1";
-  private static final String WORKFLOW_COMPLETED = "io.serverlessworkflow.workflow.completed.v1";
-  private static final String WORKFLOW_SUSPENDED = "io.serverlessworkflow.workflow.suspended.v1";
-  private static final String WORKFLOW_RESUMED = "io.serverlessworkflow.workflow.resumed.v1";
-  private static final String WORKFLOW_FAULTED = "io.serverlessworkflow.workflow.faulted.v1";
-  private static final String WORKFLOW_CANCELLED = "io.serverlessworkflow.workflow.cancelled.v1";
-  private static final String WORKFLOW_STATUS_CHANGED =
-      "io.serverlessworkflow.workflow.status-changed.v1";
 
   public static Collection<String> getLifeCycleTypes() {
     return Set.of(
