@@ -47,7 +47,8 @@ public class CallHttpAuthDslTest {
     assertThat(wf.getDo().get(0).getTask().getCallTask().get()).isNotNull();
 
     // Endpoint expression is set
-    assertThat(args.getEndpoint().getRuntimeExpression()).isEqualTo(EXPR_ENDPOINT);
+    assertThat(args.getEndpoint().getEndpointConfiguration().getUri().getExpressionEndpointURI())
+        .isEqualTo(EXPR_ENDPOINT);
 
     // Auth populated: BASIC (others null)
     var auth =
@@ -83,7 +84,8 @@ public class CallHttpAuthDslTest {
 
     var args = wf.getDo().get(0).getTask().getCallTask().getCallHTTP().getWith();
 
-    assertThat(args.getEndpoint().getRuntimeExpression()).isEqualTo(EXPR_ENDPOINT);
+    assertThat(args.getEndpoint().getEndpointConfiguration().getUri().getExpressionEndpointURI())
+        .isEqualTo(EXPR_ENDPOINT);
 
     var auth =
         args.getEndpoint().getEndpointConfiguration().getAuthentication().getAuthenticationPolicy();
@@ -112,7 +114,8 @@ public class CallHttpAuthDslTest {
 
     var args = wf.getDo().get(0).getTask().getCallTask().getCallHTTP().getWith();
 
-    assertThat(args.getEndpoint().getRuntimeExpression()).isEqualTo(EXPR_ENDPOINT);
+    assertThat(args.getEndpoint().getEndpointConfiguration().getUri().getExpressionEndpointURI())
+        .isEqualTo(EXPR_ENDPOINT);
 
     var auth =
         args.getEndpoint().getEndpointConfiguration().getAuthentication().getAuthenticationPolicy();
@@ -158,7 +161,8 @@ public class CallHttpAuthDslTest {
 
     var args = wf.getDo().get(0).getTask().getCallTask().getCallHTTP().getWith();
 
-    assertThat(args.getEndpoint().getRuntimeExpression()).isEqualTo(EXPR_ENDPOINT);
+    assertThat(args.getEndpoint().getEndpointConfiguration().getUri().getExpressionEndpointURI())
+        .isEqualTo(EXPR_ENDPOINT);
 
     var auth =
         args.getEndpoint().getEndpointConfiguration().getAuthentication().getAuthenticationPolicy();
@@ -203,7 +207,8 @@ public class CallHttpAuthDslTest {
 
     var args = wf.getDo().get(0).getTask().getCallTask().getCallHTTP().getWith();
 
-    assertThat(args.getEndpoint().getRuntimeExpression()).isEqualTo(EXPR_ENDPOINT);
+    assertThat(args.getEndpoint().getEndpointConfiguration().getUri().getExpressionEndpointURI())
+        .isEqualTo(EXPR_ENDPOINT);
 
     var auth =
         args.getEndpoint().getEndpointConfiguration().getAuthentication().getAuthenticationPolicy();
@@ -237,7 +242,13 @@ public class CallHttpAuthDslTest {
 
     var args = wf.getDo().get(0).getTask().getCallTask().getCallHTTP().getWith();
 
-    assertThat(args.getEndpoint().getUriTemplate().getLiteralUri().toString())
+    assertThat(
+            args.getEndpoint()
+                .getEndpointConfiguration()
+                .getUri()
+                .getLiteralEndpointURI()
+                .getLiteralUri()
+                .toString())
         .isEqualTo("https://api.example.com/v1/resource");
 
     var auth =

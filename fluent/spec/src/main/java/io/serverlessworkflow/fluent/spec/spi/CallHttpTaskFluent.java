@@ -50,6 +50,12 @@ public interface CallHttpTaskFluent<SELF extends TaskBaseBuilder<SELF>> {
     return self();
   }
 
+  /**
+   * Sets the endpoint URI for the HTTP call.
+   *
+   * @param endpoint the URI to call
+   * @return this builder instance for method chaining
+   */
   default SELF endpoint(URI endpoint) {
     ((CallHTTP) this.self().getTask())
         .getWith()
@@ -57,10 +63,16 @@ public interface CallHttpTaskFluent<SELF extends TaskBaseBuilder<SELF>> {
     return self();
   }
 
+  /**
+   * Sets the endpoint URI for the HTTP call with authentication configuration.
+   *
+   * @param endpoint the URI to call
+   * @param auth consumer to configure authentication policy
+   * @return this builder instance for method chaining
+   */
   default SELF endpoint(URI endpoint, Consumer<ReferenceableAuthenticationPolicyBuilder> auth) {
     final ReferenceableAuthenticationPolicyBuilder policy =
         new ReferenceableAuthenticationPolicyBuilder();
-    final UriTemplate uriTemplate = new UriTemplate().withLiteralUri(endpoint);
     auth.accept(policy);
     ((CallHTTP) this.self().getTask())
         .getWith()
@@ -68,39 +80,59 @@ public interface CallHttpTaskFluent<SELF extends TaskBaseBuilder<SELF>> {
             new Endpoint()
                 .withEndpointConfiguration(
                     new EndpointConfiguration()
-                        .withUri(new EndpointUri().withLiteralEndpointURI(uriTemplate))
-                        .withAuthentication(policy.build()))
-                .withUriTemplate(uriTemplate));
+                        .withUri(
+                            new EndpointUri()
+                                .withLiteralEndpointURI(new UriTemplate().withLiteralUri(endpoint)))
+                        .withAuthentication(policy.build())));
     return self();
   }
 
+  /**
+   * Sets the endpoint using a runtime expression or URI string.
+   *
+   * @param expr the runtime expression or URI string for the endpoint
+   * @return this builder instance for method chaining
+   */
   default SELF endpoint(String expr) {
     ((CallHTTP) this.self().getTask()).getWith().setEndpoint(EndpointUtil.fromString(expr));
     return self();
   }
 
+  /**
+   * Sets the endpoint using a runtime expression or URI string with authentication configuration.
+   *
+   * @param expr the runtime expression or URI string for the endpoint
+   * @param auth consumer to configure authentication policy
+   * @return this builder instance for method chaining
+   */
   default SELF endpoint(String expr, Consumer<ReferenceableAuthenticationPolicyBuilder> auth) {
     final ReferenceableAuthenticationPolicyBuilder policy =
         new ReferenceableAuthenticationPolicyBuilder();
     auth.accept(policy);
 
-    final Endpoint endpoint = EndpointUtil.fromString(expr);
-    endpoint.setEndpointConfiguration(
-        new EndpointConfiguration().withAuthentication(policy.build()));
-
-    ((CallHTTP) this.self().getTask()).getWith().setEndpoint(endpoint);
+    ((CallHTTP) this.self().getTask())
+        .getWith()
+        .setEndpoint(EndpointUtil.fromString(expr, policy.build()));
     return self();
   }
 
+  /**
+   * Sets the endpoint using a runtime expression or URI string with authentication policy
+   * reference.
+   *
+   * @param expr the runtime expression or URI string for the endpoint
+   * @param authUse the name of the authentication policy to reference
+   * @return this builder instance for method chaining
+   */
   default SELF endpoint(String expr, String authUse) {
-    final Endpoint endpoint = EndpointUtil.fromString(expr);
-    endpoint.withEndpointConfiguration(
-        new EndpointConfiguration()
-            .withAuthentication(
+    ((CallHTTP) this.self().getTask())
+        .getWith()
+        .setEndpoint(
+            EndpointUtil.fromString(
+                expr,
                 new ReferenceableAuthenticationPolicy()
                     .withAuthenticationPolicyReference(
                         new AuthenticationPolicyReference(authUse))));
-    ((CallHTTP) this.self().getTask()).getWith().setEndpoint(endpoint);
     return self();
   }
 

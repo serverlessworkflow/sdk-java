@@ -16,6 +16,9 @@
 package io.serverlessworkflow.fluent.spec.spi;
 
 import io.serverlessworkflow.api.types.Endpoint;
+import io.serverlessworkflow.api.types.EndpointConfiguration;
+import io.serverlessworkflow.api.types.EndpointUri;
+import io.serverlessworkflow.api.types.ReferenceableAuthenticationPolicy;
 import io.serverlessworkflow.api.types.UriTemplate;
 import java.net.URI;
 import java.util.Objects;
@@ -24,25 +27,46 @@ public final class EndpointUtil {
 
   private EndpointUtil() {}
 
-  public static Endpoint fromString(String expr) {
-    Objects.requireNonNull(expr, "Endpoint expression cannot be null");
-    String trimmed = expr.trim();
-    Endpoint endpoint = new Endpoint();
-    if (isUrlLike(trimmed)) {
-      UriTemplate template = new UriTemplate();
-      if (trimmed.indexOf('{') >= 0 || trimmed.indexOf('}') >= 0) {
-        template.setLiteralUriTemplate(trimmed);
-      } else {
-        template.setLiteralUri(URI.create(trimmed));
-      }
-      endpoint.setUriTemplate(template);
-      return endpoint;
-    }
+  public static Endpoint fromString(String uri) {
+    return fromString(uri, null);
+  }
 
-    // Let the runtime engine to verify if it's a valid jq expression since ${} it's not the only
-    // way of checking it.
-    endpoint.setRuntimeExpression(expr);
+  public static Endpoint fromString(String uri, ReferenceableAuthenticationPolicy auth) {
+    Objects.requireNonNull(uri, "Endpoint URI cannot be null");
+    String trimmed = uri.trim();
+    Endpoint endpoint = new Endpoint();
+
+    if (auth != null) {
+      endpoint.setEndpointConfiguration(
+          new EndpointConfiguration(buildEndpointUri(trimmed)).withAuthentication(auth));
+    } else if (isUrlLike(trimmed)) {
+      endpoint.setUriTemplate(buildUriTemplate(trimmed));
+    } else {
+      // Let the runtime engine to verify if it's a valid jq expression since ${} it's not the only
+      // way of checking it.
+      endpoint.setRuntimeExpression(uri);
+    }
     return endpoint;
+  }
+
+  private static EndpointUri buildEndpointUri(String uri) {
+    EndpointUri endpointUri = new EndpointUri();
+    if (isUrlLike(uri)) {
+      endpointUri.setLiteralEndpointURI(buildUriTemplate(uri));
+    } else {
+      endpointUri.setExpressionEndpointURI(uri);
+    }
+    return endpointUri;
+  }
+
+  private static UriTemplate buildUriTemplate(String trimmed) {
+    UriTemplate template = new UriTemplate();
+    if (trimmed.indexOf('{') >= 0 || trimmed.indexOf('}') >= 0) {
+      template.setLiteralUriTemplate(trimmed);
+    } else {
+      template.setLiteralUri(URI.create(trimmed));
+    }
+    return template;
   }
 
   private static boolean isUrlLike(String value) {

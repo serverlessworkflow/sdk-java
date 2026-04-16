@@ -21,6 +21,7 @@ import io.serverlessworkflow.api.types.EndpointConfiguration;
 import io.serverlessworkflow.api.types.EndpointUri;
 import io.serverlessworkflow.api.types.ExternalResource;
 import io.serverlessworkflow.api.types.OpenAPIArguments;
+import io.serverlessworkflow.api.types.ReferenceableAuthenticationPolicy;
 import io.serverlessworkflow.api.types.UriTemplate;
 import io.serverlessworkflow.fluent.spec.ReferenceableAuthenticationPolicyBuilder;
 import io.serverlessworkflow.fluent.spec.TaskBaseBuilder;
@@ -40,11 +41,19 @@ public interface CallOpenAPITaskFluent<SELF extends TaskBaseBuilder<SELF>> {
 
   SELF self();
 
+  /**
+   * Sets the OpenAPI document location. This method automatically detects whether the provided
+   * string is a literal URI or a JQ runtime expression.
+   *
+   * @param uri the OpenAPI document location as either a literal URI string or a JQ expression
+   * @return this builder instance for method chaining
+   * @see #document(URI) for setting a literal URI directly
+   * @see #document(String, AuthenticationConfigurer) for setting a document with authentication
+   */
   default SELF document(String uri) {
     ((CallOpenAPI) this.self().getTask())
         .getWith()
-        .withDocument(
-            new ExternalResource().withEndpoint(new Endpoint().withRuntimeExpression(uri)));
+        .setDocument(new ExternalResource().withEndpoint(EndpointUtil.fromString(uri)));
     return self();
   }
 
@@ -62,18 +71,11 @@ public interface CallOpenAPITaskFluent<SELF extends TaskBaseBuilder<SELF>> {
     final ReferenceableAuthenticationPolicyBuilder policy =
         new ReferenceableAuthenticationPolicyBuilder();
     authenticationConfigurer.accept(policy);
-    ((CallOpenAPI) this.self().getTask()).getWith().setAuthentication(policy.build());
+    ReferenceableAuthenticationPolicy auth = policy.build();
+    ((CallOpenAPI) this.self().getTask()).getWith().setAuthentication(auth);
     ((CallOpenAPI) this.self().getTask())
         .getWith()
-        .setDocument(
-            new ExternalResource()
-                .withEndpoint(
-                    new Endpoint()
-                        .withRuntimeExpression(uri)
-                        .withEndpointConfiguration(
-                            new EndpointConfiguration()
-                                .withUri(new EndpointUri().withExpressionEndpointURI(uri))
-                                .withAuthentication(policy.build()))));
+        .setDocument(new ExternalResource().withEndpoint(EndpointUtil.fromString(uri, auth)));
     return self();
   }
 
@@ -81,22 +83,21 @@ public interface CallOpenAPITaskFluent<SELF extends TaskBaseBuilder<SELF>> {
     final ReferenceableAuthenticationPolicyBuilder policy =
         new ReferenceableAuthenticationPolicyBuilder();
     authenticationConfigurer.accept(policy);
-
-    ((CallOpenAPI) this.self().getTask()).getWith().setAuthentication(policy.build());
+    ReferenceableAuthenticationPolicy auth = policy.build();
+    ((CallOpenAPI) this.self().getTask()).getWith().setAuthentication(auth);
     ((CallOpenAPI) this.self().getTask())
         .getWith()
         .setDocument(
             new ExternalResource()
                 .withEndpoint(
                     new Endpoint()
-                        .withUriTemplate(new UriTemplate().withLiteralUri(uri))
                         .withEndpointConfiguration(
                             new EndpointConfiguration()
                                 .withUri(
                                     new EndpointUri()
                                         .withLiteralEndpointURI(
                                             new UriTemplate().withLiteralUri(uri)))
-                                .withAuthentication(policy.build()))));
+                                .withAuthentication(auth))));
     return self();
   }
 
