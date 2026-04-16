@@ -84,23 +84,21 @@ public interface CallHttpTaskFluent<SELF extends TaskBaseBuilder<SELF>> {
         new ReferenceableAuthenticationPolicyBuilder();
     auth.accept(policy);
 
-    final Endpoint endpoint = EndpointUtil.fromString(expr);
-    endpoint.setEndpointConfiguration(
-        new EndpointConfiguration().withAuthentication(policy.build()));
-
-    ((CallHTTP) this.self().getTask()).getWith().setEndpoint(endpoint);
+    ((CallHTTP) this.self().getTask())
+        .getWith()
+        .setEndpoint(EndpointUtil.fromString(expr, policy.build()));
     return self();
   }
 
   default SELF endpoint(String expr, String authUse) {
-    final Endpoint endpoint = EndpointUtil.fromString(expr);
-    endpoint.withEndpointConfiguration(
-        new EndpointConfiguration()
-            .withAuthentication(
+    ((CallHTTP) this.self().getTask())
+        .getWith()
+        .setEndpoint(
+            EndpointUtil.fromString(
+                expr,
                 new ReferenceableAuthenticationPolicy()
                     .withAuthenticationPolicyReference(
                         new AuthenticationPolicyReference(authUse))));
-    ((CallHTTP) this.self().getTask()).getWith().setEndpoint(endpoint);
     return self();
   }
 

@@ -266,7 +266,13 @@ class FuncDSLTest {
     assertEquals("GET", http.getWith().getMethod());
     assertEquals(
         "http://service/api/users",
-        http.getWith().getEndpoint().getUriTemplate().getLiteralUri().toString(),
+        http.getWith()
+            .getEndpoint()
+            .getEndpointConfiguration()
+            .getUri()
+            .getLiteralEndpointURI()
+            .getLiteralUri()
+            .toString(),
         "endpoint should be set from get(name, endpoint, auth)");
 
     assertNotNull(
@@ -371,7 +377,13 @@ class FuncDSLTest {
     assertEquals("POST", http.getWith().getMethod());
     assertEquals(
         "https://orders.example.com/api/orders",
-        http.getWith().getEndpoint().getUriTemplate().getLiteralUri().toString());
+        http.getWith()
+            .getEndpoint()
+            .getEndpointConfiguration()
+            .getUri()
+            .getLiteralEndpointURI()
+            .getLiteralUri()
+            .toString());
     assertEquals(body, http.getWith().getBody());
 
     assertNotNull(http.getWith().getEndpoint().getEndpointConfiguration().getAuthentication());
@@ -409,7 +421,13 @@ class FuncDSLTest {
     assertEquals("POST", http.getWith().getMethod());
     assertEquals(
         "http://service/api",
-        http.getWith().getEndpoint().getUriTemplate().getLiteralUri().toString());
+        http.getWith()
+            .getEndpoint()
+            .getEndpointConfiguration()
+            .getUri()
+            .getLiteralEndpointURI()
+            .getLiteralUri()
+            .toString());
     assertEquals(
         "svc-auth",
         http.getWith()

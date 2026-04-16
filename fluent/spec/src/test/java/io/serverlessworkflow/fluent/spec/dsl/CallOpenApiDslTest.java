@@ -55,7 +55,13 @@ public class CallOpenApiDslTest {
     // Document and endpoint expression
     assertThat(with.getDocument()).isNotNull();
     assertThat(with.getDocument().getEndpoint()).isNotNull();
-    assertThat(with.getDocument().getEndpoint().getRuntimeExpression()).isEqualTo(EXPR_DOCUMENT);
+    assertThat(
+            with.getDocument()
+                .getEndpoint()
+                .getEndpointConfiguration()
+                .getUri()
+                .getExpressionEndpointURI())
+        .isEqualTo(EXPR_DOCUMENT);
 
     // Endpoint configuration URI expression
     var endpointConfig = with.getDocument().getEndpoint().getEndpointConfiguration();
