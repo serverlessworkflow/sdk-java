@@ -23,6 +23,7 @@ package io.serverlessworkflow.impl;
 public final class LifecycleEvents {
 
   private LifecycleEvents() {}
+
   /** Notifies about the start of a task. */
   public static final String TASK_STARTED = "io.serverlessworkflow.task.started.v1";
 
