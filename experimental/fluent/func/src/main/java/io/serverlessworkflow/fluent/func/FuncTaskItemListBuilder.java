@@ -94,6 +94,16 @@ public class FuncTaskItemListBuilder extends BaseTaskItemListBuilder<FuncTaskIte
   }
 
   @Override
+  public FuncTaskItemListBuilder raise(
+      String name, Consumer<FuncRaiseTaskBuilder> itemsConfigurer) {
+    name = this.defaultNameAndRequireConfig(name, itemsConfigurer, TYPE_RAISE);
+    final FuncRaiseTaskBuilder raiseTaskJavaBuilder = new FuncRaiseTaskBuilder();
+    itemsConfigurer.accept(raiseTaskJavaBuilder);
+    return this.addTaskItem(
+        new TaskItem(name, new Task().withRaiseTask(raiseTaskJavaBuilder.build())));
+  }
+
+  @Override
   public FuncTaskItemListBuilder forEach(
       String name, Consumer<FuncForTaskBuilder> itemsConfigurer) {
     name = this.defaultNameAndRequireConfig(name, itemsConfigurer, TYPE_FOR);
@@ -153,5 +163,14 @@ public class FuncTaskItemListBuilder extends BaseTaskItemListBuilder<FuncTaskIte
     task.setCallTask(callTask);
 
     return this.addTaskItem(new TaskItem(name, task));
+  }
+
+  @Override
+  public FuncTaskItemListBuilder tryCatch(
+      String name, Consumer<FuncTryTaskBuilder> itemsConfigurer) {
+    name = this.defaultNameAndRequireConfig(name, itemsConfigurer, TYPE_TRY);
+    final FuncTryTaskBuilder tryTaskBuilder = new FuncTryTaskBuilder();
+    itemsConfigurer.accept(tryTaskBuilder);
+    return this.addTaskItem(new TaskItem(name, new Task().withTryTask(tryTaskBuilder.build())));
   }
 }

@@ -28,8 +28,10 @@ import io.serverlessworkflow.api.types.func.ContextFunction;
 import io.serverlessworkflow.api.types.func.FilterFunction;
 import io.serverlessworkflow.fluent.func.FuncCallTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncEmitTaskBuilder;
+import io.serverlessworkflow.fluent.func.FuncRaiseTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncSwitchTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncTaskItemListBuilder;
+import io.serverlessworkflow.fluent.func.FuncTryTaskBuilder;
 import io.serverlessworkflow.fluent.func.configurers.FuncCallHttpConfigurer;
 import io.serverlessworkflow.fluent.func.configurers.FuncCallOpenAPIConfigurer;
 import io.serverlessworkflow.fluent.func.configurers.FuncTaskConfigurer;
@@ -881,6 +883,48 @@ public final class FuncDSL {
     Objects.requireNonNull(cases, "cases are required");
     final List<SwitchCaseConfigurer> snapshot = List.of(cases.clone());
     return list -> list.switchCase(taskName, s -> snapshot.forEach(s::onPredicate));
+  }
+
+  /**
+   * Create a {@link FuncTaskConfigurer} that adds a {@code raise} task.
+   *
+   * @param configurer raise task builder configurer
+   * @return list configurer
+   */
+  public static FuncTaskConfigurer raise(Consumer<FuncRaiseTaskBuilder> configurer) {
+    return list -> list.raise(configurer);
+  }
+
+  /**
+   * Create a {@link FuncTaskConfigurer} that adds a named {@code raise} task.
+   *
+   * @param name task name
+   * @param configurer raise task builder configurer
+   * @return list configurer
+   */
+  public static FuncTaskConfigurer raise(String name, Consumer<FuncRaiseTaskBuilder> configurer) {
+    return list -> list.raise(name, configurer);
+  }
+
+  /**
+   * Create a {@link FuncTaskConfigurer} that adds a {@code try/catch} task.
+   *
+   * @param configurer try task builder configurer
+   * @return list configurer
+   */
+  public static FuncTaskConfigurer tryCatch(Consumer<FuncTryTaskBuilder> configurer) {
+    return list -> list.tryCatch(configurer);
+  }
+
+  /**
+   * Create a {@link FuncTaskConfigurer} that adds a named {@code try/catch} task.
+   *
+   * @param name task name
+   * @param configurer try task builder configurer
+   * @return list configurer
+   */
+  public static FuncTaskConfigurer tryCatch(String name, Consumer<FuncTryTaskBuilder> configurer) {
+    return list -> list.tryCatch(name, configurer);
   }
 
   /**

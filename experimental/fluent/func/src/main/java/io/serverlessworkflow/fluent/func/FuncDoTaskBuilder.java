@@ -48,6 +48,12 @@ public class FuncDoTaskBuilder extends BaseDoTaskBuilder<FuncDoTaskBuilder, Func
   }
 
   @Override
+  public FuncDoTaskBuilder raise(String name, Consumer<FuncRaiseTaskBuilder> itemsConfigurer) {
+    this.listBuilder().raise(name, itemsConfigurer);
+    return this;
+  }
+
+  @Override
   public FuncDoTaskBuilder forEach(String name, Consumer<FuncForTaskBuilder> itemsConfigurer) {
     this.listBuilder().forEach(name, itemsConfigurer);
     return this;
@@ -94,6 +100,12 @@ public class FuncDoTaskBuilder extends BaseDoTaskBuilder<FuncDoTaskBuilder, Func
   public FuncDoTaskBuilder openapi(
       String name, Consumer<FuncCallOpenAPITaskBuilder> itemsConfigurer) {
     this.listBuilder().openapi(name, itemsConfigurer);
+    return this;
+  }
+
+  @Override
+  public FuncDoTaskBuilder tryCatch(String name, Consumer<FuncTryTaskBuilder> itemsConfigurer) {
+    this.listBuilder().tryCatch(name, itemsConfigurer);
     return this;
   }
 }
