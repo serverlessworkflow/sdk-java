@@ -19,6 +19,7 @@ import io.serverlessworkflow.fluent.func.spi.ConditionalTaskBuilder;
 import io.serverlessworkflow.fluent.func.spi.FuncDoFluent;
 import io.serverlessworkflow.fluent.func.spi.FuncTaskTransformations;
 import io.serverlessworkflow.fluent.spec.BaseDoTaskBuilder;
+import io.serverlessworkflow.fluent.spec.WorkflowTaskBuilder;
 import java.util.function.Consumer;
 
 public class FuncDoTaskBuilder extends BaseDoTaskBuilder<FuncDoTaskBuilder, FuncTaskItemListBuilder>
@@ -100,6 +101,24 @@ public class FuncDoTaskBuilder extends BaseDoTaskBuilder<FuncDoTaskBuilder, Func
   public FuncDoTaskBuilder openapi(
       String name, Consumer<FuncCallOpenAPITaskBuilder> itemsConfigurer) {
     this.listBuilder().openapi(name, itemsConfigurer);
+    return this;
+  }
+
+  @Override
+  public FuncDoTaskBuilder workflow(String name, Consumer<WorkflowTaskBuilder> itemsConfigurer) {
+    this.listBuilder().workflow(name, itemsConfigurer);
+    return this;
+  }
+
+  @Override
+  public FuncDoTaskBuilder subflow(String name, Consumer<WorkflowTaskBuilder> itemsConfigurer) {
+    this.listBuilder().subflow(name, itemsConfigurer);
+    return this;
+  }
+
+  @Override
+  public FuncDoTaskBuilder subflow(Consumer<WorkflowTaskBuilder> itemsConfigurer) {
+    this.listBuilder().subflow(itemsConfigurer);
     return this;
   }
 

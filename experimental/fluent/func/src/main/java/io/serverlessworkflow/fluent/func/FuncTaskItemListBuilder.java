@@ -22,6 +22,8 @@ import io.serverlessworkflow.api.types.Task;
 import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.fluent.func.spi.FuncDoFluent;
 import io.serverlessworkflow.fluent.spec.BaseTaskItemListBuilder;
+import io.serverlessworkflow.fluent.spec.TaskItemListBuilder;
+import io.serverlessworkflow.fluent.spec.WorkflowTaskBuilder;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -163,6 +165,46 @@ public class FuncTaskItemListBuilder extends BaseTaskItemListBuilder<FuncTaskIte
     task.setCallTask(callTask);
 
     return this.addTaskItem(new TaskItem(name, task));
+  }
+
+  @Override
+  public FuncTaskItemListBuilder workflow(
+      String name, Consumer<WorkflowTaskBuilder> itemsConfigurer) {
+    return this.addDelegatedWorkflow(name, itemsConfigurer, TYPE_WORKFLOW);
+  }
+
+  @Override
+  public FuncTaskItemListBuilder workflow(Consumer<WorkflowTaskBuilder> itemsConfigurer) {
+    return this.workflow(null, itemsConfigurer);
+  }
+
+  @Override
+  public FuncTaskItemListBuilder subflow(
+      String name, Consumer<WorkflowTaskBuilder> itemsConfigurer) {
+    return this.addDelegatedWorkflow(name, itemsConfigurer, TYPE_WORKFLOW);
+  }
+
+  @Override
+  public FuncTaskItemListBuilder subflow(Consumer<WorkflowTaskBuilder> itemsConfigurer) {
+    return this.subflow(null, itemsConfigurer);
+  }
+
+  private FuncTaskItemListBuilder addDelegatedWorkflow(
+      String name, Consumer<WorkflowTaskBuilder> itemsConfigurer, String delegateType) {
+    name = this.defaultNameAndRequireConfig(name, itemsConfigurer, delegateType);
+    // Preserve the original offset when delegating to avoid duplicate task names
+    // across appended .tasks(...) blocks
+    final int effectiveOffset = this.getOffset() + this.mutableList().size();
+    final TaskItemListBuilder delegate = new TaskItemListBuilder(effectiveOffset);
+    delegate.workflow(name, itemsConfigurer);
+    final List<TaskItem> taskItems = delegate.build();
+    if (taskItems.size() != 1) {
+      throw new IllegalStateException(
+          String.format(
+              "Expected %s delegate '%s' to build exactly 1 TaskItem, but got %d",
+              delegateType, name, taskItems.size()));
+    }
+    return addTaskItem(taskItems.get(0));
   }
 
   @Override

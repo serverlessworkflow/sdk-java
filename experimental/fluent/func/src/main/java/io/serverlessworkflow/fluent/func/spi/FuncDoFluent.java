@@ -26,6 +26,7 @@ import io.serverlessworkflow.fluent.func.FuncRaiseTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncSetTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncSwitchTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncTryTaskBuilder;
+import io.serverlessworkflow.fluent.spec.WorkflowTaskBuilder;
 import io.serverlessworkflow.fluent.spec.spi.CallHttpFluent;
 import io.serverlessworkflow.fluent.spec.spi.CallOpenAPIFluent;
 import io.serverlessworkflow.fluent.spec.spi.EmitFluent;
@@ -36,6 +37,8 @@ import io.serverlessworkflow.fluent.spec.spi.RaiseFluent;
 import io.serverlessworkflow.fluent.spec.spi.SetFluent;
 import io.serverlessworkflow.fluent.spec.spi.SwitchFluent;
 import io.serverlessworkflow.fluent.spec.spi.TryCatchFluent;
+import io.serverlessworkflow.fluent.spec.spi.WorkflowFluent;
+import java.util.function.Consumer;
 
 public interface FuncDoFluent<SELF extends FuncDoFluent<SELF>>
     extends SetFluent<FuncSetTaskBuilder, SELF>,
@@ -48,4 +51,14 @@ public interface FuncDoFluent<SELF extends FuncDoFluent<SELF>>
         TryCatchFluent<FuncTryTaskBuilder, SELF>,
         CallFnFluent<FuncCallTaskBuilder, SELF>,
         CallHttpFluent<FuncCallHttpTaskBuilder, SELF>,
-        CallOpenAPIFluent<FuncCallOpenAPITaskBuilder, SELF> {}
+        CallOpenAPIFluent<FuncCallOpenAPITaskBuilder, SELF>,
+        WorkflowFluent<WorkflowTaskBuilder, SELF> {
+
+  default SELF subflow(String name, Consumer<WorkflowTaskBuilder> itemsConfigurer) {
+    return this.workflow(name, itemsConfigurer);
+  }
+
+  default SELF subflow(Consumer<WorkflowTaskBuilder> itemsConfigurer) {
+    return this.workflow(itemsConfigurer);
+  }
+}

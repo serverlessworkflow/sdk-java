@@ -40,9 +40,12 @@ import io.serverlessworkflow.fluent.spec.AbstractEventConsumptionStrategyBuilder
 import io.serverlessworkflow.fluent.spec.EventFilterBuilder;
 import io.serverlessworkflow.fluent.spec.ScheduleBuilder;
 import io.serverlessworkflow.fluent.spec.TimeoutBuilder;
+import io.serverlessworkflow.fluent.spec.WorkflowTaskBuilder;
 import io.serverlessworkflow.fluent.spec.configurers.AuthenticationConfigurer;
+import io.serverlessworkflow.fluent.spec.configurers.WorkflowConfigurer;
 import io.serverlessworkflow.fluent.spec.dsl.DSL;
 import io.serverlessworkflow.fluent.spec.dsl.UseSpec;
+import io.serverlessworkflow.fluent.spec.dsl.WorkflowSpec;
 import io.serverlessworkflow.impl.TaskContextData;
 import io.serverlessworkflow.impl.WorkflowContextData;
 import java.net.URI;
@@ -1114,6 +1117,107 @@ public final class FuncDSL {
    */
   public static FuncTaskConfigurer set(Map<String, Object> map) {
     return list -> list.set(s -> s.expr(map));
+  }
+
+  /**
+   * Create a {@link FuncTaskConfigurer} that adds a sub-workflow call task using a {@link
+   * WorkflowConfigurer}.
+   *
+   * <pre>{@code
+   * tasks(
+   *     subflow(
+   *         workflow("org.acme", "sub-workflow", "0.1.0")
+   *             .input("id", 99)
+   *             .await(false)
+   *     )
+   * );
+   * }</pre>
+   *
+   * @param configurer nested workflow configurer
+   * @return a {@link FuncTaskConfigurer} that adds a workflow task to the tasks list
+   */
+  public static FuncTaskConfigurer subflow(WorkflowConfigurer configurer) {
+    Objects.requireNonNull(configurer, "configurer");
+    return list -> list.subflow(configurer);
+  }
+
+  /**
+   * Create a {@link FuncTaskConfigurer} that adds a named sub-workflow call task.
+   *
+   * @param name task name
+   * @param configurer nested workflow configurer
+   * @return a {@link FuncTaskConfigurer} that adds a workflow task to the tasks list
+   */
+  public static FuncTaskConfigurer subflow(String name, Consumer<WorkflowTaskBuilder> configurer) {
+    Objects.requireNonNull(name, "name");
+    Objects.requireNonNull(configurer, "configurer");
+    return list -> list.subflow(name, configurer);
+  }
+
+  /**
+   * Create a {@link FuncTaskConfigurer} that adds an unnamed sub-workflow call task.
+   *
+   * @param configurer nested workflow configurer
+   * @return a {@link FuncTaskConfigurer} that adds a workflow task to the tasks list
+   */
+  public static FuncTaskConfigurer subflow(Consumer<WorkflowTaskBuilder> configurer) {
+    Objects.requireNonNull(configurer, "configurer");
+    return list -> list.subflow(configurer);
+  }
+
+  /**
+   * Alias for {@link #subflow(WorkflowConfigurer)}.
+   *
+   * @param configurer nested workflow configurer
+   * @return a {@link FuncTaskConfigurer} that adds a workflow task to the tasks list
+   */
+  public static FuncTaskConfigurer workflowTask(WorkflowConfigurer configurer) {
+    return subflow(configurer);
+  }
+
+  /**
+   * Create a {@link FuncTaskConfigurer} that adds a workflow subflow task.
+   *
+   * @param configurer configurer for the nested workflow task
+   * @return a {@link FuncTaskConfigurer} that adds a workflow task to the tasks list
+   * @deprecated use {@link #subflow(WorkflowConfigurer)} to avoid ambiguity with spec-side factory
+   *     methods
+   */
+  @Deprecated
+  public static FuncTaskConfigurer workflow(WorkflowConfigurer configurer) {
+    return subflow(configurer);
+  }
+
+  /**
+   * Create a new {@link WorkflowSpec} to be used as a factory for workflow definitions.
+   *
+   * @param namespace workflow namespace
+   * @param name workflow name
+   * @param version workflow version
+   * @return a new {@link WorkflowSpec} instance
+   */
+  public static WorkflowSpec workflow(String namespace, String name, String version) {
+    return DSL.workflow(namespace, name, version);
+  }
+
+  /**
+   * Create a new {@link WorkflowSpec} to be used as a factory for workflow definitions.
+   *
+   * @param namespace workflow namespace
+   * @param name workflow name
+   * @return a new {@link WorkflowSpec} instance
+   */
+  public static WorkflowSpec workflow(String namespace, String name) {
+    return DSL.workflow(namespace, name);
+  }
+
+  /**
+   * Create a new {@link WorkflowSpec} to be used as a factory for workflow definitions.
+   *
+   * @return a new {@link WorkflowSpec} instance
+   */
+  public static WorkflowSpec workflow() {
+    return DSL.workflow();
   }
 
   // ---------------------------------------------------------------------------

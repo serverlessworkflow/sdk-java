@@ -79,6 +79,15 @@ public abstract class BaseTaskItemListBuilder<SELF extends BaseTaskItemListBuild
     return this.list;
   }
 
+  /**
+   * Returns the offset value used for auto-generating task names.
+   *
+   * @return the offset that was set during construction
+   */
+  protected final int getOffset() {
+    return this.offset;
+  }
+
   protected final SELF addTaskItem(TaskItem taskItem) {
     Objects.requireNonNull(taskItem, "taskItem must not be null");
     list.add(taskItem);

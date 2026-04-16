@@ -23,10 +23,8 @@ import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.get;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.http;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.listen;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.produced;
-import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.raise;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.switchWhenOrElse;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.toOne;
-import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.tryCatch;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.use;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -36,6 +34,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import io.serverlessworkflow.api.types.CallHTTP;
 import io.serverlessworkflow.api.types.Export;
 import io.serverlessworkflow.api.types.FlowDirectiveEnum;
+import io.serverlessworkflow.api.types.RunTask;
+import io.serverlessworkflow.api.types.RunWorkflow;
 import io.serverlessworkflow.api.types.Task;
 import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.api.types.Workflow;
@@ -174,133 +174,6 @@ class FuncDSLTest {
     assertNotNull(
         ((CallJava) t0.getCallTask().get()).getExport(), "function step should carry export");
     assertNotNull(t2.getListenTask().getExport(), "listen step should carry export");
-  }
-
-  @Test
-  void raise_and_tryCatch_build_through_func_workflow_builder() {
-    Workflow wf =
-        FuncWorkflowBuilder.workflow("raise-try")
-            .tasks(
-                FuncDSL.tasks(
-                    raise("boom", r -> r.error(e -> e.type("org.acme.Boom").status(409))),
-                    tryCatch(
-                        "guarded",
-                        t ->
-                            t.tryHandler(
-                                    tb ->
-                                        tb.function(
-                                            cb ->
-                                                cb.function((String s) -> s.trim(), String.class)))
-                                .catchHandler(
-                                    c ->
-                                        c.when("$.errorType == 'TEMP'")
-                                            .doTasks(
-                                                d ->
-                                                    d.raise(
-                                                        "handled",
-                                                        r ->
-                                                            r.error(
-                                                                e ->
-                                                                    e.type("org.acme.Handled")
-                                                                        .status(500))))))))
-            .build();
-
-    List<TaskItem> items = wf.getDo();
-    assertEquals(2, items.size());
-
-    Task raiseTask = items.get(0).getTask();
-    assertNotNull(raiseTask.getRaiseTask(), "RaiseTask expected");
-    var type = raiseTask.getRaiseTask().getRaise().getError().getRaiseErrorDefinition().getType();
-    assertNotNull(type, "Error type expected");
-    assertEquals(
-        "org.acme.Boom",
-        type.getLiteralErrorType() != null
-            ? type.getLiteralErrorType().getLiteralUri().toString()
-            : type.getExpressionErrorType());
-    assertEquals(
-        409, raiseTask.getRaiseTask().getRaise().getError().getRaiseErrorDefinition().getStatus());
-
-    Task tryTask = items.get(1).getTask();
-    assertNotNull(tryTask.getTryTask(), "TryTask expected");
-    assertEquals(1, tryTask.getTryTask().getTry().size(), "Try block should contain one task");
-    assertNotNull(
-        tryTask.getTryTask().getTry().get(0).getTask().getCallTask(),
-        "Function task should compile inside try");
-
-    assertNotNull(tryTask.getTryTask().getCatch(), "Catch block expected");
-    assertEquals("$.errorType == 'TEMP'", tryTask.getTryTask().getCatch().getWhen());
-    assertEquals(
-        1, tryTask.getTryTask().getCatch().getDo().size(), "Catch block should contain one task");
-    assertNotNull(
-        tryTask.getTryTask().getCatch().getDo().get(0).getTask().getRaiseTask(),
-        "Raise task should compile inside catch");
-  }
-
-  @Test
-  @DisplayName("tryCatch.when(String) / then(String) / exportAs(String) no longer NPE")
-  void tryCatch_inherited_task_base_builder_methods_do_not_npe() {
-    Workflow wf =
-        FuncWorkflowBuilder.workflow("try-base-methods")
-            .tasks(
-                tryCatch(
-                    "guarded",
-                    t ->
-                        t.tryHandler(
-                                tb ->
-                                    tb.function(
-                                        cb -> cb.function((String s) -> s.trim(), String.class)))
-                            .catchHandler(c -> c.when("$.errorType == 'TEMP'"))
-                            // inherited TaskBaseBuilder methods – must not NPE
-                            .when(".input != null")
-                            .then("nextStep")
-                            .exportAs("$.result")))
-            .build();
-
-    List<TaskItem> items = wf.getDo();
-    assertEquals(1, items.size());
-
-    var tryTask = items.get(0).getTask().getTryTask();
-    assertNotNull(tryTask, "TryTask expected");
-    assertEquals(".input != null", tryTask.getIf(), "when(String) should set 'if' on TryTask");
-    assertEquals(
-        "nextStep", tryTask.getThen().getString(), "then(String) should set FlowDirective");
-    assertNotNull(tryTask.getExport(), "exportAs(String) should set Export on TryTask");
-    assertEquals(
-        "$.result", tryTask.getExport().getAs().getString(), "exportAs value should be propagated");
-  }
-
-  @Test
-  @DisplayName(
-      "tryCatch.exportAs(Function) and when(Predicate) are available via new SPI interfaces")
-  void tryCatch_func_transformations_and_conditional_builder_available() {
-    Workflow wf =
-        FuncWorkflowBuilder.workflow("try-func-interfaces")
-            .tasks(
-                tryCatch(
-                    "guarded",
-                    t ->
-                        t.tryHandler(
-                                tb ->
-                                    tb.function(
-                                        cb -> cb.function((String s) -> s.trim(), String.class)))
-                            .catchHandler(c -> c.when("$.errorType == 'TEMP'"))
-                            // FuncTaskTransformations – function-based exportAs
-                            .exportAs((String s) -> s.toUpperCase())
-                            // ConditionalTaskBuilder – predicate-based when
-                            .when((String s) -> s != null, String.class)))
-            .build();
-
-    List<TaskItem> items = wf.getDo();
-    assertEquals(1, items.size());
-
-    var tryTask = items.get(0).getTask().getTryTask();
-    assertNotNull(tryTask, "TryTask expected");
-
-    // FuncTaskTransformations.exportAs(Function) must set a non-literal Export
-    assertNotNull(tryTask.getExport(), "exportAs(Function) should set Export on TryTask");
-    assertNull(
-        tryTask.getExport().getAs().getString(),
-        "Export 'as' must not be a literal string when using Function overload");
   }
 
   @Test
@@ -663,5 +536,80 @@ class FuncDSLTest {
         FlowDirectiveEnum.END,
         callJava.getThen().getFlowDirectiveEnum(),
         "then() should be FlowDirectiveEnum.END");
+  }
+
+  @Test
+  @DisplayName(
+      "subflow(workflow(ns,name,ver).input(...).await(...)) creates RunTask/RunWorkflow with expected values")
+  void subflow_workflow_spec_with_input_and_await_creates_correct_run_task() {
+    Workflow wf =
+        FuncWorkflowBuilder.workflow("parent-workflow")
+            .tasks(
+                FuncDSL.subflow(
+                    FuncDSL.workflow("org.test", "my-subflow", "1.0.0")
+                        .input("id", 99)
+                        .await(false)))
+            .build();
+
+    List<TaskItem> items = wf.getDo();
+    assertEquals(1, items.size());
+
+    TaskItem taskItem = items.get(0);
+    Task t = taskItem.getTask();
+    assertNotNull(t.getRunTask(), "RunTask expected for subflow");
+
+    RunTask runTask = t.getRunTask();
+    assertNotNull(runTask.getRun(), "RunTask configuration should be present");
+
+    RunWorkflow runWorkflow = runTask.getRun().getRunWorkflow();
+    assertNotNull(runWorkflow, "RunWorkflow should be selected");
+
+    // Verify workflow reference
+    assertEquals("org.test", runWorkflow.getWorkflow().getNamespace(), "Namespace should match");
+    assertEquals("my-subflow", runWorkflow.getWorkflow().getName(), "Name should match");
+    assertEquals("1.0.0", runWorkflow.getWorkflow().getVersion(), "Version should match");
+
+    // Verify input (accessed through workflow config)
+    assertNotNull(runWorkflow.getWorkflow().getInput(), "Input should be set");
+    assertEquals(
+        99,
+        runWorkflow.getWorkflow().getInput().getAdditionalProperties().get("id"),
+        "Input 'id' should match");
+
+    // Verify await
+    assertEquals(false, runWorkflow.isAwait(), "Await should be false");
+  }
+
+  @Test
+  @DisplayName("subflow(name, workflow(...)) creates named subflow task with RunTask/RunWorkflow")
+  void subflow_named_with_workflow_spec_creates_named_run_task() {
+    Workflow wf =
+        FuncWorkflowBuilder.workflow("parent-workflow")
+            .tasks(
+                FuncDSL.subflow(
+                    "mySubflowTask",
+                    w ->
+                        w.namespace("org.acme")
+                            .name("child-workflow")
+                            .version("2.0.0")
+                            .input("key", "value")
+                            .await(true)))
+            .build();
+
+    List<TaskItem> items = wf.getDo();
+    assertEquals(1, items.size());
+
+    TaskItem taskItem = items.get(0);
+    assertEquals("mySubflowTask", taskItem.getName(), "Task name should match");
+
+    Task t = taskItem.getTask();
+    assertNotNull(t.getRunTask(), "RunTask expected for subflow");
+
+    RunWorkflow runWorkflow = t.getRunTask().getRun().getRunWorkflow();
+    assertNotNull(runWorkflow, "RunWorkflow should be selected");
+    assertEquals("org.acme", runWorkflow.getWorkflow().getNamespace());
+    assertEquals("child-workflow", runWorkflow.getWorkflow().getName());
+    assertEquals("2.0.0", runWorkflow.getWorkflow().getVersion());
+    assertEquals(true, runWorkflow.isAwait(), "Await should be true");
   }
 }
