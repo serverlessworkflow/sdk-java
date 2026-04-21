@@ -21,6 +21,7 @@ import io.serverlessworkflow.api.types.EventSource;
 import io.serverlessworkflow.api.types.EventTime;
 import io.serverlessworkflow.api.types.UriTemplate;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Date;
 
 public abstract class AbstractEventPropertiesBuilder<
@@ -36,7 +37,13 @@ public abstract class AbstractEventPropertiesBuilder<
   }
 
   public SELF source(String expr) {
-    eventProperties.setSource(new EventSource().withRuntimeExpression(expr));
+    EventSource source = new EventSource();
+    try {
+      source.withUriTemplate(new UriTemplate().withLiteralUri(new URI(expr)));
+    } catch (URISyntaxException ex) {
+      source.withRuntimeExpression(expr);
+    }
+    eventProperties.setSource(source);
     return self();
   }
 

@@ -379,8 +379,7 @@ class AllAnyOneOfSchemaRule extends SchemaRule {
         definedClass.method(JMod.PUBLIC, definedClass, setterName.replaceFirst("set", "with"));
     JBlock body = fluentMethod.body();
     JVar fluentMethodParam = fluentMethod.param(instanceField.type(), "value");
-    body.assign(instanceField, fluentMethodParam);
-    valueField.ifPresent(v -> fluentMethod.body().assign(JExpr._this().ref(v), fluentMethodParam));
+    body.invoke(setterName).arg(fluentMethodParam);
     body._return(JExpr._this());
     return definedClass.method(JMod.PUBLIC, definedClass.owner().VOID, setterName);
   }

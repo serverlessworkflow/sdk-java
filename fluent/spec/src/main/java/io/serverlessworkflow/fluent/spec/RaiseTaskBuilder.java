@@ -23,6 +23,7 @@ import io.serverlessworkflow.api.types.RaiseTaskConfiguration;
 import io.serverlessworkflow.api.types.RaiseTaskError;
 import io.serverlessworkflow.api.types.UriTemplate;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.function.Consumer;
 
 public class RaiseTaskBuilder extends TaskBaseBuilder<RaiseTaskBuilder> {
@@ -67,7 +68,14 @@ public class RaiseTaskBuilder extends TaskBaseBuilder<RaiseTaskBuilder> {
     }
 
     public RaiseTaskErrorBuilder type(String expression) {
-      this.error.setType(new ErrorType().withExpressionErrorType(expression));
+
+      ErrorType errorType = new ErrorType();
+      try {
+        errorType.withLiteralErrorType(new UriTemplate().withLiteralUri(new URI(expression)));
+      } catch (URISyntaxException ex) {
+        errorType.withExpressionErrorType(expression);
+      }
+      this.error.setType(errorType);
       return this;
     }
 

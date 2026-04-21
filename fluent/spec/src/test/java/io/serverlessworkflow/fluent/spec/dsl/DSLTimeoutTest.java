@@ -37,7 +37,7 @@ public class DSLTimeoutTest {
 
     var after = wf.getTimeout().getTimeoutDefinition().getAfter();
     assertThat(after).isNotNull();
-    assertThat(after.getDurationExpression()).isEqualTo("PT15M");
+    assertThat(after.getDurationLiteral()).isEqualTo("PT15M");
     assertThat(after.getDurationInline()).isNull();
   }
 

@@ -94,12 +94,12 @@ public class TryCatchDslTest {
     var retry = cat.getRetry().getRetryPolicyDefinition();
     assertThat(retry).isNotNull();
     assertThat(retry.getWhen()).isEqualTo("$.retries < 3");
-    assertThat(retry.getLimit().getDuration().getDurationExpression()).isEqualTo("PT5S");
+    assertThat(retry.getLimit().getDuration().getDurationLiteral()).isEqualTo("PT5S");
 
     // jitter range if modeled with from/to
     if (retry.getJitter() != null) {
-      assertThat(retry.getJitter().getFrom().getDurationExpression()).isEqualTo("PT0.1S");
-      assertThat(retry.getJitter().getTo().getDurationExpression()).isEqualTo("PT0.5S");
+      assertThat(retry.getJitter().getFrom().getDurationLiteral()).isEqualTo("PT0.1S");
+      assertThat(retry.getJitter().getTo().getDurationLiteral()).isEqualTo("PT0.5S");
     }
   }
 
@@ -196,7 +196,7 @@ public class TryCatchDslTest {
 
     var retryDef = cat.getRetry().getRetryPolicyDefinition();
     assertThat(retryDef).isNotNull();
-    assertThat(retryDef.getLimit().getDuration().getDurationExpression()).isEqualTo("PT2S");
+    assertThat(retryDef.getLimit().getDuration().getDurationLiteral()).isEqualTo("PT2S");
     // 'when' not set in this case
     assertThat(retryDef.getWhen()).isNull();
 
