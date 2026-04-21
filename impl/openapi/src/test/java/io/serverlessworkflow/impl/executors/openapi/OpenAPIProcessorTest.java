@@ -19,15 +19,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.serverlessworkflow.api.WorkflowFormat;
 import io.serverlessworkflow.impl.resources.ClasspathResource;
+import io.serverlessworkflow.impl.resources.ExternalResourceHandler;
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
-public class OpenAPIProcessorTest {
+public abstract class OpenAPIProcessorTest {
 
   @Test
   public void testGetPetByIdSwaggerV2() {
@@ -204,15 +203,15 @@ public class OpenAPIProcessorTest {
     return false;
   }
 
-  public static UnifiedOpenAPI readResource(String path) {
-
-    ClasspathResource classpathResource = new ClasspathResource(path);
-    ObjectMapper mapper = WorkflowFormat.fromFileName(classpathResource.name()).mapper();
-
-    try (InputStream is = classpathResource.open()) {
-      return mapper.readValue(is, UnifiedOpenAPI.class);
+  private UnifiedOpenAPI readResource(String path) {
+    UnifiedOpenAPIReader reader = getUnifiedOpenAPIReader();
+    ExternalResourceHandler classpathResource = new ClasspathResource(path);
+    try {
+      return reader.read(classpathResource);
     } catch (IOException e) {
-      throw new RuntimeException("Failed to read OpenAPI resource: " + path, e);
+      throw new UncheckedIOException(e);
     }
   }
+
+  protected abstract UnifiedOpenAPIReader getUnifiedOpenAPIReader();
 }

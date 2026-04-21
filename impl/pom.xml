@@ -99,6 +99,18 @@
             </dependency>
             <dependency>
                 <groupId>io.serverlessworkflow</groupId>
+                <artifactId>serverlessworkflow-impl-openapi-base</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.serverlessworkflow</groupId>
+                <artifactId>serverlessworkflow-impl-openapi-base</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.serverlessworkflow</groupId>
                 <artifactId>serverlessworkflow-impl-openapi</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -201,5 +213,6 @@
         <module>javascript</module>
         <module>python</module>
         <module>grpc</module>
+        <module>openapi-jackson</module>
     </modules>
 </project>

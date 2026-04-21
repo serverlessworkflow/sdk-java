@@ -102,8 +102,11 @@ This SDK is modular by design—pull in only what you need:
   Optimized entity converter for Jackson model and OAuth2/OIDC helpers for HTTP calls.
   
 * **serverlessworkflow-impl-openapi**
-  OpenAPI support
+  OpenAPI support using Jackson
   
+  * **serverlessworkflow-impl-openapi-base**
+  Base OpenAPI support intended to be extended for a specific JSON library
+   
 * **serverlessworkflow-impl-grpc**
   gRPC support
   

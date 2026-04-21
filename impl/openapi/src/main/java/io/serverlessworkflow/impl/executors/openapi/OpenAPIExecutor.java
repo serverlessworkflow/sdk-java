@@ -15,8 +15,6 @@
  */
 package io.serverlessworkflow.impl.executors.openapi;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.serverlessworkflow.api.WorkflowFormat;
 import io.serverlessworkflow.api.types.ExternalResource;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
@@ -27,7 +25,6 @@ import io.serverlessworkflow.impl.executors.http.HttpExecutor;
 import io.serverlessworkflow.impl.executors.http.HttpExecutorBuilder;
 import io.serverlessworkflow.impl.resources.ExternalResourceHandler;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.util.Collection;
 import java.util.HashMap;
@@ -65,7 +62,12 @@ class OpenAPIExecutor implements CallableTask {
             workflowContext
                 .definition()
                 .resourceLoader()
-                .load(resource, this::readUnifiedOpenAPI, workflowContext, taskContext, input));
+                .load(
+                    resource,
+                    h -> readUnifiedOpenAPI(workflowContext, taskContext, h),
+                    workflowContext,
+                    taskContext,
+                    input));
 
     fillHttpBuilder(workflowContext.definition().application(), operationDefinition);
     // One executor per operation, even if the document is the same
@@ -145,12 +147,25 @@ class OpenAPIExecutor implements CallableTask {
     }
   }
 
-  private UnifiedOpenAPI readUnifiedOpenAPI(ExternalResourceHandler handler) {
-    ObjectMapper objectMapper = WorkflowFormat.fromFileName(handler.name()).mapper();
-    try (InputStream is = handler.open()) {
-      return objectMapper.readValue(is, UnifiedOpenAPI.class);
-    } catch (IOException e) {
-      throw new UncheckedIOException("Error while reading OpenAPI document " + handler.name(), e);
-    }
+  private UnifiedOpenAPI readUnifiedOpenAPI(
+      WorkflowContext workflowContext, TaskContext taskContext, ExternalResourceHandler handler) {
+    return workflowContext
+        .definition()
+        .application()
+        .<UnifiedOpenAPIReader>additionalObject(
+            UnifiedOpenAPIReader.UNIFIED_OPEN_API_READER, workflowContext, taskContext)
+        .map(
+            v -> {
+              try {
+                return v.read(handler);
+              } catch (IOException e) {
+                throw new UncheckedIOException(
+                    "Error while reading OpenAPI document " + handler.name(), e);
+              }
+            })
+        .orElseThrow(
+            () ->
+                new IllegalStateException(
+                    "Missing UnifiedOpenAPIReader, please make sure dependency serverlessworkflow-impl-openapi is included"));
   }
 }

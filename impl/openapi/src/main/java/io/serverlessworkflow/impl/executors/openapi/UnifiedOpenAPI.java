@@ -15,16 +15,12 @@
  */
 package io.serverlessworkflow.impl.executors.openapi;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.JsonNode;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
 public record UnifiedOpenAPI(
     String swagger,
     List<Server> servers,
@@ -133,10 +129,8 @@ public record UnifiedOpenAPI(
     return definitions.get(name);
   }
 
-  @JsonIgnoreProperties(ignoreUnknown = true)
   public record Server(String url) {}
 
-  @JsonIgnoreProperties(ignoreUnknown = true)
   public record PathItem(
       Operation get,
       Operation post,
@@ -158,10 +152,8 @@ public record UnifiedOpenAPI(
     }
   }
 
-  @JsonIgnoreProperties(ignoreUnknown = true)
-  record HttpOperation(String method, Operation operation) {}
+  public record HttpOperation(String method, Operation operation) {}
 
-  @JsonIgnoreProperties(ignoreUnknown = true)
   public record Operation(String operationId, List<Parameter> parameters, RequestBody requestBody) {
 
     public boolean hasParameters() {
@@ -173,32 +165,26 @@ public record UnifiedOpenAPI(
     }
   }
 
-  @JsonIgnoreProperties(ignoreUnknown = true)
   public record Parameter(String name, String in, Boolean required, Schema schema) {}
 
-  @JsonIgnoreProperties(ignoreUnknown = true)
   public record RequestBody(Content content) {}
 
-  @JsonIgnoreProperties(ignoreUnknown = true)
-  public record Content(@JsonProperty("application/json") MediaType applicationJson) {
+  public record Content(MediaType applicationJson) {
     public boolean isApplicationJson() {
       return applicationJson != null;
     }
   }
 
-  @JsonIgnoreProperties(ignoreUnknown = true)
   public record MediaType(Schema schema) {}
 
-  @JsonIgnoreProperties(ignoreUnknown = true)
   public record Components(Map<String, Schema> schemas) {}
 
-  @JsonIgnoreProperties(ignoreUnknown = true)
   public record Schema(
       String type,
       Map<String, Schema> properties,
       List<String> required,
-      @JsonProperty("$ref") String ref,
-      @JsonProperty("default") JsonNode _default) {
+      String ref,
+      Object _default) {
 
     public boolean hasRef() {
       return ref != null && !ref.isBlank();

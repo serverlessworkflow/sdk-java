@@ -5,8 +5,8 @@
         <artifactId>serverlessworkflow-impl</artifactId>
         <version>8.0.0-SNAPSHOT</version>
     </parent>
-    <artifactId>serverlessworkflow-impl-openapi</artifactId>
-    <name>Serverless Workflow :: Impl :: OpenAPI</name>
+    <artifactId>serverlessworkflow-impl-openapi-base</artifactId>
+    <name>Serverless Workflow :: Impl :: OpenAPI :: Base</name>
     <dependencies>
         <dependency>
             <groupId>jakarta.ws.rs</groupId>
@@ -15,10 +15,6 @@
         <dependency>
             <groupId>io.serverlessworkflow</groupId>
             <artifactId>serverlessworkflow-impl-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>io.serverlessworkflow</groupId>
-            <artifactId>serverlessworkflow-api</artifactId>
         </dependency>
         <dependency>
             <groupId>io.serverlessworkflow</groupId>
@@ -35,4 +31,20 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+    
+    <build>
+    <plugins>
+     <plugin>
+       <groupId>org.apache.maven.plugins</groupId>
+       <artifactId>maven-jar-plugin</artifactId>
+       <executions>
+         <execution>
+           <goals>
+             <goal>test-jar</goal>
+           </goals>
+         </execution>
+       </executions>
+     </plugin>
+    </plugins>
+  </build>
 </project>
