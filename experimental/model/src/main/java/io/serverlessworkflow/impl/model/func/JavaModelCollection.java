@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 public class JavaModelCollection implements Collection<WorkflowModel>, WorkflowModelCollection {
@@ -155,5 +156,18 @@ public class JavaModelCollection implements Collection<WorkflowModel>, WorkflowM
     if (clazz.isInstance(object)) return Optional.of(clazz.cast(object));
 
     return CollectionConversionUtils.as(object, clazz);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(object);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) return true;
+    if (!(obj instanceof JavaModelCollection)) return false;
+    JavaModelCollection other = (JavaModelCollection) obj;
+    return Objects.equals(object, other.object);
   }
 }

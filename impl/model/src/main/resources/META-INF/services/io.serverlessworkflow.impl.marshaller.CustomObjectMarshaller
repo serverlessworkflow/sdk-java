@@ -1,2 +1,3 @@
 io.serverlessworkflow.impl.model.jackson.JacksonModelMarshaller
+io.serverlessworkflow.impl.model.jackson.JacksonModelCollectionMarshaller
 io.serverlessworkflow.impl.model.jackson.JacksonObjectMarshaller

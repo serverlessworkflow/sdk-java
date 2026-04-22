@@ -16,6 +16,8 @@
 package io.serverlessworkflow.impl.model.jackson;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import io.serverlessworkflow.impl.CollectionConversionUtils;
 import io.serverlessworkflow.impl.WorkflowModel;
@@ -25,11 +27,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
+@JsonSerialize(using = JacksonModelCollectionSerializer.class)
+@JsonDeserialize(using = JacksonModelCollectionDeserializer.class)
 public class JacksonModelCollection implements WorkflowModelCollection {
 
-  private ArrayNode node;
+  protected ArrayNode node;
 
   JacksonModelCollection() {
     this.node = JsonUtils.array();
@@ -163,5 +168,18 @@ public class JacksonModelCollection implements WorkflowModelCollection {
   @Override
   public Class<?> objectClass() {
     return ArrayNode.class;
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(node);
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) return true;
+    if (!(obj instanceof JacksonModelCollection)) return false;
+    JacksonModelCollection other = (JacksonModelCollection) obj;
+    return Objects.equals(node, other.node);
   }
 }

@@ -23,6 +23,7 @@ import io.serverlessworkflow.impl.marshaller.WorkflowInputBuffer;
 import io.serverlessworkflow.impl.marshaller.WorkflowOutputBuffer;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class JavaModelSerializationTest {
@@ -31,6 +32,13 @@ class JavaModelSerializationTest {
   void testSerializableJavaModel() {
     testMarshallUnMarshall(
         new JavaModel(new Person("Pepe Gotera", 32, new Address("Rue del Percebe", 13))));
+  }
+
+  @Test
+  void testSerializableJavaModelCollection() {
+    testMarshallUnMarshall(
+        new JavaModelCollection(
+            List.of(new Person("Pepe Gotera", 32, new Address("Rue del Percebe", 13)))));
   }
 
   private void testMarshallUnMarshall(Object object) {

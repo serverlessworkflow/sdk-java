@@ -39,6 +39,16 @@ class JacksonModelSerializationTest {
         new JacksonModel(JsonUtils.mapper().createObjectNode().put("Mortadelo", "TIA")));
   }
 
+  @Test
+  void testCollectionModel() {
+    testMarshallUnMarshall(
+        new JacksonModelCollection(
+            JsonUtils.mapper()
+                .createArrayNode()
+                .add(JsonUtils.mapper().createObjectNode().put("Mortadelo", "TIA"))));
+    testMarshallUnMarshall(new JacksonModelCollection(JsonUtils.mapper().createArrayNode().add(1)));
+  }
+
   private void testMarshallUnMarshall(Object object) {
     WorkflowBufferFactory factory = DefaultBufferFactory.factory();
     ByteArrayOutputStream output = new ByteArrayOutputStream();

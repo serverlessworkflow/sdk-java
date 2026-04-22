@@ -15,6 +15,7 @@
  */
 package io.serverlessworkflow.impl.marshaller;
 
+import io.serverlessworkflow.impl.WorkflowModel;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.Map;
@@ -64,6 +65,8 @@ public abstract class AbstractOutputBuffer implements WorkflowOutputBuffer {
   public WorkflowOutputBuffer writeObject(Object object) {
     if (object == null) {
       writeType(Type.NULL);
+    } else if (object instanceof WorkflowModel) {
+      internalWriteObject(object);
     } else if (object instanceof Short number) {
       writeType(Type.SHORT);
       writeShort(number);
@@ -101,14 +104,18 @@ public abstract class AbstractOutputBuffer implements WorkflowOutputBuffer {
       writeType(Type.BYTES);
       writeBytes(bytes);
     } else {
-      writeType(Type.CUSTOM);
-      writeCustomObject(object);
+      internalWriteObject(object);
     }
     return this;
   }
 
   protected void writeClass(Class<?> objectClass) {
     writeString(objectClass.getCanonicalName());
+  }
+
+  private void internalWriteObject(Object object) {
+    writeType(Type.CUSTOM);
+    writeCustomObject(object);
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
