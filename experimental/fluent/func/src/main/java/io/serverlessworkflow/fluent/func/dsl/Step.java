@@ -156,12 +156,12 @@ abstract class Step<SELF extends Step<SELF, B>, B> implements FuncTaskConfigurer
   /**
    * Shapes what the task exports for downstream consumers using a context-aware filter function.
    *
-   * <p>This variant provides access to both workflow and task context, allowing you to inspect
-   * metadata when shaping the export.
+   * <p>This variant provides access to the task result, workflow context, and task context,
+   * allowing you to inspect metadata when shaping the export.
    *
-   * @param <T> the workflow context type
+   * @param <T> the task result type
    * @param <R> the export type (what gets written in the context)
-   * @param function the filter function with workflow and task context
+   * @param function the filter function with task result, workflow context, and task context
    * @return this step for method chaining
    * @see io.serverlessworkflow.fluent.func.spi.FuncTaskTransformations#exportAs(FilterFunction)
    */
@@ -177,10 +177,10 @@ abstract class Step<SELF extends Step<SELF, B>, B> implements FuncTaskConfigurer
    * Shapes what the task exports for downstream consumers using a context-aware filter function
    * with explicit input type.
    *
-   * @param <T> the workflow context type
+   * @param <T> the task result type
    * @param <R> the export type (what gets written in the context)
-   * @param function the filter function with workflow and task context
-   * @param taskResultClass the class of the workflow context type
+   * @param function the filter function with task result, workflow context, and task context
+   * @param taskResultClass the class of the task result type
    * @return this step for method chaining
    * @see io.serverlessworkflow.fluent.func.spi.FuncTaskTransformations#exportAs(FilterFunction,
    *     Class)
@@ -278,7 +278,7 @@ abstract class Step<SELF extends Step<SELF, B>, B> implements FuncTaskConfigurer
    *
    * <pre>{@code
    * agent("investmentAnalyst", analyst::analyse, InvestmentMemo.class)
-   *     .outputAs(memo -> Map.of("memo", memo))
+   *     .outputAs(taskOutput -> Map.of("memo", taskOutput))
    *     .when(condition);
    * }</pre>
    *
@@ -318,20 +318,21 @@ abstract class Step<SELF extends Step<SELF, B>, B> implements FuncTaskConfigurer
    * Shapes what gets written back into the workflow data document using a context-aware filter
    * function.
    *
-   * <p>This variant provides access to both workflow and task context, allowing you to inspect
-   * metadata, task input, and raw output when shaping the committed output.
+   * <p>This variant provides access to the task result as the first lambda parameter, plus the
+   * workflow and task context for metadata, task input, and raw output when shaping the committed
+   * output.
    *
    * <p><strong>Example:</strong>
    *
    * <pre>{@code
    * get("fetchMarketData", "http://localhost:8081/market-data/{ticker}")
-   *     .outputAs((MarketDataSnapshot snapshot,
+   *     .outputAs((MarketDataSnapshot taskOutput,
    *                WorkflowContextData wf,
    *                TaskContextData task) -> {
    *         var input = task.input().asMap().orElseThrow();
    *         var rawBody = task.rawOutput().asText().orElseThrow();
    *         return new InvestmentPrompt(
-   *             snapshot.ticker(),
+   *             taskOutput.ticker(),
    *             input.get("objective").toString(),
    *             rawBody
    *         );
@@ -340,7 +341,7 @@ abstract class Step<SELF extends Step<SELF, B>, B> implements FuncTaskConfigurer
    *
    * @param <T> the task result type
    * @param <R> the output type (what gets written to workflow data)
-   * @param function the filter function with workflow and task context
+   * @param function the filter function with task result, workflow context, and task context
    * @return this step for method chaining
    * @see io.serverlessworkflow.fluent.func.spi.FuncTransformations#outputAs(FilterFunction)
    */
@@ -358,7 +359,7 @@ abstract class Step<SELF extends Step<SELF, B>, B> implements FuncTaskConfigurer
    *
    * @param <T> the task result type
    * @param <R> the output type (what gets written to workflow data)
-   * @param function the filter function with workflow and task context
+   * @param function the filter function with task result, workflow context, and task context
    * @param taskResultClass the class of the task result type
    * @return this step for method chaining
    * @see io.serverlessworkflow.fluent.func.spi.FuncTransformations#outputAs(FilterFunction, Class)

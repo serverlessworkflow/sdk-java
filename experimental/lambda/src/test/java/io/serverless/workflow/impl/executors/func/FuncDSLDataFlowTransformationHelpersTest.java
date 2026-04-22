@@ -17,7 +17,6 @@ package io.serverless.workflow.impl.executors.func;
 
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.function;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.input;
-import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.output;
 
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.fluent.func.FuncWorkflowBuilder;
@@ -82,11 +81,13 @@ public class FuncDSLDataFlowTransformationHelpersTest {
                         },
                         Long.class)
                     .outputAs(
-                        (object, workflowContext, taskContextData) -> {
-                          softly.assertThat(object).isEqualTo(15L);
+                        (Long taskOutput,
+                            WorkflowContextData workflowContext,
+                            TaskContextData taskContextData) -> {
+                          softly.assertThat(taskOutput).isEqualTo(15L);
                           Long input = input(workflowContext, Long.class);
                           softly.assertThat(input).isEqualTo(10L);
-                          return input + object;
+                          return input + taskOutput;
                         },
                         Long.class))
             .build();
@@ -119,10 +120,9 @@ public class FuncDSLDataFlowTransformationHelpersTest {
                         },
                         Long.class)
                     .exportAs(
-                        (Long object,
+                        (Long taskOutput,
                             WorkflowContextData workflowContext,
                             TaskContextData taskContextData) -> {
-                          Long taskOutput = output(taskContextData, Long.class);
                           softly.assertThat(taskOutput).isEqualTo(15L);
                           return taskOutput * 2;
                         }))
@@ -133,6 +133,53 @@ public class FuncDSLDataFlowTransformationHelpersTest {
       WorkflowModel model = def.instance(10L).start().join();
       Number number = model.asNumber().orElseThrow();
       softly.assertThat(number.longValue()).isEqualTo(15L);
+    }
+
+    softly.assertAll();
+  }
+
+  @Test
+  void test_output_with_outputAs_and_exportAs() {
+
+    SoftAssertions softly = new SoftAssertions();
+
+    Workflow workflow =
+        FuncWorkflowBuilder.workflow("enrichOutputWithOutputAsAndExportAsTest")
+            .tasks(
+                function(
+                        "add5",
+                        (Long input) -> {
+                          softly.assertThat(input).isEqualTo(10L);
+                          return input + 5;
+                        },
+                        Long.class)
+                    .outputAs(
+                        (Long taskOutput) -> {
+                          softly.assertThat(taskOutput).isEqualTo(15L);
+                          return taskOutput * 2;
+                        })
+                    .exportAs(
+                        (Long taskOutput,
+                            WorkflowContextData workflowContext,
+                            TaskContextData taskContextData) -> {
+                          softly.assertThat(taskOutput).isEqualTo(30L);
+                          softly
+                              .assertThat(taskContextData.output().asNumber().orElseThrow())
+                              .isEqualTo(30L);
+                          return taskOutput;
+                        }))
+            .build();
+
+    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
+      WorkflowDefinition def = app.workflowDefinition(workflow);
+      WorkflowModel model = def.instance(10L).start().join();
+      Number number = model.asNumber().orElseThrow();
+      softly.assertThat(number.longValue()).isEqualTo(30L);
+
+      WorkflowInstance instance = def.instance(10L);
+      instance.start().join();
+      Number contextNumber = instance.context().asNumber().orElseThrow();
+      softly.assertThat(contextNumber.longValue()).isEqualTo(30L);
     }
 
     softly.assertAll();
@@ -178,10 +225,9 @@ public class FuncDSLDataFlowTransformationHelpersTest {
                         },
                         Long.class)
                     .exportAs(
-                        (Long object,
+                        (Long taskOutput,
                             WorkflowContextData workflowContext,
                             TaskContextData taskContextData) -> {
-                          Long taskOutput = output(taskContextData, Long.class);
                           softly.assertThat(taskOutput).isEqualTo(15L);
                           Long input = input(workflowContext, Long.class);
                           softly.assertThat(input).isEqualTo(10L);

@@ -82,11 +82,16 @@ public class WorkflowUtils {
   }
 
   public static Optional<WorkflowFilter> buildWorkflowFilter(WorkflowApplication app, ExportAs as) {
-    return as != null
-        ? Optional.of(
-            buildFilterFromStrObject(
-                app.expressionFactory(), app.contextFactory(), as.getString(), as.getObject()))
-        : Optional.empty();
+    if (as == null) {
+      return Optional.empty();
+    }
+    WorkflowFilter filter =
+        buildFilterFromStrObject(
+            app.expressionFactory(), app.contextFactory(), as.getString(), as.getObject());
+    if (as.getString() == null && as.getObject() != null) {
+      return Optional.of((w, t, m) -> filter.apply(w, t, t.output()));
+    }
+    return Optional.of(filter);
   }
 
   public static WorkflowFilter buildWorkflowFilter(WorkflowApplication app, Object obj) {
