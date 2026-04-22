@@ -15,95 +15,14 @@
  */
 package io.serverlessworkflow.fluent.spec;
 
-import io.serverlessworkflow.api.types.ErrorDetails;
-import io.serverlessworkflow.api.types.ErrorTitle;
-import io.serverlessworkflow.api.types.ErrorType;
-import io.serverlessworkflow.api.types.RaiseTask;
-import io.serverlessworkflow.api.types.RaiseTaskConfiguration;
-import io.serverlessworkflow.api.types.RaiseTaskError;
-import io.serverlessworkflow.api.types.UriTemplate;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.function.Consumer;
-
-public class RaiseTaskBuilder extends TaskBaseBuilder<RaiseTaskBuilder> {
-
-  private final RaiseTask raiseTask;
+public class RaiseTaskBuilder extends BaseRaiseTaskBuilder<RaiseTaskBuilder> {
 
   RaiseTaskBuilder() {
-    this.raiseTask = new RaiseTask();
-    setTask(raiseTask);
+    super();
   }
 
   @Override
   protected RaiseTaskBuilder self() {
     return this;
-  }
-
-  public RaiseTaskBuilder error(Consumer<RaiseTaskErrorBuilder> consumer) {
-    final RaiseTaskErrorBuilder raiseTaskErrorBuilder = new RaiseTaskErrorBuilder();
-    consumer.accept(raiseTaskErrorBuilder);
-    this.raiseTask.setRaise(new RaiseTaskConfiguration().withError(raiseTaskErrorBuilder.build()));
-    return this;
-  }
-
-  // TODO: validation, one or the other
-
-  public RaiseTaskBuilder error(String errorReference) {
-    this.raiseTask.setRaise(
-        new RaiseTaskConfiguration()
-            .withError(new RaiseTaskError().withRaiseErrorReference(errorReference)));
-    return this;
-  }
-
-  public RaiseTask build() {
-    return this.raiseTask;
-  }
-
-  public static final class RaiseTaskErrorBuilder {
-    private final io.serverlessworkflow.api.types.Error error;
-
-    private RaiseTaskErrorBuilder() {
-      this.error = new io.serverlessworkflow.api.types.Error();
-    }
-
-    public RaiseTaskErrorBuilder type(String expression) {
-
-      ErrorType errorType = new ErrorType();
-      try {
-        errorType.withLiteralErrorType(new UriTemplate().withLiteralUri(new URI(expression)));
-      } catch (URISyntaxException ex) {
-        errorType.withExpressionErrorType(expression);
-      }
-      this.error.setType(errorType);
-      return this;
-    }
-
-    public RaiseTaskErrorBuilder type(URI errorType) {
-      this.error.setType(
-          new ErrorType().withLiteralErrorType(new UriTemplate().withLiteralUri(errorType)));
-      return this;
-    }
-
-    public RaiseTaskErrorBuilder status(int status) {
-      this.error.setStatus(status);
-      return this;
-    }
-
-    // TODO: change signature to Expression interface since literal and expressions are String
-
-    public RaiseTaskErrorBuilder title(String expression) {
-      this.error.setTitle(new ErrorTitle().withExpressionErrorTitle(expression));
-      return this;
-    }
-
-    public RaiseTaskErrorBuilder detail(String expression) {
-      this.error.setDetail(new ErrorDetails().withExpressionErrorDetails(expression));
-      return this;
-    }
-
-    public RaiseTaskError build() {
-      return new RaiseTaskError().withRaiseErrorDefinition(this.error);
-    }
   }
 }

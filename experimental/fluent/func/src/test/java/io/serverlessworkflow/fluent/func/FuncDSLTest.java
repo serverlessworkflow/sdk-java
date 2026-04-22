@@ -210,15 +210,13 @@ class FuncDSLTest {
 
     Task raiseTask = items.get(0).getTask();
     assertNotNull(raiseTask.getRaiseTask(), "RaiseTask expected");
+    var type = raiseTask.getRaiseTask().getRaise().getError().getRaiseErrorDefinition().getType();
+    assertNotNull(type, "Error type expected");
     assertEquals(
         "org.acme.Boom",
-        raiseTask
-            .getRaiseTask()
-            .getRaise()
-            .getError()
-            .getRaiseErrorDefinition()
-            .getType()
-            .getExpressionErrorType());
+        type.getLiteralErrorType() != null
+            ? type.getLiteralErrorType().getLiteralUri().toString()
+            : type.getExpressionErrorType());
     assertEquals(
         409, raiseTask.getRaiseTask().getRaise().getError().getRaiseErrorDefinition().getStatus());
 

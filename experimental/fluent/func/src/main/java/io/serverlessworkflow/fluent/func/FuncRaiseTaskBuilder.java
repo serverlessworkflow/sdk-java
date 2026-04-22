@@ -15,88 +15,20 @@
  */
 package io.serverlessworkflow.fluent.func;
 
-import io.serverlessworkflow.api.types.ErrorDetails;
-import io.serverlessworkflow.api.types.ErrorTitle;
-import io.serverlessworkflow.api.types.ErrorType;
-import io.serverlessworkflow.api.types.RaiseTask;
-import io.serverlessworkflow.api.types.RaiseTaskConfiguration;
-import io.serverlessworkflow.api.types.RaiseTaskError;
-import io.serverlessworkflow.api.types.UriTemplate;
 import io.serverlessworkflow.fluent.func.spi.ConditionalTaskBuilder;
 import io.serverlessworkflow.fluent.func.spi.FuncTaskTransformations;
-import io.serverlessworkflow.fluent.spec.TaskBaseBuilder;
-import java.net.URI;
-import java.util.function.Consumer;
+import io.serverlessworkflow.fluent.spec.BaseRaiseTaskBuilder;
 
-public class FuncRaiseTaskBuilder extends TaskBaseBuilder<FuncRaiseTaskBuilder>
+public class FuncRaiseTaskBuilder extends BaseRaiseTaskBuilder<FuncRaiseTaskBuilder>
     implements FuncTaskTransformations<FuncRaiseTaskBuilder>,
         ConditionalTaskBuilder<FuncRaiseTaskBuilder> {
 
-  private final RaiseTask raiseTask;
-
   FuncRaiseTaskBuilder() {
-    this.raiseTask = new RaiseTask();
-    setTask(this.raiseTask);
+    super();
   }
 
   @Override
   protected FuncRaiseTaskBuilder self() {
     return this;
-  }
-
-  public FuncRaiseTaskBuilder error(Consumer<RaiseTaskErrorBuilder> consumer) {
-    final RaiseTaskErrorBuilder raiseTaskErrorBuilder = new RaiseTaskErrorBuilder();
-    consumer.accept(raiseTaskErrorBuilder);
-    this.raiseTask.setRaise(new RaiseTaskConfiguration().withError(raiseTaskErrorBuilder.build()));
-    return this;
-  }
-
-  public FuncRaiseTaskBuilder error(String errorReference) {
-    this.raiseTask.setRaise(
-        new RaiseTaskConfiguration()
-            .withError(new RaiseTaskError().withRaiseErrorReference(errorReference)));
-    return this;
-  }
-
-  public RaiseTask build() {
-    return this.raiseTask;
-  }
-
-  public static final class RaiseTaskErrorBuilder {
-    private final io.serverlessworkflow.api.types.Error error;
-
-    private RaiseTaskErrorBuilder() {
-      this.error = new io.serverlessworkflow.api.types.Error();
-    }
-
-    public RaiseTaskErrorBuilder type(String expression) {
-      this.error.setType(new ErrorType().withExpressionErrorType(expression));
-      return this;
-    }
-
-    public RaiseTaskErrorBuilder type(URI errorType) {
-      this.error.setType(
-          new ErrorType().withLiteralErrorType(new UriTemplate().withLiteralUri(errorType)));
-      return this;
-    }
-
-    public RaiseTaskErrorBuilder status(int status) {
-      this.error.setStatus(status);
-      return this;
-    }
-
-    public RaiseTaskErrorBuilder title(String expression) {
-      this.error.setTitle(new ErrorTitle().withExpressionErrorTitle(expression));
-      return this;
-    }
-
-    public RaiseTaskErrorBuilder detail(String expression) {
-      this.error.setDetail(new ErrorDetails().withExpressionErrorDetails(expression));
-      return this;
-    }
-
-    public RaiseTaskError build() {
-      return new RaiseTaskError().withRaiseErrorDefinition(this.error);
-    }
   }
 }

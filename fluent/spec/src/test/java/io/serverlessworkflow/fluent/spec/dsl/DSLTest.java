@@ -126,8 +126,7 @@ public class DSLTest {
 
     assertThat(wf.getDo()).hasSize(2);
     assertThat(wf.getDo().get(0).getTask().getWaitTask()).isNotNull();
-    assertThat(wf.getDo().get(0).getTask().getWaitTask().getWait().getDurationLiteral())
-        .isEqualTo("PT5S");
+    assertThat(wf.getDo().get(0).getTask().getWaitTask().getWait().get()).isEqualTo("PT5S");
     assertThat(wf.getDo().get(1).getName()).isEqualTo("pause");
     assertThat(wf.getDo().get(1).getTask().getWaitTask().getWait().getDurationInline().getSeconds())
         .isEqualTo(2);
@@ -203,10 +202,8 @@ public class DSLTest {
                 .toString())
         .isEqualTo("org.acme.Error");
     assertThat(err.getRaiseErrorDefinition().getStatus()).isEqualTo(422);
-    assertThat(err.getRaiseErrorDefinition().getTitle().getLiteralErrorTitle())
-        .isEqualTo("Unprocessable");
-    assertThat(err.getRaiseErrorDefinition().getDetail().getLiteralErrorDetails())
-        .isEqualTo("Bad input");
+    assertThat(err.getRaiseErrorDefinition().getTitle().get()).isEqualTo("Unprocessable");
+    assertThat(err.getRaiseErrorDefinition().getDetail().get()).isEqualTo("Bad input");
   }
 
   @Test
@@ -251,10 +248,8 @@ public class DSLTest {
     assertThat(err.getRaiseErrorDefinition().getType().getLiteralErrorType().getLiteralUri())
         .isEqualTo(type);
     assertThat(err.getRaiseErrorDefinition().getStatus()).isEqualTo(400);
-    assertThat(err.getRaiseErrorDefinition().getTitle().getLiteralErrorTitle())
-        .isEqualTo("Bad Request");
-    assertThat(err.getRaiseErrorDefinition().getDetail().getLiteralErrorDetails())
-        .isEqualTo("Missing field");
+    assertThat(err.getRaiseErrorDefinition().getTitle().get()).isEqualTo("Bad Request");
+    assertThat(err.getRaiseErrorDefinition().getDetail().get()).isEqualTo("Missing field");
   }
 
   @Test
@@ -276,8 +271,7 @@ public class DSLTest {
     // status not set
     assertThat(err.getRaiseErrorDefinition().getStatus()).isEqualTo(0);
     // title set, detail not set
-    assertThat(err.getRaiseErrorDefinition().getTitle().getLiteralErrorTitle())
-        .isEqualTo("Temporary");
+    assertThat(err.getRaiseErrorDefinition().getTitle().get()).isEqualTo("Temporary");
     assertThat(err.getRaiseErrorDefinition().getDetail()).isNull();
   }
 
@@ -293,8 +287,8 @@ public class DSLTest {
     assertThat(def.getType().getLiteralErrorType().getLiteralUri().toString())
         .isEqualTo("https://serverlessworkflow.io/spec/1.1.0/errors/runtime");
     assertThat(def.getStatus()).isEqualTo(500);
-    assertThat(def.getTitle().getLiteralErrorTitle()).isEqualTo("Boom");
-    assertThat(def.getDetail().getLiteralErrorDetails()).isEqualTo("x");
+    assertThat(def.getTitle().get()).isEqualTo("Boom");
+    assertThat(def.getDetail().get()).isEqualTo("x");
   }
 
   @Test
