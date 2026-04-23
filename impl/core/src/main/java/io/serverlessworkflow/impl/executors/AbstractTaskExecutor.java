@@ -15,9 +15,9 @@
  */
 package io.serverlessworkflow.impl.executors;
 
+import static io.serverlessworkflow.impl.LifecycleEventsUtils.publishEvent;
 import static io.serverlessworkflow.impl.WorkflowUtils.buildWorkflowFilter;
 import static io.serverlessworkflow.impl.WorkflowUtils.getSchemaValidator;
-import static io.serverlessworkflow.impl.lifecycle.LifecycleEventsUtils.publishEvent;
 
 import io.serverlessworkflow.api.types.Export;
 import io.serverlessworkflow.api.types.FlowDirective;
@@ -54,7 +54,6 @@ import java.util.Optional;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskExecutor<T> {
@@ -62,9 +61,6 @@ public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskEx
   protected final T task;
   protected final String taskName;
   protected final WorkflowPosition position;
-
-  private Map<String, Integer> iterationsMap = new ConcurrentHashMap<String, Integer>();
-
   private final Optional<WorkflowFilter> inputProcessor;
   private final Optional<WorkflowFilter> outputProcessor;
   private final Optional<WorkflowFilter> contextProcessor;
@@ -206,18 +202,15 @@ public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskEx
   @Override
   public CompletableFuture<TaskContext> apply(
       WorkflowContext workflowContext, Optional<TaskContext> parentContext, WorkflowModel input) {
-    String id = workflowContext.instanceData().id();
-    TaskContext taskContext =
-        new TaskContext(
-            input, position, parentContext, taskName, task, iterationsMap.getOrDefault(id, 0) + 1);
+    TaskContext taskContext = new TaskContext(input, position, parentContext, taskName, task);
     workflowContext.instance().restoreContext(workflowContext, taskContext);
-    iterationsMap.put(id, taskContext.iteration());
     CompletableFuture<TaskContext> completable = CompletableFuture.completedFuture(taskContext);
     if (!TaskExecutorHelper.isActive(workflowContext)) {
       return completable;
     } else if (taskContext.isCompleted()) {
       return executeNext(completable, workflowContext);
     } else if (ifFilter.map(f -> f.test(workflowContext, taskContext, input)).orElse(true)) {
+      taskContext.iteration(workflowContext.instance().incIteration(position));
       completable =
           completable
               .thenCompose(workflowContext.instance()::suspendedCheck)
@@ -316,10 +309,6 @@ public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskEx
 
   public WorkflowPosition position() {
     return position;
-  }
-
-  public void onInstanceCompleted(String instanceId) {
-    iterationsMap.remove(instanceId);
   }
 
   protected abstract TransitionInfo getSkipTransition();

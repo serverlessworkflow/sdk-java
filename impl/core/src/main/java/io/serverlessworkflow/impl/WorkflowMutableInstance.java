@@ -15,7 +15,7 @@
  */
 package io.serverlessworkflow.impl;
 
-import static io.serverlessworkflow.impl.lifecycle.LifecycleEventsUtils.publishEvent;
+import static io.serverlessworkflow.impl.LifecycleEventsUtils.publishEvent;
 
 import io.serverlessworkflow.impl.executors.TaskExecutorHelper;
 import io.serverlessworkflow.impl.lifecycle.WorkflowCancelledEvent;
@@ -52,6 +52,8 @@ public class WorkflowMutableInstance implements WorkflowInstance {
   protected Instant completedAt;
 
   protected final Map<String, Object> additionalObjects = new ConcurrentHashMap<>();
+
+  protected final Map<String, Integer> iterationsMap = new ConcurrentHashMap<>();
 
   private Lock statusLock = new ReentrantLock();
   private Map<CompletableFuture<TaskContext>, TaskContext> suspended;
@@ -162,6 +164,10 @@ public class WorkflowMutableInstance implements WorkflowInstance {
   @Override
   public WorkflowModel input() {
     return input;
+  }
+
+  public int incIteration(WorkflowPosition position) {
+    return iterationsMap.compute(position.jsonPointer(), (k, v) -> v == null ? 1 : v + 1);
   }
 
   @Override

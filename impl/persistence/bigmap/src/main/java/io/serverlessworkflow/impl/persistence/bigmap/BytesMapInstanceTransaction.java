@@ -121,13 +121,13 @@ public abstract class BytesMapInstanceTransaction
       byte version = buffer.readByte();
       switch (version) {
         case VERSION_0:
-        default:
           return readVersion0(buffer);
         case VERSION_1:
           return readVersion1(buffer);
         case VERSION_2:
           return readVersion2(buffer);
       }
+      throw new UnsupportedOperationException("Unknown version " + version);
     }
   }
 
@@ -135,7 +135,6 @@ public abstract class BytesMapInstanceTransaction
     TaskStatus taskStatus = buffer.readEnum(TaskStatus.class);
     switch (taskStatus) {
       case COMPLETED:
-      default:
         return new CompletedTaskInfo(
             buffer.readInstant(),
             (WorkflowModel) buffer.readObject(),
@@ -146,17 +145,18 @@ public abstract class BytesMapInstanceTransaction
       case RETRIED:
         return new RetriedTaskInfo(buffer.readShort());
     }
+    throw new UnsupportedOperationException("Unknown status " + taskStatus);
   }
 
   private PersistenceTaskInfo readVersion1(WorkflowInputBuffer buffer) {
     TaskStatus taskStatus = buffer.readEnum(TaskStatus.class);
     switch (taskStatus) {
       case COMPLETED:
-      default:
         return readVersion0(buffer);
       case RETRIED:
         return new RetriedTaskInfo(buffer.readShort());
     }
+    throw new UnsupportedOperationException("Unknown status " + taskStatus);
   }
 
   private PersistenceTaskInfo readVersion0(WorkflowInputBuffer buffer) {

@@ -31,7 +31,6 @@ public class TaskContext implements TaskContextData {
   private final String taskName;
   private final Map<String, Object> contextVariables;
   private final Optional<TaskContext> parentContext;
-  private int iteration;
 
   private WorkflowModel input;
   private WorkflowModel output;
@@ -39,6 +38,7 @@ public class TaskContext implements TaskContextData {
   private Instant completedAt;
   private TransitionInfo transition;
   private short retryAttempt;
+  private int iteration;
   private AuthorizationDescriptor authorization;
 
   public TaskContext(
@@ -46,19 +46,8 @@ public class TaskContext implements TaskContextData {
       WorkflowPosition position,
       Optional<TaskContext> parentContext,
       String taskName,
-      TaskBase task,
-      int iterations) {
-    this(
-        input,
-        parentContext,
-        taskName,
-        task,
-        position,
-        Instant.now(),
-        input,
-        input,
-        input,
-        iterations);
+      TaskBase task) {
+    this(input, parentContext, taskName, task, position, Instant.now(), input, input, input);
   }
 
   private TaskContext(
@@ -70,8 +59,7 @@ public class TaskContext implements TaskContextData {
       Instant startedAt,
       WorkflowModel input,
       WorkflowModel output,
-      WorkflowModel rawOutput,
-      int iterations) {
+      WorkflowModel rawOutput) {
     this.rawInput = rawInput;
     this.parentContext = parentContext;
     this.taskName = taskName;
@@ -84,21 +72,6 @@ public class TaskContext implements TaskContextData {
     this.retryAttempt = parentContext.map(TaskContext::retryAttempt).orElse((short) 0);
     this.contextVariables =
         parentContext.map(p -> new HashMap<>(p.contextVariables)).orElseGet(HashMap::new);
-    this.iteration = iterations;
-  }
-
-  public TaskContext copy() {
-    return new TaskContext(
-        rawInput,
-        parentContext,
-        taskName,
-        task,
-        position,
-        startedAt,
-        input,
-        output,
-        rawOutput,
-        iteration);
   }
 
   public void input(WorkflowModel input) {

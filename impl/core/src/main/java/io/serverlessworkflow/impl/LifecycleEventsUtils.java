@@ -13,9 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.lifecycle;
+package io.serverlessworkflow.impl;
 
-import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.lifecycle.WorkflowExecutionCompletableListener;
+import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import org.slf4j.Logger;
@@ -30,17 +31,25 @@ public class LifecycleEventsUtils {
   public static CompletableFuture<?> publishEvent(
       WorkflowContext workflowContext,
       Function<WorkflowExecutionCompletableListener, CompletableFuture<?>> function) {
-    return CompletableFuture.allOf(
-        workflowContext.definition().application().listeners().stream()
-            .map(
-                v ->
-                    function
-                        .apply(v)
-                        .exceptionally(
-                            ex -> {
-                              logger.error("Error while executing listener", ex);
-                              return null;
-                            }))
-            .toArray(CompletableFuture[]::new));
+    CompletableFuture<?> result = CompletableFuture.completedFuture(null);
+    for (Collection<WorkflowExecutionCompletableListener> listeners :
+        workflowContext.definition().application().listenersByPriority()) {
+      result =
+          result.thenCompose(
+              __ ->
+                  CompletableFuture.allOf(
+                      listeners.stream()
+                          .map(
+                              v ->
+                                  function
+                                      .apply(v)
+                                      .exceptionally(
+                                          ex -> {
+                                            logger.error("Error while executing listener", ex);
+                                            return null;
+                                          }))
+                          .toArray(CompletableFuture[]::new)));
+    }
+    return result;
   }
 }

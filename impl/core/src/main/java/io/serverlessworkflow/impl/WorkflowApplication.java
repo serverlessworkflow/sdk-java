@@ -51,6 +51,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -69,7 +70,7 @@ public class WorkflowApplication implements AutoCloseable {
   private final ResourceLoaderFactory resourceLoaderFactory;
   private final SchemaValidatorFactory schemaValidatorFactory;
   private final WorkflowInstanceIdFactory idFactory;
-  private final Collection<WorkflowExecutionCompletableListener> listeners;
+  private final List<Collection<WorkflowExecutionCompletableListener>> listenersByPriority;
   private final Map<WorkflowDefinitionId, WorkflowDefinition> definitions;
   private final WorkflowPositionFactory positionFactory;
   private final ExecutorServiceFactory executorFactory;
@@ -99,7 +100,7 @@ public class WorkflowApplication implements AutoCloseable {
     this.idFactory = builder.idFactory;
     this.runtimeDescriptorFactory = builder.descriptorFactory;
     this.executorFactory = builder.executorFactory;
-    this.listeners = new LinkedHashSet<>(builder.listeners);
+    this.listenersByPriority = groupByPriority(new LinkedHashSet<>(builder.listeners));
     this.definitions = new ConcurrentHashMap<>();
     this.eventConsumer = builder.eventConsumer;
     this.eventPublishers = builder.eventPublishers;
@@ -140,7 +141,7 @@ public class WorkflowApplication implements AutoCloseable {
   }
 
   public Collection<WorkflowExecutionCompletableListener> listeners() {
-    return listeners;
+    return this.listenersByPriority.stream().flatMap(x -> x.stream()).toList();
   }
 
   public Collection<EventPublisher> eventPublishers() {
@@ -149,6 +150,36 @@ public class WorkflowApplication implements AutoCloseable {
 
   public WorkflowInstanceIdFactory idFactory() {
     return idFactory;
+  }
+
+  List<Collection<WorkflowExecutionCompletableListener>> listenersByPriority() {
+    return listenersByPriority;
+  }
+
+  private static List<Collection<WorkflowExecutionCompletableListener>> groupByPriority(
+      Collection<WorkflowExecutionCompletableListener> listeners) {
+    if (listeners.isEmpty()) {
+      return List.of();
+    }
+    List<Collection<WorkflowExecutionCompletableListener>> result = new ArrayList<>();
+    Iterator<WorkflowExecutionCompletableListener> iter = listeners.iterator();
+    List<WorkflowExecutionCompletableListener> currentList = new ArrayList<>();
+    WorkflowExecutionCompletableListener currentListener = iter.next();
+    int currentPriority = currentListener.priority();
+    currentList.add(currentListener);
+    while (iter.hasNext()) {
+      currentListener = iter.next();
+      if (currentListener.priority() != currentPriority) {
+        result.add(currentList);
+        currentList = new ArrayList<>();
+        currentPriority = currentListener.priority();
+      }
+      currentList.add(currentListener);
+    }
+    if (!currentList.isEmpty()) {
+      result.add(currentList);
+    }
+    return result;
   }
 
   public static class Builder {
@@ -423,10 +454,15 @@ public class WorkflowApplication implements AutoCloseable {
     }
     definitions.clear();
 
-    for (WorkflowExecutionCompletableListener listener : listeners) {
-      safeClose(listener);
+    if (!listenersByPriority.isEmpty()) {
+      for (Collection<WorkflowExecutionCompletableListener> listeners : listenersByPriority) {
+        for (WorkflowExecutionCompletableListener listener : listeners) {
+          safeClose(listener);
+        }
+        listeners.clear();
+      }
+      listenersByPriority.clear();
     }
-    listeners.clear();
   }
 
   public WorkflowPositionFactory positionFactory() {

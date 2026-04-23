@@ -24,7 +24,6 @@ import io.serverlessworkflow.api.types.Output;
 import io.serverlessworkflow.api.types.Schedule;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.events.EventRegistrationBuilderInfo;
-import io.serverlessworkflow.impl.executors.AbstractTaskExecutor;
 import io.serverlessworkflow.impl.executors.TaskExecutor;
 import io.serverlessworkflow.impl.executors.TaskExecutorHelper;
 import io.serverlessworkflow.impl.resources.ResourceLoader;
@@ -182,7 +181,6 @@ public class WorkflowDefinition implements AutoCloseable, WorkflowDefinitionData
 
   void removeInstance(WorkflowInstance instance) {
     activeInstances.remove(instance.id());
-    executors.forEach((k, v) -> ((AbstractTaskExecutor) v).onInstanceCompleted(instance.id()));
   }
 
   void addInstance(WorkflowInstance instance) {

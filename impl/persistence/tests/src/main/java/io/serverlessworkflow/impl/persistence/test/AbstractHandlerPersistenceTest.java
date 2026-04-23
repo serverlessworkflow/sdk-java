@@ -173,9 +173,7 @@ public abstract class AbstractHandlerPersistenceTest {
     ArgumentCaptor<TransitionInfo> transition = ArgumentCaptor.forClass(TransitionInfo.class);
     verify(updateTContext).transition(transition.capture());
     assertThat(transition.getValue().isEndNode()).isTrue();
-    ArgumentCaptor<Integer> iteration = ArgumentCaptor.forClass(Integer.class);
-    verify(updateTContext).iteration(iteration.capture());
-    assertThat(iteration.getValue()).isEqualTo(2);
+    assertThat(instance.incIteration(position2)).isEqualTo(3);
 
     // workflow completed
     handlers.writer().completed(workflowContext).join();

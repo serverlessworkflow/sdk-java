@@ -38,6 +38,13 @@ public class WorkflowPersistenceInstance extends WorkflowMutableInstance {
   private WorkflowPersistenceInstance(WorkflowDefinition definition, PersistenceWorkflowInfo info) {
     super(definition, info.id(), info.input());
     this.info = info;
+    info.tasks()
+        .forEach(
+            (k, v) -> {
+              if (v instanceof CompletedTaskInfo task) {
+                iterationsMap.put(k, task.iteration());
+              }
+            });
     this.startedAt = info.startedAt();
   }
 
@@ -54,7 +61,13 @@ public class WorkflowPersistenceInstance extends WorkflowMutableInstance {
 
   @Override
   public void restoreContext(WorkflowContext workflow, TaskContext context) {
+    if (info.tasks().isEmpty()) {
+      return;
+    }
     PersistenceTaskInfo taskInfo = info.tasks().remove(context.position().jsonPointer());
+    if (taskInfo == null) {
+      return;
+    }
     if (taskInfo instanceof CompletedTaskInfo completedTaskInfo) {
       context.output(completedTaskInfo.model());
       context.completedAt(completedTaskInfo.instant());
@@ -64,7 +77,6 @@ public class WorkflowPersistenceInstance extends WorkflowMutableInstance {
                   ? null
                   : workflow.definition().taskExecutor(completedTaskInfo.nextPosition()),
               completedTaskInfo.isEndNode()));
-      context.iteration(completedTaskInfo.iteration());
       workflow.context(completedTaskInfo.context());
     } else if (taskInfo instanceof RetriedTaskInfo retriedTaskInfo) {
       if (context.retryAttempt() == 0) {
