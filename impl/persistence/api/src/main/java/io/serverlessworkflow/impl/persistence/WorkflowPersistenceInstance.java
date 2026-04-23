@@ -64,6 +64,7 @@ public class WorkflowPersistenceInstance extends WorkflowMutableInstance {
                   ? null
                   : workflow.definition().taskExecutor(completedTaskInfo.nextPosition()),
               completedTaskInfo.isEndNode()));
+      context.iteration(completedTaskInfo.iteration());
       workflow.context(completedTaskInfo.context());
     } else if (taskInfo instanceof RetriedTaskInfo retriedTaskInfo) {
       if (context.retryAttempt() == 0) {

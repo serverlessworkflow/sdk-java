@@ -23,5 +23,16 @@ public record CompletedTaskInfo(
     WorkflowModel model,
     WorkflowModel context,
     Boolean isEndNode,
-    String nextPosition)
-    implements PersistenceTaskInfo {}
+    String nextPosition,
+    int iteration)
+    implements PersistenceTaskInfo {
+
+  public CompletedTaskInfo(
+      Instant instant,
+      WorkflowModel model,
+      WorkflowModel context,
+      Boolean isEndNode,
+      String nextPosition) {
+    this(instant, model, context, isEndNode, nextPosition, 1);
+  }
+}

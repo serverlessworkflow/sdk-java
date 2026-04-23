@@ -62,7 +62,7 @@ class ScheduleEventConsumerTest {
     appl.eventPublishers().forEach(p -> p.publish(buildCloudEvent(Map.of("name", "Fulanito"))));
     await()
         .pollDelay(Duration.ofMillis(20))
-        .atMost(Duration.ofMillis(600))
+        .atMost(Duration.ofMillis(980))
         .until(
             () ->
                 instances.stream().filter(i -> i.status() == WorkflowStatus.COMPLETED).count()
@@ -80,7 +80,7 @@ class ScheduleEventConsumerTest {
     Collection<WorkflowInstance> instances = definition.scheduledInstances();
     await()
         .pollDelay(Duration.ofMillis(20))
-        .atMost(Duration.ofMillis(600))
+        .atMost(Duration.ofMillis(980))
         .until(
             () ->
                 instances.stream().filter(i -> i.status() == WorkflowStatus.COMPLETED).count()

@@ -89,6 +89,7 @@ public abstract class AbstractHandlerPersistenceTest {
     when(taskContext.completedAt()).thenReturn(Instant.now());
     when(taskContext.output()).thenReturn(app.modelFactory().from(model));
     when(taskContext.transition()).thenReturn(new TransitionInfo(null, true));
+    when(taskContext.iteration()).thenReturn(2);
     return taskContext;
   }
 
@@ -172,6 +173,9 @@ public abstract class AbstractHandlerPersistenceTest {
     ArgumentCaptor<TransitionInfo> transition = ArgumentCaptor.forClass(TransitionInfo.class);
     verify(updateTContext).transition(transition.capture());
     assertThat(transition.getValue().isEndNode()).isTrue();
+    ArgumentCaptor<Integer> iteration = ArgumentCaptor.forClass(Integer.class);
+    verify(updateTContext).iteration(iteration.capture());
+    assertThat(iteration.getValue()).isEqualTo(2);
 
     // workflow completed
     handlers.writer().completed(workflowContext).join();

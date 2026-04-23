@@ -54,6 +54,7 @@ import java.util.Optional;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskExecutor<T> {
@@ -61,6 +62,9 @@ public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskEx
   protected final T task;
   protected final String taskName;
   protected final WorkflowPosition position;
+
+  private Map<String, Integer> iterationsMap = new ConcurrentHashMap<String, Integer>();
+
   private final Optional<WorkflowFilter> inputProcessor;
   private final Optional<WorkflowFilter> outputProcessor;
   private final Optional<WorkflowFilter> contextProcessor;
@@ -202,8 +206,12 @@ public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskEx
   @Override
   public CompletableFuture<TaskContext> apply(
       WorkflowContext workflowContext, Optional<TaskContext> parentContext, WorkflowModel input) {
-    TaskContext taskContext = new TaskContext(input, position, parentContext, taskName, task);
+    String id = workflowContext.instanceData().id();
+    TaskContext taskContext =
+        new TaskContext(
+            input, position, parentContext, taskName, task, iterationsMap.getOrDefault(id, 0) + 1);
     workflowContext.instance().restoreContext(workflowContext, taskContext);
+    iterationsMap.put(id, taskContext.iteration());
     CompletableFuture<TaskContext> completable = CompletableFuture.completedFuture(taskContext);
     if (!TaskExecutorHelper.isActive(workflowContext)) {
       return completable;
@@ -308,6 +316,10 @@ public abstract class AbstractTaskExecutor<T extends TaskBase> implements TaskEx
 
   public WorkflowPosition position() {
     return position;
+  }
+
+  public void onInstanceCompleted(String instanceId) {
+    iterationsMap.remove(instanceId);
   }
 
   protected abstract TransitionInfo getSkipTransition();

@@ -37,4 +37,8 @@ public interface TaskContextData {
   String taskName();
 
   Instant completedAt();
+
+  int iteration();
+
+  short retryAttempt();
 }
