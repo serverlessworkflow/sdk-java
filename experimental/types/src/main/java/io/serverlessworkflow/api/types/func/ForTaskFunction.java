@@ -29,7 +29,7 @@ public class ForTaskFunction extends ForTask {
   private Optional<Class<?>> whileClass = Optional.empty();
   private Optional<Class<?>> itemClass = Optional.empty();
   private Optional<Class<?>> forClass = Optional.empty();
-  private Function<?, Collection<?>> collection;
+  private Function collection;
 
   public <T, V> ForTaskFunction withWhile(LoopPredicate<T, V> whilePredicate) {
     return withWhile(toPredicate(whilePredicate));
@@ -119,12 +119,12 @@ public class ForTaskFunction extends ForTask {
     return this;
   }
 
-  public <T> ForTaskFunction withCollection(Function<T, Collection<?>> collection) {
+  public <T, V> ForTaskFunction withCollection(Function<T, Collection<V>> collection) {
     return withCollection(collection, null);
   }
 
-  public <T> ForTaskFunction withCollection(
-      Function<T, Collection<?>> collection, Class<T> colArgClass) {
+  public <T, V> ForTaskFunction withCollection(
+      Function<T, Collection<V>> collection, Class<T> colArgClass) {
     this.collection = collection;
     this.forClass = Optional.ofNullable(colArgClass);
     return this;

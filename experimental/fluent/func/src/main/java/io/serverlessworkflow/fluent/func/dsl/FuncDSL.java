@@ -26,6 +26,7 @@ import io.serverlessworkflow.api.types.FlowDirectiveEnum;
 import io.serverlessworkflow.api.types.OAuth2AuthenticationData;
 import io.serverlessworkflow.api.types.func.ContextFunction;
 import io.serverlessworkflow.api.types.func.FilterFunction;
+import io.serverlessworkflow.api.types.func.LoopFunction;
 import io.serverlessworkflow.fluent.func.FuncCallTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncEmitTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncSwitchTaskBuilder;
@@ -1020,9 +1021,25 @@ public final class FuncDSL {
    * @param <T> input type for the collection function
    * @return list configurer
    */
-  public static <T> FuncTaskConfigurer forEach(
-      Function<T, Collection<?>> collection, Consumer<FuncTaskItemListBuilder> body) {
-    return list -> list.forEach(j -> j.collection(collection).tasks(body));
+  public static <T, V> FuncTaskConfigurer forEach(
+      SerializableFunction<T, Collection<V>> collection, Consumer<FuncTaskItemListBuilder> body) {
+    return list ->
+        list.forEach(
+            j -> j.collection(collection, ReflectionUtils.inferInputType(collection)).tasks(body));
+  }
+
+  public static <T, V> FuncTaskConfigurer forEach(
+      SerializableFunction<T, Collection<V>> collection, LoopFunction<T, V, ?> function) {
+    return list ->
+        list.forEach(
+            j ->
+                j.collection(collection, ReflectionUtils.inferInputType(collection))
+                    .tasks(function));
+  }
+
+  public static <T, V> FuncTaskConfigurer forEachItem(
+      SerializableFunction<T, Collection<V>> collection, Function<V, ?> function) {
+    return forEach(collection, ((t, v) -> function.apply((V) v)));
   }
 
   /**
@@ -1033,9 +1050,9 @@ public final class FuncDSL {
    * @param <T> ignored (kept for signature consistency)
    * @return list configurer
    */
-  public static <T> FuncTaskConfigurer forEach(
-      Collection<?> collection, Consumer<FuncTaskItemListBuilder> body) {
-    Function<T, Collection<?>> f = ctx -> (Collection<?>) collection;
+  public static <T, V> FuncTaskConfigurer forEach(
+      Collection<V> collection, Consumer<FuncTaskItemListBuilder> body) {
+    Function<T, Collection<V>> f = ctx -> collection;
     return list -> list.forEach(j -> j.collection(f).tasks(body));
   }
 

@@ -64,8 +64,14 @@ public class FuncForTaskBuilder extends TaskBaseBuilder<FuncForTaskBuilder>
     return this;
   }
 
-  public <T> FuncForTaskBuilder collection(Function<T, Collection<?>> collectionF) {
+  public <T, V> FuncForTaskBuilder collection(Function<T, Collection<V>> collectionF) {
     this.forTaskFunction.withCollection(collectionF);
+    return this;
+  }
+
+  public <T, V> FuncForTaskBuilder collection(
+      Function<T, Collection<V>> collectionF, Class<T> clazz) {
+    this.forTaskFunction.withCollection(collectionF, clazz);
     return this;
   }
 
