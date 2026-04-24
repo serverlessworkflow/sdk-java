@@ -59,6 +59,394 @@ public class FuncTryCatchTest {
   private static final String ORDER_002 = "ORDER#002";
   private static final String ORDER_003 = "ORDER#003";
 
+  @Test
+  void booking_compensation_dsl() {
+
+    Workflow workflow =
+        FuncWorkflowBuilder.workflow()
+            .tasks(
+                tryCatch(
+                    "tryStockReservation",
+                    t ->
+                        t.try_(function("stockReservation", this::reserveStock))
+                            .catch_(
+                                err -> err.type(STOCK_ORDER_ERROR),
+                                function("cancelStockReservation", this::cancelReservation)
+                                    .then("endFlow"))),
+                tryCatch(
+                    "tryPaymentProcessing",
+                    t ->
+                        t.try_(function("paymentProcessing", this::processPayment))
+                            .catchWhen(
+                                "${ .status == 503 }",
+                                function("cancelPayment", this::cancelPayment).then("endFlow"))),
+                tryCatch(
+                    "tryShipping",
+                    t ->
+                        t.try_(function("scheduleShipping", this::scheduleShipping))
+                            .catchType(
+                                SHIPPING_ERROR, function("cancelPayment", this::cancelShipping))),
+                function("endFlow", this::endFlow))
+            .build();
+
+    try (WorkflowApplication application = WorkflowApplication.builder().build()) {
+      WorkflowDefinition workflowDefinition = application.workflowDefinition(workflow);
+      WorkflowModel workflowModel = workflowDefinition.instance(ORDER_003).start().join();
+
+      assertThat(workflowModel.asCollection())
+          .map(w -> w.asText().orElseThrow())
+          .contains(ORDER_003, "endFlow");
+    }
+  }
+
+  @Test
+  void testStockReservationError_CatchByType() {
+    log.info("Testing stock reservation error with catch by type");
+
+    Workflow workflow =
+        FuncWorkflowBuilder.workflow()
+            .tasks(
+                tryCatch(
+                    "tryStockReservation",
+                    t ->
+                        t.try_(function("stockReservation", this::reserveStock))
+                            .catch_(
+                                err -> err.type(STOCK_ORDER_ERROR),
+                                function("cancelStockReservation", this::cancelReservation)
+                                    .then("endFlow"))),
+                function("endFlow", this::endFlow))
+            .build();
+
+    try (WorkflowApplication application = WorkflowApplication.builder().build()) {
+      WorkflowDefinition workflowDefinition = application.workflowDefinition(workflow);
+      WorkflowModel workflowModel = workflowDefinition.instance(ORDER_001).start().join();
+
+      assertThat(workflowModel.asCollection())
+          .map(w -> w.asText().orElseThrow())
+          .contains(ORDER_001, "endFlow");
+    }
+  }
+
+  @Test
+  void testStockReservationError_CatchByStatus() {
+    log.info("Testing stock reservation error with catch by status code");
+
+    Workflow workflow =
+        FuncWorkflowBuilder.workflow()
+            .tasks(
+                tryCatch(
+                    "tryStockReservation",
+                    t ->
+                        t.try_(function("stockReservation", this::reserveStock))
+                            .catchWhen(
+                                "${ .status == 409 }",
+                                function("cancelStockReservation", this::cancelReservation)
+                                    .then("endFlow"))),
+                function("endFlow", this::endFlow))
+            .build();
+
+    try (WorkflowApplication application = WorkflowApplication.builder().build()) {
+      WorkflowDefinition workflowDefinition = application.workflowDefinition(workflow);
+      WorkflowModel workflowModel = workflowDefinition.instance(ORDER_001).start().join();
+
+      assertThat(workflowModel.asCollection())
+          .map(w -> w.asText().orElseThrow())
+          .contains(ORDER_001, "endFlow");
+    }
+  }
+
+  @Test
+  void testStockReservationError_CatchType() {
+    log.info("Testing stock reservation error with catchType");
+
+    Workflow workflow =
+        FuncWorkflowBuilder.workflow()
+            .tasks(
+                tryCatch(
+                    "tryStockReservation",
+                    t ->
+                        t.try_(function("stockReservation", this::reserveStock))
+                            .catchType(
+                                STOCK_ORDER_ERROR,
+                                function("cancelStockReservation", this::cancelReservation)
+                                    .then("endFlow"))),
+                function("endFlow", this::endFlow))
+            .build();
+
+    try (WorkflowApplication application = WorkflowApplication.builder().build()) {
+      WorkflowDefinition workflowDefinition = application.workflowDefinition(workflow);
+      WorkflowModel workflowModel = workflowDefinition.instance(ORDER_001).start().join();
+
+      assertThat(workflowModel.asCollection())
+          .map(w -> w.asText().orElseThrow())
+          .contains(ORDER_001, "endFlow");
+    }
+  }
+
+  @Test
+  void testPaymentProcessingError_CatchByType() {
+    log.info("Testing payment processing error with catch by type");
+
+    Workflow workflow =
+        FuncWorkflowBuilder.workflow()
+            .tasks(
+                tryCatch(
+                    "tryPaymentProcessing",
+                    t ->
+                        t.try_(function("paymentProcessing", this::processPayment))
+                            .catch_(
+                                err -> err.type(PAYMENT_PROCESSING_ERROR),
+                                function("cancelPayment", this::cancelPayment).then("endFlow"))),
+                function("endFlow", this::endFlow))
+            .build();
+
+    try (WorkflowApplication application = WorkflowApplication.builder().build()) {
+      WorkflowDefinition workflowDefinition = application.workflowDefinition(workflow);
+      WorkflowModel workflowModel = workflowDefinition.instance(ORDER_002).start().join();
+
+      assertThat(workflowModel.asCollection())
+          .map(w -> w.asText().orElseThrow())
+          .contains(ORDER_002, "endFlow");
+    }
+  }
+
+  @Test
+  void testPaymentProcessingError_CatchByStatus() {
+    log.info("Testing payment processing error with catch by status code");
+
+    Workflow workflow =
+        FuncWorkflowBuilder.workflow()
+            .tasks(
+                tryCatch(
+                    "tryPaymentProcessing",
+                    t ->
+                        t.try_(function("paymentProcessing", this::processPayment))
+                            .catchWhen(
+                                "${ .status == 503 }",
+                                function("cancelPayment", this::cancelPayment).then("endFlow"))),
+                function("endFlow", this::endFlow))
+            .build();
+
+    try (WorkflowApplication application = WorkflowApplication.builder().build()) {
+      WorkflowDefinition workflowDefinition = application.workflowDefinition(workflow);
+      WorkflowModel workflowModel = workflowDefinition.instance(ORDER_002).start().join();
+
+      assertThat(workflowModel.asCollection())
+          .map(w -> w.asText().orElseThrow())
+          .contains(ORDER_002, "endFlow");
+    }
+  }
+
+  @Test
+  void testPaymentProcessingError_CatchType() {
+    log.info("Testing payment processing error with catchType");
+
+    Workflow workflow =
+        FuncWorkflowBuilder.workflow()
+            .tasks(
+                tryCatch(
+                    "tryPaymentProcessing",
+                    t ->
+                        t.try_(function("paymentProcessing", this::processPayment))
+                            .catchType(
+                                PAYMENT_PROCESSING_ERROR,
+                                function("cancelPayment", this::cancelPayment).then("endFlow"))),
+                function("endFlow", this::endFlow))
+            .build();
+
+    try (WorkflowApplication application = WorkflowApplication.builder().build()) {
+      WorkflowDefinition workflowDefinition = application.workflowDefinition(workflow);
+      WorkflowModel workflowModel = workflowDefinition.instance(ORDER_002).start().join();
+
+      assertThat(workflowModel.asCollection())
+          .map(w -> w.asText().orElseThrow())
+          .contains(ORDER_002, "endFlow");
+    }
+  }
+
+  @Test
+  void testShippingError_CatchByType() {
+    log.info("Testing shipping error with catch by type");
+
+    Workflow workflow =
+        FuncWorkflowBuilder.workflow()
+            .tasks(
+                tryCatch(
+                    "tryShipping",
+                    t ->
+                        t.try_(function("scheduleShipping", this::scheduleShipping))
+                            .catch_(
+                                err -> err.type(SHIPPING_ERROR),
+                                function("cancelShipping", this::cancelShipping).then("endFlow"))),
+                function("endFlow", this::endFlow))
+            .build();
+
+    try (WorkflowApplication application = WorkflowApplication.builder().build()) {
+      WorkflowDefinition workflowDefinition = application.workflowDefinition(workflow);
+      WorkflowModel workflowModel = workflowDefinition.instance(ORDER_003).start().join();
+
+      assertThat(workflowModel.asCollection())
+          .map(w -> w.asText().orElseThrow())
+          .contains(ORDER_003, "endFlow");
+    }
+  }
+
+  @Test
+  void testShippingError_CatchByStatus() {
+    log.info("Testing shipping error with catch by status code");
+
+    Workflow workflow =
+        FuncWorkflowBuilder.workflow()
+            .tasks(
+                tryCatch(
+                    "tryShipping",
+                    t ->
+                        t.try_(function("scheduleShipping", this::scheduleShipping))
+                            .catchWhen(
+                                "${ .status == 500 }",
+                                function("cancelShipping", this::cancelShipping).then("endFlow"))),
+                function("endFlow", this::endFlow))
+            .build();
+
+    try (WorkflowApplication application = WorkflowApplication.builder().build()) {
+      WorkflowDefinition workflowDefinition = application.workflowDefinition(workflow);
+      WorkflowModel workflowModel = workflowDefinition.instance(ORDER_003).start().join();
+
+      assertThat(workflowModel.asCollection())
+          .map(w -> w.asText().orElseThrow())
+          .contains(ORDER_003, "endFlow");
+    }
+  }
+
+  @Test
+  void testShippingError_CatchType() {
+    log.info("Testing shipping error with catchType");
+
+    Workflow workflow =
+        FuncWorkflowBuilder.workflow()
+            .tasks(
+                tryCatch(
+                    "tryShipping",
+                    t ->
+                        t.try_(function("scheduleShipping", this::scheduleShipping))
+                            .catchType(
+                                SHIPPING_ERROR,
+                                function("cancelShipping", this::cancelShipping).then("endFlow"))),
+                function("endFlow", this::endFlow))
+            .build();
+
+    try (WorkflowApplication application = WorkflowApplication.builder().build()) {
+      WorkflowDefinition workflowDefinition = application.workflowDefinition(workflow);
+      WorkflowModel workflowModel = workflowDefinition.instance(ORDER_003).start().join();
+
+      assertThat(workflowModel.asCollection())
+          .map(w -> w.asText().orElseThrow())
+          .contains(ORDER_003, "endFlow");
+    }
+  }
+
+  @Test
+  void testSuccessfulFlow_NoErrors() {
+    log.info("Testing successful flow without any errors");
+
+    Workflow workflow =
+        FuncWorkflowBuilder.workflow()
+            .tasks(
+                tryCatch(
+                    "tryStockReservation",
+                    t ->
+                        t.try_(function("stockReservation", this::reserveStock))
+                            .catch_(
+                                err -> err.type(STOCK_ORDER_ERROR),
+                                function("cancelStockReservation", this::cancelReservation)
+                                    .then("endFlow"))),
+                tryCatch(
+                    "tryPaymentProcessing",
+                    t ->
+                        t.try_(function("paymentProcessing", this::processPayment))
+                            .catchWhen(
+                                "${ .status == 503 }",
+                                function("cancelPayment", this::cancelPayment).then("endFlow"))),
+                tryCatch(
+                    "tryShipping",
+                    t ->
+                        t.try_(function("scheduleShipping", this::scheduleShipping))
+                            .catchType(
+                                SHIPPING_ERROR, function("cancelShipping", this::cancelShipping))),
+                function("endFlow", this::endFlow))
+            .build();
+
+    try (WorkflowApplication application = WorkflowApplication.builder().build()) {
+      WorkflowDefinition workflowDefinition = application.workflowDefinition(workflow);
+      // Using a different order ID that doesn't trigger any errors
+      WorkflowModel workflowModel = workflowDefinition.instance("ORDER#999").start().join();
+
+      assertThat(workflowModel.asCollection())
+          .map(w -> w.asText().orElseThrow())
+          .contains("ORDER#999", "endFlow");
+    }
+  }
+
+  @Test
+  void testMultipleCatchHandlers_FirstMatches() {
+    log.info("Testing multiple catch handlers where first one matches");
+
+    Workflow workflow =
+        FuncWorkflowBuilder.workflow()
+            .tasks(
+                tryCatch(
+                    "tryStockReservation",
+                    t ->
+                        t.try_(function("stockReservation", this::reserveStock))
+                            .catch_(
+                                err -> err.type(STOCK_ORDER_ERROR),
+                                function("cancelStockReservation", this::cancelReservation)
+                                    .then("endFlow"))
+                            .catchWhen(
+                                "${ .status == 409 }",
+                                function("alternativeCancellation", this::cancelReservation)
+                                    .then("endFlow"))),
+                function("endFlow", this::endFlow))
+            .build();
+
+    try (WorkflowApplication application = WorkflowApplication.builder().build()) {
+      WorkflowDefinition workflowDefinition = application.workflowDefinition(workflow);
+      WorkflowModel workflowModel = workflowDefinition.instance(ORDER_001).start().join();
+
+      assertThat(workflowModel.asCollection())
+          .map(w -> w.asText().orElseThrow())
+          .contains(ORDER_001, "endFlow");
+    }
+  }
+
+  @Test
+  void testCatchAll_WithAnyError() {
+    log.info("Testing catch-all handler for any error");
+
+    Workflow workflow =
+        FuncWorkflowBuilder.workflow()
+            .tasks(
+                tryCatch(
+                    "tryStockReservation",
+                    t ->
+                        t.try_(function("stockReservation", this::reserveStock))
+                            .catchWhen(
+                                "${ true }",
+                                function("genericErrorHandler", this::cancelReservation)
+                                    .then("endFlow"))),
+                function("endFlow", this::endFlow))
+            .build();
+
+    try (WorkflowApplication application = WorkflowApplication.builder().build()) {
+      WorkflowDefinition workflowDefinition = application.workflowDefinition(workflow);
+      WorkflowModel workflowModel = workflowDefinition.instance(ORDER_001).start().join();
+
+      assertThat(workflowModel.asCollection())
+          .map(w -> w.asText().orElseThrow())
+          .contains(ORDER_001, "endFlow");
+    }
+  }
+
   public String reserveStock(String order) {
     log.info("Reserving stock for order: {}", order);
     if (order.equals(ORDER_001)) {
@@ -103,45 +491,5 @@ public class FuncTryCatchTest {
   public List<String> endFlow(String order) {
     log.info("End flow for order:  {}", order);
     return List.of(order, "endFlow");
-  }
-
-  @Test
-  void booking_compensation_dsl() {
-
-    Workflow workflow =
-        FuncWorkflowBuilder.workflow()
-            .tasks(
-                tryCatch(
-                    "tryStockReservation",
-                    t ->
-                        t.try_(function("stockReservation", this::reserveStock))
-                            .catch_(
-                                err -> err.type(STOCK_ORDER_ERROR),
-                                function("cancelStockReservation", this::cancelReservation)
-                                    .then("endFlow"))),
-                tryCatch(
-                    "tryPaymentProcessing",
-                    t ->
-                        t.try_(function("paymentProcessing", this::processPayment))
-                            .catchWhen(
-                                "${ .status == 503 }",
-                                function("cancelPayment", this::cancelPayment).then("endFlow"))),
-                tryCatch(
-                    "tryShipping",
-                    t ->
-                        t.try_(function("scheduleShipping", this::scheduleShipping))
-                            .catchType(
-                                SHIPPING_ERROR, function("cancelPayment", this::cancelShipping))),
-                function("endFlow", this::endFlow))
-            .build();
-
-    try (WorkflowApplication application = WorkflowApplication.builder().build()) {
-      WorkflowDefinition workflowDefinition = application.workflowDefinition(workflow);
-      WorkflowModel workflowModel = workflowDefinition.instance(ORDER_003).start().join();
-
-      assertThat(workflowModel.asCollection())
-          .map(w -> w.asText().orElseThrow())
-          .contains(ORDER_003, "endFlow");
-    }
   }
 }
