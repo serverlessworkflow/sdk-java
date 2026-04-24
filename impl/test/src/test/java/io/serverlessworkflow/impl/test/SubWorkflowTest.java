@@ -41,12 +41,7 @@ public class SubWorkflowTest {
     try (WorkflowApplication app = WorkflowApplication.builder().build()) {
       app.workflowDefinition(workflowChild);
       Map<String, Object> result =
-          app.workflowDefinition(workflowParent)
-              .instance()
-              .start()
-              .join()
-              .asMap()
-              .orElseThrow();
+          app.workflowDefinition(workflowParent).instance().start().join().asMap().orElseThrow();
       assertThat(result.get("counter"), is(equalTo(1)));
       assertThat(result.get("greeting"), is(equalTo("helloWorld")));
     }
@@ -62,12 +57,7 @@ public class SubWorkflowTest {
     try (WorkflowApplication app = WorkflowApplication.builder().build()) {
       app.workflowDefinition(workflowChild);
       Map<String, Object> result =
-          app.workflowDefinition(workflowParent)
-              .instance()
-              .start()
-              .join()
-              .asMap()
-              .orElseThrow();
+          app.workflowDefinition(workflowParent).instance().start().join().asMap().orElseThrow();
       assertThat(result.get("counter"), is(equalTo(1)));
       assertThat(result.get("greeting"), is(equalTo("helloWorld")));
     }

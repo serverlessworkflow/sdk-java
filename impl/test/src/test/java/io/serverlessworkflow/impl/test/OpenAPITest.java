@@ -194,13 +194,7 @@ public class OpenAPITest {
     Exception exception =
         assertThrows(
             Exception.class,
-            () ->
-                app.workflowDefinition(workflow)
-                    .instance()
-                    .start()
-                    .get()
-                    .asMap()
-                    .orElseThrow());
+            () -> app.workflowDefinition(workflow).instance().start().get().asMap().orElseThrow());
     assertInstanceOf(WorkflowException.class, exception.getCause());
     assertTrue(exception.getMessage().contains("status=409"));
 
