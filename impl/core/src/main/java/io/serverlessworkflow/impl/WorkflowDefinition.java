@@ -129,6 +129,10 @@ public class WorkflowDefinition implements AutoCloseable, WorkflowDefinitionData
     return new WorkflowMutableInstance(this, application().idFactory().get(), inputModel);
   }
 
+  public WorkflowInstance instance() {
+    return instance(Map.of());
+  }
+
   Optional<SchemaValidator> inputSchemaValidator() {
     return inputSchemaValidator;
   }
