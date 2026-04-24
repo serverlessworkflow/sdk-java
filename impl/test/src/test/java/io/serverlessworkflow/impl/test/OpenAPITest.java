@@ -149,7 +149,7 @@ public class OpenAPITest {
             .setResponseCode(201));
 
     Map<String, Object> result =
-        app.workflowDefinition(workflow).instance(Map.of()).start().get().asMap().orElseThrow();
+        app.workflowDefinition(workflow).instance().start().get().asMap().orElseThrow();
 
     RecordedRequest restRequest = restServer.takeRequest();
     assertEquals("POST", restRequest.getMethod());
@@ -196,7 +196,7 @@ public class OpenAPITest {
             Exception.class,
             () ->
                 app.workflowDefinition(workflow)
-                    .instance(Map.of())
+                    .instance()
                     .start()
                     .get()
                     .asMap()
@@ -244,11 +244,11 @@ public class OpenAPITest {
             .setResponseCode(200));
 
     WorkflowDefinition definition = app.workflowDefinition(workflow);
-    assertData(definition.instance(Map.of()).start().get().asMap().orElseThrow());
+    assertData(definition.instance().start().get().asMap().orElseThrow());
     RecordedRequest openAPIRequest = openApiServer.takeRequest();
     assertEquals("GET", openAPIRequest.getMethod());
 
-    assertData(definition.instance(Map.of()).start().get().asMap().orElseThrow());
+    assertData(definition.instance().start().get().asMap().orElseThrow());
     openAPIRequest = openApiServer.takeRequest();
     assertEquals("HEAD", openAPIRequest.getMethod());
   }

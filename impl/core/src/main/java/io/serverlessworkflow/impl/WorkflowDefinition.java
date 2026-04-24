@@ -130,7 +130,7 @@ public class WorkflowDefinition implements AutoCloseable, WorkflowDefinitionData
   }
 
   public WorkflowInstance instance() {
-    return instance(Map.of());
+    return instance(null);
   }
 
   Optional<SchemaValidator> inputSchemaValidator() {
