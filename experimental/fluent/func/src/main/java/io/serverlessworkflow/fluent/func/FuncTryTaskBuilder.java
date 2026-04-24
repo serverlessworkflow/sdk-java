@@ -25,7 +25,7 @@ public class FuncTryTaskBuilder
     implements FuncTaskTransformations<FuncTryTaskBuilder>,
         ConditionalTaskBuilder<FuncTryTaskBuilder> {
 
-  public FuncTryTaskBuilder() {
+  FuncTryTaskBuilder() {
     super(new FuncTaskItemListBuilder(0));
   }
 
