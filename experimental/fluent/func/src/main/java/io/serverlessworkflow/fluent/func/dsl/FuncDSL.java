@@ -1117,6 +1117,32 @@ public final class FuncDSL {
   }
 
   /**
+   * This is helper to quickly build fork task where every branch is unnamed and consist of just one
+   * task. For more advanced use cases, please check FuncTaskItemListBuilder.fork
+   *
+   * @param name the name of the fork task
+   * @param branches every task in this input array will become a branch of the fork.
+   * @return FuncTaskConfigurer
+   */
+  public static FuncTaskConfigurer fork(String name, FuncTaskConfigurer... branches) {
+    if (branches == null || branches.length == 0) {
+      throw new IllegalArgumentException("branches must not be null or empty");
+    }
+    return list ->
+        list.fork(
+            name,
+            forkBuilder -> {
+              for (FuncTaskConfigurer branch : branches) {
+                forkBuilder.branch((FuncTaskItemListBuilder v) -> branch.accept(v));
+              }
+            });
+  }
+
+  public static FuncTaskConfigurer fork(FuncTaskConfigurer... branches) {
+    return fork(null, branches);
+  }
+
+  /**
    * Set a raw expression on the current list (advanced).
    *
    * @param expr expression string
