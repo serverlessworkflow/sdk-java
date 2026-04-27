@@ -40,7 +40,7 @@ public class FuncTryTaskBuilder
    * @param tryHandler a consumer that configures the tasks to be executed in the try
    * @return this builder instance for method chaining
    */
-  public FuncTryTaskBuilder try_(Consumer<FuncTaskItemListBuilder> tryHandler) {
+  public FuncTryTaskBuilder tryCatch(Consumer<FuncTaskItemListBuilder> tryHandler) {
     return this.tryHandler(tryHandler);
   }
 
@@ -53,7 +53,7 @@ public class FuncTryTaskBuilder
    *     are caught
    * @return this builder instance for method chaining
    */
-  public FuncTryTaskBuilder catch_(
+  public FuncTryTaskBuilder catchError(
       Consumer<CatchErrorsBuilder> catchErrors, Consumer<FuncTaskItemListBuilder> catchHandler) {
     return this.catchHandler(handler -> handler.errorsWith(catchErrors).doTasks(catchHandler));
   }

@@ -68,22 +68,22 @@ public class FuncTryCatchTest {
                 tryCatch(
                     "tryStockReservation",
                     t ->
-                        t.try_(function("stockReservation", this::reserveStock))
-                            .catch_(
+                        t.tryCatch(function("stockReservation", this::reserveStock))
+                            .catchError(
                                 err -> err.type(STOCK_ORDER_ERROR),
                                 function("cancelStockReservation", this::cancelReservation)
                                     .then("endFlow"))),
                 tryCatch(
                     "tryPaymentProcessing",
                     t ->
-                        t.try_(function("paymentProcessing", this::processPayment))
+                        t.tryCatch(function("paymentProcessing", this::processPayment))
                             .catchWhen(
                                 "${ .status == 503 }",
                                 function("cancelPayment", this::cancelPayment).then("endFlow"))),
                 tryCatch(
                     "tryShipping",
                     t ->
-                        t.try_(function("scheduleShipping", this::scheduleShipping))
+                        t.tryCatch(function("scheduleShipping", this::scheduleShipping))
                             .catchType(
                                 SHIPPING_ERROR, function("cancelPayment", this::cancelShipping))),
                 function("endFlow", this::endFlow))
@@ -109,8 +109,8 @@ public class FuncTryCatchTest {
                 tryCatch(
                     "tryStockReservation",
                     t ->
-                        t.try_(function("stockReservation", this::reserveStock))
-                            .catch_(
+                        t.tryCatch(function("stockReservation", this::reserveStock))
+                            .catchError(
                                 err -> err.type(STOCK_ORDER_ERROR),
                                 function("cancelStockReservation", this::cancelReservation)
                                     .then("endFlow"))),
@@ -137,7 +137,7 @@ public class FuncTryCatchTest {
                 tryCatch(
                     "tryStockReservation",
                     t ->
-                        t.try_(function("stockReservation", this::reserveStock))
+                        t.tryCatch(function("stockReservation", this::reserveStock))
                             .catchWhen(
                                 "${ .status == 409 }",
                                 function("cancelStockReservation", this::cancelReservation)
@@ -165,7 +165,7 @@ public class FuncTryCatchTest {
                 tryCatch(
                     "tryStockReservation",
                     t ->
-                        t.try_(function("stockReservation", this::reserveStock))
+                        t.tryCatch(function("stockReservation", this::reserveStock))
                             .catchType(
                                 STOCK_ORDER_ERROR,
                                 function("cancelStockReservation", this::cancelReservation)
@@ -193,8 +193,8 @@ public class FuncTryCatchTest {
                 tryCatch(
                     "tryPaymentProcessing",
                     t ->
-                        t.try_(function("paymentProcessing", this::processPayment))
-                            .catch_(
+                        t.tryCatch(function("paymentProcessing", this::processPayment))
+                            .catchError(
                                 err -> err.type(PAYMENT_PROCESSING_ERROR),
                                 function("cancelPayment", this::cancelPayment).then("endFlow"))),
                 function("endFlow", this::endFlow))
@@ -220,7 +220,7 @@ public class FuncTryCatchTest {
                 tryCatch(
                     "tryPaymentProcessing",
                     t ->
-                        t.try_(function("paymentProcessing", this::processPayment))
+                        t.tryCatch(function("paymentProcessing", this::processPayment))
                             .catchWhen(
                                 "${ .status == 503 }",
                                 function("cancelPayment", this::cancelPayment).then("endFlow"))),
@@ -247,7 +247,7 @@ public class FuncTryCatchTest {
                 tryCatch(
                     "tryPaymentProcessing",
                     t ->
-                        t.try_(function("paymentProcessing", this::processPayment))
+                        t.tryCatch(function("paymentProcessing", this::processPayment))
                             .catchType(
                                 PAYMENT_PROCESSING_ERROR,
                                 function("cancelPayment", this::cancelPayment).then("endFlow"))),
@@ -274,8 +274,8 @@ public class FuncTryCatchTest {
                 tryCatch(
                     "tryShipping",
                     t ->
-                        t.try_(function("scheduleShipping", this::scheduleShipping))
-                            .catch_(
+                        t.tryCatch(function("scheduleShipping", this::scheduleShipping))
+                            .catchError(
                                 err -> err.type(SHIPPING_ERROR),
                                 function("cancelShipping", this::cancelShipping).then("endFlow"))),
                 function("endFlow", this::endFlow))
@@ -301,7 +301,7 @@ public class FuncTryCatchTest {
                 tryCatch(
                     "tryShipping",
                     t ->
-                        t.try_(function("scheduleShipping", this::scheduleShipping))
+                        t.tryCatch(function("scheduleShipping", this::scheduleShipping))
                             .catchWhen(
                                 "${ .status == 500 }",
                                 function("cancelShipping", this::cancelShipping).then("endFlow"))),
@@ -328,7 +328,7 @@ public class FuncTryCatchTest {
                 tryCatch(
                     "tryShipping",
                     t ->
-                        t.try_(function("scheduleShipping", this::scheduleShipping))
+                        t.tryCatch(function("scheduleShipping", this::scheduleShipping))
                             .catchType(
                                 SHIPPING_ERROR,
                                 function("cancelShipping", this::cancelShipping).then("endFlow"))),
@@ -355,22 +355,22 @@ public class FuncTryCatchTest {
                 tryCatch(
                     "tryStockReservation",
                     t ->
-                        t.try_(function("stockReservation", this::reserveStock))
-                            .catch_(
+                        t.tryCatch(function("stockReservation", this::reserveStock))
+                            .catchError(
                                 err -> err.type(STOCK_ORDER_ERROR),
                                 function("cancelStockReservation", this::cancelReservation)
                                     .then("endFlow"))),
                 tryCatch(
                     "tryPaymentProcessing",
                     t ->
-                        t.try_(function("paymentProcessing", this::processPayment))
+                        t.tryCatch(function("paymentProcessing", this::processPayment))
                             .catchWhen(
                                 "${ .status == 503 }",
                                 function("cancelPayment", this::cancelPayment).then("endFlow"))),
                 tryCatch(
                     "tryShipping",
                     t ->
-                        t.try_(function("scheduleShipping", this::scheduleShipping))
+                        t.tryCatch(function("scheduleShipping", this::scheduleShipping))
                             .catchType(
                                 SHIPPING_ERROR, function("cancelShipping", this::cancelShipping))),
                 function("endFlow", this::endFlow))
@@ -397,8 +397,8 @@ public class FuncTryCatchTest {
                 tryCatch(
                     "tryStockReservation",
                     t ->
-                        t.try_(function("stockReservation", this::reserveStock))
-                            .catch_(
+                        t.tryCatch(function("stockReservation", this::reserveStock))
+                            .catchError(
                                 err -> err.type(STOCK_ORDER_ERROR),
                                 function("cancelStockReservation", this::cancelReservation)
                                     .then("endFlow"))
@@ -429,7 +429,7 @@ public class FuncTryCatchTest {
                 tryCatch(
                     "tryStockReservation",
                     t ->
-                        t.try_(function("stockReservation", this::reserveStock))
+                        t.tryCatch(function("stockReservation", this::reserveStock))
                             .catchWhen(
                                 "${ true }",
                                 function("genericErrorHandler", this::cancelReservation)
