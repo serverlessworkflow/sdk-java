@@ -27,7 +27,8 @@ public class FuncWorkflowBuilder
     super(name, namespace, version);
   }
 
-  public static FuncWorkflowBuilder workflow(final String name, final String namespace, final String version) {
+  public static FuncWorkflowBuilder workflow(
+      final String name, final String namespace, final String version) {
     return new FuncWorkflowBuilder(name, namespace, version);
   }
 
