@@ -51,6 +51,18 @@ public class MarshallingUtils {
     return writeValue(factory, value, (b, v) -> b.writeShort(v));
   }
 
+  public static byte[] writeInt(WorkflowBufferFactory factory, int value) {
+    return writeValue(factory, value, (b, v) -> b.writeInt(v));
+  }
+
+  public static byte[] writeFloat(WorkflowBufferFactory factory, float value) {
+    return writeValue(factory, value, (b, v) -> b.writeFloat(v));
+  }
+
+  public static byte[] writeDouble(WorkflowBufferFactory factory, int value) {
+    return writeValue(factory, value, (b, v) -> b.writeDouble(v));
+  }
+
   public static byte[] writeBoolean(WorkflowBufferFactory factory, boolean value) {
     return writeValue(factory, value, (b, v) -> b.writeBoolean(v));
   }
@@ -64,11 +76,23 @@ public class MarshallingUtils {
   }
 
   public static boolean readBoolean(WorkflowBufferFactory factory, byte[] value) {
-    return readValue(factory, value, WorkflowInputBuffer::readBoolean);
+    return readValue(factory, value, WorkflowInputBuffer::readBoolean, false);
   }
 
   public static short readShort(WorkflowBufferFactory factory, byte[] value) {
-    return readValue(factory, value, WorkflowInputBuffer::readShort);
+    return readValue(factory, value, WorkflowInputBuffer::readShort, (short) 0);
+  }
+
+  public static int readInt(WorkflowBufferFactory factory, byte[] value) {
+    return readValue(factory, value, WorkflowInputBuffer::readInt, 0);
+  }
+
+  public static float readFloat(WorkflowBufferFactory factory, byte[] value) {
+    return readValue(factory, value, WorkflowInputBuffer::readFloat, 0.0f);
+  }
+
+  public static double readDouble(WorkflowBufferFactory factory, byte[] value) {
+    return readValue(factory, value, WorkflowInputBuffer::readDouble, 0.0);
   }
 
   public static WorkflowModel readModel(WorkflowBufferFactory factory, byte[] value) {
@@ -95,8 +119,16 @@ public class MarshallingUtils {
 
   private static <T> T readValue(
       WorkflowBufferFactory factory, byte[] value, Function<WorkflowInputBuffer, T> valueConsumer) {
+    return readValue(factory, value, valueConsumer, null);
+  }
+
+  private static <T> T readValue(
+      WorkflowBufferFactory factory,
+      byte[] value,
+      Function<WorkflowInputBuffer, T> valueConsumer,
+      T defaultValue) {
     if (value == null) {
-      return null;
+      return defaultValue;
     }
     ByteArrayInputStream bytesIn = new ByteArrayInputStream(value);
     try (WorkflowInputBuffer buffer = factory.input(bytesIn)) {
