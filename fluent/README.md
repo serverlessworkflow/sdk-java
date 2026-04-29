@@ -69,6 +69,108 @@ Workflow wf = WorkflowBuilder
 > [!NOTE]
 > We rename reserved keywords (`for`, `do`, `if`, `while`, `switch`, `try`) to safe identifiers (`forEach`, `tasks`, `when`, etc.).
 
+#### Call Tasks — HTTP, OpenAPI, gRPC
+
+The spec fluent DSL supports all three call task types defined by the specification:
+
+| Call Type | DSL Factory | Shortcut |
+|-----------|------------|----------|
+| HTTP | `call(http().GET().endpoint(...))` | `DSL.http()` |
+| OpenAPI | `call(openapi().document(...).operation(...))` | `DSL.openapi()` |
+| gRPC | `call(grpc().proto(...).service(...).method(...))` | `DSL.grpc()` |
+
+**HTTP call:**
+
+```java
+import static io.serverlessworkflow.fluent.spec.dsl.DSL.*;
+
+Workflow wf = WorkflowBuilder.workflow("myFlow", "myNs", "1.0")
+    .tasks(call(
+        http()
+          .GET()
+          .endpoint("https://petstore.swagger.io/v2/pet")
+    ))
+    .build();
+```
+
+**OpenAPI call:**
+
+```java
+Workflow wf = WorkflowBuilder.workflow("myFlow", "myNs", "1.0")
+    .tasks(call(
+        openapi()
+          .document("https://api.example.com/openapi.yaml")
+          .operation("getPetById")
+          .parameter("id", "42")
+    ))
+    .build();
+```
+
+**gRPC call:**
+
+```java
+Workflow wf = WorkflowBuilder.workflow("myFlow", "myNs", "1.0")
+    .tasks(call(
+        grpc()
+          .proto("workflows-samples/grpc/proto/person.proto")
+          .service("Person", "localhost", 5011)
+          .method("GetPerson")
+    ))
+    .build();
+```
+
+**gRPC call with arguments and authentication:**
+
+```java
+Workflow wf = WorkflowBuilder.workflow("myFlow", "myNs", "1.0")
+    .tasks(call(
+        grpc()
+          .proto("proto/contributors.proto", basic("user", "pass"))
+          .service("Contributors", "localhost", 5011)
+          .method("GetContributor")
+          .argument("github", "${ .github }")
+    ))
+    .build();
+```
+
+**gRPC call with a named task:**
+
+```java
+Workflow wf = WorkflowBuilder.workflow("myFlow", "myNs", "1.0")
+    .tasks(call(
+        "greet",
+        grpc()
+          .proto("proto/person.proto")
+          .service("Person", "localhost", 5011)
+          .method("GetPerson")
+    ))
+    .build();
+```
+
+##### `CallGrpcSpec` API Reference
+
+| Method | Description |
+|--------|-------------|
+| `proto(String uri)` | Sets the proto definition endpoint (file path or URI) |
+| `proto(String uri, AuthenticationConfigurer auth)` | Sets the proto endpoint with authentication; also applies the same authentication to the service configuration when no service-level authentication has been set yet |
+| `service(String name, String host)` | Sets the gRPC service name and host |
+| `service(String name, String host, int port)` | Sets the gRPC service name, host, and port |
+| `method(String method)` | Sets the gRPC method name to call |
+| `argument(String name, Object value)` | Adds a single method argument |
+| `arguments(Map<String, Object> args)` | Adds multiple method arguments |
+| `authentication(AuthenticationConfigurer auth)` | Sets or overrides the service-level authentication policy |
+
+You can also use the low-level `CallGrpcConfigurer` lambda directly:
+
+```java
+Workflow wf = WorkflowBuilder.workflow("f", "ns", "1")
+    .tasks(call((CallGrpcConfigurer) b -> b
+        .proto("proto/service.proto")
+        .service("Svc", "host")
+        .method("DoThing")))
+    .build();
+```
+
 ---
 
 ### 2. Func Fluent

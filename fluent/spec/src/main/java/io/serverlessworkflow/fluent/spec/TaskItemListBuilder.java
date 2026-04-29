@@ -154,6 +154,21 @@ public class TaskItemListBuilder extends BaseTaskItemListBuilder<TaskItemListBui
   }
 
   @Override
+  public TaskItemListBuilder grpc(String name, Consumer<CallGrpcTaskBuilder> itemsConfigurer) {
+    name = defaultNameAndRequireConfig(name, itemsConfigurer, TYPE_GRPC);
+
+    final CallGrpcTaskBuilder callGRPCBuilder = new CallGrpcTaskBuilder();
+    itemsConfigurer.accept(callGRPCBuilder);
+
+    final CallTask callTask = new CallTask();
+    callTask.setCallGRPC(callGRPCBuilder.build());
+    final Task task = new Task();
+    task.setCallTask(callTask);
+
+    return addTaskItem(new TaskItem(name, task));
+  }
+
+  @Override
   public TaskItemListBuilder workflow(String name, Consumer<WorkflowTaskBuilder> itemsConfigurer) {
     name = defaultNameAndRequireConfig(name, itemsConfigurer, TYPE_WORKFLOW);
 
