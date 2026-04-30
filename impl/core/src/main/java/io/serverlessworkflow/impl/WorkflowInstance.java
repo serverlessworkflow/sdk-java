@@ -20,6 +20,10 @@ import java.util.concurrent.CompletableFuture;
 public interface WorkflowInstance extends WorkflowInstanceData {
   CompletableFuture<WorkflowModel> start();
 
+  WorkflowModel output();
+
+  <T> T outputAs(Class<T> clazz);
+
   boolean suspend();
 
   boolean cancel();
