@@ -56,6 +56,8 @@ public class WorkflowMutableInstance implements WorkflowInstance {
   private Lock statusLock = new ReentrantLock();
   private Map<CompletableFuture<TaskContext>, TaskContext> suspended;
 
+  private volatile WorkflowModel completedOutput;
+
   private Collection<CompletableFuture<?>> cancelables = new ArrayList<>();
 
   protected WorkflowMutableInstance(WorkflowDefinition definition, String id, WorkflowModel input) {
@@ -140,6 +142,10 @@ public class WorkflowMutableInstance implements WorkflowInstance {
             .map(f -> f.apply(workflowContext, null, node))
             .orElse(node);
     workflowContext.definition().outputSchemaValidator().ifPresent(v -> v.validate(output));
+    // Store before onWorkflowCompleted fires so instanceData().output() is available in the hook.
+    // futureRef is set after startExecution() returns, which is too late for synchronous
+    // workflows where the CompletableFuture chain completes inline on the calling thread.
+    this.completedOutput = output;
     status(WorkflowStatus.COMPLETED);
     return output;
   }
@@ -176,6 +182,9 @@ public class WorkflowMutableInstance implements WorkflowInstance {
 
   @Override
   public WorkflowModel output() {
+    if (completedOutput != null) {
+      return completedOutput;
+    }
     CompletableFuture<WorkflowModel> future = futureRef.get();
     return future != null ? future.join() : null;
   }
