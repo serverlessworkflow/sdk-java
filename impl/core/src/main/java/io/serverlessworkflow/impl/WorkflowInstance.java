@@ -20,8 +20,28 @@ import java.util.concurrent.CompletableFuture;
 public interface WorkflowInstance extends WorkflowInstanceData {
   CompletableFuture<WorkflowModel> start();
 
+  /**
+   * Returns the workflow output.
+   *
+   * <p>This method may block until the workflow execution has completed. Callers should not invoke
+   * it from lifecycle callbacks, listener threads, or other execution contexts where blocking is
+   * not safe.
+   *
+   * @return the workflow output
+   */
   WorkflowModel output();
 
+  /**
+   * Returns the workflow output converted to the requested type.
+   *
+   * <p>This method may block until the workflow execution has completed. Callers should not invoke
+   * it from lifecycle callbacks, listener threads, or other execution contexts where blocking is
+   * not safe.
+   *
+   * @param clazz the target output type
+   * @param <T> the target output type
+   * @return the workflow output converted to {@code clazz}
+   */
   <T> T outputAs(Class<T> clazz);
 
   boolean suspend();
@@ -29,8 +49,4 @@ public interface WorkflowInstance extends WorkflowInstanceData {
   boolean cancel();
 
   boolean resume();
-
-  WorkflowModel output();
-
-  <T> T outputAs(Class<T> clazz);
 }
