@@ -29,4 +29,8 @@ public interface WorkflowInstance extends WorkflowInstanceData {
   boolean cancel();
 
   boolean resume();
+
+  WorkflowModel output();
+
+  <T> T outputAs(Class<T> clazz);
 }
