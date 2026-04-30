@@ -846,13 +846,13 @@ public final class FuncDSL {
    * Low-level switch case configurer using a custom builder consumer. Prefer the {@link
    * #caseOf(SerializablePredicate)} helpers when possible.
    *
-   * @param taskName optional task name
+   * @param name optional task name
    * @param switchCase consumer to configure the {@link FuncSwitchTaskBuilder}
    * @return a list configurer
    */
   public static FuncTaskConfigurer switchCase(
-      String taskName, Consumer<FuncSwitchTaskBuilder> switchCase) {
-    return list -> list.switchCase(taskName, switchCase);
+      String name, Consumer<FuncSwitchTaskBuilder> switchCase) {
+    return list -> list.switchCase(name, switchCase);
   }
 
   /**
@@ -879,14 +879,14 @@ public final class FuncDSL {
   /**
    * Named variant of {@link #switchCase(SwitchCaseConfigurer...)}.
    *
-   * @param taskName task name
+   * @param name task name
    * @param cases case configurers
    * @return list configurer
    */
-  public static FuncTaskConfigurer switchCase(String taskName, SwitchCaseConfigurer... cases) {
+  public static FuncTaskConfigurer switchCase(String name, SwitchCaseConfigurer... cases) {
     Objects.requireNonNull(cases, "cases are required");
     final List<SwitchCaseConfigurer> snapshot = List.of(cases.clone());
-    return list -> list.switchCase(taskName, s -> snapshot.forEach(s::onPredicate));
+    return list -> list.switchCase(name, s -> snapshot.forEach(s::onPredicate));
   }
 
   /**
@@ -945,6 +945,11 @@ public final class FuncDSL {
     return list -> list.switchCase(cases(caseOf(pred, predClass).then(thenTask)));
   }
 
+  public static <T> FuncTaskConfigurer switchWhen(
+      String name, Predicate<T> pred, String thenTask, Class<T> predClass) {
+    return list -> list.switchCase(name, cases(caseOf(pred, predClass).then(thenTask)));
+  }
+
   /**
    * JQ-based condition: if the JQ expression evaluates truthy → jump to {@code thenTask}.
    *
@@ -962,6 +967,11 @@ public final class FuncDSL {
    */
   public static FuncTaskConfigurer switchWhen(String jqExpression, String thenTask) {
     return list -> list.switchCase(sw -> sw.on(c -> c.when(jqExpression).then(thenTask)));
+  }
+
+  public static FuncTaskConfigurer switchWhen(
+      String name, String jqExpression, String thenTask) {
+    return list -> list.switchCase(name, sw -> sw.on(c -> c.when(jqExpression).then(thenTask)));
   }
 
   /**
@@ -982,8 +992,29 @@ public final class FuncDSL {
   }
 
   public static <T> FuncTaskConfigurer switchWhenOrElse(
+      String name,
+      Predicate<T> pred,
+      String thenTask,
+      FlowDirectiveEnum otherwise,
+      Class<T> predClass) {
+    return list ->
+        list.switchCase(
+            name,
+            FuncDSL.cases(caseOf(pred, predClass).then(thenTask), caseDefault(otherwise)));
+  }
+
+  public static <T> FuncTaskConfigurer switchWhenOrElse(
       SerializablePredicate<T> pred, String thenTask, FlowDirectiveEnum otherwise) {
     return switchWhenOrElse(pred, thenTask, otherwise, ReflectionUtils.inferInputType(pred));
+  }
+
+  public static <T> FuncTaskConfigurer switchWhenOrElse(
+      String name,
+      SerializablePredicate<T> pred,
+      String thenTask,
+      FlowDirectiveEnum otherwise) {
+    return switchWhenOrElse(
+        name, pred, thenTask, otherwise, ReflectionUtils.inferInputType(pred));
   }
 
   /**
@@ -1007,6 +1038,17 @@ public final class FuncDSL {
     return switchWhenOrElse(pred, thenTask, otherwiseTask, ReflectionUtils.inferInputType(pred));
   }
 
+  public static <T> FuncTaskConfigurer switchWhenOrElse(
+      String name,
+      Predicate<T> pred,
+      String thenTask,
+      String otherwiseTask,
+      Class<T> predClass) {
+    return list ->
+        list.switchCase(
+            name, cases(caseOf(pred, predClass).then(thenTask), caseDefault(otherwiseTask)));
+  }
+
   /**
    * JQ-based condition: if the JQ expression evaluates truthy → jump to {@code thenTask}, otherwise
    * follow the {@link FlowDirectiveEnum} given in {@code otherwise}.
@@ -1024,13 +1066,12 @@ public final class FuncDSL {
    */
   public static FuncTaskConfigurer switchWhenOrElse(
       String jqExpression, String thenTask, FlowDirectiveEnum otherwise) {
+    return namedSwitchWhenOrElse(null, jqExpression, thenTask, otherwise);
+  }
 
-    Objects.requireNonNull(jqExpression, "jqExpression");
-    Objects.requireNonNull(thenTask, "thenTask");
-    Objects.requireNonNull(otherwise, "otherwise");
-
-    return list ->
-        list.switchCase(sw -> sw.on(c -> c.when(jqExpression).then(thenTask)).onDefault(otherwise));
+  public static FuncTaskConfigurer switchWhenOrElse(
+      String name, String jqExpression, String thenTask, FlowDirectiveEnum otherwise) {
+    return namedSwitchWhenOrElse(name, jqExpression, thenTask, otherwise);
   }
 
   /**
@@ -1050,13 +1091,37 @@ public final class FuncDSL {
    */
   public static FuncTaskConfigurer switchWhenOrElse(
       String jqExpression, String thenTask, String otherwiseTask) {
+    return namedSwitchWhenOrElse(null, jqExpression, thenTask, otherwiseTask);
+  }
 
+  public static FuncTaskConfigurer switchWhenOrElse(
+      String name, String jqExpression, String thenTask, String otherwiseTask) {
+    Objects.requireNonNull(jqExpression, "jqExpression");
+    Objects.requireNonNull(thenTask, "thenTask");
+    Objects.requireNonNull(otherwiseTask, "otherwiseTask");
+    return namedSwitchWhenOrElse(name, jqExpression, thenTask, otherwiseTask);
+  }
+
+  private static FuncTaskConfigurer namedSwitchWhenOrElse(
+      String name, String jqExpression, String thenTask, FlowDirectiveEnum otherwiseTask) {
     Objects.requireNonNull(jqExpression, "jqExpression");
     Objects.requireNonNull(thenTask, "thenTask");
     Objects.requireNonNull(otherwiseTask, "otherwiseTask");
 
     return list ->
         list.switchCase(
+            name,
+            sw -> sw.on(c -> c.when(jqExpression).then(thenTask)).onDefault(otherwiseTask));
+  }
+
+  private static FuncTaskConfigurer namedSwitchWhenOrElse(
+      String name, String jqExpression, String thenTask, String otherwiseTask) {
+    Objects.requireNonNull(jqExpression, "jqExpression");
+    Objects.requireNonNull(thenTask, "thenTask");
+    Objects.requireNonNull(otherwiseTask, "otherwiseTask");
+    return list ->
+        list.switchCase(
+            name,
             sw -> sw.on(c -> c.when(jqExpression).then(thenTask)).onDefault(otherwiseTask));
   }
 
@@ -1070,15 +1135,45 @@ public final class FuncDSL {
    */
   public static <T, V> FuncTaskConfigurer forEach(
       SerializableFunction<T, Collection<V>> collection, Consumer<FuncTaskItemListBuilder> body) {
+    return namedForEach(null, collection, body);
+  }
+
+  public static <T, V> FuncTaskConfigurer forEach(
+      String name,
+      SerializableFunction<T, Collection<V>> collection,
+      Consumer<FuncTaskItemListBuilder> body) {
+    return namedForEach(name, collection, body);
+  }
+
+  private static <T, V> FuncTaskConfigurer namedForEach(
+      String name,
+      SerializableFunction<T, Collection<V>> collection,
+      Consumer<FuncTaskItemListBuilder> body) {
     return list ->
         list.forEach(
+            name,
             j -> j.collection(collection, ReflectionUtils.inferInputType(collection)).tasks(body));
   }
 
   public static <T, V> FuncTaskConfigurer forEach(
       SerializableFunction<T, Collection<V>> collection, LoopFunction<T, V, ?> function) {
+    return namedForEach(null, collection, function);
+  }
+
+  public static <T, V> FuncTaskConfigurer forEach(
+      String name,
+      SerializableFunction<T, Collection<V>> collection,
+      LoopFunction<T, V, ?> function) {
+    return namedForEach(name, collection, function);
+  }
+
+  private static <T, V> FuncTaskConfigurer namedForEach(
+      String name,
+      SerializableFunction<T, Collection<V>> collection,
+      LoopFunction<T, V, ?> function) {
     return list ->
         list.forEach(
+            name,
             j ->
                 j.collection(collection, ReflectionUtils.inferInputType(collection))
                     .tasks(function));
@@ -1086,7 +1181,17 @@ public final class FuncDSL {
 
   public static <T, V> FuncTaskConfigurer forEachItem(
       SerializableFunction<T, Collection<V>> collection, Function<V, ?> function) {
-    return forEach(collection, ((t, v) -> function.apply((V) v)));
+    return namedForEachItem(null, collection, function);
+  }
+
+  public static <T, V> FuncTaskConfigurer forEachItem(
+      String name, SerializableFunction<T, Collection<V>> collection, Function<V, ?> function) {
+    return namedForEachItem(name, collection, function);
+  }
+
+  private static <T, V> FuncTaskConfigurer namedForEachItem(
+      String name, SerializableFunction<T, Collection<V>> collection, Function<V, ?> function) {
+    return forEach(name, collection, ((t, v) -> function.apply(v)));
   }
 
   /**
@@ -1099,8 +1204,18 @@ public final class FuncDSL {
    */
   public static <T, V> FuncTaskConfigurer forEach(
       Collection<V> collection, Consumer<FuncTaskItemListBuilder> body) {
+    return namedForEach(null, collection, body);
+  }
+
+  public static <T, V> FuncTaskConfigurer forEach(
+      String name, Collection<V> collection, Consumer<FuncTaskItemListBuilder> body) {
+    return namedForEach(name, collection, body);
+  }
+
+  private static <T, V> FuncTaskConfigurer namedForEach(
+      String name, Collection<V> collection, Consumer<FuncTaskItemListBuilder> body) {
     Function<T, Collection<V>> f = ctx -> collection;
-    return list -> list.forEach(j -> j.collection(f).tasks(body));
+    return list -> list.forEach(name, j -> j.collection(f).tasks(body));
   }
 
   /**
@@ -1114,6 +1229,11 @@ public final class FuncDSL {
   public static <T> FuncTaskConfigurer forEach(
       List<T> collection, Consumer<FuncTaskItemListBuilder> body) {
     return list -> list.forEach(j -> j.collection(ctx -> collection).tasks(body));
+  }
+
+  public static <T> FuncTaskConfigurer forEach(
+      String name, List<T> collection, Consumer<FuncTaskItemListBuilder> body) {
+    return list -> list.forEach(name, j -> j.collection(ctx -> collection).tasks(body));
   }
 
   /**
