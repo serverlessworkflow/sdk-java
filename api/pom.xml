@@ -11,6 +11,9 @@
     <name>Serverless Workflow :: API</name>
     <packaging>jar</packaging>
     <description>Java SDK for Serverless Workflow Specification</description>
+    <properties>
+      <version.build-helper-maven-plugin>3.6.1</version.build-helper-maven-plugin>
+    </properties>
 
     <dependencies>
         <dependency>
@@ -75,9 +78,8 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-    <build>
+  <build>
     <plugins>
-    
         <plugin>
             <groupId>io.serverlessworkflow</groupId>
             <artifactId>serverless-workflow-jackson-generator</artifactId>
@@ -100,7 +102,7 @@
         <!-- a hint for IDE's to add the java sources to the classpath -->
             <groupId>org.codehaus.mojo</groupId>
             <artifactId>build-helper-maven-plugin</artifactId>
-            <version>3.6.1</version>
+            <version>${version.build-helper-maven-plugin}</version>
             <executions>
               <execution>
                 <id>add-mixin</id>
@@ -114,8 +116,22 @@
                   </sources>
                 </configuration>
               </execution>
+              <execution>
+                <id>add-resource</id>
+                <phase>generate-sources</phase>
+                <goals>
+                  <goal>add-resource</goal>
+                </goals>
+                <configuration>
+                  <resources>
+                    <resource>
+                        <directory>${project.build.directory}/generated-resources</directory>
+                    </resource>
+                  </resources>
+                </configuration>
+              </execution>
             </executions>
         </plugin>
     </plugins>
   </build>
- </project>
+</project>

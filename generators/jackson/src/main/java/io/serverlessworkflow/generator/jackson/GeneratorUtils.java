@@ -83,7 +83,7 @@ public class GeneratorUtils {
   private static JDefinedClass createClass(
       JPackage jPackage, JClass relatedClass, Class<?> serializerClass, String suffix)
       throws JClassAlreadyExistsException {
-    JDefinedClass definedClass = jPackage._class(JMod.NONE, relatedClass.name() + suffix);
+    JDefinedClass definedClass = jPackage._class(JMod.PUBLIC, relatedClass.name() + suffix);
     definedClass._extends(definedClass.owner().ref(serializerClass).narrow(relatedClass));
     return definedClass;
   }

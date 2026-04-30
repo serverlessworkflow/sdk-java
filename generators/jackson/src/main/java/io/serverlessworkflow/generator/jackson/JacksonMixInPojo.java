@@ -50,6 +50,7 @@ import io.serverlessworkflow.annotations.InclusiveUnion;
 import io.serverlessworkflow.annotations.Item;
 import io.serverlessworkflow.annotations.ItemKey;
 import io.serverlessworkflow.annotations.ItemValue;
+import io.serverlessworkflow.generator.graalvm.ReflectNativeFileHandler;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -78,6 +79,17 @@ public class JacksonMixInPojo extends AbstractMojo {
       defaultValue = "${project.build.directory}/generated-sources/jacksonmixinpojo")
   private File outputDirectory;
 
+  @Parameter(defaultValue = "${project.groupId}", readonly = true, required = true)
+  private String groupId;
+
+  @Parameter(defaultValue = "${project.artifactId}", readonly = true, required = true)
+  private String artifactId;
+
+  @Parameter(
+      property = "jacksonmixinpojo.outputResources",
+      defaultValue = "${project.build.directory}/generated-resources")
+  private File outputResources;
+
   @Parameter(property = "jacksonmixinpojo.srcPackage")
   private String srcPackage;
 
@@ -90,6 +102,7 @@ public class JacksonMixInPojo extends AbstractMojo {
   private JCodeModel codeModel;
   private JPackage rootPackage;
   private JMethod setupMethod;
+  private ReflectNativeFileHandler nativeHandler;
 
   @FunctionalInterface
   interface AnnotationProcessor {
@@ -99,7 +112,6 @@ public class JacksonMixInPojo extends AbstractMojo {
 
   @Override
   public void execute() throws MojoExecutionException, MojoFailureException {
-
     try (ScanResult result =
         new ClassGraph()
             .enableAnnotationInfo()
@@ -107,12 +119,14 @@ public class JacksonMixInPojo extends AbstractMojo {
             .acceptPackages(srcPackage)
             .scan()) {
       codeModel = new JCodeModel();
+      nativeHandler = new ReflectNativeFileHandler(groupId, artifactId);
       rootPackage = codeModel._package(targetPackage);
       setupMethod =
           rootPackage
               ._class("JacksonMixInModule")
               ._extends(SimpleModule.class)
               .method(JMod.PUBLIC, codeModel.VOID, SETUP_METHOD);
+      nativeHandler.addClasses(result.getAllClasses().stream().map(c -> c.getName()));
       processAnnotatedClasses(result, ExclusiveUnion.class, this::buildExclusiveUnionMixIn);
       processAnnotatedClasses(result, InclusiveUnion.class, this::buildInclusiveUnionMixIn);
       processAnnotatedClasses(result, AdditionalProperties.class, this::buildAdditionalPropsMixIn);
@@ -124,6 +138,8 @@ public class JacksonMixInPojo extends AbstractMojo {
           .arg(setupMethod.param(SetupContext.class, "context"));
       Files.createDirectories(outputDirectory.toPath());
       codeModel.build(outputDirectory, (PrintStream) null);
+
+      nativeHandler.generate(outputResources.toPath());
     } catch (JClassAlreadyExistsException | IOException e) {
       getLog().error(e);
     }
@@ -149,7 +165,8 @@ public class JacksonMixInPojo extends AbstractMojo {
 
   private JExpression processAnnotatedClass(ClassInfo classInfo, AnnotationProcessor processor)
       throws JClassAlreadyExistsException {
-    JDefinedClass result = createMixInClass(classInfo);
+    JDefinedClass result = rootPackage._class(JMod.ABSTRACT, classInfo.getSimpleName() + "MixIn");
+    nativeHandler.addClass(result);
     processor.accept(classInfo, result);
     return JExpr.dotclass(result);
   }
@@ -179,31 +196,28 @@ public class JacksonMixInPojo extends AbstractMojo {
         classInfo.getMethodInfo().filter(m -> m.hasAnnotation(ItemKey.class)).get(0);
     MethodInfo valueMethod =
         classInfo.getMethodInfo().filter(m -> m.hasAnnotation(ItemValue.class)).get(0);
-    mixClass
-        .annotate(JsonSerialize.class)
-        .param(
-            "using",
-            GeneratorUtils.generateSerializer(
-                rootPackage, relClass, keyMethod.getName(), valueMethod.getName()));
-    mixClass
-        .annotate(JsonDeserialize.class)
-        .param(
-            "using",
-            GeneratorUtils.generateDeserializer(rootPackage, relClass, getReturnType(valueMethod)));
+    JDefinedClass serializerClass =
+        GeneratorUtils.generateSerializer(
+            rootPackage, relClass, keyMethod.getName(), valueMethod.getName());
+    nativeHandler.addClass(serializerClass);
+    mixClass.annotate(JsonSerialize.class).param("using", serializerClass);
+    JDefinedClass deserializerClass =
+        GeneratorUtils.generateDeserializer(rootPackage, relClass, getReturnType(valueMethod));
+    nativeHandler.addClass(deserializerClass);
+    mixClass.annotate(JsonDeserialize.class).param("using", deserializerClass);
   }
 
   private void buildExclusiveUnionMixIn(ClassInfo unionClassInfo, JDefinedClass unionMixClass)
       throws JClassAlreadyExistsException {
     JClass unionClass = codeModel.ref(unionClassInfo.getName());
-    unionMixClass
-        .annotate(JsonSerialize.class)
-        .param("using", GeneratorUtils.generateSerializer(rootPackage, unionClass));
-    unionMixClass
-        .annotate(JsonDeserialize.class)
-        .param(
-            "using",
-            GeneratorUtils.generateDeserializer(
-                rootPackage, unionClass, getUnionClasses(ExclusiveUnion.class, unionClassInfo)));
+    JDefinedClass serializerClass = GeneratorUtils.generateSerializer(rootPackage, unionClass);
+    unionMixClass.annotate(JsonSerialize.class).param("using", serializerClass);
+    nativeHandler.addClass(serializerClass);
+    JDefinedClass deserializerClass =
+        GeneratorUtils.generateDeserializer(
+            rootPackage, unionClass, getUnionClasses(ExclusiveUnion.class, unionClassInfo));
+    unionMixClass.annotate(JsonDeserialize.class).param("using", deserializerClass);
+    nativeHandler.addClass(deserializerClass);
   }
 
   private void buildInclusiveUnionMixIn(ClassInfo unionClassInfo, JDefinedClass unionMixClass)
@@ -227,10 +241,6 @@ public class JacksonMixInPojo extends AbstractMojo {
     staticMethod.param(String.class, "value");
     staticMethod.annotate(JsonCreator.class);
     staticMethod.body()._return(JExpr._null());
-  }
-
-  private JDefinedClass createMixInClass(ClassInfo classInfo) throws JClassAlreadyExistsException {
-    return rootPackage._class(JMod.ABSTRACT, classInfo.getSimpleName() + "MixIn");
   }
 
   private Collection<JClass> getUnionClasses(
