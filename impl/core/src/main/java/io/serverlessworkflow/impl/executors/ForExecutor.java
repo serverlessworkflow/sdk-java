@@ -80,14 +80,25 @@ public class ForExecutor extends RegularTaskExecutor<ForTask> {
     CompletableFuture<WorkflowModel> future =
         CompletableFuture.completedFuture(taskContext.input());
     while (iter.hasNext()) {
-      taskContext.variables().put(task.getFor().getEach(), iter.next());
-      taskContext.variables().put(task.getFor().getAt(), i++);
+      // Capture iteration variables as final locals to avoid race condition with async tasks
+      final Object currentItem = iter.next();
+      final int currentIndex = i++;
+
+      // Set variables for condition evaluation
+      taskContext.variables().put(task.getFor().getEach(), currentItem);
+      taskContext.variables().put(task.getFor().getAt(), currentIndex);
+
       if (whileExpr.map(w -> w.test(workflow, taskContext, taskContext.input())).orElse(true)) {
         future =
             future.thenCompose(
-                input ->
-                    TaskExecutorHelper.processTaskList(
-                        taskExecutor, workflow, Optional.of(taskContext), input));
+                input -> {
+                  // Set variables from captured finals before executing subtasks
+                  // This ensures each async task gets its own iteration values
+                  taskContext.variables().put(task.getFor().getEach(), currentItem);
+                  taskContext.variables().put(task.getFor().getAt(), currentIndex);
+                  return TaskExecutorHelper.processTaskList(
+                      taskExecutor, workflow, Optional.of(taskContext), input);
+                });
       } else {
         break;
       }
