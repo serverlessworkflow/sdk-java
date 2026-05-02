@@ -22,6 +22,7 @@ import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowInstance;
 import io.serverlessworkflow.impl.WorkflowStatus;
+import io.serverlessworkflow.impl.lifecycle.TraceExecutionListener;
 import io.serverlessworkflow.impl.persistence.DefaultPersistenceInstanceHandlers;
 import io.serverlessworkflow.impl.persistence.PersistenceApplicationBuilder;
 import io.serverlessworkflow.impl.persistence.PersistenceInstanceHandlers;
@@ -114,8 +115,7 @@ public class MvStorePersistenceTest {
             PersistenceApplicationBuilder.builder(
                     WorkflowApplication.builder()
                         .withListener(taskCounter)
-                        .withListener(
-                            new io.serverlessworkflow.impl.lifecycle.TraceExecutionListener()),
+                        .withListener(new TraceExecutionListener()),
                     handlers.writer())
                 .build(); ) {
       WorkflowDefinition definition =

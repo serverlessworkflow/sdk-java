@@ -20,6 +20,7 @@ import static io.serverlessworkflow.api.WorkflowReader.readWorkflowFromClasspath
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowInstance;
+import io.serverlessworkflow.impl.lifecycle.TraceExecutionListener;
 import io.serverlessworkflow.impl.persistence.DefaultPersistenceInstanceHandlers;
 import io.serverlessworkflow.impl.persistence.PersistenceApplicationBuilder;
 import io.serverlessworkflow.impl.persistence.PersistenceInstanceHandlers;
@@ -47,9 +48,7 @@ public class DBGenerator {
             DefaultPersistenceInstanceHandlers.from(new MVStorePersistenceStore(dbName));
         WorkflowApplication application =
             PersistenceApplicationBuilder.builder(
-                    WorkflowApplication.builder()
-                        .withListener(
-                            new io.serverlessworkflow.impl.lifecycle.TraceExecutionListener()),
+                    WorkflowApplication.builder().withListener(new TraceExecutionListener()),
                     factories.writer())
                 .build()) {
       WorkflowDefinition definition =
