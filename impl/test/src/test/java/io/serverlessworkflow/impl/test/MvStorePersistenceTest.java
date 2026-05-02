@@ -114,7 +114,8 @@ public class MvStorePersistenceTest {
             PersistenceApplicationBuilder.builder(
                     WorkflowApplication.builder()
                         .withListener(taskCounter)
-                        .withListener(new TraceExecutionListener()),
+                        .withListener(
+                            new io.serverlessworkflow.impl.lifecycle.TraceExecutionListener()),
                     handlers.writer())
                 .build(); ) {
       WorkflowDefinition definition =

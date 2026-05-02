@@ -47,7 +47,9 @@ public class DBGenerator {
             DefaultPersistenceInstanceHandlers.from(new MVStorePersistenceStore(dbName));
         WorkflowApplication application =
             PersistenceApplicationBuilder.builder(
-                    WorkflowApplication.builder().withListener(new TraceExecutionListener()),
+                    WorkflowApplication.builder()
+                        .withListener(
+                            new io.serverlessworkflow.impl.lifecycle.TraceExecutionListener()),
                     factories.writer())
                 .build()) {
       WorkflowDefinition definition =

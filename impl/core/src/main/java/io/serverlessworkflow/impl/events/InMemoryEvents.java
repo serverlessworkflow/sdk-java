@@ -30,6 +30,10 @@ import java.util.function.Consumer;
  */
 public class InMemoryEvents extends AbstractTypeConsumer implements EventPublisher {
 
+  protected final ExecutorServiceFactory serviceFactory;
+  protected final Map<String, Consumer<CloudEvent>> topicMap = new ConcurrentHashMap<>();
+  protected final AtomicReference<Consumer<CloudEvent>> allConsumerRef = new AtomicReference<>();
+
   public InMemoryEvents() {
     this(new DefaultExecutorServiceFactory());
   }
@@ -37,12 +41,6 @@ public class InMemoryEvents extends AbstractTypeConsumer implements EventPublish
   public InMemoryEvents(ExecutorServiceFactory serviceFactory) {
     this.serviceFactory = serviceFactory;
   }
-
-  private ExecutorServiceFactory serviceFactory;
-
-  private Map<String, Consumer<CloudEvent>> topicMap = new ConcurrentHashMap<>();
-
-  private AtomicReference<Consumer<CloudEvent>> allConsumerRef = new AtomicReference<>();
 
   @Override
   public void register(String topicName, Consumer<CloudEvent> consumer) {
