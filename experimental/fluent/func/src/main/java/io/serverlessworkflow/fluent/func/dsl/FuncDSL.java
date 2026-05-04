@@ -479,24 +479,88 @@ public final class FuncDSL {
   }
 
   /**
-   * Build a call step for functions that expect a composite "unique id" as the first parameter.
-   * This id is derived from the workflow instance id and the task definition position, encoded as a
-   * JSON pointer.
+   * Build a named call step for functions that expect a composite "unique id" as the first
+   * parameter. This id is derived from the workflow instance id and the task definition position,
+   * encoded as a JSON pointer.
    *
-   * <p>Signature expected: {@code (uniqueId, payload) -> result}
+   * <p>The unique ID follows the pattern: {@code "<instanceId>-<jsonPointer>"} where the JSON
+   * pointer represents the task's position in the workflow definition.
+   *
+   * <p>This overload requires explicit input class and infers the output type from the function
+   * signature.
+   *
+   * <p><b>Signature expected:</b> {@code (uniqueId, payload) -> result}
+   *
+   * <p><b>Example:</b>
+   *
+   * <pre>{@code
+   * tasks(
+   *   withUniqueId("processOrder",
+   *     (String uniqueId, OrderRequest order) -> {
+   *       // Use uniqueId for stateful operations (e.g., database keys, cache entries)
+   *       return orderService.process(uniqueId, order);
+   *     },
+   *     OrderRequest.class
+   *   )
+   * );
+   * }</pre>
    *
    * @param name task name (or {@code null} for an anonymous task)
-   * @param fn unique-id-aware function
-   * @param in payload input class
+   * @param fn unique-id-aware function accepting (uniqueId, payload) and returning a result
+   * @param in payload input class for type-safe conversion
    * @param <T> input type
    * @param <R> result type
-   * @return a call step
+   * @return a named call step that can be chained with additional configurations
+   * @see #withUniqueId(String, UniqueIdBiFunction, Class, Class)
+   * @see #withUniqueId(String, UniqueIdBiFunction)
+   * @see #withUniqueId(UniqueIdBiFunction, Class)
+   * @see #withUniqueId(UniqueIdBiFunction)
    */
   public static <T, R> FuncCallStep<T, R> withUniqueId(
       String name, UniqueIdBiFunction<T, R> fn, Class<T> in) {
     return withUniqueId(name, fn, in, ReflectionUtils.inferResultType(fn));
   }
 
+  /**
+   * Build a named call step for functions that expect a composite "unique id" as the first
+   * parameter, with explicit input and output type classes.
+   *
+   * <p>The unique ID follows the pattern: {@code "<instanceId>-<jsonPointer>"} where the JSON
+   * pointer represents the task's position in the workflow definition.
+   *
+   * <p>This overload provides complete control over type conversion by explicitly specifying both
+   * input and output classes. Use this when automatic type inference is not sufficient or when you
+   * need to ensure specific serialization/deserialization behavior.
+   *
+   * <p><b>Signature expected:</b> {@code (uniqueId, payload) -> result}
+   *
+   * <p><b>Example:</b>
+   *
+   * <pre>{@code
+   * tasks(
+   *   withUniqueId("enrichData",
+   *     (String uniqueId, Map<String, Object> input) -> {
+   *       // Process and transform with explicit types
+   *       return dataEnricher.enrich(uniqueId, input);
+   *     },
+   *     Map.class,
+   *     EnrichedData.class
+   *   )
+   * );
+   * }</pre>
+   *
+   * @param name task name (or {@code null} for an anonymous task)
+   * @param fn unique-id-aware function accepting (uniqueId, payload) and returning a result
+   * @param in payload input class for type-safe conversion
+   * @param out result output class for type-safe conversion
+   * @param <T> input type
+   * @param <R> result type
+   * @return a named call step that can be chained with additional configurations
+   * @see #withUniqueId(String, UniqueIdBiFunction, Class)
+   * @see #withUniqueId(String, UniqueIdBiFunction)
+   * @see #withUniqueId(UniqueIdBiFunction, Class)
+   * @see #withUniqueId(UniqueIdBiFunction)
+   */
   public static <T, R> FuncCallStep<T, R> withUniqueId(
       String name, UniqueIdBiFunction<T, R> fn, Class<T> in, Class<R> out) {
     FilterFunction<T, R> jff =
@@ -504,24 +568,116 @@ public final class FuncDSL {
     return new FuncCallStep<>(name, jff, in, out);
   }
 
+  /**
+   * Build a named call step for functions that expect a composite "unique id" as the first
+   * parameter, with automatic type inference.
+   *
+   * <p>The unique ID follows the pattern: {@code "<instanceId>-<jsonPointer>"} where the JSON
+   * pointer represents the task's position in the workflow definition.
+   *
+   * <p>This overload uses reflection to automatically infer both input and output types from the
+   * {@link UniqueIdBiFunction} interface. This is the most concise variant but requires the
+   * function to be serializable for type inference to work.
+   *
+   * <p><b>Signature expected:</b> {@code (uniqueId, payload) -> result}
+   *
+   * <p><b>Example:</b>
+   *
+   * <pre>{@code
+   * tasks(
+   *   withUniqueId("cacheResult",
+   *     (String uniqueId, ProcessRequest req) -> {
+   *       cache.store(uniqueId, req);
+   *       return processor.handle(req);
+   *     }
+   *   )
+   * );
+   * }</pre>
+   *
+   * @param name task name (or {@code null} for an anonymous task)
+   * @param fn unique-id-aware function with serializable signature for type inference
+   * @param <T> input type (inferred automatically)
+   * @param <R> result type (inferred automatically)
+   * @return a named call step that can be chained with additional configurations
+   * @see #withUniqueId(String, UniqueIdBiFunction, Class)
+   * @see #withUniqueId(String, UniqueIdBiFunction, Class, Class)
+   * @see #withUniqueId(UniqueIdBiFunction)
+   */
   public static <T, R> FuncCallStep<T, R> withUniqueId(String name, UniqueIdBiFunction<T, R> fn) {
     return withUniqueId(name, fn, ReflectionUtils.inferInputType(fn));
   }
 
   /**
-   * Variant of {@link #withUniqueId(String, UniqueIdBiFunction, Class)} without an explicit task
-   * name.
+   * Build an unnamed call step for functions that expect a composite "unique id" as the first
+   * parameter.
    *
-   * @param fn unique-id-aware function
-   * @param in payload input class
+   * <p>The unique ID follows the pattern: {@code "<instanceId>-<jsonPointer>"} where the JSON
+   * pointer represents the task's position in the workflow definition.
+   *
+   * <p>This overload requires an explicit input class and infers the output type from the function
+   * signature. Use this when you don't need to assign a specific task name.
+   *
+   * <p><b>Signature expected:</b> {@code (uniqueId, payload) -> result}
+   *
+   * <p><b>Example:</b>
+   *
+   * <pre>{@code
+   * tasks(
+   *   withUniqueId(
+   *     (String uniqueId, CustomerData data) -> {
+   *       logger.log("Processing " + uniqueId);
+   *       return customerProcessor.process(data);
+   *     },
+   *     CustomerData.class
+   *   )
+   * );
+   * }</pre>
+   *
+   * @param fn unique-id-aware function accepting (uniqueId, payload) and returning a result
+   * @param in payload input class for type-safe conversion
    * @param <T> input type
    * @param <R> result type
-   * @return a call step
+   * @return an unnamed call step that can be chained with additional configurations
+   * @see #withUniqueId(String, UniqueIdBiFunction, Class)
+   * @see #withUniqueId(String, UniqueIdBiFunction, Class, Class)
+   * @see #withUniqueId(UniqueIdBiFunction)
    */
   public static <T, R> FuncCallStep<T, R> withUniqueId(UniqueIdBiFunction<T, R> fn, Class<T> in) {
     return withUniqueId(null, fn, in);
   }
 
+  /**
+   * Build an unnamed call step for functions that expect a composite "unique id" as the first
+   * parameter, with automatic type inference.
+   *
+   * <p>The unique ID follows the pattern: {@code "<instanceId>-<jsonPointer>"} where the JSON
+   * pointer represents the task's position in the workflow definition.
+   *
+   * <p>This is the most concise overload, using reflection to automatically infer both input and
+   * output types. It creates an anonymous task, which is useful for quick inline operations.
+   *
+   * <p><b>Signature expected:</b> {@code (uniqueId, payload) -> result}
+   *
+   * <p><b>Example:</b>
+   *
+   * <pre>{@code
+   * tasks(
+   *   withUniqueId((String uniqueId, String input) -> {
+   *     // Quick stateful operation with unique ID
+   *     stateManager.update(uniqueId, input);
+   *     return input.toUpperCase();
+   *   })
+   * );
+   * }</pre>
+   *
+   * @param fn unique-id-aware function with serializable signature for type inference
+   * @param <T> input type (inferred automatically)
+   * @param <R> result type (inferred automatically)
+   * @return an unnamed call step that can be chained with additional configurations
+   * @see #withUniqueId(String, UniqueIdBiFunction)
+   * @see #withUniqueId(UniqueIdBiFunction, Class)
+   * @see #withUniqueId(String, UniqueIdBiFunction, Class)
+   */
   public static <T, R> FuncCallStep<T, R> withUniqueId(UniqueIdBiFunction<T, R> fn) {
     return withUniqueId(null, fn, ReflectionUtils.inferInputType(fn));
   }
