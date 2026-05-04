@@ -80,19 +80,17 @@ public class ForExecutor extends RegularTaskExecutor<ForTask> {
     CompletableFuture<WorkflowModel> future =
         CompletableFuture.completedFuture(taskContext.input());
     while (iter.hasNext()) {
-      Object currentItem = iter.next();
-      int currentIndex = i++;
-      future =
-          future.thenCompose(
-              input -> {
-                taskContext.variables().put(task.getFor().getEach(), currentItem);
-                taskContext.variables().put(task.getFor().getAt(), currentIndex);
-                if (whileExpr.isPresent() && !whileExpr.get().test(workflow, taskContext, input)) {
-                  return CompletableFuture.completedFuture(input);
-                }
-                return TaskExecutorHelper.processTaskList(
-                    taskExecutor, workflow, Optional.of(taskContext), input);
-              });
+      taskContext.variables().put(task.getFor().getEach(), iter.next());
+      taskContext.variables().put(task.getFor().getAt(), i++);
+      if (whileExpr.map(w -> w.test(workflow, taskContext, taskContext.input())).orElse(true)) {
+        future =
+            future.thenCompose(
+                input ->
+                    TaskExecutorHelper.processTaskList(
+                        taskExecutor, workflow, Optional.of(taskContext), input));
+      } else {
+        break;
+      }
     }
     return future;
   }
