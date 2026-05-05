@@ -1098,7 +1098,22 @@ public final class FuncDSL {
    */
   public static <T> FuncTaskConfigurer switchWhen(
       Predicate<T> pred, String thenTask, Class<T> predClass) {
-    return list -> list.switchCase(cases(caseOf(pred, predClass).then(thenTask)));
+    return switchWhen(null, pred, thenTask, predClass);
+  }
+
+  /**
+   * Named variant of {@link #switchWhen(Predicate, String, Class)}.
+   *
+   * @param taskName task name for the switch task
+   * @param pred predicate
+   * @param thenTask task name when predicate is true
+   * @param predClass predicate class
+   * @param <T> predicate input type
+   * @return list configurer
+   */
+  public static <T> FuncTaskConfigurer switchWhen(
+      String taskName, Predicate<T> pred, String thenTask, Class<T> predClass) {
+    return list -> list.switchCase(taskName, cases(caseOf(pred, predClass).then(thenTask)));
   }
 
   /**
@@ -1117,7 +1132,20 @@ public final class FuncDSL {
    * @return list configurer
    */
   public static FuncTaskConfigurer switchWhen(String jqExpression, String thenTask) {
-    return list -> list.switchCase(sw -> sw.on(c -> c.when(jqExpression).then(thenTask)));
+    return switchWhen(null, jqExpression, thenTask);
+  }
+
+  /**
+   * Named variant of {@link #switchWhen(String, String)}.
+   *
+   * @param taskName task name for the switch task
+   * @param jqExpression JQ expression evaluated against the current task input
+   * @param thenTask task name to jump to when the expression evaluates truthy
+   * @return list configurer
+   */
+  public static FuncTaskConfigurer switchWhen(
+      String taskName, String jqExpression, String thenTask) {
+    return list -> list.switchCase(taskName, sw -> sw.on(c -> c.when(jqExpression).then(thenTask)));
   }
 
   /**
@@ -1132,14 +1160,44 @@ public final class FuncDSL {
    */
   public static <T> FuncTaskConfigurer switchWhenOrElse(
       Predicate<T> pred, String thenTask, FlowDirectiveEnum otherwise, Class<T> predClass) {
-    return list ->
-        list.switchCase(
-            FuncDSL.cases(caseOf(pred, predClass).then(thenTask), caseDefault(otherwise)));
+    return switchWhenOrElse(null, pred, thenTask, otherwise, predClass);
   }
 
   public static <T> FuncTaskConfigurer switchWhenOrElse(
       SerializablePredicate<T> pred, String thenTask, FlowDirectiveEnum otherwise) {
-    return switchWhenOrElse(pred, thenTask, otherwise, ReflectionUtils.inferInputType(pred));
+    return switchWhenOrElse(null, pred, thenTask, otherwise);
+  }
+
+  /**
+   * Named variant of {@link #switchWhenOrElse(Predicate, String, FlowDirectiveEnum, Class)}.
+   *
+   * @param taskName task name for the switch task
+   * @param pred predicate
+   * @param thenTask task name when predicate is true
+   * @param otherwise default flow directive when predicate is false
+   * @param predClass predicate class
+   * @param <T> predicate input type
+   * @return list configurer
+   */
+  public static <T> FuncTaskConfigurer switchWhenOrElse(
+      String taskName,
+      Predicate<T> pred,
+      String thenTask,
+      FlowDirectiveEnum otherwise,
+      Class<T> predClass) {
+    return list ->
+        list.switchCase(
+            taskName,
+            FuncDSL.cases(caseOf(pred, predClass).then(thenTask), caseDefault(otherwise)));
+  }
+
+  public static <T> FuncTaskConfigurer switchWhenOrElse(
+      String taskName,
+      SerializablePredicate<T> pred,
+      String thenTask,
+      FlowDirectiveEnum otherwise) {
+    return switchWhenOrElse(
+        taskName, pred, thenTask, otherwise, ReflectionUtils.inferInputType(pred));
   }
 
   /**
@@ -1154,13 +1212,40 @@ public final class FuncDSL {
    */
   public static <T> FuncTaskConfigurer switchWhenOrElse(
       Predicate<T> pred, String thenTask, String otherwiseTask, Class<T> predClass) {
-    return list ->
-        list.switchCase(cases(caseOf(pred, predClass).then(thenTask), caseDefault(otherwiseTask)));
+    return switchWhenOrElse(null, pred, thenTask, otherwiseTask, predClass);
   }
 
   public static <T> FuncTaskConfigurer switchWhenOrElse(
       SerializablePredicate<T> pred, String thenTask, String otherwiseTask) {
-    return switchWhenOrElse(pred, thenTask, otherwiseTask, ReflectionUtils.inferInputType(pred));
+    return switchWhenOrElse(null, pred, thenTask, otherwiseTask);
+  }
+
+  /**
+   * Named variant of {@link #switchWhenOrElse(Predicate, String, String, Class)}.
+   *
+   * @param taskName task name for the switch task
+   * @param pred predicate
+   * @param thenTask task name when predicate is true
+   * @param otherwiseTask task name when predicate is false
+   * @param predClass predicate class
+   * @param <T> predicate input type
+   * @return list configurer
+   */
+  public static <T> FuncTaskConfigurer switchWhenOrElse(
+      String taskName,
+      Predicate<T> pred,
+      String thenTask,
+      String otherwiseTask,
+      Class<T> predClass) {
+    return list ->
+        list.switchCase(
+            taskName, cases(caseOf(pred, predClass).then(thenTask), caseDefault(otherwiseTask)));
+  }
+
+  public static <T> FuncTaskConfigurer switchWhenOrElse(
+      String taskName, SerializablePredicate<T> pred, String thenTask, String otherwiseTask) {
+    return switchWhenOrElse(
+        taskName, pred, thenTask, otherwiseTask, ReflectionUtils.inferInputType(pred));
   }
 
   /**
@@ -1180,13 +1265,28 @@ public final class FuncDSL {
    */
   public static FuncTaskConfigurer switchWhenOrElse(
       String jqExpression, String thenTask, FlowDirectiveEnum otherwise) {
+    return switchWhenOrElse(null, jqExpression, thenTask, otherwise);
+  }
+
+  /**
+   * Named variant of {@link #switchWhenOrElse(String, String, FlowDirectiveEnum)}.
+   *
+   * @param taskName task name for the switch task
+   * @param jqExpression JQ expression evaluated against the current task input
+   * @param thenTask task to jump to if the expression evaluates truthy
+   * @param otherwise default flow directive when the expression is falsy
+   * @return list configurer
+   */
+  public static FuncTaskConfigurer switchWhenOrElse(
+      String taskName, String jqExpression, String thenTask, FlowDirectiveEnum otherwise) {
 
     Objects.requireNonNull(jqExpression, "jqExpression");
     Objects.requireNonNull(thenTask, "thenTask");
     Objects.requireNonNull(otherwise, "otherwise");
 
     return list ->
-        list.switchCase(sw -> sw.on(c -> c.when(jqExpression).then(thenTask)).onDefault(otherwise));
+        list.switchCase(
+            taskName, sw -> sw.on(c -> c.when(jqExpression).then(thenTask)).onDefault(otherwise));
   }
 
   /**
@@ -1206,6 +1306,20 @@ public final class FuncDSL {
    */
   public static FuncTaskConfigurer switchWhenOrElse(
       String jqExpression, String thenTask, String otherwiseTask) {
+    return switchWhenOrElse(null, jqExpression, thenTask, otherwiseTask);
+  }
+
+  /**
+   * Named variant of {@link #switchWhenOrElse(String, String, String)}.
+   *
+   * @param taskName task name for the switch task
+   * @param jqExpression JQ expression evaluated against the current task input
+   * @param thenTask task name when truthy
+   * @param otherwiseTask task name when falsy
+   * @return list configurer
+   */
+  public static FuncTaskConfigurer switchWhenOrElse(
+      String taskName, String jqExpression, String thenTask, String otherwiseTask) {
 
     Objects.requireNonNull(jqExpression, "jqExpression");
     Objects.requireNonNull(thenTask, "thenTask");
@@ -1213,6 +1327,7 @@ public final class FuncDSL {
 
     return list ->
         list.switchCase(
+            taskName,
             sw -> sw.on(c -> c.when(jqExpression).then(thenTask)).onDefault(otherwiseTask));
   }
 
@@ -1226,15 +1341,40 @@ public final class FuncDSL {
    */
   public static <T, V> FuncTaskConfigurer forEach(
       SerializableFunction<T, Collection<V>> collection, Consumer<FuncTaskItemListBuilder> body) {
+    return forEach(null, collection, body);
+  }
+
+  /**
+   * Named variant of {@link #forEach(SerializableFunction, Consumer)}.
+   *
+   * @param taskName task name for the for-loop task
+   * @param collection function that returns the collection to iterate
+   * @param body inner task list body
+   * @param <T> input type for the collection function
+   * @return list configurer
+   */
+  public static <T, V> FuncTaskConfigurer forEach(
+      String taskName,
+      SerializableFunction<T, Collection<V>> collection,
+      Consumer<FuncTaskItemListBuilder> body) {
     return list ->
         list.forEach(
+            taskName,
             j -> j.collection(collection, ReflectionUtils.inferInputType(collection)).tasks(body));
   }
 
   public static <T, V> FuncTaskConfigurer forEach(
       SerializableFunction<T, Collection<V>> collection, LoopFunction<T, V, ?> function) {
+    return forEach(null, collection, function);
+  }
+
+  public static <T, V> FuncTaskConfigurer forEach(
+      String taskName,
+      SerializableFunction<T, Collection<V>> collection,
+      LoopFunction<T, V, ?> function) {
     return list ->
         list.forEach(
+            taskName,
             j ->
                 j.collection(collection, ReflectionUtils.inferInputType(collection))
                     .tasks(function));
@@ -1242,7 +1382,12 @@ public final class FuncDSL {
 
   public static <T, V> FuncTaskConfigurer forEachItem(
       SerializableFunction<T, Collection<V>> collection, Function<V, ?> function) {
-    return forEach(collection, ((t, v) -> function.apply((V) v)));
+    return forEachItem(null, collection, function);
+  }
+
+  public static <T, V> FuncTaskConfigurer forEachItem(
+      String taskName, SerializableFunction<T, Collection<V>> collection, Function<V, ?> function) {
+    return forEach(taskName, collection, ((t, v) -> function.apply((V) v)));
   }
 
   /**
@@ -1255,8 +1400,22 @@ public final class FuncDSL {
    */
   public static <T, V> FuncTaskConfigurer forEach(
       Collection<V> collection, Consumer<FuncTaskItemListBuilder> body) {
+    return forEach(null, collection, body);
+  }
+
+  /**
+   * Named variant of {@link #forEach(Collection, Consumer)}.
+   *
+   * @param taskName task name for the for-loop task
+   * @param collection static collection to iterate
+   * @param body inner task list body
+   * @param <T> ignored (kept for signature consistency)
+   * @return list configurer
+   */
+  public static <T, V> FuncTaskConfigurer forEach(
+      String taskName, Collection<V> collection, Consumer<FuncTaskItemListBuilder> body) {
     Function<T, Collection<V>> f = ctx -> collection;
-    return list -> list.forEach(j -> j.collection(f).tasks(body));
+    return list -> list.forEach(taskName, j -> j.collection(f).tasks(body));
   }
 
   /**
@@ -1269,7 +1428,21 @@ public final class FuncDSL {
    */
   public static <T> FuncTaskConfigurer forEach(
       List<T> collection, Consumer<FuncTaskItemListBuilder> body) {
-    return list -> list.forEach(j -> j.collection(ctx -> collection).tasks(body));
+    return forEach(null, collection, body);
+  }
+
+  /**
+   * Named variant of {@link #forEach(List, Consumer)}.
+   *
+   * @param taskName task name for the for-loop task
+   * @param collection list to iterate
+   * @param body inner task list body
+   * @param <T> element type
+   * @return list configurer
+   */
+  public static <T> FuncTaskConfigurer forEach(
+      String taskName, List<T> collection, Consumer<FuncTaskItemListBuilder> body) {
+    return list -> list.forEach(taskName, j -> j.collection(ctx -> collection).tasks(body));
   }
 
   /**
