@@ -75,29 +75,30 @@ public class ForExecutor extends RegularTaskExecutor<ForTask> {
   @Override
   protected CompletableFuture<WorkflowModel> internalExecute(
       WorkflowContext workflow, TaskContext taskContext) {
-    Iterator<?> iter = collectionExpr.apply(workflow, taskContext, taskContext.input()).iterator();
-    int i = 0;
-    CompletableFuture<WorkflowModel> future =
-        CompletableFuture.completedFuture(taskContext.input());
-    while (iter.hasNext()) {
-      final Object currentItem = iter.next();
-      final int currentIndex = i++;
-      taskContext.variables().put(task.getFor().getEach(), currentItem);
-      taskContext.variables().put(task.getFor().getAt(), currentIndex);
+    return buildLoopFuture(
+        workflow,
+        taskContext,
+        taskContext.input(),
+        collectionExpr.apply(workflow, taskContext, taskContext.input()).iterator(),
+        -1);
+  }
 
-      if (whileExpr.map(w -> w.test(workflow, taskContext, taskContext.input())).orElse(true)) {
-        future =
-            future.thenCompose(
-                input -> {
-                  taskContext.variables().put(task.getFor().getEach(), currentItem);
-                  taskContext.variables().put(task.getFor().getAt(), currentIndex);
-                  return TaskExecutorHelper.processTaskList(
-                      taskExecutor, workflow, Optional.of(taskContext), input);
-                });
-      } else {
-        break;
+  private CompletableFuture<WorkflowModel> buildLoopFuture(
+      WorkflowContext workflow,
+      TaskContext taskContext,
+      WorkflowModel input,
+      Iterator<?> iter,
+      int index) {
+    final int newIndex = index + 1;
+    if (iter.hasNext()) {
+      taskContext.variables().put(task.getFor().getEach(), iter.next());
+      taskContext.variables().put(task.getFor().getAt(), newIndex);
+      if (whileExpr.map(w -> w.test(workflow, taskContext, input)).orElse(true)) {
+        return TaskExecutorHelper.processTaskList(
+                taskExecutor, workflow, Optional.of(taskContext), input)
+            .thenCompose(output -> buildLoopFuture(workflow, taskContext, output, iter, newIndex));
       }
     }
-    return future;
+    return CompletableFuture.completedFuture(input);
   }
 }

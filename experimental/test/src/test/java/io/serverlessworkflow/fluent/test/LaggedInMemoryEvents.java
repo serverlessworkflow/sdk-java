@@ -18,33 +18,20 @@ package io.serverlessworkflow.fluent.test;
 import io.cloudevents.CloudEvent;
 import io.serverlessworkflow.impl.events.InMemoryEvents;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.Consumer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class LaggedInMemoryEvents extends InMemoryEvents {
 
-  private static final Logger logger = LoggerFactory.getLogger(InMemoryEvents.class);
-
   @Override
   public CompletableFuture<Void> publish(CloudEvent ce) {
-    return CompletableFuture.runAsync(
-        () -> {
-          Consumer<CloudEvent> allConsumer = allConsumerRef.get();
-          if (allConsumer != null) {
-            allConsumer.accept(ce);
-          }
-          Consumer<CloudEvent> consumer = topicMap.get(ce.getType());
-          if (consumer != null) {
-            consumer.accept(ce);
-          }
-          try {
-            Thread.sleep(10);
-          } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-          }
-          logger.info("Accepted event {} for topic {}", ce.getId(), ce.getType());
-        },
-        serviceFactory.get());
+
+    return super.publish(ce)
+        .thenRun(
+            () -> {
+              try {
+                Thread.sleep(50);
+              } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+              }
+            });
   }
 }
