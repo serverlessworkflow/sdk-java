@@ -75,7 +75,7 @@ public class ForEachFuncTest {
             .build();
 
     List<CloudEvent> publishedEvents = new CopyOnWriteArrayList<>();
-    InMemoryEvents eventBroker = new InMemoryEvents();
+    InMemoryEvents eventBroker = new LaggedInMemoryEvents();
     eventBroker.register(eventType, ce -> publishedEvents.add(ce));
 
     try (WorkflowApplication app =
