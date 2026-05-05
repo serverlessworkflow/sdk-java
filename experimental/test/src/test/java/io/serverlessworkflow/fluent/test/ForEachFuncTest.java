@@ -25,7 +25,7 @@ import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.fluent.func.FuncWorkflowBuilder;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowModel;
-import io.serverlessworkflow.impl.events.InMemoryEvents;
+import io.serverlessworkflow.impl.lifecycle.TraceExecutionListener;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
@@ -35,13 +35,13 @@ import org.junit.jupiter.api.Test;
 
 public class ForEachFuncTest {
 
-  private static record Order(String id) {}
+  private record Order(String id) {}
 
-  private static record EnhancedOrder(String id, int salary) {}
+  private record EnhancedOrder(String id, int salary) {}
 
-  private static record OrdersPayload(List<Order> orders) {}
+  private record OrdersPayload(List<Order> orders) {}
 
-  private static record OrderName(String id, String name) {}
+  private record OrderName(String id, String name) {}
 
   @Test
   void testForEachIteration() {
@@ -75,13 +75,14 @@ public class ForEachFuncTest {
             .build();
 
     List<CloudEvent> publishedEvents = new CopyOnWriteArrayList<>();
-    InMemoryEvents eventBroker = new InMemoryEvents();
+    LaggedInMemoryEvents eventBroker = new LaggedInMemoryEvents();
     eventBroker.register(eventType, ce -> publishedEvents.add(ce));
 
     try (WorkflowApplication app =
         WorkflowApplication.builder()
             .withEventConsumer(eventBroker)
             .withEventPublisher(eventBroker)
+            .withListener(new TraceExecutionListener())
             .build()) {
       app.workflowDefinition(workflow)
           .instance(

@@ -22,6 +22,7 @@ import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowInstance;
 import io.serverlessworkflow.impl.WorkflowStatus;
+import io.serverlessworkflow.impl.lifecycle.TraceExecutionListener;
 import io.serverlessworkflow.impl.persistence.DefaultPersistenceInstanceHandlers;
 import io.serverlessworkflow.impl.persistence.PersistenceApplicationBuilder;
 import io.serverlessworkflow.impl.persistence.PersistenceInstanceHandlers;
