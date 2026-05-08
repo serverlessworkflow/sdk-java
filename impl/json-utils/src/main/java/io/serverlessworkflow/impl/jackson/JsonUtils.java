@@ -206,10 +206,41 @@ public class JsonUtils {
       obj = JacksonCloudEventUtils.toCloudEvent(jsonNode);
     } else if (CloudEventData.class.isAssignableFrom(returnType)) {
       obj = JacksonCloudEventUtils.toCloudEventData(jsonNode);
+    } else if (returnType.isPrimitive()) {
+      return (T) convertPrimitive(jsonNode, returnType);
+    } else if (Short.class.isAssignableFrom(returnType)) {
+      obj = Short.valueOf((short) jsonNode.asInt());
+    } else if (Float.class.isAssignableFrom(returnType)) {
+      obj = Float.valueOf((float) jsonNode.asDouble());
+    } else if (Character.class.isAssignableFrom(returnType)) {
+      obj = Character.valueOf((char) jsonNode.asInt());
+    } else if (Byte.class.isAssignableFrom(returnType)) {
+      obj = Byte.valueOf((byte) jsonNode.asInt());
     } else {
       obj = mapper().convertValue(jsonNode, returnType);
     }
     return returnType.cast(obj);
+  }
+
+  private static Object convertPrimitive(JsonNode jsonNode, Class<?> returnType) {
+    if (boolean.class.equals(returnType)) {
+      return jsonNode.asBoolean();
+    } else if (int.class.isAssignableFrom(returnType)) {
+      return jsonNode.asInt();
+    } else if (double.class.isAssignableFrom(returnType)) {
+      return jsonNode.asDouble();
+    } else if (long.class.isAssignableFrom(returnType)) {
+      return jsonNode.asLong();
+    } else if (short.class.isAssignableFrom(returnType)) {
+      return (short) jsonNode.asInt();
+    } else if (float.class.isAssignableFrom(returnType)) {
+      return (float) jsonNode.asDouble();
+    } else if (char.class.isAssignableFrom(returnType)) {
+      return (char) jsonNode.asInt();
+    } else if (byte.class.isAssignableFrom(returnType)) {
+      return (byte) jsonNode.asInt();
+    }
+    throw new IllegalStateException("There is a unknown primitive!!!" + returnType);
   }
 
   public static Object simpleToJavaValue(JsonNode jsonNode) {

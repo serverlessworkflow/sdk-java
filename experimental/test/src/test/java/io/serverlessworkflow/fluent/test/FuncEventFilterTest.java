@@ -32,12 +32,14 @@ import io.cloudevents.CloudEvent;
 import io.cloudevents.core.builder.CloudEventBuilder;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.fluent.func.FuncWorkflowBuilder;
+import io.serverlessworkflow.fluent.func.dsl.ListenStep;
 import io.serverlessworkflow.impl.TaskContextData;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContextData;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowInstance;
 import io.serverlessworkflow.impl.WorkflowModel;
+import io.serverlessworkflow.impl.WorkflowModelCollection;
 import io.serverlessworkflow.impl.WorkflowStatus;
 import io.serverlessworkflow.impl.events.EventPublisher;
 import java.net.URI;
@@ -107,6 +109,36 @@ class FuncEventFilterTest {
             .build());
   }
 
+  @Test
+  void testPrimitiveArray() {
+    try (WorkflowApplication app = WorkflowApplication.builder().build()) {
+      Workflow workflow =
+          FuncWorkflowBuilder.workflow("doubleArray")
+              .tasks(function(FuncEventFilterTest::doubleArray))
+              .build();
+      WorkflowModelCollection col = app.modelFactory().createCollection();
+      col.add(app.modelFactory().from(1));
+      col.add(app.modelFactory().from(2));
+      col.add(app.modelFactory().from(3));
+      assertThat(
+              app.workflowDefinition(workflow)
+                  .instance(col)
+                  .start()
+                  .join()
+                  .as(int[].class)
+                  .orElseThrow())
+          .isEqualTo(new int[] {2, 4, 6});
+    }
+  }
+
+  private static int[] doubleArray(int[] input) {
+    int[] output = new int[input.length];
+    for (int i = 0; i < input.length; i++) {
+      output[i] = input[i] << 1;
+    }
+    return output;
+  }
+
   private Workflow reviewEmitter() {
     return FuncWorkflowBuilder.workflow("emitReview")
         .tasks(emitJson("draftReady", "org.acme.test.review", Review.class))
@@ -141,42 +173,63 @@ class FuncEventFilterTest {
   }
 
   @Test
-  void testJacksonAutomagicalConversion() throws Exception {
+  void testAutomaticConversion() throws Exception {
+    testConversionWorkflow(
+        listen(
+            "waitHumanReview",
+            to().one(
+                    consumed("org.acme.newsletter.review.done")
+                        .extensionByInstanceId("instanceid"))));
+  }
+
+  @Test
+  void testCollectionConversion() throws Exception {
+    testConversionWorkflow(
+        listen(
+                to().one(
+                        consumed("org.acme.newsletter.review.done")
+                            .extensionByInstanceId("instanceid")))
+            .outputAs((Collection<?> col) -> col.iterator().next()));
+  }
+
+  @Test
+  void testNodeConversion() throws Exception {
+    testConversionWorkflow(
+        listen(
+                "waitHumanReview",
+                to().one(
+                        consumed("org.acme.newsletter.review.done")
+                            .extensionByInstanceId("instanceid")))
+            .outputAs((ArrayNode col) -> col.get(0)));
+  }
+
+  private void testConversionWorkflow(ListenStep listen) throws Exception {
+    Workflow workflow =
+        FuncWorkflowBuilder.workflow("intelligent-newsletter")
+            .tasks(
+                function("draftAgent", this::writeDraft).exportAsTaskOutput(),
+                emitJson("draftReady", "org.acme.email.review.required", NewsletterDraft.class),
+                listen,
+                switchWhenOrElse(
+                    h -> HumanReview.NEEDS_REVISION.equals(h.status()),
+                    "humanEditorAgent",
+                    "sendNewsletter",
+                    HumanReview.class),
+                function("humanEditorAgent", this::editDraft)
+                    .exportAsTaskOutput()
+                    .then("draftReady"),
+                consume("sendNewsletter", this::sendEmail)
+                    // Because we are in Jackson, the payload at this evaluation stage can be a
+                    // Map.
+                    // We simply check for the "status" field to know if it's the review payload.
+                    .inputFrom(
+                        (Map<String, Object> payload,
+                            WorkflowContextData wfc,
+                            TaskContextData tfc) ->
+                            payload.containsKey("status") ? wfc.context() : payload))
+            .build();
+
     try (WorkflowApplication app = WorkflowApplication.builder().build()) {
-
-      Workflow workflow =
-          FuncWorkflowBuilder.workflow("intelligent-newsletter")
-              .tasks(
-                  function("draftAgent", this::writeDraft).exportAsTaskOutput(),
-                  emitJson("draftReady", "org.acme.email.review.required", NewsletterDraft.class),
-                  listen(
-                          "waitHumanReview",
-                          to().one(
-                                  consumed("org.acme.newsletter.review.done")
-                                      .extensionByInstanceId("instanceid")))
-                      .outputAs((Collection<?> events) -> events.iterator().next()),
-                  // The engine sees the incoming JsonNode, sees this task expects
-                  // HumanReview.class,
-                  // and natively deserializes it for you before executing the lambda!
-                  switchWhenOrElse(
-                      h -> HumanReview.NEEDS_REVISION.equals(h.status()),
-                      "humanEditorAgent",
-                      "sendNewsletter",
-                      HumanReview.class),
-                  function("humanEditorAgent", this::editDraft)
-                      .exportAsTaskOutput()
-                      .then("draftReady"),
-                  consume("sendNewsletter", this::sendEmail)
-                      // Because we are in Jackson, the payload at this evaluation stage can be a
-                      // Map.
-                      // We simply check for the "status" field to know if it's the review payload.
-                      .inputFrom(
-                          (Map<String, Object> payload,
-                              WorkflowContextData wfc,
-                              TaskContextData tfc) ->
-                              payload.containsKey("status") ? wfc.context() : payload))
-              .build();
-
       WorkflowDefinition definition = app.workflowDefinition(workflow);
       WorkflowInstance instance = definition.instance(new NewsletterRequest("Tech Stocks"));
       CompletableFuture<WorkflowModel> future = instance.start();
