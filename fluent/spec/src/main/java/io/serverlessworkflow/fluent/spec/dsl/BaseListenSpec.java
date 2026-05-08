@@ -28,6 +28,12 @@ import java.util.function.Consumer;
  */
 public abstract class BaseListenSpec<SELF, LISTEN_TASK, LISTEN_TO, EVENT_FILTER> {
 
+  private enum StrategyType {
+    ALL,
+    ANY,
+    ONE
+  }
+
   @FunctionalInterface
   public interface ToInvoker<LISTEN_TASK, LISTEN_TO> {
     void to(LISTEN_TASK listenTaskBuilder, Consumer<LISTEN_TO> toStep);
@@ -50,6 +56,7 @@ public abstract class BaseListenSpec<SELF, LISTEN_TASK, LISTEN_TO, EVENT_FILTER>
 
   private Consumer<LISTEN_TO> strategyStep;
   private Consumer<LISTEN_TO> untilStep;
+  private StrategyType strategyType;
 
   protected BaseListenSpec(
       ToInvoker<LISTEN_TASK, LISTEN_TO> toInvoker,
@@ -73,6 +80,7 @@ public abstract class BaseListenSpec<SELF, LISTEN_TASK, LISTEN_TO, EVENT_FILTER>
   public final SELF all(Consumer<EVENT_FILTER>... filters) {
     Objects.requireNonNull(filters, "filters");
     strategyStep = t -> allApplier.apply(t, filters);
+    strategyType = StrategyType.ALL;
     return self();
   }
 
@@ -80,17 +88,25 @@ public abstract class BaseListenSpec<SELF, LISTEN_TASK, LISTEN_TO, EVENT_FILTER>
   public final SELF any(Consumer<EVENT_FILTER>... filters) {
     Objects.requireNonNull(filters, "filters");
     strategyStep = t -> anyApplier.apply(t, filters);
+    strategyType = StrategyType.ANY;
     return self();
   }
 
   public final SELF one(Consumer<EVENT_FILTER> filter) {
     Objects.requireNonNull(filter, "filter");
     strategyStep = t -> oneApplier.apply(t, filter);
+    strategyType = StrategyType.ONE;
     return self();
   }
 
   protected final void acceptInto(LISTEN_TASK listenTaskBuilder) {
     Objects.requireNonNull(strategyStep, "listening strategy must be set (all/any/one)");
+    if (untilStep != null && strategyType != StrategyType.ANY) {
+      throw new IllegalStateException(
+          "until() is only supported with any() event consumption strategy. "
+              + "Current strategy: "
+              + strategyType);
+    }
     toInvoker.to(
         listenTaskBuilder,
         t -> {
