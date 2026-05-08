@@ -51,10 +51,7 @@ public class JacksonModelCollection implements WorkflowModelCollection {
     if (clazz.isInstance(node)) return Optional.of(clazz.cast(node));
     if (clazz.isInstance(this)) return Optional.of(clazz.cast(this));
 
-    List<JsonNode> elements = new ArrayList<>(node.size());
-    node.forEach(elements::add);
-
-    return CollectionConversionUtils.as(elements, clazz, JsonUtils::convertValue);
+    return CollectionConversionUtils.as(node, clazz, JsonUtils::convertValue);
   }
 
   @Override
