@@ -51,8 +51,7 @@ public abstract class ListenExecutor extends RegularTaskExecutor<ListenTask> {
 
     private EventRegistrationBuilderInfo registrationInfo;
     private TaskExecutor<?> loop;
-    private Function<CloudEvent, WorkflowModel> converter =
-        ce -> application.modelFactory().from(ce.getData());
+    private final Function<CloudEvent, WorkflowModel> converter;
 
     protected ListenExecutorBuilder(
         WorkflowMutablePosition position, ListenTask task, WorkflowDefinition definition) {
@@ -65,16 +64,10 @@ public abstract class ListenExecutor extends RegularTaskExecutor<ListenTask> {
         loop = TaskExecutorHelper.createExecutorList(position, forEach.getDo(), definition);
       }
       ListenAndReadAs readAs = listen.getRead();
-      if (readAs != null) {
-        switch (readAs) {
-          case ENVELOPE:
-            converter = ce -> application.modelFactory().from(ce);
-          default:
-          case DATA:
-            converter = ce -> application.modelFactory().from(ce.getData());
-            break;
-        }
-      }
+      converter =
+          readAs == ListenAndReadAs.ENVELOPE
+              ? application.modelFactory()::from
+              : ce -> application.modelFactory().from(ce.getData());
     }
 
     protected WorkflowPredicate buildUntilPredicate(Until until) {
