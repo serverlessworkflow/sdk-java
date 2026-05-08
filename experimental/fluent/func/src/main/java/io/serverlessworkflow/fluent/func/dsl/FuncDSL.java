@@ -2213,6 +2213,11 @@ public final class FuncDSL {
     return DSL.all(filters);
   }
 
+  public static Consumer<AbstractEventConsumptionStrategyBuilder<?, ?, ?>> allOfType(
+      String eventType) {
+    return DSL.all(f -> f.with(c -> c.type(eventType)));
+  }
+
   /**
    * @see DSL#any(Consumer[])
    */
