@@ -2218,10 +2218,11 @@ public final class FuncDSL {
    *
    * @param eventType the event type
    * @return a consumer configuring the event strategy builder
+   * @see DSL#all(Consumer[])
    */
   public static Consumer<AbstractEventConsumptionStrategyBuilder<?, ?, ?>> allOfType(
       String eventType) {
-    return DSL.all(f -> f.with(c -> c.type(eventType)));
+    return DSL.all(DSL.event().type(eventType));
   }
 
   /**
