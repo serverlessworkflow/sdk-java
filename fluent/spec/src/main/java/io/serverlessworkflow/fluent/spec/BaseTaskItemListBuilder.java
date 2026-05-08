@@ -45,6 +45,7 @@ public abstract class BaseTaskItemListBuilder<SELF extends BaseTaskItemListBuild
   protected final String TYPE_WAIT = "wait";
   protected final String TYPE_HTTP = "http";
   protected final String TYPE_OPENAPI = "openapi";
+  protected final String TYPE_GRPC = "grpc";
   protected final String TYPE_WORKFLOW = "workflow";
 
   private final List<TaskItem> list;

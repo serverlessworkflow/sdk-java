@@ -26,6 +26,7 @@ import io.serverlessworkflow.fluent.spec.TaskItemListBuilder;
 import io.serverlessworkflow.fluent.spec.TimeoutBuilder;
 import io.serverlessworkflow.fluent.spec.TryTaskBuilder;
 import io.serverlessworkflow.fluent.spec.configurers.AuthenticationConfigurer;
+import io.serverlessworkflow.fluent.spec.configurers.CallGrpcConfigurer;
 import io.serverlessworkflow.fluent.spec.configurers.CallHttpConfigurer;
 import io.serverlessworkflow.fluent.spec.configurers.CallOpenAPIConfigurer;
 import io.serverlessworkflow.fluent.spec.configurers.ForEachConfigurer;
@@ -104,6 +105,10 @@ public final class DSL {
    */
   public static CallOpenAPISpec openapi() {
     return new CallOpenAPISpec();
+  }
+
+  public static CallGrpcSpec grpc() {
+    return new CallGrpcSpec();
   }
 
   public static WorkflowSpec workflow(String namespace, String name, String version) {
@@ -681,6 +686,14 @@ public final class DSL {
    */
   public static TasksConfigurer call(String name, CallOpenAPIConfigurer configurer) {
     return list -> list.openapi(name, configurer);
+  }
+
+  public static TasksConfigurer call(CallGrpcConfigurer configurer) {
+    return list -> list.grpc(configurer);
+  }
+
+  public static TasksConfigurer call(String name, CallGrpcConfigurer configurer) {
+    return list -> list.grpc(name, configurer);
   }
 
   /**

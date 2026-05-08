@@ -15,6 +15,7 @@
  */
 package io.serverlessworkflow.fluent.spec.spi;
 
+import io.serverlessworkflow.fluent.spec.CallGrpcTaskBuilder;
 import io.serverlessworkflow.fluent.spec.CallHttpTaskBuilder;
 import io.serverlessworkflow.fluent.spec.CallOpenAPITaskBuilder;
 import io.serverlessworkflow.fluent.spec.EmitTaskBuilder;
@@ -48,4 +49,5 @@ public interface DoFluent<T>
         WaitFluent<WaitTaskBuilder, T>,
         RaiseFluent<RaiseTaskBuilder, T>,
         CallOpenAPIFluent<CallOpenAPITaskBuilder, T>,
+        CallGrpcFluent<CallGrpcTaskBuilder, T>,
         WorkflowFluent<WorkflowTaskBuilder, T> {}

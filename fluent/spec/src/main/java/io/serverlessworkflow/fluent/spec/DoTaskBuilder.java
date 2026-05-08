@@ -105,6 +105,12 @@ public class DoTaskBuilder extends BaseDoTaskBuilder<DoTaskBuilder, TaskItemList
   }
 
   @Override
+  public DoTaskBuilder grpc(String name, Consumer<CallGrpcTaskBuilder> itemsConfigurer) {
+    this.listBuilder().grpc(name, itemsConfigurer);
+    return this;
+  }
+
+  @Override
   public DoTaskBuilder workflow(String name, Consumer<WorkflowTaskBuilder> itemsConfigurer) {
     this.listBuilder().workflow(name, itemsConfigurer);
     return this;
