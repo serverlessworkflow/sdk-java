@@ -2213,6 +2213,12 @@ public final class FuncDSL {
     return DSL.all(filters);
   }
 
+  /**
+   * Creates an 'all' event consumption strategy using a specific event type string.
+   *
+   * @param eventType the event type
+   * @return a consumer configuring the event strategy builder
+   */
   public static Consumer<AbstractEventConsumptionStrategyBuilder<?, ?, ?>> allOfType(
       String eventType) {
     return DSL.all(f -> f.with(c -> c.type(eventType)));
