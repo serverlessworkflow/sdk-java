@@ -2214,6 +2214,18 @@ public final class FuncDSL {
   }
 
   /**
+   * Creates an 'all' event consumption strategy using a specific event type string.
+   *
+   * @param eventType the event type
+   * @return a consumer configuring the event strategy builder
+   * @see DSL#all(Consumer[])
+   */
+  public static Consumer<AbstractEventConsumptionStrategyBuilder<?, ?, ?>> allOfType(
+      String eventType) {
+    return DSL.all(DSL.event().type(eventType));
+  }
+
+  /**
    * @see DSL#any(Consumer[])
    */
   @SafeVarargs

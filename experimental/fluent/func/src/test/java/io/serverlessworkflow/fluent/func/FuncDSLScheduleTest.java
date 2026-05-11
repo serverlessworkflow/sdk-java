@@ -16,6 +16,7 @@
 package io.serverlessworkflow.fluent.func;
 
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.after;
+import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.allOfType;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.cron;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.every;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.on;
@@ -123,5 +124,26 @@ class FuncDSLScheduleTest {
         "org.acme.startup",
         schedule.getOn().getOneEventConsumptionStrategy().getOne().getWith().getType(),
         "Event type should match");
+  }
+
+  @Test
+  @DisplayName(
+      "schedule(on(allOfType(event))) configures an 'on' schedule with 'all' event consumption strategy")
+  void schedule_on_allOfType_event_sets_schedule() {
+    Workflow wf =
+        FuncWorkflowBuilder.workflow("schedule-on-allOfType-event")
+            .schedule(on(allOfType("org.acme.processing")))
+            .build();
+
+    Schedule schedule = wf.getSchedule();
+    assertNotNull(schedule, "Schedule should be configured");
+    assertNotNull(schedule.getOn(), "On configuration should be set");
+    assertNotNull(
+        schedule.getOn().getAllEventConsumptionStrategy(),
+        "All consumption strategy should be set");
+    assertEquals(
+        "org.acme.processing",
+        schedule.getOn().getAllEventConsumptionStrategy().getAll().get(0).getWith().getType(),
+        "Event type should match in the filter");
   }
 }
