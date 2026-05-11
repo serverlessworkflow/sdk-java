@@ -26,6 +26,8 @@ import io.serverlessworkflow.impl.config.ConfigManager;
 import io.serverlessworkflow.impl.config.ConfigSecretManager;
 import io.serverlessworkflow.impl.config.SecretManager;
 import io.serverlessworkflow.impl.config.SystemPropertyConfigManager;
+import io.serverlessworkflow.impl.events.CloudEventPredicateFactory;
+import io.serverlessworkflow.impl.events.DefaultCloudEventPredicateFactory;
 import io.serverlessworkflow.impl.events.EventConsumer;
 import io.serverlessworkflow.impl.events.EventPublisher;
 import io.serverlessworkflow.impl.events.InMemoryEvents;
@@ -90,6 +92,7 @@ public class WorkflowApplication implements AutoCloseable {
   private final Optional<FunctionReader> functionReader;
   private final URI defaultCatalogURI;
   private final Collection<CallableTaskProxyBuilder> callableProxyBuilders;
+  private final CloudEventPredicateFactory cloudEventPredicateFactory;
 
   private WorkflowApplication(Builder builder) {
     this.taskFactory = builder.taskFactory;
@@ -118,6 +121,7 @@ public class WorkflowApplication implements AutoCloseable {
     this.defaultCatalogURI = builder.defaultCatalogURI;
     this.id = builder.id;
     this.callableProxyBuilders = builder.callableProxyBuilders;
+    this.cloudEventPredicateFactory = builder.cloudEventPredicateFactory;
   }
 
   public TaskExecutorFactory taskFactory() {
@@ -235,6 +239,7 @@ public class WorkflowApplication implements AutoCloseable {
     private Optional<URITemplateResolver> templateResolver;
     private Optional<FunctionReader> functionReader;
     private URI defaultCatalogURI;
+    private CloudEventPredicateFactory cloudEventPredicateFactory;
 
     private Builder() {
       ServiceLoader.load(NamedWorkflowAdditionalObject.class)
@@ -361,6 +366,12 @@ public class WorkflowApplication implements AutoCloseable {
       return this;
     }
 
+    public Builder withCloudEventPredicateFactory(
+        CloudEventPredicateFactory cloudEventPredicateFactory) {
+      this.cloudEventPredicateFactory = cloudEventPredicateFactory;
+      return this;
+    }
+
     public WorkflowApplication build() {
 
       if (modelFactory == null) {
@@ -416,6 +427,11 @@ public class WorkflowApplication implements AutoCloseable {
       }
       templateResolver = loadFirst(URITemplateResolver.class);
       functionReader = loadFirst(FunctionReader.class);
+      if (cloudEventPredicateFactory == null) {
+        cloudEventPredicateFactory =
+            loadFirst(CloudEventPredicateFactory.class)
+                .orElseGet(() -> new DefaultCloudEventPredicateFactory());
+      }
       if (defaultCatalogURI == null) {
         defaultCatalogURI = URI.create("https://github.com/serverlessworkflow/catalog");
       }
@@ -520,6 +536,10 @@ public class WorkflowApplication implements AutoCloseable {
 
   public Optional<FunctionReader> functionReader() {
     return functionReader;
+  }
+
+  public CloudEventPredicateFactory cloudEventPredicateFactory() {
+    return cloudEventPredicateFactory;
   }
 
   public URI defaultCatalogURI() {

@@ -27,7 +27,15 @@ import java.util.Date;
 public abstract class AbstractEventPropertiesBuilder<
     SELF extends AbstractEventPropertiesBuilder<SELF>> {
 
-  protected final EventProperties eventProperties = new EventProperties();
+  protected final EventProperties eventProperties;
+
+  protected AbstractEventPropertiesBuilder() {
+    this.eventProperties = new EventProperties();
+  }
+
+  protected AbstractEventPropertiesBuilder(EventProperties eventProperties) {
+    this.eventProperties = eventProperties;
+  }
 
   protected abstract SELF self();
 
