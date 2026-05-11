@@ -53,7 +53,7 @@ public abstract class AbstractTypeConsumer
     EventProperties properties = register.getWith();
     String type = properties.getType();
     return new TypeEventRegistrationBuilder(
-        type, new DefaultCloudEventPredicate(properties, application));
+        type, application.cloudEventPredicateFactory().build(application, properties));
   }
 
   @Override
