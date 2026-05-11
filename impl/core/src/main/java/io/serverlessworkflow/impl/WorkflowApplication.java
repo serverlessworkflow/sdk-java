@@ -43,7 +43,9 @@ import io.serverlessworkflow.impl.resources.DefaultResourceLoaderFactory;
 import io.serverlessworkflow.impl.resources.ExternalResourceHandler;
 import io.serverlessworkflow.impl.resources.ResourceLoaderFactory;
 import io.serverlessworkflow.impl.resources.URITemplateResolver;
+import io.serverlessworkflow.impl.scheduler.AllStrategyCorrelationInfoFactory;
 import io.serverlessworkflow.impl.scheduler.DefaultWorkflowScheduler;
+import io.serverlessworkflow.impl.scheduler.InMemoryAllStrategyCorrelationInfo;
 import io.serverlessworkflow.impl.scheduler.WorkflowScheduler;
 import io.serverlessworkflow.impl.schema.SchemaValidator;
 import io.serverlessworkflow.impl.schema.SchemaValidatorFactory;
@@ -93,6 +95,7 @@ public class WorkflowApplication implements AutoCloseable {
   private final URI defaultCatalogURI;
   private final Collection<CallableTaskProxyBuilder> callableProxyBuilders;
   private final CloudEventPredicateFactory cloudEventPredicateFactory;
+  private final AllStrategyCorrelationInfoFactory allStrategyCorrelationInfoFactory;
 
   private WorkflowApplication(Builder builder) {
     this.taskFactory = builder.taskFactory;
@@ -122,6 +125,7 @@ public class WorkflowApplication implements AutoCloseable {
     this.id = builder.id;
     this.callableProxyBuilders = builder.callableProxyBuilders;
     this.cloudEventPredicateFactory = builder.cloudEventPredicateFactory;
+    this.allStrategyCorrelationInfoFactory = builder.allStrategyCorrelationInfoFactory;
   }
 
   public TaskExecutorFactory taskFactory() {
@@ -240,6 +244,7 @@ public class WorkflowApplication implements AutoCloseable {
     private Optional<FunctionReader> functionReader;
     private URI defaultCatalogURI;
     private CloudEventPredicateFactory cloudEventPredicateFactory;
+    private AllStrategyCorrelationInfoFactory allStrategyCorrelationInfoFactory;
 
     private Builder() {
       ServiceLoader.load(NamedWorkflowAdditionalObject.class)
@@ -372,6 +377,12 @@ public class WorkflowApplication implements AutoCloseable {
       return this;
     }
 
+    public Builder withAllStrategyCorrelationInfoFactory(
+        AllStrategyCorrelationInfoFactory allStrategyCorrelationInfoFactory) {
+      this.allStrategyCorrelationInfoFactory = allStrategyCorrelationInfoFactory;
+      return this;
+    }
+
     public WorkflowApplication build() {
 
       if (modelFactory == null) {
@@ -432,6 +443,10 @@ public class WorkflowApplication implements AutoCloseable {
             loadFirst(CloudEventPredicateFactory.class)
                 .orElseGet(() -> new DefaultCloudEventPredicateFactory());
       }
+      if (allStrategyCorrelationInfoFactory == null) {
+        allStrategyCorrelationInfoFactory = definition -> new InMemoryAllStrategyCorrelationInfo();
+      }
+
       if (defaultCatalogURI == null) {
         defaultCatalogURI = URI.create("https://github.com/serverlessworkflow/catalog");
       }
@@ -558,5 +573,9 @@ public class WorkflowApplication implements AutoCloseable {
 
   public Collection<CallableTaskProxyBuilder> callableProxyBuilders() {
     return callableProxyBuilders;
+  }
+
+  public AllStrategyCorrelationInfoFactory allStrategyCorrelationInfoFactory() {
+    return allStrategyCorrelationInfoFactory;
   }
 }
