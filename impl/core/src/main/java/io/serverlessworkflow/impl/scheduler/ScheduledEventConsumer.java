@@ -15,19 +15,17 @@
  */
 package io.serverlessworkflow.impl.scheduler;
 
+import static io.serverlessworkflow.impl.WorkflowUtils.safeClose;
+
 import io.cloudevents.CloudEvent;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowModelCollection;
 import io.serverlessworkflow.impl.events.EventConsumer;
 import io.serverlessworkflow.impl.events.EventRegistration;
-import io.serverlessworkflow.impl.events.EventRegistrationBuilder;
 import io.serverlessworkflow.impl.events.EventRegistrationBuilderInfo;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.function.Function;
 
 public class ScheduledEventConsumer implements AutoCloseable {
@@ -37,8 +35,8 @@ public class ScheduledEventConsumer implements AutoCloseable {
   private final EventRegistrationBuilderInfo builderInfo;
   private final EventConsumer eventConsumer;
   private final ScheduledInstanceRunnable instanceRunner;
-  private Map<EventRegistrationBuilder, List<CloudEvent>> correlatedEvents;
-  private Collection<EventRegistration> registrations = new ArrayList<>();
+  private final Collection<EventRegistration> registrations = new ArrayList<>();
+  private AllStrategyCorrelationInfo allStrategyCorrelationInfo;
 
   public ScheduledEventConsumer(
       WorkflowDefinition definition,
@@ -50,17 +48,23 @@ public class ScheduledEventConsumer implements AutoCloseable {
     this.builderInfo = builderInfo;
     this.instanceRunner = instanceRunner;
     this.eventConsumer = definition.application().eventConsumer();
+
     if (builderInfo.registrations().isAnd()
         && builderInfo.registrations().registrations().size() > 1) {
-      this.correlatedEvents = new HashMap<>();
+      this.allStrategyCorrelationInfo =
+          definition.application().allStrategyCorrelationInfoFactory().apply(definition);
       builderInfo
           .registrations()
           .registrations()
           .forEach(
               reg -> {
-                correlatedEvents.put(reg, new ArrayList<>());
+                allStrategyCorrelationInfo.register(reg);
                 registrations.add(
-                    eventConsumer.register(reg, ce -> consumeEvent(reg, (CloudEvent) ce)));
+                    eventConsumer.register(
+                        reg,
+                        ce ->
+                            allStrategyCorrelationInfo.correlate(
+                                reg, (CloudEvent) ce, this::start)));
               });
     } else {
       builderInfo
@@ -69,34 +73,6 @@ public class ScheduledEventConsumer implements AutoCloseable {
           .forEach(
               reg -> registrations.add(eventConsumer.register(reg, ce -> start((CloudEvent) ce))));
     }
-  }
-
-  private void consumeEvent(EventRegistrationBuilder reg, CloudEvent ce) {
-    Collection<Collection<CloudEvent>> collections = new ArrayList<>();
-    // to minimize the critical section, conversion is done later, here we are
-    // performing
-    // just collection, if any
-    synchronized (correlatedEvents) {
-      correlatedEvents.get(reg).add((CloudEvent) ce);
-      while (satisfyCondition()) {
-        Collection<CloudEvent> collection = new ArrayList<>();
-        for (List<CloudEvent> values : correlatedEvents.values()) {
-          collection.add(values.remove(0));
-        }
-        collections.add(collection);
-      }
-    }
-    // convert and start outside synchronized
-    collections.forEach(this::start);
-  }
-
-  private boolean satisfyCondition() {
-    for (List<CloudEvent> values : correlatedEvents.values()) {
-      if (values.isEmpty()) {
-        return false;
-      }
-    }
-    return true;
   }
 
   protected void start(CloudEvent ce) {
@@ -112,9 +88,7 @@ public class ScheduledEventConsumer implements AutoCloseable {
   }
 
   public void close() {
-    if (correlatedEvents != null) {
-      correlatedEvents.clear();
-    }
     registrations.forEach(eventConsumer::unregister);
+    safeClose(allStrategyCorrelationInfo);
   }
 }
