@@ -102,7 +102,7 @@ public abstract class BaseListenSpec<SELF, LISTEN_TASK, LISTEN_TO, EVENT_FILTER>
   protected final void acceptInto(LISTEN_TASK listenTaskBuilder) {
     Objects.requireNonNull(strategyStep, "listening strategy must be set (all/any/one)");
     if (untilStep != null && strategyType != StrategyType.ANY) {
-      throw new IllegalStateException(
+      throw new IllegalArgumentException(
           "until() is only supported with any() event consumption strategy. "
               + "Current strategy: "
               + strategyType);

@@ -27,9 +27,9 @@ public class ListenUntilValidationTest {
 
   @Test
   public void testUntilWithAllThrowsException() {
-    IllegalStateException exception =
+    IllegalArgumentException exception =
         assertThrows(
-            IllegalStateException.class,
+            IllegalArgumentException.class,
             () -> {
               try (WorkflowApplication app = WorkflowApplication.builder().build()) {
                 Workflow workflow =
@@ -54,9 +54,9 @@ public class ListenUntilValidationTest {
 
   @Test
   public void testUntilWithOneThrowsException() {
-    IllegalStateException exception =
+    IllegalArgumentException exception =
         assertThrows(
-            IllegalStateException.class,
+            IllegalArgumentException.class,
             () -> {
               try (WorkflowApplication app = WorkflowApplication.builder().build()) {
                 Workflow workflow =

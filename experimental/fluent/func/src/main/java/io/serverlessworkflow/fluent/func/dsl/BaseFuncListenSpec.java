@@ -45,21 +45,18 @@ public abstract class BaseFuncListenSpec<SELF, LB>
 
   public <T> SELF until(Predicate<T> predicate, Class<T> predClass) {
     Objects.requireNonNull(predicate, "predicate");
-    Objects.requireNonNull(predClass, "predClass");
     this.setUntilStep(u -> u.until(predicate, predClass));
     return self();
   }
 
   public <T> SELF until(ContextPredicate<T> predicate, Class<T> predClass) {
     Objects.requireNonNull(predicate, "predicate");
-    Objects.requireNonNull(predClass, "predClass");
     this.setUntilStep(u -> u.until(predicate, predClass));
     return self();
   }
 
   public <T> SELF until(FilterPredicate<T> predicate, Class<T> predClass) {
     Objects.requireNonNull(predicate, "predicate");
-    Objects.requireNonNull(predClass, "predClass");
     this.setUntilStep(u -> u.until(predicate, predClass));
     return self();
   }
