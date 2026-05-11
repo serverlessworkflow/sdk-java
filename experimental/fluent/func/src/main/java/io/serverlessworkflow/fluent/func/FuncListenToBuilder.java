@@ -20,6 +20,8 @@ import io.serverlessworkflow.api.types.AnyEventConsumptionStrategy;
 import io.serverlessworkflow.api.types.ListenTo;
 import io.serverlessworkflow.api.types.OneEventConsumptionStrategy;
 import io.serverlessworkflow.api.types.Until;
+import io.serverlessworkflow.api.types.func.ContextPredicate;
+import io.serverlessworkflow.api.types.func.FilterPredicate;
 import io.serverlessworkflow.api.types.func.UntilPredicate;
 import io.serverlessworkflow.fluent.spec.AbstractEventConsumptionStrategyBuilder;
 import java.util.function.Predicate;
@@ -63,6 +65,16 @@ public class FuncListenToBuilder
   }
 
   public <T> FuncListenToBuilder until(Predicate<T> predicate, Class<T> predClass) {
+    this.setUntil(new UntilPredicate().withPredicate(predicate, predClass));
+    return this;
+  }
+
+  public <T> FuncListenToBuilder until(ContextPredicate<T> predicate, Class<T> predClass) {
+    this.setUntil(new UntilPredicate().withPredicate(predicate, predClass));
+    return this;
+  }
+
+  public <T> FuncListenToBuilder until(FilterPredicate<T> predicate, Class<T> predClass) {
     this.setUntil(new UntilPredicate().withPredicate(predicate, predClass));
     return this;
   }
