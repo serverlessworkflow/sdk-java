@@ -37,6 +37,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import io.serverlessworkflow.api.types.AuthenticationPolicyUnion;
 import io.serverlessworkflow.api.types.CallHTTP;
 import io.serverlessworkflow.api.types.CatchErrors;
+import io.serverlessworkflow.api.types.CorrelateProperty;
 import io.serverlessworkflow.api.types.Document;
 import io.serverlessworkflow.api.types.EmitEventDefinition;
 import io.serverlessworkflow.api.types.EmitTask;
@@ -310,8 +311,12 @@ public class WorkflowBuilderTest {
                                 to ->
                                     to.one(
                                         f ->
-                                            f.with(
-                                                p -> p.type("com.fake.pet").source("mySource"))))))
+                                            f.with(p -> p.type("com.fake.pet").source("mySource"))
+                                                .correlate(
+                                                    "orderId",
+                                                    c ->
+                                                        c.from("$.data.orderId")
+                                                            .expect("$.input.orderId"))))))
             .build();
 
     List<TaskItem> items = wf.getDo();
@@ -327,6 +332,10 @@ public class WorkflowBuilderTest {
     EventFilter filter = one.getOne();
     assertNotNull(filter, "EventFilter should be present");
     assertEquals("com.fake.pet", filter.getWith().getType(), "Filter type should match");
+    CorrelateProperty correlate = filter.getCorrelate().getAdditionalProperties().get("orderId");
+    assertNotNull(correlate, "Correlate property should be present");
+    assertEquals("$.data.orderId", correlate.getFrom(), "Correlate from should match");
+    assertEquals("$.input.orderId", correlate.getExpect(), "Correlate expect should match");
   }
 
   @Test

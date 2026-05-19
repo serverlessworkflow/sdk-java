@@ -47,6 +47,12 @@ public abstract class AbstractExpressionFactory implements ExpressionFactory {
   }
 
   @Override
+  public WorkflowValueResolver<Object> resolveValue(ExpressionDescriptor desc) {
+    ObjectExpression expr = buildExpression(desc);
+    return (w, t, m) -> expr.eval(w, t, m);
+  }
+
+  @Override
   public WorkflowValueResolver<Collection<?>> resolveCollection(ExpressionDescriptor desc) {
     ObjectExpression expr = buildExpression(desc);
     return (w, t, m) -> toCollection(expr.eval(w, t, m));

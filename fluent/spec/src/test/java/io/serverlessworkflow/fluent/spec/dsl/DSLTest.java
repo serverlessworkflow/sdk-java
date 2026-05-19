@@ -30,6 +30,7 @@ import static io.serverlessworkflow.fluent.spec.dsl.DSL.to;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.workflow;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.serverlessworkflow.api.types.CorrelateProperty;
 import io.serverlessworkflow.api.types.HTTPArguments;
 import io.serverlessworkflow.api.types.ListenTaskConfiguration;
 import io.serverlessworkflow.api.types.RunTaskConfiguration;
@@ -166,7 +167,15 @@ public class DSLTest {
   public void when_listen_one() {
     Workflow wf =
         WorkflowBuilder.workflow("f", "ns", "1")
-            .tasks(t -> t.listen(to().one(event().type("only-once"))))
+            .tasks(
+                t ->
+                    t.listen(
+                        to().one(
+                                event()
+                                    .type("only-once")
+                                    .correlate(
+                                        "workflowInstanceId",
+                                        c -> c.from("$.metadata.instanceId")))))
             .build();
 
     var to = wf.getDo().get(0).getTask().getListenTask().getListen().getTo();
@@ -178,6 +187,10 @@ public class DSLTest {
     var one = to.getOneEventConsumptionStrategy().getOne();
     assertThat(one.getWith()).isNotNull();
     assertThat(one.getWith().getType()).isEqualTo("only-once");
+    CorrelateProperty correlate =
+        one.getCorrelate().getAdditionalProperties().get("workflowInstanceId");
+    assertThat(correlate).isNotNull();
+    assertThat(correlate.getFrom()).isEqualTo("$.metadata.instanceId");
   }
 
   @Test
