@@ -17,6 +17,7 @@ package io.serverlessworkflow.fluent.spec.dsl;
 
 import io.serverlessworkflow.fluent.spec.AbstractEventFilterBuilder;
 import io.serverlessworkflow.fluent.spec.AbstractEventPropertiesBuilder;
+import io.serverlessworkflow.fluent.spec.AbstractListenTaskBuilder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
@@ -41,13 +42,11 @@ public abstract class AbstractEventFilterSpec<
     return filterSteps;
   }
 
-  // TODO: "correlate is not supported in the engine level:
-  // https://github.com/serverlessworkflow/sdk-java/issues/1206". Keeping the code for a future
-  // reference.
-  //  public SELF correlate(String key, Consumer<ListenTaskBuilder.CorrelatePropertyBuilder> c) {
-  //    filterSteps.add(f -> f.correlate(key, c));
-  //    return self();
-  //  }
+  public SELF correlate(
+      String key, Consumer<AbstractListenTaskBuilder.CorrelatePropertyBuilder> c) {
+    addFilterStep(f -> f.correlate(key, c));
+    return self();
+  }
 
   @Override
   public void accept(EVENT_FILTER filterBuilder) {

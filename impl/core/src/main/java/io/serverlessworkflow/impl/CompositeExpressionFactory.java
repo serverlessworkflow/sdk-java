@@ -50,6 +50,11 @@ class CompositeExpressionFactory implements ExpressionFactory {
   }
 
   @Override
+  public WorkflowValueResolver<Object> resolveValue(ExpressionDescriptor desc) {
+    return processFactories(desc, f -> f.resolveValue(desc));
+  }
+
+  @Override
   public WorkflowValueResolver<OffsetDateTime> resolveDate(ExpressionDescriptor desc) {
     return processFactories(desc, f -> f.resolveDate(desc));
   }
