@@ -20,6 +20,7 @@ import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowPredicate;
+import io.serverlessworkflow.impl.WorkflowValueResolver;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
@@ -77,6 +78,12 @@ public abstract class ObjectExpressionFactory extends AbstractExpressionFactory 
   public WorkflowPredicate buildPredicate(ExpressionDescriptor desc) {
     ObjectExpression expr = buildExpression(desc);
     return (w, t, m) -> toBoolean(expr.eval(w, t, m));
+  }
+
+  @Override
+  public WorkflowValueResolver<Object> resolveValue(ExpressionDescriptor desc) {
+    ObjectExpression expr = buildExpression(desc);
+    return (w, t, m) -> toJavaObject(expr.eval(w, t, m));
   }
 
   protected abstract boolean toBoolean(Object eval);

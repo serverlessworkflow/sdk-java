@@ -1,0 +1,18 @@
+document:
+  dsl: '1.0.0-alpha5'
+  namespace: test
+  name: listen-correlate
+  version: '0.1.0'
+input:
+  from: '{ patientId: .patientId }'
+do:
+  - waitForPatient:
+      listen:
+        to:
+          one:
+            with:
+              type: com.example.hospital.patient.admitted
+            correlate:
+              patientId:
+                from: .data.patientId
+                expect: .patientId

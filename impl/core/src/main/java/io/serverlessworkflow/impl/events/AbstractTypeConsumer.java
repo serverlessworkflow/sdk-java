@@ -16,12 +16,17 @@
 package io.serverlessworkflow.impl.events;
 
 import io.cloudevents.CloudEvent;
+import io.serverlessworkflow.api.types.CorrelateProperty;
 import io.serverlessworkflow.api.types.EventFilter;
+import io.serverlessworkflow.api.types.EventFilterCorrelate;
 import io.serverlessworkflow.api.types.EventProperties;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.WorkflowModel;
+import io.serverlessworkflow.impl.WorkflowModelFactory;
 import java.util.AbstractCollection;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -52,27 +57,79 @@ public abstract class AbstractTypeConsumer
       EventFilter register, WorkflowApplication application) {
     EventProperties properties = register.getWith();
     String type = properties.getType();
+    CloudEventPredicate cePredicate =
+        application.cloudEventPredicateFactory().build(application, properties);
+    Collection<CloudEventPredicate> correlationPredicates =
+        buildCorrelationPredicates(register.getCorrelate(), application);
     return new TypeEventRegistrationBuilder(
-        type, application.cloudEventPredicateFactory().build(application, properties));
+        type, cePredicate, correlationPredicates, application.modelFactory());
+  }
+
+  private Collection<CloudEventPredicate> buildCorrelationPredicates(
+      EventFilterCorrelate correlate, WorkflowApplication application) {
+    if (correlate == null) {
+      return List.of();
+    }
+    Map<String, CorrelateProperty> additionalProperties = correlate.getAdditionalProperties();
+    if (additionalProperties == null || additionalProperties.isEmpty()) {
+      return List.of();
+    }
+    Collection<CloudEventPredicate> predicates = new ArrayList<>();
+    for (Map.Entry<String, CorrelateProperty> entry : additionalProperties.entrySet()) {
+      predicates.add(CorrelationPredicate.from(entry.getKey(), entry.getValue(), application));
+    }
+    return predicates;
   }
 
   @Override
   public Collection<TypeEventRegistrationBuilder> listenToAll(WorkflowApplication application) {
-    return List.of(new TypeEventRegistrationBuilder(null, null));
+    return List.of(
+        new TypeEventRegistrationBuilder(null, null, List.of(), application.modelFactory()));
   }
 
   private static class CloudEventConsumer extends AbstractCollection<TypeEventRegistration>
       implements Consumer<CloudEvent> {
+    private final WorkflowModelFactory modelFactory;
     private Collection<TypeEventRegistration> registrations = new CopyOnWriteArrayList<>();
+
+    CloudEventConsumer(WorkflowModelFactory modelFactory) {
+      this.modelFactory = modelFactory;
+    }
 
     @Override
     public void accept(CloudEvent ce) {
       logger.debug("Received cloud event {}", ce);
       for (TypeEventRegistration registration : registrations) {
         if (registration.predicate().test(ce, registration.workflow(), registration.task())) {
+          if (!testCorrelation(ce, registration)) {
+            continue;
+          }
           registration.consumer().accept(ce);
         }
       }
+    }
+
+    private boolean testCorrelation(CloudEvent ce, TypeEventRegistration registration) {
+      Collection<CloudEventPredicate> predicates = registration.correlationPredicates();
+      if (predicates.isEmpty()) {
+        return true;
+      }
+      WorkflowModel eventModel = null;
+      for (CloudEventPredicate pred : predicates) {
+        if (pred instanceof ModelAwareCloudEventPredicate ma) {
+          if (eventModel == null) {
+            eventModel = modelFactory.from(ce);
+          }
+          if (!ma.test(eventModel, registration.workflow(), registration.task())) {
+            return false;
+          }
+        } else {
+          if (!pred.test(ce, registration.workflow(), registration.task())) {
+            return false;
+          }
+        }
+      }
+      return true;
     }
 
     @Override
@@ -107,12 +164,18 @@ public abstract class AbstractTypeConsumer
       return new TypeEventRegistration(null, ce, null, workflow, task);
     } else {
       TypeEventRegistration registration =
-          new TypeEventRegistration(builder.type(), ce, builder.cePredicate(), workflow, task);
+          new TypeEventRegistration(
+              builder.type(),
+              ce,
+              builder.cePredicate(),
+              builder.correlationPredicates(),
+              workflow,
+              task);
       registrations
           .computeIfAbsent(
               registration.type(),
               k -> {
-                CloudEventConsumer consumer = new CloudEventConsumer();
+                CloudEventConsumer consumer = new CloudEventConsumer(builder.modelFactory());
                 register(k, consumer);
                 return consumer;
               })
