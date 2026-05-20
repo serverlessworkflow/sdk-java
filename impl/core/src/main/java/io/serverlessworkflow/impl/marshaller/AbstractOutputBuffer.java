@@ -16,7 +16,9 @@
 package io.serverlessworkflow.impl.marshaller;
 
 import io.serverlessworkflow.impl.WorkflowModel;
+import java.net.URI;
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -100,9 +102,16 @@ public abstract class AbstractOutputBuffer implements WorkflowOutputBuffer {
     } else if (object instanceof Instant value) {
       writeType(Type.INSTANT);
       writeInstant(value);
-    } else if (object instanceof byte[] bytes) {
+    } else if (object instanceof OffsetDateTime value) {
+      writeType(Type.OFFSET_DATE_TIME);
+      writeInstant(value.toInstant());
+      writeString(value.getOffset().toString());
+    } else if (object instanceof URI value) {
+      writeType(Type.URI);
+      writeString(value.toString());
+    } else if (object instanceof byte[] value) {
       writeType(Type.BYTES);
-      writeBytes(bytes);
+      writeBytes(value);
     } else {
       internalWriteObject(object);
     }

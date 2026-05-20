@@ -22,7 +22,7 @@ import io.serverlessworkflow.impl.WorkflowStatus;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-public interface PersistenceInstanceOperations {
+public interface PersistenceInstanceOperations extends CorrelationOperations {
   void writeInstanceData(WorkflowContextData workflowContext);
 
   void writeRetryTask(WorkflowContextData workflowContext, TaskContextData taskContext);

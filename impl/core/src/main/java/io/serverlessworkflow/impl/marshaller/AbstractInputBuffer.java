@@ -15,7 +15,10 @@
  */
 package io.serverlessworkflow.impl.marshaller;
 
+import java.net.URI;
 import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -111,6 +114,12 @@ public abstract class AbstractInputBuffer implements WorkflowInputBuffer {
 
       case CUSTOM:
         return readCustomObject();
+
+      case URI:
+        return URI.create(readString());
+
+      case OFFSET_DATE_TIME:
+        return OffsetDateTime.ofInstant(readInstant(), ZoneOffset.of(readString()));
 
       default:
         throw new IllegalStateException("Unsupported type " + type);

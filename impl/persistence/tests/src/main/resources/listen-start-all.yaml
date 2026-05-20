@@ -1,0 +1,18 @@
+document:
+  dsl: '1.0.1'
+  namespace: test
+  name: event-driven-schedule-all
+  version: '0.1.0'
+schedule:
+  on:
+    all:
+      - with:
+          type: com.example.hospital.events.patients.recover
+          data: ${.name == "Javierito"}
+      - with:
+          type: com.example.hospital.events.patients.recover
+          data: ${.name == "Fulanito"}
+do: 
+  - recovered:
+      set: ${[$workflow.input[]|.data.name]}
+        

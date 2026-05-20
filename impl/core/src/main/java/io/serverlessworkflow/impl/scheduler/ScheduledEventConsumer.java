@@ -19,13 +19,16 @@ import static io.serverlessworkflow.impl.WorkflowUtils.safeClose;
 
 import io.cloudevents.CloudEvent;
 import io.serverlessworkflow.impl.WorkflowDefinition;
+import io.serverlessworkflow.impl.WorkflowInstance;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowModelCollection;
 import io.serverlessworkflow.impl.events.EventConsumer;
 import io.serverlessworkflow.impl.events.EventRegistration;
+import io.serverlessworkflow.impl.events.EventRegistrationBuilder;
 import io.serverlessworkflow.impl.events.EventRegistrationBuilderInfo;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Map;
 import java.util.function.Function;
 
 public class ScheduledEventConsumer implements AutoCloseable {
@@ -53,19 +56,15 @@ public class ScheduledEventConsumer implements AutoCloseable {
         && builderInfo.registrations().registrations().size() > 1) {
       this.allStrategyCorrelationInfo =
           definition.application().allStrategyCorrelationInfoFactory().apply(definition);
-      builderInfo
-          .registrations()
-          .registrations()
-          .forEach(
-              reg -> {
-                allStrategyCorrelationInfo.register(reg);
-                registrations.add(
-                    eventConsumer.register(
-                        reg,
-                        ce ->
-                            allStrategyCorrelationInfo.correlate(
-                                reg, (CloudEvent) ce, this::start)));
-              });
+      Collection<EventRegistrationBuilder> registrationBuilders =
+          builderInfo.registrations().registrations();
+      allStrategyCorrelationInfo.init(registrationBuilders, this::start);
+      registrationBuilders.forEach(
+          reg -> {
+            registrations.add(
+                eventConsumer.register(
+                    reg, ce -> allStrategyCorrelationInfo.correlate(reg, (CloudEvent) ce)));
+          });
     } else {
       builderInfo
           .registrations()
@@ -78,13 +77,15 @@ public class ScheduledEventConsumer implements AutoCloseable {
   protected void start(CloudEvent ce) {
     WorkflowModelCollection model = definition.application().modelFactory().createCollection();
     model.add(converter.apply(ce));
-    instanceRunner.accept(model);
+    instanceRunner.accept(definition.instance(model));
   }
 
-  protected void start(Collection<CloudEvent> ces) {
+  protected void start(Map<EventRegistrationBuilder, CloudEvent> ces) {
     WorkflowModelCollection model = definition.application().modelFactory().createCollection();
-    ces.forEach(ce -> model.add(converter.apply(ce)));
-    instanceRunner.accept(model);
+    ces.values().forEach(ce -> model.add(converter.apply(ce)));
+    WorkflowInstance instance = definition.instance(model);
+    allStrategyCorrelationInfo.addMetadata(instance, ces);
+    instanceRunner.accept(instance);
   }
 
   public void close() {

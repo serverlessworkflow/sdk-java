@@ -21,18 +21,22 @@ import io.serverlessworkflow.impl.WorkflowDefinitionData;
 import io.serverlessworkflow.impl.marshaller.WorkflowBufferFactory;
 import io.serverlessworkflow.impl.persistence.bigmap.BytesMapInstanceTransaction;
 import java.util.Map;
+import org.h2.mvstore.MVStore;
 import org.h2.mvstore.tx.Transaction;
 import org.h2.mvstore.tx.TransactionMap;
 
 public class MVStoreTransaction extends BytesMapInstanceTransaction {
 
   protected static final String ID_SEPARATOR = "-";
+  private static final String PROCESSED_PREFIX = "PROCESSED" + ID_SEPARATOR;
 
   private final Transaction transaction;
+  private final MVStore store;
 
-  public MVStoreTransaction(Transaction transaction, WorkflowBufferFactory factory) {
+  public MVStoreTransaction(MVStore store, Transaction transaction, WorkflowBufferFactory factory) {
     super(factory);
     this.transaction = transaction;
+    this.store = store;
   }
 
   protected static String identifier(Workflow workflow, String sep) {
@@ -86,5 +90,22 @@ public class MVStoreTransaction extends BytesMapInstanceTransaction {
   @Override
   protected Map<String, byte[]> applicationData() {
     return transaction.openMap("APPLICATION");
+  }
+
+  @Override
+  protected Map<String, byte[]> cloudEvents(String regId) {
+    return transaction.openMap("CLOUDEVENTS" + ID_SEPARATOR + regId);
+  }
+
+  @Override
+  protected Map<String, byte[]> processedCloudEvents(String regId) {
+    return transaction.openMap(PROCESSED_PREFIX + regId);
+  }
+
+  @Override
+  protected void deleteAllProcessedMaps() {
+    store.getMapNames().stream()
+        .filter(s -> s.startsWith(PROCESSED_PREFIX))
+        .forEach(s -> transaction.removeMap(transaction.openMap(s)));
   }
 }

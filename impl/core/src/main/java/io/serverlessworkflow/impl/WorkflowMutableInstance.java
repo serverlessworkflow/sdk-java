@@ -350,8 +350,15 @@ public class WorkflowMutableInstance implements WorkflowInstance {
     }
   }
 
-  public <T> T additionalObject(String key, Supplier<T> supplier) {
+  @Override
+  public <T> T addMetadataIfAbsent(String key, Supplier<T> supplier) {
     return (T) additionalObjects.computeIfAbsent(key, k -> supplier.get());
+  }
+
+  @Override
+  public <T> Optional<T> findMetadata(String key, Class<T> objectClass) {
+    Object value = additionalObjects.get(key);
+    return objectClass.isInstance(value) ? Optional.of(objectClass.cast(value)) : Optional.empty();
   }
 
   public void restoreContext(WorkflowContext workflow, TaskContext context) {}

@@ -16,6 +16,7 @@
 package io.serverlessworkflow.impl;
 
 import java.time.Instant;
+import java.util.Optional;
 
 public interface WorkflowInstanceData {
   String id();
@@ -29,4 +30,6 @@ public interface WorkflowInstanceData {
   WorkflowStatus status();
 
   WorkflowModel context();
+
+  <T> Optional<T> findMetadata(String key, Class<T> objectClass);
 }

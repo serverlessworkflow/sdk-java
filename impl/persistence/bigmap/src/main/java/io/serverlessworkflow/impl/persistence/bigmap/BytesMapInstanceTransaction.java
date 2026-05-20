@@ -15,6 +15,9 @@
  */
 package io.serverlessworkflow.impl.persistence.bigmap;
 
+import io.cloudevents.CloudEvent;
+import io.cloudevents.SpecVersion;
+import io.cloudevents.core.builder.CloudEventBuilder;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContextData;
 import io.serverlessworkflow.impl.WorkflowInstanceData;
@@ -33,13 +36,17 @@ import io.serverlessworkflow.impl.persistence.PersistenceTaskInfo;
 import io.serverlessworkflow.impl.persistence.RetriedTaskInfo;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.net.URI;
 
 public abstract class BytesMapInstanceTransaction
-    extends BigMapInstanceTransaction<byte[], byte[], byte[], byte[]> {
+    extends BigMapInstanceTransaction<byte[], byte[], byte[], byte[], byte[], byte[]> {
 
   private static final byte VERSION_0 = 0;
   private static final byte VERSION_1 = 1;
   private static final byte VERSION_2 = 2;
+  private static final byte[] PROCESSED_VALUE = new byte[] {1};
 
   private final WorkflowBufferFactory factory;
 
@@ -49,8 +56,9 @@ public abstract class BytesMapInstanceTransaction
 
   @Override
   protected byte[] marshallTaskCompleted(WorkflowContextData contextData, TaskContext taskContext) {
-    ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-    try (WorkflowOutputBuffer writer = factory.output(bytes)) {
+
+    try (ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        WorkflowOutputBuffer writer = factory.output(bytes)) {
       writer.writeByte(VERSION_2);
       writer.writeEnum(TaskStatus.COMPLETED);
       writer.writeInstant(taskContext.completedAt());
@@ -66,29 +74,36 @@ public abstract class BytesMapInstanceTransaction
         writer.writeString(next.position().jsonPointer());
       }
       writer.writeInt(taskContext.iteration());
+      return bytes.toByteArray();
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
     }
-    return bytes.toByteArray();
   }
 
   @Override
   protected byte[] marshallStatus(WorkflowStatus status) {
-    ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-    try (WorkflowOutputBuffer writer = factory.output(bytes)) {
+    try (ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        WorkflowOutputBuffer writer = factory.output(bytes)) {
       writer.writeByte(VERSION_0);
       writer.writeEnum(status);
+      return bytes.toByteArray();
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
     }
-    return bytes.toByteArray();
   }
 
   @Override
   protected byte[] marshallInstance(WorkflowInstanceData instance) {
-    ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-    try (WorkflowOutputBuffer writer = factory.output(bytes)) {
+
+    try (ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        WorkflowOutputBuffer writer = factory.output(bytes)) {
       writer.writeByte(VERSION_0);
       writer.writeInstant(instance.startedAt());
       writeModel(writer, instance.input());
+      return bytes.toByteArray();
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
     }
-    return bytes.toByteArray();
   }
 
   protected void writeModel(WorkflowOutputBuffer writer, WorkflowModel model) {
@@ -182,5 +197,46 @@ public abstract class BytesMapInstanceTransaction
       buffer.readByte(); // version byte not used at the moment
       return buffer.readEnum(WorkflowStatus.class);
     }
+  }
+
+  protected byte[] marshallCloudEvent(CloudEvent event) {
+    try (ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        WorkflowOutputBuffer writer = factory.output(bytes)) {
+      writer.writeEnum(event.getSpecVersion());
+      writer.writeString(event.getId());
+      writer.writeString(event.getType());
+      writer.writeString(event.getSource().toString());
+      writer.writeObject(event.getSubject());
+      writer.writeObject(event.getDataSchema());
+      writer.writeObject(event.getDataContentType());
+      writer.writeObject(event.getData() == null ? null : event.getData().toBytes());
+      MarshallingUtils.writeCloudEventExtensions(writer, event);
+      return bytes.toByteArray();
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
+  }
+
+  protected CloudEvent unmarshallCloudEvent(byte[] eventData) {
+    try (ByteArrayInputStream bytes = new ByteArrayInputStream(eventData);
+        WorkflowInputBuffer reader = factory.input(bytes)) {
+      CloudEventBuilder builder =
+          CloudEventBuilder.fromSpecVersion(reader.readEnum(SpecVersion.class));
+      builder.withId(reader.readString());
+      builder.withType(reader.readString());
+      builder.withSource(URI.create(reader.readString()));
+      builder.withSubject((String) reader.readObject());
+      builder.withDataSchema((URI) reader.readObject());
+      builder.withDataContentType((String) reader.readObject());
+      builder.withData((byte[]) reader.readObject());
+      MarshallingUtils.readCloudEventExtenstions(reader, eventData, builder);
+      return builder.build();
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
+  }
+
+  protected byte[] processedValue() {
+    return PROCESSED_VALUE;
   }
 }
