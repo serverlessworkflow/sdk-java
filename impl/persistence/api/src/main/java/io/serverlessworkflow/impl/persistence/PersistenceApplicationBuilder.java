@@ -25,6 +25,11 @@ public class PersistenceApplicationBuilder {
     return new PersistenceApplicationBuilder(builder, writer);
   }
 
+  public static PersistenceApplicationBuilder builder(
+      WorkflowApplication.Builder builder, PersistenceInstanceHandlers handler) {
+    return new PersistenceApplicationBuilder(builder, handler.writer());
+  }
+
   private final WorkflowApplication.Builder appBuilder;
 
   protected PersistenceApplicationBuilder(Builder appBuilder, PersistenceInstanceWriter writer) {

@@ -13,25 +13,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.scheduler;
+package io.serverlessworkflow.impl.persistence;
 
 import io.cloudevents.CloudEvent;
-import io.serverlessworkflow.impl.WorkflowInstance;
+import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.events.EventRegistrationBuilder;
 import java.util.Collection;
 import java.util.Map;
-import java.util.function.Consumer;
+import java.util.function.Function;
 
-public interface AllStrategyCorrelationInfo extends AutoCloseable {
+class OperationAllStrategyCorrelationInfo extends AbstractAllStrategyCorrelationInfo {
 
-  void init(
-      Collection<EventRegistrationBuilder> reg,
-      Consumer<Map<EventRegistrationBuilder, CloudEvent>> starter);
+  private final PersistenceInstanceOperations operations;
 
-  void correlate(EventRegistrationBuilder reg, CloudEvent event);
+  public OperationAllStrategyCorrelationInfo(
+      WorkflowDefinition definition,
+      PersistenceExecutor executor,
+      PersistenceInstanceOperations operations) {
+    super(definition, executor);
+    this.operations = operations;
+  }
 
-  default void addMetadata(
-      WorkflowInstance instance, Map<EventRegistrationBuilder, CloudEvent> events) {}
-
-  default void close() {}
+  @Override
+  protected Collection<Map<EventRegistrationBuilder, CloudEvent>> doTransaction(
+      Function<CorrelationOperations, Collection<Map<EventRegistrationBuilder, CloudEvent>>>
+          function) {
+    return function.apply(operations);
+  }
 }

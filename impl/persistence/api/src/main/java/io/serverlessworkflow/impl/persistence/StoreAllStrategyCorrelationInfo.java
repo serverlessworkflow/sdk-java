@@ -15,31 +15,37 @@
  */
 package io.serverlessworkflow.impl.persistence;
 
+import io.cloudevents.CloudEvent;
 import io.serverlessworkflow.impl.WorkflowDefinition;
-import io.serverlessworkflow.impl.WorkflowInstance;
-import java.util.Optional;
-import java.util.stream.Stream;
+import io.serverlessworkflow.impl.events.EventRegistrationBuilder;
+import java.util.Collection;
+import java.util.Map;
+import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class DefaultPersistenceInstanceReader extends AbstractPersistenceInstanceReader {
+class StoreAllStrategyCorrelationInfo extends AbstractAllStrategyCorrelationInfo {
 
   private static final Logger logger =
-      LoggerFactory.getLogger(DefaultPersistenceInstanceReader.class);
+      LoggerFactory.getLogger(StoreAllStrategyCorrelationInfo.class);
 
   private final PersistenceInstanceStore store;
 
-  protected DefaultPersistenceInstanceReader(PersistenceInstanceStore store) {
+  public StoreAllStrategyCorrelationInfo(
+      WorkflowDefinition definition, PersistenceExecutor executor, PersistenceInstanceStore store) {
+    super(definition, executor);
     this.store = store;
   }
 
   @Override
-  public Optional<WorkflowInstance> find(WorkflowDefinition definition, String instanceId) {
+  protected Collection<Map<EventRegistrationBuilder, CloudEvent>> doTransaction(
+      Function<CorrelationOperations, Collection<Map<EventRegistrationBuilder, CloudEvent>>>
+          function) {
     PersistenceInstanceTransaction transaction = store.begin();
+    Collection<Map<EventRegistrationBuilder, CloudEvent>> result;
     try {
-      Optional<WorkflowInstance> instance = find(transaction, definition, instanceId);
+      result = function.apply(transaction);
       transaction.commit(definition);
-      return instance;
     } catch (Exception ex) {
       try {
         transaction.rollback(definition);
@@ -48,12 +54,6 @@ public class DefaultPersistenceInstanceReader extends AbstractPersistenceInstanc
       }
       throw ex;
     }
-  }
-
-  @Override
-  public Stream<WorkflowInstance> scanAll(WorkflowDefinition definition, String applicationId) {
-    PersistenceInstanceTransaction transaction = store.begin();
-    return super.scanAll(transaction, definition, applicationId)
-        .onClose(() -> transaction.commit(definition));
+    return result;
   }
 }

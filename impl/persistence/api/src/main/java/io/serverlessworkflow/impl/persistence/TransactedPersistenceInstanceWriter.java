@@ -27,21 +27,21 @@ public abstract class TransactedPersistenceInstanceWriter
   protected CompletableFuture<Void> doTransaction(
       Consumer<PersistenceInstanceOperations> operation, WorkflowContextData context) {
     return persistenceExecutor()
-        .execute(() -> doTransaction(operation, context.definition()), context);
+        .execute(() -> doTransaction(operation, context.definition()), context.definition());
   }
 
   @Override
   protected CompletableFuture<Void> doStartInstance(
       Consumer<PersistenceInstanceOperations> operation, WorkflowContextData context) {
     return persistenceExecutor()
-        .execute(() -> doTransaction(operation, context.definition()), context);
+        .execute(() -> doTransaction(operation, context.definition()), context.definition());
   }
 
   @Override
   protected CompletableFuture<Void> doCompleteInstance(
       Consumer<PersistenceInstanceOperations> operation, WorkflowContextData context) {
     return persistenceExecutor()
-        .execute(() -> doTransaction(operation, context.definition()), context);
+        .execute(() -> doTransaction(operation, context.definition()), context.definition());
   }
 
   protected abstract void doTransaction(

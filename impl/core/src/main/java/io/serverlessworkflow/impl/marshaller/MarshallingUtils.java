@@ -15,14 +15,21 @@
  */
 package io.serverlessworkflow.impl.marshaller;
 
+import io.cloudevents.CloudEvent;
+import io.cloudevents.core.builder.CloudEventBuilder;
 import io.serverlessworkflow.impl.WorkflowModel;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.lang.reflect.Modifier;
+import java.net.URI;
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import org.slf4j.Logger;
@@ -69,6 +76,58 @@ public class MarshallingUtils {
 
   public static byte[] writeString(WorkflowBufferFactory factory, String value) {
     return writeValue(factory, value, (b, v) -> b.writeString(v));
+  }
+
+  public static byte[] writeCloudEventExtensions(WorkflowBufferFactory factory, CloudEvent event) {
+    try (ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
+        WorkflowOutputBuffer out = factory.output(bytesOut)) {
+      writeCloudEventExtensions(out, event);
+      return bytesOut.toByteArray();
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
+  }
+
+  public static void writeCloudEventExtensions(WorkflowOutputBuffer out, CloudEvent event) {
+    Set<String> extensionNames = event.getExtensionNames();
+    out.writeInt(extensionNames.size());
+    for (String extensionName : extensionNames) {
+      out.writeString(extensionName);
+      out.writeObject(event.getExtension(extensionName));
+    }
+  }
+
+  public static CloudEventBuilder readCloudEventExtensions(
+      WorkflowBufferFactory factory, byte[] value, CloudEventBuilder builder) {
+    try (ByteArrayInputStream bytesInt = new ByteArrayInputStream(value);
+        WorkflowInputBuffer in = factory.input(bytesInt)) {
+      return readCloudEventExtenstions(in, value, builder);
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
+  }
+
+  public static CloudEventBuilder readCloudEventExtenstions(
+      WorkflowInputBuffer in, byte[] value, CloudEventBuilder builder) {
+    int size = in.readInt();
+    while (size-- > 0) {
+      String extensionName = in.readString();
+      Object extensionValue = in.readObject();
+      if (extensionValue instanceof Number extValue) {
+        builder.withExtension(extensionName, extValue);
+      } else if (extensionValue instanceof String extValue) {
+        builder.withExtension(extensionName, extValue);
+      } else if (extensionValue instanceof Boolean extValue) {
+        builder.withExtension(extensionName, extValue);
+      } else if (extensionValue instanceof byte[] extValue) {
+        builder.withExtension(extensionName, extValue);
+      } else if (extensionValue instanceof OffsetDateTime extValue) {
+        builder.withExtension(extensionName, extValue);
+      } else if (extensionValue instanceof URI extValue) {
+        builder.withExtension(extensionName, extValue);
+      }
+    }
+    return builder;
   }
 
   public static String readString(WorkflowBufferFactory factory, byte[] value) {

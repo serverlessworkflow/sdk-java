@@ -18,14 +18,25 @@ package io.serverlessworkflow.impl.persistence;
 import io.serverlessworkflow.impl.TaskContextData;
 import io.serverlessworkflow.impl.WorkflowContextData;
 import io.serverlessworkflow.impl.WorkflowStatus;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 public abstract class AbstractPersistenceInstanceWriter implements PersistenceInstanceWriter {
 
+  public static final String CLOUD_EVENT_IDS = "CloudEventIds";
+
   @Override
   public CompletableFuture<Void> started(WorkflowContextData workflowContext) {
-    return doStartInstance(t -> t.writeInstanceData(workflowContext), workflowContext);
+    return doStartInstance(
+        t -> {
+          t.writeInstanceData(workflowContext);
+          workflowContext
+              .instanceData()
+              .findMetadata(CLOUD_EVENT_IDS, Map.class)
+              .ifPresent(c -> t.removeCloudEvents(c));
+        },
+        workflowContext);
   }
 
   @Override

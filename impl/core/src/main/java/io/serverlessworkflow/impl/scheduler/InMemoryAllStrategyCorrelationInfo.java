@@ -26,38 +26,50 @@ import java.util.function.Consumer;
 
 public class InMemoryAllStrategyCorrelationInfo implements AllStrategyCorrelationInfo {
 
+  private static class InMemoryAllStrategyCorrelationInfoHolder {
+    private static InMemoryAllStrategyCorrelationInfo INSTANCE =
+        new InMemoryAllStrategyCorrelationInfo();
+  }
+
+  public static AllStrategyCorrelationInfo instance() {
+    return InMemoryAllStrategyCorrelationInfoHolder.INSTANCE;
+  }
+
+  private InMemoryAllStrategyCorrelationInfo() {}
+
   private Map<EventRegistrationBuilder, List<CloudEvent>> correlatedEvents;
+  private Consumer<Map<EventRegistrationBuilder, CloudEvent>> starter;
 
   @Override
-  public void correlate(
-      EventRegistrationBuilder reg, CloudEvent event, Consumer<Collection<CloudEvent>> starter) {
-    Collection<CloudEvent> collection = new ArrayList<>();
+  public void correlate(EventRegistrationBuilder reg, CloudEvent event) {
+    Map<EventRegistrationBuilder, CloudEvent> result = new HashMap<>();
     // to minimize the critical section, conversion is done later, here we are
     // performing just collection, if any
     synchronized (correlatedEvents) {
       correlatedEvents.get(reg).add(event);
-      Collection<List<CloudEvent>> events = correlatedEvents.values();
-      if (satisfyCondition(events)) {
-        for (List<CloudEvent> values : events) {
-          collection.add(values.remove(0));
+      if (satisfyCondition(correlatedEvents)) {
+        for (java.util.Map.Entry<EventRegistrationBuilder, List<CloudEvent>> values :
+            correlatedEvents.entrySet()) {
+          result.put(values.getKey(), values.getValue().remove(0));
         }
       }
     }
-    if (!collection.isEmpty()) {
-      starter.accept(collection);
+    if (!result.isEmpty()) {
+      starter.accept(result);
     }
   }
 
   @Override
-  public void register(EventRegistrationBuilder reg) {
-    if (correlatedEvents == null) {
-      correlatedEvents = new HashMap<>();
-    }
-    correlatedEvents.put(reg, new ArrayList<CloudEvent>());
+  public void init(
+      Collection<EventRegistrationBuilder> regs,
+      Consumer<Map<EventRegistrationBuilder, CloudEvent>> starter) {
+    correlatedEvents = new HashMap<>();
+    this.starter = starter;
+    regs.forEach(reg -> correlatedEvents.put(reg, new ArrayList<CloudEvent>()));
   }
 
-  private boolean satisfyCondition(Collection<List<CloudEvent>> events) {
-    for (List<CloudEvent> values : events) {
+  private boolean satisfyCondition(Map<EventRegistrationBuilder, List<CloudEvent>> events) {
+    for (List<CloudEvent> values : events.values()) {
       if (values.isEmpty()) {
         return false;
       }

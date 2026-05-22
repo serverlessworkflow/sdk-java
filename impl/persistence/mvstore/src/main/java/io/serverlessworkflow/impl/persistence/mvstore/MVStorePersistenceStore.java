@@ -23,7 +23,8 @@ import org.h2.mvstore.MVStore;
 import org.h2.mvstore.tx.TransactionStore;
 
 public class MVStorePersistenceStore implements PersistenceInstanceStore {
-  private final TransactionStore mvStore;
+  private final TransactionStore transactionStore;
+  private final MVStore mvStore;
   private WorkflowBufferFactory factory;
 
   public MVStorePersistenceStore(String dbName) {
@@ -31,7 +32,8 @@ public class MVStorePersistenceStore implements PersistenceInstanceStore {
   }
 
   public MVStorePersistenceStore(String dbName, WorkflowBufferFactory factory) {
-    this.mvStore = new TransactionStore(MVStore.open(dbName));
+    this.mvStore = MVStore.open(dbName);
+    this.transactionStore = new TransactionStore(mvStore);
     this.factory = factory;
   }
 
@@ -41,7 +43,7 @@ public class MVStorePersistenceStore implements PersistenceInstanceStore {
   }
 
   @Override
-  public BigMapInstanceTransaction<byte[], byte[], byte[], byte[]> begin() {
-    return new MVStoreTransaction(mvStore.begin(), factory);
+  public BigMapInstanceTransaction<byte[], byte[], byte[], byte[], byte[], byte[]> begin() {
+    return new MVStoreTransaction(mvStore, transactionStore.begin(), factory);
   }
 }

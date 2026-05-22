@@ -13,25 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.scheduler;
+package io.serverlessworkflow.impl.persistence;
 
 import io.cloudevents.CloudEvent;
-import io.serverlessworkflow.impl.WorkflowInstance;
-import io.serverlessworkflow.impl.events.EventRegistrationBuilder;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 
-public interface AllStrategyCorrelationInfo extends AutoCloseable {
+interface CorrelationOperations {
 
-  void init(
-      Collection<EventRegistrationBuilder> reg,
-      Consumer<Map<EventRegistrationBuilder, CloudEvent>> starter);
+  default Map<String, List<CloudEvent>> retrieveEvents(Collection<String> targetRegIds) {
+    return Map.of();
+  }
 
-  void correlate(EventRegistrationBuilder reg, CloudEvent event);
+  default void storeEvent(String regId, CloudEvent event) {}
 
-  default void addMetadata(
-      WorkflowInstance instance, Map<EventRegistrationBuilder, CloudEvent> events) {}
+  default void markAsProcessed(Map<String, Collection<String>> regCeIds) {}
 
-  default void close() {}
+  default void clearProcessed() {}
+
+  default void removeCloudEvents(Map<String, String> ids) {}
 }

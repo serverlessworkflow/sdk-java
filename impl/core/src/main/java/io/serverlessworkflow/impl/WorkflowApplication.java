@@ -444,7 +444,8 @@ public class WorkflowApplication implements AutoCloseable {
                 .orElseGet(() -> new DefaultCloudEventPredicateFactory());
       }
       if (allStrategyCorrelationInfoFactory == null) {
-        allStrategyCorrelationInfoFactory = definition -> new InMemoryAllStrategyCorrelationInfo();
+        allStrategyCorrelationInfoFactory =
+            definition -> InMemoryAllStrategyCorrelationInfo.instance();
       }
 
       if (defaultCatalogURI == null) {

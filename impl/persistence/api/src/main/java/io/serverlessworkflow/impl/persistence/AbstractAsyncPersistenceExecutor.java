@@ -15,16 +15,24 @@
  */
 package io.serverlessworkflow.impl.persistence;
 
-import io.serverlessworkflow.impl.WorkflowContextData;
+import io.serverlessworkflow.impl.WorkflowDefinitionData;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Supplier;
 
 public abstract class AbstractAsyncPersistenceExecutor implements PersistenceExecutor {
   @Override
-  public CompletableFuture<Void> execute(Runnable runnable, WorkflowContextData context) {
+  public CompletableFuture<Void> execute(Runnable runnable, WorkflowDefinitionData definition) {
+
     return CompletableFuture.runAsync(
-        runnable, executorService().orElse(context.definition().application().executorService()));
+        runnable, executorService().orElse(definition.application().executorService()));
+  }
+
+  @Override
+  public <T> CompletableFuture<T> execute(Supplier<T> runnable, WorkflowDefinitionData definition) {
+    return CompletableFuture.supplyAsync(
+        runnable, executorService().orElse(definition.application().executorService()));
   }
 
   protected abstract Optional<ExecutorService> executorService();

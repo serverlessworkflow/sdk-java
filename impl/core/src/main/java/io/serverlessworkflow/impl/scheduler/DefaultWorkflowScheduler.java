@@ -16,7 +16,7 @@
 package io.serverlessworkflow.impl.scheduler;
 
 import io.serverlessworkflow.impl.WorkflowDefinition;
-import io.serverlessworkflow.impl.WorkflowModel;
+import io.serverlessworkflow.impl.WorkflowInstance;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -83,10 +83,10 @@ public class DefaultWorkflowScheduler extends ExecutorServiceWorkflowScheduler {
       }
 
       @Override
-      public void accept(WorkflowModel model) {
+      public void accept(WorkflowInstance instance) {
         if (!cancelled.get()) {
           scheduleNext();
-          super.accept(model);
+          super.accept(instance);
         }
       }
     }

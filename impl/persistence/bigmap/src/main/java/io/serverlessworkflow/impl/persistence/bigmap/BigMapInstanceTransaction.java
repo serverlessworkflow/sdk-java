@@ -15,6 +15,7 @@
  */
 package io.serverlessworkflow.impl.persistence.bigmap;
 
+import io.cloudevents.CloudEvent;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.TaskContextData;
 import io.serverlessworkflow.impl.WorkflowContextData;
@@ -26,13 +27,17 @@ import io.serverlessworkflow.impl.persistence.PersistenceInstanceInfo;
 import io.serverlessworkflow.impl.persistence.PersistenceInstanceTransaction;
 import io.serverlessworkflow.impl.persistence.PersistenceTaskInfo;
 import io.serverlessworkflow.impl.persistence.PersistenceWorkflowInfo;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public abstract class BigMapInstanceTransaction<V, T, S, A>
+public abstract class BigMapInstanceTransaction<V, T, S, A, C, P>
     implements PersistenceInstanceTransaction {
 
   @Override
@@ -108,6 +113,42 @@ public abstract class BigMapInstanceTransaction<V, T, S, A>
     clearStatus(workflowContext.definition(), key(workflowContext));
   }
 
+  public Map<String, List<CloudEvent>> retrieveEvents(Collection<String> targetRegIds) {
+    Map<String, List<CloudEvent>> result = new HashMap<>();
+    targetRegIds.forEach(
+        regId -> {
+          Map<String, P> processedCes = processedCloudEvents(regId);
+          Map<String, C> ces = cloudEvents(regId);
+          result.put(
+              regId,
+              ces.values().stream()
+                  .map(this::unmarshallCloudEvent)
+                  .filter(ce -> !processedCes.containsKey(ce.getId()))
+                  .collect(Collectors.toCollection(ArrayList::new)));
+        });
+    return result;
+  }
+
+  public void storeEvent(String regId, CloudEvent event) {
+    cloudEvents(regId).put(event.getId(), marshallCloudEvent(event));
+  }
+
+  public void markAsProcessed(Map<String, Collection<String>> regCeIds) {
+    regCeIds.forEach(
+        (k, v) -> {
+          Map<String, P> processed = processedCloudEvents(k);
+          v.forEach(id -> processed.put(id, processedValue()));
+        });
+  }
+
+  public void clearProcessed() {
+    deleteAllProcessedMaps();
+  }
+
+  public void removeCloudEvents(Map<String, String> ids) {
+    ids.forEach((k, v) -> cloudEvents(k).remove(v));
+  }
+
   private void clearStatus(WorkflowDefinitionData definition, String key) {
     status(definition).remove(key);
   }
@@ -133,9 +174,19 @@ public abstract class BigMapInstanceTransaction<V, T, S, A>
 
   protected abstract Map<String, V> instanceData(WorkflowDefinitionData definition);
 
-  protected abstract Map<String, S> status(WorkflowDefinitionData workflowContext);
+  protected abstract Map<String, S> status(WorkflowDefinitionData definition);
 
   protected abstract Map<String, T> tasks(String instanceId);
+
+  protected abstract Map<String, C> cloudEvents(String regId);
+
+  protected abstract Map<String, P> processedCloudEvents(String regId);
+
+  protected abstract C marshallCloudEvent(CloudEvent event);
+
+  protected abstract CloudEvent unmarshallCloudEvent(C eventData);
+
+  protected abstract P processedValue();
 
   protected abstract V marshallInstance(WorkflowInstanceData instance);
 
@@ -158,4 +209,6 @@ public abstract class BigMapInstanceTransaction<V, T, S, A>
   protected abstract String unmarshallApplicationId(A a);
 
   protected abstract void removeTasks(String key);
+
+  protected abstract void deleteAllProcessedMaps();
 }

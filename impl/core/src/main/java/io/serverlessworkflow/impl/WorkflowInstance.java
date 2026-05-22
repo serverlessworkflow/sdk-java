@@ -16,6 +16,7 @@
 package io.serverlessworkflow.impl;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Supplier;
 
 public interface WorkflowInstance extends WorkflowInstanceData {
   CompletableFuture<WorkflowModel> start();
@@ -49,4 +50,6 @@ public interface WorkflowInstance extends WorkflowInstanceData {
   boolean cancel();
 
   boolean resume();
+
+  <T> T addMetadataIfAbsent(String key, Supplier<T> supplier);
 }

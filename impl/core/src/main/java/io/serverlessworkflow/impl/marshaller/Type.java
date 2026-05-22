@@ -29,5 +29,7 @@ enum Type {
   MAP,
   COLLECTION,
   NULL,
-  CUSTOM
+  CUSTOM,
+  OFFSET_DATE_TIME,
+  URI
 }

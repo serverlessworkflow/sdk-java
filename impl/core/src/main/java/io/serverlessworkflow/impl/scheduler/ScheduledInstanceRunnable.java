@@ -20,7 +20,7 @@ import io.serverlessworkflow.impl.WorkflowInstance;
 import io.serverlessworkflow.impl.WorkflowModel;
 import java.util.function.Consumer;
 
-public class ScheduledInstanceRunnable implements Runnable, Consumer<WorkflowModel> {
+public class ScheduledInstanceRunnable implements Runnable, Consumer<WorkflowInstance> {
 
   protected final WorkflowDefinition definition;
 
@@ -30,16 +30,20 @@ public class ScheduledInstanceRunnable implements Runnable, Consumer<WorkflowMod
 
   @Override
   public void run() {
-    accept(definition.application().modelFactory().fromNull());
+    accept(definition.instance());
   }
 
   @Override
-  public void accept(WorkflowModel model) {
-    runScheduledInstance(definition, model);
+  public void accept(WorkflowInstance instance) {
+    runScheduledInstance(definition, instance);
   }
 
   public static void runScheduledInstance(WorkflowDefinition definition, WorkflowModel model) {
-    WorkflowInstance instance = definition.instance(model);
+    runScheduledInstance(definition, definition.instance(model));
+  }
+
+  private static void runScheduledInstance(
+      WorkflowDefinition definition, WorkflowInstance instance) {
     definition.addScheduledInstance(instance);
     definition.application().executorService().execute(() -> instance.start());
   }

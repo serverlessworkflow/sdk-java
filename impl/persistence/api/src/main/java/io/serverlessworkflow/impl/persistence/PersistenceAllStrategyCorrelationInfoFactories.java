@@ -15,14 +15,19 @@
  */
 package io.serverlessworkflow.impl.persistence;
 
-import io.serverlessworkflow.impl.WorkflowDefinitionData;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Supplier;
+import io.serverlessworkflow.impl.scheduler.AllStrategyCorrelationInfoFactory;
 
-public interface PersistenceExecutor extends AutoCloseable {
-  <T> CompletableFuture<T> execute(Supplier<T> runnable, WorkflowDefinitionData definition);
+public class PersistenceAllStrategyCorrelationInfoFactories {
 
-  CompletableFuture<Void> execute(Runnable runnable, WorkflowDefinitionData definition);
+  private PersistenceAllStrategyCorrelationInfoFactories() {}
 
-  default void close() {}
+  public static AllStrategyCorrelationInfoFactory from(
+      PersistenceExecutor executor, PersistenceInstanceStore store) {
+    return new StoreAllStrategyCorrelationInfoFactory(executor, store);
+  }
+
+  public static AllStrategyCorrelationInfoFactory from(
+      PersistenceExecutor executor, PersistenceInstanceOperations operations) {
+    return new OperationAllStrategyCorrelationInfoFactory(executor, operations);
+  }
 }
