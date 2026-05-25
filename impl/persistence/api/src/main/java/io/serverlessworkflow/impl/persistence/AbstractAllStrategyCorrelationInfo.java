@@ -90,19 +90,33 @@ public abstract class AbstractAllStrategyCorrelationInfo implements AllStrategyC
       CorrelationOperations operations, String reg, CloudEvent event) {
     logger.debug(
         "Received event {} for definition {} and registration {}", event, definition.id(), reg);
+    Map<String, List<CloudEvent>> events = initMap();
+    operations.retrieveEvents(events);
+    events.get(reg).add(event);
+    Collection<Map<EventRegistrationBuilder, CloudEvent>> result = checkCorrelation(events);
     operations.storeEvent(reg, event);
-    return checkCorrelation(operations);
+    markProcessed(operations, result);
+    return result;
+  }
+
+  private Map<String, List<CloudEvent>> initMap() {
+    return id2RegMapping.keySet().stream()
+        .collect(Collectors.toMap(k -> k, k -> new ArrayList<>()));
   }
 
   private Collection<Map<EventRegistrationBuilder, CloudEvent>> startupCheck(
       CorrelationOperations operations) {
+    logger.debug("Checking cloud events for definition {}", definition.id());
     operations.clearProcessed();
-    return checkCorrelation(operations);
+    Map<String, List<CloudEvent>> events = initMap();
+    operations.retrieveEvents(events);
+    Collection<Map<EventRegistrationBuilder, CloudEvent>> result = checkCorrelation(events);
+    markProcessed(operations, result);
+    return result;
   }
 
   private final Collection<Map<EventRegistrationBuilder, CloudEvent>> checkCorrelation(
-      CorrelationOperations operations) {
-    Map<String, List<CloudEvent>> events = operations.retrieveEvents(id2RegMapping.keySet());
+      Map<String, List<CloudEvent>> events) {
     logger.debug("Stored CloudEvents for definition {} are {}", definition.id(), events);
     if (events.isEmpty()) {
       return List.of();
@@ -117,13 +131,18 @@ public abstract class AbstractAllStrategyCorrelationInfo implements AllStrategyC
           notDone = false;
           break;
         }
-        CloudEvent retrieved = list.remove(0);
-        row.put(id2RegMapping.get(item.getKey()), retrieved);
+        row.put(id2RegMapping.get(item.getKey()), list.remove(0));
       }
       if (notDone) {
         result.add(row);
       }
     }
+    return result;
+  }
+
+  private void markProcessed(
+      CorrelationOperations operations,
+      Collection<Map<EventRegistrationBuilder, CloudEvent>> result) {
     if (!result.isEmpty()) {
       Map<String, Collection<String>> processed = new HashMap<>();
       for (Map<EventRegistrationBuilder, CloudEvent> item : result) {
@@ -135,7 +154,6 @@ public abstract class AbstractAllStrategyCorrelationInfo implements AllStrategyC
       }
       operations.markAsProcessed(processed);
     }
-    return result;
   }
 
   public void addMetadata(

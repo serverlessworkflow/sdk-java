@@ -27,9 +27,7 @@ import io.serverlessworkflow.impl.persistence.PersistenceInstanceInfo;
 import io.serverlessworkflow.impl.persistence.PersistenceInstanceTransaction;
 import io.serverlessworkflow.impl.persistence.PersistenceTaskInfo;
 import io.serverlessworkflow.impl.persistence.PersistenceWorkflowInfo;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -113,26 +111,28 @@ public abstract class BigMapInstanceTransaction<V, T, S, A, C, P>
     clearStatus(workflowContext.definition(), key(workflowContext));
   }
 
-  public Map<String, List<CloudEvent>> retrieveEvents(Collection<String> targetRegIds) {
-    Map<String, List<CloudEvent>> result = new HashMap<>();
-    targetRegIds.forEach(
-        regId -> {
-          Map<String, P> processedCes = processedCloudEvents(regId);
-          Map<String, C> ces = cloudEvents(regId);
-          result.put(
-              regId,
-              ces.values().stream()
+  @Override
+  public void retrieveEvents(Map<String, List<CloudEvent>> events) {
+    events
+        .entrySet()
+        .forEach(
+            e -> {
+              String regId = e.getKey();
+              List<CloudEvent> cloudEvents = e.getValue();
+              Map<String, P> processedCes = processedCloudEvents(regId);
+              cloudEvents(regId).values().stream()
                   .map(this::unmarshallCloudEvent)
                   .filter(ce -> !processedCes.containsKey(ce.getId()))
-                  .collect(Collectors.toCollection(ArrayList::new)));
-        });
-    return result;
+                  .forEach(cloudEvents::add);
+            });
   }
 
+  @Override
   public void storeEvent(String regId, CloudEvent event) {
     cloudEvents(regId).put(event.getId(), marshallCloudEvent(event));
   }
 
+  @Override
   public void markAsProcessed(Map<String, Collection<String>> regCeIds) {
     regCeIds.forEach(
         (k, v) -> {
@@ -141,6 +141,7 @@ public abstract class BigMapInstanceTransaction<V, T, S, A, C, P>
         });
   }
 
+  @Override
   public void clearProcessed() {
     deleteAllProcessedMaps();
   }

@@ -60,11 +60,10 @@ public class ScheduledEventConsumer implements AutoCloseable {
           builderInfo.registrations().registrations();
       allStrategyCorrelationInfo.init(registrationBuilders, this::start);
       registrationBuilders.forEach(
-          reg -> {
-            registrations.add(
-                eventConsumer.register(
-                    reg, ce -> allStrategyCorrelationInfo.correlate(reg, (CloudEvent) ce)));
-          });
+          reg ->
+              registrations.add(
+                  eventConsumer.register(
+                      reg, ce -> allStrategyCorrelationInfo.correlate(reg, (CloudEvent) ce))));
     } else {
       builderInfo
           .registrations()
