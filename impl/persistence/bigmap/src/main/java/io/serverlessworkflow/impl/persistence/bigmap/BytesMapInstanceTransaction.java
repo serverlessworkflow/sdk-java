@@ -39,6 +39,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.URI;
+import java.time.OffsetDateTime;
 
 public abstract class BytesMapInstanceTransaction
     extends BigMapInstanceTransaction<byte[], byte[], byte[], byte[], byte[], byte[]> {
@@ -205,7 +206,8 @@ public abstract class BytesMapInstanceTransaction
       writer.writeEnum(event.getSpecVersion());
       writer.writeString(event.getId());
       writer.writeString(event.getType());
-      writer.writeString(event.getSource().toString());
+      writer.writeURI(event.getSource());
+      writer.writeObject(event.getTime());
       writer.writeObject(event.getSubject());
       writer.writeObject(event.getDataSchema());
       writer.writeObject(event.getDataContentType());
@@ -224,7 +226,8 @@ public abstract class BytesMapInstanceTransaction
           CloudEventBuilder.fromSpecVersion(reader.readEnum(SpecVersion.class));
       builder.withId(reader.readString());
       builder.withType(reader.readString());
-      builder.withSource(URI.create(reader.readString()));
+      builder.withSource(reader.readURI());
+      builder.withTime((OffsetDateTime) reader.readObject());
       builder.withSubject((String) reader.readObject());
       builder.withDataSchema((URI) reader.readObject());
       builder.withDataContentType((String) reader.readObject());

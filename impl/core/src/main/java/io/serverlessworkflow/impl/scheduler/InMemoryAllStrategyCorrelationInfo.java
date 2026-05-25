@@ -17,10 +17,10 @@ package io.serverlessworkflow.impl.scheduler;
 
 import io.cloudevents.CloudEvent;
 import io.serverlessworkflow.impl.events.EventRegistrationBuilder;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -37,7 +37,7 @@ public class InMemoryAllStrategyCorrelationInfo implements AllStrategyCorrelatio
 
   private InMemoryAllStrategyCorrelationInfo() {}
 
-  private Map<EventRegistrationBuilder, List<CloudEvent>> correlatedEvents;
+  private Map<EventRegistrationBuilder, Collection<CloudEvent>> correlatedEvents;
   private Consumer<Map<EventRegistrationBuilder, CloudEvent>> starter;
 
   @Override
@@ -48,9 +48,11 @@ public class InMemoryAllStrategyCorrelationInfo implements AllStrategyCorrelatio
     synchronized (correlatedEvents) {
       correlatedEvents.get(reg).add(event);
       if (satisfyCondition(correlatedEvents)) {
-        for (java.util.Map.Entry<EventRegistrationBuilder, List<CloudEvent>> values :
+        for (java.util.Map.Entry<EventRegistrationBuilder, Collection<CloudEvent>> values :
             correlatedEvents.entrySet()) {
-          result.put(values.getKey(), values.getValue().remove(0));
+          Iterator<CloudEvent> iter = values.getValue().iterator();
+          result.put(values.getKey(), iter.next());
+          iter.remove();
         }
       }
     }
@@ -65,11 +67,11 @@ public class InMemoryAllStrategyCorrelationInfo implements AllStrategyCorrelatio
       Consumer<Map<EventRegistrationBuilder, CloudEvent>> starter) {
     correlatedEvents = new HashMap<>();
     this.starter = starter;
-    regs.forEach(reg -> correlatedEvents.put(reg, new ArrayList<CloudEvent>()));
+    regs.forEach(reg -> correlatedEvents.put(reg, new LinkedHashSet<CloudEvent>()));
   }
 
-  private boolean satisfyCondition(Map<EventRegistrationBuilder, List<CloudEvent>> events) {
-    for (List<CloudEvent> values : events.values()) {
+  private boolean satisfyCondition(Map<EventRegistrationBuilder, Collection<CloudEvent>> events) {
+    for (Collection<CloudEvent> values : events.values()) {
       if (values.isEmpty()) {
         return false;
       }

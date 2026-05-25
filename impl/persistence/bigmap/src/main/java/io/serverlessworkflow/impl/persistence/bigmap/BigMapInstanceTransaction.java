@@ -28,7 +28,6 @@ import io.serverlessworkflow.impl.persistence.PersistenceInstanceTransaction;
 import io.serverlessworkflow.impl.persistence.PersistenceTaskInfo;
 import io.serverlessworkflow.impl.persistence.PersistenceWorkflowInfo;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -112,18 +111,18 @@ public abstract class BigMapInstanceTransaction<V, T, S, A, C, P>
   }
 
   @Override
-  public void retrieveEvents(Map<String, List<CloudEvent>> events) {
+  public void retrieveEvents(Map<String, Collection<CloudEvent>> events) {
     events
         .entrySet()
         .forEach(
             e -> {
               String regId = e.getKey();
-              List<CloudEvent> cloudEvents = e.getValue();
+              Collection<CloudEvent> ces = e.getValue();
               Map<String, P> processedCes = processedCloudEvents(regId);
               cloudEvents(regId).values().stream()
                   .map(this::unmarshallCloudEvent)
                   .filter(ce -> !processedCes.containsKey(ce.getId()))
-                  .forEach(cloudEvents::add);
+                  .forEach(ces::add);
             });
   }
 

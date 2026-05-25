@@ -23,6 +23,8 @@ import io.serverlessworkflow.impl.scheduler.AllStrategyCorrelationInfo;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -80,8 +82,16 @@ public abstract class AbstractAllStrategyCorrelationInfo implements AllStrategyC
       Consumer<Map<EventRegistrationBuilder, CloudEvent>> starter) {
     synchronized (this) {
       this.completableFuture =
-          completableFuture.thenCompose(
-              v -> executor.execute(() -> doTransaction(function), definition));
+          completableFuture
+              .thenCompose(v -> executor.execute(() -> doTransaction(function), definition))
+              .exceptionally(
+                  ex -> {
+                    logger.error(
+                        "Exception processing correlation task for definition {}",
+                        definition.id(),
+                        ex);
+                    return List.of();
+                  });
       completableFuture.thenAccept(events -> events.forEach(starter));
     }
   }
@@ -90,7 +100,7 @@ public abstract class AbstractAllStrategyCorrelationInfo implements AllStrategyC
       CorrelationOperations operations, String reg, CloudEvent event) {
     logger.debug(
         "Received event {} for definition {} and registration {}", event, definition.id(), reg);
-    Map<String, List<CloudEvent>> events = initMap();
+    Map<String, Collection<CloudEvent>> events = initMap();
     operations.retrieveEvents(events);
     events.get(reg).add(event);
     Collection<Map<EventRegistrationBuilder, CloudEvent>> result = checkCorrelation(events);
@@ -99,16 +109,16 @@ public abstract class AbstractAllStrategyCorrelationInfo implements AllStrategyC
     return result;
   }
 
-  private Map<String, List<CloudEvent>> initMap() {
+  private Map<String, Collection<CloudEvent>> initMap() {
     return id2RegMapping.keySet().stream()
-        .collect(Collectors.toMap(k -> k, k -> new ArrayList<>()));
+        .collect(Collectors.toMap(k -> k, k -> new LinkedHashSet<>()));
   }
 
   private Collection<Map<EventRegistrationBuilder, CloudEvent>> startupCheck(
       CorrelationOperations operations) {
     logger.debug("Checking cloud events for definition {}", definition.id());
     operations.clearProcessed();
-    Map<String, List<CloudEvent>> events = initMap();
+    Map<String, Collection<CloudEvent>> events = initMap();
     operations.retrieveEvents(events);
     Collection<Map<EventRegistrationBuilder, CloudEvent>> result = checkCorrelation(events);
     markProcessed(operations, result);
@@ -116,22 +126,23 @@ public abstract class AbstractAllStrategyCorrelationInfo implements AllStrategyC
   }
 
   private final Collection<Map<EventRegistrationBuilder, CloudEvent>> checkCorrelation(
-      Map<String, List<CloudEvent>> events) {
+      Map<String, Collection<CloudEvent>> events) {
     logger.debug("Stored CloudEvents for definition {} are {}", definition.id(), events);
-    if (events.isEmpty()) {
-      return List.of();
-    }
     Collection<Map<EventRegistrationBuilder, CloudEvent>> result = new ArrayList<>();
+    Map<String, Iterator<CloudEvent>> iteratingEvents =
+        events.entrySet().stream()
+            .collect(Collectors.toMap(Entry::getKey, e -> e.getValue().iterator()));
     boolean notDone = true;
     while (notDone) {
       Map<EventRegistrationBuilder, CloudEvent> row = new HashMap<>();
-      for (Entry<String, List<CloudEvent>> item : events.entrySet()) {
-        List<CloudEvent> list = item.getValue();
-        if (list.isEmpty()) {
+      for (Entry<String, Iterator<CloudEvent>> item : iteratingEvents.entrySet()) {
+        Iterator<CloudEvent> iter = item.getValue();
+        if (!iter.hasNext()) {
           notDone = false;
           break;
         }
-        row.put(id2RegMapping.get(item.getKey()), list.remove(0));
+        row.put(id2RegMapping.get(item.getKey()), iter.next());
+        iter.remove();
       }
       if (notDone) {
         result.add(row);
