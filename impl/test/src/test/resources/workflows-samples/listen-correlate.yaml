@@ -4,7 +4,9 @@ document:
   name: listen-correlate
   version: '0.1.0'
 input:
-  from: '{ patientId: .patientId }'
+  # Raw input shape: { "patientId": "P123" }
+  # Transforms to: { "id": "P123" } — reshapes patientId into id field
+  from: '{ id: .patientId }'
 do:
   - waitForPatient:
       listen:
@@ -15,4 +17,6 @@ do:
             correlate:
               patientId:
                 from: .data.patientId
-                expect: .patientId
+                # expect is evaluated against the task input (post input.from transform),
+                # so .id resolves to the reshaped id field in the transformed input
+                expect: .id

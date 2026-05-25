@@ -42,7 +42,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -83,8 +82,11 @@ class CorrelationTest {
                         Map.of("patientId", "P123", "name", "John"))));
 
     WorkflowModel result = future.get(2, TimeUnit.SECONDS);
-    List<Object> output = (List<Object>) JsonUtils.toJavaValue(JsonUtils.modelToJson(result));
+    Object outputValue = JsonUtils.toJavaValue(JsonUtils.modelToJson(result));
+    assertThat(outputValue).isInstanceOf(List.class);
+    List<?> output = (List<?>) outputValue;
     assertThat(output).hasSize(1);
+    assertThat(output.get(0)).isInstanceOf(Map.class);
     Map<String, Object> eventData = (Map<String, Object>) output.get(0);
     assertThat(eventData).containsEntry("patientId", "P123");
     assertThat(instance.status()).isEqualTo(WorkflowStatus.COMPLETED);
@@ -96,11 +98,6 @@ class CorrelationTest {
     assertCorrelateNoMatch(workflow);
   }
 
-  @Test
-  void testCorrelateNoMatchDsl() throws Exception {
-    assertCorrelateNoMatch(listenCorrelateWorkflow());
-  }
-
   private static Stream<Arguments> correlateWorkflowSources() throws IOException {
     return Stream.of(
             readWorkflowFromClasspath("workflows-samples/listen-correlate.yaml"),
@@ -110,7 +107,7 @@ class CorrelationTest {
 
   private static Workflow listenCorrelateWorkflow() {
     return WorkflowBuilder.workflow("listen-correlate-java-dsl", "test", "0.1.0")
-        .input(i -> i.from("{ patientId: .patientId }"))
+        .input(i -> i.from("{ id: .patientId }"))
         .tasks(
             doTasks(
                 listen(
@@ -127,9 +124,7 @@ class CorrelationTest {
                                                         "com.example.hospital.patient.admitted"))
                                             .correlate(
                                                 "patientId",
-                                                cp ->
-                                                    cp.from(".data.patientId")
-                                                        .expect(".patientId")))))))
+                                                cp -> cp.from(".data.patientId").expect(".id")))))))
         .build();
   }
 
@@ -192,9 +187,16 @@ class CorrelationTest {
         .build();
   }
 
-  @Test
-  void testCorrelateNoExpectMatch() throws Exception {
-    Workflow workflow = listenCorrelateNoExpectWorkflow();
+  private static Stream<Arguments> correlateNoExpectWorkflowSources() throws IOException {
+    return Stream.of(
+            readWorkflowFromClasspath("workflows-samples/listen-correlate-no-expect.yaml"),
+            listenCorrelateNoExpectWorkflow())
+        .map(wf -> Arguments.of(wf.getDocument().getName(), wf));
+  }
+
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("correlateNoExpectWorkflowSources")
+  void testCorrelateNoExpectMatch(String sourceName, Workflow workflow) throws Exception {
     WorkflowDefinition def = appl.workflowDefinition(workflow);
     WorkflowInstance instance = def.instance();
     CompletableFuture<WorkflowModel> future = instance.start();
@@ -213,16 +215,20 @@ class CorrelationTest {
                         Map.of("patientId", "P123", "name", "John"))));
 
     WorkflowModel result = future.get(2, TimeUnit.SECONDS);
-    List<Object> output = (List<Object>) JsonUtils.toJavaValue(JsonUtils.modelToJson(result));
+    Object outputValue = JsonUtils.toJavaValue(JsonUtils.modelToJson(result));
+    assertThat(outputValue).isInstanceOf(List.class);
+    List<?> output = (List<?>) outputValue;
     assertThat(output).hasSize(1);
+    assertThat(output.get(0)).isInstanceOf(Map.class);
     Map<String, Object> eventData = (Map<String, Object>) output.get(0);
     assertThat(eventData).containsEntry("patientId", "P123");
     assertThat(instance.status()).isEqualTo(WorkflowStatus.COMPLETED);
   }
 
-  @Test
-  void testCorrelateNoExpectNoMatch() throws Exception {
-    Workflow workflow = listenCorrelateNoExpectWorkflow();
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("correlateNoExpectWorkflowSources")
+  void testCorrelateNoExpectMismatchThenMatch(String sourceName, Workflow workflow)
+      throws Exception {
     WorkflowDefinition def = appl.workflowDefinition(workflow);
     WorkflowInstance instance = def.instance();
     CompletableFuture<WorkflowModel> future = instance.start();
@@ -242,11 +248,40 @@ class CorrelationTest {
     await()
         .during(Duration.ofMillis(200))
         .atMost(Duration.ofSeconds(3))
+        .untilAsserted(() -> assertThat(instance.status()).isEqualTo(WorkflowStatus.WAITING));
+
+    appl.eventPublishers()
+        .forEach(
+            p ->
+                p.publish(
+                    buildCloudEvent(
+                        "com.example.hospital.patient.admitted", Map.of("name", "Alice"))));
+
+    await()
+        .during(Duration.ofMillis(200))
+        .atMost(Duration.ofSeconds(3))
         .untilAsserted(
             () -> {
               assertThat(instance.status()).isEqualTo(WorkflowStatus.WAITING);
               assertThat(future.isDone()).isFalse();
             });
-    instance.cancel();
+
+    appl.eventPublishers()
+        .forEach(
+            p ->
+                p.publish(
+                    buildCloudEvent(
+                        "com.example.hospital.patient.admitted",
+                        Map.of("patientId", "P123", "name", "Bob"))));
+
+    WorkflowModel result = future.get(2, TimeUnit.SECONDS);
+    Object outputValue = JsonUtils.toJavaValue(JsonUtils.modelToJson(result));
+    assertThat(outputValue).isInstanceOf(List.class);
+    List<?> output = (List<?>) outputValue;
+    assertThat(output).hasSize(1);
+    assertThat(output.get(0)).isInstanceOf(Map.class);
+    Map<String, Object> eventData = (Map<String, Object>) output.get(0);
+    assertThat(eventData).containsEntry("patientId", "P123");
+    assertThat(instance.status()).isEqualTo(WorkflowStatus.COMPLETED);
   }
 }

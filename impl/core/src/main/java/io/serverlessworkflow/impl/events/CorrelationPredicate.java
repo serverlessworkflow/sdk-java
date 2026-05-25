@@ -24,6 +24,7 @@ import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
 import io.serverlessworkflow.impl.expressions.ExpressionDescriptor;
 import java.util.Objects;
+import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,7 +57,16 @@ class CorrelationPredicate implements ModelAwareCloudEventPredicate {
   }
 
   private String correlationStateKey(TaskContext task) {
-    return "correlation:" + task.position().jsonPointer() + ":" + correlationKey;
+    return "correlation:"
+        + task.position().jsonPointer()
+        + ":"
+        + task.iteration()
+        + ":"
+        + correlationKey;
+  }
+
+  Optional<String> stateKey(TaskContext task) {
+    return expectResolver == null ? Optional.of(correlationStateKey(task)) : Optional.empty();
   }
 
   @Override
@@ -75,7 +85,7 @@ class CorrelationPredicate implements ModelAwareCloudEventPredicate {
 
     if (expectResolver == null) {
       String stateKey = correlationStateKey(task);
-      Object firstValue = workflow.instance().computeCorrelationValue(stateKey, eventValue);
+      Object firstValue = workflow.instance().addMetadataIfAbsent(stateKey, () -> eventValue);
       boolean result = Objects.equals(eventValue, firstValue);
       logger.debug(
           "Correlation no expect, eventValue='{}', firstValue='{}', match={}",

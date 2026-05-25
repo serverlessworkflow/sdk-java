@@ -27,9 +27,27 @@ public record TypeEventRegistration(
     Consumer<CloudEvent> consumer,
     CloudEventPredicate predicate,
     Collection<CloudEventPredicate> correlationPredicates,
+    boolean hasModelAwareCorrelation,
     WorkflowContext workflow,
     TaskContext task)
     implements EventRegistration {
+
+  public TypeEventRegistration(
+      String type,
+      Consumer<CloudEvent> consumer,
+      CloudEventPredicate predicate,
+      Collection<CloudEventPredicate> correlationPredicates,
+      WorkflowContext workflow,
+      TaskContext task) {
+    this(
+        type,
+        consumer,
+        predicate,
+        correlationPredicates,
+        correlationPredicates.stream().anyMatch(ModelAwareCloudEventPredicate.class::isInstance),
+        workflow,
+        task);
+  }
 
   public TypeEventRegistration(
       String type,

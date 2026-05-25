@@ -355,8 +355,9 @@ public class WorkflowMutableInstance implements WorkflowInstance {
     return (T) additionalObjects.computeIfAbsent(key, k -> supplier.get());
   }
 
-  public Object computeCorrelationValue(String key, Object value) {
-    return additionalObjects.computeIfAbsent(key, k -> value);
+  @Override
+  public void removeMetadata(String key) {
+    additionalObjects.remove(key);
   }
 
   @Override
