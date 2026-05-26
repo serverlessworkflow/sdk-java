@@ -104,8 +104,7 @@ public abstract class AbstractOutputBuffer implements WorkflowOutputBuffer {
       writeInstant(value);
     } else if (object instanceof OffsetDateTime value) {
       writeType(Type.OFFSET_DATE_TIME);
-      writeInstant(value.toInstant());
-      writeString(value.getOffset().toString());
+      writeOffsetDateTime(value);
     } else if (object instanceof URI value) {
       writeType(Type.URI);
       writeString(value.toString());

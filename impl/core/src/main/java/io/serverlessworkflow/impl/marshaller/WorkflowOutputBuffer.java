@@ -15,7 +15,9 @@
  */
 package io.serverlessworkflow.impl.marshaller;
 
+import java.net.URI;
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.Map;
 
@@ -40,6 +42,17 @@ public interface WorkflowOutputBuffer extends AutoCloseable {
   WorkflowOutputBuffer writeBytes(byte[] bytes);
 
   WorkflowOutputBuffer writeInstant(Instant instant);
+
+  default WorkflowOutputBuffer writeOffsetDateTime(OffsetDateTime time) {
+    writeInstant(time.toInstant());
+    writeString(time.getOffset().toString());
+    return this;
+  }
+
+  default WorkflowOutputBuffer writeURI(URI uri) {
+    writeString(uri.toString());
+    return this;
+  }
 
   WorkflowOutputBuffer writeMap(Map<String, Object> map);
 

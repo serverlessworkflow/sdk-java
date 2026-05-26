@@ -22,7 +22,7 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.function.Function;
 
-class OperationAllStrategyCorrelationInfo extends AbstractAllStrategyCorrelationInfo {
+public class OperationAllStrategyCorrelationInfo extends AbstractAllStrategyCorrelationInfo {
 
   private final PersistenceInstanceOperations operations;
 

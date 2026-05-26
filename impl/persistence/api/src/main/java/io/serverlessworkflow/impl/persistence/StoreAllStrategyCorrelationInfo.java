@@ -24,7 +24,7 @@ import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-class StoreAllStrategyCorrelationInfo extends AbstractAllStrategyCorrelationInfo {
+public class StoreAllStrategyCorrelationInfo extends AbstractAllStrategyCorrelationInfo {
 
   private static final Logger logger =
       LoggerFactory.getLogger(StoreAllStrategyCorrelationInfo.class);

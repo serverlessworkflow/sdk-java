@@ -17,14 +17,11 @@ package io.serverlessworkflow.impl.persistence;
 
 import io.cloudevents.CloudEvent;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 
-interface CorrelationOperations {
+public interface CorrelationOperations {
 
-  default Map<String, List<CloudEvent>> retrieveEvents(Collection<String> targetRegIds) {
-    return Map.of();
-  }
+  default void retrieveEvents(Map<String, Collection<CloudEvent>> reg2EventsMap) {}
 
   default void storeEvent(String regId, CloudEvent event) {}
 

@@ -16,7 +16,10 @@
 package io.serverlessworkflow.impl.marshaller;
 
 import java.io.Closeable;
+import java.net.URI;
 import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Collection;
 import java.util.Map;
 
@@ -39,6 +42,14 @@ public interface WorkflowInputBuffer extends Closeable {
   byte readByte();
 
   byte[] readBytes();
+
+  default OffsetDateTime readOffsetDateTime() {
+    return OffsetDateTime.ofInstant(readInstant(), ZoneOffset.of(readString()));
+  }
+
+  default URI readURI() {
+    return URI.create(readString());
+  }
 
   <T extends Enum<T>> T readEnum(Class<T> enumClass);
 

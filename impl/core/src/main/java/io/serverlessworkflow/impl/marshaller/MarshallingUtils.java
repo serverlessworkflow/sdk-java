@@ -78,6 +78,14 @@ public class MarshallingUtils {
     return writeValue(factory, value, (b, v) -> b.writeString(v));
   }
 
+  public static byte[] writeOffsetDateTime(WorkflowBufferFactory factory, OffsetDateTime value) {
+    return writeValue(factory, value, (b, v) -> b.writeOffsetDateTime(v));
+  }
+
+  public static byte[] writeURI(WorkflowBufferFactory factory, URI value) {
+    return writeValue(factory, value, (b, v) -> b.writeURI(v));
+  }
+
   public static byte[] writeCloudEventExtensions(WorkflowBufferFactory factory, CloudEvent event) {
     try (ByteArrayOutputStream bytesOut = new ByteArrayOutputStream();
         WorkflowOutputBuffer out = factory.output(bytesOut)) {
@@ -99,6 +107,9 @@ public class MarshallingUtils {
 
   public static CloudEventBuilder readCloudEventExtensions(
       WorkflowBufferFactory factory, byte[] value, CloudEventBuilder builder) {
+    if (value == null) {
+      return builder;
+    }
     try (ByteArrayInputStream bytesInt = new ByteArrayInputStream(value);
         WorkflowInputBuffer in = factory.input(bytesInt)) {
       return readCloudEventExtenstions(in, value, builder);
@@ -160,6 +171,14 @@ public class MarshallingUtils {
 
   public static Instant readInstant(WorkflowBufferFactory factory, byte[] value) {
     return readValue(factory, value, WorkflowInputBuffer::readInstant);
+  }
+
+  public static OffsetDateTime readOffsetDateTime(WorkflowBufferFactory factory, byte[] value) {
+    return readValue(factory, value, WorkflowInputBuffer::readOffsetDateTime);
+  }
+
+  public static URI readURI(WorkflowBufferFactory factory, byte[] value) {
+    return readValue(factory, value, WorkflowInputBuffer::readURI);
   }
 
   public static <T extends Enum<T>> T readEnum(
