@@ -18,4 +18,4 @@ package io.serverlessworkflow.impl.lifecycle.ce;
 import java.time.OffsetDateTime;
 
 public record WorkflowStatusCEDataEvent(
-        String name, WorkflowDefinitionCEData definition, OffsetDateTime updatedAt, String status) {}
+    String name, WorkflowDefinitionCEData definition, OffsetDateTime updatedAt, String status) {}
