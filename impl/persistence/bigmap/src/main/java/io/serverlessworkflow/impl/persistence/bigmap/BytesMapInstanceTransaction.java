@@ -232,7 +232,7 @@ public abstract class BytesMapInstanceTransaction
       builder.withDataSchema((URI) reader.readObject());
       builder.withDataContentType((String) reader.readObject());
       builder.withData((byte[]) reader.readObject());
-      MarshallingUtils.readCloudEventExtenstions(reader, eventData, builder);
+      MarshallingUtils.readCloudEventExtensions(reader, eventData, builder);
       return builder.build();
     } catch (IOException e) {
       throw new UncheckedIOException(e);

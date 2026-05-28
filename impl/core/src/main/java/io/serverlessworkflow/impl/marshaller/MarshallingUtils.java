@@ -112,13 +112,13 @@ public class MarshallingUtils {
     }
     try (ByteArrayInputStream bytesInt = new ByteArrayInputStream(value);
         WorkflowInputBuffer in = factory.input(bytesInt)) {
-      return readCloudEventExtenstions(in, value, builder);
+      return readCloudEventExtensions(in, value, builder);
     } catch (IOException e) {
       throw new UncheckedIOException(e);
     }
   }
 
-  public static CloudEventBuilder readCloudEventExtenstions(
+  public static CloudEventBuilder readCloudEventExtensions(
       WorkflowInputBuffer in, byte[] value, CloudEventBuilder builder) {
     int size = in.readInt();
     while (size-- > 0) {
