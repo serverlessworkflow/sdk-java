@@ -23,15 +23,11 @@ import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
-import io.serverlessworkflow.impl.executors.CallableTask;
 import io.serverlessworkflow.impl.executors.CallableTaskBuilder;
+import io.serverlessworkflow.impl.executors.CallableTaskFactory;
 import java.util.Map;
 
 public class GrpcExecutorBuilder implements CallableTaskBuilder<CallGRPC> {
-
-  private GrpcRequestContext grpcRequestContext;
-  private FileDescriptorContext fileDescriptorContext;
-  private WorkflowValueResolver<Map<String, Object>> arguments;
 
   @Override
   public boolean accept(Class<? extends TaskBase> clazz) {
@@ -39,28 +35,25 @@ public class GrpcExecutorBuilder implements CallableTaskBuilder<CallGRPC> {
   }
 
   @Override
-  public void init(CallGRPC task, WorkflowDefinition definition, WorkflowMutablePosition position) {
+  public CallableTaskFactory init(
+      CallGRPC task, WorkflowDefinition definition, WorkflowMutablePosition position) {
 
     GRPCArguments with = task.getWith();
     WithGRPCService service = with.getService();
 
-    this.arguments =
+    WorkflowValueResolver<Map<String, Object>> arguments =
         WorkflowUtils.buildMapResolver(
             definition.application(),
             with.getArguments() != null ? with.getArguments().getAdditionalProperties() : Map.of());
 
-    this.grpcRequestContext =
+    GrpcRequestContext grpcRequestContext =
         new GrpcRequestContext(
             service.getHost(), service.getPort(), with.getMethod(), service.getName());
 
-    this.fileDescriptorContext =
+    FileDescriptorContext fileDescriptorContext =
         definition
             .resourceLoader()
             .loadStatic(with.getProto().getEndpoint(), FileDescriptorReader::readDescriptor);
-  }
-
-  @Override
-  public CallableTask build() {
-    return new GrpcExecutor(this.grpcRequestContext, this.arguments, this.fileDescriptorContext);
+    return () -> new GrpcExecutor(grpcRequestContext, arguments, fileDescriptorContext);
   }
 }

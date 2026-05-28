@@ -18,19 +18,13 @@ package io.serverlessworkflow.impl.executors.func;
 import io.serverlessworkflow.api.types.TaskBase;
 import io.serverlessworkflow.api.types.func.CallJava;
 import io.serverlessworkflow.api.types.func.CallJava.CallJavaContextFunction;
-import io.serverlessworkflow.api.types.func.ContextFunction;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowMutablePosition;
-import io.serverlessworkflow.impl.executors.CallableTask;
 import io.serverlessworkflow.impl.executors.CallableTaskBuilder;
-import java.util.Optional;
+import io.serverlessworkflow.impl.executors.CallableTaskFactory;
 
 public class JavaContextFunctionCallExecutorBuilder<T, V>
     implements CallableTaskBuilder<CallJava.CallJavaContextFunction<T, V>> {
-
-  protected ContextFunction<T, V> function;
-  protected Optional<Class<T>> inputClass;
-  protected Optional<Class<V>> outputClass;
 
   @Override
   public boolean accept(Class<? extends TaskBase> clazz) {
@@ -38,17 +32,12 @@ public class JavaContextFunctionCallExecutorBuilder<T, V>
   }
 
   @Override
-  public void init(
+  public CallableTaskFactory init(
       CallJavaContextFunction<T, V> task,
       WorkflowDefinition definition,
       WorkflowMutablePosition position) {
-    this.function = task.function();
-    this.inputClass = task.inputClass();
-    this.outputClass = task.outputClass();
-  }
-
-  @Override
-  public CallableTask build() {
-    return new JavaContextFunctionCallExecutor<T, V>(inputClass, outputClass, function);
+    return () ->
+        new JavaContextFunctionCallExecutor<T, V>(
+            task.inputClass(), task.outputClass(), task.function());
   }
 }

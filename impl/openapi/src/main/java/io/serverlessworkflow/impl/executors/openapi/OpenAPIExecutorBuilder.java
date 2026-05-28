@@ -21,17 +21,12 @@ import io.serverlessworkflow.api.types.OpenAPIArguments;
 import io.serverlessworkflow.api.types.TaskBase;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowMutablePosition;
-import io.serverlessworkflow.impl.executors.CallableTask;
 import io.serverlessworkflow.impl.executors.CallableTaskBuilder;
+import io.serverlessworkflow.impl.executors.CallableTaskFactory;
 import io.serverlessworkflow.impl.executors.http.HttpExecutorBuilder;
 import java.util.Map;
 
 public class OpenAPIExecutorBuilder implements CallableTaskBuilder<CallOpenAPI> {
-
-  private OpenAPIProcessor processor;
-  private ExternalResource resource;
-  private Map<String, Object> parameters;
-  private HttpExecutorBuilder builder;
 
   @Override
   public boolean accept(Class<? extends TaskBase> clazz) {
@@ -39,23 +34,19 @@ public class OpenAPIExecutorBuilder implements CallableTaskBuilder<CallOpenAPI> 
   }
 
   @Override
-  public void init(
+  public CallableTaskFactory init(
       CallOpenAPI task, WorkflowDefinition definition, WorkflowMutablePosition position) {
     OpenAPIArguments with = task.getWith();
-    this.processor = new OpenAPIProcessor(with.getOperationId());
-    this.resource = with.getDocument();
-    this.parameters =
+    OpenAPIProcessor processor = new OpenAPIProcessor(with.getOperationId());
+    ExternalResource resource = with.getDocument();
+    Map<String, Object> parameters =
         with.getParameters() != null && with.getParameters().getAdditionalProperties() != null
             ? with.getParameters().getAdditionalProperties()
             : Map.of();
-    this.builder =
+    HttpExecutorBuilder builder =
         HttpExecutorBuilder.builder(definition)
             .withAuth(with.getAuthentication())
             .redirect(with.isRedirect());
-  }
-
-  @Override
-  public CallableTask build() {
-    return new OpenAPIExecutor(processor, resource, parameters, builder);
+    return () -> new OpenAPIExecutor(processor, resource, parameters, builder);
   }
 }

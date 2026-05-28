@@ -18,19 +18,13 @@ package io.serverlessworkflow.impl.executors.func;
 import io.serverlessworkflow.api.types.TaskBase;
 import io.serverlessworkflow.api.types.func.CallJava;
 import io.serverlessworkflow.api.types.func.CallJava.CallJavaFilterFunction;
-import io.serverlessworkflow.api.types.func.FilterFunction;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowMutablePosition;
-import io.serverlessworkflow.impl.executors.CallableTask;
 import io.serverlessworkflow.impl.executors.CallableTaskBuilder;
-import java.util.Optional;
+import io.serverlessworkflow.impl.executors.CallableTaskFactory;
 
 public class JavaFilterFunctionCallExecutorBuilder<T, V>
     implements CallableTaskBuilder<CallJava.CallJavaFilterFunction<T, V>> {
-
-  private FilterFunction<T, V> function;
-  private Optional<Class<T>> inputClass;
-  private Optional<Class<V>> outputClass;
 
   @Override
   public boolean accept(Class<? extends TaskBase> clazz) {
@@ -38,17 +32,12 @@ public class JavaFilterFunctionCallExecutorBuilder<T, V>
   }
 
   @Override
-  public void init(
+  public CallableTaskFactory init(
       CallJavaFilterFunction<T, V> task,
       WorkflowDefinition definition,
       WorkflowMutablePosition position) {
-    this.function = task.function();
-    this.inputClass = task.inputClass();
-    this.outputClass = task.outputClass();
-  }
-
-  @Override
-  public CallableTask build() {
-    return new JavaFilterFunctionCallExecutor<>(inputClass, outputClass, function);
+    return () ->
+        new JavaFilterFunctionCallExecutor<>(
+            task.inputClass(), task.outputClass(), task.function());
   }
 }
