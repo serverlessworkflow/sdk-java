@@ -15,13 +15,24 @@
  */
 package io.serverlessworkflow.impl.lifecycle.ce;
 
-import io.serverlessworkflow.impl.WorkflowDefinitionId;
-import io.serverlessworkflow.impl.lifecycle.WorkflowEvent;
+import io.serverlessworkflow.impl.lifecycle.WorkflowCompletedEvent;
 
-public record WorkflowDefinitionCEData(String namespace, String name, String version) {
+public class WorkflowCompletedCEDataWOutput extends WorkflowCompletedCEData {
 
-  public static WorkflowDefinitionCEData ref(WorkflowEvent ev) {
-    WorkflowDefinitionId id = ev.workflowContext().definition().id();
-    return new WorkflowDefinitionCEData(id.namespace(), id.name(), id.version());
+  private Object output;
+
+  public Object output() {
+    return output;
   }
+
+  public Object getOutput() {
+    return output;
+  }
+
+  public WorkflowCompletedCEDataWOutput(WorkflowCompletedEvent ev) {
+    super(ev);
+    this.output = ev.output();
+  }
+
+  public WorkflowCompletedCEDataWOutput() {}
 }

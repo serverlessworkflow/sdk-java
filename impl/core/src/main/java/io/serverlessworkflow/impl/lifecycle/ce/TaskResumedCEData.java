@@ -15,7 +15,62 @@
  */
 package io.serverlessworkflow.impl.lifecycle.ce;
 
+import io.serverlessworkflow.impl.lifecycle.TaskResumedEvent;
 import java.time.OffsetDateTime;
+import java.util.Objects;
 
-public record TaskResumedCEData(
-    String workflow, String task, WorkflowDefinitionCEData definition, OffsetDateTime resumedAt) {}
+public class TaskResumedCEData extends TaskCEData {
+  private OffsetDateTime resumedAt;
+
+  public TaskResumedCEData(TaskResumedEvent ev) {
+    super(ev);
+    this.resumedAt = ev.eventDate();
+  }
+
+  public TaskResumedCEData() {}
+
+  public TaskResumedCEData(
+      String workflow, String task, WorkflowDefinitionCEData definition, OffsetDateTime time) {
+    super(workflow, task, definition);
+    this.resumedAt = time;
+  }
+
+  public OffsetDateTime resumedAt() {
+    return resumedAt;
+  }
+
+  public OffsetDateTime getResumedAt() {
+    return resumedAt;
+  }
+
+  @Override
+  public String toString() {
+    return "TaskResumedCEData [resumedAt="
+        + resumedAt
+        + ", getWorkflow()="
+        + workflow()
+        + ", getTask()="
+        + task()
+        + ", getDefinition()="
+        + definition()
+        + "]";
+  }
+
+  @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = super.hashCode();
+    result = prime * result + Objects.hash(resumedAt);
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) return true;
+    if (obj == null) return false;
+    if (!super.equals(obj)) return false;
+    if (getClass() != obj.getClass()) return false;
+    TaskResumedCEData other = (TaskResumedCEData) obj;
+    return Objects.equals(resumedAt, other.resumedAt);
+  }
+}

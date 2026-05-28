@@ -16,10 +16,74 @@
 package io.serverlessworkflow.impl.lifecycle.ce;
 
 import io.serverlessworkflow.impl.WorkflowError;
+import io.serverlessworkflow.impl.lifecycle.WorkflowFailedEvent;
 import java.time.OffsetDateTime;
+import java.util.Objects;
 
-public record WorkflowFailedCEData(
-    String name,
-    WorkflowDefinitionCEData definition,
-    OffsetDateTime faultedAt,
-    WorkflowError error) {}
+public class WorkflowFailedCEData extends WorkflowCEData {
+
+  private OffsetDateTime faultedAt;
+  private WorkflowError error;
+
+  public WorkflowFailedCEData(WorkflowFailedEvent ev) {
+    super(ev);
+    this.faultedAt = ev.eventDate();
+    this.error = WorkflowError.error(ev);
+  }
+
+  public WorkflowFailedCEData(
+      String name, WorkflowDefinitionCEData definition, OffsetDateTime time, WorkflowError error) {
+    super(name, definition);
+    this.faultedAt = time;
+    this.error = error;
+  }
+
+  public WorkflowFailedCEData() {}
+
+  public OffsetDateTime faultedAt() {
+    return faultedAt;
+  }
+
+  public WorkflowError error() {
+    return error;
+  }
+
+  public OffsetDateTime getFaultedAt() {
+    return faultedAt;
+  }
+
+  public WorkflowError getError() {
+    return error;
+  }
+
+  @Override
+  public String toString() {
+    return "WorkflowFailedCEData [faultedAt="
+        + faultedAt
+        + ", error="
+        + error
+        + ", getName()="
+        + name()
+        + ", getDefinition()="
+        + definition()
+        + "]";
+  }
+
+  @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = super.hashCode();
+    result = prime * result + Objects.hash(error, faultedAt);
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) return true;
+    if (obj == null) return false;
+    if (!super.equals(obj)) return false;
+    if (getClass() != obj.getClass()) return false;
+    WorkflowFailedCEData other = (WorkflowFailedCEData) obj;
+    return Objects.equals(error, other.error) && Objects.equals(faultedAt, other.faultedAt);
+  }
+}

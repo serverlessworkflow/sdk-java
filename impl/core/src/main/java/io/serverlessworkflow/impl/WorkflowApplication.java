@@ -39,6 +39,8 @@ import io.serverlessworkflow.impl.expressions.RuntimeDescriptor;
 import io.serverlessworkflow.impl.lifecycle.WorkflowExecutionCompletableListener;
 import io.serverlessworkflow.impl.lifecycle.WorkflowExecutionListener;
 import io.serverlessworkflow.impl.lifecycle.WorkflowExecutionListenerAdapter;
+import io.serverlessworkflow.impl.lifecycle.ce.DefaultLifeCycleCloudEventFactory;
+import io.serverlessworkflow.impl.lifecycle.ce.WorkflowLifeCycleCloudEventFactory;
 import io.serverlessworkflow.impl.resources.DefaultResourceLoaderFactory;
 import io.serverlessworkflow.impl.resources.ExternalResourceHandler;
 import io.serverlessworkflow.impl.resources.ResourceLoaderFactory;
@@ -96,6 +98,7 @@ public class WorkflowApplication implements AutoCloseable {
   private final Collection<CallableTaskProxyBuilder> callableProxyBuilders;
   private final CloudEventPredicateFactory cloudEventPredicateFactory;
   private final AllStrategyCorrelationInfoFactory allStrategyCorrelationInfoFactory;
+  private final WorkflowLifeCycleCloudEventFactory lifeCycleCloudEventFactory;
 
   private WorkflowApplication(Builder builder) {
     this.taskFactory = builder.taskFactory;
@@ -126,6 +129,7 @@ public class WorkflowApplication implements AutoCloseable {
     this.callableProxyBuilders = builder.callableProxyBuilders;
     this.cloudEventPredicateFactory = builder.cloudEventPredicateFactory;
     this.allStrategyCorrelationInfoFactory = builder.allStrategyCorrelationInfoFactory;
+    this.lifeCycleCloudEventFactory = builder.lifeCycleCloudEventFactory;
   }
 
   public TaskExecutorFactory taskFactory() {
@@ -245,6 +249,7 @@ public class WorkflowApplication implements AutoCloseable {
     private URI defaultCatalogURI;
     private CloudEventPredicateFactory cloudEventPredicateFactory;
     private AllStrategyCorrelationInfoFactory allStrategyCorrelationInfoFactory;
+    private WorkflowLifeCycleCloudEventFactory lifeCycleCloudEventFactory;
 
     private Builder() {
       ServiceLoader.load(NamedWorkflowAdditionalObject.class)
@@ -383,6 +388,12 @@ public class WorkflowApplication implements AutoCloseable {
       return this;
     }
 
+    public Builder withLifeCycleCloudEventFactory(
+        WorkflowLifeCycleCloudEventFactory lifeCycleCloudEventFactory) {
+      this.lifeCycleCloudEventFactory = lifeCycleCloudEventFactory;
+      return this;
+    }
+
     public WorkflowApplication build() {
 
       if (modelFactory == null) {
@@ -442,6 +453,9 @@ public class WorkflowApplication implements AutoCloseable {
         cloudEventPredicateFactory =
             loadFirst(CloudEventPredicateFactory.class)
                 .orElseGet(() -> new DefaultCloudEventPredicateFactory());
+      }
+      if (lifeCycleCloudEventFactory == null) {
+        lifeCycleCloudEventFactory = new DefaultLifeCycleCloudEventFactory();
       }
       if (allStrategyCorrelationInfoFactory == null) {
         allStrategyCorrelationInfoFactory =
@@ -578,5 +592,9 @@ public class WorkflowApplication implements AutoCloseable {
 
   public AllStrategyCorrelationInfoFactory allStrategyCorrelationInfoFactory() {
     return allStrategyCorrelationInfoFactory;
+  }
+
+  public WorkflowLifeCycleCloudEventFactory lifeCycleCloudEventFactory() {
+    return lifeCycleCloudEventFactory;
   }
 }

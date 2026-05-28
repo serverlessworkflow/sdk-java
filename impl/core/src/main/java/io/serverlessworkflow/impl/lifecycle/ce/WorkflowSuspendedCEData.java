@@ -15,7 +15,60 @@
  */
 package io.serverlessworkflow.impl.lifecycle.ce;
 
+import io.serverlessworkflow.impl.lifecycle.WorkflowSuspendedEvent;
 import java.time.OffsetDateTime;
+import java.util.Objects;
 
-public record WorkflowSuspendedCEData(
-    String name, WorkflowDefinitionCEData definition, OffsetDateTime suspendedAt) {}
+public class WorkflowSuspendedCEData extends WorkflowCEData {
+  private OffsetDateTime suspendedAt;
+
+  public WorkflowSuspendedCEData(WorkflowSuspendedEvent ev) {
+    super(ev);
+    this.suspendedAt = ev.eventDate();
+  }
+
+  public WorkflowSuspendedCEData(
+      String name, WorkflowDefinitionCEData definition, OffsetDateTime time) {
+    super(name, definition);
+    this.suspendedAt = time;
+  }
+
+  public WorkflowSuspendedCEData() {}
+
+  public OffsetDateTime suspendedAt() {
+    return suspendedAt;
+  }
+
+  public OffsetDateTime getSuspendedAt() {
+    return suspendedAt;
+  }
+
+  @Override
+  public String toString() {
+    return "WorkflowSuspendedCEData [suspendedAt="
+        + suspendedAt
+        + ", getName()="
+        + name()
+        + ", getDefinition()="
+        + definition()
+        + "]";
+  }
+
+  @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = super.hashCode();
+    result = prime * result + Objects.hash(suspendedAt);
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) return true;
+    if (obj == null) return false;
+    if (!super.equals(obj)) return false;
+    if (getClass() != obj.getClass()) return false;
+    WorkflowSuspendedCEData other = (WorkflowSuspendedCEData) obj;
+    return Objects.equals(suspendedAt, other.suspendedAt);
+  }
+}

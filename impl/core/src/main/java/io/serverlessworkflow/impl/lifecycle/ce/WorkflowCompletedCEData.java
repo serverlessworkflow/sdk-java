@@ -15,7 +15,60 @@
  */
 package io.serverlessworkflow.impl.lifecycle.ce;
 
+import io.serverlessworkflow.impl.lifecycle.WorkflowCompletedEvent;
 import java.time.OffsetDateTime;
+import java.util.Objects;
 
-public record WorkflowCompletedCEData(
-    String name, WorkflowDefinitionCEData definition, OffsetDateTime completedAt, Object output) {}
+public class WorkflowCompletedCEData extends WorkflowCEData {
+  public WorkflowCompletedCEData(WorkflowCompletedEvent ev) {
+    super(ev);
+    this.completedAt = ev.eventDate();
+  }
+
+  public WorkflowCompletedCEData(
+      String name, WorkflowDefinitionCEData definition, OffsetDateTime time) {
+    super(name, definition);
+    this.completedAt = time;
+  }
+
+  public WorkflowCompletedCEData() {}
+
+  private OffsetDateTime completedAt;
+
+  public OffsetDateTime completedAt() {
+    return completedAt;
+  }
+
+  public OffsetDateTime getCompletedAt() {
+    return completedAt;
+  }
+
+  @Override
+  public String toString() {
+    return "WorkflowCompletedCEData [completedAt="
+        + completedAt
+        + ", getName()="
+        + name()
+        + ", getDefinition()="
+        + definition()
+        + "]";
+  }
+
+  @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = super.hashCode();
+    result = prime * result + Objects.hash(completedAt);
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) return true;
+    if (obj == null) return false;
+    if (!super.equals(obj)) return false;
+    if (getClass() != obj.getClass()) return false;
+    WorkflowCompletedCEData other = (WorkflowCompletedCEData) obj;
+    return Objects.equals(completedAt, other.completedAt);
+  }
+}

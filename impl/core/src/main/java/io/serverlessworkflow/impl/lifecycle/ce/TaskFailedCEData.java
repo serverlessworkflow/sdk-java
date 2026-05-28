@@ -16,11 +16,79 @@
 package io.serverlessworkflow.impl.lifecycle.ce;
 
 import io.serverlessworkflow.impl.WorkflowError;
+import io.serverlessworkflow.impl.lifecycle.TaskFailedEvent;
 import java.time.OffsetDateTime;
+import java.util.Objects;
 
-public record TaskFailedCEData(
-    String workflow,
-    String task,
-    WorkflowDefinitionCEData definition,
-    OffsetDateTime faultedAt,
-    WorkflowError error) {}
+public class TaskFailedCEData extends TaskCEData {
+  private OffsetDateTime faultedAt;
+  private WorkflowError error;
+
+  public TaskFailedCEData(TaskFailedEvent ev) {
+    super(ev);
+    this.faultedAt = ev.eventDate();
+    this.error = WorkflowError.error(ev);
+  }
+
+  public TaskFailedCEData(
+      String workflow,
+      String task,
+      WorkflowDefinitionCEData definition,
+      OffsetDateTime faultedAt,
+      WorkflowError error) {
+    super(workflow, task, definition);
+    this.faultedAt = faultedAt;
+    this.error = error;
+  }
+
+  public TaskFailedCEData() {}
+
+  public OffsetDateTime faultedAt() {
+    return faultedAt;
+  }
+
+  public WorkflowError error() {
+    return error;
+  }
+
+  public OffsetDateTime getFaultedAt() {
+    return faultedAt;
+  }
+
+  public WorkflowError getError() {
+    return error;
+  }
+
+  @Override
+  public String toString() {
+    return "TaskFailedCEData [faultedAt="
+        + faultedAt
+        + ", error="
+        + error
+        + ", getWorkflow()="
+        + workflow()
+        + ", getTask()="
+        + task()
+        + ", getDefinition()="
+        + definition()
+        + "]";
+  }
+
+  @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = super.hashCode();
+    result = prime * result + Objects.hash(error, faultedAt);
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) return true;
+    if (obj == null) return false;
+    if (!super.equals(obj)) return false;
+    if (getClass() != obj.getClass()) return false;
+    TaskFailedCEData other = (TaskFailedCEData) obj;
+    return Objects.equals(error, other.error) && Objects.equals(faultedAt, other.faultedAt);
+  }
+}
