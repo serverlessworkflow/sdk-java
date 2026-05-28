@@ -20,17 +20,11 @@ import io.serverlessworkflow.api.types.func.CallJava;
 import io.serverlessworkflow.api.types.func.CallJava.CallJavaFunction;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowMutablePosition;
-import io.serverlessworkflow.impl.executors.CallableTask;
 import io.serverlessworkflow.impl.executors.CallableTaskBuilder;
-import java.util.Optional;
-import java.util.function.Function;
+import io.serverlessworkflow.impl.executors.CallableTaskFactory;
 
 public class JavaFunctionCallExecutorBuilder<T, V>
     implements CallableTaskBuilder<CallJava.CallJavaFunction<T, V>> {
-
-  protected Function<T, V> function;
-  protected Optional<Class<T>> inputClass;
-  protected Optional<Class<V>> outputClass;
 
   @Override
   public boolean accept(Class<? extends TaskBase> clazz) {
@@ -38,17 +32,11 @@ public class JavaFunctionCallExecutorBuilder<T, V>
   }
 
   @Override
-  public void init(
+  public CallableTaskFactory init(
       CallJavaFunction<T, V> task,
       WorkflowDefinition definition,
       WorkflowMutablePosition position) {
-    function = task.function();
-    inputClass = task.inputClass();
-    outputClass = task.outputClass();
-  }
-
-  @Override
-  public CallableTask build() {
-    return new JavaFunctionCallExecutor<>(inputClass, outputClass, function);
+    return () ->
+        new JavaFunctionCallExecutor<>(task.inputClass(), task.outputClass(), task.function());
   }
 }

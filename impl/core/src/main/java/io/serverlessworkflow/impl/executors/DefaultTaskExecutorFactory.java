@@ -32,6 +32,7 @@ import io.serverlessworkflow.impl.executors.SetExecutor.SetExecutorBuilder;
 import io.serverlessworkflow.impl.executors.SwitchExecutor.SwitchExecutorBuilder;
 import io.serverlessworkflow.impl.executors.TryExecutor.TryExecutorBuilder;
 import io.serverlessworkflow.impl.executors.WaitExecutor.WaitExecutorBuilder;
+import java.util.Collection;
 import java.util.ServiceLoader;
 import java.util.ServiceLoader.Provider;
 
@@ -45,8 +46,8 @@ public class DefaultTaskExecutorFactory implements TaskExecutorFactory {
 
   protected DefaultTaskExecutorFactory() {}
 
-  private ServiceLoader<CallableTaskBuilder> callTasks =
-      ServiceLoader.load(CallableTaskBuilder.class);
+  private Collection<CallableTaskBuilder> callTasks =
+      ServiceLoader.load(CallableTaskBuilder.class).stream().map(Provider::get).toList();
 
   @Override
   public TaskExecutorBuilder<? extends TaskBase> getTaskExecutor(
@@ -88,10 +89,11 @@ public class DefaultTaskExecutorFactory implements TaskExecutorFactory {
   private <T extends TaskBase> CallableTaskBuilder<T> findCallTask(Class<T> clazz) {
     return (CallableTaskBuilder<T>)
         callTasks.stream()
-            .map(Provider::get)
             .filter(s -> s.accept(clazz))
             .findAny()
             .orElseThrow(
-                () -> new UnsupportedOperationException(clazz.getName() + " not supported yet"));
+                () ->
+                    new UnsupportedOperationException(
+                        clazz.getName() + " not accepted by any of these builders " + callTasks));
   }
 }

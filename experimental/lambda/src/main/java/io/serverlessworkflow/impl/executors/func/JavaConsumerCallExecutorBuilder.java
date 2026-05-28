@@ -19,32 +19,21 @@ import io.serverlessworkflow.api.types.TaskBase;
 import io.serverlessworkflow.api.types.func.CallJava;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowMutablePosition;
-import io.serverlessworkflow.impl.executors.CallableTask;
 import io.serverlessworkflow.impl.executors.CallableTaskBuilder;
-import java.util.Optional;
-import java.util.function.Consumer;
+import io.serverlessworkflow.impl.executors.CallableTaskFactory;
 
 public class JavaConsumerCallExecutorBuilder<T>
     implements CallableTaskBuilder<CallJava.CallJavaConsumer<T>> {
 
-  private Consumer<T> consumer;
-  private Optional<Class<T>> inputClass;
-
-  public void init(
+  public CallableTaskFactory init(
       CallJava.CallJavaConsumer<T> task,
       WorkflowDefinition definition,
       WorkflowMutablePosition position) {
-    consumer = task.consumer();
-    inputClass = task.inputClass();
+    return () -> new JavaConsumerCallExecutor<T>(task.inputClass(), task.consumer());
   }
 
   @Override
   public boolean accept(Class<? extends TaskBase> clazz) {
     return CallJava.CallJavaConsumer.class.isAssignableFrom(clazz);
-  }
-
-  @Override
-  public CallableTask build() {
-    return new JavaConsumerCallExecutor<T>(inputClass, consumer);
   }
 }

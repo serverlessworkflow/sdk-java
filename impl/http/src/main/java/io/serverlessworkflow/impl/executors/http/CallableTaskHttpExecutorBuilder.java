@@ -24,19 +24,17 @@ import io.serverlessworkflow.api.types.TaskBase;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
-import io.serverlessworkflow.impl.executors.CallableTask;
 import io.serverlessworkflow.impl.executors.CallableTaskBuilder;
+import io.serverlessworkflow.impl.executors.CallableTaskFactory;
 import java.net.URI;
 
 public class CallableTaskHttpExecutorBuilder implements CallableTaskBuilder<CallHTTP> {
 
-  private HttpExecutorBuilder builder;
-  private WorkflowValueResolver<URI> uriSupplier;
-
   @Override
-  public void init(CallHTTP task, WorkflowDefinition definition, WorkflowMutablePosition position) {
+  public CallableTaskFactory init(
+      CallHTTP task, WorkflowDefinition definition, WorkflowMutablePosition position) {
 
-    builder = HttpExecutorBuilder.builder(definition);
+    HttpExecutorBuilder builder = HttpExecutorBuilder.builder(definition);
     final HTTPArguments httpArgs = task.getWith();
     final Endpoint endpoint = httpArgs.getEndpoint();
 
@@ -44,7 +42,7 @@ public class CallableTaskHttpExecutorBuilder implements CallableTaskBuilder<Call
       builder.withAuth(endpoint.getEndpointConfiguration().getAuthentication());
     }
 
-    uriSupplier = definition.resourceLoader().uriSupplier(endpoint);
+    WorkflowValueResolver<URI> uriSupplier = definition.resourceLoader().uriSupplier(endpoint);
 
     if (httpArgs.getHeaders() != null) {
       builder.withHeaders(
@@ -69,15 +67,11 @@ public class CallableTaskHttpExecutorBuilder implements CallableTaskBuilder<Call
     builder.withBody(httpArgs.getBody());
     builder.withMethod(httpArgs.getMethod().toUpperCase());
     builder.redirect(httpArgs.isRedirect());
+    return () -> builder.build(uriSupplier);
   }
 
   @Override
   public boolean accept(Class<? extends TaskBase> clazz) {
     return clazz.equals(CallHTTP.class);
-  }
-
-  @Override
-  public CallableTask build() {
-    return builder.build(uriSupplier);
   }
 }

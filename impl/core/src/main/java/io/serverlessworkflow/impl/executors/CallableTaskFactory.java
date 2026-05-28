@@ -15,14 +15,7 @@
  */
 package io.serverlessworkflow.impl.executors;
 
-import io.serverlessworkflow.api.types.TaskBase;
-import io.serverlessworkflow.impl.ServicePriority;
-import io.serverlessworkflow.impl.WorkflowDefinition;
-import io.serverlessworkflow.impl.WorkflowMutablePosition;
+import java.util.function.Supplier;
 
-public interface CallableTaskBuilder<T extends TaskBase> extends ServicePriority {
-
-  boolean accept(Class<? extends TaskBase> clazz);
-
-  CallableTaskFactory init(T task, WorkflowDefinition definition, WorkflowMutablePosition position);
-}
+@FunctionalInterface
+public interface CallableTaskFactory extends Supplier<CallableTask> {}

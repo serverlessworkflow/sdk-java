@@ -18,17 +18,13 @@ package io.serverlessworkflow.impl.executors.func;
 import io.serverlessworkflow.api.types.TaskBase;
 import io.serverlessworkflow.api.types.func.CallJava;
 import io.serverlessworkflow.api.types.func.CallJava.CallJavaLoopFunction;
-import io.serverlessworkflow.api.types.func.LoopFunction;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowMutablePosition;
-import io.serverlessworkflow.impl.executors.CallableTask;
 import io.serverlessworkflow.impl.executors.CallableTaskBuilder;
+import io.serverlessworkflow.impl.executors.CallableTaskFactory;
 
 public class JavaLoopFunctionCallExecutorBuilder
     implements CallableTaskBuilder<CallJava.CallJavaLoopFunction> {
-
-  private LoopFunction function;
-  private String varName;
 
   @Override
   public boolean accept(Class<? extends TaskBase> clazz) {
@@ -36,14 +32,8 @@ public class JavaLoopFunctionCallExecutorBuilder
   }
 
   @Override
-  public void init(
+  public CallableTaskFactory init(
       CallJavaLoopFunction task, WorkflowDefinition definition, WorkflowMutablePosition position) {
-    function = task.function();
-    varName = task.varName();
-  }
-
-  @Override
-  public CallableTask build() {
-    return new JavaLoopFunctionCallExecutor<>(function, varName);
+    return () -> new JavaLoopFunctionCallExecutor<>(task.function(), task.varName());
   }
 }
