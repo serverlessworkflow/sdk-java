@@ -21,6 +21,7 @@ import static org.awaitility.Awaitility.await;
 
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowDefinition;
+import io.serverlessworkflow.impl.WorkflowInstance;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Map;
@@ -48,8 +49,9 @@ class SchedulerTest {
   void testAfter() throws IOException, InterruptedException, ExecutionException {
     try (WorkflowDefinition def =
         appl.workflowDefinition(readWorkflowFromClasspath("workflows-samples/after-start.yaml"))) {
-      def.instance(Map.of()).start().join();
+      WorkflowInstance instance = def.instance(Map.of());
       assertThat(def.scheduledInstances()).isEmpty();
+      instance.start().join();
       await()
           .pollDelay(Duration.ofMillis(50))
           .atMost(Duration.ofMillis(200))
