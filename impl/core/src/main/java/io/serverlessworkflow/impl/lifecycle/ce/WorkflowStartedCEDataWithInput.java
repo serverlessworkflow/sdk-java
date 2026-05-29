@@ -15,52 +15,33 @@
  */
 package io.serverlessworkflow.impl.lifecycle.ce;
 
-import io.serverlessworkflow.impl.lifecycle.TaskResumedEvent;
-import java.time.OffsetDateTime;
+import io.serverlessworkflow.impl.lifecycle.WorkflowStartedEvent;
 import java.util.Objects;
 
-public class TaskResumedCEData extends TaskCEData {
-  private OffsetDateTime resumedAt;
+public class WorkflowStartedCEDataWithInput extends WorkflowStartedCEData {
 
-  public TaskResumedCEData(TaskResumedEvent ev) {
+  private Object input;
+
+  public Object input() {
+    return input;
+  }
+
+  public Object getInput() {
+    return input;
+  }
+
+  public WorkflowStartedCEDataWithInput(WorkflowStartedEvent ev) {
     super(ev);
-    this.resumedAt = ev.eventDate();
+    this.input = ev.workflowContext().instanceData().input().asJavaObject();
   }
 
-  public TaskResumedCEData() {}
-
-  public TaskResumedCEData(
-      String workflow, String task, WorkflowDefinitionCEData definition, OffsetDateTime time) {
-    super(workflow, task, definition);
-    this.resumedAt = time;
-  }
-
-  public OffsetDateTime resumedAt() {
-    return resumedAt;
-  }
-
-  public OffsetDateTime getResumedAt() {
-    return resumedAt;
-  }
-
-  @Override
-  public String toString() {
-    return "TaskResumedCEData [resumedAt="
-        + resumedAt
-        + ", getWorkflow()="
-        + workflow()
-        + ", getTask()="
-        + task()
-        + ", getDefinition()="
-        + definition()
-        + "]";
-  }
+  public WorkflowStartedCEDataWithInput() {}
 
   @Override
   public int hashCode() {
     final int prime = 31;
     int result = super.hashCode();
-    result = prime * result + Objects.hash(resumedAt);
+    result = prime * result + Objects.hash(input);
     return result;
   }
 
@@ -70,7 +51,7 @@ public class TaskResumedCEData extends TaskCEData {
     if (obj == null) return false;
     if (!super.equals(obj)) return false;
     if (getClass() != obj.getClass()) return false;
-    TaskResumedCEData other = (TaskResumedCEData) obj;
-    return Objects.equals(resumedAt, other.resumedAt);
+    WorkflowStartedCEDataWithInput other = (WorkflowStartedCEDataWithInput) obj;
+    return Objects.equals(input, other.input);
   }
 }

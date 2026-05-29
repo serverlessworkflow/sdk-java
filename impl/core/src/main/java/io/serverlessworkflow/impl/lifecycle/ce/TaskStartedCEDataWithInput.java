@@ -15,50 +15,32 @@
  */
 package io.serverlessworkflow.impl.lifecycle.ce;
 
-import io.serverlessworkflow.impl.lifecycle.WorkflowSuspendedEvent;
-import java.time.OffsetDateTime;
+import io.serverlessworkflow.impl.lifecycle.TaskStartedEvent;
 import java.util.Objects;
 
-public class WorkflowSuspendedCEData extends WorkflowCEData {
-  private OffsetDateTime suspendedAt;
+public class TaskStartedCEDataWithInput extends TaskStartedCEData {
+  private Object input;
 
-  public WorkflowSuspendedCEData(WorkflowSuspendedEvent ev) {
+  public TaskStartedCEDataWithInput(TaskStartedEvent ev) {
     super(ev);
-    this.suspendedAt = ev.eventDate();
+    this.input = ev.taskContext().input().asJavaObject();
   }
 
-  public WorkflowSuspendedCEData(
-      String name, WorkflowDefinitionCEData definition, OffsetDateTime time) {
-    super(name, definition);
-    this.suspendedAt = time;
+  public TaskStartedCEDataWithInput() {}
+
+  public Object input() {
+    return input;
   }
 
-  public WorkflowSuspendedCEData() {}
-
-  public OffsetDateTime suspendedAt() {
-    return suspendedAt;
-  }
-
-  public OffsetDateTime getSuspendedAt() {
-    return suspendedAt;
-  }
-
-  @Override
-  public String toString() {
-    return "WorkflowSuspendedCEData [suspendedAt="
-        + suspendedAt
-        + ", getName()="
-        + name()
-        + ", getDefinition()="
-        + definition()
-        + "]";
+  public Object getInput() {
+    return input;
   }
 
   @Override
   public int hashCode() {
     final int prime = 31;
     int result = super.hashCode();
-    result = prime * result + Objects.hash(suspendedAt);
+    result = prime * result + Objects.hash(input);
     return result;
   }
 
@@ -68,7 +50,7 @@ public class WorkflowSuspendedCEData extends WorkflowCEData {
     if (obj == null) return false;
     if (!super.equals(obj)) return false;
     if (getClass() != obj.getClass()) return false;
-    WorkflowSuspendedCEData other = (WorkflowSuspendedCEData) obj;
-    return Objects.equals(suspendedAt, other.suspendedAt);
+    TaskStartedCEDataWithInput other = (TaskStartedCEDataWithInput) obj;
+    return Objects.equals(input, other.input);
   }
 }

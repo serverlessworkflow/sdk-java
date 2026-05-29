@@ -29,8 +29,6 @@ import static io.serverlessworkflow.impl.LifecycleEvents.WORKFLOW_RESUMED;
 import static io.serverlessworkflow.impl.LifecycleEvents.WORKFLOW_STARTED;
 import static io.serverlessworkflow.impl.LifecycleEvents.WORKFLOW_STATUS_CHANGED;
 import static io.serverlessworkflow.impl.LifecycleEvents.WORKFLOW_SUSPENDED;
-import static io.serverlessworkflow.impl.WorkflowError.error;
-import static io.serverlessworkflow.impl.lifecycle.ce.WorkflowDefinitionCEData.ref;
 
 import io.cloudevents.CloudEvent;
 import io.cloudevents.CloudEventData;
@@ -38,11 +36,9 @@ import io.cloudevents.core.builder.CloudEventBuilder;
 import io.cloudevents.core.data.PojoCloudEventData;
 import io.cloudevents.core.data.PojoCloudEventData.ToBytes;
 import io.serverlessworkflow.impl.WorkflowApplication;
-import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.events.CloudEventUtils;
 import io.serverlessworkflow.impl.lifecycle.TaskCancelledEvent;
 import io.serverlessworkflow.impl.lifecycle.TaskCompletedEvent;
-import io.serverlessworkflow.impl.lifecycle.TaskEvent;
 import io.serverlessworkflow.impl.lifecycle.TaskFailedEvent;
 import io.serverlessworkflow.impl.lifecycle.TaskResumedEvent;
 import io.serverlessworkflow.impl.lifecycle.TaskRetriedEvent;
@@ -82,202 +78,177 @@ public abstract class AbstractLifeCyclePublisher implements WorkflowExecutionLis
         WORKFLOW_STATUS_CHANGED);
   }
 
+  private WorkflowLifeCycleCloudEventFactory lifeCycleFactory(WorkflowEvent ev) {
+    return ev.workflowContext().definition().application().lifeCycleCloudEventFactory();
+  }
+
   @Override
   public void onTaskStarted(TaskStartedEvent event) {
+    WorkflowLifeCycleCloudEventFactory factory = lifeCycleFactory(event);
     publish(
         event,
         ev ->
-            builder()
-                .withData(
-                    cloudEventData(
-                        new TaskStartedCEData(id(ev), pos(ev), ref(ev), ev.eventDate()),
-                        this::convert))
-                .withType(TASK_STARTED)
-                .build());
+            factory.build(
+                builder()
+                    .withData(cloudEventData(factory.build(event), this::convert))
+                    .withType(TASK_STARTED)));
   }
 
   @Override
   public void onTaskRetried(TaskRetriedEvent event) {
+    WorkflowLifeCycleCloudEventFactory factory = lifeCycleFactory(event);
     publish(
         event,
         ev ->
-            builder()
-                .withData(
-                    cloudEventData(
-                        new TaskRetriedCEData(id(ev), pos(ev), ref(ev), ev.eventDate()),
-                        this::convert))
-                .withType(TASK_STARTED)
-                .build());
+            factory.build(
+                builder()
+                    .withData(cloudEventData(factory.build(event), this::convert))
+                    .withType(TASK_RETRIED)));
   }
 
   @Override
   public void onTaskCompleted(TaskCompletedEvent event) {
+    WorkflowLifeCycleCloudEventFactory factory = lifeCycleFactory(event);
     publish(
         event,
         ev ->
-            builder()
-                .withData(
-                    cloudEventData(
-                        new TaskCompletedCEData(
-                            id(ev), pos(ev), ref(ev), ev.eventDate(), output(ev)),
-                        this::convert))
-                .withType(TASK_COMPLETED)
-                .build());
+            factory.build(
+                builder()
+                    .withData(cloudEventData(factory.build(event), this::convert))
+                    .withType(TASK_COMPLETED)));
   }
 
   @Override
   public void onTaskSuspended(TaskSuspendedEvent event) {
+    WorkflowLifeCycleCloudEventFactory factory = lifeCycleFactory(event);
     publish(
         event,
         ev ->
-            builder()
-                .withData(
-                    cloudEventData(
-                        new TaskSuspendedCEData(id(ev), pos(ev), ref(ev), ev.eventDate()),
-                        this::convert))
-                .withType(TASK_SUSPENDED)
-                .build());
+            factory.build(
+                builder()
+                    .withData(cloudEventData(factory.build(event), this::convert))
+                    .withType(TASK_SUSPENDED)));
   }
 
   @Override
   public void onTaskResumed(TaskResumedEvent event) {
+    WorkflowLifeCycleCloudEventFactory factory = lifeCycleFactory(event);
     publish(
         event,
         ev ->
-            builder()
-                .withData(
-                    cloudEventData(
-                        new TaskResumedCEData(id(ev), pos(ev), ref(ev), ev.eventDate()),
-                        this::convert))
-                .withType(TASK_RESUMED)
-                .build());
+            factory.build(
+                builder()
+                    .withData(cloudEventData(factory.build(event), this::convert))
+                    .withType(TASK_RESUMED)));
   }
 
   @Override
   public void onTaskCancelled(TaskCancelledEvent event) {
+    WorkflowLifeCycleCloudEventFactory factory = lifeCycleFactory(event);
     publish(
         event,
         ev ->
-            builder()
-                .withData(
-                    cloudEventData(
-                        new TaskCancelledCEData(id(ev), pos(ev), ref(ev), ev.eventDate()),
-                        this::convert))
-                .withType(TASK_CANCELLED)
-                .build());
+            factory.build(
+                builder()
+                    .withData(cloudEventData(factory.build(event), this::convert))
+                    .withType(TASK_CANCELLED)));
   }
 
   @Override
   public void onTaskFailed(TaskFailedEvent event) {
+    WorkflowLifeCycleCloudEventFactory factory = lifeCycleFactory(event);
     publish(
         event,
         ev ->
-            builder()
-                .withData(
-                    cloudEventData(
-                        new TaskFailedCEData(id(ev), pos(ev), ref(ev), ev.eventDate(), error(ev)),
-                        this::convert))
-                .withType(TASK_FAULTED)
-                .build());
+            factory.build(
+                builder()
+                    .withData(cloudEventData(factory.build(event), this::convert))
+                    .withType(TASK_FAULTED)));
   }
 
   @Override
   public void onWorkflowStarted(WorkflowStartedEvent event) {
+    WorkflowLifeCycleCloudEventFactory factory = lifeCycleFactory(event);
     publish(
         event,
         ev ->
-            builder()
-                .withData(
-                    cloudEventData(
-                        new WorkflowStartedCEData(id(ev), ref(ev), ev.eventDate()), this::convert))
-                .withType(WORKFLOW_STARTED)
-                .build());
+            factory.build(
+                builder()
+                    .withData(cloudEventData(factory.build(event), this::convert))
+                    .withType(WORKFLOW_STARTED)));
   }
 
   @Override
   public void onWorkflowSuspended(WorkflowSuspendedEvent event) {
+    WorkflowLifeCycleCloudEventFactory factory = lifeCycleFactory(event);
     publish(
         event,
         ev ->
-            builder()
-                .withData(
-                    cloudEventData(
-                        new WorkflowSuspendedCEData(id(ev), ref(ev), ev.eventDate()),
-                        this::convert))
-                .withType(WORKFLOW_SUSPENDED)
-                .build());
+            factory.build(
+                builder()
+                    .withData(cloudEventData(factory.build(event), this::convert))
+                    .withType(WORKFLOW_SUSPENDED)));
   }
 
   @Override
   public void onWorkflowCancelled(WorkflowCancelledEvent event) {
+    WorkflowLifeCycleCloudEventFactory factory = lifeCycleFactory(event);
     publish(
         event,
         ev ->
-            builder()
-                .withData(
-                    cloudEventData(
-                        new WorkflowCancelledCEData(id(ev), ref(ev), ev.eventDate()),
-                        this::convert))
-                .withType(WORKFLOW_CANCELLED)
-                .build());
+            factory.build(
+                builder()
+                    .withData(cloudEventData(factory.build(event), this::convert))
+                    .withType(WORKFLOW_CANCELLED)));
   }
 
   @Override
   public void onWorkflowResumed(WorkflowResumedEvent event) {
+    WorkflowLifeCycleCloudEventFactory factory = lifeCycleFactory(event);
     publish(
         event,
         ev ->
-            builder()
-                .withData(
-                    cloudEventData(
-                        new WorkflowResumedCEData(id(ev), ref(ev), ev.eventDate()), this::convert))
-                .withType(WORKFLOW_RESUMED)
-                .build());
+            factory.build(
+                builder()
+                    .withData(cloudEventData(factory.build(event), this::convert))
+                    .withType(WORKFLOW_RESUMED)));
   }
 
   @Override
   public void onWorkflowCompleted(WorkflowCompletedEvent event) {
+    WorkflowLifeCycleCloudEventFactory factory = lifeCycleFactory(event);
     publish(
         event,
         ev ->
-            builder()
-                .withData(
-                    cloudEventData(
-                        new WorkflowCompletedCEData(
-                            id(ev), ref(ev), ev.eventDate(), from(event.output())),
-                        this::convert))
-                .withType(WORKFLOW_COMPLETED)
-                .build());
+            factory.build(
+                builder()
+                    .withData(cloudEventData(factory.build(event), this::convert))
+                    .withType(WORKFLOW_COMPLETED)));
   }
 
   @Override
   public void onWorkflowFailed(WorkflowFailedEvent event) {
+    WorkflowLifeCycleCloudEventFactory factory = lifeCycleFactory(event);
     publish(
         event,
         ev ->
-            builder()
-                .withData(
-                    cloudEventData(
-                        new WorkflowFailedCEData(id(ev), ref(ev), ev.eventDate(), error(ev)),
-                        this::convert))
-                .withType(WORKFLOW_FAULTED)
-                .build());
+            factory.build(
+                builder()
+                    .withData(cloudEventData(factory.build(event), this::convert))
+                    .withType(WORKFLOW_FAULTED)));
   }
 
   @Override
   public void onWorkflowStatusChanged(WorkflowStatusEvent event) {
     if (appl(event).isStatusChangePublishingEnabled()) {
+      WorkflowLifeCycleCloudEventFactory factory = lifeCycleFactory(event);
       publish(
           event,
           ev ->
-              builder()
-                  .withData(
-                      cloudEventData(
-                          new WorkflowStatusCEDataEvent(
-                              id(ev), ref(ev), ev.eventDate(), ev.status().toString()),
-                          this::convert))
-                  .withType(WORKFLOW_STATUS_CHANGED)
-                  .build());
+              factory.build(
+                  builder()
+                      .withData(cloudEventData(factory.build(event), this::convert))
+                      .withType(WORKFLOW_STATUS_CHANGED)));
     }
   }
 
@@ -366,21 +337,5 @@ public abstract class AbstractLifeCyclePublisher implements WorkflowExecutionLis
 
   private static WorkflowApplication appl(WorkflowEvent ev) {
     return ev.workflowContext().definition().application();
-  }
-
-  private static String id(WorkflowEvent ev) {
-    return ev.workflowContext().instanceData().id();
-  }
-
-  private static String pos(TaskEvent ev) {
-    return ev.taskContext().position().jsonPointer();
-  }
-
-  private static Object output(TaskEvent ev) {
-    return from(ev.taskContext().output());
-  }
-
-  private static Object from(WorkflowModel model) {
-    return model.asJavaObject();
   }
 }

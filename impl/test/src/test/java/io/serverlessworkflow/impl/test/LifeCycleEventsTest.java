@@ -34,11 +34,12 @@ import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowStatus;
 import io.serverlessworkflow.impl.events.InMemoryEvents;
 import io.serverlessworkflow.impl.lifecycle.ce.AbstractLifeCyclePublisher;
+import io.serverlessworkflow.impl.lifecycle.ce.InputOutputLifeCycleCloudEventFactory;
 import io.serverlessworkflow.impl.lifecycle.ce.TaskCancelledCEData;
-import io.serverlessworkflow.impl.lifecycle.ce.TaskCompletedCEData;
+import io.serverlessworkflow.impl.lifecycle.ce.TaskCompletedCEDataWithOutput;
 import io.serverlessworkflow.impl.lifecycle.ce.TaskStartedCEData;
 import io.serverlessworkflow.impl.lifecycle.ce.WorkflowCancelledCEData;
-import io.serverlessworkflow.impl.lifecycle.ce.WorkflowCompletedCEData;
+import io.serverlessworkflow.impl.lifecycle.ce.WorkflowCompletedCEDataWithOutput;
 import io.serverlessworkflow.impl.lifecycle.ce.WorkflowFailedCEData;
 import io.serverlessworkflow.impl.lifecycle.ce.WorkflowResumedCEData;
 import io.serverlessworkflow.impl.lifecycle.ce.WorkflowStartedCEData;
@@ -77,6 +78,7 @@ class LifeCycleEventsTest {
     }
     appl =
         WorkflowApplication.builder()
+            .withLifeCycleCloudEventFactory(new InputOutputLifeCycleCloudEventFactory())
             .withEventConsumer(eventBroker)
             .withEventPublisher(eventBroker)
             .build();
@@ -107,11 +109,12 @@ class LifeCycleEventsTest {
         assertPojoInCE("io.serverlessworkflow.workflow.started.v1", WorkflowStartedCEData.class);
     TaskStartedCEData taskStartedEvent =
         assertPojoInCE("io.serverlessworkflow.task.started.v1", TaskStartedCEData.class);
-    TaskCompletedCEData taskCompletedEvent =
-        assertPojoInCE("io.serverlessworkflow.task.completed.v1", TaskCompletedCEData.class);
-    WorkflowCompletedCEData workflowCompletedEvent =
+    TaskCompletedCEDataWithOutput taskCompletedEvent =
         assertPojoInCE(
-            "io.serverlessworkflow.workflow.completed.v1", WorkflowCompletedCEData.class);
+            "io.serverlessworkflow.task.completed.v1", TaskCompletedCEDataWithOutput.class);
+    WorkflowCompletedCEDataWithOutput workflowCompletedEvent =
+        assertPojoInCE(
+            "io.serverlessworkflow.workflow.completed.v1", WorkflowCompletedCEDataWithOutput.class);
     assertThat(workflowCompletedEvent.output()).isEqualTo(model.asJavaObject());
     assertThat(workflowStartedEvent.startedAt()).isBefore(workflowCompletedEvent.completedAt());
     assertThat(taskCompletedEvent.output()).isEqualTo(model.asJavaObject());

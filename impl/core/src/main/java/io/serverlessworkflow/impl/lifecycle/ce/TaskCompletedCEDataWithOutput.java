@@ -16,52 +16,32 @@
 package io.serverlessworkflow.impl.lifecycle.ce;
 
 import io.serverlessworkflow.impl.lifecycle.TaskCompletedEvent;
-import java.time.OffsetDateTime;
 import java.util.Objects;
 
-public class TaskCompletedCEData extends TaskCEData {
+public class TaskCompletedCEDataWithOutput extends TaskCompletedCEData {
 
-  private OffsetDateTime completedAt;
+  private Object output;
 
-  public TaskCompletedCEData(TaskCompletedEvent ev) {
+  public TaskCompletedCEDataWithOutput(TaskCompletedEvent ev) {
     super(ev);
-    this.completedAt = ev.eventDate();
+    this.output = ev.taskContext().output().asJavaObject();
   }
 
-  public TaskCompletedCEData() {}
+  public TaskCompletedCEDataWithOutput() {}
 
-  public TaskCompletedCEData(
-      String workflow, String task, WorkflowDefinitionCEData definition, OffsetDateTime time) {
-    super(workflow, task, definition);
-    this.completedAt = time;
+  public Object output() {
+    return output;
   }
 
-  public OffsetDateTime completedAt() {
-    return completedAt;
-  }
-
-  public OffsetDateTime getCompletedAt() {
-    return completedAt;
-  }
-
-  @Override
-  public String toString() {
-    return "TaskCompletedCEData [completedAt="
-        + completedAt
-        + ", getWorkflow()="
-        + workflow()
-        + ", getTask()="
-        + task()
-        + ", getDefinition()="
-        + definition()
-        + "]";
+  public Object getOutput() {
+    return output;
   }
 
   @Override
   public int hashCode() {
     final int prime = 31;
     int result = super.hashCode();
-    result = prime * result + Objects.hash(completedAt);
+    result = prime * result + Objects.hash(output);
     return result;
   }
 
@@ -71,7 +51,7 @@ public class TaskCompletedCEData extends TaskCEData {
     if (obj == null) return false;
     if (!super.equals(obj)) return false;
     if (getClass() != obj.getClass()) return false;
-    TaskCompletedCEData other = (TaskCompletedCEData) obj;
-    return Objects.equals(completedAt, other.completedAt);
+    TaskCompletedCEDataWithOutput other = (TaskCompletedCEDataWithOutput) obj;
+    return Objects.equals(output, other.output);
   }
 }

@@ -15,52 +15,33 @@
  */
 package io.serverlessworkflow.impl.lifecycle.ce;
 
-import io.serverlessworkflow.impl.lifecycle.TaskResumedEvent;
-import java.time.OffsetDateTime;
+import io.serverlessworkflow.impl.lifecycle.WorkflowCompletedEvent;
 import java.util.Objects;
 
-public class TaskResumedCEData extends TaskCEData {
-  private OffsetDateTime resumedAt;
+public class WorkflowCompletedCEDataWithOutput extends WorkflowCompletedCEData {
 
-  public TaskResumedCEData(TaskResumedEvent ev) {
+  private Object output;
+
+  public Object output() {
+    return output;
+  }
+
+  public Object getOutput() {
+    return output;
+  }
+
+  public WorkflowCompletedCEDataWithOutput(WorkflowCompletedEvent ev) {
     super(ev);
-    this.resumedAt = ev.eventDate();
+    this.output = ev.output().asJavaObject();
   }
 
-  public TaskResumedCEData() {}
-
-  public TaskResumedCEData(
-      String workflow, String task, WorkflowDefinitionCEData definition, OffsetDateTime time) {
-    super(workflow, task, definition);
-    this.resumedAt = time;
-  }
-
-  public OffsetDateTime resumedAt() {
-    return resumedAt;
-  }
-
-  public OffsetDateTime getResumedAt() {
-    return resumedAt;
-  }
-
-  @Override
-  public String toString() {
-    return "TaskResumedCEData [resumedAt="
-        + resumedAt
-        + ", getWorkflow()="
-        + workflow()
-        + ", getTask()="
-        + task()
-        + ", getDefinition()="
-        + definition()
-        + "]";
-  }
+  public WorkflowCompletedCEDataWithOutput() {}
 
   @Override
   public int hashCode() {
     final int prime = 31;
     int result = super.hashCode();
-    result = prime * result + Objects.hash(resumedAt);
+    result = prime * result + Objects.hash(output);
     return result;
   }
 
@@ -70,7 +51,7 @@ public class TaskResumedCEData extends TaskCEData {
     if (obj == null) return false;
     if (!super.equals(obj)) return false;
     if (getClass() != obj.getClass()) return false;
-    TaskResumedCEData other = (TaskResumedCEData) obj;
-    return Objects.equals(resumedAt, other.resumedAt);
+    WorkflowCompletedCEDataWithOutput other = (WorkflowCompletedCEDataWithOutput) obj;
+    return Objects.equals(output, other.output);
   }
 }

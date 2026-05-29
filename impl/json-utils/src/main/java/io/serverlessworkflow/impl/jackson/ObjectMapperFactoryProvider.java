@@ -17,7 +17,9 @@ package io.serverlessworkflow.impl.jackson;
 
 import static io.serverlessworkflow.impl.WorkflowUtils.loadFirst;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import io.cloudevents.jackson.JsonFormat;
 import java.util.Objects;
 import java.util.function.Supplier;
@@ -60,7 +62,9 @@ public class ObjectMapperFactoryProvider implements Supplier<ObjectMapperFactory
       this.mapper =
           new ObjectMapper()
               .findAndRegisterModules()
-              .registerModule(JsonFormat.getCloudEventJacksonModule());
+              .registerModule(JsonFormat.getCloudEventJacksonModule())
+              .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+              .disable(DeserializationFeature.ADJUST_DATES_TO_CONTEXT_TIME_ZONE);
     }
 
     @Override

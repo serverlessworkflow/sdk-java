@@ -15,14 +15,13 @@
  */
 package io.serverlessworkflow.impl.lifecycle.ce;
 
-import io.serverlessworkflow.api.types.Document;
+import io.serverlessworkflow.impl.WorkflowDefinitionId;
 import io.serverlessworkflow.impl.lifecycle.WorkflowEvent;
 
 public record WorkflowDefinitionCEData(String namespace, String name, String version) {
 
   public static WorkflowDefinitionCEData ref(WorkflowEvent ev) {
-    Document document = ev.workflowContext().definition().workflow().getDocument();
-    return new WorkflowDefinitionCEData(
-        document.getNamespace(), document.getName(), document.getVersion());
+    WorkflowDefinitionId id = ev.workflowContext().definition().id();
+    return new WorkflowDefinitionCEData(id.namespace(), id.name(), id.version());
   }
 }

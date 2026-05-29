@@ -15,7 +15,62 @@
  */
 package io.serverlessworkflow.impl.lifecycle.ce;
 
+import io.serverlessworkflow.impl.lifecycle.TaskStartedEvent;
 import java.time.OffsetDateTime;
+import java.util.Objects;
 
-public record TaskStartedCEData(
-    String workflow, String task, WorkflowDefinitionCEData definition, OffsetDateTime startedAt) {}
+public class TaskStartedCEData extends TaskCEData {
+  private OffsetDateTime startedAt;
+
+  public TaskStartedCEData(TaskStartedEvent ev) {
+    super(ev);
+    this.startedAt = ev.eventDate();
+  }
+
+  public TaskStartedCEData(
+      String workflow, String task, WorkflowDefinitionCEData definition, OffsetDateTime time) {
+    super(workflow, task, definition);
+    this.startedAt = time;
+  }
+
+  public TaskStartedCEData() {}
+
+  public OffsetDateTime startedAt() {
+    return startedAt;
+  }
+
+  public OffsetDateTime getStartedAt() {
+    return startedAt;
+  }
+
+  @Override
+  public String toString() {
+    return "TaskStartedCEData [startedAt="
+        + startedAt
+        + ", getWorkflow()="
+        + workflow()
+        + ", getTask()="
+        + task()
+        + ", getDefinition()="
+        + definition()
+        + "]";
+  }
+
+  @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = super.hashCode();
+    result = prime * result + Objects.hash(startedAt);
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) return true;
+    if (obj == null) return false;
+    if (!super.equals(obj)) return false;
+    if (getClass() != obj.getClass()) return false;
+    TaskStartedCEData other = (TaskStartedCEData) obj;
+    return Objects.equals(startedAt, other.startedAt);
+  }
+}

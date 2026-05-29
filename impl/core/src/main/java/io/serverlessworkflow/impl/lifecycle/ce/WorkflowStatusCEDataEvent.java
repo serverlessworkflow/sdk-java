@@ -15,7 +15,77 @@
  */
 package io.serverlessworkflow.impl.lifecycle.ce;
 
+import io.serverlessworkflow.impl.WorkflowStatus;
+import io.serverlessworkflow.impl.lifecycle.WorkflowStatusEvent;
 import java.time.OffsetDateTime;
+import java.util.Objects;
 
-public record WorkflowStatusCEDataEvent(
-    String name, WorkflowDefinitionCEData definition, OffsetDateTime updatedAt, String status) {}
+public class WorkflowStatusCEDataEvent extends WorkflowCEData {
+  private OffsetDateTime updatedAt;
+  private String status;
+
+  public WorkflowStatusCEDataEvent(WorkflowStatusEvent ev) {
+    super(ev);
+    this.updatedAt = ev.eventDate();
+    this.status = ev.status().toString();
+  }
+
+  public WorkflowStatusCEDataEvent(
+      String name,
+      WorkflowDefinitionCEData definition,
+      OffsetDateTime time,
+      WorkflowStatus status) {
+    super(name, definition);
+    this.updatedAt = time;
+    this.status = status.toString();
+  }
+
+  public WorkflowStatusCEDataEvent() {}
+
+  public OffsetDateTime updatedAt() {
+    return updatedAt;
+  }
+
+  public String status() {
+    return status;
+  }
+
+  public OffsetDateTime getUpdatedAt() {
+    return updatedAt;
+  }
+
+  public String getStatus() {
+    return status;
+  }
+
+  @Override
+  public String toString() {
+    return "WorkflowStatusCEDataEvent [updatedAt="
+        + updatedAt
+        + ", status="
+        + status
+        + ", getName()="
+        + name()
+        + ", getDefinition()="
+        + definition()
+        + "]";
+  }
+
+  @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = super.hashCode();
+    result = prime * result + Objects.hash(status, updatedAt);
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) return true;
+    if (obj == null) return false;
+    if (!super.equals(obj)) return false;
+    if (getClass() != obj.getClass()) return false;
+    WorkflowStatusCEDataEvent other = (WorkflowStatusCEDataEvent) obj;
+    return Objects.equals(status, other.status) && Objects.equals(updatedAt, other.updatedAt);
+  }
+}
