@@ -16,16 +16,17 @@
 package io.serverlessworkflow.impl.lifecycle.ce;
 
 import io.serverlessworkflow.impl.lifecycle.TaskStartedEvent;
+import java.util.Objects;
 
-public class TaskStartedCEDataWInput extends TaskStartedCEData {
+public class TaskStartedCEDataWithInput extends TaskStartedCEData {
   private Object input;
 
-  public TaskStartedCEDataWInput(TaskStartedEvent ev) {
+  public TaskStartedCEDataWithInput(TaskStartedEvent ev) {
     super(ev);
-    this.input = ev.taskContext().input();
+    this.input = ev.taskContext().input().asJavaObject();
   }
 
-  public TaskStartedCEDataWInput() {}
+  public TaskStartedCEDataWithInput() {}
 
   public Object input() {
     return input;
@@ -33,5 +34,23 @@ public class TaskStartedCEDataWInput extends TaskStartedCEData {
 
   public Object getInput() {
     return input;
+  }
+
+  @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = super.hashCode();
+    result = prime * result + Objects.hash(input);
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) return true;
+    if (obj == null) return false;
+    if (!super.equals(obj)) return false;
+    if (getClass() != obj.getClass()) return false;
+    TaskStartedCEDataWithInput other = (TaskStartedCEDataWithInput) obj;
+    return Objects.equals(input, other.input);
   }
 }

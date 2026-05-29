@@ -16,8 +16,9 @@
 package io.serverlessworkflow.impl.lifecycle.ce;
 
 import io.serverlessworkflow.impl.lifecycle.WorkflowStartedEvent;
+import java.util.Objects;
 
-public class WorkflowStartedCEDataWInput extends WorkflowStartedCEData {
+public class WorkflowStartedCEDataWithInput extends WorkflowStartedCEData {
 
   private Object input;
 
@@ -29,10 +30,28 @@ public class WorkflowStartedCEDataWInput extends WorkflowStartedCEData {
     return input;
   }
 
-  public WorkflowStartedCEDataWInput(WorkflowStartedEvent ev) {
+  public WorkflowStartedCEDataWithInput(WorkflowStartedEvent ev) {
     super(ev);
-    this.input = ev.workflowContext().instanceData().input();
+    this.input = ev.workflowContext().instanceData().input().asJavaObject();
   }
 
-  public WorkflowStartedCEDataWInput() {}
+  public WorkflowStartedCEDataWithInput() {}
+
+  @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = super.hashCode();
+    result = prime * result + Objects.hash(input);
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) return true;
+    if (obj == null) return false;
+    if (!super.equals(obj)) return false;
+    if (getClass() != obj.getClass()) return false;
+    WorkflowStartedCEDataWithInput other = (WorkflowStartedCEDataWithInput) obj;
+    return Objects.equals(input, other.input);
+  }
 }

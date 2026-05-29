@@ -45,20 +45,20 @@ import io.serverlessworkflow.impl.lifecycle.WorkflowStatusEvent;
 import io.serverlessworkflow.impl.lifecycle.WorkflowSuspendedEvent;
 import io.serverlessworkflow.impl.lifecycle.ce.TaskCancelledCEData;
 import io.serverlessworkflow.impl.lifecycle.ce.TaskCompletedCEData;
-import io.serverlessworkflow.impl.lifecycle.ce.TaskCompletedCEDataWOutput;
+import io.serverlessworkflow.impl.lifecycle.ce.TaskCompletedCEDataWithOutput;
 import io.serverlessworkflow.impl.lifecycle.ce.TaskFailedCEData;
 import io.serverlessworkflow.impl.lifecycle.ce.TaskResumedCEData;
 import io.serverlessworkflow.impl.lifecycle.ce.TaskRetriedCEData;
 import io.serverlessworkflow.impl.lifecycle.ce.TaskStartedCEData;
-import io.serverlessworkflow.impl.lifecycle.ce.TaskStartedCEDataWInput;
+import io.serverlessworkflow.impl.lifecycle.ce.TaskStartedCEDataWithInput;
 import io.serverlessworkflow.impl.lifecycle.ce.TaskSuspendedCEData;
 import io.serverlessworkflow.impl.lifecycle.ce.WorkflowCancelledCEData;
 import io.serverlessworkflow.impl.lifecycle.ce.WorkflowCompletedCEData;
-import io.serverlessworkflow.impl.lifecycle.ce.WorkflowCompletedCEDataWOutput;
+import io.serverlessworkflow.impl.lifecycle.ce.WorkflowCompletedCEDataWithOutput;
 import io.serverlessworkflow.impl.lifecycle.ce.WorkflowFailedCEData;
 import io.serverlessworkflow.impl.lifecycle.ce.WorkflowResumedCEData;
 import io.serverlessworkflow.impl.lifecycle.ce.WorkflowStartedCEData;
-import io.serverlessworkflow.impl.lifecycle.ce.WorkflowStartedCEDataWInput;
+import io.serverlessworkflow.impl.lifecycle.ce.WorkflowStartedCEDataWithInput;
 import io.serverlessworkflow.impl.lifecycle.ce.WorkflowStatusCEDataEvent;
 import io.serverlessworkflow.impl.lifecycle.ce.WorkflowSuspendedCEData;
 import io.serverlessworkflow.impl.model.jackson.JacksonModelFactory;
@@ -112,10 +112,11 @@ public class JacksonLifeCyclePublisherTest {
     return Stream.of(
         Arguments.of(new TaskCompletedCEData(new TaskCompletedEvent(workflowContext, taskContext))),
         Arguments.of(
-            new TaskCompletedCEDataWOutput(new TaskCompletedEvent(workflowContext, taskContext))),
+            new TaskCompletedCEDataWithOutput(
+                new TaskCompletedEvent(workflowContext, taskContext))),
         Arguments.of(new TaskStartedCEData(new TaskStartedEvent(workflowContext, taskContext))),
         Arguments.of(
-            new TaskStartedCEDataWInput(new TaskStartedEvent(workflowContext, taskContext))),
+            new TaskStartedCEDataWithInput(new TaskStartedEvent(workflowContext, taskContext))),
         Arguments.of(new TaskCancelledCEData(new TaskCancelledEvent(workflowContext, taskContext))),
         Arguments.of(new TaskResumedCEData(new TaskResumedEvent(workflowContext, taskContext))),
         Arguments.of(new TaskRetriedCEData(new TaskRetriedEvent(workflowContext, taskContext))),
@@ -125,11 +126,11 @@ public class JacksonLifeCyclePublisherTest {
                 new TaskFailedEvent(
                     workflowContext, taskContext, new IllegalArgumentException("NOOOO!!!!")))),
         Arguments.of(new WorkflowStartedCEData(new WorkflowStartedEvent(workflowContext))),
-        Arguments.of(new WorkflowStartedCEDataWInput(new WorkflowStartedEvent(workflowContext))),
+        Arguments.of(new WorkflowStartedCEDataWithInput(new WorkflowStartedEvent(workflowContext))),
         Arguments.of(
             new WorkflowCompletedCEData(new WorkflowCompletedEvent(workflowContext, null))),
         Arguments.of(
-            new WorkflowCompletedCEDataWOutput(
+            new WorkflowCompletedCEDataWithOutput(
                 new WorkflowCompletedEvent(
                     workflowContext, factory.fromAny(Map.of("name", "Javierito"))))),
         Arguments.of(new WorkflowCancelledCEData(new WorkflowCancelledEvent(workflowContext))),

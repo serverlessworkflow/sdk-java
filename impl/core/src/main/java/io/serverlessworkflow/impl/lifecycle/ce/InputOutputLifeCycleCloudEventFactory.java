@@ -24,21 +24,21 @@ public class InputOutputLifeCycleCloudEventFactory extends DefaultLifeCycleCloud
 
   @Override
   public WorkflowCompletedCEData build(WorkflowCompletedEvent ev) {
-    return new WorkflowCompletedCEDataWOutput(ev);
+    return new WorkflowCompletedCEDataWithOutput(ev);
   }
 
   @Override
   public WorkflowStartedCEData build(WorkflowStartedEvent ev) {
-    return new WorkflowStartedCEDataWInput(ev);
+    return new WorkflowStartedCEDataWithInput(ev);
   }
 
   @Override
   public TaskCompletedCEData build(TaskCompletedEvent ev) {
-    return new TaskCompletedCEDataWOutput(ev);
+    return new TaskCompletedCEDataWithOutput(ev);
   }
 
   @Override
   public TaskStartedCEData build(TaskStartedEvent ev) {
-    return new TaskStartedCEDataWInput(ev);
+    return new TaskStartedCEDataWithInput(ev);
   }
 }

@@ -16,17 +16,18 @@
 package io.serverlessworkflow.impl.lifecycle.ce;
 
 import io.serverlessworkflow.impl.lifecycle.TaskCompletedEvent;
+import java.util.Objects;
 
-public class TaskCompletedCEDataWOutput extends TaskCompletedCEData {
+public class TaskCompletedCEDataWithOutput extends TaskCompletedCEData {
 
   private Object output;
 
-  public TaskCompletedCEDataWOutput(TaskCompletedEvent ev) {
+  public TaskCompletedCEDataWithOutput(TaskCompletedEvent ev) {
     super(ev);
-    this.output = ev.taskContext().output();
+    this.output = ev.taskContext().output().asJavaObject();
   }
 
-  public TaskCompletedCEDataWOutput() {}
+  public TaskCompletedCEDataWithOutput() {}
 
   public Object output() {
     return output;
@@ -34,5 +35,23 @@ public class TaskCompletedCEDataWOutput extends TaskCompletedCEData {
 
   public Object getOutput() {
     return output;
+  }
+
+  @Override
+  public int hashCode() {
+    final int prime = 31;
+    int result = super.hashCode();
+    result = prime * result + Objects.hash(output);
+    return result;
+  }
+
+  @Override
+  public boolean equals(Object obj) {
+    if (this == obj) return true;
+    if (obj == null) return false;
+    if (!super.equals(obj)) return false;
+    if (getClass() != obj.getClass()) return false;
+    TaskCompletedCEDataWithOutput other = (TaskCompletedCEDataWithOutput) obj;
+    return Objects.equals(output, other.output);
   }
 }

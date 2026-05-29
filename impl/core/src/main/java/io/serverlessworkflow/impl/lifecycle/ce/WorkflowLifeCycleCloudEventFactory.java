@@ -34,33 +34,33 @@ import io.serverlessworkflow.impl.lifecycle.WorkflowSuspendedEvent;
 
 public interface WorkflowLifeCycleCloudEventFactory {
 
-  public CloudEvent build(CloudEventBuilder builder);
+  CloudEvent build(CloudEventBuilder builder);
 
-  public TaskCompletedCEData build(TaskCompletedEvent ev);
+  TaskCompletedCEData build(TaskCompletedEvent ev);
 
-  public TaskFailedCEData build(TaskFailedEvent ev);
+  TaskFailedCEData build(TaskFailedEvent ev);
 
-  public TaskCancelledCEData build(TaskCancelledEvent ev);
+  TaskCancelledCEData build(TaskCancelledEvent ev);
 
-  public TaskResumedCEData build(TaskResumedEvent ev);
+  TaskResumedCEData build(TaskResumedEvent ev);
 
-  public TaskRetriedCEData build(TaskRetriedEvent ev);
+  TaskRetriedCEData build(TaskRetriedEvent ev);
 
-  public TaskStartedCEData build(TaskStartedEvent ev);
+  TaskStartedCEData build(TaskStartedEvent ev);
 
-  public TaskSuspendedCEData build(TaskSuspendedEvent ev);
+  TaskSuspendedCEData build(TaskSuspendedEvent ev);
 
-  public WorkflowCancelledCEData build(WorkflowCancelledEvent ev);
+  WorkflowCancelledCEData build(WorkflowCancelledEvent ev);
 
-  public WorkflowFailedCEData build(WorkflowFailedEvent ev);
+  WorkflowFailedCEData build(WorkflowFailedEvent ev);
 
-  public WorkflowResumedCEData build(WorkflowResumedEvent ev);
+  WorkflowResumedCEData build(WorkflowResumedEvent ev);
 
-  public WorkflowStartedCEData build(WorkflowStartedEvent ev);
+  WorkflowStartedCEData build(WorkflowStartedEvent ev);
 
-  public WorkflowStatusCEDataEvent build(WorkflowStatusEvent ev);
+  WorkflowStatusCEDataEvent build(WorkflowStatusEvent ev);
 
-  public WorkflowSuspendedCEData build(WorkflowSuspendedEvent ev);
+  WorkflowSuspendedCEData build(WorkflowSuspendedEvent ev);
 
-  public WorkflowCompletedCEData build(WorkflowCompletedEvent event);
+  WorkflowCompletedCEData build(WorkflowCompletedEvent event);
 }
