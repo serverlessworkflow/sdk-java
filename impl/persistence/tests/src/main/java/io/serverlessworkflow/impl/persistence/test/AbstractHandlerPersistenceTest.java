@@ -21,6 +21,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import io.serverlessworkflow.api.types.TaskBase;
+import io.serverlessworkflow.api.types.TryTask;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.TaskContextData;
 import io.serverlessworkflow.impl.WorkflowApplication;
@@ -140,9 +142,15 @@ public abstract class AbstractHandlerPersistenceTest {
     WorkflowContext updateWContext = mock(WorkflowContext.class);
     TaskContext updateTContext = mock(TaskContext.class);
     when(updateTContext.position()).thenReturn(position1);
+    TaskContext parentContext = mock(TaskContext.class);
+    TaskBase taskBase = mock(TryTask.class);
+    when(parentContext.task()).thenReturn(taskBase);
+    when(updateTContext.parent()).thenReturn(Optional.of(parentContext));
     instance.restoreContext(updateWContext, updateTContext);
     ArgumentCaptor<Short> retryAttempt = ArgumentCaptor.forClass(Short.class);
     verify(updateTContext).retryAttempt(retryAttempt.capture());
+    assertThat(retryAttempt.getValue()).isEqualTo(numRetries);
+    verify(parentContext).tryRetryCount(retryAttempt.capture());
     assertThat(retryAttempt.getValue()).isEqualTo(numRetries);
 
     // task completed

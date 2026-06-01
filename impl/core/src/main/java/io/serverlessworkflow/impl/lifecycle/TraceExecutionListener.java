@@ -100,10 +100,11 @@ public class TraceExecutionListener implements WorkflowExecutionListener {
   @Override
   public void onTaskRetried(TaskRetriedEvent ev) {
     logger.info(
-        "Task {} retried at {}, position {}",
+        "Task {} retried at {}, position {}, retried attempt {}",
         ev.taskContext().taskName(),
         ev.eventDate(),
-        ev.taskContext().position());
+        ev.taskContext().position(),
+        ev.taskContext().retryAttempt());
   }
 
   @Override

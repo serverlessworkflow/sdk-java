@@ -157,6 +157,7 @@ public class TryExecutor extends RegularTaskExecutor<TryTask> {
 
   private CompletableFuture<WorkflowModel> doIt(
       WorkflowContext workflow, TaskContext taskContext, WorkflowModel model) {
+    retryIntervalExecutor.ifPresent(r -> r.init(workflow, taskContext, model));
     return TaskExecutorHelper.processTaskList(
             taskExecutor, workflow, Optional.of(taskContext), model)
         .exceptionallyCompose(e -> handleException(e, workflow, taskContext));

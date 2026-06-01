@@ -40,6 +40,7 @@ public class TaskContext implements TaskContextData {
   private short retryAttempt;
   private int iteration;
   private AuthorizationDescriptor authorization;
+  private Optional<Short> tryRetryCount = Optional.empty();
 
   public TaskContext(
       WorkflowModel input,
@@ -69,7 +70,8 @@ public class TaskContext implements TaskContextData {
     this.input = input;
     this.output = output;
     this.rawOutput = rawOutput;
-    this.retryAttempt = parentContext.map(TaskContext::retryAttempt).orElse((short) 0);
+    this.retryAttempt =
+        parentContext.map(ctx -> ctx.tryRetryCount.orElse(ctx.retryAttempt())).orElse((short) 0);
     this.contextVariables =
         parentContext.map(p -> new HashMap<>(p.contextVariables)).orElseGet(HashMap::new);
   }
@@ -179,6 +181,14 @@ public class TaskContext implements TaskContextData {
     this.retryAttempt = retryAttempt;
   }
 
+  public void tryRetryCount(short tryRetryCount) {
+    this.tryRetryCount = Optional.of(tryRetryCount);
+  }
+
+  public Optional<Short> tryRetryCount() {
+    return tryRetryCount;
+  }
+
   public boolean isRetrying() {
     return retryAttempt > 0;
   }
@@ -194,16 +204,19 @@ public class TaskContext implements TaskContextData {
 
   @Override
   public String toString() {
-    return "TaskContext [position="
-        + position
-        + ", startedAt="
-        + startedAt
-        + ", taskName="
-        + taskName
-        + ", completedAt="
-        + completedAt
-        + ", retryAttempt="
-        + retryAttempt
-        + "]";
+    StringBuilder sb =
+        new StringBuilder(
+            "TaskContext [position="
+                + position
+                + ", startedAt="
+                + startedAt
+                + ", taskName="
+                + taskName
+                + ", completedAt="
+                + completedAt
+                + ", retryAttempt="
+                + retryAttempt);
+    tryRetryCount.ifPresent(s -> sb.append(", tryRetryCount=").append(s));
+    return sb.append("]").toString();
   }
 }

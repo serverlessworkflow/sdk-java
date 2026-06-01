@@ -1,0 +1,39 @@
+document:
+  dsl: '1.0.0'
+  namespace: test
+  name: nested-try-catch-retry-inline
+  version: '0.1.0'
+do:
+  - tryServerError:
+      try:
+       - tryCommunication:
+          try:
+            - getPet:
+                call: http
+                with:
+                  method: get
+                  endpoint: http://localhost:9797
+                  redirect: true
+          catch:
+            errors:
+              with:
+                type: https://serverlessworkflow.io/spec/1.0.0/errors/communication
+                status: 404
+            retry:
+              delay: ${"PT\(.delay)S"}
+              backoff:
+                exponential: {}
+              limit:
+                attempt:
+                  count: 5
+      catch:
+          errors:
+            with:
+              type: https://serverlessworkflow.io/spec/1.0.0/errors/communication
+          retry:
+            delay: ${"PT\(.delay)S"}
+            backoff:
+              exponential: {}
+            limit:
+              attempt:
+                count: 2

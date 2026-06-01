@@ -18,23 +18,27 @@ package io.serverlessworkflow.impl.test;
 import static io.serverlessworkflow.api.WorkflowReader.readWorkflowFromClasspath;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.Assert.assertThat;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import io.serverlessworkflow.api.types.TryTask;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowException;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.jackson.JsonUtils;
+import io.serverlessworkflow.impl.lifecycle.TaskCompletedEvent;
+import io.serverlessworkflow.impl.lifecycle.TaskRetriedEvent;
+import io.serverlessworkflow.impl.lifecycle.TraceExecutionListener;
+import io.serverlessworkflow.impl.lifecycle.WorkflowExecutionListener;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.awaitility.Awaitility;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -42,28 +46,42 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 public class RetryTimeoutTest {
 
-  private static WorkflowApplication app;
+  private WorkflowApplication app;
+  private RetryListener retryListener;
   private MockWebServer apiServer;
-
-  @BeforeAll
-  static void init() {
-    app = WorkflowApplication.builder().build();
-  }
-
-  @AfterAll
-  static void cleanup() {
-    app.close();
-  }
 
   @BeforeEach
   void setUp() throws IOException {
     apiServer = new MockWebServer();
     apiServer.start(9797);
+    retryListener = new RetryListener();
+    app =
+        WorkflowApplication.builder()
+            .withListener(retryListener)
+            .withListener(new TraceExecutionListener())
+            .build();
   }
 
   @AfterEach
   void tearDown() throws IOException {
     apiServer.shutdown();
+    app.close();
+  }
+
+  private class RetryListener implements WorkflowExecutionListener {
+
+    private Map<String, Short> taskRetried = new ConcurrentHashMap<>();
+    private Set<Short> contexts = ConcurrentHashMap.newKeySet();
+
+    public void onTaskRetried(TaskRetriedEvent ev) {
+      taskRetried.put(ev.taskContext().position().jsonPointer(), ev.taskContext().retryAttempt());
+    }
+
+    public void onTaskCompleted(TaskCompletedEvent ev) {
+      if (ev.taskContext().task() instanceof TryTask) {
+        contexts.add(ev.taskContext().retryAttempt());
+      }
+    }
   }
 
   @ParameterizedTest
@@ -88,6 +106,37 @@ public class RetryTimeoutTest {
     Awaitility.await()
         .atMost(Duration.ofSeconds(1))
         .until(() -> future.join().as(JsonNode.class).orElseThrow().equals(result));
+    assertThat(retryListener.taskRetried).hasSize(1);
+    assertThat(retryListener.taskRetried.get("do/0/tryGetPet/do/0/getPet")).isEqualTo((short) 2);
+    assertThat(retryListener.contexts).containsOnly((short) 0);
+  }
+
+  @Test
+  void testNestedRetry() throws IOException {
+    final JsonNode result = JsonUtils.mapper().createObjectNode().put("name", "Javierito");
+    apiServer.enqueue(new MockResponse().setResponseCode(404));
+    apiServer.enqueue(new MockResponse().setResponseCode(404));
+    apiServer.enqueue(new MockResponse().setResponseCode(404));
+    apiServer.enqueue(new MockResponse().setResponseCode(404));
+    apiServer.enqueue(new MockResponse().setResponseCode(404));
+    apiServer.enqueue(new MockResponse().setResponseCode(404));
+    apiServer.enqueue(new MockResponse().setResponseCode(500));
+    apiServer.enqueue(
+        new MockResponse()
+            .setResponseCode(200)
+            .setHeader("Content-Type", "application/json")
+            .setBody(JsonUtils.mapper().writeValueAsString(result)));
+    CompletableFuture<WorkflowModel> future =
+        app.workflowDefinition(
+                readWorkflowFromClasspath("workflows-samples/nested-try-catch-retry-inline.yaml"))
+            .instance(Map.of("delay", 0.01))
+            .start();
+    Awaitility.await()
+        .atMost(Duration.ofSeconds(1))
+        .until(() -> future.join().as(JsonNode.class).orElseThrow().equals(result));
+    assertThat(retryListener.taskRetried).hasSize(2);
+    assertThat(retryListener.taskRetried.values()).containsExactlyInAnyOrder((short) 5, (short) 2);
+    assertThat(retryListener.contexts).containsExactlyInAnyOrder((short) 0, (short) 2);
   }
 
   @Test
