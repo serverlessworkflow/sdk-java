@@ -1,0 +1,15 @@
+document:
+  dsl: '1.0.0-alpha5'
+  namespace: test
+  name: listen-correlate-no-expect
+  version: '0.1.0'
+do:
+  - waitForPatient:
+      listen:
+        to:
+          one:
+            with:
+              type: com.example.hospital.patient.admitted
+            correlate:
+              patientId:
+                from: .data.patientId

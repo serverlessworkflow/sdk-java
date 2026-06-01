@@ -38,6 +38,8 @@ public interface ExpressionFactory {
 
   WorkflowValueResolver<String> resolveString(ExpressionDescriptor desc);
 
+  WorkflowValueResolver<Object> resolveValue(ExpressionDescriptor desc);
+
   WorkflowValueResolver<OffsetDateTime> resolveDate(ExpressionDescriptor desc);
 
   WorkflowValueResolver<CloudEventData> resolveCE(ExpressionDescriptor desc);

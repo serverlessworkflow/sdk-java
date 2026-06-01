@@ -18,12 +18,43 @@ package io.serverlessworkflow.impl.events;
 import io.cloudevents.CloudEvent;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.function.Consumer;
 
 public record TypeEventRegistration(
     String type,
     Consumer<CloudEvent> consumer,
     CloudEventPredicate predicate,
+    Collection<CloudEventPredicate> correlationPredicates,
+    boolean hasModelAwareCorrelation,
     WorkflowContext workflow,
     TaskContext task)
-    implements EventRegistration {}
+    implements EventRegistration {
+
+  public TypeEventRegistration(
+      String type,
+      Consumer<CloudEvent> consumer,
+      CloudEventPredicate predicate,
+      Collection<CloudEventPredicate> correlationPredicates,
+      WorkflowContext workflow,
+      TaskContext task) {
+    this(
+        type,
+        consumer,
+        predicate,
+        correlationPredicates,
+        correlationPredicates.stream().anyMatch(ModelAwareCloudEventPredicate.class::isInstance),
+        workflow,
+        task);
+  }
+
+  public TypeEventRegistration(
+      String type,
+      Consumer<CloudEvent> consumer,
+      CloudEventPredicate predicate,
+      WorkflowContext workflow,
+      TaskContext task) {
+    this(type, consumer, predicate, Collections.emptyList(), workflow, task);
+  }
+}

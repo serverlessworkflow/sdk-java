@@ -52,4 +52,6 @@ public interface WorkflowInstance extends WorkflowInstanceData {
   boolean resume();
 
   <T> T addMetadataIfAbsent(String key, Supplier<T> supplier);
+
+  void removeMetadata(String key);
 }

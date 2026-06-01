@@ -36,9 +36,13 @@ public abstract class AbstractEventFilterBuilder<
     return self();
   }
 
-  public SELF correlate(String key, Consumer<ListenTaskBuilder.CorrelatePropertyBuilder> c) {
-    throw new UnsupportedOperationException(
-        "correlate is not supported in the engine level: https://github.com/serverlessworkflow/sdk-java/issues/1206");
+  public SELF correlate(
+      String key, Consumer<? super AbstractListenTaskBuilder.CorrelatePropertyBuilder> c) {
+    AbstractListenTaskBuilder.CorrelatePropertyBuilder cb =
+        new AbstractListenTaskBuilder.CorrelatePropertyBuilder();
+    c.accept(cb);
+    correlate.setAdditionalProperty(key, cb.build());
+    return self();
   }
 
   public EventFilter build() {

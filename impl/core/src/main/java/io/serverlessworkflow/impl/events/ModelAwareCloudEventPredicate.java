@@ -15,16 +15,11 @@
  */
 package io.serverlessworkflow.impl.events;
 
-import java.util.Collection;
-import java.util.Collections;
+import io.serverlessworkflow.impl.TaskContext;
+import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.WorkflowModel;
 
-public record TypeEventRegistrationBuilder(
-    String type,
-    CloudEventPredicate cePredicate,
-    Collection<CloudEventPredicate> correlationPredicates)
-    implements EventRegistrationBuilder {
+public interface ModelAwareCloudEventPredicate extends CloudEventPredicate {
 
-  public TypeEventRegistrationBuilder(String type, CloudEventPredicate cePredicate) {
-    this(type, cePredicate, Collections.emptyList());
-  }
+  boolean test(WorkflowModel eventModel, WorkflowContext workflow, TaskContext task);
 }

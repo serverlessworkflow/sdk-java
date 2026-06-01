@@ -356,6 +356,11 @@ public class WorkflowMutableInstance implements WorkflowInstance {
   }
 
   @Override
+  public void removeMetadata(String key) {
+    additionalObjects.remove(key);
+  }
+
+  @Override
   public <T> Optional<T> findMetadata(String key, Class<T> objectClass) {
     Object value = additionalObjects.get(key);
     return objectClass.isInstance(value) ? Optional.of(objectClass.cast(value)) : Optional.empty();
