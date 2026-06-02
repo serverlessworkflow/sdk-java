@@ -15,6 +15,7 @@
  */
 package io.serverlessworkflow.impl.persistence;
 
+import io.serverlessworkflow.api.types.TryTask;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowDefinition;
@@ -23,6 +24,7 @@ import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowMutableInstance;
 import io.serverlessworkflow.impl.WorkflowStatus;
 import io.serverlessworkflow.impl.executors.TransitionInfo;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public class WorkflowPersistenceInstance extends WorkflowMutableInstance {
@@ -81,6 +83,17 @@ public class WorkflowPersistenceInstance extends WorkflowMutableInstance {
     } else if (taskInfo instanceof RetriedTaskInfo retriedTaskInfo) {
       if (context.retryAttempt() == 0) {
         context.retryAttempt(retriedTaskInfo.retryAttempt());
+      }
+      Optional<TaskContext> searchContext = context.parent();
+      while (searchContext.isPresent()) {
+        TaskContext tryContext = searchContext.orElseThrow();
+        if (tryContext.task() instanceof TryTask) {
+          if (tryContext.tryRetryCount().isEmpty()) {
+            tryContext.tryRetryCount(retriedTaskInfo.retryAttempt());
+          }
+          break;
+        }
+        searchContext = tryContext.parent();
       }
     }
   }

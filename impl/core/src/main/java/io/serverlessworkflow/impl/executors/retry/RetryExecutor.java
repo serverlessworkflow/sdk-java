@@ -22,6 +22,9 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public interface RetryExecutor {
+
+  void init(WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel model);
+
   Optional<CompletableFuture<WorkflowModel>> retry(
       WorkflowContext worfklowContext, TaskContext taskContext, WorkflowModel model);
 }
