@@ -61,8 +61,16 @@ public class TaskExecutorHelper {
       WorkflowMutablePosition position,
       List<TaskItem> taskItems,
       WorkflowDefinition workflowDefinition) {
+    return createExecutorList(position, taskItems, workflowDefinition, "do");
+  }
+
+  public static TaskExecutor<?> createExecutorList(
+      WorkflowMutablePosition position,
+      List<TaskItem> taskItems,
+      WorkflowDefinition workflowDefinition,
+      String positionPrefix) {
     Map<String, TaskExecutorBuilder<?>> executors =
-        createExecutorBuilderList(position, taskItems, workflowDefinition, "do");
+        createExecutorBuilderList(position, taskItems, workflowDefinition, positionPrefix);
     executors.values().forEach(t -> t.connect(executors));
     Iterator<TaskExecutorBuilder<?>> iter = executors.values().iterator();
     TaskExecutor<?> first = iter.next().build();

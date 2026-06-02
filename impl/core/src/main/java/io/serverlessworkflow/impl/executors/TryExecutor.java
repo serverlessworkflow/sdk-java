@@ -72,7 +72,7 @@ public class TryExecutor extends RegularTaskExecutor<TryTask> {
       this.whenFilter = WorkflowUtils.optionalPredicate(application, catchInfo.getWhen());
       this.exceptFilter = WorkflowUtils.optionalPredicate(application, catchInfo.getExceptWhen());
       this.taskExecutor =
-          TaskExecutorHelper.createExecutorList(position, task.getTry(), definition);
+          TaskExecutorHelper.createExecutorList(position, task.getTry(), definition, "try");
       TryTaskCatch catchTask = task.getCatch();
       if (catchTask != null) {
         this.errorVariable = catchTask.getAs();
@@ -80,7 +80,7 @@ public class TryExecutor extends RegularTaskExecutor<TryTask> {
         this.catchTaskExecutor =
             catchTaskDo != null && !catchTaskDo.isEmpty()
                 ? Optional.of(
-                    TaskExecutorHelper.createExecutorList(position, catchTaskDo, definition))
+                    TaskExecutorHelper.createExecutorList(position.copy(), catchTaskDo, definition))
                 : Optional.empty();
 
         Retry retry = catchTask.getRetry();

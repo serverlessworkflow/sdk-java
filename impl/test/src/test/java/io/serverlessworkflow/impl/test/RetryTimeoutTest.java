@@ -27,12 +27,10 @@ import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.jackson.JsonUtils;
 import io.serverlessworkflow.impl.lifecycle.TaskCompletedEvent;
 import io.serverlessworkflow.impl.lifecycle.TaskRetriedEvent;
-import io.serverlessworkflow.impl.lifecycle.TraceExecutionListener;
 import io.serverlessworkflow.impl.lifecycle.WorkflowExecutionListener;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import okhttp3.mockwebserver.MockResponse;
@@ -55,11 +53,7 @@ public class RetryTimeoutTest {
     apiServer = new MockWebServer();
     apiServer.start(9797);
     retryListener = new RetryListener();
-    app =
-        WorkflowApplication.builder()
-            .withListener(retryListener)
-            .withListener(new TraceExecutionListener())
-            .build();
+    app = WorkflowApplication.builder().withListener(retryListener).build();
   }
 
   @AfterEach
@@ -71,7 +65,7 @@ public class RetryTimeoutTest {
   private class RetryListener implements WorkflowExecutionListener {
 
     private Map<String, Short> taskRetried = new ConcurrentHashMap<>();
-    private Set<Short> contexts = ConcurrentHashMap.newKeySet();
+    private Map<String, Short> tryTaskCompleted = new ConcurrentHashMap<>();
 
     public void onTaskRetried(TaskRetriedEvent ev) {
       taskRetried.put(ev.taskContext().position().jsonPointer(), ev.taskContext().retryAttempt());
@@ -79,7 +73,8 @@ public class RetryTimeoutTest {
 
     public void onTaskCompleted(TaskCompletedEvent ev) {
       if (ev.taskContext().task() instanceof TryTask) {
-        contexts.add(ev.taskContext().retryAttempt());
+        tryTaskCompleted.put(
+            ev.taskContext().position().jsonPointer(), ev.taskContext().retryAttempt());
       }
     }
   }
@@ -107,8 +102,8 @@ public class RetryTimeoutTest {
         .atMost(Duration.ofSeconds(1))
         .until(() -> future.join().as(JsonNode.class).orElseThrow().equals(result));
     assertThat(retryListener.taskRetried).hasSize(1);
-    assertThat(retryListener.taskRetried.get("do/0/tryGetPet/do/0/getPet")).isEqualTo((short) 2);
-    assertThat(retryListener.contexts).containsOnly((short) 0);
+    assertThat(retryListener.taskRetried.get("do/0/tryGetPet/try/0/getPet")).isEqualTo((short) 2);
+    assertThat(retryListener.tryTaskCompleted.values()).containsOnly((short) 0);
   }
 
   @Test
@@ -135,8 +130,35 @@ public class RetryTimeoutTest {
         .atMost(Duration.ofSeconds(1))
         .until(() -> future.join().as(JsonNode.class).orElseThrow().equals(result));
     assertThat(retryListener.taskRetried).hasSize(2);
-    assertThat(retryListener.taskRetried.values()).containsExactlyInAnyOrder((short) 5, (short) 2);
-    assertThat(retryListener.contexts).containsExactlyInAnyOrder((short) 0, (short) 2);
+    assertThat(retryListener.taskRetried.get("do/0/tryServerError/try/0/tryCommunication/try"))
+        .isEqualTo((short) 2);
+    assertThat(
+            retryListener.taskRetried.get(
+                "do/0/tryServerError/try/0/tryCommunication/try/0/getPet"))
+        .isEqualTo((short) 5);
+    assertThat(retryListener.tryTaskCompleted.get("do/0/tryServerError/try/0/tryCommunication/try"))
+        .isEqualTo((short) 2);
+    assertThat(retryListener.tryTaskCompleted.get("do/0/tryServerError/try")).isEqualTo((short) 0);
+  }
+
+  @Test
+  void testRetryDo() throws IOException {
+    CompletableFuture<WorkflowModel> future =
+        app.workflowDefinition(
+                readWorkflowFromClasspath("workflows-samples/try-catch-with-do.yaml"))
+            .instance(Map.of("delay", 0.01))
+            .start();
+    Awaitility.await()
+        .atMost(Duration.ofSeconds(1))
+        .until(
+            () ->
+                future
+                    .join()
+                    .asMap()
+                    .orElseThrow()
+                    .equals(Map.of("setAfterFailingTask", "No problem")));
+
+    assertThat(retryListener.tryTaskCompleted.get("do/0/attemptTask/try")).isEqualTo((short) 0);
   }
 
   @Test

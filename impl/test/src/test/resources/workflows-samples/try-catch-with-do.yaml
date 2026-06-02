@@ -1,0 +1,22 @@
+document:
+  dsl: '1.0.0-alpha5'
+  namespace: test
+  name: try-catch-with-do
+  version: '0.1.0'
+do:
+  - attemptTask:
+      try:
+        - failingTask:
+            raise:
+              error:
+                type: https://example.com/errors/runtime
+                status: 500
+      catch:
+        errors:
+          with:
+            type: https://example.com/errors/runtime
+            status: 500
+        do:
+          - executeAfterFailingTask:
+              set:
+                setAfterFailingTask: "No problem"
