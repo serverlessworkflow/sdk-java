@@ -39,6 +39,7 @@ import io.serverlessworkflow.impl.executors.retry.LinearRetryIntervalFunction;
 import io.serverlessworkflow.impl.executors.retry.RetryExecutor;
 import io.serverlessworkflow.impl.executors.retry.RetryIntervalFunction;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -67,28 +68,23 @@ public class TryExecutor extends RegularTaskExecutor<TryTask> {
     protected TryExecutorBuilder(
         WorkflowMutablePosition position, TryTask task, WorkflowDefinition definition) {
       super(position, task, definition);
-      TryTaskCatch catchInfo = task.getCatch();
+      TryTaskCatch catchInfo =
+          Objects.requireNonNull(task.getCatch(), "Catch property is mandatory for Try task");
       this.errorFilter = buildErrorFilter(catchInfo.getErrors());
       this.whenFilter = WorkflowUtils.optionalPredicate(application, catchInfo.getWhen());
       this.exceptFilter = WorkflowUtils.optionalPredicate(application, catchInfo.getExceptWhen());
+      this.errorVariable = catchInfo.getAs();
+      List<TaskItem> catchTaskDo = catchInfo.getDo();
+      this.catchTaskExecutor =
+          catchTaskDo != null && !catchTaskDo.isEmpty()
+              ? Optional.of(
+                  TaskExecutorHelper.createExecutorList(
+                      position.copy().addProperty("catch"), catchTaskDo, definition))
+              : Optional.empty();
+      Retry retry = catchInfo.getRetry();
+      this.retryIntervalExecutor = retry != null ? buildRetryInterval(retry) : Optional.empty();
       this.taskExecutor =
-          TaskExecutorHelper.createExecutorList(position, task.getTry(), definition);
-      TryTaskCatch catchTask = task.getCatch();
-      if (catchTask != null) {
-        this.errorVariable = catchTask.getAs();
-        List<TaskItem> catchTaskDo = catchTask.getDo();
-        this.catchTaskExecutor =
-            catchTaskDo != null && !catchTaskDo.isEmpty()
-                ? Optional.of(
-                    TaskExecutorHelper.createExecutorList(position, catchTaskDo, definition))
-                : Optional.empty();
-
-        Retry retry = catchTask.getRetry();
-        this.retryIntervalExecutor = retry != null ? buildRetryInterval(retry) : Optional.empty();
-      } else {
-        this.catchTaskExecutor = Optional.empty();
-        this.retryIntervalExecutor = Optional.empty();
-      }
+          TaskExecutorHelper.createExecutorList(position, task.getTry(), definition, "try");
     }
 
     private Optional<RetryExecutor> buildRetryInterval(Retry retry) {
