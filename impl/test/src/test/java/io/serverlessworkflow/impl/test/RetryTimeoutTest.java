@@ -20,12 +20,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import io.serverlessworkflow.api.types.TryTask;
+import io.serverlessworkflow.impl.TaskContextData;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowException;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.jackson.JsonUtils;
 import io.serverlessworkflow.impl.lifecycle.TaskCompletedEvent;
+import io.serverlessworkflow.impl.lifecycle.TaskEvent;
 import io.serverlessworkflow.impl.lifecycle.TaskRetriedEvent;
 import io.serverlessworkflow.impl.lifecycle.WorkflowExecutionListener;
 import java.io.IOException;
@@ -65,17 +66,21 @@ public class RetryTimeoutTest {
   private class RetryListener implements WorkflowExecutionListener {
 
     private Map<String, Short> taskRetried = new ConcurrentHashMap<>();
-    private Map<String, Short> tryTaskCompleted = new ConcurrentHashMap<>();
+    private Map<String, Short> taskCompleted = new ConcurrentHashMap<>();
 
+    @Override
     public void onTaskRetried(TaskRetriedEvent ev) {
-      taskRetried.put(ev.taskContext().position().jsonPointer(), ev.taskContext().retryAttempt());
+      add2Map(taskRetried, ev);
     }
 
+    @Override
     public void onTaskCompleted(TaskCompletedEvent ev) {
-      if (ev.taskContext().task() instanceof TryTask) {
-        tryTaskCompleted.put(
-            ev.taskContext().position().jsonPointer(), ev.taskContext().retryAttempt());
-      }
+      add2Map(taskCompleted, ev);
+    }
+
+    private static void add2Map(Map<String, Short> map, TaskEvent ev) {
+      TaskContextData taskContext = ev.taskContext();
+      map.put(taskContext.position().jsonPointer(), taskContext.retryAttempt());
     }
   }
 
@@ -103,7 +108,6 @@ public class RetryTimeoutTest {
         .until(() -> future.join().as(JsonNode.class).orElseThrow().equals(result));
     assertThat(retryListener.taskRetried).hasSize(1);
     assertThat(retryListener.taskRetried.get("do/0/tryGetPet/try/0/getPet")).isEqualTo((short) 2);
-    assertThat(retryListener.tryTaskCompleted.values()).containsOnly((short) 0);
   }
 
   @Test
@@ -136,9 +140,9 @@ public class RetryTimeoutTest {
             retryListener.taskRetried.get(
                 "do/0/tryServerError/try/0/tryCommunication/try/0/getPet"))
         .isEqualTo((short) 5);
-    assertThat(retryListener.tryTaskCompleted.get("do/0/tryServerError/try/0/tryCommunication/try"))
+    assertThat(retryListener.taskCompleted.get("do/0/tryServerError/try/0/tryCommunication/try"))
         .isEqualTo((short) 2);
-    assertThat(retryListener.tryTaskCompleted.get("do/0/tryServerError/try")).isEqualTo((short) 0);
+    assertThat(retryListener.taskCompleted.get("do/0/tryServerError/try")).isEqualTo((short) 0);
   }
 
   @Test
@@ -158,7 +162,9 @@ public class RetryTimeoutTest {
                     .orElseThrow()
                     .equals(Map.of("setAfterFailingTask", "No problem")));
 
-    assertThat(retryListener.tryTaskCompleted.get("do/0/attemptTask/try")).isEqualTo((short) 0);
+    assertThat(retryListener.taskCompleted.get("do/0/attemptTask/try")).isEqualTo((short) 0);
+    assertThat(retryListener.taskCompleted)
+        .containsKey("do/0/attemptTask/catch/do/0/executeAfterFailingTask");
   }
 
   @Test
