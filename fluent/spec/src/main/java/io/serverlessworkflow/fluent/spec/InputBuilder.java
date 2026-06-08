@@ -32,16 +32,32 @@ public class InputBuilder {
   }
 
   public InputBuilder from(String expr) {
-    if (this.input.getFrom() == null) this.input.setFrom(new InputFrom());
-    else this.input.getFrom().setObject(null);
+    if (expr == null) {
+      this.input.setFrom(null);
+      return this;
+    }
+
+    if (this.input.getFrom() == null) {
+      this.input.setFrom(new InputFrom());
+    } else {
+      this.input.getFrom().setObject(null);
+    }
 
     this.input.getFrom().setString(expr);
     return this;
   }
 
   public InputBuilder from(Object object) {
-    if (this.input.getFrom() == null) this.input.setFrom(new InputFrom());
-    else this.input.getFrom().setString(null);
+    if (object == null) {
+      this.input.setFrom(null);
+      return this;
+    }
+
+    if (this.input.getFrom() == null) {
+      this.input.setFrom(new InputFrom());
+    } else {
+      this.input.getFrom().setString(null);
+    }
 
     this.input.getFrom().setObject(object);
     return this;
