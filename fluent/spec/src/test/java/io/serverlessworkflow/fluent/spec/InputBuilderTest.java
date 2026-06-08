@@ -127,6 +127,9 @@ public class InputBuilderTest {
 
     assertNotNull(input.getSchema(), "Schema should be set");
     assertNotNull(input.getSchema().getSchemaExternal(), "Schema external should be set");
+    assertNull(
+        input.getSchema().getSchemaInline(),
+        "Schema inline should be cleared when setting external schema");
   }
 
   @Test
@@ -138,7 +141,9 @@ public class InputBuilderTest {
 
     assertNotNull(input.getSchema(), "Schema should be set");
     assertNotNull(input.getSchema().getSchemaInline(), "Schema inline should be set");
-    // Note: SchemaUnion may keep both, but inline takes precedence in serialization
+    assertNull(
+        input.getSchema().getSchemaExternal(),
+        "Schema external should be cleared when setting inline schema");
   }
 
   @Test
