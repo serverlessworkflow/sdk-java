@@ -64,13 +64,35 @@ public class InputBuilder {
   }
 
   public InputBuilder schema(Object schema) {
-    if (this.input.getSchema() == null) this.input.setSchema(new SchemaUnion());
+    if (schema == null) {
+      this.input.setSchema(null);
+      return this;
+    }
+
+    if (this.input.getSchema() == null) {
+      this.input.setSchema(new SchemaUnion());
+    } else {
+      // Clear external schema when setting inline schema
+      this.input.getSchema().setSchemaExternal(null);
+    }
+
     this.input.getSchema().setSchemaInline(new SchemaInline(schema));
     return this;
   }
 
   public InputBuilder schema(String schema) {
-    if (this.input.getSchema() == null) this.input.setSchema(new SchemaUnion());
+    if (schema == null) {
+      this.input.setSchema(null);
+      return this;
+    }
+
+    if (this.input.getSchema() == null) {
+      this.input.setSchema(new SchemaUnion());
+    } else {
+      // Clear inline schema when setting external schema
+      this.input.getSchema().setSchemaInline(null);
+    }
+
     this.input
         .getSchema()
         .setSchemaExternal(
@@ -84,7 +106,18 @@ public class InputBuilder {
   }
 
   public InputBuilder schemaAsJsonString(String schema) {
-    if (this.input.getSchema() == null) this.input.setSchema(new SchemaUnion());
+    if (schema == null) {
+      this.input.setSchema(null);
+      return this;
+    }
+
+    if (this.input.getSchema() == null) {
+      this.input.setSchema(new SchemaUnion());
+    } else {
+      // Clear external schema when setting inline schema
+      this.input.getSchema().setSchemaExternal(null);
+    }
+
     this.input.getSchema().setSchemaInline(new SchemaInline(schema));
     return this;
   }

@@ -119,8 +119,7 @@ public class InputBuilderTest {
 
   @Test
   void testSchemaObjectThenString() {
-    // Setting schema(Object) then schema(String) sets external schema
-    // Note: SchemaUnion may keep both inline and external, last one set takes precedence
+    // Setting schema(Object) then schema(String) should clear inline and set external
     Map<String, Object> inlineSchema = Map.of("type", "object");
     String externalUri = "http://example.com/schema.json";
     Input input = new InputBuilder().schema(inlineSchema).schema(externalUri).build();
@@ -134,7 +133,7 @@ public class InputBuilderTest {
 
   @Test
   void testSchemaStringThenObject() {
-    // Setting schema(String) then schema(Object) should replace external with inline
+    // Setting schema(String) then schema(Object) should clear external and set inline
     String externalUri = "http://example.com/schema.json";
     Map<String, Object> inlineSchema = Map.of("type", "object");
     Input input = new InputBuilder().schema(externalUri).schema(inlineSchema).build();
@@ -254,5 +253,51 @@ public class InputBuilderTest {
 
     // Verify this would not cause "Both object and str are null" validation error
     // (in the actual runtime, this input would be validated without errors)
+  }
+
+  @Test
+  void testFromNullClearsFrom() {
+    // Passing null to from() should clear the from field
+    Input input = new InputBuilder().from("$.data").from((String) null).build();
+
+    assertNull(input.getFrom(), "From should be cleared when passing null");
+  }
+
+  @Test
+  void testFromObjectNullClearsFrom() {
+    // Passing null object to from() should clear the from field
+    Input input = new InputBuilder().from(Map.of("key", "value")).from((Object) null).build();
+
+    assertNull(input.getFrom(), "From should be cleared when passing null object");
+  }
+
+  @Test
+  void testSchemaNullClearsSchema() {
+    // Passing null to schema(Object) should clear the schema field
+    Input input = new InputBuilder().schema(Map.of("type", "object")).schema((Object) null).build();
+
+    assertNull(input.getSchema(), "Schema should be cleared when passing null");
+  }
+
+  @Test
+  void testSchemaStringNullClearsSchema() {
+    // Passing null to schema(String) should clear the schema field
+    Input input =
+        new InputBuilder().schema("http://example.com/schema").schema((String) null).build();
+
+    assertNull(input.getSchema(), "Schema should be cleared when passing null string");
+  }
+
+  @Test
+  void testSchemaAsJsonStringNullClearsSchema() {
+    // Passing null to schemaAsJsonString should clear the schema field
+    Input input =
+        new InputBuilder()
+            .schemaAsJsonString("{\"type\":\"object\"}")
+            .schemaAsJsonString(null)
+            .build();
+
+    assertNull(
+        input.getSchema(), "Schema should be cleared when passing null to schemaAsJsonString");
   }
 }
