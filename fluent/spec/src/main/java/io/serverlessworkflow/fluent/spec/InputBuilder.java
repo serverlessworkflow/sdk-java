@@ -29,26 +29,32 @@ public class InputBuilder {
 
   InputBuilder() {
     this.input = new Input();
-    this.input.setFrom(new InputFrom());
-    this.input.setSchema(new SchemaUnion());
   }
 
   public InputBuilder from(String expr) {
+    if (this.input.getFrom() == null) this.input.setFrom(new InputFrom());
+    else this.input.getFrom().setObject(null);
+
     this.input.getFrom().setString(expr);
     return this;
   }
 
   public InputBuilder from(Object object) {
+    if (this.input.getFrom() == null) this.input.setFrom(new InputFrom());
+    else this.input.getFrom().setString(null);
+
     this.input.getFrom().setObject(object);
     return this;
   }
 
   public InputBuilder schema(Object schema) {
+    if (this.input.getSchema() == null) this.input.setSchema(new SchemaUnion());
     this.input.getSchema().setSchemaInline(new SchemaInline(schema));
     return this;
   }
 
   public InputBuilder schema(String schema) {
+    if (this.input.getSchema() == null) this.input.setSchema(new SchemaUnion());
     this.input
         .getSchema()
         .setSchemaExternal(
@@ -58,6 +64,12 @@ public class InputBuilder {
                         .withEndpoint(
                             new Endpoint()
                                 .withUriTemplate(UriTemplateBuilder.newUriTemplate(schema)))));
+    return this;
+  }
+
+  public InputBuilder schemaAsJsonString(String schema) {
+    if (this.input.getSchema() == null) this.input.setSchema(new SchemaUnion());
+    this.input.getSchema().setSchemaInline(new SchemaInline(schema));
     return this;
   }
 
