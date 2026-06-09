@@ -30,35 +30,54 @@ class OAuthRequestBuilder
     extends AbstractAuthRequestBuilder<OAuth2ConnectAuthenticationProperties> {
 
   private static String DEFAULT_TOKEN_PATH = "oauth2/token";
+  private static String DEFAULT_REVOCATION_PATH = "oauth2/revoke";
+  private static String DEFAULT_INTROSPECTION_PATH = "oauth2/introspect";
 
   public OAuthRequestBuilder(WorkflowApplication application) {
     super(application);
   }
-
-  // TODO handle revocation and introspection path
-  // private static String DEFAULT_REVOCATION_PATH = "oauth2/revoke";
-  // private static String DEFAULT_INTROSPECTION_PATH = "oauth2/introspect";
 
   @Override
   protected void authenticationURI(OAuth2ConnectAuthenticationProperties authenticationData) {
     OAuth2AuthenticationPropertiesEndpoints endpoints = authenticationData.getEndpoints();
     WorkflowValueResolver<URI> uri =
         WorkflowUtils.getURISupplier(application, authenticationData.getAuthority());
-    String tokenPath =
-        endpoints != null && endpoints.getToken() != null
-            ? endpoints.getToken().replaceAll("^/", "")
-            : DEFAULT_TOKEN_PATH;
-    requestBuilder.withUri((w, t, m) -> concatURI(uri.apply(w, t, m), tokenPath));
+    String token = endpoints != null ? endpoints.getToken() : null;
+    String revocation = endpoints != null ? endpoints.getRevocation() : null;
+    String introspection = endpoints != null ? endpoints.getIntrospection() : null;
+    requestBuilder
+        .withUri(endpointResolver(uri, endpointPath(token, DEFAULT_TOKEN_PATH)))
+        .withRevocationUri(endpointResolver(uri, endpointPath(revocation, DEFAULT_REVOCATION_PATH)))
+        .withIntrospectionUri(
+            endpointResolver(uri, endpointPath(introspection, DEFAULT_INTROSPECTION_PATH)));
   }
 
   @Override
   protected void authenticationURI(Map<String, Object> secret) {
-    String tokenPath =
-        secret.get("endpoints") instanceof Map endpoints ? (String) endpoints.get("token") : null;
-    URI uri =
-        concatURI(
-            URI.create((String) secret.get(AUTHORITY)),
-            tokenPath == null ? DEFAULT_TOKEN_PATH : tokenPath);
-    requestBuilder.withUri((w, t, m) -> uri);
+    URI authority = URI.create((String) secret.get(AUTHORITY));
+    Map<?, ?> endpoints =
+        secret.get("endpoints") instanceof Map<?, ?> raw ? (Map<?, ?>) raw : Map.of();
+    requestBuilder
+        .withUri(staticUri(authority, endpoints, "token", DEFAULT_TOKEN_PATH))
+        .withRevocationUri(staticUri(authority, endpoints, "revocation", DEFAULT_REVOCATION_PATH))
+        .withIntrospectionUri(
+            staticUri(authority, endpoints, "introspection", DEFAULT_INTROSPECTION_PATH));
+  }
+
+  private static String endpointPath(String path, String defaultPath) {
+    return path != null ? path.replaceAll("^/", "") : defaultPath;
+  }
+
+  private WorkflowValueResolver<URI> endpointResolver(
+      WorkflowValueResolver<URI> authority, String path) {
+    return (w, t, m) -> concatURI(authority.apply(w, t, m), path);
+  }
+
+  private static WorkflowValueResolver<URI> staticUri(
+      URI authority, Map<?, ?> endpoints, String key, String defaultPath) {
+    String path =
+        endpoints.get(key) instanceof String value ? endpointPath(value, defaultPath) : defaultPath;
+    URI uri = concatURI(authority, path);
+    return (w, t, m) -> uri;
   }
 }

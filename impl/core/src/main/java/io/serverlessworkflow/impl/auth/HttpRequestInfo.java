@@ -23,5 +23,7 @@ public record HttpRequestInfo(
     Map<String, WorkflowValueResolver<String>> headers,
     Map<String, WorkflowValueResolver<String>> queryParams,
     WorkflowValueResolver<URI> uri,
+    WorkflowValueResolver<URI> revocationUri,
+    WorkflowValueResolver<URI> introspectionUri,
     String grantType,
     String contentType) {}

@@ -32,6 +32,10 @@ class HttpRequestInfoBuilder {
 
   private WorkflowValueResolver<URI> uri;
 
+  private WorkflowValueResolver<URI> revocationUri;
+
+  private WorkflowValueResolver<URI> introspectionUri;
+
   private String grantType;
 
   private String contentType;
@@ -66,6 +70,16 @@ class HttpRequestInfoBuilder {
     return this;
   }
 
+  HttpRequestInfoBuilder withRevocationUri(WorkflowValueResolver<URI> revocationUri) {
+    this.revocationUri = revocationUri;
+    return this;
+  }
+
+  HttpRequestInfoBuilder withIntrospectionUri(WorkflowValueResolver<URI> introspectionUri) {
+    this.introspectionUri = introspectionUri;
+    return this;
+  }
+
   HttpRequestInfoBuilder withContentType(OAuth2TokenRequest oAuth2TokenRequest) {
     if (oAuth2TokenRequest != null) {
       this.contentType = oAuth2TokenRequest.getEncoding().value();
@@ -91,6 +105,7 @@ class HttpRequestInfoBuilder {
     if (contentType == null) {
       contentType = APPLICATION_X_WWW_FORM_URLENCODED.value();
     }
-    return new HttpRequestInfo(headers, queryParams, uri, grantType, contentType);
+    return new HttpRequestInfo(
+        headers, queryParams, uri, revocationUri, introspectionUri, grantType, contentType);
   }
 }
