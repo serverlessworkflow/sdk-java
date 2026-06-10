@@ -23,7 +23,7 @@ import io.serverlessworkflow.impl.marshaller.WorkflowOutputBuffer;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 
-abstract class AbstractJacksonMarshaller<T> implements CustomObjectMarshaller<T> {
+public abstract class AbstractJacksonMarshaller<T> implements CustomObjectMarshaller<T> {
 
   @Override
   public void write(WorkflowOutputBuffer buffer, T object) {
