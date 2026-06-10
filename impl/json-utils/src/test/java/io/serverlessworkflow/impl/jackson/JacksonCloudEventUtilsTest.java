@@ -25,6 +25,7 @@ import io.cloudevents.CloudEvent;
 import io.cloudevents.CloudEventData;
 import io.cloudevents.core.builder.CloudEventBuilder;
 import io.cloudevents.core.data.BytesCloudEventData;
+import io.cloudevents.jackson.JsonCloudEventData;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.Test;
@@ -32,19 +33,65 @@ import org.junit.jupiter.api.Test;
 public class JacksonCloudEventUtilsTest {
 
   private CloudEvent createSampleEvent() {
+    return createEventBuilder()
+        .withData("{\"status\":\"NEEDS_REVISION\"}".getBytes(StandardCharsets.UTF_8))
+        .build();
+  }
+
+  private CloudEventBuilder createEventBuilder() {
     return CloudEventBuilder.v1()
         .withId("5dc4698e-5f98-470e-bb76-04218fe2dd0f")
         .withSource(URI.create("api:/newsletter"))
         .withType("org.acme.newsletter.review.done")
         .withDataContentType("application/json")
-        .withExtension("flowinstanceid", "01KMRBFA19GZYW3XY895Z4SNCK")
-        .withData("{\"status\":\"NEEDS_REVISION\"}".getBytes(StandardCharsets.UTF_8))
-        .build();
+        .withExtension("flowinstanceid", "01KMRBFA19GZYW3XY895Z4SNCK");
+  }
+
+  @Test
+  public void testCloudEventSerializationNullData() {
+    CloudEvent event = createEventBuilder().build();
+
+    JsonNode node = JacksonCloudEventUtils.toJsonNode(event);
+
+    assertNotNull(node);
+    assertTrue(node.has("specversion"), "Missing mandatory specversion attribute");
+    assertEquals("1.0", node.get("specversion").asText());
+
+    assertFalse(node.has("specVersion"), "Jackson POJO serializer mangled the envelope!");
+
+    assertEquals("5dc4698e-5f98-470e-bb76-04218fe2dd0f", node.get("id").asText());
+    assertEquals("01KMRBFA19GZYW3XY895Z4SNCK", node.get("flowinstanceid").asText());
+
+    assertFalse(node.has("data"));
   }
 
   @Test
   public void testCloudEventSerialization() {
     CloudEvent event = createSampleEvent();
+
+    JsonNode node = JacksonCloudEventUtils.toJsonNode(event);
+
+    assertNotNull(node);
+    assertTrue(node.has("specversion"), "Missing mandatory specversion attribute");
+    assertEquals("1.0", node.get("specversion").asText());
+
+    assertFalse(node.has("specVersion"), "Jackson POJO serializer mangled the envelope!");
+
+    assertEquals("5dc4698e-5f98-470e-bb76-04218fe2dd0f", node.get("id").asText());
+    assertEquals("01KMRBFA19GZYW3XY895Z4SNCK", node.get("flowinstanceid").asText());
+
+    assertTrue(node.has("data"));
+    assertEquals("NEEDS_REVISION", node.get("data").get("status").asText());
+  }
+
+  @Test
+  public void testCloudEventSerializationJson() {
+    CloudEvent event =
+        createEventBuilder()
+            .withData(
+                JsonCloudEventData.wrap(
+                    JsonUtils.mapper().createObjectNode().put("status", "NEEDS_REVISION")))
+            .build();
 
     JsonNode node = JacksonCloudEventUtils.toJsonNode(event);
 

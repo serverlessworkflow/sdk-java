@@ -15,14 +15,13 @@
  */
 package io.serverlessworkflow.impl.jackson;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.NullNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.fasterxml.jackson.databind.node.POJONode;
 import io.cloudevents.CloudEvent;
 import io.cloudevents.CloudEventData;
-import io.cloudevents.core.provider.EventFormatProvider;
 import io.cloudevents.jackson.JsonCloudEventData;
-import io.cloudevents.jackson.JsonFormat;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.time.OffsetDateTime;
@@ -35,14 +34,11 @@ public class JacksonCloudEventUtils {
     if (event == null) {
       return NullNode.instance;
     }
-    // Delegate entirely to the official CloudEvents SDK
-    byte[] serialized =
-        EventFormatProvider.getInstance().resolveFormat(JsonFormat.CONTENT_TYPE).serialize(event);
-    try {
-      return JsonUtils.mapper().readTree(serialized);
-    } catch (IOException e) {
-      throw new UncheckedIOException(e);
+    ObjectNode node = JsonUtils.mapper().convertValue(event, ObjectNode.class);
+    if (node.get("data") instanceof POJONode) {
+      node.set("data", toJsonNode(event.getData()));
     }
+    return node;
   }
 
   public static OffsetDateTime toOffset(Date date) {
@@ -66,14 +62,7 @@ public class JacksonCloudEventUtils {
     if (node == null || node.isNull()) {
       return null;
     }
-    try {
-      byte[] ceBytes = JsonUtils.mapper().writeValueAsBytes(node);
-      return EventFormatProvider.getInstance()
-          .resolveFormat(JsonFormat.CONTENT_TYPE)
-          .deserialize(ceBytes);
-    } catch (JsonProcessingException e) {
-      throw new IllegalArgumentException("Failed to deserialize JsonNode to CloudEvent", e);
-    }
+    return JsonUtils.mapper().convertValue(node, CloudEvent.class);
   }
 
   public static CloudEventData toCloudEventData(JsonNode node) {
