@@ -243,7 +243,8 @@ class JaxRSAccessTokenProvider implements AccessTokenProvider {
           e);
     } catch (ProcessingException e) {
       throw new WorkflowException(
-          WorkflowError.communication(task, "Failed to connect or process request: " + e.getMessage())
+          WorkflowError.communication(
+                  task, "Failed to connect or process request: " + e.getMessage())
               .build(),
           e);
     }
