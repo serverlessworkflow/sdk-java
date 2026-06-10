@@ -115,12 +115,13 @@ class JwtClientAssertion extends ClientSecretHandler {
 
   private void addAssertion(String clientId, String assertion) {
     if (clientId != null) {
-      requestBuilder.addQueryParam(
+      requestBuilder.addClientAuthParam(
           CLIENT_ID, WorkflowUtils.buildStringFilter(application, clientId));
     }
     requestBuilder
-        .addQueryParam(CLIENT_ASSERTION_TYPE, JWT_BEARER_ASSERTION_TYPE)
-        .addQueryParam(CLIENT_ASSERTION, WorkflowUtils.buildStringFilter(application, assertion));
+        .addClientAuthParam(CLIENT_ASSERTION_TYPE, JWT_BEARER_ASSERTION_TYPE)
+        .addClientAuthParam(
+            CLIENT_ASSERTION, WorkflowUtils.buildStringFilter(application, assertion));
   }
 
   @SuppressWarnings("unchecked")

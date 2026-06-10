@@ -15,17 +15,13 @@
  */
 package io.serverlessworkflow.impl.auth;
 
-import io.serverlessworkflow.impl.WorkflowValueResolver;
-import java.net.URI;
 import java.util.Map;
-import java.util.Optional;
 
-public record HttpRequestInfo(
-    Map<String, WorkflowValueResolver<String>> headers,
-    Map<String, WorkflowValueResolver<String>> queryParams,
-    Map<String, WorkflowValueResolver<String>> clientAuthParams,
-    WorkflowValueResolver<URI> uri,
-    Optional<WorkflowValueResolver<URI>> revocationUri,
-    Optional<WorkflowValueResolver<URI>> introspectionUri,
-    String grantType,
-    String contentType) {}
+/**
+ * The result of an OAuth2 token introspection request as defined by <a
+ * href="https://www.rfc-editor.org/rfc/rfc7662">RFC 7662</a>.
+ *
+ * <p>{@code active} is the only field guaranteed by the specification; the full response is exposed
+ * through {@code claims} so callers can inspect additional metadata (scope, exp, sub, ...).
+ */
+public record TokenIntrospection(boolean active, Map<String, Object> claims) {}

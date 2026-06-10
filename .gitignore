@@ -33,3 +33,6 @@ build/
 
 # Bob-Shell
 .bob/notes/
+
+
+impl/test/*/**.db

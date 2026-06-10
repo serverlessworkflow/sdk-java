@@ -25,13 +25,14 @@ import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
 import java.net.URI;
 import java.util.Map;
+import java.util.Optional;
 
 class OAuthRequestBuilder
     extends AbstractAuthRequestBuilder<OAuth2ConnectAuthenticationProperties> {
 
-  private static String DEFAULT_TOKEN_PATH = "oauth2/token";
-  private static String DEFAULT_REVOCATION_PATH = "oauth2/revoke";
-  private static String DEFAULT_INTROSPECTION_PATH = "oauth2/introspect";
+  private static final String DEFAULT_TOKEN_PATH = "oauth2/token";
+  private static final String DEFAULT_REVOCATION_PATH = "oauth2/revoke";
+  private static final String DEFAULT_INTROSPECTION_PATH = "oauth2/introspect";
 
   public OAuthRequestBuilder(WorkflowApplication application) {
     super(application);
@@ -47,9 +48,11 @@ class OAuthRequestBuilder
     String introspection = endpoints != null ? endpoints.getIntrospection() : null;
     requestBuilder
         .withUri(endpointResolver(uri, endpointPath(token, DEFAULT_TOKEN_PATH)))
-        .withRevocationUri(endpointResolver(uri, endpointPath(revocation, DEFAULT_REVOCATION_PATH)))
+        .withRevocationUri(
+            Optional.of(endpointResolver(uri, endpointPath(revocation, DEFAULT_REVOCATION_PATH))))
         .withIntrospectionUri(
-            endpointResolver(uri, endpointPath(introspection, DEFAULT_INTROSPECTION_PATH)));
+            Optional.of(
+                endpointResolver(uri, endpointPath(introspection, DEFAULT_INTROSPECTION_PATH))));
   }
 
   @Override
@@ -59,9 +62,11 @@ class OAuthRequestBuilder
         secret.get("endpoints") instanceof Map<?, ?> raw ? (Map<?, ?>) raw : Map.of();
     requestBuilder
         .withUri(staticUri(authority, endpoints, "token", DEFAULT_TOKEN_PATH))
-        .withRevocationUri(staticUri(authority, endpoints, "revocation", DEFAULT_REVOCATION_PATH))
+        .withRevocationUri(
+            Optional.of(staticUri(authority, endpoints, "revocation", DEFAULT_REVOCATION_PATH)))
         .withIntrospectionUri(
-            staticUri(authority, endpoints, "introspection", DEFAULT_INTROSPECTION_PATH));
+            Optional.of(
+                staticUri(authority, endpoints, "introspection", DEFAULT_INTROSPECTION_PATH)));
   }
 
   private static String endpointPath(String path, String defaultPath) {

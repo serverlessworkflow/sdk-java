@@ -329,6 +329,50 @@ public class OAuthHTTPWorkflowDefinitionTest {
   }
 
   @Test
+  public void testOAuthClientSecretPostClientCredentialsAllEndpointsWorkflowExecution()
+      throws Exception {
+    String jwt = fakeAccessToken();
+
+    String tokenResponse = TOKEN_RESPONSE_TEMPLATE.formatted(jwt);
+
+    authServer.enqueue(
+        new MockResponse()
+            .setBody(tokenResponse)
+            .setHeader("Content-Type", "application/json")
+            .setResponseCode(200));
+
+    apiServer.enqueue(
+        new MockResponse()
+            .setBody(RESPONSE)
+            .setHeader("Content-Type", "application/json")
+            .setResponseCode(200));
+
+    Workflow workflow =
+        readWorkflowFromClasspath(
+            "workflows-samples/oauth2/oAuthClientSecretPostClientCredentialsAllEndpointsHttpCall.yaml");
+    Map<String, Object> result =
+        app.workflowDefinition(workflow).instance(Map.of()).start().get().asMap().orElseThrow();
+
+    assertTrue(result.containsKey("message"));
+    assertTrue(result.get("message").toString().contains("Hello World"));
+
+    RecordedRequest tokenRequest = authServer.takeRequest();
+    assertEquals("POST", tokenRequest.getMethod());
+    assertEquals("/realms/test-realm/protocol/openid-connect/token", tokenRequest.getPath());
+    assertEquals("application/x-www-form-urlencoded", tokenRequest.getHeader("Content-Type"));
+
+    String tokenRequestBody = tokenRequest.getBody().readUtf8();
+    assertTrue(tokenRequestBody.contains("grant_type=client_credentials"));
+    assertTrue(tokenRequestBody.contains("client_id=serverless-workflow"));
+    assertTrue(tokenRequestBody.contains("secret=D0ACXCUKOUrL5YL7j6RQWplMaSjPB8MT"));
+
+    RecordedRequest petRequest = apiServer.takeRequest();
+    assertEquals("GET", petRequest.getMethod());
+    assertEquals("/hello", petRequest.getPath());
+    assertEquals("Bearer " + jwt, petRequest.getHeader("Authorization"));
+  }
+
+  @Test
   public void testOAuthClientSecretPostClientCredentialsParamsWorkflowExecution() throws Exception {
     String jwt = fakeAccessToken();
 
