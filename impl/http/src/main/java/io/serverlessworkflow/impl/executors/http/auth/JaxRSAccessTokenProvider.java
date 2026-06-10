@@ -188,6 +188,7 @@ class JaxRSAccessTokenProvider implements AccessTokenProvider {
   private Invocation.Builder commonHeaders(
       WebTarget target, WorkflowContext workflow, TaskContext task, WorkflowModel model) {
     Invocation.Builder builder = target.request(MediaType.APPLICATION_JSON);
+    builder.header("User-Agent", "OAuth2-Client-Credentials/1.0");
     builder.header("Accept", MediaType.APPLICATION_JSON);
     builder.header("Cache-Control", "no-cache");
     for (var entry : requestInfo.headers().entrySet()) {
@@ -242,8 +243,7 @@ class JaxRSAccessTokenProvider implements AccessTokenProvider {
           e);
     } catch (ProcessingException e) {
       throw new WorkflowException(
-          WorkflowError.communication(
-                  -1, task, "Failed to connect or process request: " + e.getMessage())
+          WorkflowError.communication(task, "Failed to connect or process request: " + e.getMessage())
               .build(),
           e);
     }
