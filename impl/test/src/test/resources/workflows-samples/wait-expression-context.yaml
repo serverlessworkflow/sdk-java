@@ -1,0 +1,11 @@
+document:
+  dsl: '1.0.0-alpha5'
+  namespace: test
+  name: wait-expression-context
+  version: '0.1.0'
+do:
+  - setDuration:
+      set:
+        waitTime: PT0.5S
+  - waitExpression:
+      wait: ${.waitTime}

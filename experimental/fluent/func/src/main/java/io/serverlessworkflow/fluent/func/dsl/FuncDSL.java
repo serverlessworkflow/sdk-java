@@ -50,6 +50,7 @@ import io.serverlessworkflow.fluent.spec.dsl.WorkflowSpec;
 import io.serverlessworkflow.impl.TaskContextData;
 import io.serverlessworkflow.impl.WorkflowContextData;
 import java.net.URI;
+import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -1085,6 +1086,221 @@ public final class FuncDSL {
    */
   public static FuncTaskConfigurer tryCatch(String name, Consumer<FuncTryTaskBuilder> configurer) {
     return list -> list.tryCatch(name, configurer);
+  }
+
+  /**
+   * Create a {@link FuncTaskConfigurer} that adds a {@code wait} task configured with a duration
+   * expression.
+   *
+   * <p>Example: {@code tasks(wait("PT5M"))}
+   *
+   * @param durationExpression duration expression or ISO 8601 literal
+   * @return a {@link FuncTaskConfigurer} that adds a WaitTask
+   */
+  public static FuncTaskConfigurer wait(String durationExpression) {
+    return taskList -> taskList.wait(w -> w.wait(durationExpression));
+  }
+
+  /**
+   * Create a {@link FuncTaskConfigurer} that adds a named {@code wait} task configured with a
+   * duration expression.
+   *
+   * <p>Example: {@code tasks(wait("pause", "PT5M"))}
+   *
+   * @param name task name
+   * @param durationExpression duration expression or ISO 8601 literal
+   * @return a {@link FuncTaskConfigurer} that adds a WaitTask
+   */
+  public static FuncTaskConfigurer wait(String name, String durationExpression) {
+    return taskList -> taskList.wait(name, w -> w.wait(durationExpression));
+  }
+
+  /**
+   * Create a {@link FuncTaskConfigurer} that adds a {@code wait} task configured with an inline
+   * duration builder.
+   *
+   * <p>Example: {@code tasks(wait(timeoutSeconds(30)))}
+   *
+   * @param duration timeout builder consumer
+   * @return a {@link FuncTaskConfigurer} that adds a WaitTask
+   */
+  public static FuncTaskConfigurer wait(Consumer<TimeoutBuilder> duration) {
+    return taskList -> taskList.wait(w -> w.wait(duration));
+  }
+
+  /**
+   * Create a {@link FuncTaskConfigurer} that adds a named {@code wait} task configured with an
+   * inline duration builder.
+   *
+   * <p>Example: {@code tasks(wait("pause", timeoutSeconds(30)))}
+   *
+   * @param name task name
+   * @param duration timeout builder consumer
+   * @return a {@link FuncTaskConfigurer} that adds a WaitTask
+   */
+  public static FuncTaskConfigurer wait(String name, Consumer<TimeoutBuilder> duration) {
+    return taskList -> taskList.wait(name, w -> w.wait(duration));
+  }
+
+  /**
+   * Create a {@link FuncTaskConfigurer} that adds a {@code wait} task configured with seconds.
+   *
+   * <p>Example: {@code tasks(waitSeconds(30))}
+   *
+   * @param seconds wait duration in seconds
+   * @return a {@link FuncTaskConfigurer} that adds a WaitTask
+   */
+  public static FuncTaskConfigurer waitSeconds(int seconds) {
+    return taskList -> taskList.wait(w -> w.wait(t -> t.duration(d -> d.seconds(seconds))));
+  }
+
+  /**
+   * Create a {@link FuncTaskConfigurer} that adds a named {@code wait} task configured with
+   * seconds.
+   *
+   * <p>Example: {@code tasks(waitSeconds("pause", 30))}
+   *
+   * @param name task name
+   * @param seconds wait duration in seconds
+   * @return a {@link FuncTaskConfigurer} that adds a WaitTask
+   */
+  public static FuncTaskConfigurer waitSeconds(String name, int seconds) {
+    return taskList -> taskList.wait(name, w -> w.wait(t -> t.duration(d -> d.seconds(seconds))));
+  }
+
+  /**
+   * Create a {@link FuncTaskConfigurer} that adds a {@code wait} task configured with minutes.
+   *
+   * <p>Example: {@code tasks(waitMinutes(5))}
+   *
+   * @param minutes wait duration in minutes
+   * @return a {@link FuncTaskConfigurer} that adds a WaitTask
+   */
+  public static FuncTaskConfigurer waitMinutes(int minutes) {
+    return taskList -> taskList.wait(w -> w.wait(t -> t.duration(d -> d.minutes(minutes))));
+  }
+
+  /**
+   * Create a {@link FuncTaskConfigurer} that adds a named {@code wait} task configured with
+   * minutes.
+   *
+   * <p>Example: {@code tasks(waitMinutes("pause", 5))}
+   *
+   * @param name task name
+   * @param minutes wait duration in minutes
+   * @return a {@link FuncTaskConfigurer} that adds a WaitTask
+   */
+  public static FuncTaskConfigurer waitMinutes(String name, int minutes) {
+    return taskList -> taskList.wait(name, w -> w.wait(t -> t.duration(d -> d.minutes(minutes))));
+  }
+
+  /**
+   * Create a {@link FuncTaskConfigurer} that adds a {@code wait} task configured with hours.
+   *
+   * <p>Example: {@code tasks(waitHours(2))}
+   *
+   * @param hours wait duration in hours
+   * @return a {@link FuncTaskConfigurer} that adds a WaitTask
+   */
+  public static FuncTaskConfigurer waitHours(int hours) {
+    return taskList -> taskList.wait(w -> w.wait(t -> t.duration(d -> d.hours(hours))));
+  }
+
+  /**
+   * Create a {@link FuncTaskConfigurer} that adds a named {@code wait} task configured with hours.
+   *
+   * <p>Example: {@code tasks(waitHours("longPause", 2))}
+   *
+   * @param name task name
+   * @param hours wait duration in hours
+   * @return a {@link FuncTaskConfigurer} that adds a WaitTask
+   */
+  public static FuncTaskConfigurer waitHours(String name, int hours) {
+    return taskList -> taskList.wait(name, w -> w.wait(t -> t.duration(d -> d.hours(hours))));
+  }
+
+  /**
+   * Create a {@link FuncTaskConfigurer} that adds a {@code wait} task configured with days.
+   *
+   * <p>Example: {@code tasks(waitDays(1))}
+   *
+   * @param days wait duration in days
+   * @return a {@link FuncTaskConfigurer} that adds a WaitTask
+   */
+  public static FuncTaskConfigurer waitDays(int days) {
+    return taskList -> taskList.wait(w -> w.wait(t -> t.duration(d -> d.days(days))));
+  }
+
+  /**
+   * Create a {@link FuncTaskConfigurer} that adds a named {@code wait} task configured with days.
+   *
+   * <p>Example: {@code tasks(waitDays("dailyDelay", 1))}
+   *
+   * @param name task name
+   * @param days wait duration in days
+   * @return a {@link FuncTaskConfigurer} that adds a WaitTask
+   */
+  public static FuncTaskConfigurer waitDays(String name, int days) {
+    return taskList -> taskList.wait(name, w -> w.wait(t -> t.duration(d -> d.days(days))));
+  }
+
+  /**
+   * Create a {@link FuncTaskConfigurer} that adds a {@code wait} task configured with milliseconds.
+   *
+   * <p>Example: {@code tasks(waitMillis(500))}
+   *
+   * @param milliseconds wait duration in milliseconds
+   * @return a {@link FuncTaskConfigurer} that adds a WaitTask
+   */
+  public static FuncTaskConfigurer waitMillis(int milliseconds) {
+    return taskList ->
+        taskList.wait(w -> w.wait(t -> t.duration(d -> d.milliseconds(milliseconds))));
+  }
+
+  /**
+   * Create a {@link FuncTaskConfigurer} that adds a named {@code wait} task configured with
+   * milliseconds.
+   *
+   * <p>Example: {@code tasks(waitMillis("shortPause", 500))}
+   *
+   * @param name task name
+   * @param milliseconds wait duration in milliseconds
+   * @return a {@link FuncTaskConfigurer} that adds a WaitTask
+   */
+  public static FuncTaskConfigurer waitMillis(String name, int milliseconds) {
+    return taskList ->
+        taskList.wait(name, w -> w.wait(t -> t.duration(d -> d.milliseconds(milliseconds))));
+  }
+
+  /**
+   * Create a {@link FuncTaskConfigurer} that adds a {@code wait} task configured with a Java {@link
+   * java.time.Duration}.
+   *
+   * <p>The Duration is converted to DurationInline format.
+   *
+   * <p>Example: {@code tasks(wait(Duration.ofMinutes(5).plusSeconds(30)))}
+   *
+   * @param duration wait duration as a Java Duration
+   * @return a {@link FuncTaskConfigurer} that adds a WaitTask
+   */
+  public static FuncTaskConfigurer wait(Duration duration) {
+    return taskList -> taskList.wait(w -> w.wait(duration));
+  }
+
+  /**
+   * Create a {@link FuncTaskConfigurer} that adds a named {@code wait} task configured with a Java
+   * {@link java.time.Duration}.
+   *
+   * <p>The Duration is converted to DurationInline format.
+   *
+   * <p>Example: {@code tasks(wait("pause", Duration.ofMinutes(5)))}
+   *
+   * @param name task name
+   * @param duration wait duration as a Java Duration
+   * @return a {@link FuncTaskConfigurer} that adds a WaitTask
+   */
+  public static FuncTaskConfigurer wait(String name, Duration duration) {
+    return taskList -> taskList.wait(name, w -> w.wait(duration));
   }
 
   /**
