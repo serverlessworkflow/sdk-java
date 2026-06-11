@@ -40,7 +40,7 @@ import io.serverlessworkflow.fluent.func.configurers.SwitchCaseConfigurer;
 import io.serverlessworkflow.fluent.spec.AbstractEventConsumptionStrategyBuilder;
 import io.serverlessworkflow.fluent.spec.EventFilterBuilder;
 import io.serverlessworkflow.fluent.spec.OAuth2AuthenticationPolicyBuilder;
-import io.serverlessworkflow.fluent.spec.OIDCBuilder.OAuth2AuthenticationPropertiesEndpointsBuilder;
+import io.serverlessworkflow.fluent.spec.OAuth2AuthenticationPolicyBuilder.OAuth2AuthenticationPropertiesEndpointsBuilder;
 import io.serverlessworkflow.fluent.spec.ScheduleBuilder;
 import io.serverlessworkflow.fluent.spec.TimeoutBuilder;
 import io.serverlessworkflow.fluent.spec.WorkflowTaskBuilder;

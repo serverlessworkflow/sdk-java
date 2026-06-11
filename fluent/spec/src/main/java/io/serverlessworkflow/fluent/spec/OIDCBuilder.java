@@ -18,7 +18,6 @@ package io.serverlessworkflow.fluent.spec;
 import io.serverlessworkflow.api.types.AuthenticationPolicy;
 import io.serverlessworkflow.api.types.OAuth2AuthenticationData;
 import io.serverlessworkflow.api.types.OAuth2AuthenticationDataClient;
-import io.serverlessworkflow.api.types.OAuth2AuthenticationPropertiesEndpoints;
 import io.serverlessworkflow.api.types.OAuth2ConnectAuthenticationProperties;
 import io.serverlessworkflow.api.types.OAuth2TokenDefinition;
 import io.serverlessworkflow.api.types.OAuth2TokenRequest;
@@ -166,33 +165,6 @@ public abstract class OIDCBuilder<T extends AuthenticationPolicy> {
 
     public OAuth2AuthenticationDataClient build() {
       return this.client;
-    }
-  }
-
-  public static final class OAuth2AuthenticationPropertiesEndpointsBuilder {
-    private final OAuth2AuthenticationPropertiesEndpoints endpoints;
-
-    OAuth2AuthenticationPropertiesEndpointsBuilder() {
-      endpoints = new OAuth2AuthenticationPropertiesEndpoints();
-    }
-
-    public OAuth2AuthenticationPropertiesEndpointsBuilder token(String token) {
-      this.endpoints.setToken(token);
-      return this;
-    }
-
-    public OAuth2AuthenticationPropertiesEndpointsBuilder revocation(String revocation) {
-      this.endpoints.setRevocation(revocation);
-      return this;
-    }
-
-    public OAuth2AuthenticationPropertiesEndpointsBuilder introspection(String introspection) {
-      this.endpoints.setIntrospection(introspection);
-      return this;
-    }
-
-    public OAuth2AuthenticationPropertiesEndpoints build() {
-      return this.endpoints;
     }
   }
 }

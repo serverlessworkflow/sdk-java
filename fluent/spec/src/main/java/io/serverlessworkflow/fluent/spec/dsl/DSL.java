@@ -22,7 +22,7 @@ import io.serverlessworkflow.fluent.spec.EmitTaskBuilder;
 import io.serverlessworkflow.fluent.spec.EventFilterBuilder;
 import io.serverlessworkflow.fluent.spec.ForkTaskBuilder;
 import io.serverlessworkflow.fluent.spec.OAuth2AuthenticationPolicyBuilder;
-import io.serverlessworkflow.fluent.spec.OIDCBuilder.OAuth2AuthenticationPropertiesEndpointsBuilder;
+import io.serverlessworkflow.fluent.spec.OAuth2AuthenticationPolicyBuilder.OAuth2AuthenticationPropertiesEndpointsBuilder;
 import io.serverlessworkflow.fluent.spec.ScheduleBuilder;
 import io.serverlessworkflow.fluent.spec.TaskItemListBuilder;
 import io.serverlessworkflow.fluent.spec.TimeoutBuilder;
@@ -499,7 +499,7 @@ public final class DSL {
    *     e -> e.token("/custom/token"));
    * }</pre>
    *
-   * @param authority OAuth2 authority/issuer URL
+   * @param authority OAuth2 authority URL (the authorization server base URL)
    * @param grant OAuth2 grant type
    * @param clientId client identifier
    * @param clientSecret client secret
