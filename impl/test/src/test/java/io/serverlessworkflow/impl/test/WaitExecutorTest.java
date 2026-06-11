@@ -97,11 +97,29 @@ class WaitExecutorTest {
     assertThat(elapsed).isGreaterThanOrEqualTo(1500); // 1 second + 500 milliseconds
   }
 
-  // ========== DurationLiteral Tests (via Duration.parse) ==========
+  // ========== DurationLiteral Tests (TimeoutAfter.durationLiteral) ==========
 
   @Test
   void testWaitWithDurationLiteralISO8601Seconds() {
     Workflow workflow =
+        WorkflowBuilder.workflow("wait-literal-seconds", "test", "0.1.0")
+            .tasks(
+                list ->
+                    list.wait(
+                        w ->
+                            w.build()
+                                .setWait(
+                                    new io.serverlessworkflow.api.types.TimeoutAfter()
+                                        .withDurationLiteral("PT1S"))))
+            .build();
+
+    long startTime = System.currentTimeMillis();
+    WorkflowModel model = appl.workflowDefinition(workflow).instance(Map.of()).start().join();
+    long elapsed = System.currentTimeMillis() - startTime;
+
+    assertThat(model).isNotNull();
+    assertThat(elapsed).isGreaterThanOrEqualTo(1000);
+  }
         WorkflowBuilder.workflow("wait-literal-seconds", "test", "0.1.0")
             .tasks(DSL.wait(Duration.parse("PT1S")))
             .build();
@@ -119,7 +137,14 @@ class WaitExecutorTest {
     // PT1.5S = 1 second 500 milliseconds (keep test fast)
     Workflow workflow =
         WorkflowBuilder.workflow("wait-literal-composite", "test", "0.1.0")
-            .tasks(DSL.wait(Duration.parse("PT1.5S")))
+            .tasks(
+                list ->
+                    list.wait(
+                        w ->
+                            w.build()
+                                .setWait(
+                                    new io.serverlessworkflow.api.types.TimeoutAfter()
+                                        .withDurationLiteral("PT1.5S"))))
             .build();
 
     long startTime = System.currentTimeMillis();
@@ -135,7 +160,14 @@ class WaitExecutorTest {
     // PT0.1S = 100 milliseconds
     Workflow workflow =
         WorkflowBuilder.workflow("wait-literal-millis", "test", "0.1.0")
-            .tasks(DSL.wait(Duration.parse("PT0.1S")))
+            .tasks(
+                list ->
+                    list.wait(
+                        w ->
+                            w.build()
+                                .setWait(
+                                    new io.serverlessworkflow.api.types.TimeoutAfter()
+                                        .withDurationLiteral("PT0.1S"))))
             .build();
 
     long startTime = System.currentTimeMillis();

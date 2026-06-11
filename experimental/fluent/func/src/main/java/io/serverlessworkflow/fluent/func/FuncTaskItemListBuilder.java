@@ -217,13 +217,12 @@ public class FuncTaskItemListBuilder extends BaseTaskItemListBuilder<FuncTaskIte
     return this.addTaskItem(new TaskItem(name, new Task().withTryTask(tryTaskBuilder.build())));
   }
 
-  public FuncTaskItemListBuilder wait(
-      Consumer<io.serverlessworkflow.fluent.spec.WaitTaskBuilder> itemsConfigurer) {
+  public FuncTaskItemListBuilder wait(Consumer<WaitTaskBuilder> itemsConfigurer) {
     return wait(null, itemsConfigurer);
   }
 
   public FuncTaskItemListBuilder wait(String name, Consumer<WaitTaskBuilder> itemsConfigurer) {
-    name = this.defaultNameAndRequireConfig(name, itemsConfigurer, "wait");
+    name = this.defaultNameAndRequireConfig(name, itemsConfigurer, TYPE_WAIT);
     final WaitTaskBuilder waitTaskBuilder = new WaitTaskBuilder();
     itemsConfigurer.accept(waitTaskBuilder);
     return this.addTaskItem(new TaskItem(name, new Task().withWaitTask(waitTaskBuilder.build())));
