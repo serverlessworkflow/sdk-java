@@ -15,8 +15,6 @@
  */
 package io.serverlessworkflow.fluent.spec.dsl;
 
-import java.time.Duration;
-
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.waitMinutes;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.waitSeconds;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -24,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.serverlessworkflow.api.types.DurationInline;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.fluent.spec.WorkflowBuilder;
+import java.time.Duration;
 import org.junit.jupiter.api.Test;
 
 public class DSLWaitTest {

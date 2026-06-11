@@ -15,8 +15,6 @@
  */
 package io.serverlessworkflow.fluent.func;
 
-import java.time.Duration;
-
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.tasks;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.timeoutSeconds;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -24,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.fluent.func.dsl.FuncDSL;
+import java.time.Duration;
 import org.junit.jupiter.api.Test;
 
 public class FuncDSLWaitTest {

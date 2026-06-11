@@ -222,11 +222,9 @@ public class FuncTaskItemListBuilder extends BaseTaskItemListBuilder<FuncTaskIte
     return wait(null, itemsConfigurer);
   }
 
-  public FuncTaskItemListBuilder wait(
-      String name, Consumer<WaitTaskBuilder> itemsConfigurer) {
+  public FuncTaskItemListBuilder wait(String name, Consumer<WaitTaskBuilder> itemsConfigurer) {
     name = this.defaultNameAndRequireConfig(name, itemsConfigurer, "wait");
-    final WaitTaskBuilder waitTaskBuilder =
-        new WaitTaskBuilder();
+    final WaitTaskBuilder waitTaskBuilder = new WaitTaskBuilder();
     itemsConfigurer.accept(waitTaskBuilder);
     return this.addTaskItem(new TaskItem(name, new Task().withWaitTask(waitTaskBuilder.build())));
   }
