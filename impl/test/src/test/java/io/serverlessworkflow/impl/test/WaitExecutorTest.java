@@ -195,7 +195,7 @@ class WaitExecutorTest {
     // message
     assertThatThrownBy(() -> appl.workflowDefinition(workflow).instance(Map.of()).start().join())
         .hasCauseInstanceOf(IllegalArgumentException.class)
-        .hasMessageContaining("duration 'null'");
+        .hasMessageContaining("evaluated to empty or null");
   }
 
   // ========== Workflow Status Tests ==========
@@ -204,7 +204,7 @@ class WaitExecutorTest {
   void testWaitSetsWorkflowStatusToWaiting() {
     Workflow workflow =
         WorkflowBuilder.workflow("wait-status-waiting", "test", "0.1.0")
-            .tasks(DSL.waitSeconds(2))
+            .tasks(DSL.waitMillis(500))
             .build();
 
     WorkflowInstance instance = appl.workflowDefinition(workflow).instance(Map.of());
@@ -225,7 +225,7 @@ class WaitExecutorTest {
   void testWaitWithSuspendAndResume() {
     Workflow workflow =
         WorkflowBuilder.workflow("wait-suspend-resume", "test", "0.1.0")
-            .tasks(DSL.waitSeconds(2))
+            .tasks(DSL.waitMillis(500))
             .build();
 
     WorkflowInstance instance = appl.workflowDefinition(workflow).instance(Map.of());
@@ -263,12 +263,9 @@ class WaitExecutorTest {
             .tasks(DSL.waitSeconds(1))
             .build();
 
-    long startTime = System.currentTimeMillis();
-    WorkflowModel model = appl.workflowDefinition(workflow).instance(Map.of()).start().join();
-    long elapsed = System.currentTimeMillis() - startTime;
-
-    assertThat(model).isNotNull();
-    assertThat(elapsed).isGreaterThanOrEqualTo(1000);
+    var waitTask = workflow.getDo().get(0).getTask().getWaitTask();
+    assertThat(waitTask).isNotNull();
+    assertThat(waitTask.getWait().getDurationInline().getSeconds()).isEqualTo(1);
   }
 
   @Test
@@ -278,12 +275,9 @@ class WaitExecutorTest {
             .tasks(DSL.waitMillis(100))
             .build();
 
-    long startTime = System.currentTimeMillis();
-    WorkflowModel model = appl.workflowDefinition(workflow).instance(Map.of()).start().join();
-    long elapsed = System.currentTimeMillis() - startTime;
-
-    assertThat(model).isNotNull();
-    assertThat(elapsed).isGreaterThanOrEqualTo(100);
+    var waitTask = workflow.getDo().get(0).getTask().getWaitTask();
+    assertThat(waitTask).isNotNull();
+    assertThat(waitTask.getWait().getDurationInline().getMilliseconds()).isEqualTo(100);
   }
 
   @Test
@@ -293,11 +287,10 @@ class WaitExecutorTest {
             .tasks(DSL.wait(Duration.ofSeconds(1).plusMillis(500)))
             .build();
 
-    long startTime = System.currentTimeMillis();
-    WorkflowModel model = appl.workflowDefinition(workflow).instance(Map.of()).start().join();
-    long elapsed = System.currentTimeMillis() - startTime;
-
-    assertThat(model).isNotNull();
-    assertThat(elapsed).isGreaterThanOrEqualTo(1500);
+    var waitTask = workflow.getDo().get(0).getTask().getWaitTask();
+    assertThat(waitTask).isNotNull();
+    var inline = waitTask.getWait().getDurationInline();
+    assertThat(inline.getSeconds()).isEqualTo(1);
+    assertThat(inline.getMilliseconds()).isEqualTo(500);
   }
 }

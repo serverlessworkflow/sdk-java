@@ -105,13 +105,10 @@ public class WaitExecutor extends RegularTaskExecutor<WaitTask> {
   }
 
   private Duration evaluateDurationExpression(WorkflowContext workflow, TaskContext taskContext) {
-    String durationString =
-        durationExpressionFilter
-            .apply(workflow, taskContext, taskContext.rawInput())
-            .as(String.class)
-            .orElse(null);
+    final Object durationObject =
+        durationExpressionFilter.apply(workflow, taskContext, taskContext.input()).asJavaObject();
 
-    if (!WorkflowUtils.isValid(durationString)) {
+    if (durationObject == null || !WorkflowUtils.isValid(durationObject.toString())) {
       throw new IllegalArgumentException(
           "Wait duration expression evaluated to empty or null at task: "
               + taskContext.position().jsonPointer()
@@ -119,11 +116,11 @@ public class WaitExecutor extends RegularTaskExecutor<WaitTask> {
     }
 
     try {
-      return Duration.parse(durationString.trim());
+      return Duration.parse(durationObject.toString().trim());
     } catch (Exception e) {
       throw new IllegalArgumentException(
           "Wait duration expression returned invalid ISO 8601 duration '"
-              + durationString
+              + durationObject
               + "' at task: "
               + taskContext.position().jsonPointer()
               + ". Expected format: PT[n]H[n]M[n]S (e.g., PT1H30M, PT5S)",
