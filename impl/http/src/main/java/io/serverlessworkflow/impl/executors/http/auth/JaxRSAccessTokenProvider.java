@@ -85,11 +85,12 @@ class JaxRSAccessTokenProvider implements AccessTokenProvider {
     return execute(
         context,
         () -> {
-          Response response =
-              postManagementRequest(workflow, context, model, uri, token, tokenTypeHint);
-          ensureSuccessful(response, context, "introspect token");
-          Map<String, Object> body = response.readEntity(new GenericType<>() {});
-          return new TokenIntrospection(Boolean.TRUE.equals(body.get("active")), body);
+          try (Response response =
+              postManagementRequest(workflow, context, model, uri, token, tokenTypeHint)) {
+            ensureSuccessful(response, context, "introspect token");
+            Map<String, Object> body = response.readEntity(new GenericType<>() {});
+            return new TokenIntrospection(Boolean.TRUE.equals(body.get("active")), body);
+          }
         });
   }
 
@@ -105,10 +106,11 @@ class JaxRSAccessTokenProvider implements AccessTokenProvider {
         context,
         () -> {
           // RFC 7009: a successful revocation responds with HTTP 200 and an empty body.
-          Response response =
-              postManagementRequest(workflow, context, model, uri, token, tokenTypeHint);
-          ensureSuccessful(response, context, "revoke token");
-          return null;
+          try (Response response =
+              postManagementRequest(workflow, context, model, uri, token, tokenTypeHint)) {
+            ensureSuccessful(response, context, "revoke token");
+            return null;
+          }
         });
   }
 
@@ -117,9 +119,10 @@ class JaxRSAccessTokenProvider implements AccessTokenProvider {
     return execute(
         taskContext,
         () -> {
-          Response response = executeRequest(workflowContext, taskContext, model);
-          ensureSuccessful(response, taskContext, "obtain token");
-          return response.readEntity(new GenericType<>() {});
+          try (Response response = executeRequest(workflowContext, taskContext, model)) {
+            ensureSuccessful(response, taskContext, "obtain token");
+            return response.readEntity(new GenericType<>() {});
+          }
         });
   }
 

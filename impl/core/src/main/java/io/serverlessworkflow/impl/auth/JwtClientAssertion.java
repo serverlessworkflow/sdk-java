@@ -73,6 +73,10 @@ class JwtClientAssertion extends ClientSecretHandler {
           "A client assertion must be provided for JWT client authentication");
     }
     if (PASSWORD.value().equals(secret.get(GRANT))) {
+      if (secret.get(USER) == null || secret.get(AuthUtils.PASSWORD) == null) {
+        throw new IllegalArgumentException(
+            "Username and password must be provided for password grant type");
+      }
       password(secret);
     } else {
       clientCredentials(secret);
@@ -126,6 +130,10 @@ class JwtClientAssertion extends ClientSecretHandler {
 
   @SuppressWarnings("unchecked")
   private static Map<String, Object> asClient(Map<String, Object> secret) {
-    return (Map<String, Object>) secret.get(CLIENT);
+    Object client = secret.get(CLIENT);
+    if (client != null && !(client instanceof Map<?, ?>)) {
+      throw new IllegalArgumentException("The 'client' entry must be a map");
+    }
+    return (Map<String, Object>) client;
   }
 }

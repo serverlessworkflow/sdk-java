@@ -130,7 +130,8 @@ abstract class AbstractAuthRequestBuilder<T extends OAuth2AuthenticationData>
       requestBuilder
           .addQueryParam(
               tokenKey, WorkflowUtils.buildStringFilter(application, definition.getToken()))
-          .addQueryParam(typeKey, definition.getType());
+          .addQueryParam(
+              typeKey, WorkflowUtils.buildStringFilter(application, definition.getType()));
     }
   }
 
@@ -142,8 +143,11 @@ abstract class AbstractAuthRequestBuilder<T extends OAuth2AuthenticationData>
   private void tokenParam(String tokenKey, String typeKey, Object rawDefinition) {
     if (rawDefinition instanceof Map<?, ?> definition) {
       requestBuilder
-          .addQueryParam(tokenKey, (String) definition.get(TOKEN))
-          .addQueryParam(typeKey, (String) definition.get(TYPE));
+          .addQueryParam(
+              tokenKey,
+              WorkflowUtils.buildStringFilter(application, (String) definition.get(TOKEN)))
+          .addQueryParam(
+              typeKey, WorkflowUtils.buildStringFilter(application, (String) definition.get(TYPE)));
     }
   }
 

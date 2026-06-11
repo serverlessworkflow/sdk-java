@@ -31,8 +31,6 @@ class OAuthRequestBuilder
     extends AbstractAuthRequestBuilder<OAuth2ConnectAuthenticationProperties> {
 
   private static final String DEFAULT_TOKEN_PATH = "oauth2/token";
-  private static final String DEFAULT_REVOCATION_PATH = "oauth2/revoke";
-  private static final String DEFAULT_INTROSPECTION_PATH = "oauth2/introspect";
 
   public OAuthRequestBuilder(WorkflowApplication application) {
     super(application);
@@ -48,11 +46,8 @@ class OAuthRequestBuilder
     String introspection = endpoints != null ? endpoints.getIntrospection() : null;
     requestBuilder
         .withUri(endpointResolver(uri, endpointPath(token, DEFAULT_TOKEN_PATH)))
-        .withRevocationUri(
-            Optional.of(endpointResolver(uri, endpointPath(revocation, DEFAULT_REVOCATION_PATH))))
-        .withIntrospectionUri(
-            Optional.of(
-                endpointResolver(uri, endpointPath(introspection, DEFAULT_INTROSPECTION_PATH))));
+        .withRevocationUri(optionalEndpoint(uri, revocation))
+        .withIntrospectionUri(optionalEndpoint(uri, introspection));
   }
 
   @Override
@@ -61,16 +56,18 @@ class OAuthRequestBuilder
     Map<?, ?> endpoints =
         secret.get("endpoints") instanceof Map<?, ?> raw ? (Map<?, ?>) raw : Map.of();
     requestBuilder
-        .withUri(staticUri(authority, endpoints, "token", DEFAULT_TOKEN_PATH))
-        .withRevocationUri(
-            Optional.of(staticUri(authority, endpoints, "revocation", DEFAULT_REVOCATION_PATH)))
-        .withIntrospectionUri(
-            Optional.of(
-                staticUri(authority, endpoints, "introspection", DEFAULT_INTROSPECTION_PATH)));
+        .withUri(
+            staticUri(authority, endpointPath((String) endpoints.get("token"), DEFAULT_TOKEN_PATH)))
+        .withRevocationUri(optionalStaticUri(authority, endpoints.get("revocation")))
+        .withIntrospectionUri(optionalStaticUri(authority, endpoints.get("introspection")));
+  }
+
+  private static String stripLeadingSlash(String path) {
+    return path.startsWith("/") ? path.substring(1) : path;
   }
 
   private static String endpointPath(String path, String defaultPath) {
-    return path != null ? path.replaceAll("^/", "") : defaultPath;
+    return path != null ? stripLeadingSlash(path) : defaultPath;
   }
 
   private WorkflowValueResolver<URI> endpointResolver(
@@ -78,11 +75,25 @@ class OAuthRequestBuilder
     return (w, t, m) -> concatURI(authority.apply(w, t, m), path);
   }
 
-  private static WorkflowValueResolver<URI> staticUri(
-      URI authority, Map<?, ?> endpoints, String key, String defaultPath) {
-    String path =
-        endpoints.get(key) instanceof String value ? endpointPath(value, defaultPath) : defaultPath;
+  // Revocation and introspection are optional capabilities: they are only wired up when the
+  // workflow (or secret) explicitly declares the corresponding endpoint, so that providers without
+  // these endpoints fail with a clear "not configured" error instead of calling a guessed path.
+  private Optional<WorkflowValueResolver<URI>> optionalEndpoint(
+      WorkflowValueResolver<URI> authority, String path) {
+    return path == null
+        ? Optional.empty()
+        : Optional.of(endpointResolver(authority, stripLeadingSlash(path)));
+  }
+
+  private static WorkflowValueResolver<URI> staticUri(URI authority, String path) {
     URI uri = concatURI(authority, path);
     return (w, t, m) -> uri;
+  }
+
+  private static Optional<WorkflowValueResolver<URI>> optionalStaticUri(
+      URI authority, Object path) {
+    return path instanceof String value
+        ? Optional.of(staticUri(authority, stripLeadingSlash(value)))
+        : Optional.empty();
   }
 }

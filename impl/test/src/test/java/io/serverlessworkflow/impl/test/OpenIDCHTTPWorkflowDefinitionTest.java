@@ -121,7 +121,7 @@ public class OpenIDCHTTPWorkflowDefinitionTest {
     assertTrue(tokenRequestBody.contains("username=serverless-workflow-test"));
     assertTrue(tokenRequestBody.contains("password=serverless-workflow-test"));
     assertTrue(tokenRequestBody.contains("client_id=serverless-workflow"));
-    assertTrue(tokenRequestBody.contains("client_secret=D0ACXCUKOUrL5YL7j6RQWplMaSjPB8MT"));
+    assertTrue(tokenRequestBody.contains("client_secret=dummy-secret-for-tests"));
     assertTrue(tokenRequestBody.contains("scope=openid"));
 
     RecordedRequest petRequest = apiServer.takeRequest();
@@ -153,7 +153,7 @@ public class OpenIDCHTTPWorkflowDefinitionTest {
     Map<String, String> params =
         Map.of(
             "clientId", "serverless-workflow",
-            "clientSecret", "D0ACXCUKOUrL5YL7j6RQWplMaSjPB8MT",
+            "clientSecret", "dummy-secret-for-tests",
             "username", "serverless-workflow-test",
             "password", "serverless-workflow-test");
 
@@ -173,7 +173,7 @@ public class OpenIDCHTTPWorkflowDefinitionTest {
     assertTrue(tokenRequestBody.contains("username=serverless-workflow-test"));
     assertTrue(tokenRequestBody.contains("password=serverless-workflow-test"));
     assertTrue(tokenRequestBody.contains("client_id=serverless-workflow"));
-    assertTrue(tokenRequestBody.contains("client_secret=D0ACXCUKOUrL5YL7j6RQWplMaSjPB8MT"));
+    assertTrue(tokenRequestBody.contains("client_secret=dummy-secret-for-tests"));
 
     RecordedRequest petRequest = apiServer.takeRequest();
     assertEquals("GET", petRequest.getMethod());
@@ -204,7 +204,7 @@ public class OpenIDCHTTPWorkflowDefinitionTest {
     Map<String, String> params =
         Map.of(
             "clientId", "serverless-workflow",
-            "clientSecret", "D0ACXCUKOUrL5YL7j6RQWplMaSjPB8MT",
+            "clientSecret", "dummy-secret-for-tests",
             "username", "serverless-workflow-test",
             "password", "serverless-workflow-test");
 
@@ -263,7 +263,7 @@ public class OpenIDCHTTPWorkflowDefinitionTest {
     Map<String, String> params =
         Map.of(
             "clientId", "serverless-workflow",
-            "clientSecret", "D0ACXCUKOUrL5YL7j6RQWplMaSjPB8MT");
+            "clientSecret", "dummy-secret-for-tests");
 
     Map<String, Object> result =
         app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
@@ -279,7 +279,7 @@ public class OpenIDCHTTPWorkflowDefinitionTest {
     String tokenRequestBody = tokenRequest.getBody().readUtf8();
     assertTrue(tokenRequestBody.contains("grant_type=client_credentials"));
     assertTrue(tokenRequestBody.contains("client_id=serverless-workflow"));
-    assertTrue(tokenRequestBody.contains("secret=D0ACXCUKOUrL5YL7j6RQWplMaSjPB8MT"));
+    assertTrue(tokenRequestBody.contains("client_secret=dummy-secret-for-tests"));
 
     RecordedRequest petRequest = apiServer.takeRequest();
     assertEquals("GET", petRequest.getMethod());
@@ -312,7 +312,7 @@ public class OpenIDCHTTPWorkflowDefinitionTest {
     Map<String, String> params =
         Map.of(
             "clientId", "serverless-workflow",
-            "clientSecret", "D0ACXCUKOUrL5YL7j6RQWplMaSjPB8MT");
+            "clientSecret", "dummy-secret-for-tests");
 
     Map<String, Object> result =
         app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
@@ -327,7 +327,7 @@ public class OpenIDCHTTPWorkflowDefinitionTest {
     String tokenRequestBody = tokenRequest.getBody().readUtf8();
     assertTrue(tokenRequestBody.contains("grant_type=client_credentials"));
     assertTrue(tokenRequestBody.contains("client_id=serverless-workflow"));
-    assertTrue(tokenRequestBody.contains("secret=D0ACXCUKOUrL5YL7j6RQWplMaSjPB8MT"));
+    assertTrue(tokenRequestBody.contains("client_secret=dummy-secret-for-tests"));
 
     RecordedRequest petRequest = apiServer.takeRequest();
     assertEquals("GET", petRequest.getMethod());
@@ -375,7 +375,7 @@ public class OpenIDCHTTPWorkflowDefinitionTest {
         asJson.containsKey("client_id") && asJson.get("client_id").equals("serverless-workflow"));
     assertTrue(
         asJson.containsKey("client_secret")
-            && asJson.get("client_secret").equals("D0ACXCUKOUrL5YL7j6RQWplMaSjPB8MT"));
+            && asJson.get("client_secret").equals("dummy-secret-for-tests"));
 
     assertTrue(
         asJson.containsKey("username")
@@ -412,7 +412,7 @@ public class OpenIDCHTTPWorkflowDefinitionTest {
     Map<String, String> params =
         Map.of(
             "clientId", "serverless-workflow",
-            "clientSecret", "D0ACXCUKOUrL5YL7j6RQWplMaSjPB8MT",
+            "clientSecret", "dummy-secret-for-tests",
             "username", "serverless-workflow-test",
             "password", "serverless-workflow-test");
 
@@ -435,7 +435,7 @@ public class OpenIDCHTTPWorkflowDefinitionTest {
         asJson.containsKey("client_id") && asJson.get("client_id").equals("serverless-workflow"));
     assertTrue(
         asJson.containsKey("client_secret")
-            && asJson.get("client_secret").equals("D0ACXCUKOUrL5YL7j6RQWplMaSjPB8MT"));
+            && asJson.get("client_secret").equals("dummy-secret-for-tests"));
     assertTrue(
         asJson.containsKey("username")
             && asJson.get("username").equals("serverless-workflow-test"));
@@ -472,7 +472,7 @@ public class OpenIDCHTTPWorkflowDefinitionTest {
     Map<String, String> params =
         Map.of(
             "clientId", "serverless-workflow",
-            "clientSecret", "D0ACXCUKOUrL5YL7j6RQWplMaSjPB8MT",
+            "clientSecret", "dummy-secret-for-tests",
             "username", "serverless-workflow-test",
             "password", "serverless-workflow-test");
 
@@ -494,7 +494,7 @@ public class OpenIDCHTTPWorkflowDefinitionTest {
         asJson.containsKey("client_id") && asJson.get("client_id").equals("serverless-workflow"));
     assertTrue(
         asJson.containsKey("client_secret")
-            && asJson.get("client_secret").equals("D0ACXCUKOUrL5YL7j6RQWplMaSjPB8MT"));
+            && asJson.get("client_secret").equals("dummy-secret-for-tests"));
     assertTrue(
         asJson.containsKey("username")
             && asJson.get("username").equals("serverless-workflow-test"));
@@ -531,7 +531,7 @@ public class OpenIDCHTTPWorkflowDefinitionTest {
     Map<String, String> params =
         Map.of(
             "clientId", "serverless-workflow",
-            "clientSecret", "D0ACXCUKOUrL5YL7j6RQWplMaSjPB8MT",
+            "clientSecret", "dummy-secret-for-tests",
             "username", "serverless-workflow-test",
             "password", "serverless-workflow-test",
             "openidScope", "openidScope",
@@ -556,7 +556,7 @@ public class OpenIDCHTTPWorkflowDefinitionTest {
         asJson.containsKey("client_id") && asJson.get("client_id").equals("serverless-workflow"));
     assertTrue(
         asJson.containsKey("client_secret")
-            && asJson.get("client_secret").equals("D0ACXCUKOUrL5YL7j6RQWplMaSjPB8MT"));
+            && asJson.get("client_secret").equals("dummy-secret-for-tests"));
     assertTrue(
         asJson.containsKey("username")
             && asJson.get("username").equals("serverless-workflow-test"));
@@ -620,7 +620,7 @@ public class OpenIDCHTTPWorkflowDefinitionTest {
         asJson.containsKey("client_id") && asJson.get("client_id").equals("serverless-workflow"));
     assertTrue(
         asJson.containsKey("client_secret")
-            && asJson.get("client_secret").equals("D0ACXCUKOUrL5YL7j6RQWplMaSjPB8MT"));
+            && asJson.get("client_secret").equals("dummy-secret-for-tests"));
 
     RecordedRequest petRequest = apiServer.takeRequest();
     assertEquals("GET", petRequest.getMethod());
@@ -652,7 +652,7 @@ public class OpenIDCHTTPWorkflowDefinitionTest {
     Map<String, String> params =
         Map.of(
             "clientId", "serverless-workflow",
-            "clientSecret", "D0ACXCUKOUrL5YL7j6RQWplMaSjPB8MT");
+            "clientSecret", "dummy-secret-for-tests");
 
     Map<String, Object> result =
         app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
@@ -673,7 +673,7 @@ public class OpenIDCHTTPWorkflowDefinitionTest {
         asJson.containsKey("client_id") && asJson.get("client_id").equals("serverless-workflow"));
     assertTrue(
         asJson.containsKey("client_secret")
-            && asJson.get("client_secret").equals("D0ACXCUKOUrL5YL7j6RQWplMaSjPB8MT"));
+            && asJson.get("client_secret").equals("dummy-secret-for-tests"));
 
     RecordedRequest petRequest = apiServer.takeRequest();
     assertEquals("GET", petRequest.getMethod());
@@ -705,7 +705,7 @@ public class OpenIDCHTTPWorkflowDefinitionTest {
     Map<String, String> params =
         Map.of(
             "clientId", "serverless-workflow",
-            "clientSecret", "D0ACXCUKOUrL5YL7j6RQWplMaSjPB8MT");
+            "clientSecret", "dummy-secret-for-tests");
 
     Map<String, Object> result =
         app.workflowDefinition(workflow).instance(params).start().get().asMap().orElseThrow();
@@ -726,7 +726,7 @@ public class OpenIDCHTTPWorkflowDefinitionTest {
         asJson.containsKey("client_id") && asJson.get("client_id").equals("serverless-workflow"));
     assertTrue(
         asJson.containsKey("client_secret")
-            && asJson.get("client_secret").equals("D0ACXCUKOUrL5YL7j6RQWplMaSjPB8MT"));
+            && asJson.get("client_secret").equals("dummy-secret-for-tests"));
 
     RecordedRequest petRequest = apiServer.takeRequest();
     assertEquals("GET", petRequest.getMethod());
