@@ -15,6 +15,8 @@
  */
 package io.serverlessworkflow.fluent.func;
 
+import java.time.Duration;
+
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.tasks;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.timeoutSeconds;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -175,7 +177,7 @@ public class FuncDSLWaitTest {
   public void when_wait_with_duration() {
     Workflow wf =
         FuncWorkflowBuilder.workflow("waitFlow")
-            .tasks(tasks(FuncDSL.wait(java.time.Duration.ofMinutes(5).plusSeconds(30))))
+            .tasks(tasks(FuncDSL.wait(Duration.ofMinutes(5).plusSeconds(30))))
             .build();
 
     var inline = wf.getDo().get(0).getTask().getWaitTask().getWait().getDurationInline();
@@ -187,7 +189,7 @@ public class FuncDSLWaitTest {
   public void when_wait_with_duration_named() {
     Workflow wf =
         FuncWorkflowBuilder.workflow("waitFlow")
-            .tasks(tasks(FuncDSL.wait("custom", java.time.Duration.ofHours(1))))
+            .tasks(tasks(FuncDSL.wait("custom", Duration.ofHours(1))))
             .build();
 
     assertEquals("custom", wf.getDo().get(0).getName());

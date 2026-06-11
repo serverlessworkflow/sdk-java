@@ -15,6 +15,8 @@
  */
 package io.serverlessworkflow.fluent.spec.dsl;
 
+import java.time.Duration;
+
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.waitMinutes;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.waitSeconds;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -170,7 +172,7 @@ public class DSLWaitTest {
   public void when_wait_with_duration_unnamed() {
     Workflow wf =
         WorkflowBuilder.workflow("waitFlow", "myNs", "1.0.0")
-            .tasks(DSL.wait(java.time.Duration.ofMinutes(5).plusSeconds(30)))
+            .tasks(DSL.wait(Duration.ofMinutes(5).plusSeconds(30)))
             .build();
 
     var waitTask = wf.getDo().get(0).getTask().getWaitTask();
@@ -184,7 +186,7 @@ public class DSLWaitTest {
   public void when_wait_with_duration_named() {
     Workflow wf =
         WorkflowBuilder.workflow("waitFlow", "myNs", "1.0.0")
-            .tasks(DSL.wait("customDelay", java.time.Duration.ofHours(1).plusMinutes(15)))
+            .tasks(DSL.wait("customDelay", Duration.ofHours(1).plusMinutes(15)))
             .build();
 
     assertThat(wf.getDo().get(0).getName()).isEqualTo("customDelay");
