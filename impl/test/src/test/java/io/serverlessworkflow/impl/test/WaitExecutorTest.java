@@ -20,6 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Awaitility.await;
 
+import io.serverlessworkflow.api.types.TimeoutAfter;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.fluent.spec.WorkflowBuilder;
 import io.serverlessworkflow.fluent.spec.dsl.DSL;
@@ -106,22 +107,7 @@ class WaitExecutorTest {
             .tasks(
                 list ->
                     list.wait(
-                        w ->
-                            w.build()
-                                .setWait(
-                                    new io.serverlessworkflow.api.types.TimeoutAfter()
-                                        .withDurationLiteral("PT1S"))))
-            .build();
-
-    long startTime = System.currentTimeMillis();
-    WorkflowModel model = appl.workflowDefinition(workflow).instance(Map.of()).start().join();
-    long elapsed = System.currentTimeMillis() - startTime;
-
-    assertThat(model).isNotNull();
-    assertThat(elapsed).isGreaterThanOrEqualTo(1000);
-  }
-        WorkflowBuilder.workflow("wait-literal-seconds", "test", "0.1.0")
-            .tasks(DSL.wait(Duration.parse("PT1S")))
+                        w -> w.build().setWait(new TimeoutAfter().withDurationExpression("PT1S"))))
             .build();
 
     long startTime = System.currentTimeMillis();
@@ -141,10 +127,7 @@ class WaitExecutorTest {
                 list ->
                     list.wait(
                         w ->
-                            w.build()
-                                .setWait(
-                                    new io.serverlessworkflow.api.types.TimeoutAfter()
-                                        .withDurationLiteral("PT1.5S"))))
+                            w.build().setWait(new TimeoutAfter().withDurationExpression("PT1.5S"))))
             .build();
 
     long startTime = System.currentTimeMillis();
@@ -164,10 +147,7 @@ class WaitExecutorTest {
                 list ->
                     list.wait(
                         w ->
-                            w.build()
-                                .setWait(
-                                    new io.serverlessworkflow.api.types.TimeoutAfter()
-                                        .withDurationLiteral("PT0.1S"))))
+                            w.build().setWait(new TimeoutAfter().withDurationExpression("PT0.1S"))))
             .build();
 
     long startTime = System.currentTimeMillis();

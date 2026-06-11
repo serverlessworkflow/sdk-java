@@ -42,14 +42,14 @@ public class WaitExecutor extends RegularTaskExecutor<WaitTask> {
     protected WaitExecutorBuilder(
         WorkflowMutablePosition position, WaitTask task, WorkflowDefinition definition) {
       super(position, task, definition);
-      if (task.getWait().getDurationExpression() == null) {
-        this.duration =
-            task.getWait().getDurationInline() != null
-                ? toDuration(task.getWait().getDurationInline())
-                : parseDurationLiteral(task.getWait().getDurationLiteral());
-      } else {
+      if (WorkflowUtils.isValid(task.getWait().getDurationExpression())) {
         this.durationExpressionFilter =
             WorkflowUtils.buildWorkflowFilter(application, task.getWait().getDurationExpression());
+      } else {
+        this.duration =
+            WorkflowUtils.isValid(task.getWait().getDurationLiteral())
+                ? parseDurationLiteral(task.getWait().getDurationLiteral())
+                : toDuration(task.getWait().getDurationInline());
       }
     }
 
