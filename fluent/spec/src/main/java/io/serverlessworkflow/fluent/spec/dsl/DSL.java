@@ -21,6 +21,8 @@ import io.serverlessworkflow.fluent.spec.DoTaskBuilder;
 import io.serverlessworkflow.fluent.spec.EmitTaskBuilder;
 import io.serverlessworkflow.fluent.spec.EventFilterBuilder;
 import io.serverlessworkflow.fluent.spec.ForkTaskBuilder;
+import io.serverlessworkflow.fluent.spec.OAuth2AuthenticationPolicyBuilder;
+import io.serverlessworkflow.fluent.spec.OIDCBuilder.OAuth2AuthenticationPropertiesEndpointsBuilder;
 import io.serverlessworkflow.fluent.spec.ScheduleBuilder;
 import io.serverlessworkflow.fluent.spec.TaskItemListBuilder;
 import io.serverlessworkflow.fluent.spec.TimeoutBuilder;
@@ -478,6 +480,75 @@ public final class DSL {
 
   public static AuthenticationConfigurer oauth2(String secret) {
     return a -> a.openIDConnect(o -> o.use(secret));
+  }
+
+  /**
+   * Build an OAuth2 authentication configurer with client credentials and explicit OAuth2 {@code
+   * endpoints} (token, revocation, introspection).
+   *
+   * <p>Unlike the other {@code oauth2(...)} helpers, which delegate to OpenID Connect, this
+   * overload produces a genuine OAuth2 authentication policy so that the OAuth2-specific {@code
+   * endpoints} can be configured without hand-building the whole policy.
+   *
+   * <pre>{@code
+   * oauth2(
+   *     "https://auth.example.com/",
+   *     OAuth2AuthenticationData.OAuth2AuthenticationDataGrant.CLIENT_CREDENTIALS,
+   *     "client-id",
+   *     "client-secret",
+   *     e -> e.token("/custom/token"));
+   * }</pre>
+   *
+   * @param authority OAuth2 authority/issuer URL
+   * @param grant OAuth2 grant type
+   * @param clientId client identifier
+   * @param clientSecret client secret
+   * @param endpoints consumer that configures the OAuth2 endpoints (e.g. {@code e -> e.token(...)})
+   * @return an {@link AuthenticationConfigurer} configured as OAuth2 with custom endpoints
+   */
+  public static AuthenticationConfigurer oauth2(
+      String authority,
+      OAuth2AuthenticationData.OAuth2AuthenticationDataGrant grant,
+      String clientId,
+      String clientSecret,
+      Consumer<OAuth2AuthenticationPropertiesEndpointsBuilder> endpoints) {
+    return a ->
+        a.oauth2(
+            o -> {
+              o.authority(authority).grant(grant).client(c -> c.id(clientId).secret(clientSecret));
+              o.endpoints(endpoints);
+            });
+  }
+
+  /**
+   * Build a fully customizable OAuth2 authentication configurer.
+   *
+   * <p>This overload exposes the complete {@link OAuth2AuthenticationPolicyBuilder} so that every
+   * field of the <a
+   * href="https://github.com/serverlessworkflow/specification/blob/main/dsl-reference.md#oauth2-authentication">OAuth2
+   * authentication</a> section of the Serverless Workflow DSL can be configured: {@code authority},
+   * {@code grant}, {@code client}, {@code request} encoding, {@code issuers}, {@code scopes},
+   * {@code audiences}, {@code username}, {@code password}, {@code subject}, {@code actor} and
+   * {@code endpoints} (token, revocation, introspection).
+   *
+   * <p>Because the OAuth2-only {@code endpoints(...)} method is declared on {@link
+   * OAuth2AuthenticationPolicyBuilder} (not on the shared {@link
+   * io.serverlessworkflow.fluent.spec.OIDCBuilder}), call it first when chaining fluently:
+   *
+   * <pre>{@code
+   * oauth2(o -> o.endpoints(e -> e.token("/custom/token"))
+   *              .authority("https://auth.example.com/")
+   *              .grant(OAuth2AuthenticationData.OAuth2AuthenticationDataGrant.CLIENT_CREDENTIALS)
+   *              .scopes("read", "write")
+   *              .audiences("api://default")
+   *              .client(c -> c.id("client-id").secret("client-secret")));
+   * }</pre>
+   *
+   * @param cfg consumer that configures the OAuth2 authentication policy builder
+   * @return an {@link AuthenticationConfigurer} configured as OAuth2
+   */
+  public static AuthenticationConfigurer oauth2(Consumer<OAuth2AuthenticationPolicyBuilder> cfg) {
+    return a -> a.oauth2(cfg);
   }
 
   /**
