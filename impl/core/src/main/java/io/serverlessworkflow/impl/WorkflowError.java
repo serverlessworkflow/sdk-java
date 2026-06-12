@@ -83,16 +83,20 @@ public record WorkflowError(String type, int status, String instance, String tit
   }
 
   private static WorkflowError commonError(Throwable cause, WorkflowPosition position) {
+    return new WorkflowError(
+        cause.getClass().getTypeName(),
+        500,
+        position == null ? null : position.jsonPointer(),
+        cause.getMessage(),
+        getStackTrace(cause));
+  }
+
+  public static String getStackTrace(Throwable cause) {
     StringWriter stackTrace = new StringWriter();
     try (PrintWriter writer = new PrintWriter(stackTrace)) {
       cause.printStackTrace(writer);
-      return new WorkflowError(
-          cause.getClass().getTypeName(),
-          500,
-          position == null ? null : position.jsonPointer(),
-          cause.getMessage(),
-          stackTrace.toString());
     }
+    return stackTrace.toString();
   }
 
   @Deprecated
