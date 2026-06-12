@@ -24,7 +24,7 @@ import java.util.function.Consumer;
 
 public final class CallHttpSpec implements BaseCallHttpSpec<CallHttpSpec>, CallHttpConfigurer {
 
-  private final List<Consumer<CallHttpTaskFluent<?>>> steps = new ArrayList<>();
+  private final List<Consumer<CallHttpTaskBuilder>> steps = new ArrayList<>();
 
   public CallHttpSpec() {}
 
@@ -34,12 +34,21 @@ public final class CallHttpSpec implements BaseCallHttpSpec<CallHttpSpec>, CallH
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public List<Consumer<CallHttpTaskFluent<?>>> steps() {
-    return steps;
+    // Safe cast because we control that all added consumers accept CallHttpTaskBuilder
+    return (List) steps;
   }
 
   @Override
   public void accept(CallHttpTaskBuilder builder) {
     BaseCallHttpSpec.super.accept(builder);
+  }
+
+  @Override
+  public CallHttpSpec andThen(Consumer<? super CallHttpTaskBuilder> after) {
+    // Convert Consumer<? super CallHttpTaskBuilder> to Consumer<CallHttpTaskBuilder> for storage
+    steps.add(builder -> after.accept(builder));
+    return this;
   }
 }

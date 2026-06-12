@@ -122,6 +122,64 @@ public interface BaseCallHttpSpec<SELF extends BaseCallHttpSpec<SELF>> {
     return self();
   }
 
+  default SELF PUT() {
+    steps().add(c -> c.method("PUT"));
+    return self();
+  }
+
+  default SELF DELETE() {
+    steps().add(c -> c.method("DELETE"));
+    return self();
+  }
+
+  default SELF PATCH() {
+    steps().add(c -> c.method("PATCH"));
+    return self();
+  }
+
+  default SELF HEAD() {
+    steps().add(c -> c.method("HEAD"));
+    return self();
+  }
+
+  default SELF OPTIONS() {
+    steps().add(c -> c.method("OPTIONS"));
+    return self();
+  }
+
+  default SELF redirect(boolean redirect) {
+    steps().add(c -> c.redirect(redirect));
+    return self();
+  }
+
+  default SELF acceptXML() {
+    return header("Accept", "application/xml");
+  }
+
+  default SELF acceptForm() {
+    return header("Accept", "application/x-www-form-urlencoded");
+  }
+
+  default SELF acceptText() {
+    return header("Accept", "text/plain");
+  }
+
+  default SELF contentTypeJSON() {
+    return header("Content-Type", "application/json");
+  }
+
+  default SELF contentTypeXML() {
+    return header("Content-Type", "application/xml");
+  }
+
+  default SELF contentTypeForm() {
+    return header("Content-Type", "application/x-www-form-urlencoded");
+  }
+
+  default SELF contentTypeText() {
+    return header("Content-Type", "text/plain");
+  }
+
   default void accept(CallHttpTaskFluent<?> b) {
     for (var s : steps()) {
       s.accept(b);

@@ -31,4 +31,16 @@ public class CallHttpTaskBuilder extends TaskBaseBuilder<CallHttpTaskBuilder>
   public CallHttpTaskBuilder self() {
     return this;
   }
+
+  /**
+   * Sets the output expression for this task (equivalent to {@code output.as} in YAML).
+   *
+   * <p>Uses jq expression syntax (e.g., {@code $.field} to select a field from the result).
+   *
+   * @param expr jq expression to extract the desired output value from the task result
+   * @return this builder for chaining
+   */
+  public CallHttpTaskBuilder outputAs(String expr) {
+    return this.output(b -> b.as(expr));
+  }
 }
