@@ -27,7 +27,6 @@ import io.serverlessworkflow.impl.auth.AccessTokenProvider;
 import io.serverlessworkflow.impl.auth.HttpRequestInfo;
 import io.serverlessworkflow.impl.auth.JWT;
 import io.serverlessworkflow.impl.auth.JWTConverter;
-import io.serverlessworkflow.impl.auth.TokenIntrospection;
 import io.serverlessworkflow.impl.executors.http.HttpClientResolver;
 import jakarta.ws.rs.ProcessingException;
 import jakarta.ws.rs.client.Client;
@@ -72,46 +71,6 @@ class JaxRSAccessTokenProvider implements AccessTokenProvider {
               });
     }
     return jwt;
-  }
-
-  @Override
-  public TokenIntrospection introspect(
-      WorkflowContext workflow,
-      TaskContext context,
-      WorkflowModel model,
-      String token,
-      String tokenTypeHint) {
-    URI uri = endpoint(requestInfo.introspectionUri(), "introspection", workflow, context, model);
-    return execute(
-        context,
-        () -> {
-          try (Response response =
-              postManagementRequest(workflow, context, model, uri, token, tokenTypeHint)) {
-            ensureSuccessful(response, context, "introspect token");
-            Map<String, Object> body = response.readEntity(new GenericType<>() {});
-            return new TokenIntrospection(Boolean.TRUE.equals(body.get("active")), body);
-          }
-        });
-  }
-
-  @Override
-  public void revoke(
-      WorkflowContext workflow,
-      TaskContext context,
-      WorkflowModel model,
-      String token,
-      String tokenTypeHint) {
-    URI uri = endpoint(requestInfo.revocationUri(), "revocation", workflow, context, model);
-    execute(
-        context,
-        () -> {
-          // RFC 7009: a successful revocation responds with HTTP 200 and an empty body.
-          try (Response response =
-              postManagementRequest(workflow, context, model, uri, token, tokenTypeHint)) {
-            ensureSuccessful(response, context, "revoke token");
-            return null;
-          }
-        });
   }
 
   private Map<String, Object> invoke(
