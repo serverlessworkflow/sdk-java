@@ -15,8 +15,16 @@
  */
 package io.serverlessworkflow.fluent.spec;
 
+import io.serverlessworkflow.api.types.Error;
+import io.serverlessworkflow.api.types.ErrorDetails;
+import io.serverlessworkflow.api.types.ErrorTitle;
+import io.serverlessworkflow.api.types.ErrorType;
+import io.serverlessworkflow.api.types.UriTemplate;
 import io.serverlessworkflow.api.types.Use;
 import io.serverlessworkflow.api.types.UseAuthentications;
+import io.serverlessworkflow.api.types.UseErrors;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -47,9 +55,81 @@ public class UseBuilder {
     return this;
   }
 
-  // TODO: implement the remaining `use` attributes
+  public UseBuilder errors(Consumer<UseErrorsBuilder> errorsConsumer) {
+    final UseErrorsBuilder builder = new UseErrorsBuilder();
+    errorsConsumer.accept(builder);
+    final UseErrors built = builder.build();
+    if (this.use.getErrors() == null) {
+      this.use.setErrors(new UseErrors());
+    }
+    this.use.getErrors().getAdditionalProperties().putAll(built.getAdditionalProperties());
+    return this;
+  }
 
   public Use build() {
     return use;
+  }
+
+  public static final class UseErrorsBuilder {
+    private final UseErrors useErrors;
+
+    UseErrorsBuilder() {
+      this.useErrors = new UseErrors();
+    }
+
+    public UseErrorsBuilder error(String name, Consumer<UseErrorBuilder> errorConsumer) {
+      final UseErrorBuilder errorBuilder = new UseErrorBuilder();
+      errorConsumer.accept(errorBuilder);
+      this.useErrors.withAdditionalProperty(name, errorBuilder.build());
+      return this;
+    }
+
+    public UseErrors build() {
+      return useErrors;
+    }
+  }
+
+  public static final class UseErrorBuilder {
+    private final Error error;
+
+    UseErrorBuilder() {
+      this.error = new Error();
+    }
+
+    public UseErrorBuilder type(String expression) {
+      ErrorType errorType = new ErrorType();
+      try {
+        errorType.withLiteralErrorType(new UriTemplate().withLiteralUri(new URI(expression)));
+      } catch (URISyntaxException ex) {
+        errorType.withExpressionErrorType(expression);
+      }
+      this.error.setType(errorType);
+      return this;
+    }
+
+    public UseErrorBuilder type(URI errorType) {
+      this.error.setType(
+          new ErrorType().withLiteralErrorType(new UriTemplate().withLiteralUri(errorType)));
+      return this;
+    }
+
+    public UseErrorBuilder status(int status) {
+      this.error.setStatus(status);
+      return this;
+    }
+
+    public UseErrorBuilder title(String expression) {
+      this.error.setTitle(new ErrorTitle().withExpressionErrorTitle(expression));
+      return this;
+    }
+
+    public UseErrorBuilder detail(String expression) {
+      this.error.setDetail(new ErrorDetails().withExpressionErrorDetails(expression));
+      return this;
+    }
+
+    public Error build() {
+      return error;
+    }
   }
 }

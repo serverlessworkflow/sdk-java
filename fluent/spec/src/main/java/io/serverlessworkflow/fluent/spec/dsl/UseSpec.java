@@ -20,6 +20,7 @@ import io.serverlessworkflow.fluent.spec.configurers.AuthenticationConfigurer;
 import io.serverlessworkflow.fluent.spec.configurers.UseConfigurer;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.Consumer;
 
 public class UseSpec implements UseConfigurer {
 
@@ -37,6 +38,11 @@ public class UseSpec implements UseConfigurer {
 
   public UseSpec auth(String name, AuthenticationConfigurer auth) {
     steps.add(u -> u.authentications(a -> a.authentication(name, auth)));
+    return this;
+  }
+
+  public UseSpec errors(Consumer<UseBuilder.UseErrorsBuilder> errorsConsumer) {
+    steps.add(u -> u.errors(errorsConsumer));
     return this;
   }
 
