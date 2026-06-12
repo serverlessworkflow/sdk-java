@@ -39,6 +39,8 @@ import io.serverlessworkflow.fluent.func.configurers.FuncTaskConfigurer;
 import io.serverlessworkflow.fluent.func.configurers.SwitchCaseConfigurer;
 import io.serverlessworkflow.fluent.spec.AbstractEventConsumptionStrategyBuilder;
 import io.serverlessworkflow.fluent.spec.EventFilterBuilder;
+import io.serverlessworkflow.fluent.spec.OAuth2AuthenticationPolicyBuilder;
+import io.serverlessworkflow.fluent.spec.OAuth2AuthenticationPolicyBuilder.OAuth2AuthenticationPropertiesEndpointsBuilder;
 import io.serverlessworkflow.fluent.spec.ScheduleBuilder;
 import io.serverlessworkflow.fluent.spec.TimeoutBuilder;
 import io.serverlessworkflow.fluent.spec.WorkflowTaskBuilder;
@@ -2586,5 +2588,25 @@ public final class FuncDSL {
    */
   public static AuthenticationConfigurer oauth2(String secret) {
     return DSL.oauth2(secret);
+  }
+
+  /**
+   * @see DSL#oauth2(String, OAuth2AuthenticationData.OAuth2AuthenticationDataGrant, String, String,
+   *     Consumer)
+   */
+  public static AuthenticationConfigurer oauth2(
+      String authority,
+      OAuth2AuthenticationData.OAuth2AuthenticationDataGrant grant,
+      String clientId,
+      String clientSecret,
+      Consumer<OAuth2AuthenticationPropertiesEndpointsBuilder> endpoints) {
+    return DSL.oauth2(authority, grant, clientId, clientSecret, endpoints);
+  }
+
+  /**
+   * @see DSL#oauth2(Consumer)
+   */
+  public static AuthenticationConfigurer oauth2(Consumer<OAuth2AuthenticationPolicyBuilder> cfg) {
+    return DSL.oauth2(cfg);
   }
 }

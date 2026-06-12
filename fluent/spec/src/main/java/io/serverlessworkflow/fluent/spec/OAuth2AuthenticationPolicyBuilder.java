@@ -17,6 +17,7 @@ package io.serverlessworkflow.fluent.spec;
 
 import io.serverlessworkflow.api.types.OAuth2AuthenticationPolicy;
 import io.serverlessworkflow.api.types.OAuth2AuthenticationPolicyConfiguration;
+import io.serverlessworkflow.api.types.OAuth2AuthenticationPropertiesEndpoints;
 import java.util.function.Consumer;
 
 public final class OAuth2AuthenticationPolicyBuilder
@@ -48,5 +49,32 @@ public final class OAuth2AuthenticationPolicyBuilder
     final OAuth2AuthenticationPolicy policy = new OAuth2AuthenticationPolicy();
     policy.setOauth2(configuration);
     return policy;
+  }
+
+  public static final class OAuth2AuthenticationPropertiesEndpointsBuilder {
+    private final OAuth2AuthenticationPropertiesEndpoints endpoints;
+
+    OAuth2AuthenticationPropertiesEndpointsBuilder() {
+      endpoints = new OAuth2AuthenticationPropertiesEndpoints();
+    }
+
+    public OAuth2AuthenticationPropertiesEndpointsBuilder token(String token) {
+      this.endpoints.setToken(token);
+      return this;
+    }
+
+    public OAuth2AuthenticationPropertiesEndpointsBuilder revocation(String revocation) {
+      this.endpoints.setRevocation(revocation);
+      return this;
+    }
+
+    public OAuth2AuthenticationPropertiesEndpointsBuilder introspection(String introspection) {
+      this.endpoints.setIntrospection(introspection);
+      return this;
+    }
+
+    public OAuth2AuthenticationPropertiesEndpoints build() {
+      return this.endpoints;
+    }
   }
 }
