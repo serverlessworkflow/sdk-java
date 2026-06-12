@@ -15,68 +15,30 @@
  */
 package io.serverlessworkflow.impl.executors;
 
-import io.serverlessworkflow.api.types.DurationInline;
 import io.serverlessworkflow.api.types.WaitTask;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowDefinition;
-import io.serverlessworkflow.impl.WorkflowFilter;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.WorkflowStatus;
 import io.serverlessworkflow.impl.WorkflowUtils;
+import io.serverlessworkflow.impl.WorkflowValueResolver;
 import java.time.Duration;
-import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 public class WaitExecutor extends RegularTaskExecutor<WaitTask> {
 
-  private final Duration duration;
-  private final WorkflowFilter durationExpressionFilter;
+  private final WorkflowValueResolver<Duration> durationResolver;
 
   public static class WaitExecutorBuilder extends RegularTaskExecutorBuilder<WaitTask> {
-    private Duration duration = null;
-    private WorkflowFilter durationExpressionFilter;
+    private WorkflowValueResolver<Duration> durationResolver;
 
     protected WaitExecutorBuilder(
         WorkflowMutablePosition position, WaitTask task, WorkflowDefinition definition) {
       super(position, task, definition);
-      if (WorkflowUtils.isValid(task.getWait().getDurationExpression())) {
-        this.durationExpressionFilter =
-            WorkflowUtils.buildWorkflowFilter(application, task.getWait().getDurationExpression());
-      } else {
-        this.duration =
-            WorkflowUtils.isValid(task.getWait().getDurationLiteral())
-                ? parseDurationLiteral(task.getWait().getDurationLiteral())
-                : toDuration(task.getWait().getDurationInline());
-      }
-    }
-
-    private Duration toDuration(DurationInline durationInline) {
-      return Duration.ofMillis(durationInline.getMilliseconds())
-          .plusSeconds(durationInline.getSeconds())
-          .plusMinutes(durationInline.getMinutes())
-          .plusHours(durationInline.getHours())
-          .plusDays(durationInline.getDays());
-    }
-
-    private Duration parseDurationLiteral(String literal) {
-      if (!WorkflowUtils.isValid(literal)) {
-        throw new IllegalArgumentException(
-            "Wait task duration literal cannot be null or empty at position: "
-                + position.jsonPointer());
-      }
-      try {
-        return Duration.parse(literal);
-      } catch (Exception e) {
-        throw new IllegalArgumentException(
-            "Invalid ISO 8601 duration literal '"
-                + literal
-                + "' at position: "
-                + position.jsonPointer(),
-            e);
-      }
+      durationResolver = WorkflowUtils.fromTimeoutAfter(application, task.getWait());
     }
 
     @Override
@@ -87,8 +49,7 @@ public class WaitExecutor extends RegularTaskExecutor<WaitTask> {
 
   protected WaitExecutor(WaitExecutorBuilder builder) {
     super(builder);
-    this.duration = builder.duration;
-    this.durationExpressionFilter = builder.durationExpressionFilter;
+    this.durationResolver = builder.durationResolver;
   }
 
   @Override
@@ -98,33 +59,7 @@ public class WaitExecutor extends RegularTaskExecutor<WaitTask> {
     return new CompletableFuture<WorkflowModel>()
         .completeOnTimeout(
             taskContext.output(),
-            Objects.requireNonNullElseGet(
-                    duration, () -> evaluateDurationExpression(workflow, taskContext))
-                .toMillis(),
+            durationResolver.apply(workflow, taskContext, taskContext.input()).toMillis(),
             TimeUnit.MILLISECONDS);
-  }
-
-  private Duration evaluateDurationExpression(WorkflowContext workflow, TaskContext taskContext) {
-    final Object durationObject =
-        durationExpressionFilter.apply(workflow, taskContext, taskContext.input()).asJavaObject();
-
-    if (durationObject == null || !WorkflowUtils.isValid(durationObject.toString())) {
-      throw new IllegalArgumentException(
-          "Wait duration expression evaluated to empty or null at task: "
-              + taskContext.position().jsonPointer()
-              + ". Expression must return a valid ISO 8601 duration string.");
-    }
-
-    try {
-      return Duration.parse(durationObject.toString().trim());
-    } catch (Exception e) {
-      throw new IllegalArgumentException(
-          "Wait duration expression returned invalid ISO 8601 duration '"
-              + durationObject
-              + "' at task: "
-              + taskContext.position().jsonPointer()
-              + ". Expected format: PT[n]H[n]M[n]S (e.g., PT1H30M, PT5S)",
-          e);
-    }
   }
 }
