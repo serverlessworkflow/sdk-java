@@ -20,6 +20,7 @@ import io.serverlessworkflow.fluent.spec.configurers.CallHttpConfigurer;
 import io.serverlessworkflow.fluent.spec.spi.CallHttpTaskFluent;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 public final class CallHttpSpec implements BaseCallHttpSpec<CallHttpSpec>, CallHttpConfigurer {
@@ -41,5 +42,20 @@ public final class CallHttpSpec implements BaseCallHttpSpec<CallHttpSpec>, CallH
   @Override
   public void accept(CallHttpTaskBuilder builder) {
     BaseCallHttpSpec.super.accept(builder);
+  }
+
+  @Override
+  public CallHttpSpec andThen(Consumer<? super CallHttpTaskBuilder> after) {
+    Objects.requireNonNull(after, "after");
+    steps.add(
+        fluent -> {
+          if (!(fluent instanceof CallHttpTaskBuilder builder)) {
+            throw new IllegalArgumentException(
+                "andThen requires CallHttpTaskBuilder, got: "
+                    + (fluent == null ? "null" : fluent.getClass().getName()));
+          }
+          after.accept(builder);
+        });
+    return this;
   }
 }
