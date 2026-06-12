@@ -35,6 +35,23 @@ public class AuthUtils {
   public static final String REQUEST = "request";
   public static final String ENCODING = "encoding";
   public static final String AUTHENTICATION = "authentication";
+  public static final String ASSERTION = "assertion";
+  public static final String SUBJECT = "subject";
+  public static final String ACTOR = "actor";
+  public static final String TYPE = "type";
+  public static final String REVOCATION = "revocation";
+  public static final String INTROSPECTION = "introspection";
+
+  public static final String CLIENT_ID = "client_id";
+  public static final String CLIENT_ASSERTION = "client_assertion";
+  public static final String CLIENT_ASSERTION_TYPE = "client_assertion_type";
+  public static final String JWT_BEARER_ASSERTION_TYPE =
+      "urn:ietf:params:oauth:client-assertion-type:jwt-bearer";
+
+  public static final String SUBJECT_TOKEN = "subject_token";
+  public static final String SUBJECT_TOKEN_TYPE = "subject_token_type";
+  public static final String ACTOR_TOKEN = "actor_token";
+  public static final String ACTOR_TOKEN_TYPE = "actor_token_type";
 
   private static final String AUTH_HEADER_FORMAT = "%s %s";
 

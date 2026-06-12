@@ -17,6 +17,7 @@ package io.serverlessworkflow.impl.auth;
 
 import static io.serverlessworkflow.api.types.OAuth2AuthenticationData.OAuth2AuthenticationDataGrant.CLIENT_CREDENTIALS;
 import static io.serverlessworkflow.api.types.OAuth2AuthenticationData.OAuth2AuthenticationDataGrant.PASSWORD;
+import static io.serverlessworkflow.api.types.OAuth2AuthenticationData.OAuth2AuthenticationDataGrant.URN_IETF_PARAMS_OAUTH_GRANT_TYPE_TOKEN_EXCHANGE;
 
 import io.serverlessworkflow.api.types.OAuth2AuthenticationData;
 import io.serverlessworkflow.impl.WorkflowApplication;
@@ -48,7 +49,8 @@ abstract class ClientSecretHandler {
       }
 
       password(authenticationData);
-    } else if (authenticationData.getGrant().equals(CLIENT_CREDENTIALS)) {
+    } else if (authenticationData.getGrant().equals(CLIENT_CREDENTIALS)
+        || authenticationData.getGrant().equals(URN_IETF_PARAMS_OAUTH_GRANT_TYPE_TOKEN_EXCHANGE)) {
       if (authenticationData.getClient() == null
           || authenticationData.getClient().getId() == null
           || authenticationData.getClient().getSecret() == null) {
@@ -74,6 +76,7 @@ abstract class ClientSecretHandler {
     String grant = Objects.requireNonNull((String) secret.get("grant"), "Grant is mandatory field");
     switch (grant) {
       case "client_credentials":
+      case "urn:ietf:params:oauth:grant-type:token-exchange":
         clientCredentials(secret);
         break;
       case "password":

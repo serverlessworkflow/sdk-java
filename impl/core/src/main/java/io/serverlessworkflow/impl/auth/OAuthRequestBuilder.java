@@ -25,40 +25,75 @@ import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
 import java.net.URI;
 import java.util.Map;
+import java.util.Optional;
 
 class OAuthRequestBuilder
     extends AbstractAuthRequestBuilder<OAuth2ConnectAuthenticationProperties> {
 
-  private static String DEFAULT_TOKEN_PATH = "oauth2/token";
+  private static final String DEFAULT_TOKEN_PATH = "oauth2/token";
 
   public OAuthRequestBuilder(WorkflowApplication application) {
     super(application);
   }
-
-  // TODO handle revocation and introspection path
-  // private static String DEFAULT_REVOCATION_PATH = "oauth2/revoke";
-  // private static String DEFAULT_INTROSPECTION_PATH = "oauth2/introspect";
 
   @Override
   protected void authenticationURI(OAuth2ConnectAuthenticationProperties authenticationData) {
     OAuth2AuthenticationPropertiesEndpoints endpoints = authenticationData.getEndpoints();
     WorkflowValueResolver<URI> uri =
         WorkflowUtils.getURISupplier(application, authenticationData.getAuthority());
-    String tokenPath =
-        endpoints != null && endpoints.getToken() != null
-            ? endpoints.getToken().replaceAll("^/", "")
-            : DEFAULT_TOKEN_PATH;
-    requestBuilder.withUri((w, t, m) -> concatURI(uri.apply(w, t, m), tokenPath));
+    String token = endpoints != null ? endpoints.getToken() : null;
+    String revocation = endpoints != null ? endpoints.getRevocation() : null;
+    String introspection = endpoints != null ? endpoints.getIntrospection() : null;
+    requestBuilder
+        .withUri(endpointResolver(uri, endpointPath(token, DEFAULT_TOKEN_PATH)))
+        .withRevocationUri(optionalEndpoint(uri, revocation))
+        .withIntrospectionUri(optionalEndpoint(uri, introspection));
   }
 
   @Override
   protected void authenticationURI(Map<String, Object> secret) {
-    String tokenPath =
-        secret.get("endpoints") instanceof Map endpoints ? (String) endpoints.get("token") : null;
-    URI uri =
-        concatURI(
-            URI.create((String) secret.get(AUTHORITY)),
-            tokenPath == null ? DEFAULT_TOKEN_PATH : tokenPath);
-    requestBuilder.withUri((w, t, m) -> uri);
+    URI authority = URI.create((String) secret.get(AUTHORITY));
+    Map<?, ?> endpoints =
+        secret.get("endpoints") instanceof Map<?, ?> raw ? (Map<?, ?>) raw : Map.of();
+    requestBuilder
+        .withUri(
+            staticUri(authority, endpointPath((String) endpoints.get("token"), DEFAULT_TOKEN_PATH)))
+        .withRevocationUri(optionalStaticUri(authority, endpoints.get("revocation")))
+        .withIntrospectionUri(optionalStaticUri(authority, endpoints.get("introspection")));
+  }
+
+  private static String stripLeadingSlash(String path) {
+    return path.startsWith("/") ? path.substring(1) : path;
+  }
+
+  private static String endpointPath(String path, String defaultPath) {
+    return path != null ? stripLeadingSlash(path) : defaultPath;
+  }
+
+  private WorkflowValueResolver<URI> endpointResolver(
+      WorkflowValueResolver<URI> authority, String path) {
+    return (w, t, m) -> concatURI(authority.apply(w, t, m), path);
+  }
+
+  // Revocation and introspection are optional capabilities: they are only wired up when the
+  // workflow (or secret) explicitly declares the corresponding endpoint, so that providers without
+  // these endpoints fail with a clear "not configured" error instead of calling a guessed path.
+  private Optional<WorkflowValueResolver<URI>> optionalEndpoint(
+      WorkflowValueResolver<URI> authority, String path) {
+    return path == null
+        ? Optional.empty()
+        : Optional.of(endpointResolver(authority, stripLeadingSlash(path)));
+  }
+
+  private static WorkflowValueResolver<URI> staticUri(URI authority, String path) {
+    URI uri = concatURI(authority, path);
+    return (w, t, m) -> uri;
+  }
+
+  private static Optional<WorkflowValueResolver<URI>> optionalStaticUri(
+      URI authority, Object path) {
+    return path instanceof String value
+        ? Optional.of(staticUri(authority, stripLeadingSlash(value)))
+        : Optional.empty();
   }
 }
