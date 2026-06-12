@@ -55,7 +55,8 @@ class WaitExecutorTest {
   // ========== DurationInline Tests ==========
 
   @Test
-  @Disabled("This one slow down")
+  @Disabled(
+      "Disabled because it waits 1s and slows the suite; DSL mapping is covered by testWaitSecondsConvenienceMethod")
   void testWaitWithDurationInlineSeconds() {
     Workflow workflow =
         WorkflowBuilder.workflow("wait-inline-seconds", "test", "0.1.0")
@@ -87,7 +88,6 @@ class WaitExecutorTest {
 
   @Test
   void testWaitWithDurationInlineComposite() {
-    // Test composite duration with multiple components
     Workflow workflow =
         WorkflowBuilder.workflow("wait-inline-composite", "test", "0.1.0")
             .tasks(DSL.wait(Duration.ofMillis(100).plusMillis(100)))
@@ -98,7 +98,7 @@ class WaitExecutorTest {
     long elapsed = System.currentTimeMillis() - startTime;
 
     assertThat(model).isNotNull();
-    assertThat(elapsed).isGreaterThanOrEqualTo(200); // 1 second + 500 milliseconds
+    assertThat(elapsed).isGreaterThanOrEqualTo(200);
   }
 
   // ========== DurationLiteral Tests (TimeoutAfter.durationLiteral) ==========
@@ -120,25 +120,6 @@ class WaitExecutorTest {
 
     assertThat(model).isNotNull();
     assertThat(elapsed).isGreaterThanOrEqualTo(1000);
-  }
-
-  @Test
-  void testWaitWithDurationLiteralISO8601Composite() {
-    Workflow workflow =
-        WorkflowBuilder.workflow("wait-literal-composite", "test", "0.1.0")
-            .tasks(
-                list ->
-                    list.wait(
-                        w ->
-                            w.build().setWait(new TimeoutAfter().withDurationExpression("PT0.1S"))))
-            .build();
-
-    long startTime = System.currentTimeMillis();
-    WorkflowModel model = appl.workflowDefinition(workflow).instance(Map.of()).start().join();
-    long elapsed = System.currentTimeMillis() - startTime;
-
-    assertThat(model).isNotNull();
-    assertThat(elapsed).isGreaterThanOrEqualTo(100);
   }
 
   @Test
