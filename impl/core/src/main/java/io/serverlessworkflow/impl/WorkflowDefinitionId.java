@@ -33,6 +33,11 @@ public record WorkflowDefinitionId(String namespace, String name, String version
     return new WorkflowDefinitionId(DEFAULT_NAMESPACE, name, DEFAULT_VERSION);
   }
 
+  @Override
+  public String toString() {
+    return toString(":");
+  }
+
   public String toString(String separator) {
     return namespace + separator + name + separator + version;
   }
