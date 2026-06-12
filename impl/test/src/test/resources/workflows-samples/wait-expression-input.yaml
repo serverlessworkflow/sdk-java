@@ -1,0 +1,8 @@
+document:
+  dsl: '1.0.0-alpha5'
+  namespace: test
+  name: wait-expression-input
+  version: '0.1.0'
+do:
+  - waitExpression:
+      wait: ${.timeout}

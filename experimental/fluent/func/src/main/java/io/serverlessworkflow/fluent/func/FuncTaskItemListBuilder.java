@@ -23,6 +23,7 @@ import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.fluent.func.spi.FuncDoFluent;
 import io.serverlessworkflow.fluent.spec.BaseTaskItemListBuilder;
 import io.serverlessworkflow.fluent.spec.TaskItemListBuilder;
+import io.serverlessworkflow.fluent.spec.WaitTaskBuilder;
 import io.serverlessworkflow.fluent.spec.WorkflowTaskBuilder;
 import java.util.List;
 import java.util.function.Consumer;
@@ -214,5 +215,16 @@ public class FuncTaskItemListBuilder extends BaseTaskItemListBuilder<FuncTaskIte
     final FuncTryTaskBuilder tryTaskBuilder = new FuncTryTaskBuilder();
     itemsConfigurer.accept(tryTaskBuilder);
     return this.addTaskItem(new TaskItem(name, new Task().withTryTask(tryTaskBuilder.build())));
+  }
+
+  public FuncTaskItemListBuilder wait(Consumer<WaitTaskBuilder> itemsConfigurer) {
+    return wait(null, itemsConfigurer);
+  }
+
+  public FuncTaskItemListBuilder wait(String name, Consumer<WaitTaskBuilder> itemsConfigurer) {
+    name = this.defaultNameAndRequireConfig(name, itemsConfigurer, TYPE_WAIT);
+    final WaitTaskBuilder waitTaskBuilder = new WaitTaskBuilder();
+    itemsConfigurer.accept(waitTaskBuilder);
+    return this.addTaskItem(new TaskItem(name, new Task().withWaitTask(waitTaskBuilder.build())));
   }
 }

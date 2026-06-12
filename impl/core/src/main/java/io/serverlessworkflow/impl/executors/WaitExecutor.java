@@ -15,41 +15,30 @@
  */
 package io.serverlessworkflow.impl.executors;
 
-import io.serverlessworkflow.api.types.DurationInline;
 import io.serverlessworkflow.api.types.WaitTask;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowModel;
-import io.serverlessworkflow.impl.WorkflowMutableInstance;
 import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.WorkflowStatus;
+import io.serverlessworkflow.impl.WorkflowUtils;
+import io.serverlessworkflow.impl.WorkflowValueResolver;
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 public class WaitExecutor extends RegularTaskExecutor<WaitTask> {
 
-  private final Duration millisToWait;
+  private final WorkflowValueResolver<Duration> durationResolver;
 
   public static class WaitExecutorBuilder extends RegularTaskExecutorBuilder<WaitTask> {
-    private final Duration millisToWait;
+    private WorkflowValueResolver<Duration> durationResolver;
 
     protected WaitExecutorBuilder(
         WorkflowMutablePosition position, WaitTask task, WorkflowDefinition definition) {
       super(position, task, definition);
-      this.millisToWait =
-          task.getWait().getDurationInline() != null
-              ? toLong(task.getWait().getDurationInline())
-              : Duration.parse(task.getWait().getDurationExpression());
-    }
-
-    private Duration toLong(DurationInline durationInline) {
-      return Duration.ofMillis(durationInline.getMilliseconds())
-          .plusSeconds(durationInline.getSeconds())
-          .plusMinutes(durationInline.getMinutes())
-          .plusHours(durationInline.getHours())
-          .plusDays(durationInline.getDays());
+      durationResolver = WorkflowUtils.fromTimeoutAfter(application, task.getWait());
     }
 
     @Override
@@ -60,19 +49,17 @@ public class WaitExecutor extends RegularTaskExecutor<WaitTask> {
 
   protected WaitExecutor(WaitExecutorBuilder builder) {
     super(builder);
-    this.millisToWait = builder.millisToWait;
+    this.durationResolver = builder.durationResolver;
   }
 
   @Override
   protected CompletableFuture<WorkflowModel> internalExecute(
       WorkflowContext workflow, TaskContext taskContext) {
-    ((WorkflowMutableInstance) workflow.instance()).status(WorkflowStatus.WAITING);
+    workflow.instance().status(WorkflowStatus.WAITING);
     return new CompletableFuture<WorkflowModel>()
-        .completeOnTimeout(taskContext.output(), millisToWait.toMillis(), TimeUnit.MILLISECONDS)
-        .thenApply(this::complete);
-  }
-
-  private WorkflowModel complete(WorkflowModel model) {
-    return model;
+        .completeOnTimeout(
+            taskContext.output(),
+            durationResolver.apply(workflow, taskContext, taskContext.input()).toMillis(),
+            TimeUnit.MILLISECONDS);
   }
 }
