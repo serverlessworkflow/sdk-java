@@ -113,6 +113,11 @@ public abstract class BaseTryTaskBuilder<
       return this;
     }
 
+    public TryTaskCatchBuilder<T> retry(String reference) {
+      this.tryTaskCatch.setRetry(new Retry().withRetryPolicyReference(reference));
+      return this;
+    }
+
     public TryTaskCatchBuilder<T> errorsWith(Consumer<CatchErrorsBuilder> consumer) {
       final CatchErrorsBuilder catchErrorsBuilder = new CatchErrorsBuilder();
       consumer.accept(catchErrorsBuilder);

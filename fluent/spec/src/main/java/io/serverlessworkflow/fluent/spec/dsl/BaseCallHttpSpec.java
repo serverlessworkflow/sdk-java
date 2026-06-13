@@ -122,6 +122,11 @@ public interface BaseCallHttpSpec<SELF extends BaseCallHttpSpec<SELF>> {
     return self();
   }
 
+  default SELF redirect(boolean redirect) {
+    steps().add(c -> c.redirect(redirect));
+    return self();
+  }
+
   default void accept(CallHttpTaskFluent<?> b) {
     for (var s : steps()) {
       s.accept(b);
