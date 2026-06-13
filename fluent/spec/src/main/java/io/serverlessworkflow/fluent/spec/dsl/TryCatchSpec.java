@@ -64,6 +64,16 @@ public final class TryCatchSpec implements TryCatchConfigurer {
     return this;
   }
 
+  public TryCatchSpec as(String errorVarName) {
+    steps.add(t -> t.as(errorVarName));
+    return this;
+  }
+
+  public TryCatchSpec retry(String reference) {
+    steps.add(t -> t.retry(reference));
+    return this;
+  }
+
   public RetrySpec retry() {
     return retry;
   }

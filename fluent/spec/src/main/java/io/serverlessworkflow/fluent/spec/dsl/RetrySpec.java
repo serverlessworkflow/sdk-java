@@ -15,6 +15,7 @@
  */
 package io.serverlessworkflow.fluent.spec.dsl;
 
+import io.serverlessworkflow.fluent.spec.DurationInlineBuilder;
 import io.serverlessworkflow.fluent.spec.TryTaskBuilder;
 import io.serverlessworkflow.fluent.spec.configurers.RetryConfigurer;
 import java.util.LinkedList;
@@ -51,8 +52,46 @@ public final class RetrySpec implements RetryConfigurer {
     return this;
   }
 
+  public RetrySpec delay(String expression) {
+    steps.add(r -> r.delay(expression));
+    return this;
+  }
+
+  /**
+   * Configures an inline delay using a duration builder.
+   *
+   * @see #delay(String)
+   */
+  public RetrySpec delay(Consumer<DurationInlineBuilder> duration) {
+    steps.add(r -> r.delay(duration));
+    return this;
+  }
+
   public RetrySpec backoff(Consumer<TryTaskBuilder.BackoffBuilder> backoff) {
     steps.add(r -> r.backoff(backoff));
+    return this;
+  }
+
+  /**
+   * Configures exponential backoff with identifier "e" and a default factor of "1.5". This is a
+   * convenience shortcut; for full control use {@link #backoff(Consumer)}.
+   *
+   * @return this spec
+   */
+  public RetrySpec backoffExponential() {
+    steps.add(r -> r.backoff(b -> b.exponential("e", "1.5")));
+    return this;
+  }
+
+  /**
+   * Configures constant backoff with identifier "c" and a default delay of "10" (units unspecified
+   * by the spec; typically milliseconds). This is a convenience shortcut; for full control use
+   * {@link #backoff(Consumer)}.
+   *
+   * @return this spec
+   */
+  public RetrySpec backoffConstant() {
+    steps.add(r -> r.backoff(b -> b.constant("c", "10")));
     return this;
   }
 

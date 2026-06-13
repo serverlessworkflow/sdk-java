@@ -19,13 +19,18 @@ import io.serverlessworkflow.api.types.Error;
 import io.serverlessworkflow.api.types.ErrorDetails;
 import io.serverlessworkflow.api.types.ErrorTitle;
 import io.serverlessworkflow.api.types.ErrorType;
+import io.serverlessworkflow.api.types.RetryPolicy;
 import io.serverlessworkflow.api.types.UriTemplate;
 import io.serverlessworkflow.api.types.Use;
 import io.serverlessworkflow.api.types.UseAuthentications;
 import io.serverlessworkflow.api.types.UseErrors;
+import io.serverlessworkflow.api.types.UseRetries;
+import io.serverlessworkflow.fluent.spec.BaseTryTaskBuilder.RetryPolicyBuilder;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 public class UseBuilder {
@@ -63,6 +68,17 @@ public class UseBuilder {
       this.use.setErrors(new UseErrors());
     }
     this.use.getErrors().getAdditionalProperties().putAll(built.getAdditionalProperties());
+    return this;
+  }
+
+  public UseBuilder retries(Consumer<UseRetriesBuilder> retriesConsumer) {
+    final UseRetriesBuilder retriesBuilder = new UseRetriesBuilder();
+    retriesConsumer.accept(retriesBuilder);
+    final UseRetries built = retriesBuilder.build();
+    if (this.use.getRetries() == null) {
+      this.use.setRetries(new UseRetries());
+    }
+    this.use.getRetries().getAdditionalProperties().putAll(built.getAdditionalProperties());
     return this;
   }
 
@@ -130,6 +146,25 @@ public class UseBuilder {
 
     public Error build() {
       return error;
+    }
+  }
+
+  public static final class UseRetriesBuilder {
+    private final Map<String, RetryPolicy> retries = new LinkedHashMap<>();
+
+    UseRetriesBuilder() {}
+
+    public UseRetriesBuilder retry(String name, Consumer<RetryPolicyBuilder> configurer) {
+      final RetryPolicyBuilder policyBuilder = new RetryPolicyBuilder();
+      configurer.accept(policyBuilder);
+      this.retries.put(name, policyBuilder.build());
+      return this;
+    }
+
+    public UseRetries build() {
+      final UseRetries useRetries = new UseRetries();
+      useRetries.getAdditionalProperties().putAll(this.retries);
+      return useRetries;
     }
   }
 }

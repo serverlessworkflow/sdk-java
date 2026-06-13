@@ -46,6 +46,11 @@ public class UseSpec implements UseConfigurer {
     return this;
   }
 
+  public UseSpec retries(Consumer<UseBuilder.UseRetriesBuilder> retriesConsumer) {
+    steps.add(u -> u.retries(retriesConsumer));
+    return this;
+  }
+
   @Override
   public void accept(UseBuilder useBuilder) {
     steps.forEach(step -> step.accept(useBuilder));
