@@ -60,7 +60,7 @@ class OperationDefinition {
     List<ParameterDefinition> paramDefinitions = new ArrayList<>();
     if (operation.hasParameters()) {
       for (UnifiedOpenAPI.Parameter parameter : operation.parameters()) {
-        if (parameter.in() != null && "body".equals(parameter.in())) {
+        if ("body".equals(parameter.in())) {
           continue; // body parameters are handled separately
         }
 
@@ -73,7 +73,7 @@ class OperationDefinition {
     if (openAPI.swaggerVersion() == UnifiedOpenAPI.SwaggerVersion.SWAGGER_V2
         && operation.parameters() != null) {
       operation.parameters().stream()
-          .filter(p -> p.in() != null && "body".equals(p.in()))
+          .filter(p -> "body".equals(p.in()))
           .forEach(
               p -> {
                 UnifiedOpenAPI.Schema schema = p.schema();
