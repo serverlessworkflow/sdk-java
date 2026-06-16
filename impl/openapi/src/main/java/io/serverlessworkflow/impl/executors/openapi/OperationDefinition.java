@@ -71,7 +71,7 @@ class OperationDefinition {
     }
 
     if (openAPI.swaggerVersion() == UnifiedOpenAPI.SwaggerVersion.SWAGGER_V2
-        && operation.parameters() != null) {
+        && operation.hasParameters()) {
       operation.parameters().stream()
           .filter(p -> "body".equals(p.in()))
           .forEach(
