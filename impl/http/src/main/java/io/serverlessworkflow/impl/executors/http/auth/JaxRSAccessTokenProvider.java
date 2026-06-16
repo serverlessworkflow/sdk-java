@@ -22,7 +22,6 @@ import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowError;
 import io.serverlessworkflow.impl.WorkflowException;
 import io.serverlessworkflow.impl.WorkflowModel;
-import io.serverlessworkflow.impl.WorkflowValueResolver;
 import io.serverlessworkflow.impl.auth.AccessTokenProvider;
 import io.serverlessworkflow.impl.auth.HttpRequestInfo;
 import io.serverlessworkflow.impl.auth.JWT;
@@ -38,11 +37,9 @@ import jakarta.ws.rs.core.Form;
 import jakarta.ws.rs.core.GenericType;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
-import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Supplier;
 
 class JaxRSAccessTokenProvider implements AccessTokenProvider {
@@ -119,34 +116,6 @@ class JaxRSAccessTokenProvider implements AccessTokenProvider {
     return builder.post(entity);
   }
 
-  /**
-   * Builds and posts a token management request (revocation per RFC 7009, introspection per RFC
-   * 7662). The body carries the {@code token}, an optional {@code token_type_hint} and the client
-   * authentication parameters; client authentication carried through headers (e.g. HTTP Basic) is
-   * applied as well.
-   */
-  private Response postManagementRequest(
-      WorkflowContext workflow,
-      TaskContext task,
-      WorkflowModel model,
-      URI uri,
-      String token,
-      String tokenTypeHint) {
-    Invocation.Builder builder =
-        commonHeaders(HttpClientResolver.client(workflow, task).target(uri), workflow, task, model);
-
-    Form form = new Form();
-    form.param("token", token);
-    if (tokenTypeHint != null) {
-      form.param("token_type_hint", tokenTypeHint);
-    }
-    requestInfo
-        .clientAuthParams()
-        .forEach((key, value) -> form.param(key, value.apply(workflow, task, model)));
-
-    return builder.post(Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED));
-  }
-
   private Invocation.Builder commonHeaders(
       WebTarget target, WorkflowContext workflow, TaskContext task, WorkflowModel model) {
     Invocation.Builder builder = target.request(MediaType.APPLICATION_JSON);
@@ -160,20 +129,6 @@ class JaxRSAccessTokenProvider implements AccessTokenProvider {
       }
     }
     return builder;
-  }
-
-  private URI endpoint(
-      Optional<WorkflowValueResolver<URI>> resolver,
-      String name,
-      WorkflowContext workflow,
-      TaskContext task,
-      WorkflowModel model) {
-    return resolver
-        .map(r -> r.apply(workflow, task, model))
-        .orElseThrow(
-            () ->
-                new UnsupportedOperationException(
-                    "No " + name + " endpoint is configured for this provider"));
   }
 
   private void ensureSuccessful(Response response, TaskContext task, String action) {

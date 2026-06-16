@@ -18,6 +18,7 @@ package io.serverlessworkflow.impl.auth;
 import static io.serverlessworkflow.api.types.OAuth2AuthenticationData.OAuth2AuthenticationDataGrant.CLIENT_CREDENTIALS;
 import static io.serverlessworkflow.api.types.OAuth2AuthenticationData.OAuth2AuthenticationDataGrant.PASSWORD;
 import static io.serverlessworkflow.api.types.OAuth2AuthenticationData.OAuth2AuthenticationDataGrant.URN_IETF_PARAMS_OAUTH_GRANT_TYPE_TOKEN_EXCHANGE;
+import static io.serverlessworkflow.impl.auth.AuthUtils.USER;
 
 import io.serverlessworkflow.api.types.OAuth2AuthenticationData;
 import io.serverlessworkflow.impl.WorkflowApplication;
@@ -80,6 +81,10 @@ abstract class ClientSecretHandler {
         clientCredentials(secret);
         break;
       case "password":
+        if (secret.get(USER) == null || secret.get(AuthUtils.PASSWORD) == null) {
+          throw new IllegalArgumentException(
+              "Username and password must be provided for password grant type");
+        }
         password(secret);
         break;
       default:

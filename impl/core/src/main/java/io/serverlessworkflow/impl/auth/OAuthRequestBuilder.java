@@ -53,8 +53,7 @@ class OAuthRequestBuilder
   @Override
   protected void authenticationURI(Map<String, Object> secret) {
     URI authority = URI.create((String) secret.get(AUTHORITY));
-    Map<?, ?> endpoints =
-        secret.get("endpoints") instanceof Map<?, ?> raw ? (Map<?, ?>) raw : Map.of();
+    Map<?, ?> endpoints = secret.get("endpoints") instanceof Map<?, ?> raw ? raw : Map.of();
     requestBuilder
         .withUri(
             staticUri(authority, endpointPath((String) endpoints.get("token"), DEFAULT_TOKEN_PATH)))
@@ -75,9 +74,6 @@ class OAuthRequestBuilder
     return (w, t, m) -> concatURI(authority.apply(w, t, m), path);
   }
 
-  // Revocation and introspection are optional capabilities: they are only wired up when the
-  // workflow (or secret) explicitly declares the corresponding endpoint, so that providers without
-  // these endpoints fail with a clear "not configured" error instead of calling a guessed path.
   private Optional<WorkflowValueResolver<URI>> optionalEndpoint(
       WorkflowValueResolver<URI> authority, String path) {
     return path == null
