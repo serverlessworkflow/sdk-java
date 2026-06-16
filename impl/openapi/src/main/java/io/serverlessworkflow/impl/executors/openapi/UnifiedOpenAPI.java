@@ -165,7 +165,7 @@ public record UnifiedOpenAPI(
     }
   }
 
-  public record Parameter(String name, String in, Boolean required, Schema schema) {}
+  public record Parameter(String name, String in, boolean required, Schema schema) {}
 
   public record RequestBody(Content content) {}
 
