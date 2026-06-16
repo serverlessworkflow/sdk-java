@@ -40,6 +40,7 @@ import jakarta.ws.rs.core.Response;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 class JaxRSAccessTokenProvider implements AccessTokenProvider {
 
@@ -71,36 +72,14 @@ class JaxRSAccessTokenProvider implements AccessTokenProvider {
 
   private Map<String, Object> invoke(
       WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel model) {
-    try {
-      Response response = executeRequest(workflowContext, taskContext, model);
-
-      if (response.getStatus() < 200 || response.getStatus() >= 300) {
-        throw new WorkflowException(
-            WorkflowError.communication(
-                    response.getStatus(),
-                    taskContext,
-                    "Failed to obtain token: HTTP "
-                        + response.getStatus()
-                        + " — "
-                        + response.getEntity())
-                .build());
-      }
-      return response.readEntity(new GenericType<>() {});
-    } catch (ResponseProcessingException e) {
-      throw new WorkflowException(
-          WorkflowError.communication(
-                  e.getResponse().getStatus(),
-                  taskContext,
-                  "Failed to process response: " + e.getMessage())
-              .build(),
-          e);
-    } catch (ProcessingException e) {
-      throw new WorkflowException(
-          WorkflowError.communication(
-                  -1, taskContext, "Failed to connect or process request: " + e.getMessage())
-              .build(),
-          e);
-    }
+    return execute(
+        taskContext,
+        () -> {
+          try (Response response = executeRequest(workflowContext, taskContext, model)) {
+            ensureSuccessful(response, taskContext, "obtain token");
+            return response.readEntity(new GenericType<>() {});
+          }
+        });
   }
 
   private Response executeRequest(WorkflowContext workflow, TaskContext task, WorkflowModel model) {
@@ -108,19 +87,8 @@ class JaxRSAccessTokenProvider implements AccessTokenProvider {
     Client client = HttpClientResolver.client(workflow, task);
     WebTarget target = client.target(requestInfo.uri().apply(workflow, task, model));
 
-    Invocation.Builder builder = target.request(MediaType.APPLICATION_JSON);
-
+    Invocation.Builder builder = commonHeaders(target, workflow, task, model);
     builder.header("grant_type", requestInfo.grantType());
-    builder.header("User-Agent", "OAuth2-Client-Credentials/1.0");
-    builder.header("Accept", MediaType.APPLICATION_JSON);
-    builder.header("Cache-Control", "no-cache");
-
-    for (var entry : requestInfo.headers().entrySet()) {
-      String headerValue = entry.getValue().apply(workflow, task, model);
-      if (headerValue != null) {
-        builder.header(entry.getKey(), headerValue);
-      }
-    }
 
     Entity<?> entity;
     if (requestInfo.contentType().equals(APPLICATION_X_WWW_FORM_URLENCODED.value())) {
@@ -129,6 +97,9 @@ class JaxRSAccessTokenProvider implements AccessTokenProvider {
       requestInfo
           .queryParams()
           .forEach((key, value) -> form.param(key, value.apply(workflow, task, model)));
+      requestInfo
+          .clientAuthParams()
+          .forEach((key, value) -> form.param(key, value.apply(workflow, task, model)));
       entity = Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED);
     } else {
       Map<String, Object> jsonData = new HashMap<>();
@@ -136,9 +107,63 @@ class JaxRSAccessTokenProvider implements AccessTokenProvider {
       requestInfo
           .queryParams()
           .forEach((key, value) -> jsonData.put(key, value.apply(workflow, task, model)));
+      requestInfo
+          .clientAuthParams()
+          .forEach((key, value) -> jsonData.put(key, value.apply(workflow, task, model)));
       entity = Entity.entity(jsonData, MediaType.APPLICATION_JSON);
     }
 
     return builder.post(entity);
+  }
+
+  private Invocation.Builder commonHeaders(
+      WebTarget target, WorkflowContext workflow, TaskContext task, WorkflowModel model) {
+    Invocation.Builder builder = target.request(MediaType.APPLICATION_JSON);
+    builder.header("User-Agent", "OAuth2-Client-Credentials/1.0");
+    builder.header("Accept", MediaType.APPLICATION_JSON);
+    builder.header("Cache-Control", "no-cache");
+    for (var entry : requestInfo.headers().entrySet()) {
+      String headerValue = entry.getValue().apply(workflow, task, model);
+      if (headerValue != null) {
+        builder.header(entry.getKey(), headerValue);
+      }
+    }
+    return builder;
+  }
+
+  private void ensureSuccessful(Response response, TaskContext task, String action) {
+    int status = response.getStatus();
+    if (status < 200 || status >= 300) {
+      throw new WorkflowException(
+          WorkflowError.communication(
+                  status,
+                  task,
+                  "Failed to " + action + ": HTTP " + status + " — " + readError(response))
+              .build());
+    }
+  }
+
+  private static String readError(Response response) {
+    return response.hasEntity() ? response.readEntity(String.class) : "";
+  }
+
+  private <T> T execute(TaskContext task, Supplier<T> call) {
+    try {
+      return call.get();
+    } catch (ResponseProcessingException e) {
+      throw new WorkflowException(
+          WorkflowError.communication(
+                  e.getResponse().getStatus(),
+                  task,
+                  "Failed to process response: " + e.getMessage())
+              .build(),
+          e);
+    } catch (ProcessingException e) {
+      throw new WorkflowException(
+          WorkflowError.communication(
+                  task, "Failed to connect or process request: " + e.getMessage())
+              .build(),
+          e);
+    }
   }
 }

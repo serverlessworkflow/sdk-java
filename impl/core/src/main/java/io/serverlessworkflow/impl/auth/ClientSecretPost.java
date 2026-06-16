@@ -38,10 +38,10 @@ class ClientSecretPost extends ClientSecretHandler {
   protected void clientCredentials(OAuth2AuthenticationData authenticationData) {
     requestBuilder
         .withGrantType(authenticationData.getGrant().value())
-        .addQueryParam(
+        .addClientAuthParam(
             "client_id",
             WorkflowUtils.buildStringFilter(application, authenticationData.getClient().getId()))
-        .addQueryParam(
+        .addClientAuthParam(
             "client_secret",
             WorkflowUtils.buildStringFilter(
                 application, authenticationData.getClient().getSecret()));
@@ -64,8 +64,8 @@ class ClientSecretPost extends ClientSecretHandler {
     Map<String, Object> client = (Map<String, Object>) secret.get(CLIENT);
     requestBuilder
         .withGrantType((String) secret.get(GRANT))
-        .addQueryParam("client_id", (String) client.get(ID))
-        .addQueryParam("client_secret", (String) client.get(SECRET));
+        .addClientAuthParam("client_id", (String) client.get(ID))
+        .addClientAuthParam("client_secret", (String) client.get(SECRET));
   }
 
   @Override

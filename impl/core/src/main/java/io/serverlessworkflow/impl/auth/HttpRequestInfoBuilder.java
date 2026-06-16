@@ -23,6 +23,7 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 class HttpRequestInfoBuilder {
 
@@ -30,7 +31,13 @@ class HttpRequestInfoBuilder {
 
   private Map<String, WorkflowValueResolver<String>> queryParams;
 
+  private Map<String, WorkflowValueResolver<String>> clientAuthParams;
+
   private WorkflowValueResolver<URI> uri;
+
+  private Optional<WorkflowValueResolver<URI>> revocationUri = Optional.empty();
+
+  private Optional<WorkflowValueResolver<URI>> introspectionUri = Optional.empty();
 
   private String grantType;
 
@@ -39,6 +46,7 @@ class HttpRequestInfoBuilder {
   HttpRequestInfoBuilder() {
     headers = new HashMap<>();
     queryParams = new HashMap<>();
+    clientAuthParams = new HashMap<>();
   }
 
   HttpRequestInfoBuilder addHeader(String key, String token) {
@@ -61,8 +69,29 @@ class HttpRequestInfoBuilder {
     return this;
   }
 
+  HttpRequestInfoBuilder addClientAuthParam(String key, String token) {
+    clientAuthParams.put(key, (w, t, m) -> token);
+    return this;
+  }
+
+  HttpRequestInfoBuilder addClientAuthParam(String key, WorkflowValueResolver<String> token) {
+    clientAuthParams.put(key, token);
+    return this;
+  }
+
   HttpRequestInfoBuilder withUri(WorkflowValueResolver<URI> uri) {
     this.uri = uri;
+    return this;
+  }
+
+  HttpRequestInfoBuilder withRevocationUri(Optional<WorkflowValueResolver<URI>> revocationUri) {
+    this.revocationUri = revocationUri;
+    return this;
+  }
+
+  HttpRequestInfoBuilder withIntrospectionUri(
+      Optional<WorkflowValueResolver<URI>> introspectionUri) {
+    this.introspectionUri = introspectionUri;
     return this;
   }
 
@@ -91,6 +120,14 @@ class HttpRequestInfoBuilder {
     if (contentType == null) {
       contentType = APPLICATION_X_WWW_FORM_URLENCODED.value();
     }
-    return new HttpRequestInfo(headers, queryParams, uri, grantType, contentType);
+    return new HttpRequestInfo(
+        headers,
+        queryParams,
+        clientAuthParams,
+        uri,
+        revocationUri,
+        introspectionUri,
+        grantType,
+        contentType);
   }
 }
