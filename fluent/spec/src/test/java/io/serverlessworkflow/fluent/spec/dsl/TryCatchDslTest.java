@@ -17,9 +17,12 @@ package io.serverlessworkflow.fluent.spec.dsl;
 
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.call;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.emit;
+import static io.serverlessworkflow.fluent.spec.dsl.DSL.error;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.http;
+import static io.serverlessworkflow.fluent.spec.dsl.DSL.raise;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.set;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.tryCatch;
+import static io.serverlessworkflow.fluent.spec.dsl.DSL.use;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.serverlessworkflow.api.types.Workflow;
@@ -204,5 +207,419 @@ public class TryCatchDslTest {
     assertThat(catchDo).hasSize(1);
     var ev = catchDo.get(0).getTask().getEmitTask().getEmit().getEvent().getWith();
     assertThat(ev.getType()).isEqualTo("org.acme.retrying");
+  }
+
+  @Test
+  void when_try_catch_with_do_task() {
+    Workflow wf =
+        WorkflowBuilder.workflow("try-catch-with-do", "test", "0.1.0")
+            .tasks(
+                tryCatch(
+                    "attemptTask",
+                    tryCatch()
+                        .tasks(
+                            raise(
+                                "failingTask",
+                                error(URI.create("https://example.com/errors/runtime"), 500)))
+                        .catches()
+                        .errors(URI.create("https://example.com/errors/runtime"), 500)
+                        .tasks(
+                            set(
+                                "executeAfterFailingTask",
+                                s -> s.put("setAfterFailingTask", "No Problem")))
+                        .done()))
+            .build();
+
+    var tryTask = wf.getDo().get(0).getTask().getTryTask();
+    assertThat(tryTask).isNotNull();
+    var cat = tryTask.getCatch();
+    assertThat(cat).isNotNull();
+    assertThat(cat.getErrors().getWith().getType()).isEqualTo("https://example.com/errors/runtime");
+    assertThat(cat.getErrors().getWith().getStatus()).isEqualTo(500);
+    var catchDo = cat.getDo();
+    assertThat(catchDo).hasSize(1);
+    var setTask = catchDo.get(0).getTask().getSetTask();
+    assertThat(setTask).isNotNull();
+    assertThat(
+            setTask
+                .getSet()
+                .getSetTaskConfiguration()
+                .getAdditionalProperties()
+                .get("setAfterFailingTask"))
+        .isEqualTo("No Problem");
+  }
+
+  @Test
+  void when_try_catch_match_status() {
+    Workflow wf =
+        WorkflowBuilder.workflow("try-catch-match-status", "test", "0.1.0")
+            .tasks(
+                tryCatch(
+                    "attemptTask",
+                    tryCatch()
+                        .tasks(
+                            raise(
+                                "failingTask",
+                                error(URI.create("https://example.com/errors/transient"), 503)))
+                        .catches()
+                        .errors(URI.create("https://example.com/errors/transient"), 503)
+                        .tasks(set("handleError", s -> s.put("recovered", true)))
+                        .done()))
+            .build();
+
+    var tryTask = wf.getDo().get(0).getTask().getTryTask();
+    assertThat(tryTask).isNotNull();
+    var cat = tryTask.getCatch();
+    assertThat(cat).isNotNull();
+    assertThat(cat.getErrors().getWith().getStatus()).isEqualTo(503);
+    var catchDo = cat.getDo();
+    assertThat(catchDo).hasSize(1);
+  }
+
+  @Test
+  void when_try_catch_not_match_status() {
+    Workflow wf =
+        WorkflowBuilder.workflow("try-catch-not-match-status", "test", "0.1.0")
+            .tasks(
+                tryCatch(
+                    "attemptTask",
+                    tryCatch()
+                        .tasks(
+                            raise(
+                                "failingTask",
+                                error(URI.create("https://example.com/errors/transient"), 503)))
+                        .catches()
+                        .errors(URI.create("https://example.com/errors/transient"), 403)
+                        .tasks(set("handleError", s -> s.put("recovered", true)))
+                        .done()))
+            .build();
+
+    var tryTask = wf.getDo().get(0).getTask().getTryTask();
+    assertThat(tryTask).isNotNull();
+    var cat = tryTask.getCatch();
+    assertThat(cat).isNotNull();
+    assertThat(cat.getErrors().getWith().getStatus()).isEqualTo(403);
+  }
+
+  @Test
+  void when_try_catch_match_details() {
+    Workflow wf =
+        WorkflowBuilder.workflow("try-catch-match-details", "test", "0.1.0")
+            .tasks(
+                tryCatch(
+                    "attemptTask",
+                    tryCatch()
+                        .tasks(
+                            raise(
+                                "failingTask",
+                                error(URI.create("https://example.com/errors/transient"), 503)
+                                    .detail("Enforcement Failure - invalid email")))
+                        .catches()
+                        .errors(
+                            e ->
+                                e.type("https://example.com/errors/transient")
+                                    .status(503)
+                                    .details("Enforcement Failure - invalid email"))
+                        .tasks(set("handleError", s -> s.put("recovered", true)))
+                        .done()))
+            .build();
+
+    var tryTask = wf.getDo().get(0).getTask().getTryTask();
+    assertThat(tryTask).isNotNull();
+    var cat = tryTask.getCatch();
+    assertThat(cat).isNotNull();
+    assertThat(cat.getErrors().getWith().getDetails())
+        .isEqualTo("Enforcement Failure - invalid email");
+  }
+
+  @Test
+  void when_try_catch_match_when() {
+    Workflow wf =
+        WorkflowBuilder.workflow("try-catch-match-when", "test", "0.1.0")
+            .tasks(
+                tryCatch(
+                    "attemptTask",
+                    tryCatch()
+                        .tasks(
+                            raise(
+                                "failingTask",
+                                error(URI.create("https://example.com/errors/transient"), 503)))
+                        .catches()
+                        .when("${ .status == 503 }")
+                        .tasks(set("handleError", s -> s.put("recovered", true)))
+                        .done()))
+            .build();
+
+    var tryTask = wf.getDo().get(0).getTask().getTryTask();
+    assertThat(tryTask).isNotNull();
+    var cat = tryTask.getCatch();
+    assertThat(cat).isNotNull();
+    assertThat(cat.getWhen()).isEqualTo("${ .status == 503 }");
+  }
+
+  @Test
+  void when_try_catch_error_variable() {
+    Workflow wf =
+        WorkflowBuilder.workflow("try-catch-error-variable", "test", "0.1.0")
+            .tasks(
+                tryCatch(
+                    "attemptTask",
+                    tryCatch()
+                        .tasks(
+                            raise(
+                                "failingTask",
+                                error(URI.create("https://example.com/errors/transient"), 503)
+                                    .detail("Javierito was here!")))
+                        .catches()
+                        .as("caughtError")
+                        .tasks(
+                            set(
+                                "handleError",
+                                s -> s.put("errorMessage", "${$caughtError.details}")))
+                        .done()))
+            .build();
+
+    var tryTask = wf.getDo().get(0).getTask().getTryTask();
+    assertThat(tryTask).isNotNull();
+    var cat = tryTask.getCatch();
+    assertThat(cat).isNotNull();
+    assertThat(cat.getAs()).isEqualTo("caughtError");
+    var catchDo = cat.getDo();
+    assertThat(catchDo).hasSize(1);
+    var setTask = catchDo.get(0).getTask().getSetTask();
+    assertThat(
+            setTask
+                .getSet()
+                .getSetTaskConfiguration()
+                .getAdditionalProperties()
+                .get("errorMessage"))
+        .isEqualTo("${$caughtError.details}");
+  }
+
+  @Test
+  void when_try_catch_inline_retry() {
+    Workflow wf =
+        WorkflowBuilder.workflow("try-catch-retry-inline", "test", "0.1.0")
+            .tasks(
+                tryCatch(
+                    "tryGetPet",
+                    tryCatch()
+                        .tasks(
+                            call(
+                                "getPet",
+                                http().GET().endpoint("http://localhost:9797").redirect(true)))
+                        .catches()
+                        .errors(Errors.COMMUNICATION, 404)
+                        .retry()
+                        .delay("${\"PT\\(.delay)S\"}")
+                        .backoff(b -> b.exponential("e", "1.5"))
+                        .limit(l -> l.attempt(a -> a.count(5)))
+                        .done()
+                        .done()))
+            .build();
+
+    var tryTask = wf.getDo().get(0).getTask().getTryTask();
+    assertThat(tryTask).isNotNull();
+    var cat = tryTask.getCatch();
+    assertThat(cat).isNotNull();
+    var retryDef = cat.getRetry().getRetryPolicyDefinition();
+    assertThat(retryDef).isNotNull();
+    assertThat(retryDef.getDelay().getDurationExpression()).isEqualTo("${\"PT\\(.delay)S\"}");
+    assertThat(retryDef.getLimit().getAttempt().getCount()).isEqualTo(5);
+  }
+
+  @Test
+  void when_try_catch_reusable_retry() {
+    Workflow wf =
+        WorkflowBuilder.workflow("try-catch-retry-reusable", "test", "0.1.0")
+            .use(
+                use()
+                    .retries(
+                        r ->
+                            r.retry(
+                                "default",
+                                policy ->
+                                    policy
+                                        .delay("PT0.01S")
+                                        .backoff(b -> b.constant("c", "10"))
+                                        .limit(l -> l.attempt(a -> a.count(5))))))
+            .tasks(
+                tryCatch(
+                    "tryGetPet",
+                    tryCatch()
+                        .tasks(
+                            call(
+                                "getPet",
+                                http().GET().endpoint("http://localhost:9797").redirect(true)))
+                        .catches()
+                        .errors(Errors.COMMUNICATION, 404)
+                        .retry("default")
+                        .done()))
+            .build();
+
+    var useBlock = wf.getUse();
+    assertThat(useBlock).isNotNull();
+    assertThat(useBlock.getRetries()).isNotNull();
+    assertThat(useBlock.getRetries().getAdditionalProperties()).containsKey("default");
+    assertThat(
+            useBlock
+                .getRetries()
+                .getAdditionalProperties()
+                .get("default")
+                .getLimit()
+                .getAttempt()
+                .getCount())
+        .isEqualTo(5);
+
+    var tryTask = wf.getDo().get(0).getTask().getTryTask();
+    assertThat(tryTask).isNotNull();
+    var cat = tryTask.getCatch();
+    assertThat(cat).isNotNull();
+    assertThat(cat.getRetry().getRetryPolicyReference()).isEqualTo("default");
+  }
+
+  @Test
+  void when_nested_try_catch() {
+    Workflow wf =
+        WorkflowBuilder.workflow("nested-try-catch-retry-inline", "test", "0.1.0")
+            .tasks(
+                tryCatch(
+                    "tryServerError",
+                    tryCatch()
+                        .tasks(
+                            tryCatch(
+                                "tryCommunication",
+                                tryCatch()
+                                    .tasks(
+                                        call(
+                                            "getPet",
+                                            http()
+                                                .GET()
+                                                .endpoint("http://localhost:9797")
+                                                .redirect(true)))
+                                    .catches()
+                                    .errors(Errors.COMMUNICATION, 404)
+                                    .retry()
+                                    .delay("${\"PT\\(.delay)S\"}")
+                                    .backoff(b -> b.exponential("e", "1.5"))
+                                    .limit(l -> l.attempt(a -> a.count(5)))
+                                    .done()
+                                    .done()))
+                        .catches()
+                        .errors(Errors.COMMUNICATION, 404)
+                        .retry()
+                        .delay("${\"PT\\(.delay)S\"}")
+                        .backoff(b -> b.exponential("e", "1.5"))
+                        .limit(l -> l.attempt(a -> a.count(2)))
+                        .done()
+                        .done()))
+            .build();
+
+    var outerTry = wf.getDo().get(0).getTask().getTryTask();
+    assertThat(outerTry).isNotNull();
+    var outerCatch = outerTry.getCatch();
+    assertThat(outerCatch).isNotNull();
+    assertThat(outerCatch.getErrors().getWith().getStatus()).isEqualTo(404);
+
+    var innerTry = outerTry.getTry().get(0).getTask().getTryTask();
+    assertThat(innerTry).isNotNull();
+    var innerCatch = innerTry.getCatch();
+    assertThat(innerCatch).isNotNull();
+    assertThat(innerCatch.getErrors().getWith().getStatus()).isEqualTo(404);
+  }
+
+  @Test
+  void when_try_catch_inline_retry_with_duration_builder() {
+    Workflow wf =
+        WorkflowBuilder.workflow("try-catch-retry-duration-builder", "test", "0.1.0")
+            .tasks(
+                tryCatch(
+                    "tryGetPet",
+                    tryCatch()
+                        .tasks(
+                            call(
+                                "getPet",
+                                http().GET().endpoint("http://localhost:9797").redirect(true)))
+                        .catches()
+                        .errors(Errors.COMMUNICATION, 404)
+                        .retry()
+                        .delay(d -> d.milliseconds(100))
+                        .limit("PT1S")
+                        .done()
+                        .done()))
+            .build();
+
+    var tryTask = wf.getDo().get(0).getTask().getTryTask();
+    assertThat(tryTask).isNotNull();
+    var cat = tryTask.getCatch();
+    assertThat(cat).isNotNull();
+    var retryDef = cat.getRetry().getRetryPolicyDefinition();
+    assertThat(retryDef).isNotNull();
+    assertThat(retryDef.getDelay().getDurationInline().getMilliseconds()).isEqualTo(100);
+    assertThat(retryDef.getLimit().getDuration().getDurationLiteral()).isEqualTo("PT1S");
+  }
+
+  @Test
+  void when_try_catch_backoff_exponential() {
+    Workflow wf =
+        WorkflowBuilder.workflow("try-catch-backoff-exponential", "test", "0.1.0")
+            .tasks(
+                tryCatch(
+                    "tryTask",
+                    tryCatch()
+                        .tasks(call(http().GET().endpoint("http://localhost:9797")))
+                        .catches()
+                        .errors(Errors.COMMUNICATION, 404)
+                        .retry()
+                        .backoffExponential()
+                        .done()
+                        .done()))
+            .build();
+
+    var tryTask = wf.getDo().get(0).getTask().getTryTask();
+    assertThat(tryTask).isNotNull();
+    var cat = tryTask.getCatch();
+    assertThat(cat).isNotNull();
+    var retryDef = cat.getRetry().getRetryPolicyDefinition();
+    assertThat(retryDef).isNotNull();
+    var backoff = retryDef.getBackoff();
+    assertThat(backoff).isNotNull();
+    var expBackoff = backoff.getExponentialBackOff();
+    assertThat(expBackoff).isNotNull();
+    var exp = expBackoff.getExponential();
+    assertThat(exp).isNotNull();
+    assertThat(exp.getAdditionalProperties()).containsEntry("e", "1.5");
+  }
+
+  @Test
+  void when_try_catch_backoff_constant() {
+    Workflow wf =
+        WorkflowBuilder.workflow("try-catch-backoff-constant", "test", "0.1.0")
+            .tasks(
+                tryCatch(
+                    "tryTask",
+                    tryCatch()
+                        .tasks(call(http().GET().endpoint("http://localhost:9797")))
+                        .catches()
+                        .errors(Errors.COMMUNICATION, 404)
+                        .retry()
+                        .backoffConstant()
+                        .done()
+                        .done()))
+            .build();
+
+    var tryTask = wf.getDo().get(0).getTask().getTryTask();
+    assertThat(tryTask).isNotNull();
+    var cat = tryTask.getCatch();
+    assertThat(cat).isNotNull();
+    var retryDef = cat.getRetry().getRetryPolicyDefinition();
+    assertThat(retryDef).isNotNull();
+    var backoff = retryDef.getBackoff();
+    assertThat(backoff).isNotNull();
+    var constBackoff = backoff.getConstantBackoff();
+    assertThat(constBackoff).isNotNull();
+    var constant = constBackoff.getConstant();
+    assertThat(constant).isNotNull();
+    assertThat(constant.getAdditionalProperties()).containsEntry("c", "10");
   }
 }
