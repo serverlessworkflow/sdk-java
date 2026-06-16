@@ -40,7 +40,6 @@ import jakarta.ws.rs.core.Response;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
 
 class JaxRSAccessTokenProvider implements AccessTokenProvider {
 
@@ -72,14 +71,32 @@ class JaxRSAccessTokenProvider implements AccessTokenProvider {
 
   private Map<String, Object> invoke(
       WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel model) {
-    return execute(
-        taskContext,
-        () -> {
-          try (Response response = executeRequest(workflowContext, taskContext, model)) {
-            ensureSuccessful(response, taskContext, "obtain token");
-            return response.readEntity(new GenericType<>() {});
-          }
-        });
+    try (Response response = executeRequest(workflowContext, taskContext, model)) {
+      int status = response.getStatus();
+      if (status < 200 || status >= 300) {
+        StringBuilder message = new StringBuilder("Failed to obtain token. Error code: " + status);
+        if (response.hasEntity()) {
+          message.append(". Message: ").append(response.readEntity(String.class));
+        }
+        throw new WorkflowException(
+            WorkflowError.communication(status, taskContext, message.toString()).build());
+      }
+      return response.readEntity(new GenericType<>() {});
+    } catch (ResponseProcessingException e) {
+      throw new WorkflowException(
+          WorkflowError.communication(
+                  e.getResponse().getStatus(),
+                  taskContext,
+                  "Failed to process response: " + e.getMessage())
+              .build(),
+          e);
+    } catch (ProcessingException e) {
+      throw new WorkflowException(
+          WorkflowError.communication(
+                  taskContext, "Failed to connect or process request: " + e.getMessage())
+              .build(),
+          e);
+    }
   }
 
   private Response executeRequest(WorkflowContext workflow, TaskContext task, WorkflowModel model) {
@@ -129,41 +146,5 @@ class JaxRSAccessTokenProvider implements AccessTokenProvider {
       }
     }
     return builder;
-  }
-
-  private void ensureSuccessful(Response response, TaskContext task, String action) {
-    int status = response.getStatus();
-    if (status < 200 || status >= 300) {
-      throw new WorkflowException(
-          WorkflowError.communication(
-                  status,
-                  task,
-                  "Failed to " + action + ": HTTP " + status + " — " + readError(response))
-              .build());
-    }
-  }
-
-  private static String readError(Response response) {
-    return response.hasEntity() ? response.readEntity(String.class) : "";
-  }
-
-  private <T> T execute(TaskContext task, Supplier<T> call) {
-    try {
-      return call.get();
-    } catch (ResponseProcessingException e) {
-      throw new WorkflowException(
-          WorkflowError.communication(
-                  e.getResponse().getStatus(),
-                  task,
-                  "Failed to process response: " + e.getMessage())
-              .build(),
-          e);
-    } catch (ProcessingException e) {
-      throw new WorkflowException(
-          WorkflowError.communication(
-                  task, "Failed to connect or process request: " + e.getMessage())
-              .build(),
-          e);
-    }
   }
 }
