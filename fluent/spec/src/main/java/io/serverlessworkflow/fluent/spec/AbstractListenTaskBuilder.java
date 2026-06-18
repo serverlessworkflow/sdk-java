@@ -19,6 +19,9 @@ import io.serverlessworkflow.api.types.CorrelateProperty;
 import io.serverlessworkflow.api.types.ListenTask;
 import io.serverlessworkflow.api.types.ListenTaskConfiguration;
 import io.serverlessworkflow.api.types.ListenTo;
+import io.serverlessworkflow.api.types.TaskTimeout;
+import io.serverlessworkflow.api.types.Timeout;
+import io.serverlessworkflow.api.types.TimeoutAfter;
 import java.util.function.Consumer;
 
 public abstract class AbstractListenTaskBuilder<
@@ -61,6 +64,27 @@ public abstract class AbstractListenTaskBuilder<
     c.accept(listenToBuilder);
     this.config.setTo((ListenTo) listenToBuilder.build());
     return this;
+  }
+
+  public ListenToConfigurerBuilder<T> to() {
+    return new ListenToConfigurerBuilder<>(this, taskItemListBuilder);
+  }
+
+  void applyTo(ListenTo listenTo) {
+    this.config.setTo(listenTo);
+  }
+
+  public AbstractListenTaskBuilder<T, F> timeout(String durationExpression) {
+    this.listenTask.setTimeout(
+        new TaskTimeout()
+            .withTaskTimeoutDefinition(
+                new Timeout()
+                    .withAfter(new TimeoutAfter().withDurationExpression(durationExpression))));
+    return this;
+  }
+
+  protected ListenTask getListenTask() {
+    return listenTask;
   }
 
   public ListenTask build() {

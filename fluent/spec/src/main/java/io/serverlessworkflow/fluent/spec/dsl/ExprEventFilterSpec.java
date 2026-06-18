@@ -26,4 +26,15 @@ public abstract class ExprEventFilterSpec<
     addPropertyStep(e -> e.data(expr));
     return JSON();
   }
+
+  /**
+   * Sets the event data filter expression without setting content type.
+   *
+   * @param expr the data filter expression (e.g., "${ .temperature > 38 }")
+   * @return self
+   */
+  public SELF data(String expr) {
+    addPropertyStep(e -> e.data(expr));
+    return self();
+  }
 }
