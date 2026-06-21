@@ -79,7 +79,9 @@ public class TryExecutor extends RegularTaskExecutor<TryTask> {
           catchTaskDo != null && !catchTaskDo.isEmpty()
               ? Optional.of(
                   TaskExecutorHelper.createExecutorList(
-                      position.copy().addProperty("catch"), catchTaskDo, definition))
+                      position.copy().addProperty("try").addProperty("catch"),
+                      catchTaskDo,
+                      definition))
               : Optional.empty();
       Retry retry = catchInfo.getRetry();
       this.retryIntervalExecutor = retry != null ? buildRetryInterval(retry) : Optional.empty();

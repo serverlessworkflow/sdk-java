@@ -164,7 +164,7 @@ public class RetryTimeoutTest {
 
     assertThat(retryListener.taskCompleted.get("do/0/attemptTask/try")).isEqualTo((short) 0);
     assertThat(retryListener.taskCompleted)
-        .containsKey("do/0/attemptTask/catch/do/0/executeAfterFailingTask");
+        .containsKey("do/0/attemptTask/try/catch/do/0/executeAfterFailingTask");
   }
 
   @Test
