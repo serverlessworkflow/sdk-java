@@ -18,6 +18,8 @@ package io.serverlessworkflow.impl.auth;
 import io.serverlessworkflow.api.types.AuthenticationPolicyUnion;
 import io.serverlessworkflow.api.types.EndpointConfiguration;
 import io.serverlessworkflow.api.types.ReferenceableAuthenticationPolicy;
+import io.serverlessworkflow.api.types.Use;
+import io.serverlessworkflow.api.types.UseAuthentications;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowDefinition;
@@ -54,10 +56,17 @@ public class AuthProviderFactory {
 
   private static Optional<AuthProvider> buildFromReference(
       WorkflowApplication app, Workflow workflow, String use, String method) {
-    return workflow.getUse().getAuthentications().getAdditionalProperties().entrySet().stream()
-        .filter(s -> s.getKey().equals(use))
-        .findAny()
-        .flatMap(e -> buildFromPolicy(app, workflow, e.getValue(), method));
+    Use useInfo = workflow.getUse();
+    if (useInfo == null) {
+      return Optional.empty();
+    }
+    UseAuthentications authInfo = useInfo.getAuthentications();
+    return authInfo == null
+        ? Optional.empty()
+        : authInfo.getAdditionalProperties().entrySet().stream()
+            .filter(s -> s.getKey().equals(use))
+            .findAny()
+            .flatMap(e -> buildFromPolicy(app, workflow, e.getValue(), method));
   }
 
   private static Optional<AuthProvider> buildFromPolicy(
