@@ -56,10 +56,12 @@ public class WaitExecutor extends RegularTaskExecutor<WaitTask> {
   protected CompletableFuture<WorkflowModel> internalExecute(
       WorkflowContext workflow, TaskContext taskContext) {
     workflow.instance().status(WorkflowStatus.WAITING);
-    return new CompletableFuture<WorkflowModel>()
-        .completeOnTimeout(
-            taskContext.output(),
+    CompletableFuture<WorkflowModel> future = new CompletableFuture<>();
+    CompletableFuture.delayedExecutor(
             durationResolver.apply(workflow, taskContext, taskContext.input()).toMillis(),
-            TimeUnit.MILLISECONDS);
+            TimeUnit.MILLISECONDS,
+            workflow.definition().application().executorService())
+        .execute(() -> future.complete(taskContext.output()));
+    return future;
   }
 }
