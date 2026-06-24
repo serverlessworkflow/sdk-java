@@ -15,6 +15,7 @@
  */
 package io.serverlessworkflow.impl.executors.http;
 
+import io.serverlessworkflow.impl.ContextSnapshot;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
@@ -75,10 +76,14 @@ public class HttpExecutor implements CallableTask {
       target = target.queryParam(entry.getKey(), entry.getValue());
     }
     Builder request = target.request();
-    requestDecorators.forEach(d -> d.decorate(request, workflow, taskContext));
     headersMap.ifPresent(h -> h.apply(workflow, taskContext, input).forEach(request::header));
+    ContextSnapshot contextSnapshot = workflow.instance().contextSnapshot();
     return CompletableFuture.supplyAsync(
-        () -> requestFunction.apply(request, uri, workflow, taskContext, input),
+        contextSnapshot.wrap(
+            () -> {
+              requestDecorators.forEach(d -> d.decorate(request, workflow, taskContext));
+              return requestFunction.apply(request, uri, workflow, taskContext, input);
+            }),
         workflow.definition().application().executorService());
   }
 }

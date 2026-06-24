@@ -80,6 +80,7 @@ public class WorkflowApplication implements AutoCloseable {
   private final Map<WorkflowDefinitionId, WorkflowDefinition> definitions;
   private final WorkflowPositionFactory positionFactory;
   private final ExecutorServiceFactory executorFactory;
+  private final ContextPropagator contextPropagator;
   private final RuntimeDescriptorFactory runtimeDescriptorFactory;
   private final EventConsumer<?, ?> eventConsumer;
   private final Collection<EventPublisher> eventPublishers;
@@ -109,6 +110,7 @@ public class WorkflowApplication implements AutoCloseable {
     this.idFactory = builder.idFactory;
     this.runtimeDescriptorFactory = builder.descriptorFactory;
     this.executorFactory = builder.executorFactory;
+    this.contextPropagator = builder.contextPropagator;
     this.listenersByPriority = groupByPriority(new LinkedHashSet<>(builder.listeners));
     this.definitions = new ConcurrentHashMap<>();
     this.eventConsumer = builder.eventConsumer;
@@ -232,6 +234,7 @@ public class WorkflowApplication implements AutoCloseable {
     private WorkflowInstanceIdFactory idFactory;
     private WorkflowScheduler scheduler;
     private ExecutorServiceFactory executorFactory = new DefaultExecutorServiceFactory();
+    private ContextPropagator contextPropagator = ContextPropagator.NOOP;
     private EventConsumer<?, ?> eventConsumer;
     private Collection<EventPublisher> eventPublishers = new ArrayList<>();
     private RuntimeDescriptorFactory descriptorFactory =
@@ -308,6 +311,11 @@ public class WorkflowApplication implements AutoCloseable {
 
     public Builder withExecutorFactory(ExecutorServiceFactory executorFactory) {
       this.executorFactory = executorFactory;
+      return this;
+    }
+
+    public Builder withContextPropagator(ContextPropagator contextPropagator) {
+      this.contextPropagator = contextPropagator;
       return this;
     }
 
@@ -534,6 +542,10 @@ public class WorkflowApplication implements AutoCloseable {
 
   public ExecutorService executorService() {
     return executorFactory.get();
+  }
+
+  public ContextPropagator contextPropagator() {
+    return contextPropagator;
   }
 
   public boolean isLifeCycleCEPublishingEnabled() {

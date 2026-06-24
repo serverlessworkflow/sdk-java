@@ -51,6 +51,8 @@ public class WorkflowMutableInstance implements WorkflowInstance {
   protected AtomicReference<CompletableFuture<WorkflowModel>> futureRef = new AtomicReference<>();
   protected Instant completedAt;
 
+  private volatile ContextSnapshot contextSnapshot = ContextSnapshot.NOOP;
+
   protected final Map<String, Object> additionalObjects = new ConcurrentHashMap<>();
 
   protected final Map<String, Integer> iterationsMap = new ConcurrentHashMap<>();
@@ -84,6 +86,8 @@ public class WorkflowMutableInstance implements WorkflowInstance {
     if (future != null) {
       return future;
     }
+
+    this.contextSnapshot = workflowContext.definition().application().contextPropagator().capture();
     status(WorkflowStatus.RUNNING);
 
     future =
@@ -114,6 +118,10 @@ public class WorkflowMutableInstance implements WorkflowInstance {
     return future;
   }
 
+  public ContextSnapshot contextSnapshot() {
+    return contextSnapshot;
+  }
+
   private void whenCompleted(WorkflowModel result, Throwable ex) {
     completedAt = Instant.now();
     additionalObjects.values().stream()
@@ -121,7 +129,7 @@ public class WorkflowMutableInstance implements WorkflowInstance {
         .map(AutoCloseable.class::cast)
         .forEach(WorkflowUtils::safeClose);
     if (ex != null) {
-      handleException(ex instanceof CompletionException ? ex = ex.getCause() : ex);
+      handleException(ex instanceof CompletionException ? ex.getCause() : ex);
     }
     workflowContext.definition().removeInstance(this);
   }
@@ -253,10 +261,7 @@ public class WorkflowMutableInstance implements WorkflowInstance {
       statusLock.lock();
       if (TaskExecutorHelper.isActive(status.get()) && suspended != null) {
 
-        suspended.forEach(
-            (k, v) -> {
-              k.complete(v);
-            });
+        suspended.forEach(CompletableFuture::complete);
         suspended = null;
         result = true;
       } else {
@@ -323,9 +328,7 @@ public class WorkflowMutableInstance implements WorkflowInstance {
     if (result) {
       publishEvent(
           workflowContext, l -> l.onWorkflowCancelled(new WorkflowCancelledEvent(workflowContext)));
-      if (toCancel != null) {
-        toCancel.forEach(t -> t.cancel(true));
-      }
+      toCancel.forEach(t -> t.cancel(true));
     }
     return result;
   }
