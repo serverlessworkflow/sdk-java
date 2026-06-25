@@ -19,7 +19,7 @@ import io.serverlessworkflow.api.types.ReferenceableAuthenticationPolicy;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
-import io.serverlessworkflow.impl.auth.AuthProviderFactory;
+import io.serverlessworkflow.impl.auth.AuthProvider;
 import jakarta.ws.rs.HttpMethod;
 import java.net.URI;
 import java.util.Map;
@@ -101,24 +101,13 @@ public class HttpExecutorBuilder {
   }
 
   private RequestExecutor buildRequestExecutor() {
-    String theMethod = method.toUpperCase();
-    switch (theMethod) {
-      case HttpMethod.POST:
-      case HttpMethod.PUT:
-      case HttpMethod.PATCH:
-        return new WithBodyRequestExecutor(
-            theMethod,
-            redirect,
-            AuthProviderFactory.getAuth(definition, policy, method),
-            definition.application(),
-            body);
-      case HttpMethod.DELETE:
-      case HttpMethod.HEAD:
-      case HttpMethod.OPTIONS:
-      case HttpMethod.GET:
-      default:
-        return new WithoutBodyRequestExecutor(
-            theMethod, redirect, AuthProviderFactory.getAuth(definition, policy, method));
-    }
+    String httpMethod = method.toUpperCase();
+    Optional<AuthProvider> auth =
+        definition.application().authProviderFactory().getAuth(definition, policy, method);
+    return switch (httpMethod) {
+      case HttpMethod.POST, HttpMethod.PUT, HttpMethod.PATCH ->
+          new WithBodyRequestExecutor(httpMethod, redirect, auth, definition.application(), body);
+      default -> new WithoutBodyRequestExecutor(httpMethod, redirect, auth);
+    };
   }
 }

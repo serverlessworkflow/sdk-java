@@ -22,6 +22,8 @@ import io.serverlessworkflow.api.types.SchemaInline;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.additional.NamedWorkflowAdditionalObject;
 import io.serverlessworkflow.impl.additional.WorkflowAdditionalObject;
+import io.serverlessworkflow.impl.auth.AuthProviderFactory;
+import io.serverlessworkflow.impl.auth.DefaultAuthProviderFactory;
 import io.serverlessworkflow.impl.config.ConfigManager;
 import io.serverlessworkflow.impl.config.ConfigSecretManager;
 import io.serverlessworkflow.impl.config.SecretManager;
@@ -89,6 +91,7 @@ public class WorkflowApplication implements AutoCloseable {
   private final WorkflowModelFactory contextFactory;
   private final WorkflowScheduler scheduler;
   private final Map<String, WorkflowAdditionalObject<?>> additionalObjects;
+  private final AuthProviderFactory authProviderFactory;
   private final ConfigManager configManager;
   private final SecretManager secretManager;
   private final SchedulerListener schedulerListener;
@@ -120,6 +123,7 @@ public class WorkflowApplication implements AutoCloseable {
     this.scheduler = builder.scheduler;
     this.schedulerListener = builder.schedulerListener;
     this.additionalObjects = builder.additionalObjects;
+    this.authProviderFactory = builder.authProviderFactory;
     this.configManager = builder.configManager;
     this.secretManager = builder.secretManager;
     this.templateResolver = builder.templateResolver;
@@ -241,6 +245,7 @@ public class WorkflowApplication implements AutoCloseable {
     private WorkflowModelFactory modelFactory;
     private WorkflowModelFactory contextFactory;
     private Map<String, WorkflowAdditionalObject<?>> additionalObjects = new HashMap<>();
+    private AuthProviderFactory authProviderFactory = DefaultAuthProviderFactory.INSTANCE;
     private SecretManager secretManager;
     private ConfigManager configManager;
     private SchedulerListener schedulerListener;
@@ -354,6 +359,11 @@ public class WorkflowApplication implements AutoCloseable {
     public <T> Builder withAdditionalObject(
         String name, WorkflowAdditionalObject<T> additionalObject) {
       additionalObjects.put(name, additionalObject);
+      return this;
+    }
+
+    public Builder withAuthProviderFactory(AuthProviderFactory authProviderFactory) {
+      this.authProviderFactory = authProviderFactory;
       return this;
     }
 
@@ -584,6 +594,10 @@ public class WorkflowApplication implements AutoCloseable {
       String name, WorkflowContext workflowContext, TaskContext taskContext) {
     return Optional.ofNullable(additionalObjects.get(name))
         .map(v -> (T) v.apply(workflowContext, taskContext));
+  }
+
+  public AuthProviderFactory authProviderFactory() {
+    return authProviderFactory;
   }
 
   public Collection<CallableTaskProxyBuilder> callableProxyBuilders() {
