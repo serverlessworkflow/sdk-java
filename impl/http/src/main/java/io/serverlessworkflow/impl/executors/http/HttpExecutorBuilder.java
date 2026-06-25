@@ -103,7 +103,7 @@ public class HttpExecutorBuilder {
   private RequestExecutor buildRequestExecutor() {
     String httpMethod = method.toUpperCase();
     Optional<AuthProvider> auth =
-        definition.application().authProviderFactory().getAuth(definition, policy, method);
+        definition.application().authProviderFactory().getAuth(definition, policy, httpMethod);
     return switch (httpMethod) {
       case HttpMethod.POST, HttpMethod.PUT, HttpMethod.PATCH ->
           new WithBodyRequestExecutor(httpMethod, redirect, auth, definition.application(), body);

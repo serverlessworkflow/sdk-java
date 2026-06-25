@@ -245,7 +245,7 @@ public class WorkflowApplication implements AutoCloseable {
     private WorkflowModelFactory modelFactory;
     private WorkflowModelFactory contextFactory;
     private Map<String, WorkflowAdditionalObject<?>> additionalObjects = new HashMap<>();
-    private AuthProviderFactory authProviderFactory = DefaultAuthProviderFactory.INSTANCE;
+    private AuthProviderFactory authProviderFactory;
     private SecretManager secretManager;
     private ConfigManager configManager;
     private SchedulerListener schedulerListener;
@@ -480,6 +480,10 @@ public class WorkflowApplication implements AutoCloseable {
       if (id == null) {
         id = idFactory.get();
       }
+      if (authProviderFactory == null) {
+        authProviderFactory = DefaultAuthProviderFactory.factory();
+      }
+
       return new WorkflowApplication(this);
     }
 

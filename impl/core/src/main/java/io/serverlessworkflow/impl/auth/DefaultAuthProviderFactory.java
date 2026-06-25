@@ -27,7 +27,13 @@ import java.util.Optional;
 
 public class DefaultAuthProviderFactory implements AuthProviderFactory {
 
-  public static final DefaultAuthProviderFactory INSTANCE = new DefaultAuthProviderFactory();
+  private static class DefaultAuthProviderFactoryHolder {
+    private static final DefaultAuthProviderFactory instance = new DefaultAuthProviderFactory();
+  }
+
+  public static DefaultAuthProviderFactory factory() {
+    return DefaultAuthProviderFactoryHolder.instance;
+  }
 
   @Override
   public Optional<AuthProvider> getAuth(
