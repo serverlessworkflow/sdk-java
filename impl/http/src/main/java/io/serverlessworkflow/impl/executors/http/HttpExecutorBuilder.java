@@ -104,10 +104,18 @@ public class HttpExecutorBuilder {
     String httpMethod = method.toUpperCase();
     Optional<AuthProvider> auth =
         definition.application().authProviderFactory().getAuth(definition, policy, httpMethod);
-    return switch (httpMethod) {
-      case HttpMethod.POST, HttpMethod.PUT, HttpMethod.PATCH ->
-          new WithBodyRequestExecutor(httpMethod, redirect, auth, definition.application(), body);
-      default -> new WithoutBodyRequestExecutor(httpMethod, redirect, auth);
-    };
+    switch (httpMethod) {
+      case HttpMethod.POST:
+      case HttpMethod.PUT:
+      case HttpMethod.PATCH:
+        return new WithBodyRequestExecutor(
+            httpMethod, redirect, auth, definition.application(), body);
+      case HttpMethod.DELETE:
+      case HttpMethod.HEAD:
+      case HttpMethod.OPTIONS:
+      case HttpMethod.GET:
+      default:
+        return new WithoutBodyRequestExecutor(httpMethod, redirect, auth);
+    }
   }
 }
