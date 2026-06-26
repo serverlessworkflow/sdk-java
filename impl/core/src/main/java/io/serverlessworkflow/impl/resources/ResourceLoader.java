@@ -26,7 +26,6 @@ import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
-import io.serverlessworkflow.impl.auth.AuthProviderFactory;
 import io.serverlessworkflow.impl.auth.AuthUtils;
 import io.serverlessworkflow.impl.expressions.ExpressionDescriptor;
 import java.net.URI;
@@ -108,8 +107,9 @@ public abstract class ResourceLoader implements AutoCloseable {
     return loadURI(
         uri,
         function,
-        AuthProviderFactory.getAuth(
-                workflowContext.definition(), endPoint.getEndpointConfiguration())
+        application
+            .authProviderFactory()
+            .getAuth(workflowContext.definition(), endPoint.getEndpointConfiguration())
             .map(
                 auth ->
                     AuthUtils.authHeaderValue(
