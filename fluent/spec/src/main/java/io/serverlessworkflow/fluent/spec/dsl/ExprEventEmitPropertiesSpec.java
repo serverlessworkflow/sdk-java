@@ -33,4 +33,15 @@ public abstract class ExprEventEmitPropertiesSpec<
     addPropertyStep(e -> e.data(data));
     return JSON();
   }
+
+  /**
+   * Sets the event data as an expression without setting content type.
+   *
+   * @param expr the data expression (e.g., "${.temperature}")
+   * @return self
+   */
+  public SELF data(String expr) {
+    addPropertyStep(e -> e.data(expr));
+    return self();
+  }
 }

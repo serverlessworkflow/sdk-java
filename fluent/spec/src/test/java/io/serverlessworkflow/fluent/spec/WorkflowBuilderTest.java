@@ -20,6 +20,7 @@ import static io.serverlessworkflow.fluent.spec.dsl.DSL.call;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.cases;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.doTasks;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.emit;
+import static io.serverlessworkflow.fluent.spec.dsl.DSL.event;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.forEach;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.fork;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.http;
@@ -702,5 +703,54 @@ public class WorkflowBuilderTest {
     assertEquals(
         RunTaskConfiguration.ProcessReturnType.NONE, runTask.getRun().getRunWorkflow().getReturn());
     assertEquals(false, runTask.getRun().getRunWorkflow().isAwait());
+  }
+
+  @Test
+  void testListenWithConfigurerBuilder() {
+    Workflow wf =
+        WorkflowBuilder.workflow("listen-with-configurer", "test", "0.1.0")
+            .tasks(
+                doTasks(
+                    listen(
+                        "waitForEvent",
+                        l ->
+                            l.to()
+                                .any(
+                                    event().type("com.example.event.A"),
+                                    event().type("com.example.event.B"))
+                                .until("$.count > 0")
+                                .forEach(
+                                    "item",
+                                    f ->
+                                        f.tasks(
+                                            set("processed", s -> s.put("eventType", "processed"))))
+                                .apply())))
+            .build();
+
+    List<TaskItem> items = wf.getDo();
+    assertNotNull(items, "Do list must not be null");
+    assertEquals(1, items.size(), "There should be one listen task");
+
+    TaskItem item = items.get(0);
+    assertEquals("waitForEvent", item.getName(), "TaskItem name should match");
+    ListenTask lt = item.getTask().getListenTask();
+    assertNotNull(lt, "ListenTask should be present");
+
+    // Verify strategy
+    var strategy = lt.getListen().getTo().getAnyEventConsumptionStrategy();
+    assertNotNull(strategy, "Any strategy should be set");
+    assertEquals(2, strategy.getAny().size(), "Should have 2 event filters");
+
+    // Verify until condition
+    var until = strategy.getUntil();
+    assertNotNull(until, "Until should be set");
+    assertEquals("$.count > 0", until.getAnyEventUntilCondition(), "Until expression should match");
+
+    // Verify foreach
+    var foreach = lt.getForeach();
+    assertNotNull(foreach, "Foreach should be set");
+    assertNotNull(foreach.getDo(), "Foreach do tasks should be set");
+    assertEquals(1, foreach.getDo().size(), "Foreach do should have 1 task");
+    assertEquals("processed", foreach.getDo().get(0).getName(), "Foreach task name should match");
   }
 }
