@@ -41,6 +41,13 @@ class FileDescriptorReader {
 
     try (InputStream inputStream = externalResourceHandler.open()) {
 
+      if (inputStream == null) {
+        throw new IllegalStateException(
+            "Could not read gRPC proto descriptor resource '"
+                + externalResourceHandler.name()
+                + "'. Verify the path is correct and that the resource is available.");
+      }
+
       Path protoFile = grpcDir.resolve(externalResourceHandler.name());
       if (!Files.exists(protoFile)) {
         Files.createDirectories(protoFile);
