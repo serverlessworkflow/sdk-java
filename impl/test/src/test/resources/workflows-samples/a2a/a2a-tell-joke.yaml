@@ -1,0 +1,21 @@
+document:
+  dsl: '1.0.3'
+  namespace: test
+  name: a2a-tell-joke
+  version: '0.1.0'
+do:
+  - tellJoke:
+      call: a2a
+      with:
+        method: message/send
+        agentCard:
+          endpoint: http://localhost:11111
+        parameters:
+          message:
+            messageId: 9229e770-767c-417b-a0b0-f0741243c589
+            parts:
+              - kind: text
+                text: tell me a joke
+      output:
+        as: .artifacts[] | .parts | map (.text) | join (" ")
+     

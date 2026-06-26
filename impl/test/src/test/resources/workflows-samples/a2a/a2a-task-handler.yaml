@@ -1,0 +1,30 @@
+document:
+  dsl: '1.0.3'
+  namespace: test
+  name: a2a-task-cancel
+  version: '0.1.0'
+do:
+  - listTasks:
+      call: a2a
+      with:
+        method: tasks/list
+        agentCard:
+          endpoint: http://localhost:11111
+      output:
+        as: .[0]
+  - getTasks:
+      call: a2a
+      with:
+        method: tasks/get
+        agentCard:
+          endpoint: http://localhost:11111
+        parameters:
+          taskId: ${.id}
+  - cancelTasks:
+      call: a2a
+      with:
+        method: tasks/cancel
+        agentCard:
+          endpoint: http://localhost:11111
+        parameters:
+          taskId: ${.id}

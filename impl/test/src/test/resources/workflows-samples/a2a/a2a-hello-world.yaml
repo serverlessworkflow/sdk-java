@@ -1,0 +1,19 @@
+document:
+  dsl: '1.0.3'
+  namespace: test
+  name: a2a-hello-world
+  version: '0.1.0'
+do:
+  - sayHello:
+      call: a2a
+      with:
+        method: message/send
+        agentCard:
+          endpoint: http://localhost:11111
+        parameters:
+          message:
+            parts:
+              - kind: text
+                text: Hello Agent!
+      output:
+        as: .parts | map(.text) | join(" ")
