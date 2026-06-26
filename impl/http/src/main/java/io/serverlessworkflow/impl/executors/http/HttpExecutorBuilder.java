@@ -16,6 +16,8 @@
 package io.serverlessworkflow.impl.executors.http;
 
 import io.serverlessworkflow.api.types.ReferenceableAuthenticationPolicy;
+import io.serverlessworkflow.api.types.Use;
+import io.serverlessworkflow.api.types.UseAuthentications;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
@@ -41,8 +43,23 @@ public class HttpExecutorBuilder {
   }
 
   public HttpExecutorBuilder withAuth(ReferenceableAuthenticationPolicy policy) {
+    checkAuthentication(policy);
     this.policy = policy;
     return this;
+  }
+
+  private void checkAuthentication(ReferenceableAuthenticationPolicy policy) {
+    if (policy == null || policy.getAuthenticationPolicyReference() == null) {
+      return;
+    }
+    String name = policy.getAuthenticationPolicyReference().getUse();
+    Use use = definition.workflow().getUse();
+    UseAuthentications authentications = use == null ? null : use.getAuthentications();
+    if (authentications == null || !authentications.getAdditionalProperties().containsKey(name)) {
+      throw new IllegalArgumentException(
+          String.format(
+              "Authentication '%s' is referenced but not defined in use.authentications.", name));
+    }
   }
 
   public HttpExecutorBuilder withBody(Object body) {
