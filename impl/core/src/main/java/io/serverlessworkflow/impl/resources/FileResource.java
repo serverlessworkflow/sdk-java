@@ -33,12 +33,8 @@ class FileResource implements ExternalResourceHandler {
   }
 
   @Override
-  public InputStream open() {
-    try {
-      return Files.newInputStream(path);
-    } catch (IOException io) {
-      throw new UncheckedIOException(io);
-    }
+  public InputStream open() throws IOException {
+    return Files.newInputStream(path);
   }
 
   @Override

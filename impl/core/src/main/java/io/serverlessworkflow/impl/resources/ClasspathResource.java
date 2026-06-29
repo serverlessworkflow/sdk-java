@@ -15,6 +15,7 @@
  */
 package io.serverlessworkflow.impl.resources;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Objects;
 
@@ -27,8 +28,12 @@ public class ClasspathResource implements ExternalResourceHandler {
   }
 
   @Override
-  public InputStream open() {
-    return Thread.currentThread().getContextClassLoader().getResourceAsStream(path);
+  public InputStream open() throws IOException {
+    InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(path);
+    if (is == null) {
+      throw new IOException("Cannot load resouce with path: " + path + " from ClassPath");
+    }
+    return is;
   }
 
   @Override
