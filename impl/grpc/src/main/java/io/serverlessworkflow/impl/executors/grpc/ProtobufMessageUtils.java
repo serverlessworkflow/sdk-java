@@ -15,23 +15,16 @@
  */
 package io.serverlessworkflow.impl.executors.grpc;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.google.protobuf.DescriptorProtos;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.DynamicMessage;
-import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.Message;
 import com.google.protobuf.util.JsonFormat;
-import io.grpc.MethodDescriptor;
-import io.grpc.stub.StreamObserver;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowModelFactory;
 import io.serverlessworkflow.impl.jackson.JsonUtils;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.UnaryOperator;
 
 class ProtobufMessageUtils {
 
@@ -45,58 +38,17 @@ class ProtobufMessageUtils {
     }
   }
 
-  static MethodDescriptor.MethodType getMethodType(
-      com.google.protobuf.Descriptors.MethodDescriptor methodDesc) {
-    DescriptorProtos.MethodDescriptorProto methodDescProto = methodDesc.toProto();
-    if (methodDescProto.getClientStreaming()) {
-      if (methodDescProto.getServerStreaming()) {
-        return MethodDescriptor.MethodType.BIDI_STREAMING;
-      }
-      return MethodDescriptor.MethodType.CLIENT_STREAMING;
-    } else if (methodDescProto.getServerStreaming()) {
-      return MethodDescriptor.MethodType.SERVER_STREAMING;
-    } else {
-      return MethodDescriptor.MethodType.UNARY;
-    }
-  }
-
-  static CompletableFuture<WorkflowModel> asyncStreamingCall(
-      Map<String, Object> parameters,
-      com.google.protobuf.Descriptors.MethodDescriptor methodDescriptor,
-      UnaryOperator<StreamObserver<Message>> streamObserverFunction,
-      WorkflowModelFactory modelFactory) {
-    CollectionStreamObserver responseObserver = new CollectionStreamObserver(modelFactory);
-    StreamObserver<Message> requestObserver = streamObserverFunction.apply(responseObserver);
-    for (Object entry : parameters.entrySet()) {
-      try {
-        requestObserver.onNext(
-            buildMessage(entry, DynamicMessage.newBuilder(methodDescriptor.getInputType()))
-                .build());
-      } catch (InvalidProtocolBufferException e) {
-        requestObserver.onError(e);
-      }
-    }
-    requestObserver.onCompleted();
-    return responseObserver.future();
-  }
-
-  static Message.Builder buildMessage(Object object, Message.Builder builder)
-      throws InvalidProtocolBufferException {
-    try {
-      // let's use Jackson to serialize the object to string for now, although we probably need to
-      // revisit this.
-      JsonFormat.parser().merge(JsonUtils.mapper().writeValueAsString(object), builder);
-      return builder;
-    } catch (JsonProcessingException e) {
-      throw new InvalidProtocolBufferException(e);
-    }
+  static Message.Builder buildMessage(Object object, Message.Builder builder) throws IOException {
+    // let's use Jackson to serialize the object to string for now, although we probably need to
+    // revisit this.
+    JsonFormat.parser().merge(JsonUtils.mapper().writeValueAsString(object), builder);
+    return builder;
   }
 
   static Message.Builder buildMessage(
       Descriptors.MethodDescriptor methodDescriptor, Map<String, Object> parameters)
-      throws InvalidProtocolBufferException {
-    DynamicMessage.Builder builder = DynamicMessage.newBuilder(methodDescriptor.getInputType());
-    return buildMessage(parameters, builder);
+      throws IOException {
+    return buildMessage(parameters, DynamicMessage.newBuilder(methodDescriptor.getInputType()));
   }
 
   private ProtobufMessageUtils() {}

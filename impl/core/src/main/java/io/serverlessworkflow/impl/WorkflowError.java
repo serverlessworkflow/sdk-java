@@ -35,7 +35,7 @@ public record WorkflowError(String type, int status, String instance, String tit
     return error("https://serverlessworkflow.io/spec/1.0.0/errors/expression", 400);
   }
 
-  public static Builder communication(int status, TaskContext context, Exception ex) {
+  public static Builder communication(int status, TaskContext context, Throwable ex) {
     return communication(status, context, ex.getMessage());
   }
 
@@ -54,13 +54,13 @@ public record WorkflowError(String type, int status, String instance, String tit
     return communication(Errors.COMMUNICATION.status(), context, title);
   }
 
-  public static Builder runtime(int status, TaskContext context, Exception ex) {
+  public static Builder runtime(int status, TaskContext context, Throwable ex) {
     return new Builder(Errors.RUNTIME.toString(), status)
         .instance(context.position().jsonPointer())
         .title(ex.getMessage());
   }
 
-  public static Builder runtime(TaskContext context, Exception ex) {
+  public static Builder runtime(TaskContext context, Throwable ex) {
     return runtime(Errors.RUNTIME.status(), context, ex);
   }
 
