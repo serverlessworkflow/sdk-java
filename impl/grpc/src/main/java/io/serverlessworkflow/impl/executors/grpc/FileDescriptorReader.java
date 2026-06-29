@@ -17,14 +17,17 @@ package io.serverlessworkflow.impl.executors.grpc;
 
 import com.github.os72.protocjar.Protoc;
 import com.google.protobuf.DescriptorProtos;
+import com.google.protobuf.DescriptorProtos.FileDescriptorProto;
 import io.serverlessworkflow.impl.resources.ExternalResourceHandler;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,35 +35,65 @@ class FileDescriptorReader {
 
   private static final Logger logger = LoggerFactory.getLogger(FileDescriptorReader.class);
 
-  static FileDescriptorContext readDescriptor(ExternalResourceHandler externalResourceHandler) {
+  static FileDescriptorProto readDescriptor(ExternalResourceHandler externalResourceHandler) {
 
+    Path grpcDir = null;
     try (InputStream inputStream = externalResourceHandler.open()) {
-
-      Path grpcDir = Files.createTempDirectory("serverless-workflow-");
-
-      Path protoFile = grpcDir.resolve(externalResourceHandler.name());
-      if (!Files.exists(protoFile)) {
-        Files.createDirectories(protoFile.getParent());
-      }
-
-      Files.copy(inputStream, protoFile, StandardCopyOption.REPLACE_EXISTING);
-
+      grpcDir = Files.createTempDirectory("serverless-workflow-");
+      Files.createDirectories(grpcDir);
+      String name = Path.of(externalResourceHandler.name()).getFileName().toString();
+      Path protoFile = grpcDir.resolve(name);
+      Files.copy(inputStream, protoFile);
       Path descriptorOutput = grpcDir.resolve("descriptor.protobin");
-
       generateFileDescriptor(grpcDir, protoFile, descriptorOutput);
-
-      DescriptorProtos.FileDescriptorSet fileDescriptorSet =
-          DescriptorProtos.FileDescriptorSet.newBuilder()
-              .mergeFrom(Files.readAllBytes(descriptorOutput))
-              .build();
-
-      return new FileDescriptorContext(fileDescriptorSet, externalResourceHandler.name());
-
+      return DescriptorProtos.FileDescriptorSet.newBuilder()
+          .mergeFrom(Files.readAllBytes(descriptorOutput))
+          .build()
+          .getFileList()
+          .stream()
+          .filter(n -> n.getName().equals(name))
+          .findAny()
+          .orElseThrow(
+              () ->
+                  new IllegalStateException(
+                      "There was something really wrong generating the protoc descriptor, it does not included a file named "
+                          + name));
     } catch (IOException e) {
       throw new UncheckedIOException(
-          "Unable to process GRPC descriptor file associated with resource "
+          "Unable to process gRPC proto file associated with resource "
               + externalResourceHandler.name(),
           e);
+    } finally {
+      if (grpcDir != null) {
+        deleteTempFiles(grpcDir);
+      }
+    }
+  }
+
+  private static void deleteTempFiles(Path grpcDir) {
+    try {
+      Files.walkFileTree(
+          grpcDir,
+          new SimpleFileVisitor<Path>() {
+            @Override
+            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
+                throws IOException {
+              Files.delete(file);
+              return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult postVisitDirectory(Path dir, IOException exc)
+                throws IOException {
+              if (exc != null) {
+                throw exc;
+              }
+              Files.delete(dir);
+              return FileVisitResult.CONTINUE;
+            }
+          });
+    } catch (IOException e) {
+      logger.warn("Error deleting GRPC temp dir " + grpcDir, e);
     }
   }
 
@@ -69,11 +102,6 @@ class FileDescriptorReader {
    * the embedded protoc from protoc-jar library. If that fails with FileNotFoundException
    * (unsupported architecture), falls back to using the system's installed protoc via
    * ProcessBuilder.
-   *
-   * @param grpcDir a temporary directory
-   * @param protoFile the .proto file used by <code>protoc</code> to generate the file descriptor
-   * @param descriptorOutput the output directory where the descriptor file will be generated
-   * @throws IOException
    */
   private static void generateFileDescriptor(Path grpcDir, Path protoFile, Path descriptorOutput)
       throws IOException {
@@ -107,8 +135,6 @@ class FileDescriptorReader {
 
   /*
    * Fallback method to generate file descriptor using system's installed protoc via ProcessBuilder.
-   *
-   * @param protocArgs the arguments to pass to protoc command
    */
   private static void generateFileDescriptorWithProcessBuilder(String[] protocArgs)
       throws IOException {

@@ -31,7 +31,7 @@ public class ClasspathResource implements ExternalResourceHandler {
   public InputStream open() throws IOException {
     InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(path);
     if (is == null) {
-      throw new IOException("Cannot load resouce with path: " + path + " from ClassPath");
+      throw new IOException("Cannot load resource with path: " + path + " from classpath");
     }
     return is;
   }

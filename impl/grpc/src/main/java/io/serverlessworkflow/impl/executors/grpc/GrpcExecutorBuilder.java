@@ -50,10 +50,12 @@ public class GrpcExecutorBuilder implements CallableTaskBuilder<CallGRPC> {
         new GrpcRequestContext(
             service.getHost(), service.getPort(), with.getMethod(), service.getName());
 
-    FileDescriptorContext fileDescriptorContext =
-        definition
-            .resourceLoader()
-            .loadStatic(with.getProto().getEndpoint(), FileDescriptorReader::readDescriptor);
-    return () -> new GrpcExecutor(grpcRequestContext, arguments, fileDescriptorContext);
+    return () ->
+        new GrpcExecutor(
+            grpcRequestContext,
+            arguments,
+            definition
+                .resourceLoader()
+                .loadStatic(with.getProto().getEndpoint(), FileDescriptorReader::readDescriptor));
   }
 }
