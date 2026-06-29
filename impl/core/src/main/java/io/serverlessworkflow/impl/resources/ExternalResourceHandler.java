@@ -15,6 +15,7 @@
  */
 package io.serverlessworkflow.impl.resources;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.time.Instant;
 
@@ -22,7 +23,7 @@ public interface ExternalResourceHandler {
 
   String name();
 
-  InputStream open();
+  InputStream open() throws IOException;
 
   default boolean shouldReload(Instant lastUpdate) {
     return false;

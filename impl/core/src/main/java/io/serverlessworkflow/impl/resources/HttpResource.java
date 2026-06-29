@@ -37,14 +37,10 @@ public class HttpResource implements ExternalResourceHandler {
   }
 
   @Override
-  public InputStream open() {
-    try {
-      URLConnection connection = url.openConnection();
-      auth.ifPresent(s -> connection.setRequestProperty(AuthUtils.AUTH_HEADER_NAME, s));
-      return connection.getInputStream();
-    } catch (IOException e) {
-      throw new UncheckedIOException(e);
-    }
+  public InputStream open() throws IOException {
+    URLConnection connection = url.openConnection();
+    auth.ifPresent(s -> connection.setRequestProperty(AuthUtils.AUTH_HEADER_NAME, s));
+    return connection.getInputStream();
   }
 
   public String name() {

@@ -15,7 +15,7 @@
  */
 package io.serverlessworkflow.impl.executors.grpc;
 
-import com.google.protobuf.DescriptorProtos;
+import com.google.protobuf.DescriptorProtos.FileDescriptorProto;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.DynamicMessage;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -42,15 +42,15 @@ public class GrpcExecutor implements CallableTask {
 
   private final GrpcRequestContext requestContext;
   private final WorkflowValueResolver<Map<String, Object>> arguments;
-  private final FileDescriptorContext fileDescriptorContext;
+  private final FileDescriptorProto fileDescriptorProto;
 
   public GrpcExecutor(
       GrpcRequestContext requestContext,
       WorkflowValueResolver<Map<String, Object>> arguments,
-      FileDescriptorContext fileDescriptorContext) {
+      FileDescriptorProto fileDescriptorProto) {
     this.requestContext = requestContext;
     this.arguments = arguments;
-    this.fileDescriptorContext = fileDescriptorContext;
+    this.fileDescriptorProto = fileDescriptorProto;
   }
 
   @Override
@@ -64,12 +64,6 @@ public class GrpcExecutor implements CallableTask {
       WorkflowContext workflowContext, TaskContext taskContext, Map<String, Object> arguments) {
 
     Channel channel = GrpcChannelResolver.channel(workflowContext, taskContext, requestContext);
-
-    DescriptorProtos.FileDescriptorProto fileDescriptorProto =
-        fileDescriptorContext.fileDescriptorSet().getFileList().stream()
-            .filter(file -> file.getName().equals(fileDescriptorContext.inputProto()))
-            .findFirst()
-            .orElseThrow(() -> new IllegalStateException("Proto file not found in descriptor set"));
 
     try {
       Descriptors.FileDescriptor fileDescriptor =
