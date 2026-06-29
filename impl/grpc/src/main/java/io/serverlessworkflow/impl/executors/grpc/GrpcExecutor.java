@@ -23,6 +23,8 @@ import com.google.protobuf.Message;
 import io.grpc.CallOptions;
 import io.grpc.Channel;
 import io.grpc.ClientCall;
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
 import io.grpc.MethodDescriptor;
 import io.grpc.protobuf.ProtoUtils;
 import io.grpc.stub.ClientCalls;
@@ -36,9 +38,12 @@ import io.serverlessworkflow.impl.WorkflowValueResolver;
 import io.serverlessworkflow.impl.executors.CallableTask;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public class GrpcExecutor implements CallableTask {
+
+  public static final String GRPC_CHANNEL_PROVIDER = "grpcChannelProvider";
 
   private final GrpcRequestContext requestContext;
   private final WorkflowValueResolver<Map<String, Object>> arguments;
@@ -63,8 +68,6 @@ public class GrpcExecutor implements CallableTask {
   private CompletableFuture<WorkflowModel> buildGrpcCallExecutor(
       WorkflowContext workflowContext, TaskContext taskContext, Map<String, Object> arguments) {
 
-    Channel channel = GrpcChannelResolver.channel(workflowContext, taskContext, requestContext);
-
     try {
       Descriptors.FileDescriptor fileDescriptor =
           Descriptors.FileDescriptor.buildFrom(
@@ -82,19 +85,33 @@ public class GrpcExecutor implements CallableTask {
 
       MethodDescriptor.MethodType methodType = ProtobufMessageUtils.getMethodType(methodDescriptor);
 
+      Optional<Channel> providedChannel =
+          workflowContext
+              .definition()
+              .application()
+              .<Channel>additionalObject(GRPC_CHANNEL_PROVIDER, workflowContext, taskContext);
+      Channel channel =
+          providedChannel.orElseGet(
+              () ->
+                  ManagedChannelBuilder.forAddress(requestContext.address(), requestContext.port())
+                      .usePlaintext()
+                      .build());
       ClientCall<Message, Message> call =
           buildClientCall(channel, methodType, serviceDescriptor, methodDescriptor);
-
-      return switch (methodType) {
-        case CLIENT_STREAMING ->
-            handleClientStreaming(workflowContext, arguments, methodDescriptor, call);
-        case BIDI_STREAMING ->
-            handleBidiStreaming(workflowContext, arguments, methodDescriptor, call);
-        case SERVER_STREAMING ->
-            handleServerStreaming(workflowContext, methodDescriptor, arguments, call);
-        case UNARY, UNKNOWN -> handleAsyncUnary(workflowContext, methodDescriptor, arguments, call);
-      };
-
+      CompletableFuture<WorkflowModel> result =
+          switch (methodType) {
+            case CLIENT_STREAMING ->
+                handleClientStreaming(workflowContext, arguments, methodDescriptor, call);
+            case BIDI_STREAMING ->
+                handleBidiStreaming(workflowContext, arguments, methodDescriptor, call);
+            case SERVER_STREAMING ->
+                handleServerStreaming(workflowContext, methodDescriptor, arguments, call);
+            case UNARY, UNKNOWN ->
+                handleAsyncUnary(workflowContext, methodDescriptor, arguments, call);
+          };
+      return providedChannel.isEmpty() && channel instanceof ManagedChannel managedChannel
+          ? result.whenComplete((__, ___) -> managedChannel.shutdown())
+          : result;
     } catch (Descriptors.DescriptorValidationException | InvalidProtocolBufferException e) {
       throw new WorkflowException(WorkflowError.runtime(taskContext, e).build());
     }
