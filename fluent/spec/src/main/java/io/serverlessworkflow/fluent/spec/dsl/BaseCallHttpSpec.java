@@ -33,14 +33,24 @@ public interface BaseCallHttpSpec<SELF extends BaseCallHttpSpec<SELF>> {
    */
   List<Consumer<CallHttpTaskFluent<?>>> steps();
 
-  default SELF GET() {
+  default SELF get() {
     steps().add(c -> c.method("GET"));
     return self();
   }
 
-  default SELF POST() {
+  @Deprecated
+  default SELF GET() {
+    return get();
+  }
+
+  default SELF post() {
     steps().add(c -> c.method("POST"));
     return self();
+  }
+
+  @Deprecated
+  default SELF POST() {
+    return post();
   }
 
   default SELF acceptJSON() {
@@ -120,6 +130,59 @@ public interface BaseCallHttpSpec<SELF extends BaseCallHttpSpec<SELF>> {
   default SELF query(String name, String value) {
     steps().add(c -> c.query(q -> q.query(name, value)));
     return self();
+  }
+
+  default SELF put() {
+    steps().add(c -> c.method("PUT"));
+    return self();
+  }
+
+  default SELF delete() {
+    steps().add(c -> c.method("DELETE"));
+    return self();
+  }
+
+  default SELF patch() {
+    steps().add(c -> c.method("PATCH"));
+    return self();
+  }
+
+  default SELF head() {
+    steps().add(c -> c.method("HEAD"));
+    return self();
+  }
+
+  default SELF options() {
+    steps().add(c -> c.method("OPTIONS"));
+    return self();
+  }
+
+  default SELF acceptXML() {
+    return header("Accept", "application/xml");
+  }
+
+  default SELF acceptForm() {
+    return header("Accept", "application/x-www-form-urlencoded");
+  }
+
+  default SELF acceptText() {
+    return header("Accept", "text/plain");
+  }
+
+  default SELF contentTypeJSON() {
+    return header("Content-Type", "application/json");
+  }
+
+  default SELF contentTypeXML() {
+    return header("Content-Type", "application/xml");
+  }
+
+  default SELF contentTypeForm() {
+    return header("Content-Type", "application/x-www-form-urlencoded");
+  }
+
+  default SELF contentTypeText() {
+    return header("Content-Type", "text/plain");
   }
 
   default SELF redirect(boolean redirect) {
