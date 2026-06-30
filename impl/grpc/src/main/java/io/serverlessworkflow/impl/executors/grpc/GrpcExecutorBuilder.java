@@ -15,6 +15,8 @@
  */
 package io.serverlessworkflow.impl.executors.grpc;
 
+import com.google.protobuf.Descriptors;
+import com.google.protobuf.Descriptors.FileDescriptor;
 import io.serverlessworkflow.api.types.CallGRPC;
 import io.serverlessworkflow.api.types.GRPCArguments;
 import io.serverlessworkflow.api.types.TaskBase;
@@ -22,10 +24,10 @@ import io.serverlessworkflow.api.types.WithGRPCService;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.WorkflowUtils;
-import io.serverlessworkflow.impl.WorkflowValueResolver;
 import io.serverlessworkflow.impl.executors.CallableTaskBuilder;
 import io.serverlessworkflow.impl.executors.CallableTaskFactory;
 import java.util.Map;
+import java.util.Objects;
 
 public class GrpcExecutorBuilder implements CallableTaskBuilder<CallGRPC> {
 
@@ -37,25 +39,30 @@ public class GrpcExecutorBuilder implements CallableTaskBuilder<CallGRPC> {
   @Override
   public CallableTaskFactory init(
       CallGRPC task, WorkflowDefinition definition, WorkflowMutablePosition position) {
-
     GRPCArguments with = task.getWith();
     WithGRPCService service = with.getService();
-
-    WorkflowValueResolver<Map<String, Object>> arguments =
-        WorkflowUtils.buildMapResolver(
-            definition.application(),
-            with.getArguments() != null ? with.getArguments().getAdditionalProperties() : Map.of());
-
-    GrpcRequestContext grpcRequestContext =
-        new GrpcRequestContext(
-            service.getHost(), service.getPort(), with.getMethod(), service.getName());
-
+    FileDescriptor fileDescriptor =
+        definition
+            .resourceLoader()
+            .loadStatic(with.getProto().getEndpoint(), FileDescriptorReader::readDescriptor);
+    Descriptors.ServiceDescriptor serviceDescriptor =
+        Objects.requireNonNull(
+            fileDescriptor.findServiceByName(service.getName()),
+            "Service not found: " + service.getName());
+    Descriptors.MethodDescriptor methodDescriptor =
+        Objects.requireNonNull(
+            serviceDescriptor.findMethodByName(with.getMethod()),
+            "Method not found: " + with.getMethod());
     return () ->
         new GrpcExecutor(
-            grpcRequestContext,
-            arguments,
-            definition
-                .resourceLoader()
-                .loadStatic(with.getProto().getEndpoint(), FileDescriptorReader::readDescriptor));
+            service.getHost(),
+            service.getPort(),
+            WorkflowUtils.buildMapResolver(
+                definition.application(),
+                with.getArguments() != null
+                    ? with.getArguments().getAdditionalProperties()
+                    : Map.of()),
+            serviceDescriptor,
+            methodDescriptor);
   }
 }

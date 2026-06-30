@@ -15,4 +15,20 @@
  */
 package io.serverlessworkflow.impl.executors.grpc;
 
-record GrpcRequestContext(String address, int port, String method, String service) {}
+import com.google.protobuf.Message;
+import io.serverlessworkflow.impl.TaskContext;
+import io.serverlessworkflow.impl.WorkflowContext;
+import io.serverlessworkflow.impl.WorkflowModel;
+
+class ItemStreamObserver extends ModelStreamObserver<WorkflowModel> {
+
+  public ItemStreamObserver(WorkflowContext workflowContext, TaskContext taskContext) {
+    super(workflowContext, taskContext);
+    model = modelFactory.fromNull();
+  }
+
+  @Override
+  public void onNext(Message value) {
+    model = ProtobufMessageUtils.convert(value, modelFactory);
+  }
+}

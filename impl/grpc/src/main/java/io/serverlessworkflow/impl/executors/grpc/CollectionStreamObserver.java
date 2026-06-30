@@ -16,39 +16,19 @@
 package io.serverlessworkflow.impl.executors.grpc;
 
 import com.google.protobuf.Message;
-import io.grpc.stub.StreamObserver;
-import io.serverlessworkflow.impl.WorkflowModel;
+import io.serverlessworkflow.impl.TaskContext;
+import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModelCollection;
-import io.serverlessworkflow.impl.WorkflowModelFactory;
-import java.util.concurrent.CompletableFuture;
 
-class CollectionStreamObserver implements StreamObserver<Message> {
-  private final WorkflowModelCollection modelCollection;
-  private final WorkflowModelFactory modelFactory;
-  private final CompletableFuture<WorkflowModel> future;
+class CollectionStreamObserver extends ModelStreamObserver<WorkflowModelCollection> {
 
-  public CollectionStreamObserver(WorkflowModelFactory modelFactory) {
-    this.modelCollection = modelFactory.createCollection();
-    this.modelFactory = modelFactory;
-    this.future = new CompletableFuture<>();
+  public CollectionStreamObserver(WorkflowContext workflowContext, TaskContext taskContext) {
+    super(workflowContext, taskContext);
+    this.model = modelFactory.createCollection();
   }
 
   @Override
   public void onNext(Message value) {
-    modelCollection.add(ProtobufMessageUtils.convert(value, modelFactory));
-  }
-
-  @Override
-  public void onError(Throwable t) {
-    future.completeExceptionally(t);
-  }
-
-  @Override
-  public void onCompleted() {
-    future.complete(modelCollection);
-  }
-
-  public CompletableFuture<WorkflowModel> future() {
-    return future;
+    model.add(ProtobufMessageUtils.convert(value, modelFactory));
   }
 }

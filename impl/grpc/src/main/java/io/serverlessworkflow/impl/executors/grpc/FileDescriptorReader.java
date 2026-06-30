@@ -18,6 +18,10 @@ package io.serverlessworkflow.impl.executors.grpc;
 import com.github.os72.protocjar.Protoc;
 import com.google.protobuf.DescriptorProtos;
 import com.google.protobuf.DescriptorProtos.FileDescriptorProto;
+import com.google.protobuf.DescriptorProtos.FileDescriptorSet;
+import com.google.protobuf.Descriptors.DescriptorValidationException;
+import com.google.protobuf.Descriptors.FileDescriptor;
+import com.google.protobuf.ProtocolStringList;
 import io.serverlessworkflow.impl.resources.ExternalResourceHandler;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -28,6 +32,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,8 +45,7 @@ class FileDescriptorReader {
 
   private static final Logger logger = LoggerFactory.getLogger(FileDescriptorReader.class);
 
-  static FileDescriptorProto readDescriptor(ExternalResourceHandler externalResourceHandler) {
-
+  static FileDescriptor readDescriptor(ExternalResourceHandler externalResourceHandler) {
     Path grpcDir = null;
     try (InputStream inputStream = externalResourceHandler.open()) {
       grpcDir = Files.createTempDirectory("serverless-workflow-");
@@ -46,27 +55,68 @@ class FileDescriptorReader {
       Files.copy(inputStream, protoFile);
       Path descriptorOutput = grpcDir.resolve("descriptor.protobin");
       generateFileDescriptor(grpcDir, protoFile, descriptorOutput);
-      return DescriptorProtos.FileDescriptorSet.newBuilder()
-          .mergeFrom(Files.readAllBytes(descriptorOutput))
-          .build()
-          .getFileList()
-          .stream()
-          .filter(n -> n.getName().equals(name))
-          .findAny()
-          .orElseThrow(
-              () ->
-                  new IllegalStateException(
-                      "There was something really wrong generating the protoc descriptor, it does not included a file named "
-                          + name));
+      return toFileDescriptor(
+          DescriptorProtos.FileDescriptorSet.newBuilder()
+              .mergeFrom(Files.readAllBytes(descriptorOutput))
+              .build(),
+          name);
     } catch (IOException e) {
       throw new UncheckedIOException(
-          "Unable to process gRPC proto file associated with resource "
+          "Unable to process gRPC proto file associated with resource: "
               + externalResourceHandler.name(),
           e);
     } finally {
       if (grpcDir != null) {
         deleteTempFiles(grpcDir);
       }
+    }
+  }
+
+  private static FileDescriptor toFileDescriptor(FileDescriptorSet set, String name) {
+    List<FileDescriptorProto> remainingProtos = new ArrayList<>(set.getFileList());
+    Map<String, FileDescriptor> builtDescriptors = new HashMap<>();
+    while (!remainingProtos.isEmpty()) {
+      Iterator<FileDescriptorProto> iterator = remainingProtos.iterator();
+      boolean modified = false;
+      while (iterator.hasNext()) {
+        FileDescriptorProto proto = iterator.next();
+        ProtocolStringList requiredDependencies = proto.getDependencyList();
+        List<FileDescriptor> currentDependencies =
+            requiredDependencies.stream()
+                .map(builtDescriptors::get)
+                .filter(Objects::nonNull)
+                .toList();
+        if (requiredDependencies.size() == currentDependencies.size()) {
+          FileDescriptor fileDescriptor = buildFileDescriptor(proto, currentDependencies);
+          String protoName = proto.getName();
+          if (protoName.equals(name)) {
+            return fileDescriptor;
+          }
+          builtDescriptors.put(protoName, fileDescriptor);
+          iterator.remove();
+          modified = true;
+        }
+      }
+      if (!modified) {
+        throw new IllegalStateException(
+            "Unable to build valid gRPC descriptor from proto file associated with resource: "
+                + name
+                + ". There are missing or circular dependencies");
+      }
+    }
+    throw new IllegalStateException("Cannot build FileDescriptor for name: " + name);
+  }
+
+  private static FileDescriptor buildFileDescriptor(
+      FileDescriptorProto proto, List<FileDescriptor> currentDependencies) {
+    try {
+      return FileDescriptor.buildFrom(
+          proto, currentDependencies.toArray(new FileDescriptor[currentDependencies.size()]));
+    } catch (DescriptorValidationException e) {
+      throw new IllegalStateException(
+          "Unable to build valid gRPC descriptor from proto file associated with resource: "
+              + proto.getName(),
+          e);
     }
   }
 
@@ -142,15 +192,10 @@ class FileDescriptorReader {
       String[] command = new String[protocArgs.length + 1];
       command[0] = "protoc";
       System.arraycopy(protocArgs, 0, command, 1, protocArgs.length);
-
       ProcessBuilder processBuilder = new ProcessBuilder(command);
-
       processBuilder.redirectErrorStream(true);
-
       Process process = processBuilder.start();
-
       int exitCode = process.waitFor();
-
       if (exitCode != 0) {
         throw new IOException(
             "Unable to generate file descriptor using system protoc. Exit code: " + exitCode);
