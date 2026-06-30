@@ -19,8 +19,12 @@ import io.serverlessworkflow.api.types.func.ContextFunction;
 import io.serverlessworkflow.api.types.func.FilterFunction;
 import java.lang.invoke.MethodType;
 import java.lang.invoke.SerializedLambda;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Optional;
 import java.util.function.Function;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Specially used by {@link Function} parameters in the Java Function.
@@ -28,6 +32,8 @@ import java.util.function.Function;
  * @see <a href="https://www.baeldung.com/java-serialize-lambda">Serialize a Lambda in Java</a>
  */
 public final class ReflectionUtils {
+
+  private static final Logger logger = LoggerFactory.getLogger(ReflectionUtils.class);
 
   private ReflectionUtils() {}
 
@@ -68,7 +74,7 @@ public final class ReflectionUtils {
 
   @SuppressWarnings("unchecked")
   public static <T> Class<T> inferResultType(Object fn) {
-    return (Class<T>) inferMethodType(fn).returnType();
+    return (Class<T>) inferOutputType(inferMethodType(fn));
   }
 
   /**
@@ -78,21 +84,52 @@ public final class ReflectionUtils {
    * @param lambdaParamIndex The index of the payload parameter in the interface's apply method
    */
   public static Class<?> inferInputTypeFromAny(Object fn, int lambdaParamIndex) {
-    return inferMethodType(fn).parameterArray()[lambdaParamIndex];
+    return inferInputType(inferMethodType(fn), lambdaParamIndex);
+  }
+
+  public static Optional<SerializedLambda> getSerializedLambda(Object fn) {
+    try {
+      return Optional.of(serializedLambda(fn));
+    } catch (ReflectiveOperationException ex) {
+      logger.debug("Error resolving serialized lambda for {}", fn, ex);
+      return Optional.empty();
+    }
+  }
+
+  private static SerializedLambda serializedLambda(Object fn)
+      throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
+    Method m = fn.getClass().getDeclaredMethod("writeReplace");
+    m.setAccessible(true);
+    return (SerializedLambda) m.invoke(fn);
+  }
+
+  public static Class<?> outputType(SerializedLambda lambda) {
+    return inferOutputType(inferMethodType(lambda));
+  }
+
+  public static Class<?> inputType(SerializedLambda lambda) {
+    return inferInputType(inferMethodType(lambda), 0);
+  }
+
+  private static Class<?> inferInputType(MethodType type, int index) {
+    return type.parameterType(index);
+  }
+
+  private static Class<?> inferOutputType(MethodType type) {
+    return type.returnType();
+  }
+
+  private static MethodType inferMethodType(SerializedLambda sl) {
+    // getInstantiatedMethodType() provides the exact generic signature resolved
+    // by the compiler, completely bypassing captured variables and method kind switches!
+    return MethodType.fromMethodDescriptorString(
+        sl.getInstantiatedMethodType(), sl.getClass().getClassLoader());
   }
 
   private static MethodType inferMethodType(Object fn) {
     try {
-      Method m = fn.getClass().getDeclaredMethod("writeReplace");
-      m.setAccessible(true);
-      SerializedLambda sl = (SerializedLambda) m.invoke(fn);
-
-      ClassLoader cl = fn.getClass().getClassLoader();
-
-      // getInstantiatedMethodType() provides the exact generic signature resolved
-      // by the compiler, completely bypassing captured variables and method kind switches!
-
-      return MethodType.fromMethodDescriptorString(sl.getInstantiatedMethodType(), cl);
+      SerializedLambda sl = serializedLambda(fn);
+      return inferMethodType(sl);
     } catch (ReflectiveOperationException ex) {
       throw new IllegalStateException(
           "Cannot infer type from lambda. Pass Class<T> or use a method reference.", ex);

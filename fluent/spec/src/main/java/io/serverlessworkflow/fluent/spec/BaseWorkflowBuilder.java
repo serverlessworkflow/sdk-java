@@ -37,7 +37,7 @@ public abstract class BaseWorkflowBuilder<
 
   public static final String DSL = "1.0.0";
   public static final String DEFAULT_VERSION = "0.0.1";
-  public static final String DEFAULT_NAMESPACE = "org.acme";
+  public static final String DEFAULT_NAMESPACE = "org-acme";
 
   protected final Workflow workflow;
   private final Document document;

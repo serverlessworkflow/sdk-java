@@ -27,6 +27,7 @@ import io.serverlessworkflow.fluent.spec.TaskItemListBuilder;
 import io.serverlessworkflow.fluent.spec.WaitTaskBuilder;
 import io.serverlessworkflow.fluent.spec.WorkflowTaskBuilder;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 public class FuncTaskItemListBuilder extends BaseTaskItemListBuilder<FuncTaskItemListBuilder>
@@ -76,6 +77,10 @@ public class FuncTaskItemListBuilder extends BaseTaskItemListBuilder<FuncTaskIte
   @Override
   public FuncTaskItemListBuilder set(String name, String expr) {
     return this.set(name, s -> s.expr(expr));
+  }
+
+  public FuncTaskItemListBuilder set(String name, Map<String, Object> map) {
+    return this.set(name, s -> s.expr(map));
   }
 
   @Override

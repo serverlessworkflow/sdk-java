@@ -13,32 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.api.types.func;
+package io.serverlessworkflow.fluent.func.serialization.jackson;
 
-import io.serverlessworkflow.annotations.OneOfSetter;
 import io.serverlessworkflow.api.types.CallTask;
+import io.serverlessworkflow.api.types.func.CallJava.CallJavaFunction;
+import io.serverlessworkflow.serialization.UnionCustomizer;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
-public class CallTaskJava extends CallTask {
-
-  private CallJava callJava;
-
-  public CallTaskJava() {}
-
-  public CallTaskJava(CallJava callJava) {
-    this.callJava = callJava;
-  }
-
-  public CallJava getCallJava() {
-    return callJava;
-  }
-
-  @OneOfSetter(CallJava.class)
-  public void setCallJava(CallJava callJava) {
-    this.callJava = callJava;
-  }
+public class FuncUnionCustomizer implements UnionCustomizer {
 
   @Override
-  public Object get() {
-    return callJava != null ? callJava : super.get();
+  public Map<Class<?>, Collection<Class<?>>> additionalClasses() {
+    return Map.of(CallTask.class, List.of(CallJavaFunction.class));
   }
 }
