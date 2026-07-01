@@ -68,6 +68,7 @@ import java.util.ServiceLoader;
 import java.util.ServiceLoader.Provider;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class WorkflowApplication implements AutoCloseable {
@@ -91,6 +92,7 @@ public class WorkflowApplication implements AutoCloseable {
   private final WorkflowModelFactory contextFactory;
   private final WorkflowScheduler scheduler;
   private final Map<String, WorkflowAdditionalObject<?>> additionalObjects;
+  private final Map<String, Supplier<?>> additionalObjectSuppliers;
   private final AuthProviderFactory authProviderFactory;
   private final ConfigManager configManager;
   private final SecretManager secretManager;
@@ -123,6 +125,7 @@ public class WorkflowApplication implements AutoCloseable {
     this.scheduler = builder.scheduler;
     this.schedulerListener = builder.schedulerListener;
     this.additionalObjects = builder.additionalObjects;
+    this.additionalObjectSuppliers = builder.additionalObjectSuppliers;
     this.authProviderFactory = builder.authProviderFactory;
     this.configManager = builder.configManager;
     this.secretManager = builder.secretManager;
@@ -245,6 +248,7 @@ public class WorkflowApplication implements AutoCloseable {
     private WorkflowModelFactory modelFactory;
     private WorkflowModelFactory contextFactory;
     private Map<String, WorkflowAdditionalObject<?>> additionalObjects = new HashMap<>();
+    private Map<String, Supplier<?>> additionalObjectSuppliers = new HashMap<>();
     private AuthProviderFactory authProviderFactory;
     private SecretManager secretManager;
     private ConfigManager configManager;
@@ -359,6 +363,11 @@ public class WorkflowApplication implements AutoCloseable {
     public <T> Builder withAdditionalObject(
         String name, WorkflowAdditionalObject<T> additionalObject) {
       additionalObjects.put(name, additionalObject);
+      return this;
+    }
+
+    public <T> Builder withAdditionalObject(String name, Supplier<T> additionalObject) {
+      additionalObjectSuppliers.put(name, additionalObject);
       return this;
     }
 
@@ -592,6 +601,10 @@ public class WorkflowApplication implements AutoCloseable {
 
   public String id() {
     return id;
+  }
+
+  public <T> Optional<T> additionalObject(String name) {
+    return Optional.ofNullable(additionalObjectSuppliers.get(name)).map(v -> (T) v.get());
   }
 
   public <T> Optional<T> additionalObject(

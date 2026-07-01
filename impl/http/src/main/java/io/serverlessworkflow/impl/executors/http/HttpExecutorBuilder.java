@@ -24,12 +24,19 @@ import io.serverlessworkflow.impl.WorkflowValueResolver;
 import io.serverlessworkflow.impl.auth.AuthProvider;
 import jakarta.ws.rs.HttpMethod;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.ServiceLoader;
 
 public class HttpExecutorBuilder {
 
+  public static final String HTTP_REQUEST_DECORATOR_KEY = "HttpRequestDecorators";
   private final WorkflowDefinition definition;
+  private final List<HttpRequestDecorator> requestDecorators;
   private WorkflowValueResolver<URI> pathSupplier;
   private Object body;
   private String method = HttpMethod.GET;
@@ -40,6 +47,14 @@ public class HttpExecutorBuilder {
 
   private HttpExecutorBuilder(WorkflowDefinition definition) {
     this.definition = definition;
+    this.requestDecorators = new ArrayList<>();
+    requestDecorators.addAll(
+        definition
+            .application()
+            .<Collection<HttpRequestDecorator>>additionalObject(HTTP_REQUEST_DECORATOR_KEY)
+            .orElse(List.of()));
+    ServiceLoader.load(HttpRequestDecorator.class).forEach(requestDecorators::add);
+    Collections.sort(requestDecorators);
   }
 
   public HttpExecutorBuilder withAuth(ReferenceableAuthenticationPolicy policy) {
@@ -110,7 +125,8 @@ public class HttpExecutorBuilder {
         Optional.ofNullable(headersMap),
         Optional.ofNullable(queryMap),
         buildRequestExecutor(),
-        Optional.ofNullable(pathSupplier));
+        Optional.ofNullable(pathSupplier),
+        requestDecorators);
   }
 
   public static HttpExecutorBuilder builder(WorkflowDefinition definition) {

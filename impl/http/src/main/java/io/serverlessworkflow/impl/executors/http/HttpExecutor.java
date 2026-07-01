@@ -28,7 +28,6 @@ import java.util.Collection;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.ServiceLoader;
 import java.util.concurrent.CompletableFuture;
 
 public class HttpExecutor implements CallableTask {
@@ -45,17 +44,14 @@ public class HttpExecutor implements CallableTask {
       Optional<WorkflowValueResolver<Map<String, Object>>> headersMap,
       Optional<WorkflowValueResolver<Map<String, Object>>> queryMap,
       RequestExecutor requestFunction,
-      Optional<WorkflowValueResolver<URI>> pathSupplier) {
+      Optional<WorkflowValueResolver<URI>> pathSupplier,
+      Collection<HttpRequestDecorator> requestDecorators) {
     this.uriSupplier = uriSupplier;
     this.headersMap = headersMap;
     this.queryMap = queryMap;
     this.requestFunction = requestFunction;
     this.pathSupplier = pathSupplier;
-    this.requestDecorators =
-        ServiceLoader.load(HttpRequestDecorator.class).stream()
-            .map(ServiceLoader.Provider::get)
-            .sorted()
-            .toList();
+    this.requestDecorators = requestDecorators;
   }
 
   public CompletableFuture<WorkflowModel> apply(
