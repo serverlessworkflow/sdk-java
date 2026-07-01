@@ -46,35 +46,27 @@ public class DefaultAuthProviderFactory implements AuthProviderFactory {
   @Override
   public Optional<AuthProvider> getAuth(
       WorkflowDefinition definition, ReferenceableAuthenticationPolicy auth, String method) {
-    if (auth == null) {
-      return Optional.empty();
-    }
-    if (auth.getAuthenticationPolicyReference() != null) {
-      return buildFromReference(
-          definition.application(),
-          definition.workflow(),
-          auth.getAuthenticationPolicyReference().getUse(),
-          method);
-    } else if (auth.getAuthenticationPolicy() != null) {
-      return buildFromPolicy(
-          definition.application(), definition.workflow(), auth.getAuthenticationPolicy(), method);
-    }
-    return Optional.empty();
+    AuthenticationPolicyUnion policy = resolvePolicy(definition.workflow(), auth);
+    return policy == null
+        ? Optional.empty()
+        : buildFromPolicy(definition.application(), definition.workflow(), policy, method);
   }
 
-  private Optional<AuthProvider> buildFromReference(
-      WorkflowApplication app, Workflow workflow, String use, String method) {
-    Use useInfo = workflow.getUse();
-    if (useInfo == null) {
-      return Optional.empty();
+  public static AuthenticationPolicyUnion resolvePolicy(
+      Workflow workflow, ReferenceableAuthenticationPolicy auth) {
+    if (auth == null) {
+      return null;
     }
-    UseAuthentications authInfo = useInfo.getAuthentications();
-    return authInfo == null
-        ? Optional.empty()
-        : authInfo.getAdditionalProperties().entrySet().stream()
-            .filter(s -> s.getKey().equals(use))
-            .findAny()
-            .flatMap(e -> buildFromPolicy(app, workflow, e.getValue(), method));
+    if (auth.getAuthenticationPolicyReference() != null) {
+      String use = auth.getAuthenticationPolicyReference().getUse();
+      Use useInfo = workflow.getUse();
+      if (useInfo == null) {
+        return null;
+      }
+      UseAuthentications authInfo = useInfo.getAuthentications();
+      return authInfo == null ? null : authInfo.getAdditionalProperties().get(use);
+    }
+    return auth.getAuthenticationPolicy();
   }
 
   private Optional<AuthProvider> buildFromPolicy(
