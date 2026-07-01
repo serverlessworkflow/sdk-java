@@ -86,16 +86,12 @@ public class DefaultAuthProviderFactory implements AuthProviderFactory {
       return Optional.of(
           new DigestAuthProvider(
               app, workflow, authenticationPolicy.getDigestAuthenticationPolicy(), method));
-    } else if (authenticationPolicy.getOAuth2AuthenticationPolicy() != null) {
-      return Optional.of(
-          new OAuth2AuthProvider(
-              app, workflow, authenticationPolicy.getOAuth2AuthenticationPolicy()));
-    } else if (authenticationPolicy.getOpenIdConnectAuthenticationPolicy() != null) {
-      return Optional.of(
-          new OpenIdAuthProvider(
-              app, workflow, authenticationPolicy.getOpenIdConnectAuthenticationPolicy()));
     }
-
-    return Optional.empty();
+    return OAuthPolicyData.from(authenticationPolicy)
+        .map(
+            policyData ->
+                policyData.scheme() == OAuthPolicyData.OAuthScheme.OPENID_CONNECT
+                    ? new OpenIdAuthProvider(app, workflow, policyData)
+                    : new OAuth2AuthProvider(app, workflow, policyData));
   }
 }
