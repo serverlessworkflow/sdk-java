@@ -15,21 +15,34 @@
  */
 package io.serverlessworkflow.api.types.func;
 
+import io.serverlessworkflow.api.reflection.func.ReflectionUtils;
 import io.serverlessworkflow.api.types.ForTask;
-import java.io.IOException;
-import java.io.ObjectInputStream;
+import io.serverlessworkflow.api.types.ForTaskConfiguration;
+import io.serverlessworkflow.api.types.TaskMetadata;
+import java.lang.invoke.MethodType;
 import java.util.Collection;
 import java.util.Optional;
 import java.util.function.Function;
 
-public class ForTaskFunction extends ForTask {
+public class ForTaskFunction {
 
-  private static final long serialVersionUID = 1L;
-  private LoopPredicateIndexFilter<?, ?> whilePredicate;
-  private Optional<Class<?>> whileClass = Optional.empty();
-  private Optional<Class<?>> itemClass = Optional.empty();
-  private Optional<Class<?>> forClass = Optional.empty();
-  private Function collection;
+  private final ForTask forTask;
+  private TaskMetadata metadata;
+
+  public static final String WHILE_PREDICATE = "whilePredicate";
+  public static final String WHILE_CLASS = "whileClass";
+  public static final String ITEM_CLASS = "itemClass";
+  public static final String FOR_CLASS = "forClass";
+  public static final String COLLECTION = "inCollection";
+
+  public ForTaskFunction(ForTask forTask) {
+    this.forTask = forTask;
+    this.metadata = forTask.getMetadata();
+    if (metadata == null) {
+      metadata = new TaskMetadata();
+      forTask.setMetadata(metadata);
+    }
+  }
 
   public <T, V> ForTaskFunction withWhile(LoopPredicate<T, V> whilePredicate) {
     return withWhile(toPredicate(whilePredicate));
@@ -63,13 +76,19 @@ public class ForTaskFunction extends ForTask {
   }
 
   public <T, V> ForTaskFunction withWhile(LoopPredicateIndexContext<T, V> whilePredicate) {
-    return withWhile(toPredicate(whilePredicate), Optional.empty(), Optional.empty());
+    Optional<MethodType> methodType = ReflectionUtils.methodType(whilePredicate);
+    return withWhile(
+        toPredicate(whilePredicate),
+        methodType.map(m -> m.parameterType(0)),
+        methodType.map(MethodType::returnType));
   }
 
   public <T, V> ForTaskFunction withWhile(
       LoopPredicateIndexContext<T, V> whilePredicate, Class<T> modelClass) {
     return withWhile(
-        toPredicate(whilePredicate), Optional.ofNullable(modelClass), Optional.empty());
+        toPredicate(whilePredicate),
+        Optional.ofNullable(modelClass),
+        ReflectionUtils.methodType(whilePredicate).map(MethodType::returnType));
   }
 
   public <T, V> ForTaskFunction withWhile(
@@ -81,12 +100,19 @@ public class ForTaskFunction extends ForTask {
   }
 
   public <T, V> ForTaskFunction withWhile(LoopPredicateIndexFilter<T, V> whilePredicate) {
-    return withWhile(whilePredicate, Optional.empty(), Optional.empty());
+    Optional<MethodType> methodType = ReflectionUtils.methodType(whilePredicate);
+    return withWhile(
+        whilePredicate,
+        methodType.map(m -> m.parameterType(0)),
+        methodType.map(MethodType::returnType));
   }
 
   public <T, V> ForTaskFunction withWhile(
       LoopPredicateIndexFilter<T, V> whilePredicate, Class<T> modelClass) {
-    return withWhile(whilePredicate, Optional.ofNullable(modelClass), Optional.empty());
+    return withWhile(
+        whilePredicate,
+        Optional.ofNullable(modelClass),
+        ReflectionUtils.methodType(whilePredicate).map(MethodType::returnType));
   }
 
   public <T, V> ForTaskFunction withWhile(
@@ -113,9 +139,9 @@ public class ForTaskFunction extends ForTask {
       LoopPredicateIndexFilter<T, V> whilePredicate,
       Optional<Class<?>> modelClass,
       Optional<Class<?>> itemClass) {
-    this.whilePredicate = whilePredicate;
-    this.whileClass = modelClass;
-    this.itemClass = itemClass;
+    metadata.withAdditionalProperty(WHILE_PREDICATE, whilePredicate);
+    metadata.withAdditionalProperty(WHILE_CLASS, modelClass);
+    metadata.withAdditionalProperty(ITEM_CLASS, itemClass);
     return this;
   }
 
@@ -125,46 +151,43 @@ public class ForTaskFunction extends ForTask {
 
   public <T, V> ForTaskFunction withCollection(
       Function<T, Collection<V>> collection, Class<T> colArgClass) {
-    this.collection = collection;
-    this.forClass = Optional.ofNullable(colArgClass);
+    metadata.withAdditionalProperty(COLLECTION, collection);
+    metadata.withAdditionalProperty(FOR_CLASS, Optional.ofNullable(colArgClass));
+    ForTaskConfiguration forConfig = forTask.getFor();
+    if (forConfig == null) {
+      forConfig = new ForTaskConfiguration();
+      forTask.setFor(forConfig);
+    }
+    if (forConfig.getIn() == null) {
+      forConfig.setIn("Handling item collection with metadata key " + ForTaskFunction.COLLECTION);
+    }
     return this;
   }
 
   public LoopPredicateIndexFilter<?, ?> getWhilePredicate() {
-    return whilePredicate;
+    return (LoopPredicateIndexFilter<?, ?>) metadata.getAdditionalProperties().get(WHILE_PREDICATE);
   }
 
   public Optional<Class<?>> getWhileClass() {
-    return whileClass;
+    return (Optional<Class<?>>)
+        metadata.getAdditionalProperties().getOrDefault(WHILE_CLASS, Optional.empty());
   }
 
   public Optional<Class<?>> getForClass() {
-    return forClass;
+    return (Optional<Class<?>>)
+        metadata.getAdditionalProperties().getOrDefault(FOR_CLASS, Optional.empty());
   }
 
   public Optional<Class<?>> getItemClass() {
-    return itemClass;
+    return (Optional<Class<?>>)
+        metadata.getAdditionalProperties().getOrDefault(ITEM_CLASS, Optional.empty());
   }
 
-  public Function<?, Collection<?>> getCollection() {
-    return collection;
+  public Function<?, Collection<?>> getInCollection() {
+    return (Function<?, Collection<?>>) metadata.getAdditionalProperties().get(COLLECTION);
   }
 
-  private void normalizeOptionalFields() {
-    if (whileClass == null) {
-      whileClass = Optional.empty();
-    }
-    if (itemClass == null) {
-      itemClass = Optional.empty();
-    }
-    if (forClass == null) {
-      forClass = Optional.empty();
-    }
-  }
-
-  private void readObject(ObjectInputStream input) throws IOException, ClassNotFoundException {
-    input.defaultReadObject();
-    // Preserve compatibility with older serialized instances that may have null optionals.
-    normalizeOptionalFields();
+  public ForTask task() {
+    return forTask;
   }
 }

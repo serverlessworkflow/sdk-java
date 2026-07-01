@@ -17,50 +17,22 @@ package io.serverless.workflow.impl.executors.func;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.serverlessworkflow.api.types.CallTask;
 import io.serverlessworkflow.api.types.Document;
+import io.serverlessworkflow.api.types.ForTask;
 import io.serverlessworkflow.api.types.ForTaskConfiguration;
 import io.serverlessworkflow.api.types.Task;
 import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.api.types.func.CallJava;
-import io.serverlessworkflow.api.types.func.CallTaskJava;
 import io.serverlessworkflow.api.types.func.ForTaskFunction;
 import io.serverlessworkflow.impl.WorkflowApplication;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import org.junit.jupiter.api.Test;
 
 class ForTaskFunctionRegressionTest {
-
-  @Test
-  void initializesOptionalFieldsAsEmpty() {
-    ForTaskFunction taskFunction = new ForTaskFunction();
-
-    assertThat(taskFunction.getWhileClass()).isNotNull().isEmpty();
-    assertThat(taskFunction.getItemClass()).isNotNull().isEmpty();
-    assertThat(taskFunction.getForClass()).isNotNull().isEmpty();
-  }
-
-  @Test
-  void optionalFieldsSurviveJavaSerializationRoundTrip() throws Exception {
-    ForTaskFunction taskFunction = new ForTaskFunction();
-    clearField(taskFunction, "whileClass");
-    clearField(taskFunction, "itemClass");
-    clearField(taskFunction, "forClass");
-    clearField(taskFunction, "collection");
-
-    ForTaskFunction copy = roundTrip(taskFunction);
-
-    assertThat(copy.getWhileClass()).isNotNull().isEmpty();
-    assertThat(copy.getItemClass()).isNotNull().isEmpty();
-    assertThat(copy.getForClass()).isNotNull().isEmpty();
-  }
 
   @Test
   void forLoopWithExplicitCollectionClassExecutesSuccessfully()
@@ -80,43 +52,28 @@ class ForTaskFunctionRegressionTest {
                           "forLoop",
                           new Task()
                               .withForTask(
-                                  new ForTaskFunction()
+                                  new ForTaskFunction(
+                                          new ForTask()
+                                              .withDo(
+                                                  List.of(
+                                                      new TaskItem(
+                                                          "javaCall",
+                                                          new Task()
+                                                              .withCallTask(
+                                                                  new CallTask()
+                                                                      .withCallFunction(
+                                                                          CallJava.loopFunction(
+                                                                              CallTest::sum,
+                                                                              forConfig
+                                                                                  .getEach()))))))
+                                              .withFor(forConfig))
                                       .withWhile(CallTest::isEven)
                                       .withCollection(v -> v, Collection.class)
-                                      .withFor(forConfig)
-                                      .withDo(
-                                          List.of(
-                                              new TaskItem(
-                                                  "javaCall",
-                                                  new Task()
-                                                      .withCallTask(
-                                                          new CallTaskJava(
-                                                              CallJava.loopFunction(
-                                                                  CallTest::sum,
-                                                                  forConfig.getEach()))))))))));
+                                      .task()))));
 
       var result = app.workflowDefinition(workflow).instance(List.of(2, 4, 6)).start().get();
 
       assertThat(result.asNumber().orElseThrow()).isEqualTo(12);
     }
-  }
-
-  private static ForTaskFunction roundTrip(ForTaskFunction taskFunction) throws Exception {
-    ByteArrayOutputStream output = new ByteArrayOutputStream();
-    try (ObjectOutputStream oos = new ObjectOutputStream(output)) {
-      oos.writeObject(taskFunction);
-    }
-
-    try (ObjectInputStream ois =
-        new ObjectInputStream(new ByteArrayInputStream(output.toByteArray()))) {
-      return (ForTaskFunction) ois.readObject();
-    }
-  }
-
-  private static void clearField(Object target, String fieldName)
-      throws ReflectiveOperationException {
-    Field field = target.getClass().getDeclaredField(fieldName);
-    field.setAccessible(true);
-    field.set(target, null);
   }
 }

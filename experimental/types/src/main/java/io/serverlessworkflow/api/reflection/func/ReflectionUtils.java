@@ -87,13 +87,41 @@ public final class ReflectionUtils {
     return inferInputType(inferMethodType(fn), lambdaParamIndex);
   }
 
-  public static Optional<SerializedLambda> getSerializedLambda(Object fn) {
+  public static Optional<SerializedLambda> serializedFromFuntion(Object fn) {
     try {
       return Optional.of(serializedLambda(fn));
     } catch (ReflectiveOperationException ex) {
       logger.debug("Error resolving serialized lambda for {}", fn, ex);
       return Optional.empty();
     }
+  }
+
+  public static Class<?> loadCapturingClass(String capturingClass) throws ClassNotFoundException {
+    return loadClass(capturingClass.replace('/', '.'));
+  }
+
+  public static Class<?> loadClass(String className) throws ClassNotFoundException {
+    return Thread.currentThread().getContextClassLoader().loadClass(className);
+  }
+
+  public static Object functionFromSerialized(SerializedLambda sl)
+      throws ReflectiveOperationException {
+    Method deserializeMethod =
+        loadCapturingClass(sl.getCapturingClass())
+            .getDeclaredMethod("$deserializeLambda$", SerializedLambda.class);
+    deserializeMethod.setAccessible(true);
+    return deserializeMethod.invoke(null, sl);
+  }
+
+  public static Optional<MethodType> methodType(Object fn) {
+    return serializedFromFuntion(fn).map(ReflectionUtils::inferMethodType);
+  }
+
+  public static MethodType inferMethodType(SerializedLambda sl) {
+    // getInstantiatedMethodType() provides the exact generic signature resolved
+    // by the compiler, completely bypassing captured variables and method kind switches!
+    return MethodType.fromMethodDescriptorString(
+        sl.getInstantiatedMethodType(), sl.getClass().getClassLoader());
   }
 
   private static SerializedLambda serializedLambda(Object fn)
@@ -103,27 +131,12 @@ public final class ReflectionUtils {
     return (SerializedLambda) m.invoke(fn);
   }
 
-  public static Class<?> outputType(SerializedLambda lambda) {
-    return inferOutputType(inferMethodType(lambda));
-  }
-
-  public static Class<?> inputType(SerializedLambda lambda) {
-    return inferInputType(inferMethodType(lambda), 0);
-  }
-
   private static Class<?> inferInputType(MethodType type, int index) {
     return type.parameterType(index);
   }
 
   private static Class<?> inferOutputType(MethodType type) {
     return type.returnType();
-  }
-
-  private static MethodType inferMethodType(SerializedLambda sl) {
-    // getInstantiatedMethodType() provides the exact generic signature resolved
-    // by the compiler, completely bypassing captured variables and method kind switches!
-    return MethodType.fromMethodDescriptorString(
-        sl.getInstantiatedMethodType(), sl.getClass().getClassLoader());
   }
 
   private static MethodType inferMethodType(Object fn) {

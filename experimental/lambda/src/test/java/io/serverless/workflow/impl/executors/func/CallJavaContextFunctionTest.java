@@ -17,12 +17,12 @@ package io.serverless.workflow.impl.executors.func;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.serverlessworkflow.api.types.CallTask;
 import io.serverlessworkflow.api.types.Document;
 import io.serverlessworkflow.api.types.Task;
 import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.api.types.func.CallJava;
-import io.serverlessworkflow.api.types.func.CallTaskJava;
 import io.serverlessworkflow.api.types.func.ContextFunction;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import java.util.List;
@@ -57,7 +57,8 @@ class CallJavaContextFunctionTest {
                           "javaContextCall",
                           new Task()
                               .withCallTask(
-                                  new CallTaskJava(CallJava.function(ctxFn, Person.class))))));
+                                  new CallTask()
+                                      .withCallFunction(CallJava.function(ctxFn, Person.class))))));
 
       var out =
           app.workflowDefinition(workflow)

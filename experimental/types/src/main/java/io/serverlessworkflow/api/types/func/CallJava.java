@@ -15,22 +15,28 @@
  */
 package io.serverlessworkflow.api.types.func;
 
-import io.serverlessworkflow.api.types.TaskBase;
+import io.serverlessworkflow.api.reflection.func.ReflectionUtils;
+import io.serverlessworkflow.api.types.CallFunction;
+import io.serverlessworkflow.api.types.FunctionArguments;
+import java.lang.invoke.MethodType;
+import java.lang.invoke.SerializedLambda;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-public abstract class CallJava<T> extends TaskBase {
+public abstract class CallJava<T> extends CallFunction {
 
   private static final long serialVersionUID = 1L;
+  public static final String JAVA_CALL_KEY = "Java";
+  public static final String FUNCTION_NAME_KEY = "function";
+  private static final String VAR_NAME_KEY = "varName";
+  private static final String INDEX_NAME_KEY = "index";
 
   private final Optional<Class<T>> inputClass;
 
-  protected CallJava() {
-    this(Optional.empty());
-  }
-
   protected CallJava(Optional<Class<T>> inputClass) {
+    super.setCall(JAVA_CALL_KEY);
     this.inputClass = inputClass;
   }
 
@@ -92,6 +98,39 @@ public abstract class CallJava<T> extends TaskBase {
         function, Optional.ofNullable(inputClass), Optional.ofNullable(outputClass));
   }
 
+  @FunctionalInterface
+  public interface SerializedLambdaUnmarshaller {
+    SerializedLambda apply(Object serializedFunction) throws ReflectiveOperationException;
+  }
+
+  public static <T> CallJava<T> fromFunctionProperties(
+      Map<String, Object> props, SerializedLambda sl) throws ReflectiveOperationException {
+    Object obj = ReflectionUtils.functionFromSerialized(sl);
+    MethodType methodType = ReflectionUtils.inferMethodType(sl);
+    Optional<Class<?>> input = Optional.of(methodType.parameterType(0));
+    Optional<Class<?>> output = Optional.of(methodType.returnType());
+    if (obj instanceof ContextFunction fn) {
+      return new CallJavaContextFunction(fn, input, output);
+    } else if (obj instanceof FilterFunction fn) {
+      return new CallJavaFilterFunction(fn, input, output);
+    } else if (obj instanceof LoopFunction loop) {
+      return new CallJavaLoopFunction(loop, (String) props.get(VAR_NAME_KEY), input, output);
+    } else if (obj instanceof LoopFunctionIndex loop) {
+      return new CallJavaLoopFunctionIndex(
+          loop,
+          (String) props.get(VAR_NAME_KEY),
+          (String) props.get(INDEX_NAME_KEY),
+          input,
+          output);
+    } else if (obj instanceof Function fn) {
+      return new CallJavaFunction(fn, input, output);
+    } else if (obj instanceof Consumer consumer) {
+      return new CallJavaConsumer(consumer, input);
+    } else {
+      throw new UnsupportedOperationException("Unrecognized function " + obj);
+    }
+  }
+
   public static class CallJavaConsumer<T> extends CallJava<T> {
     private static final long serialVersionUID = 1L;
     private final Consumer<T> consumer;
@@ -106,6 +145,23 @@ public abstract class CallJava<T> extends TaskBase {
     }
   }
 
+  public abstract static class CallAbstractJavaFunction<T, V> extends CallJava<T> {
+
+    private static final long serialVersionUID = 1L;
+
+    private final Optional<Class<V>> outputClass;
+
+    protected CallAbstractJavaFunction(
+        Optional<Class<T>> inputClass, Optional<Class<V>> outputClass) {
+      super(inputClass);
+      this.outputClass = outputClass;
+    }
+
+    public Optional<Class<V>> outputClass() {
+      return outputClass;
+    }
+  }
+
   public static class CallJavaFunction<T, V> extends CallAbstractJavaFunction<T, V> {
 
     private static final long serialVersionUID = 1L;
@@ -115,6 +171,7 @@ public abstract class CallJava<T> extends TaskBase {
         Function<T, V> function, Optional<Class<T>> inputClass, Optional<Class<V>> outputClass) {
       super(inputClass, outputClass);
       this.function = function;
+      this.withWith(new FunctionArguments().withAdditionalProperty(FUNCTION_NAME_KEY, function));
     }
 
     public Function<T, V> function() {
@@ -132,6 +189,7 @@ public abstract class CallJava<T> extends TaskBase {
         Optional<Class<V>> outputClass) {
       super(inputClass, outputClass);
       this.function = function;
+      this.withWith(new FunctionArguments().withAdditionalProperty(FUNCTION_NAME_KEY, function));
     }
 
     public ContextFunction<T, V> function() {
@@ -149,6 +207,7 @@ public abstract class CallJava<T> extends TaskBase {
         Optional<Class<V>> outputClass) {
       super(inputClass, outputClass);
       this.function = function;
+      this.withWith(new FunctionArguments().withAdditionalProperty(FUNCTION_NAME_KEY, function));
     }
 
     public FilterFunction<T, V> function() {
@@ -163,9 +222,21 @@ public abstract class CallJava<T> extends TaskBase {
     private String varName;
 
     public CallJavaLoopFunction(LoopFunction<T, I, V> function, String varName) {
+      this(function, varName, Optional.empty(), Optional.empty());
+    }
 
+    public CallJavaLoopFunction(
+        LoopFunction<T, I, V> function,
+        String varName,
+        Optional<Class<T>> inputClass,
+        Optional<Class<V>> outputClass) {
+      super(inputClass, outputClass);
       this.function = function;
       this.varName = varName;
+      this.withWith(
+          new FunctionArguments()
+              .withAdditionalProperty(FUNCTION_NAME_KEY, function)
+              .withAdditionalProperty(VAR_NAME_KEY, varName));
     }
 
     public LoopFunction<T, I, V> function() {
@@ -186,9 +257,24 @@ public abstract class CallJava<T> extends TaskBase {
 
     public CallJavaLoopFunctionIndex(
         LoopFunctionIndex<T, I, V> function, String varName, String indexName) {
+      this(function, varName, indexName, Optional.empty(), Optional.empty());
+    }
+
+    public CallJavaLoopFunctionIndex(
+        LoopFunctionIndex<T, I, V> function,
+        String varName,
+        String indexName,
+        Optional<Class<T>> inputClass,
+        Optional<Class<V>> outputClass) {
+      super(inputClass, outputClass);
       this.function = function;
       this.varName = varName;
       this.indexName = indexName;
+      this.withWith(
+          new FunctionArguments()
+              .withAdditionalProperty(FUNCTION_NAME_KEY, function)
+              .withAdditionalProperty(VAR_NAME_KEY, varName)
+              .withAdditionalProperty(INDEX_NAME_KEY, indexName));
     }
 
     public LoopFunctionIndex<T, I, V> function() {

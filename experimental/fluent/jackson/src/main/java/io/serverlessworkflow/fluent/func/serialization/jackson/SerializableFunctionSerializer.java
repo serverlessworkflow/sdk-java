@@ -19,28 +19,20 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import io.serverlessworkflow.api.reflection.func.ReflectionUtils;
-import io.serverlessworkflow.api.types.func.CallJava;
-import io.serverlessworkflow.api.types.func.CallJava.CallJavaFunction;
 import java.io.IOException;
 import java.lang.invoke.SerializedLambda;
 import java.util.Optional;
 
-public class CallJavaFunctionSerializer extends JsonSerializer<CallJava.CallJavaFunction> {
+public class SerializableFunctionSerializer extends JsonSerializer<Object> {
 
   @Override
-  public void serialize(CallJavaFunction value, JsonGenerator gen, SerializerProvider serializers)
+  public void serialize(Object value, JsonGenerator gen, SerializerProvider serializers)
       throws IOException {
-    gen.writeStartObject();
-    gen.writeStringField("call", "Java");
-    gen.writeObjectFieldStart("with");
-    Optional<SerializedLambda> serializedLambda =
-        ReflectionUtils.getSerializedLambda(value.function());
+    Optional<SerializedLambda> serializedLambda = ReflectionUtils.serializedFromFuntion(value);
     if (serializedLambda.isPresent()) {
-      gen.writeObjectField("function", serializedLambda.orElse(null));
+      gen.writeObject(serializedLambda.orElseThrow());
     } else {
-      gen.writeStringField("function", value.function().toString());
+      gen.writeString(value.toString());
     }
-    gen.writeEndObject();
-    gen.writeEndObject();
   }
 }

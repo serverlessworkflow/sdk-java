@@ -37,15 +37,11 @@ public class ForExecutor extends RegularTaskExecutor<ForTask> {
   private final TaskExecutor<?> taskExecutor;
 
   public static class ForExecutorBuilder extends RegularTaskExecutorBuilder<ForTask> {
-    private WorkflowValueResolver<Collection<?>> collectionExpr;
-    private Optional<WorkflowPredicate> whileExpr;
     private TaskExecutor<?> taskExecutor;
 
     protected ForExecutorBuilder(
         WorkflowMutablePosition position, ForTask task, WorkflowDefinition definition) {
       super(position, task, definition);
-      this.collectionExpr = buildCollectionFilter();
-      this.whileExpr = buildWhileFilter();
       this.taskExecutor = TaskExecutorHelper.createExecutorList(position, task.getDo(), definition);
     }
 
@@ -67,8 +63,8 @@ public class ForExecutor extends RegularTaskExecutor<ForTask> {
 
   protected ForExecutor(ForExecutorBuilder builder) {
     super(builder);
-    this.collectionExpr = builder.collectionExpr;
-    this.whileExpr = builder.whileExpr;
+    this.collectionExpr = builder.buildCollectionFilter();
+    this.whileExpr = builder.buildWhileFilter();
     this.taskExecutor = builder.taskExecutor;
   }
 

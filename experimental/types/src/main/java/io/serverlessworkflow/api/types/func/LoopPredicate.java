@@ -15,7 +15,8 @@
  */
 package io.serverlessworkflow.api.types.func;
 
+import java.io.Serializable;
 import java.util.function.BiPredicate;
 
 @FunctionalInterface
-public interface LoopPredicate<T, V> extends BiPredicate<T, V> {}
+public interface LoopPredicate<T, V> extends Serializable, BiPredicate<T, V> {}

@@ -8,9 +8,13 @@
   <artifactId>serverlessworkflow-experimental-fluent-serialization-jackson</artifactId>
   <name>Serverless Workflow :: Experimental :: Fluent :: Serialization:: Jackson</name>
   <dependencies>
-      <dependency>
+    <dependency>
         <groupId>com.fasterxml.jackson.dataformat</groupId>
         <artifactId>jackson-dataformat-yaml</artifactId>
+    </dependency>
+    <dependency>
+        <groupId>com.fasterxml.jackson.datatype</groupId>
+        <artifactId>jackson-datatype-jdk8</artifactId>
     </dependency>
     <dependency>
         <groupId>io.serverlessworkflow</groupId>

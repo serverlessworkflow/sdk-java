@@ -15,8 +15,8 @@
  */
 package io.serverlessworkflow.fluent.func;
 
+import io.serverlessworkflow.api.types.CallTask;
 import io.serverlessworkflow.api.types.func.CallJava;
-import io.serverlessworkflow.api.types.func.CallTaskJava;
 import io.serverlessworkflow.api.types.func.ContextFunction;
 import io.serverlessworkflow.api.types.func.FilterFunction;
 import io.serverlessworkflow.fluent.func.spi.ConditionalTaskBuilder;
@@ -29,12 +29,9 @@ public class FuncCallTaskBuilder extends TaskBaseBuilder<FuncCallTaskBuilder>
     implements FuncTaskTransformations<FuncCallTaskBuilder>,
         ConditionalTaskBuilder<FuncCallTaskBuilder> {
 
-  private CallTaskJava callTaskJava;
+  private CallTask callTaskJava;
 
-  FuncCallTaskBuilder() {
-    callTaskJava = new CallTaskJava(new CallJava() {});
-    super.setTask(callTaskJava.getCallJava());
-  }
+  FuncCallTaskBuilder() {}
 
   @Override
   protected FuncCallTaskBuilder self() {
@@ -51,8 +48,9 @@ public class FuncCallTaskBuilder extends TaskBaseBuilder<FuncCallTaskBuilder>
 
   public <T, V> FuncCallTaskBuilder function(
       Function<T, V> function, Class<T> argClass, Class<V> returnClass) {
-    this.callTaskJava = new CallTaskJava(CallJava.function(function, argClass, returnClass));
-    super.setTask(this.callTaskJava.getCallJava());
+    this.callTaskJava =
+        new CallTask().withCallFunction(CallJava.function(function, argClass, returnClass));
+    super.setTask(this.callTaskJava.getCallFunction());
     return this;
   }
 
@@ -66,8 +64,9 @@ public class FuncCallTaskBuilder extends TaskBaseBuilder<FuncCallTaskBuilder>
 
   public <T, V> FuncCallTaskBuilder function(
       ContextFunction<T, V> function, Class<T> argClass, Class<V> returnClass) {
-    this.callTaskJava = new CallTaskJava(CallJava.function(function, argClass, returnClass));
-    super.setTask(this.callTaskJava.getCallJava());
+    this.callTaskJava =
+        new CallTask().withCallFunction(CallJava.function(function, argClass, returnClass));
+    super.setTask(this.callTaskJava.getCallFunction());
     return this;
   }
 
@@ -81,26 +80,27 @@ public class FuncCallTaskBuilder extends TaskBaseBuilder<FuncCallTaskBuilder>
 
   public <T, V> FuncCallTaskBuilder function(
       FilterFunction<T, V> function, Class<T> argClass, Class<V> outputClass) {
-    this.callTaskJava = new CallTaskJava(CallJava.function(function, argClass, outputClass));
-    super.setTask(this.callTaskJava.getCallJava());
+    this.callTaskJava =
+        new CallTask().withCallFunction(CallJava.function(function, argClass, outputClass));
+    super.setTask(this.callTaskJava.getCallFunction());
     return this;
   }
 
   /** Accept a side-effect Consumer; engine should pass input through unchanged. */
   public <T> FuncCallTaskBuilder consumer(Consumer<T> consumer) {
-    this.callTaskJava = new CallTaskJava(CallJava.consumer(consumer));
-    super.setTask(this.callTaskJava.getCallJava());
+    this.callTaskJava = new CallTask().withCallFunction(CallJava.consumer(consumer));
+    super.setTask(this.callTaskJava.getCallFunction());
     return this;
   }
 
   /** Accept a Consumer with explicit input type hint. */
   public <T> FuncCallTaskBuilder consumer(Consumer<T> consumer, Class<T> argClass) {
-    this.callTaskJava = new CallTaskJava(CallJava.consumer(consumer, argClass));
-    super.setTask(this.callTaskJava.getCallJava());
+    this.callTaskJava = new CallTask().withCallFunction(CallJava.consumer(consumer, argClass));
+    super.setTask(this.callTaskJava.getCallFunction());
     return this;
   }
 
-  public CallTaskJava build() {
+  public CallTask build() {
     return this.callTaskJava;
   }
 }

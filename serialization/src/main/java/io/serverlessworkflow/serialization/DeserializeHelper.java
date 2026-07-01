@@ -26,44 +26,30 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.ServiceLoader;
-import java.util.ServiceLoader.Provider;
-import java.util.stream.Collectors;
 
 public class DeserializeHelper {
-
-  private static Map<Class<?>, Collection<Class<?>>> additionalClasses =
-      ServiceLoader.load(UnionCustomizer.class).stream()
-          .map(Provider::get)
-          .map(UnionCustomizer::additionalClasses)
-          .flatMap(map -> map.entrySet().stream())
-          .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
 
   public static <T> T deserializeOneOf(
       JsonParser p, Class<T> targetClass, Collection<Class<?>> oneOfTypes) throws IOException {
     TreeNode node = p.readValueAsTree();
     try {
       T result = targetClass.getDeclaredConstructor().newInstance();
-      Collection<Class<?>> possibleTypes;
-      Collection<Class<?>> additional = additionalClasses.get(targetClass);
-      if (additional != null && !additional.isEmpty()) {
-        possibleTypes = new HashSet<Class<?>>(oneOfTypes);
-        possibleTypes.addAll(additional);
-      } else {
-        possibleTypes = oneOfTypes;
+      Collection<Exception> exceptions = new ArrayList<>();
+      for (Class<?> oneOfType : oneOfTypes) {
+        try {
+          assingIt(p, result, node, targetClass, oneOfType);
+          break;
+        } catch (IOException | ConstraintViolationException | InvocationTargetException ex) {
+          exceptions.add(ex);
+        }
       }
-      Collection<Throwable> exceptions =
-          deserializeOneOf(result, node, p, targetClass, possibleTypes);
-      if (exceptions.size() == possibleTypes.size()) {
+      if (exceptions.size() == oneOfTypes.size()) {
         JsonMappingException ex =
             new JsonMappingException(
                 p,
                 String.format(
                     "Error deserializing class %s, all oneOf alternatives %s has failed ",
-                    targetClass, possibleTypes));
+                    targetClass, oneOfTypes));
         exceptions.forEach(ex::addSuppressed);
         throw ex;
       }
@@ -71,23 +57,6 @@ public class DeserializeHelper {
     } catch (ReflectiveOperationException ex) {
       throw new IllegalStateException(ex);
     }
-  }
-
-  private static <T> Collection<Throwable> deserializeOneOf(
-      T result, TreeNode node, JsonParser p, Class<T> targetClass, Collection<Class<?>> oneOfTypes)
-      throws ReflectiveOperationException {
-    Collection<Throwable> exceptions = new ArrayList<>();
-    for (Class<?> oneOfType : oneOfTypes) {
-      try {
-        assingIt(p, result, node, targetClass, oneOfType);
-        break;
-      } catch (IOException | ConstraintViolationException ex) {
-        exceptions.add(ex);
-      } catch (InvocationTargetException ex) {
-        exceptions.add(ex.getCause());
-      }
-    }
-    return exceptions;
   }
 
   private static <T> void assingIt(

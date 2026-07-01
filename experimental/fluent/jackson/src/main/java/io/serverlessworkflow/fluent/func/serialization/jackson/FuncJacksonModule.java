@@ -15,19 +15,76 @@
  */
 package io.serverlessworkflow.fluent.func.serialization.jackson;
 
+import com.fasterxml.jackson.databind.BeanDescription;
+import com.fasterxml.jackson.databind.DeserializationConfig;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.SerializationConfig;
+import com.fasterxml.jackson.databind.deser.BeanDeserializerModifier;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-
-import io.serverlessworkflow.api.types.CallTask;
-import io.serverlessworkflow.api.types.func.CallJava;
+import com.fasterxml.jackson.databind.ser.BeanPropertyWriter;
+import com.fasterxml.jackson.databind.ser.BeanSerializerModifier;
+import io.serverlessworkflow.api.reflection.func.SerializableConsumer;
+import io.serverlessworkflow.api.reflection.func.SerializableFunction;
+import io.serverlessworkflow.api.reflection.func.SerializablePredicate;
+import io.serverlessworkflow.api.types.CallFunction;
+import io.serverlessworkflow.api.types.TaskMetadata;
+import io.serverlessworkflow.api.types.func.ContextFunction;
+import io.serverlessworkflow.api.types.func.FilterFunction;
+import io.serverlessworkflow.api.types.func.LoopFunction;
+import io.serverlessworkflow.api.types.func.LoopFunctionIndex;
+import io.serverlessworkflow.api.types.func.LoopPredicate;
+import io.serverlessworkflow.api.types.func.LoopPredicateIndex;
+import io.serverlessworkflow.api.types.func.LoopPredicateIndexContext;
+import io.serverlessworkflow.api.types.func.LoopPredicateIndexFilter;
+import java.lang.invoke.SerializedLambda;
+import java.util.List;
 
 public class FuncJacksonModule extends SimpleModule {
 
   private static final long serialVersionUID = 1L;
 
   public void setupModule(com.fasterxml.jackson.databind.Module.SetupContext context) {
-	  super.addSerializer(CallTask.class, new CallTaskFunctionSerializer());
-//    super.addDeserializer(CallJava.CallJavaFunction.class, new CallJavaFunctionDeserializer());
- //   super.addSerializer(CallJava.CallJavaFunction.class, new CallJavaFunctionSerializer());
+    SerializableFunctionSerializer serializer = new SerializableFunctionSerializer();
+    super.addSerializer(SerializableFunction.class, serializer);
+    super.addSerializer(SerializablePredicate.class, serializer);
+    super.addSerializer(SerializableConsumer.class, serializer);
+    super.addSerializer(ContextFunction.class, serializer);
+    super.addSerializer(FilterFunction.class, serializer);
+    super.addSerializer(LoopFunction.class, serializer);
+    super.addSerializer(LoopFunctionIndex.class, serializer);
+    super.addSerializer(LoopPredicate.class, serializer);
+    super.addSerializer(LoopPredicateIndex.class, serializer);
+    super.addSerializer(LoopPredicateIndexContext.class, serializer);
+    super.addSerializer(LoopPredicateIndexFilter.class, serializer);
+    super.addDeserializer(SerializedLambda.class, new SerializedLambdaDeserializer());
+    super.setMixInAnnotation(TaskMetadata.class, TaskMetadataMixIn.class);
+    super.setDeserializerModifier(
+        new BeanDeserializerModifier() {
+          @Override
+          public JsonDeserializer<?> modifyDeserializer(
+              DeserializationConfig config,
+              BeanDescription beanDesc,
+              JsonDeserializer<?> deserializer) {
+            if (beanDesc.getBeanClass().equals(CallFunction.class)) {
+              return new CallJavaDeserializer<>(deserializer);
+            }
+            return deserializer;
+          }
+        });
+    super.setSerializerModifier(
+        new BeanSerializerModifier() {
+          @Override
+          public List<BeanPropertyWriter> changeProperties(
+              SerializationConfig config,
+              BeanDescription beanDesc,
+              List<BeanPropertyWriter> beanProperties) {
+            if (beanDesc.getBeanClass().equals(SerializedLambda.class)) {
+              beanProperties.add(new SerializedLambdaWriter(beanProperties.get(0)));
+            }
+
+            return beanProperties;
+          }
+        });
     super.setupModule(context);
   }
 }

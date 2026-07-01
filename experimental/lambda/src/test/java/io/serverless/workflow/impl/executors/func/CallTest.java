@@ -17,9 +17,11 @@ package io.serverless.workflow.impl.executors.func;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.serverlessworkflow.api.types.CallTask;
 import io.serverlessworkflow.api.types.Document;
 import io.serverlessworkflow.api.types.FlowDirective;
 import io.serverlessworkflow.api.types.FlowDirectiveEnum;
+import io.serverlessworkflow.api.types.ForTask;
 import io.serverlessworkflow.api.types.ForTaskConfiguration;
 import io.serverlessworkflow.api.types.SwitchItem;
 import io.serverlessworkflow.api.types.SwitchTask;
@@ -28,7 +30,6 @@ import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.api.types.TaskMetadata;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.api.types.func.CallJava;
-import io.serverlessworkflow.api.types.func.CallTaskJava;
 import io.serverlessworkflow.api.types.func.ForTaskFunction;
 import io.serverlessworkflow.api.types.func.SwitchCasePredicate;
 import io.serverlessworkflow.api.types.func.TaskMetadataKeys;
@@ -72,7 +73,8 @@ class CallTest {
                           "javaCall",
                           new Task()
                               .withCallTask(
-                                  new CallTaskJava(CallJava.function(function, clazz))))));
+                                  new CallTask()
+                                      .withCallFunction(CallJava.function(function, clazz))))));
 
       assertThat(
               app.workflowDefinition(workflow)
@@ -99,20 +101,24 @@ class CallTest {
                           "forLoop",
                           new Task()
                               .withForTask(
-                                  new ForTaskFunction()
+                                  new ForTaskFunction(
+                                          new ForTask()
+                                              .withFor(forConfig)
+                                              .withDo(
+                                                  List.of(
+                                                      new TaskItem(
+                                                          "javaCall",
+                                                          new Task()
+                                                              .withCallTask(
+                                                                  new CallTask()
+                                                                      .withCallFunction(
+                                                                          CallJava.loopFunction(
+                                                                              CallTest::sum,
+                                                                              forConfig
+                                                                                  .getEach())))))))
                                       .withWhile(CallTest::isEven)
                                       .withCollection(v -> v, Collection.class)
-                                      .withFor(forConfig)
-                                      .withDo(
-                                          List.of(
-                                              new TaskItem(
-                                                  "javaCall",
-                                                  new Task()
-                                                      .withCallTask(
-                                                          new CallTaskJava(
-                                                              CallJava.loopFunction(
-                                                                  CallTest::sum,
-                                                                  forConfig.getEach()))))))))));
+                                      .task()))));
 
       assertThat(
               app.workflowDefinition(workflow)
@@ -152,7 +158,9 @@ class CallTest {
                       new TaskItem(
                           "java",
                           new Task()
-                              .withCallTask(new CallTaskJava(CallJava.function(CallTest::zero))))));
+                              .withCallTask(
+                                  new CallTask()
+                                      .withCallFunction(CallJava.function(CallTest::zero))))));
 
       WorkflowDefinition definition = app.workflowDefinition(workflow);
       assertThat(definition.instance(3).start().get().asNumber().orElseThrow()).isEqualTo(3);
@@ -173,9 +181,11 @@ class CallTest {
                           "java",
                           new Task()
                               .withCallTask(
-                                  new CallTaskJava(
-                                      withPredicate(
-                                          CallJava.function(CallTest::zero), CallTest::isOdd))))));
+                                  new CallTask()
+                                      .withCallFunction(
+                                          withPredicate(
+                                              CallJava.function(CallTest::zero),
+                                              CallTest::isOdd))))));
       WorkflowDefinition definition = app.workflowDefinition(workflow);
       assertThat(definition.instance(3).start().get().asNumber().orElseThrow()).isEqualTo(0);
       assertThat(definition.instance(4).start().get().asNumber().orElseThrow()).isEqualTo(4);
@@ -195,11 +205,12 @@ class CallTest {
                           "java",
                           new Task()
                               .withCallTask(
-                                  new CallTaskJava(
-                                      withPredicate(
-                                          CallJava.function(
-                                              CallTest::zeroWithModel, WorkflowModel.class),
-                                          CallTest::isOdd))))));
+                                  new CallTask()
+                                      .withCallFunction(
+                                          withPredicate(
+                                              CallJava.function(
+                                                  CallTest::zeroWithModel, WorkflowModel.class),
+                                              CallTest::isOdd))))));
       WorkflowDefinition definition = app.workflowDefinition(workflow);
       assertThat(definition.instance(3).start().get().asNumber().orElseThrow()).isEqualTo(0);
       assertThat(definition.instance(4).start().get().asNumber().orElseThrow()).isEqualTo(4);

@@ -15,11 +15,12 @@
  */
 package io.serverlessworkflow.fluent.func;
 
+import io.serverlessworkflow.api.types.CallTask;
+import io.serverlessworkflow.api.types.ForTask;
 import io.serverlessworkflow.api.types.ForTaskConfiguration;
 import io.serverlessworkflow.api.types.Task;
 import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.api.types.func.CallJava;
-import io.serverlessworkflow.api.types.func.CallTaskJava;
 import io.serverlessworkflow.api.types.func.ForTaskFunction;
 import io.serverlessworkflow.api.types.func.LoopFunction;
 import io.serverlessworkflow.api.types.func.LoopPredicate;
@@ -39,14 +40,16 @@ public class FuncForTaskBuilder extends TaskBaseBuilder<FuncForTaskBuilder>
         ConditionalTaskBuilder<FuncForTaskBuilder>,
         ForEachTaskFluent<FuncForTaskBuilder, FuncTaskItemListBuilder> {
 
+  private final ForTask forTask;
   private final ForTaskFunction forTaskFunction;
   private final List<TaskItem> items;
 
   FuncForTaskBuilder() {
-    this.forTaskFunction = new ForTaskFunction();
-    this.forTaskFunction.withFor(new ForTaskConfiguration());
+    this.forTask = new ForTask();
+    this.forTaskFunction = new ForTaskFunction(forTask);
+    this.forTask.withFor(new ForTaskConfiguration());
     this.items = new ArrayList<>();
-    super.setTask(forTaskFunction);
+    super.setTask(forTask);
   }
 
   @Override
@@ -84,9 +87,9 @@ public class FuncForTaskBuilder extends TaskBaseBuilder<FuncForTaskBuilder>
             name,
             new Task()
                 .withCallTask(
-                    new CallTaskJava(
-                        CallJava.loopFunction(
-                            function, this.forTaskFunction.getFor().getEach())))));
+                    new CallTask()
+                        .withCallFunction(
+                            CallJava.loopFunction(function, this.forTask.getFor().getEach())))));
     return this;
   }
 
@@ -96,25 +99,25 @@ public class FuncForTaskBuilder extends TaskBaseBuilder<FuncForTaskBuilder>
 
   @Override
   public FuncForTaskBuilder each(String each) {
-    this.forTaskFunction.getFor().withEach(each);
+    this.forTask.getFor().withEach(each);
     return this;
   }
 
   @Override
   public FuncForTaskBuilder in(String in) {
-    this.forTaskFunction.getFor().withIn(in);
+    this.forTask.getFor().withIn(in);
     return this;
   }
 
   @Override
   public FuncForTaskBuilder at(String at) {
-    this.forTaskFunction.getFor().withAt(at);
+    this.forTask.getFor().withAt(at);
     return this;
   }
 
   @Override
   public FuncForTaskBuilder whileC(String expression) {
-    this.forTaskFunction.setWhile(expression);
+    this.forTask.setWhile(expression);
     return this;
   }
 
@@ -125,8 +128,8 @@ public class FuncForTaskBuilder extends TaskBaseBuilder<FuncForTaskBuilder>
     return this;
   }
 
-  public ForTaskFunction build() {
-    this.forTaskFunction.setDo(this.items);
-    return this.forTaskFunction;
+  public ForTask build() {
+    this.forTask.setDo(this.items);
+    return this.forTask;
   }
 }

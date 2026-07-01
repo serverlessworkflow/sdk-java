@@ -15,17 +15,7 @@
  */
 package io.serverlessworkflow.fluent.func.serialization.jackson;
 
-import io.serverlessworkflow.api.types.CallTask;
-import io.serverlessworkflow.api.types.func.CallJava.CallJavaFunction;
-import io.serverlessworkflow.serialization.UnionCustomizer;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
-public class FuncUnionCustomizer implements UnionCustomizer {
-
-  @Override
-  public Map<Class<?>, Collection<Class<?>>> additionalClasses() {
-    return Map.of(CallTask.class, List.of(CallJavaFunction.class));
-  }
-}
+@JsonDeserialize(converter = TaskMetadataTransformer.class)
+public abstract class TaskMetadataMixIn {}

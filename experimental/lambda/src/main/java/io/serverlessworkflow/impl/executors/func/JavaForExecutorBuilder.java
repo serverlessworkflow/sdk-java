@@ -32,51 +32,53 @@ import java.util.Optional;
 
 public class JavaForExecutorBuilder extends ForExecutorBuilder {
 
+  private final ForTaskFunction taskFunctions;
+
   protected JavaForExecutorBuilder(
       WorkflowMutablePosition position, ForTask task, WorkflowDefinition definition) {
     super(position, task, definition);
+    this.taskFunctions = new ForTaskFunction(task);
   }
 
   @Override
   protected Optional<WorkflowPredicate> buildWhileFilter() {
-    if (task instanceof ForTaskFunction taskFunctions) {
-      final LoopPredicateIndexFilter whilePred = taskFunctions.getWhilePredicate();
-      Optional<Class<?>> whileClass = taskFunctions.getWhileClass();
-      String varName = task.getFor().getEach();
-      String indexName = task.getFor().getAt();
-      if (whilePred != null) {
-        return Optional.of(
-            (w, t, n) -> {
-              Object item = safeObject(t.variables().get(varName));
-              return whilePred.test(
-                  JavaFuncUtils.convert(n, whileClass),
-                  item,
-                  (Integer) safeObject(t.variables().get(indexName)),
-                  w,
-                  t);
-            });
-      }
+    final LoopPredicateIndexFilter whilePred = taskFunctions.getWhilePredicate();
+    Optional<Class<?>> whileClass = taskFunctions.getWhileClass();
+    String varName = task.getFor().getEach();
+    String indexName = task.getFor().getAt();
+    if (whilePred != null) {
+      return Optional.of(
+          (w, t, n) -> {
+            Object item = safeObject(t.variables().get(varName));
+            return whilePred.test(
+                JavaFuncUtils.convert(n, whileClass),
+                item,
+                (Integer) safeObject(t.variables().get(indexName)),
+                w,
+                t);
+          });
     }
     return super.buildWhileFilter();
   }
 
   protected WorkflowValueResolver<Collection<?>> buildCollectionFilter() {
-    return task instanceof ForTaskFunction taskFunctions
+    Object inCollection = collectionFilterObject();
+    return inCollection != null
         ? application
             .expressionFactory()
-            .resolveCollection(ExpressionDescriptor.object(collectionFilterObject(taskFunctions)))
+            .resolveCollection(ExpressionDescriptor.object(inCollection))
         : super.buildCollectionFilter();
   }
 
-  private Object collectionFilterObject(ForTaskFunction taskFunctions) {
+  private Object collectionFilterObject() {
     return taskFunctions
         .getForClass()
         .<Object>map(forClass -> typedCollectionFunction(taskFunctions, forClass))
-        .orElse(taskFunctions.getCollection());
+        .orElse(taskFunctions.getInCollection());
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
   private Object typedCollectionFunction(ForTaskFunction taskFunctions, Class<?> forClass) {
-    return new TypedFunction(taskFunctions.getCollection(), forClass);
+    return new TypedFunction(taskFunctions.getInCollection(), forClass);
   }
 }

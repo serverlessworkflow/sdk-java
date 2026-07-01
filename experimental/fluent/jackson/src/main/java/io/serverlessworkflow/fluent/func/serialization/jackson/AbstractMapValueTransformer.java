@@ -13,27 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.api.types.func;
+package io.serverlessworkflow.fluent.func.serialization.jackson;
 
-import java.util.Optional;
+import com.fasterxml.jackson.databind.util.StdConverter;
+import java.util.Map;
 
-public abstract class CallAbstractJavaFunction<T, V> extends CallJava<T> {
+public abstract class AbstractMapValueTransformer<T> extends StdConverter<T, T> {
 
-  private static final long serialVersionUID = 1L;
-
-  private final Optional<Class<V>> outputClass;
-
-  protected CallAbstractJavaFunction() {
-    this(Optional.empty(), Optional.empty());
+  @Override
+  public T convert(T value) {
+    for (Map.Entry<String, Object> entry : map(value).entrySet()) {
+      GlobalConverterRegistry.get()
+          .findConverter(entry.getKey())
+          .ifPresent(c -> entry.setValue(c.apply(entry.getValue())));
+    }
+    return value;
   }
 
-  protected CallAbstractJavaFunction(
-      Optional<Class<T>> inputClass, Optional<Class<V>> outputClass) {
-    super(inputClass);
-    this.outputClass = outputClass;
-  }
-
-  public Optional<Class<V>> outputClass() {
-    return outputClass;
-  }
+  protected abstract Map<String, Object> map(T value);
 }

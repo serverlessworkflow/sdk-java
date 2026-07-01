@@ -15,7 +15,9 @@
  */
 package io.serverlessworkflow.api.types.func;
 
+import java.io.Serializable;
+
 @FunctionalInterface
-public interface LoopFunctionIndex<T, V, R> {
+public interface LoopFunctionIndex<T, V, R> extends Serializable {
   R apply(T model, V item, Integer index);
 }

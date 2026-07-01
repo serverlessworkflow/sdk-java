@@ -1600,7 +1600,7 @@ public final class FuncDSL {
   }
 
   public static <T, V> FuncTaskConfigurer forEachItem(
-      SerializableFunction<T, Collection<V>> collection, Function<V, ?> function) {
+      SerializableFunction<T, Collection<V>> collection, SerializableFunction<V, ?> function) {
     return forEachItem(null, collection, function);
   }
 
