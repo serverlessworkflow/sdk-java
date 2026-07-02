@@ -37,7 +37,7 @@ public record OAuthPolicyData(
       return Optional.empty();
     }
     OAuth2AuthenticationPolicy oauth2 = policy.getOAuth2AuthenticationPolicy();
-    if (oauth2 != null) {
+    if (oauth2 != null && oauth2.getOauth2() != null) {
       OAuth2AuthenticationPolicyConfiguration config = oauth2.getOauth2();
       return Optional.of(
           new OAuthPolicyData(
@@ -46,7 +46,7 @@ public record OAuthPolicyData(
               OAuthScheme.OAUTH2));
     }
     OpenIdConnectAuthenticationPolicy oidc = policy.getOpenIdConnectAuthenticationPolicy();
-    if (oidc != null) {
+    if (oidc != null && oidc.getOidc() != null) {
       OpenIdConnectAuthenticationPolicyConfiguration config = oidc.getOidc();
       return Optional.of(
           new OAuthPolicyData(
