@@ -15,18 +15,7 @@
  */
 package io.serverlessworkflow.impl.auth;
 
-import io.serverlessworkflow.api.types.Workflow;
-import io.serverlessworkflow.impl.WorkflowApplication;
-
-class OpenIdAuthProvider extends CommonOAuthProvider {
-
-  public OpenIdAuthProvider(
-      WorkflowApplication application, Workflow workflow, OAuthPolicyData policyData) {
-    super(
-        accessToken(
-            workflow,
-            policyData.data(),
-            policyData.secret(),
-            new OpenIdRequestBuilder(application)));
-  }
+public enum OAuthScheme {
+  OAUTH2,
+  OPENID_CONNECT
 }

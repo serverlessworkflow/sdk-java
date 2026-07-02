@@ -15,18 +15,15 @@
  */
 package io.serverlessworkflow.impl.auth;
 
-import io.serverlessworkflow.api.types.Workflow;
-import io.serverlessworkflow.impl.WorkflowApplication;
+import io.serverlessworkflow.api.types.AuthenticationPolicyUnion;
+import io.serverlessworkflow.api.types.OAuth2AuthenticationData;
+import io.serverlessworkflow.api.types.SecretBasedAuthenticationPolicy;
+import java.util.Optional;
 
-class OpenIdAuthProvider extends CommonOAuthProvider {
+public record OAuthPolicyData(
+    OAuth2AuthenticationData data, SecretBasedAuthenticationPolicy secret, OAuthScheme scheme) {
 
-  public OpenIdAuthProvider(
-      WorkflowApplication application, Workflow workflow, OAuthPolicyData policyData) {
-    super(
-        accessToken(
-            workflow,
-            policyData.data(),
-            policyData.secret(),
-            new OpenIdRequestBuilder(application)));
+  public static Optional<OAuthPolicyData> from(AuthenticationPolicyUnion policy) {
+    return OAuthUtils.from(policy);
   }
 }

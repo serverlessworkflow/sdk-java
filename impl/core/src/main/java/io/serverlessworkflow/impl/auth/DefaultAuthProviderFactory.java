@@ -18,8 +18,6 @@ package io.serverlessworkflow.impl.auth;
 import io.serverlessworkflow.api.types.AuthenticationPolicyUnion;
 import io.serverlessworkflow.api.types.EndpointConfiguration;
 import io.serverlessworkflow.api.types.ReferenceableAuthenticationPolicy;
-import io.serverlessworkflow.api.types.Use;
-import io.serverlessworkflow.api.types.UseAuthentications;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowDefinition;
@@ -46,35 +44,10 @@ public class DefaultAuthProviderFactory implements AuthProviderFactory {
   @Override
   public Optional<AuthProvider> getAuth(
       WorkflowDefinition definition, ReferenceableAuthenticationPolicy auth, String method) {
-    if (auth == null) {
-      return Optional.empty();
-    }
-    if (auth.getAuthenticationPolicyReference() != null) {
-      return buildFromReference(
-          definition.application(),
-          definition.workflow(),
-          auth.getAuthenticationPolicyReference().getUse(),
-          method);
-    } else if (auth.getAuthenticationPolicy() != null) {
-      return buildFromPolicy(
-          definition.application(), definition.workflow(), auth.getAuthenticationPolicy(), method);
-    }
-    return Optional.empty();
-  }
-
-  private Optional<AuthProvider> buildFromReference(
-      WorkflowApplication app, Workflow workflow, String use, String method) {
-    Use useInfo = workflow.getUse();
-    if (useInfo == null) {
-      return Optional.empty();
-    }
-    UseAuthentications authInfo = useInfo.getAuthentications();
-    return authInfo == null
-        ? Optional.empty()
-        : authInfo.getAdditionalProperties().entrySet().stream()
-            .filter(s -> s.getKey().equals(use))
-            .findAny()
-            .flatMap(e -> buildFromPolicy(app, workflow, e.getValue(), method));
+    return OAuthUtils.resolvePolicy(definition.workflow(), auth)
+        .flatMap(
+            policy ->
+                buildFromPolicy(definition.application(), definition.workflow(), policy, method));
   }
 
   private Optional<AuthProvider> buildFromPolicy(
@@ -94,16 +67,12 @@ public class DefaultAuthProviderFactory implements AuthProviderFactory {
       return Optional.of(
           new DigestAuthProvider(
               app, workflow, authenticationPolicy.getDigestAuthenticationPolicy(), method));
-    } else if (authenticationPolicy.getOAuth2AuthenticationPolicy() != null) {
-      return Optional.of(
-          new OAuth2AuthProvider(
-              app, workflow, authenticationPolicy.getOAuth2AuthenticationPolicy()));
-    } else if (authenticationPolicy.getOpenIdConnectAuthenticationPolicy() != null) {
-      return Optional.of(
-          new OpenIdAuthProvider(
-              app, workflow, authenticationPolicy.getOpenIdConnectAuthenticationPolicy()));
     }
-
-    return Optional.empty();
+    return OAuthUtils.from(authenticationPolicy)
+        .map(
+            policyData ->
+                policyData.scheme() == OAuthScheme.OPENID_CONNECT
+                    ? new OpenIdAuthProvider(app, workflow, policyData)
+                    : new OAuth2AuthProvider(app, workflow, policyData));
   }
 }
