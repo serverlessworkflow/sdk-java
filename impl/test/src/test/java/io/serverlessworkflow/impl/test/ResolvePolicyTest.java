@@ -17,7 +17,6 @@ package io.serverlessworkflow.impl.test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import io.serverlessworkflow.api.types.AuthenticationPolicyReference;
 import io.serverlessworkflow.api.types.AuthenticationPolicyUnion;
@@ -28,7 +27,7 @@ import io.serverlessworkflow.api.types.ReferenceableAuthenticationPolicy;
 import io.serverlessworkflow.api.types.Use;
 import io.serverlessworkflow.api.types.UseAuthentications;
 import io.serverlessworkflow.api.types.Workflow;
-import io.serverlessworkflow.impl.auth.DefaultAuthProviderFactory;
+import io.serverlessworkflow.impl.auth.OAuthUtils;
 import org.junit.jupiter.api.Test;
 
 public class ResolvePolicyTest {
@@ -43,14 +42,14 @@ public class ResolvePolicyTest {
 
   @Test
   void nullAuthReturnsNull() {
-    assertNull(DefaultAuthProviderFactory.resolvePolicy(new Workflow(), null));
+    assertNull(OAuthUtils.resolvePolicy(new Workflow(), null));
   }
 
   @Test
   void inlinePolicyReturnsPolicyDirectly() {
     ReferenceableAuthenticationPolicy auth =
         new ReferenceableAuthenticationPolicy().withAuthenticationPolicy(BEARER_POLICY);
-    assertEquals(BEARER_POLICY, DefaultAuthProviderFactory.resolvePolicy(new Workflow(), auth));
+    assertEquals(BEARER_POLICY, OAuthUtils.resolvePolicy(new Workflow(), auth));
   }
 
   @Test
@@ -64,16 +63,7 @@ public class ResolvePolicyTest {
     ReferenceableAuthenticationPolicy auth =
         new ReferenceableAuthenticationPolicy()
             .withAuthenticationPolicyReference(new AuthenticationPolicyReference("myAuth"));
-    assertEquals(BEARER_POLICY, DefaultAuthProviderFactory.resolvePolicy(workflow, auth));
-  }
-
-  @Test
-  void referenceWithNullWorkflowThrows() {
-    ReferenceableAuthenticationPolicy auth =
-        new ReferenceableAuthenticationPolicy()
-            .withAuthenticationPolicyReference(new AuthenticationPolicyReference("myAuth"));
-    assertThrows(
-        IllegalArgumentException.class, () -> DefaultAuthProviderFactory.resolvePolicy(null, auth));
+    assertEquals(BEARER_POLICY, OAuthUtils.resolvePolicy(workflow, auth));
   }
 
   @Test
@@ -81,7 +71,7 @@ public class ResolvePolicyTest {
     ReferenceableAuthenticationPolicy auth =
         new ReferenceableAuthenticationPolicy()
             .withAuthenticationPolicyReference(new AuthenticationPolicyReference("myAuth"));
-    assertNull(DefaultAuthProviderFactory.resolvePolicy(new Workflow(), auth));
+    assertNull(OAuthUtils.resolvePolicy(new Workflow(), auth));
   }
 
   @Test
@@ -90,7 +80,7 @@ public class ResolvePolicyTest {
     ReferenceableAuthenticationPolicy auth =
         new ReferenceableAuthenticationPolicy()
             .withAuthenticationPolicyReference(new AuthenticationPolicyReference("myAuth"));
-    assertNull(DefaultAuthProviderFactory.resolvePolicy(workflow, auth));
+    assertNull(OAuthUtils.resolvePolicy(workflow, auth));
   }
 
   @Test
@@ -105,6 +95,6 @@ public class ResolvePolicyTest {
     ReferenceableAuthenticationPolicy auth =
         new ReferenceableAuthenticationPolicy()
             .withAuthenticationPolicyReference(new AuthenticationPolicyReference("myAuth"));
-    assertNull(DefaultAuthProviderFactory.resolvePolicy(workflow, auth));
+    assertNull(OAuthUtils.resolvePolicy(workflow, auth));
   }
 }

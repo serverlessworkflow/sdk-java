@@ -28,15 +28,16 @@ import io.serverlessworkflow.api.types.OAuth2ConnectAuthenticationProperties;
 import io.serverlessworkflow.api.types.OpenIdConnectAuthenticationPolicy;
 import io.serverlessworkflow.api.types.OpenIdConnectAuthenticationPolicyConfiguration;
 import io.serverlessworkflow.api.types.SecretBasedAuthenticationPolicy;
-import io.serverlessworkflow.impl.auth.OAuthPolicyData;
+import io.serverlessworkflow.impl.auth.OAuthUtils;
+import io.serverlessworkflow.impl.auth.OAuthUtils.OAuthPolicyData;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
-public class OAuthPolicyDataTest {
+public class OAuthUtilsTest {
 
   @Test
   void fromNullReturnsEmpty() {
-    assertEquals(Optional.empty(), OAuthPolicyData.from(null));
+    assertEquals(Optional.empty(), OAuthUtils.from(null));
   }
 
   @Test
@@ -44,7 +45,7 @@ public class OAuthPolicyDataTest {
     AuthenticationPolicyUnion union =
         new AuthenticationPolicyUnion()
             .withBasicAuthenticationPolicy(new BasicAuthenticationPolicy());
-    assertTrue(OAuthPolicyData.from(union).isEmpty());
+    assertTrue(OAuthUtils.from(union).isEmpty());
   }
 
   @Test
@@ -57,10 +58,10 @@ public class OAuthPolicyDataTest {
                     .withOauth2(
                         new OAuth2AuthenticationPolicyConfiguration()
                             .withOAuth2ConnectAuthenticationProperties(props)));
-    Optional<OAuthPolicyData> result = OAuthPolicyData.from(union);
+    Optional<OAuthPolicyData> result = OAuthUtils.from(union);
     assertTrue(result.isPresent());
     OAuthPolicyData data = result.get();
-    assertEquals(OAuthPolicyData.OAuthScheme.OAUTH2, data.scheme());
+    assertEquals(OAuthUtils.OAuthScheme.OAUTH2, data.scheme());
     assertEquals(props, data.data());
     assertNull(data.secret());
   }
@@ -75,10 +76,10 @@ public class OAuthPolicyDataTest {
                     .withOauth2(
                         new OAuth2AuthenticationPolicyConfiguration()
                             .withOAuth2AuthenticationPolicySecret(secret)));
-    Optional<OAuthPolicyData> result = OAuthPolicyData.from(union);
+    Optional<OAuthPolicyData> result = OAuthUtils.from(union);
     assertTrue(result.isPresent());
     OAuthPolicyData data = result.get();
-    assertEquals(OAuthPolicyData.OAuthScheme.OAUTH2, data.scheme());
+    assertEquals(OAuthUtils.OAuthScheme.OAUTH2, data.scheme());
     assertNull(data.data());
     assertEquals(secret, data.secret());
   }
@@ -93,10 +94,10 @@ public class OAuthPolicyDataTest {
                     .withOidc(
                         new OpenIdConnectAuthenticationPolicyConfiguration()
                             .withOpenIdConnectAuthenticationProperties(oidcData)));
-    Optional<OAuthPolicyData> result = OAuthPolicyData.from(union);
+    Optional<OAuthPolicyData> result = OAuthUtils.from(union);
     assertTrue(result.isPresent());
     OAuthPolicyData data = result.get();
-    assertEquals(OAuthPolicyData.OAuthScheme.OPENID_CONNECT, data.scheme());
+    assertEquals(OAuthUtils.OAuthScheme.OPENID_CONNECT, data.scheme());
     assertEquals(oidcData, data.data());
     assertNull(data.secret());
   }
@@ -111,10 +112,10 @@ public class OAuthPolicyDataTest {
                     .withOidc(
                         new OpenIdConnectAuthenticationPolicyConfiguration()
                             .withOpenIdConnectAuthenticationPolicySecret(secret)));
-    Optional<OAuthPolicyData> result = OAuthPolicyData.from(union);
+    Optional<OAuthPolicyData> result = OAuthUtils.from(union);
     assertTrue(result.isPresent());
     OAuthPolicyData data = result.get();
-    assertEquals(OAuthPolicyData.OAuthScheme.OPENID_CONNECT, data.scheme());
+    assertEquals(OAuthUtils.OAuthScheme.OPENID_CONNECT, data.scheme());
     assertNull(data.data());
     assertEquals(secret, data.secret());
   }

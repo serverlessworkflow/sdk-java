@@ -18,8 +18,6 @@ package io.serverlessworkflow.impl.auth;
 import io.serverlessworkflow.api.types.AuthenticationPolicyUnion;
 import io.serverlessworkflow.api.types.EndpointConfiguration;
 import io.serverlessworkflow.api.types.ReferenceableAuthenticationPolicy;
-import io.serverlessworkflow.api.types.Use;
-import io.serverlessworkflow.api.types.UseAuthentications;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowDefinition;
@@ -46,31 +44,10 @@ public class DefaultAuthProviderFactory implements AuthProviderFactory {
   @Override
   public Optional<AuthProvider> getAuth(
       WorkflowDefinition definition, ReferenceableAuthenticationPolicy auth, String method) {
-    AuthenticationPolicyUnion policy = resolvePolicy(definition.workflow(), auth);
+    AuthenticationPolicyUnion policy = OAuthUtils.resolvePolicy(definition.workflow(), auth);
     return policy == null
         ? Optional.empty()
         : buildFromPolicy(definition.application(), definition.workflow(), policy, method);
-  }
-
-  public static AuthenticationPolicyUnion resolvePolicy(
-      Workflow workflow, ReferenceableAuthenticationPolicy auth) {
-    if (workflow == null) {
-      throw new IllegalArgumentException(
-          "workflow must not be null when resolving an authentication policy reference");
-    }
-    if (auth == null) {
-      return null;
-    }
-    if (auth.getAuthenticationPolicyReference() != null) {
-      String use = auth.getAuthenticationPolicyReference().getUse();
-      Use useInfo = workflow.getUse();
-      if (useInfo == null) {
-        return null;
-      }
-      UseAuthentications authInfo = useInfo.getAuthentications();
-      return authInfo == null ? null : authInfo.getAdditionalProperties().get(use);
-    }
-    return auth.getAuthenticationPolicy();
   }
 
   private Optional<AuthProvider> buildFromPolicy(
@@ -91,10 +68,10 @@ public class DefaultAuthProviderFactory implements AuthProviderFactory {
           new DigestAuthProvider(
               app, workflow, authenticationPolicy.getDigestAuthenticationPolicy(), method));
     }
-    return OAuthPolicyData.from(authenticationPolicy)
+    return OAuthUtils.from(authenticationPolicy)
         .map(
             policyData ->
-                policyData.scheme() == OAuthPolicyData.OAuthScheme.OPENID_CONNECT
+                policyData.scheme() == OAuthUtils.OAuthScheme.OPENID_CONNECT
                     ? new OpenIdAuthProvider(app, workflow, policyData)
                     : new OAuth2AuthProvider(app, workflow, policyData));
   }

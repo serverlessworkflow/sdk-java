@@ -21,39 +21,68 @@ import io.serverlessworkflow.api.types.OAuth2AuthenticationPolicy;
 import io.serverlessworkflow.api.types.OAuth2AuthenticationPolicyConfiguration;
 import io.serverlessworkflow.api.types.OpenIdConnectAuthenticationPolicy;
 import io.serverlessworkflow.api.types.OpenIdConnectAuthenticationPolicyConfiguration;
+import io.serverlessworkflow.api.types.ReferenceableAuthenticationPolicy;
 import io.serverlessworkflow.api.types.SecretBasedAuthenticationPolicy;
+import io.serverlessworkflow.api.types.Use;
+import io.serverlessworkflow.api.types.UseAuthentications;
+import io.serverlessworkflow.api.types.Workflow;
 import java.util.Optional;
 
-public record OAuthPolicyData(
-    OAuth2AuthenticationData data, SecretBasedAuthenticationPolicy secret, OAuthScheme scheme) {
+public class OAuthUtils {
+
+  private OAuthUtils() {}
 
   public enum OAuthScheme {
     OAUTH2,
     OPENID_CONNECT
   }
 
+  public record OAuthPolicyData(
+      OAuth2AuthenticationData data, SecretBasedAuthenticationPolicy secret, OAuthScheme scheme) {}
+
   public static Optional<OAuthPolicyData> from(AuthenticationPolicyUnion policy) {
     if (policy == null) {
       return Optional.empty();
     }
     OAuth2AuthenticationPolicy oauth2 = policy.getOAuth2AuthenticationPolicy();
-    if (oauth2 != null && oauth2.getOauth2() != null) {
+    if (oauth2 != null) {
       OAuth2AuthenticationPolicyConfiguration config = oauth2.getOauth2();
-      return Optional.of(
-          new OAuthPolicyData(
-              config.getOAuth2ConnectAuthenticationProperties(),
-              config.getOAuth2AuthenticationPolicySecret(),
-              OAuthScheme.OAUTH2));
+      if (config != null) {
+        return Optional.of(
+            new OAuthPolicyData(
+                config.getOAuth2ConnectAuthenticationProperties(),
+                config.getOAuth2AuthenticationPolicySecret(),
+                OAuthScheme.OAUTH2));
+      }
     }
     OpenIdConnectAuthenticationPolicy oidc = policy.getOpenIdConnectAuthenticationPolicy();
-    if (oidc != null && oidc.getOidc() != null) {
+    if (oidc != null) {
       OpenIdConnectAuthenticationPolicyConfiguration config = oidc.getOidc();
-      return Optional.of(
-          new OAuthPolicyData(
-              config.getOpenIdConnectAuthenticationProperties(),
-              config.getOpenIdConnectAuthenticationPolicySecret(),
-              OAuthScheme.OPENID_CONNECT));
+      if (config != null) {
+        return Optional.of(
+            new OAuthPolicyData(
+                config.getOpenIdConnectAuthenticationProperties(),
+                config.getOpenIdConnectAuthenticationPolicySecret(),
+                OAuthScheme.OPENID_CONNECT));
+      }
     }
     return Optional.empty();
+  }
+
+  public static AuthenticationPolicyUnion resolvePolicy(
+      Workflow workflow, ReferenceableAuthenticationPolicy auth) {
+    if (auth == null) {
+      return null;
+    }
+    if (auth.getAuthenticationPolicyReference() != null) {
+      String use = auth.getAuthenticationPolicyReference().getUse();
+      Use useInfo = workflow.getUse();
+      if (useInfo == null) {
+        return null;
+      }
+      UseAuthentications authInfo = useInfo.getAuthentications();
+      return authInfo == null ? null : authInfo.getAdditionalProperties().get(use);
+    }
+    return auth.getAuthenticationPolicy();
   }
 }

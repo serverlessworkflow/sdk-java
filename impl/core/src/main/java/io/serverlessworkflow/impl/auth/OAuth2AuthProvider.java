@@ -21,7 +21,7 @@ import io.serverlessworkflow.impl.WorkflowApplication;
 class OAuth2AuthProvider extends CommonOAuthProvider {
 
   public OAuth2AuthProvider(
-      WorkflowApplication application, Workflow workflow, OAuthPolicyData policyData) {
+      WorkflowApplication application, Workflow workflow, OAuthUtils.OAuthPolicyData policyData) {
     super(
         accessToken(
             workflow,
