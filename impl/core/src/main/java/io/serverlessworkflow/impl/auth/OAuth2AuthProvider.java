@@ -15,19 +15,18 @@
  */
 package io.serverlessworkflow.impl.auth;
 
-import io.serverlessworkflow.api.types.OAuth2AuthenticationPolicy;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.WorkflowApplication;
 
 class OAuth2AuthProvider extends CommonOAuthProvider {
 
   public OAuth2AuthProvider(
-      WorkflowApplication application, Workflow workflow, OAuth2AuthenticationPolicy authPolicy) {
+      WorkflowApplication application, Workflow workflow, OAuthPolicyData policyData) {
     super(
         accessToken(
             workflow,
-            authPolicy.getOauth2().getOAuth2ConnectAuthenticationProperties(),
-            authPolicy.getOauth2().getOAuth2AuthenticationPolicySecret(),
+            policyData.data(),
+            policyData.secret(),
             new OAuthRequestBuilder(application)));
   }
 }
