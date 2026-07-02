@@ -15,7 +15,10 @@
  */
 package io.serverlessworkflow.fluent.spec;
 
+import io.serverlessworkflow.api.types.OAuth2AuthenticationData;
 import io.serverlessworkflow.api.types.UseAuthentications;
+import io.serverlessworkflow.fluent.spec.OAuth2AuthenticationPolicyBuilder.OAuth2AuthenticationPropertiesEndpointsBuilder;
+import io.serverlessworkflow.fluent.spec.dsl.DSL;
 import java.util.function.Consumer;
 
 public class UseAuthenticationsBuilder {
@@ -33,6 +36,56 @@ public class UseAuthenticationsBuilder {
     authenticationConsumer.accept(builder);
     this.authentication.setAdditionalProperty(name, builder.build().getAuthenticationPolicy());
     return this;
+  }
+
+  public UseAuthenticationsBuilder basic(String name, String username, String password) {
+    return authentication(name, DSL.basic(username, password));
+  }
+
+  public UseAuthenticationsBuilder bearer(String name, String token) {
+    return authentication(name, DSL.bearer(token));
+  }
+
+  public UseAuthenticationsBuilder digest(String name, String username, String password) {
+    return authentication(name, DSL.digest(username, password));
+  }
+
+  public UseAuthenticationsBuilder oidc(
+      String name, String authority, OAuth2AuthenticationData.OAuth2AuthenticationDataGrant grant) {
+    return authentication(name, DSL.oidc(authority, grant));
+  }
+
+  public UseAuthenticationsBuilder oidc(
+      String name,
+      String authority,
+      OAuth2AuthenticationData.OAuth2AuthenticationDataGrant grant,
+      String clientId,
+      String clientSecret) {
+    return authentication(name, DSL.oidc(authority, grant, clientId, clientSecret));
+  }
+
+  public UseAuthenticationsBuilder oauth2(
+      String name,
+      String authority,
+      OAuth2AuthenticationData.OAuth2AuthenticationDataGrant grant,
+      String clientId,
+      String clientSecret) {
+    return oidc(name, authority, grant, clientId, clientSecret);
+  }
+
+  public UseAuthenticationsBuilder oauth2(
+      String name,
+      String authority,
+      OAuth2AuthenticationData.OAuth2AuthenticationDataGrant grant,
+      String clientId,
+      String clientSecret,
+      Consumer<OAuth2AuthenticationPropertiesEndpointsBuilder> endpoints) {
+    return authentication(name, DSL.oauth2(authority, grant, clientId, clientSecret, endpoints));
+  }
+
+  public UseAuthenticationsBuilder oauth2(
+      String name, Consumer<OAuth2AuthenticationPolicyBuilder> configurer) {
+    return authentication(name, a -> a.oauth2(configurer));
   }
 
   public UseAuthentications build() {
