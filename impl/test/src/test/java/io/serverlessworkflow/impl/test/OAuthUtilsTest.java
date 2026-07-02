@@ -28,9 +28,9 @@ import io.serverlessworkflow.api.types.OAuth2ConnectAuthenticationProperties;
 import io.serverlessworkflow.api.types.OpenIdConnectAuthenticationPolicy;
 import io.serverlessworkflow.api.types.OpenIdConnectAuthenticationPolicyConfiguration;
 import io.serverlessworkflow.api.types.SecretBasedAuthenticationPolicy;
+import io.serverlessworkflow.impl.auth.OAuthPolicyData;
 import io.serverlessworkflow.impl.auth.OAuthScheme;
 import io.serverlessworkflow.impl.auth.OAuthUtils;
-import io.serverlessworkflow.impl.auth.OAuthUtils.OAuthPolicyData;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 

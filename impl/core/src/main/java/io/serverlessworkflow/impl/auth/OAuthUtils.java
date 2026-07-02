@@ -16,13 +16,11 @@
 package io.serverlessworkflow.impl.auth;
 
 import io.serverlessworkflow.api.types.AuthenticationPolicyUnion;
-import io.serverlessworkflow.api.types.OAuth2AuthenticationData;
 import io.serverlessworkflow.api.types.OAuth2AuthenticationPolicy;
 import io.serverlessworkflow.api.types.OAuth2AuthenticationPolicyConfiguration;
 import io.serverlessworkflow.api.types.OpenIdConnectAuthenticationPolicy;
 import io.serverlessworkflow.api.types.OpenIdConnectAuthenticationPolicyConfiguration;
 import io.serverlessworkflow.api.types.ReferenceableAuthenticationPolicy;
-import io.serverlessworkflow.api.types.SecretBasedAuthenticationPolicy;
 import io.serverlessworkflow.api.types.Use;
 import io.serverlessworkflow.api.types.Workflow;
 import java.util.Optional;
@@ -30,9 +28,6 @@ import java.util.Optional;
 public class OAuthUtils {
 
   private OAuthUtils() {}
-
-  public record OAuthPolicyData(
-      OAuth2AuthenticationData data, SecretBasedAuthenticationPolicy secret, OAuthScheme scheme) {}
 
   public static Optional<OAuthPolicyData> from(AuthenticationPolicyUnion policy) {
     if (policy == null) {
