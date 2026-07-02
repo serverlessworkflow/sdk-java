@@ -52,7 +52,7 @@ public class UseAuthenticationsBuilder {
 
   public UseAuthenticationsBuilder oidc(
       String name, String authority, OAuth2AuthenticationData.OAuth2AuthenticationDataGrant grant) {
-    return authentication(name, a -> a.openIDConnect(o -> o.authority(authority).grant(grant)));
+    return authentication(name, DSL.oidc(authority, grant));
   }
 
   public UseAuthenticationsBuilder oidc(
@@ -61,14 +61,7 @@ public class UseAuthenticationsBuilder {
       OAuth2AuthenticationData.OAuth2AuthenticationDataGrant grant,
       String clientId,
       String clientSecret) {
-    return authentication(
-        name,
-        a ->
-            a.openIDConnect(
-                o ->
-                    o.authority(authority)
-                        .grant(grant)
-                        .client(c -> c.id(clientId).secret(clientSecret))));
+    return authentication(name, DSL.oidc(authority, grant, clientId, clientSecret));
   }
 
   public UseAuthenticationsBuilder oauth2(
@@ -87,16 +80,7 @@ public class UseAuthenticationsBuilder {
       String clientId,
       String clientSecret,
       Consumer<OAuth2AuthenticationPropertiesEndpointsBuilder> endpoints) {
-    return authentication(
-        name,
-        a ->
-            a.oauth2(
-                o -> {
-                  o.authority(authority)
-                      .grant(grant)
-                      .client(c -> c.id(clientId).secret(clientSecret));
-                  o.endpoints(endpoints);
-                }));
+    return authentication(name, DSL.oauth2(authority, grant, clientId, clientSecret, endpoints));
   }
 
   public UseAuthenticationsBuilder oauth2(
