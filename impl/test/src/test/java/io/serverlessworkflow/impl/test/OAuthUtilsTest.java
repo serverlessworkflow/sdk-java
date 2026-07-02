@@ -28,6 +28,7 @@ import io.serverlessworkflow.api.types.OAuth2ConnectAuthenticationProperties;
 import io.serverlessworkflow.api.types.OpenIdConnectAuthenticationPolicy;
 import io.serverlessworkflow.api.types.OpenIdConnectAuthenticationPolicyConfiguration;
 import io.serverlessworkflow.api.types.SecretBasedAuthenticationPolicy;
+import io.serverlessworkflow.impl.auth.OAuthScheme;
 import io.serverlessworkflow.impl.auth.OAuthUtils;
 import io.serverlessworkflow.impl.auth.OAuthUtils.OAuthPolicyData;
 import java.util.Optional;
@@ -61,7 +62,7 @@ public class OAuthUtilsTest {
     Optional<OAuthPolicyData> result = OAuthUtils.from(union);
     assertTrue(result.isPresent());
     OAuthPolicyData data = result.get();
-    assertEquals(OAuthUtils.OAuthScheme.OAUTH2, data.scheme());
+    assertEquals(OAuthScheme.OAUTH2, data.scheme());
     assertEquals(props, data.data());
     assertNull(data.secret());
   }
@@ -79,7 +80,7 @@ public class OAuthUtilsTest {
     Optional<OAuthPolicyData> result = OAuthUtils.from(union);
     assertTrue(result.isPresent());
     OAuthPolicyData data = result.get();
-    assertEquals(OAuthUtils.OAuthScheme.OAUTH2, data.scheme());
+    assertEquals(OAuthScheme.OAUTH2, data.scheme());
     assertNull(data.data());
     assertEquals(secret, data.secret());
   }
@@ -97,7 +98,7 @@ public class OAuthUtilsTest {
     Optional<OAuthPolicyData> result = OAuthUtils.from(union);
     assertTrue(result.isPresent());
     OAuthPolicyData data = result.get();
-    assertEquals(OAuthUtils.OAuthScheme.OPENID_CONNECT, data.scheme());
+    assertEquals(OAuthScheme.OPENID_CONNECT, data.scheme());
     assertEquals(oidcData, data.data());
     assertNull(data.secret());
   }
@@ -115,7 +116,7 @@ public class OAuthUtilsTest {
     Optional<OAuthPolicyData> result = OAuthUtils.from(union);
     assertTrue(result.isPresent());
     OAuthPolicyData data = result.get();
-    assertEquals(OAuthUtils.OAuthScheme.OPENID_CONNECT, data.scheme());
+    assertEquals(OAuthScheme.OPENID_CONNECT, data.scheme());
     assertNull(data.data());
     assertEquals(secret, data.secret());
   }

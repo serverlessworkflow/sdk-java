@@ -24,18 +24,12 @@ import io.serverlessworkflow.api.types.OpenIdConnectAuthenticationPolicyConfigur
 import io.serverlessworkflow.api.types.ReferenceableAuthenticationPolicy;
 import io.serverlessworkflow.api.types.SecretBasedAuthenticationPolicy;
 import io.serverlessworkflow.api.types.Use;
-import io.serverlessworkflow.api.types.UseAuthentications;
 import io.serverlessworkflow.api.types.Workflow;
 import java.util.Optional;
 
 public class OAuthUtils {
 
   private OAuthUtils() {}
-
-  public enum OAuthScheme {
-    OAUTH2,
-    OPENID_CONNECT
-  }
 
   public record OAuthPolicyData(
       OAuth2AuthenticationData data, SecretBasedAuthenticationPolicy secret, OAuthScheme scheme) {}
@@ -69,20 +63,17 @@ public class OAuthUtils {
     return Optional.empty();
   }
 
-  public static AuthenticationPolicyUnion resolvePolicy(
+  public static Optional<AuthenticationPolicyUnion> resolvePolicy(
       Workflow workflow, ReferenceableAuthenticationPolicy auth) {
     if (auth == null) {
-      return null;
+      return Optional.empty();
     }
     if (auth.getAuthenticationPolicyReference() != null) {
       String use = auth.getAuthenticationPolicyReference().getUse();
-      Use useInfo = workflow.getUse();
-      if (useInfo == null) {
-        return null;
-      }
-      UseAuthentications authInfo = useInfo.getAuthentications();
-      return authInfo == null ? null : authInfo.getAdditionalProperties().get(use);
+      return Optional.ofNullable(workflow.getUse())
+          .map(Use::getAuthentications)
+          .map(a -> a.getAdditionalProperties().get(use));
     }
-    return auth.getAuthenticationPolicy();
+    return Optional.ofNullable(auth.getAuthenticationPolicy());
   }
 }

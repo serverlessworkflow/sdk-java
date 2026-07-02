@@ -44,10 +44,10 @@ public class DefaultAuthProviderFactory implements AuthProviderFactory {
   @Override
   public Optional<AuthProvider> getAuth(
       WorkflowDefinition definition, ReferenceableAuthenticationPolicy auth, String method) {
-    AuthenticationPolicyUnion policy = OAuthUtils.resolvePolicy(definition.workflow(), auth);
-    return policy == null
-        ? Optional.empty()
-        : buildFromPolicy(definition.application(), definition.workflow(), policy, method);
+    return OAuthUtils.resolvePolicy(definition.workflow(), auth)
+        .flatMap(
+            policy ->
+                buildFromPolicy(definition.application(), definition.workflow(), policy, method));
   }
 
   private Optional<AuthProvider> buildFromPolicy(
@@ -71,7 +71,7 @@ public class DefaultAuthProviderFactory implements AuthProviderFactory {
     return OAuthUtils.from(authenticationPolicy)
         .map(
             policyData ->
-                policyData.scheme() == OAuthUtils.OAuthScheme.OPENID_CONNECT
+                policyData.scheme() == OAuthScheme.OPENID_CONNECT
                     ? new OpenIdAuthProvider(app, workflow, policyData)
                     : new OAuth2AuthProvider(app, workflow, policyData));
   }

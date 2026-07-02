@@ -16,7 +16,7 @@
 package io.serverlessworkflow.impl.test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.serverlessworkflow.api.types.AuthenticationPolicyReference;
 import io.serverlessworkflow.api.types.AuthenticationPolicyUnion;
@@ -28,6 +28,7 @@ import io.serverlessworkflow.api.types.Use;
 import io.serverlessworkflow.api.types.UseAuthentications;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.impl.auth.OAuthUtils;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 public class ResolvePolicyTest {
@@ -42,14 +43,14 @@ public class ResolvePolicyTest {
 
   @Test
   void nullAuthReturnsNull() {
-    assertNull(OAuthUtils.resolvePolicy(new Workflow(), null));
+    assertTrue(OAuthUtils.resolvePolicy(new Workflow(), null).isEmpty());
   }
 
   @Test
   void inlinePolicyReturnsPolicyDirectly() {
     ReferenceableAuthenticationPolicy auth =
         new ReferenceableAuthenticationPolicy().withAuthenticationPolicy(BEARER_POLICY);
-    assertEquals(BEARER_POLICY, OAuthUtils.resolvePolicy(new Workflow(), auth));
+    assertEquals(Optional.of(BEARER_POLICY), OAuthUtils.resolvePolicy(new Workflow(), auth));
   }
 
   @Test
@@ -63,28 +64,28 @@ public class ResolvePolicyTest {
     ReferenceableAuthenticationPolicy auth =
         new ReferenceableAuthenticationPolicy()
             .withAuthenticationPolicyReference(new AuthenticationPolicyReference("myAuth"));
-    assertEquals(BEARER_POLICY, OAuthUtils.resolvePolicy(workflow, auth));
+    assertEquals(Optional.of(BEARER_POLICY), OAuthUtils.resolvePolicy(workflow, auth));
   }
 
   @Test
-  void referenceWithNullUseReturnsNull() {
+  void referenceWithNullUseReturnsEmpty() {
     ReferenceableAuthenticationPolicy auth =
         new ReferenceableAuthenticationPolicy()
             .withAuthenticationPolicyReference(new AuthenticationPolicyReference("myAuth"));
-    assertNull(OAuthUtils.resolvePolicy(new Workflow(), auth));
+    assertTrue(OAuthUtils.resolvePolicy(new Workflow(), auth).isEmpty());
   }
 
   @Test
-  void referenceWithNullAuthenticationsReturnsNull() {
+  void referenceWithNullAuthenticationsReturnsEmpty() {
     Workflow workflow = new Workflow().withUse(new Use());
     ReferenceableAuthenticationPolicy auth =
         new ReferenceableAuthenticationPolicy()
             .withAuthenticationPolicyReference(new AuthenticationPolicyReference("myAuth"));
-    assertNull(OAuthUtils.resolvePolicy(workflow, auth));
+    assertTrue(OAuthUtils.resolvePolicy(workflow, auth).isEmpty());
   }
 
   @Test
-  void referenceToNonExistentKeyReturnsNull() {
+  void referenceToNonExistentKeyReturnsEmpty() {
     Workflow workflow =
         new Workflow()
             .withUse(
@@ -95,6 +96,6 @@ public class ResolvePolicyTest {
     ReferenceableAuthenticationPolicy auth =
         new ReferenceableAuthenticationPolicy()
             .withAuthenticationPolicyReference(new AuthenticationPolicyReference("myAuth"));
-    assertNull(OAuthUtils.resolvePolicy(workflow, auth));
+    assertTrue(OAuthUtils.resolvePolicy(workflow, auth).isEmpty());
   }
 }
