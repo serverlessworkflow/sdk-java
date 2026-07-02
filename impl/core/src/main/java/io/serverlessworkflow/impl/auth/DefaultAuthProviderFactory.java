@@ -54,6 +54,10 @@ public class DefaultAuthProviderFactory implements AuthProviderFactory {
 
   public static AuthenticationPolicyUnion resolvePolicy(
       Workflow workflow, ReferenceableAuthenticationPolicy auth) {
+    if (workflow == null) {
+      throw new IllegalArgumentException(
+          "workflow must not be null when resolving an authentication policy reference");
+    }
     if (auth == null) {
       return null;
     }

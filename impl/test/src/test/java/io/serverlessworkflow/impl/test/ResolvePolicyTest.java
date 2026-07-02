@@ -17,6 +17,7 @@ package io.serverlessworkflow.impl.test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import io.serverlessworkflow.api.types.AuthenticationPolicyReference;
 import io.serverlessworkflow.api.types.AuthenticationPolicyUnion;
@@ -64,6 +65,15 @@ public class ResolvePolicyTest {
         new ReferenceableAuthenticationPolicy()
             .withAuthenticationPolicyReference(new AuthenticationPolicyReference("myAuth"));
     assertEquals(BEARER_POLICY, DefaultAuthProviderFactory.resolvePolicy(workflow, auth));
+  }
+
+  @Test
+  void referenceWithNullWorkflowThrows() {
+    ReferenceableAuthenticationPolicy auth =
+        new ReferenceableAuthenticationPolicy()
+            .withAuthenticationPolicyReference(new AuthenticationPolicyReference("myAuth"));
+    assertThrows(
+        IllegalArgumentException.class, () -> DefaultAuthProviderFactory.resolvePolicy(null, auth));
   }
 
   @Test
