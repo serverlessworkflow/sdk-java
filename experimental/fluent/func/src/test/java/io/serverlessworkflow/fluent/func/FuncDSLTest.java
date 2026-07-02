@@ -20,6 +20,7 @@ import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.consume;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.emit;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.function;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.get;
+import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.grpc;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.http;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.listen;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.produced;
@@ -31,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
+import io.serverlessworkflow.api.types.CallGRPC;
 import io.serverlessworkflow.api.types.CallHTTP;
 import io.serverlessworkflow.api.types.Export;
 import io.serverlessworkflow.api.types.FlowDirectiveEnum;
@@ -611,5 +613,59 @@ class FuncDSLTest {
     assertEquals("child-workflow", runWorkflow.getWorkflow().getName());
     assertEquals("2.0.0", runWorkflow.getWorkflow().getVersion());
     assertEquals(true, runWorkflow.isAwait(), "Await should be true");
+  }
+
+  @Test
+  @DisplayName("grpc(name).proto().service().method().argument() builds CallGRPC task")
+  void grpc_step_builds_call_grpc_task() {
+    Workflow wf =
+        FuncWorkflowBuilder.workflow("grpc-dsl-test")
+            .tasks(
+                call(
+                    "greet",
+                    grpc("greet")
+                        .proto("proto/greeter.proto")
+                        .service("Greeter", "localhost")
+                        .method("SayHello")
+                        .argument("name", "World")))
+            .build();
+
+    List<TaskItem> items = wf.getDo();
+    assertEquals(1, items.size());
+    assertEquals("greet", items.get(0).getName());
+
+    Task t = items.get(0).getTask();
+    assertNotNull(t.getCallTask(), "CallTask expected for gRPC call");
+    assertInstanceOf(CallGRPC.class, t.getCallTask().get(), "Should be CallGRPC");
+
+    CallGRPC grpcArgs = (CallGRPC) t.getCallTask().get();
+    assertNotNull(grpcArgs.getWith().getProto(), "Proto should be set");
+    assertEquals("Greeter", grpcArgs.getWith().getService().getName());
+    assertEquals("localhost", grpcArgs.getWith().getService().getHost());
+    assertEquals("SayHello", grpcArgs.getWith().getMethod());
+    assertEquals("World", grpcArgs.getWith().getArguments().getAdditionalProperties().get("name"));
+  }
+
+  @Test
+  @DisplayName("call(grpc().proto().service().method().argument(...)) unnamed gRPC task")
+  void grpc_unnamed_call_builds_task() {
+    Workflow wf =
+        FuncWorkflowBuilder.workflow("grpc-dsl-unnamed")
+            .tasks(
+                call(
+                    grpc()
+                        .proto("proto/svc.proto")
+                        .service("Svc", "host")
+                        .method("Call")
+                        .arguments(Map.of("k", "v"))))
+            .build();
+
+    List<TaskItem> items = wf.getDo();
+    assertEquals(1, items.size());
+
+    Task t = items.get(0).getTask();
+    assertNotNull(t.getCallTask());
+    assertInstanceOf(CallGRPC.class, t.getCallTask().get());
+    assertEquals("Call", ((CallGRPC) t.getCallTask().get()).getWith().getMethod());
   }
 }

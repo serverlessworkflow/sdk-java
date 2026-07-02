@@ -18,6 +18,7 @@ package io.serverlessworkflow.fluent.spec;
 import io.serverlessworkflow.api.types.CallTask;
 import io.serverlessworkflow.api.types.Task;
 import io.serverlessworkflow.api.types.TaskItem;
+import io.serverlessworkflow.fluent.spec.configurers.CallGrpcConfigurer;
 import io.serverlessworkflow.fluent.spec.spi.DoFluent;
 import java.util.List;
 import java.util.function.Consumer;
@@ -166,6 +167,11 @@ public class TaskItemListBuilder extends BaseTaskItemListBuilder<TaskItemListBui
     task.setCallTask(callTask);
 
     return addTaskItem(new TaskItem(name, task));
+  }
+
+  public TaskItemListBuilder grpc(String name, CallGrpcConfigurer configurer) {
+    Consumer<CallGrpcTaskBuilder> consumer = configurer;
+    return grpc(name, consumer);
   }
 
   @Override

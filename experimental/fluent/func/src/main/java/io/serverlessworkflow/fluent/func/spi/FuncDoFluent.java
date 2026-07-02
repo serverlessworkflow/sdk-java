@@ -15,6 +15,7 @@
  */
 package io.serverlessworkflow.fluent.func.spi;
 
+import io.serverlessworkflow.fluent.func.FuncCallGrpcTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncCallHttpTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncCallOpenAPITaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncCallTaskBuilder;
@@ -52,6 +53,7 @@ public interface FuncDoFluent<SELF extends FuncDoFluent<SELF>>
         CallFnFluent<FuncCallTaskBuilder, SELF>,
         CallHttpFluent<FuncCallHttpTaskBuilder, SELF>,
         CallOpenAPIFluent<FuncCallOpenAPITaskBuilder, SELF>,
+        CallGrpcFluent<FuncCallGrpcTaskBuilder, SELF>,
         WorkflowFluent<WorkflowTaskBuilder, SELF> {
 
   default SELF subflow(String name, Consumer<WorkflowTaskBuilder> itemsConfigurer) {

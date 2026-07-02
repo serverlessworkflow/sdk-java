@@ -15,31 +15,42 @@
  */
 package io.serverlessworkflow.impl.test.grpc;
 
+import static io.serverlessworkflow.api.WorkflowReader.readWorkflowFromClasspath;
+import static io.serverlessworkflow.fluent.spec.dsl.DSL.*;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.serverlessworkflow.api.WorkflowReader;
 import io.serverlessworkflow.api.types.Workflow;
+import io.serverlessworkflow.fluent.spec.WorkflowBuilder;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowDefinition;
+import io.serverlessworkflow.impl.WorkflowDefinitionId;
 import io.serverlessworkflow.impl.test.grpc.handlers.ContributorClientStreamingHandler;
 import io.serverlessworkflow.impl.test.junit.DisabledIfProtocUnavailable;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 @DisabledIfProtocUnavailable
 public class GrpcClientStreamingTest {
 
   private static final int PORT_FOR_EXAMPLES = 5011;
-  private static WorkflowApplication app;
-  private static Server server;
+  private WorkflowApplication app;
+  private Server server;
 
-  @BeforeAll
-  static void setUpApp() throws IOException {
+  @BeforeEach
+  void setUp() throws IOException {
     server =
         ServerBuilder.forPort(PORT_FOR_EXAMPLES)
             .addService(new ContributorClientStreamingHandler())
@@ -50,8 +61,14 @@ public class GrpcClientStreamingTest {
   }
 
   @AfterEach
-  void cleanup() throws InterruptedException {
-    server.shutdown().awaitTermination();
+  void tearDown() throws InterruptedException {
+    if (server != null) {
+      server.shutdownNow();
+      server.awaitTermination(10, TimeUnit.SECONDS);
+    }
+    if (app != null) {
+      app.close();
+    }
   }
 
   @Test
@@ -69,5 +86,38 @@ public class GrpcClientStreamingTest {
             .toList();
 
     Assertions.assertThat(list).isNotEmpty();
+  }
+
+  @ParameterizedTest(name = "{0}")
+  @MethodSource("contributorsClientStreamSources")
+  void testContributorsClientStreamDsl(String sourceName, Workflow workflow) {
+    List<Map<String, Object>> list =
+        app.workflowDefinition(workflow).instance(Map.of()).start().join().asCollection().stream()
+            .map(m -> m.asMap().orElseThrow())
+            .toList();
+
+    assertThat(list).isNotEmpty();
+  }
+
+  private static Stream<Arguments> contributorsClientStreamSources() throws IOException {
+    return Stream.of(
+            readWorkflowFromClasspath(
+                "workflows-samples/grpc/contributors-client-stream-call.yaml"),
+            contributorsClientStreamWorkflow())
+        .map(w -> Arguments.of(WorkflowDefinitionId.of(w).toString(), w));
+  }
+
+  private static Workflow contributorsClientStreamWorkflow() {
+    return WorkflowBuilder.workflow("grpc-example", "test", "0.1.0")
+        .tasks(
+            doTasks(
+                call(
+                    "greet",
+                    grpc()
+                        .proto("workflows-samples/grpc/proto/contributors.proto")
+                        .service("ClientStreaming", "localhost", PORT_FOR_EXAMPLES)
+                        .method("CreateContributor")
+                        .argument("github", "dependabot[bot]"))))
+        .build();
   }
 }
