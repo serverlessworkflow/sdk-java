@@ -16,7 +16,7 @@
 package io.serverlessworkflow.impl;
 
 import com.github.f4b6a3.ulid.UlidFactory;
-import java.util.random.RandomGenerator;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * A {@link WorkflowInstanceIdFactory} implementation that generates Monotonic ULIDs as workflow
@@ -27,10 +27,10 @@ public class MonotonicUlidWorkflowInstanceIdFactory implements WorkflowInstanceI
   private final UlidFactory factory;
 
   public MonotonicUlidWorkflowInstanceIdFactory() {
-    final RandomGenerator random = RandomGenerator.getDefault();
-    factory = UlidFactory.newMonotonicInstance(() -> random.nextLong());
+    factory = UlidFactory.newMonotonicInstance(() -> ThreadLocalRandom.current().nextLong());
   }
 
+  @Override
   public String get() {
     return factory.create().toString();
   }
