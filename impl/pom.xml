@@ -10,7 +10,7 @@
     <packaging>pom</packaging>
     <properties>
         <version.com.h2database>2.4.240</version.com.h2database>
-        <version.de.huxhorn.sulky>8.3.0</version.de.huxhorn.sulky>
+        <version.com.github.f4b6a3>5.2.4</version.com.github.f4b6a3>
         <version.jakarta.ws.rs>4.0.0</version.jakarta.ws.rs>
         <version.net.thisptr>1.6.2</version.net.thisptr>
         <version.org.glassfish.jersey>4.0.2</version.org.glassfish.jersey>
@@ -136,9 +136,9 @@
                 <version>${version.net.thisptr}</version>
             </dependency>
             <dependency>
-                <groupId>de.huxhorn.sulky</groupId>
-                <artifactId>de.huxhorn.sulky.ulid</artifactId>
-                <version>${version.de.huxhorn.sulky}</version>
+                <groupId>com.github.f4b6a3</groupId>
+                <artifactId>ulid-creator</artifactId>
+                <version>${version.com.github.f4b6a3}</version>
             </dependency>
             <dependency>
               <groupId>jakarta.ws.rs</groupId>
