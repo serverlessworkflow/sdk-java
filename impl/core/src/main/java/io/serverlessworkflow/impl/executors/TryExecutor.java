@@ -20,7 +20,6 @@ import io.serverlessworkflow.api.types.ErrorFilter;
 import io.serverlessworkflow.api.types.Retry;
 import io.serverlessworkflow.api.types.RetryBackoff;
 import io.serverlessworkflow.api.types.RetryLimit;
-import io.serverlessworkflow.api.types.RetryLimitAttempt;
 import io.serverlessworkflow.api.types.RetryPolicy;
 import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.api.types.TryTask;
@@ -116,14 +115,10 @@ public class TryExecutor extends RegularTaskExecutor<TryTask> {
     }
 
     private static int resolveMaxAttempts(RetryLimit limit) {
-      if (limit == null) {
-        return Integer.MAX_VALUE;
+      if (limit == null || limit.getAttempt() == null) {
+        return 0;
       }
-      RetryLimitAttempt attempt = limit.getAttempt();
-      if (attempt == null) {
-        return Integer.MAX_VALUE;
-      }
-      return attempt.getCount();
+      return limit.getAttempt().getCount();
     }
 
     private RetryIntervalFunction buildIntervalFunction(RetryPolicy retryPolicy) {
