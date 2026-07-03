@@ -32,6 +32,9 @@ public abstract class AbstractRetryIntervalFunction implements RetryIntervalFunc
   private final Optional<WorkflowValueResolver<Duration>> maxJitteringResolver;
   private final WorkflowValueResolver<Duration> delayResolver;
 
+  private static final WorkflowValueResolver<Duration> ZERO_DURATION_RESOLVER =
+      (w, t, m) -> Duration.ZERO;
+
   public AbstractRetryIntervalFunction(
       WorkflowApplication appl, TimeoutAfter delay, RetryPolicyJitter jitter) {
     if (jitter != null) {
@@ -41,7 +44,8 @@ public abstract class AbstractRetryIntervalFunction implements RetryIntervalFunc
       minJitteringResolver = Optional.empty();
       maxJitteringResolver = Optional.empty();
     }
-    delayResolver = WorkflowUtils.fromTimeoutAfter(appl, delay);
+    delayResolver =
+        delay != null ? WorkflowUtils.fromTimeoutAfter(appl, delay) : ZERO_DURATION_RESOLVER;
   }
 
   @Override

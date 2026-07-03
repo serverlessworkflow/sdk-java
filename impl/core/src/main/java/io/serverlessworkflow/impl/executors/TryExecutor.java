@@ -19,6 +19,8 @@ import io.serverlessworkflow.api.types.CatchErrors;
 import io.serverlessworkflow.api.types.ErrorFilter;
 import io.serverlessworkflow.api.types.Retry;
 import io.serverlessworkflow.api.types.RetryBackoff;
+import io.serverlessworkflow.api.types.RetryLimit;
+import io.serverlessworkflow.api.types.RetryLimitAttempt;
 import io.serverlessworkflow.api.types.RetryPolicy;
 import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.api.types.TryTask;
@@ -107,15 +109,26 @@ public class TryExecutor extends RegularTaskExecutor<TryTask> {
 
     protected RetryExecutor buildRetryExecutor(RetryPolicy retryPolicy) {
       return new DefaultRetryExecutor(
-          retryPolicy.getLimit().getAttempt().getCount(),
+          resolveMaxAttempts(retryPolicy.getLimit()),
           buildIntervalFunction(retryPolicy),
           WorkflowUtils.optionalPredicate(application, retryPolicy.getWhen()),
           WorkflowUtils.optionalPredicate(application, retryPolicy.getExceptWhen()));
     }
 
+    private static int resolveMaxAttempts(RetryLimit limit) {
+      if (limit == null) {
+        return Integer.MAX_VALUE;
+      }
+      RetryLimitAttempt attempt = limit.getAttempt();
+      if (attempt == null) {
+        return Integer.MAX_VALUE;
+      }
+      return attempt.getCount();
+    }
+
     private RetryIntervalFunction buildIntervalFunction(RetryPolicy retryPolicy) {
       RetryBackoff backoff = retryPolicy.getBackoff();
-      if (backoff.getConstantBackoff() != null) {
+      if (backoff == null || backoff.getConstantBackoff() != null) {
         return new ConstantRetryIntervalFunction(
             application, retryPolicy.getDelay(), retryPolicy.getJitter());
       } else if (backoff.getLinearBackoff() != null) {
