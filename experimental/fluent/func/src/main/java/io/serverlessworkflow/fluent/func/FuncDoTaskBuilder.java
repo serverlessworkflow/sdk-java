@@ -105,6 +105,12 @@ public class FuncDoTaskBuilder extends BaseDoTaskBuilder<FuncDoTaskBuilder, Func
   }
 
   @Override
+  public FuncDoTaskBuilder grpc(String name, Consumer<FuncCallGrpcTaskBuilder> itemsConfigurer) {
+    this.listBuilder().grpc(name, itemsConfigurer);
+    return this;
+  }
+
+  @Override
   public FuncDoTaskBuilder workflow(String name, Consumer<WorkflowTaskBuilder> itemsConfigurer) {
     this.listBuilder().workflow(name, itemsConfigurer);
     return this;

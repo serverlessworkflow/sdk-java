@@ -33,6 +33,7 @@ import io.serverlessworkflow.fluent.func.FuncRaiseTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncSwitchTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncTaskItemListBuilder;
 import io.serverlessworkflow.fluent.func.FuncTryTaskBuilder;
+import io.serverlessworkflow.fluent.func.configurers.FuncCallGrpcConfigurer;
 import io.serverlessworkflow.fluent.func.configurers.FuncCallHttpConfigurer;
 import io.serverlessworkflow.fluent.func.configurers.FuncCallOpenAPIConfigurer;
 import io.serverlessworkflow.fluent.func.configurers.FuncTaskConfigurer;
@@ -1947,17 +1948,88 @@ public final class FuncDSL {
   }
 
   /**
+   * gRPC call using a fluent {@link FuncCallGrpcStep}.
+   *
+   * <p>This overload creates an unnamed gRPC call task.
+   *
+   * <pre>{@code
+   * tasks(FuncDSL.call(FuncDSL.grpc()
+   *     .proto("proto/greeter.proto")
+   *     .service("Greeter", "localhost")
+   *     .method("SayHello")
+   *     .argument("name", "World")));
+   * }</pre>
+   *
+   * @param spec fluent gRPC spec built via {@link #grpc()}
+   * @return a {@link FuncTaskConfigurer} that adds a gRPC call task
+   */
+  public static FuncTaskConfigurer call(FuncCallGrpcStep spec) {
+    return call(null, spec);
+  }
+
+  /**
+   * gRPC call using a fluent {@link FuncCallGrpcStep} with an explicit task name.
+   *
+   * <pre>{@code
+   * tasks(
+   * FuncDSL.call(
+   * "greet",
+   * FuncDSL.grpc()
+   *     .proto("proto/greeter.proto")
+   *     .service("Greeter", "localhost")
+   *     .method("SayHello")
+   *     .argument("name", "World"))
+   * );
+   * }</pre>
+   *
+   * @param name task name, or {@code null} for an anonymous task
+   * @param spec fluent gRPC spec built via {@link #grpc()}
+   * @return a {@link FuncTaskConfigurer} that adds a named gRPC call task
+   */
+  public static FuncTaskConfigurer call(String name, FuncCallGrpcStep spec) {
+    Objects.requireNonNull(spec, "spec");
+    spec.setName(name);
+    return spec;
+  }
+
+  /**
+   * Low-level gRPC call entrypoint using a {@link FuncCallGrpcConfigurer}.
+   *
+   * <p>This overload creates an unnamed gRPC call task.
+   *
+   * @param configurer configurer that mutates the underlying gRPC call builder
+   * @return a {@link FuncTaskConfigurer} that adds a gRPC call task
+   */
+  public static FuncTaskConfigurer call(FuncCallGrpcConfigurer configurer) {
+    return call(null, configurer);
+  }
+
+  /**
+   * Low-level gRPC call entrypoint using a {@link FuncCallGrpcConfigurer}.
+   *
+   * <p>This overload allows assigning an explicit task name.
+   *
+   * @param name task name, or {@code null} for an anonymous task
+   * @param configurer configurer that mutates the underlying gRPC call builder
+   * @return a {@link FuncTaskConfigurer} that adds a gRPC call task
+   */
+  public static FuncTaskConfigurer call(String name, FuncCallGrpcConfigurer configurer) {
+    Objects.requireNonNull(configurer, "configurer");
+    return list -> list.grpc(name, configurer);
+  }
+
+  /**
    * Create a new OpenAPI specification to be used with {@link #call(FuncCallOpenAPIStep)}.
    *
    * <p>Typical usage:
    *
    * <pre>{@code
-   * FuncDSL.call(openapi().document("https://petstore.swagger.io/v2/swagger.json", DSL.auth("openapi-auth")).operation("getPetById").parameter("id", 123));
+   * FuncDSL.call(
+   * openapi()
+   * .document("https://petstore.swagger.io/v2/swagger.json")
+   * .operation("getPetById"))
+   * );
    * }</pre>
-   *
-   * <p>The returned spec is a fluent builder that records operations (document, operation,
-   * parameters, authentication, etc.) and applies them to the underlying OpenAPI call task at build
-   * time.
    *
    * @return a new {@link FuncCallOpenAPIStep}
    */
@@ -1977,7 +2049,37 @@ public final class FuncDSL {
   }
 
   /**
-   * Create a new, empty HTTP specification to be used with {@link #call(FuncCallHttpStep)}.
+   * Create a new gRPC specification to be used with {@link #call(FuncCallGrpcStep)}.
+   *
+   * <p>Typical usage:
+   *
+   * <pre>{@code
+   * FuncDSL.call(
+   * grpc()
+   * .proto("proto/greeter.proto")
+   *          .service("Greeter", "localhost")
+   *          .method("SayHello")
+   *          .argument("name", "World"));
+   * }</pre>
+   *
+   * @return a new {@link FuncCallGrpcStep}
+   */
+  public static FuncCallGrpcStep grpc() {
+    return new FuncCallGrpcStep();
+  }
+
+  /**
+   * Named variant of {@link #grpc()}.
+   *
+   * @param name task name to be used when the spec is attached via {@link #call(FuncCallGrpcStep)}
+   * @return a new named {@link FuncCallGrpcStep}
+   */
+  public static FuncCallGrpcStep grpc(String name) {
+    return new FuncCallGrpcStep(name);
+  }
+
+  /**
+   * Create a new HTTP specification to be used with {@link #call(FuncCallHttpStep)}.
    *
    * <p>Typical usage:
    *

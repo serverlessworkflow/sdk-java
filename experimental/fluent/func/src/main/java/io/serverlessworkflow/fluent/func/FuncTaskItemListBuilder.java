@@ -15,6 +15,7 @@
  */
 package io.serverlessworkflow.fluent.func;
 
+import io.serverlessworkflow.api.types.CallGRPC;
 import io.serverlessworkflow.api.types.CallHTTP;
 import io.serverlessworkflow.api.types.CallOpenAPI;
 import io.serverlessworkflow.api.types.CallTask;
@@ -162,6 +163,23 @@ public class FuncTaskItemListBuilder extends BaseTaskItemListBuilder<FuncTaskIte
     final CallOpenAPI callOpenAPI = openAPITaskBuilder.build();
     final CallTask callTask = new CallTask();
     callTask.setCallOpenAPI(callOpenAPI);
+    final Task task = new Task();
+    task.setCallTask(callTask);
+
+    return this.addTaskItem(new TaskItem(name, task));
+  }
+
+  @Override
+  public FuncTaskItemListBuilder grpc(
+      String name, Consumer<FuncCallGrpcTaskBuilder> itemsConfigurer) {
+    name = this.defaultNameAndRequireConfig(name, itemsConfigurer, TYPE_GRPC);
+
+    final FuncCallGrpcTaskBuilder grpcTaskBuilder = new FuncCallGrpcTaskBuilder();
+    itemsConfigurer.accept(grpcTaskBuilder);
+
+    final CallGRPC callGRPC = grpcTaskBuilder.build();
+    final CallTask callTask = new CallTask();
+    callTask.setCallGRPC(callGRPC);
     final Task task = new Task();
     task.setCallTask(callTask);
 
