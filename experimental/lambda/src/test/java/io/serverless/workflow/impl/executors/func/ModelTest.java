@@ -20,6 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.serverlessworkflow.api.types.Document;
 import io.serverlessworkflow.api.types.DurationInline;
 import io.serverlessworkflow.api.types.Output;
+import io.serverlessworkflow.api.types.OutputAs;
 import io.serverlessworkflow.api.types.Set;
 import io.serverlessworkflow.api.types.SetTask;
 import io.serverlessworkflow.api.types.Task;
@@ -27,13 +28,15 @@ import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.api.types.TimeoutAfter;
 import io.serverlessworkflow.api.types.WaitTask;
 import io.serverlessworkflow.api.types.Workflow;
+import io.serverlessworkflow.api.types.func.ContextFunction;
+import io.serverlessworkflow.api.types.func.FilterFunction;
 import io.serverlessworkflow.api.types.func.MapSetTaskConfiguration;
-import io.serverlessworkflow.api.types.func.OutputAsFunction;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowInstance;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Function;
 import org.junit.jupiter.api.Test;
 
 class ModelTest {
@@ -59,7 +62,9 @@ class ModelTest {
               .withOutput(
                   new Output()
                       .withAs(
-                          new OutputAsFunction().withFunction(JavaFunctions::addJavieritoString)));
+                          new OutputAs()
+                              .withObject(
+                                  (Function<String, String>) JavaFunctions::addJavieritoString)));
 
       assertThat(
               app.workflowDefinition(workflow)
@@ -94,9 +99,10 @@ class ModelTest {
                                       .withOutput(
                                           new Output()
                                               .withAs(
-                                                  new OutputAsFunction()
-                                                      .withFunction(
-                                                          JavaFunctions::addJavierito)))))));
+                                                  new OutputAs()
+                                                      .withObject(
+                                                          (Function<Map, Map>)
+                                                              JavaFunctions::addJavierito)))))));
       assertThat(
               app.workflowDefinition(workflow)
                   .instance(Map.of())
@@ -129,7 +135,9 @@ class ModelTest {
                                                   new DurationInline().withMilliseconds(10)))))))
               .withOutput(
                   new Output()
-                      .withAs(new OutputAsFunction().withFunction(JavaFunctions::personPojo)));
+                      .withAs(
+                          new OutputAs()
+                              .withObject((Function<String, Person>) JavaFunctions::personPojo)));
 
       assertThat(
               app.workflowDefinition(workflow)
@@ -162,7 +170,10 @@ class ModelTest {
                                               .withDurationInline(
                                                   new DurationInline().withMilliseconds(10)))))))
               .withOutput(
-                  new Output().withAs(new OutputAsFunction().withFunction(JavaFunctions::getName)));
+                  new Output()
+                      .withAs(
+                          new OutputAs()
+                              .withObject((Function<Person, String>) JavaFunctions::getName)));
 
       assertThat(
               app.workflowDefinition(workflow)
@@ -195,7 +206,11 @@ class ModelTest {
                                                   new DurationInline().withMilliseconds(10)))))))
               .withOutput(
                   new Output()
-                      .withAs(new OutputAsFunction().withFunction(JavaFunctions::getContextName)));
+                      .withAs(
+                          new OutputAs()
+                              .withObject(
+                                  (ContextFunction<Person, String>)
+                                      JavaFunctions::getContextName)));
       WorkflowInstance instance =
           app.workflowDefinition(workflow).instance(new Person("Francisco", 33));
       assertThat(instance.start().get().asText().orElseThrow())
@@ -220,8 +235,10 @@ class ModelTest {
                                       .withOutput(
                                           new Output()
                                               .withAs(
-                                                  new OutputAsFunction()
-                                                      .withFunction(JavaFunctions::getFilterName)))
+                                                  new OutputAs()
+                                                      .withObject(
+                                                          (FilterFunction<Person, String>)
+                                                              JavaFunctions::getFilterName)))
                                       .withWait(
                                           new TimeoutAfter()
                                               .withDurationInline(

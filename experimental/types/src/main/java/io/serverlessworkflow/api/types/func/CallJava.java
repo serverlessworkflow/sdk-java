@@ -19,274 +19,111 @@ import io.serverlessworkflow.api.reflection.func.ReflectionUtils;
 import io.serverlessworkflow.api.types.CallFunction;
 import io.serverlessworkflow.api.types.FunctionArguments;
 import java.lang.invoke.MethodType;
-import java.lang.invoke.SerializedLambda;
-import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-public abstract class CallJava<T> extends CallFunction {
+public abstract class CallJava {
 
-  private static final long serialVersionUID = 1L;
+  private CallJava() {}
+
   public static final String JAVA_CALL_KEY = "Java";
   public static final String FUNCTION_NAME_KEY = "function";
-  private static final String VAR_NAME_KEY = "varName";
-  private static final String INDEX_NAME_KEY = "index";
+  public static final String INPUT_CLASS_KEY = "inputClass";
+  public static final String OUTPUT_CLASS_KEY = "outputClass";
+  public static final String VAR_NAME_KEY = "varName";
+  public static final String INDEX_NAME_KEY = "index";
 
-  private final Optional<Class<T>> inputClass;
-
-  protected CallJava(Optional<Class<T>> inputClass) {
-    super.setCall(JAVA_CALL_KEY);
-    this.inputClass = inputClass;
+  private static CallFunction buildFunction(
+      Object function, Optional<Class<?>> inputClass, Optional<Class<?>> outputClass) {
+    CallFunction result = new CallFunction();
+    result.setCall(JAVA_CALL_KEY);
+    result.withWith(
+        new FunctionArguments()
+            .withAdditionalProperty(FUNCTION_NAME_KEY, function)
+            .withAdditionalProperty(INPUT_CLASS_KEY, inputClass)
+            .withAdditionalProperty(OUTPUT_CLASS_KEY, outputClass));
+    return result;
   }
 
-  public Optional<Class<T>> inputClass() {
-    return inputClass;
+  public static <T> CallFunction consumer(Consumer<T> consumer) {
+    return buildFunction(
+        consumer,
+        ReflectionUtils.methodType(consumer).map(m -> m.parameterType(0)),
+        Optional.empty());
   }
 
-  public static <T> CallJava<T> consumer(Consumer<T> consumer) {
-    return new CallJavaConsumer<>(consumer, Optional.empty());
+  public static <T> CallFunction consumer(Consumer<T> consumer, Class<T> inputClass) {
+    return buildFunction(consumer, Optional.ofNullable(inputClass), Optional.empty());
   }
 
-  public static <T> CallJava<T> consumer(Consumer<T> consumer, Class<T> inputClass) {
-    return new CallJavaConsumer<>(consumer, Optional.ofNullable(inputClass));
+  public static <T, V> CallFunction function(Function<T, V> function) {
+    return buildFunction(function, Optional.empty(), Optional.empty());
   }
 
-  public static <T, V> CallJavaFunction<T, V> function(Function<T, V> function) {
-    return new CallJavaFunction<>(function, Optional.empty(), Optional.empty());
+  public static <T, V> CallFunction function(Function<T, V> function, Class<T> inputClass) {
+    return buildFunction(
+        function,
+        Optional.ofNullable(inputClass),
+        ReflectionUtils.methodType(function).map(MethodType::returnType));
   }
 
-  public static <T, V> CallJavaFunction<T, V> function(
-      Function<T, V> function, Class<T> inputClass) {
-    return new CallJavaFunction<>(function, Optional.ofNullable(inputClass), Optional.empty());
-  }
-
-  public static <T, V> CallJavaFunction<T, V> function(
+  public static <T, V> CallFunction function(
       Function<T, V> function, Class<T> inputClass, Class<V> outputClass) {
-    return new CallJavaFunction<>(
+    return buildFunction(
         function, Optional.ofNullable(inputClass), Optional.ofNullable(outputClass));
   }
 
-  public static <T, I, V> CallJava<T> loopFunction(
+  public static <T, I, V> CallFunction loopFunction(
       LoopFunctionIndex<T, I, V> function, String varName, String indexName) {
-    return new CallJavaLoopFunctionIndex<>(function, varName, indexName);
+    Optional<MethodType> methodType = ReflectionUtils.methodType(function);
+    CallFunction result =
+        buildFunction(
+            function,
+            methodType.map(m -> m.parameterType(0)),
+            methodType.map(MethodType::returnType));
+    result
+        .getWith()
+        .withAdditionalProperty(VAR_NAME_KEY, varName)
+        .withAdditionalProperty(INDEX_NAME_KEY, indexName);
+    return result;
   }
 
-  public static <T, I, V> CallJava<T> loopFunction(LoopFunction<T, I, V> function, String varName) {
-    return new CallJavaLoopFunction<>(function, varName);
+  public static <T, I, V> CallFunction loopFunction(
+      LoopFunction<T, I, V> function, String varName) {
+    Optional<MethodType> methodType = ReflectionUtils.methodType(function);
+    CallFunction result =
+        buildFunction(
+            function,
+            methodType.map(m -> m.parameterType(0)),
+            methodType.map(MethodType::returnType));
+    result.getWith().withAdditionalProperty(VAR_NAME_KEY, varName);
+    return result;
   }
 
-  public static <V, T> CallJava<T> function(ContextFunction<T, V> function, Class<T> inputClass) {
-    return new CallJavaContextFunction<>(
-        function, Optional.ofNullable(inputClass), Optional.empty());
+  public static <V, T> CallFunction function(ContextFunction<T, V> function, Class<T> inputClass) {
+    return buildFunction(
+        function,
+        Optional.ofNullable(inputClass),
+        ReflectionUtils.methodType(function).map(MethodType::returnType));
   }
 
-  public static <V, T> CallJava<T> function(
+  public static <V, T> CallFunction function(
       ContextFunction<T, V> function, Class<T> inputClass, Class<V> outputClass) {
-    return new CallJavaContextFunction<>(
+    return buildFunction(
         function, Optional.ofNullable(inputClass), Optional.ofNullable(outputClass));
   }
 
-  public static <V, T> CallJava<T> function(FilterFunction<T, V> function, Class<T> inputClass) {
-    return new CallJavaFilterFunction<>(
-        function, Optional.ofNullable(inputClass), Optional.empty());
+  public static <V, T> CallFunction function(FilterFunction<T, V> function, Class<T> inputClass) {
+    return buildFunction(
+        function,
+        Optional.ofNullable(inputClass),
+        ReflectionUtils.methodType(function).map(MethodType::returnType));
   }
 
-  public static <V, T> CallJava<T> function(
+  public static <V, T> CallFunction function(
       FilterFunction<T, V> function, Class<T> inputClass, Class<V> outputClass) {
-    return new CallJavaFilterFunction<>(
+    return buildFunction(
         function, Optional.ofNullable(inputClass), Optional.ofNullable(outputClass));
-  }
-
-  @FunctionalInterface
-  public interface SerializedLambdaUnmarshaller {
-    SerializedLambda apply(Object serializedFunction) throws ReflectiveOperationException;
-  }
-
-  public static <T> CallJava<T> fromFunctionProperties(
-      Map<String, Object> props, SerializedLambda sl) throws ReflectiveOperationException {
-    Object obj = ReflectionUtils.functionFromSerialized(sl);
-    MethodType methodType = ReflectionUtils.inferMethodType(sl);
-    Optional<Class<?>> input = Optional.of(methodType.parameterType(0));
-    Optional<Class<?>> output = Optional.of(methodType.returnType());
-    if (obj instanceof ContextFunction fn) {
-      return new CallJavaContextFunction(fn, input, output);
-    } else if (obj instanceof FilterFunction fn) {
-      return new CallJavaFilterFunction(fn, input, output);
-    } else if (obj instanceof LoopFunction loop) {
-      return new CallJavaLoopFunction(loop, (String) props.get(VAR_NAME_KEY), input, output);
-    } else if (obj instanceof LoopFunctionIndex loop) {
-      return new CallJavaLoopFunctionIndex(
-          loop,
-          (String) props.get(VAR_NAME_KEY),
-          (String) props.get(INDEX_NAME_KEY),
-          input,
-          output);
-    } else if (obj instanceof Function fn) {
-      return new CallJavaFunction(fn, input, output);
-    } else if (obj instanceof Consumer consumer) {
-      return new CallJavaConsumer(consumer, input);
-    } else {
-      throw new UnsupportedOperationException("Unrecognized function " + obj);
-    }
-  }
-
-  public static class CallJavaConsumer<T> extends CallJava<T> {
-    private static final long serialVersionUID = 1L;
-    private final Consumer<T> consumer;
-
-    public CallJavaConsumer(Consumer<T> consumer, Optional<Class<T>> inputClass) {
-      super(inputClass);
-      this.consumer = consumer;
-    }
-
-    public Consumer<T> consumer() {
-      return consumer;
-    }
-  }
-
-  public abstract static class CallAbstractJavaFunction<T, V> extends CallJava<T> {
-
-    private static final long serialVersionUID = 1L;
-
-    private final Optional<Class<V>> outputClass;
-
-    protected CallAbstractJavaFunction(
-        Optional<Class<T>> inputClass, Optional<Class<V>> outputClass) {
-      super(inputClass);
-      this.outputClass = outputClass;
-    }
-
-    public Optional<Class<V>> outputClass() {
-      return outputClass;
-    }
-  }
-
-  public static class CallJavaFunction<T, V> extends CallAbstractJavaFunction<T, V> {
-
-    private static final long serialVersionUID = 1L;
-    private final Function<T, V> function;
-
-    public CallJavaFunction(
-        Function<T, V> function, Optional<Class<T>> inputClass, Optional<Class<V>> outputClass) {
-      super(inputClass, outputClass);
-      this.function = function;
-      this.withWith(new FunctionArguments().withAdditionalProperty(FUNCTION_NAME_KEY, function));
-    }
-
-    public Function<T, V> function() {
-      return function;
-    }
-  }
-
-  public static class CallJavaContextFunction<T, V> extends CallAbstractJavaFunction<T, V> {
-    private static final long serialVersionUID = 1L;
-    private final ContextFunction<T, V> function;
-
-    public CallJavaContextFunction(
-        ContextFunction<T, V> function,
-        Optional<Class<T>> inputClass,
-        Optional<Class<V>> outputClass) {
-      super(inputClass, outputClass);
-      this.function = function;
-      this.withWith(new FunctionArguments().withAdditionalProperty(FUNCTION_NAME_KEY, function));
-    }
-
-    public ContextFunction<T, V> function() {
-      return function;
-    }
-  }
-
-  public static class CallJavaFilterFunction<T, V> extends CallAbstractJavaFunction<T, V> {
-    private static final long serialVersionUID = 1L;
-    private final FilterFunction<T, V> function;
-
-    public CallJavaFilterFunction(
-        FilterFunction<T, V> function,
-        Optional<Class<T>> inputClass,
-        Optional<Class<V>> outputClass) {
-      super(inputClass, outputClass);
-      this.function = function;
-      this.withWith(new FunctionArguments().withAdditionalProperty(FUNCTION_NAME_KEY, function));
-    }
-
-    public FilterFunction<T, V> function() {
-      return function;
-    }
-  }
-
-  public static class CallJavaLoopFunction<T, I, V> extends CallAbstractJavaFunction<T, V> {
-
-    private static final long serialVersionUID = 1L;
-    private LoopFunction<T, I, V> function;
-    private String varName;
-
-    public CallJavaLoopFunction(LoopFunction<T, I, V> function, String varName) {
-      this(function, varName, Optional.empty(), Optional.empty());
-    }
-
-    public CallJavaLoopFunction(
-        LoopFunction<T, I, V> function,
-        String varName,
-        Optional<Class<T>> inputClass,
-        Optional<Class<V>> outputClass) {
-      super(inputClass, outputClass);
-      this.function = function;
-      this.varName = varName;
-      this.withWith(
-          new FunctionArguments()
-              .withAdditionalProperty(FUNCTION_NAME_KEY, function)
-              .withAdditionalProperty(VAR_NAME_KEY, varName));
-    }
-
-    public LoopFunction<T, I, V> function() {
-      return function;
-    }
-
-    public String varName() {
-      return varName;
-    }
-  }
-
-  public static class CallJavaLoopFunctionIndex<T, I, V> extends CallAbstractJavaFunction<T, V> {
-
-    private static final long serialVersionUID = 1L;
-    private final LoopFunctionIndex<T, I, V> function;
-    private final String varName;
-    private final String indexName;
-
-    public CallJavaLoopFunctionIndex(
-        LoopFunctionIndex<T, I, V> function, String varName, String indexName) {
-      this(function, varName, indexName, Optional.empty(), Optional.empty());
-    }
-
-    public CallJavaLoopFunctionIndex(
-        LoopFunctionIndex<T, I, V> function,
-        String varName,
-        String indexName,
-        Optional<Class<T>> inputClass,
-        Optional<Class<V>> outputClass) {
-      super(inputClass, outputClass);
-      this.function = function;
-      this.varName = varName;
-      this.indexName = indexName;
-      this.withWith(
-          new FunctionArguments()
-              .withAdditionalProperty(FUNCTION_NAME_KEY, function)
-              .withAdditionalProperty(VAR_NAME_KEY, varName)
-              .withAdditionalProperty(INDEX_NAME_KEY, indexName));
-    }
-
-    public LoopFunctionIndex<T, I, V> function() {
-      return function;
-    }
-
-    public String varName() {
-      return varName;
-    }
-
-    public String indexName() {
-      return indexName;
-    }
   }
 }

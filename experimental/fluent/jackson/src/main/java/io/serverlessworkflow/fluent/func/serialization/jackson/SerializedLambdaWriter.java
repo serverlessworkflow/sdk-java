@@ -16,6 +16,8 @@
 package io.serverlessworkflow.fluent.func.serialization.jackson;
 
 import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.BeanPropertyWriter;
 import io.serverlessworkflow.api.reflection.func.ReflectionUtils;
@@ -33,24 +35,36 @@ public class SerializedLambdaWriter extends BeanPropertyWriter {
   @Override
   public void serializeAsField(Object bean, JsonGenerator gen, SerializerProvider prov)
       throws IOException {
-    SerializedLambda sl = (SerializedLambda) bean;
-    int size = sl.getCapturedArgCount();
-    if (size > 0) {
-      gen.writeArrayFieldStart(SerializedLambdaDeserializer.CAPTURED_ARGS);
-      for (int i = 0; i < size; i++) {
-        Object obj = sl.getCapturedArg(i);
-        gen.writeStartObject();
-        if (obj != null) {
-          gen.writeStringField(
-              SerializedLambdaDeserializer.TYPE_CAPTURE_ARG,
-              ReflectionUtils.serializedFromFuntion(obj)
-                  .map(v -> SerializedLambda.class.getName())
-                  .orElse(obj.getClass().getName()));
-          gen.writeObjectField(SerializedLambdaDeserializer.DATA_CAPTURE_ARG, obj);
+    ObjectMapper mapper = (ObjectMapper) gen.getCodec();
+    boolean isEnabled = mapper.isEnabled(SerializationFeature.FAIL_ON_EMPTY_BEANS);
+    if (isEnabled) {
+      mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+    }
+    try {
+      SerializedLambda sl = (SerializedLambda) bean;
+      int size = sl.getCapturedArgCount();
+      if (size > 0) {
+        gen.writeArrayFieldStart(SerializedLambdaDeserializer.CAPTURED_ARGS);
+        for (int i = 0; i < size; i++) {
+          Object obj = sl.getCapturedArg(i);
+          gen.writeStartObject();
+          if (obj != null) {
+
+            gen.writeStringField(
+                SerializedLambdaDeserializer.TYPE_CAPTURE_ARG,
+                ReflectionUtils.serializedFromFuntion(obj)
+                    .map(v -> SerializedLambda.class.getName())
+                    .orElse(obj.getClass().getName()));
+            gen.writeObjectField(SerializedLambdaDeserializer.DATA_CAPTURE_ARG, obj);
+          }
+          gen.writeEndObject();
         }
-        gen.writeEndObject();
+        gen.writeEndArray();
       }
-      gen.writeEndArray();
+    } finally {
+      if (isEnabled) {
+        mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, true);
+      }
     }
   }
 }

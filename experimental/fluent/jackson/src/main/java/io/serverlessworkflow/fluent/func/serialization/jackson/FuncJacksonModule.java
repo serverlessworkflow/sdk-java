@@ -16,17 +16,14 @@
 package io.serverlessworkflow.fluent.func.serialization.jackson;
 
 import com.fasterxml.jackson.databind.BeanDescription;
-import com.fasterxml.jackson.databind.DeserializationConfig;
-import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.SerializationConfig;
-import com.fasterxml.jackson.databind.deser.BeanDeserializerModifier;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.BeanPropertyWriter;
 import com.fasterxml.jackson.databind.ser.BeanSerializerModifier;
 import io.serverlessworkflow.api.reflection.func.SerializableConsumer;
 import io.serverlessworkflow.api.reflection.func.SerializableFunction;
 import io.serverlessworkflow.api.reflection.func.SerializablePredicate;
-import io.serverlessworkflow.api.types.CallFunction;
+import io.serverlessworkflow.api.types.FunctionArguments;
 import io.serverlessworkflow.api.types.TaskMetadata;
 import io.serverlessworkflow.api.types.func.ContextFunction;
 import io.serverlessworkflow.api.types.func.FilterFunction;
@@ -58,19 +55,7 @@ public class FuncJacksonModule extends SimpleModule {
     super.addSerializer(LoopPredicateIndexFilter.class, serializer);
     super.addDeserializer(SerializedLambda.class, new SerializedLambdaDeserializer());
     super.setMixInAnnotation(TaskMetadata.class, TaskMetadataMixIn.class);
-    super.setDeserializerModifier(
-        new BeanDeserializerModifier() {
-          @Override
-          public JsonDeserializer<?> modifyDeserializer(
-              DeserializationConfig config,
-              BeanDescription beanDesc,
-              JsonDeserializer<?> deserializer) {
-            if (beanDesc.getBeanClass().equals(CallFunction.class)) {
-              return new CallJavaDeserializer<>(deserializer);
-            }
-            return deserializer;
-          }
-        });
+    super.setMixInAnnotation(FunctionArguments.class, FunctionArgumentsMixIn.class);
     super.setSerializerModifier(
         new BeanSerializerModifier() {
           @Override
@@ -81,7 +66,6 @@ public class FuncJacksonModule extends SimpleModule {
             if (beanDesc.getBeanClass().equals(SerializedLambda.class)) {
               beanProperties.add(new SerializedLambdaWriter(beanProperties.get(0)));
             }
-
             return beanProperties;
           }
         });

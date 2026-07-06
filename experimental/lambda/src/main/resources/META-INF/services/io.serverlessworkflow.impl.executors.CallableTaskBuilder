@@ -1,6 +1,2 @@
-io.serverlessworkflow.impl.executors.func.JavaLoopFunctionIndexCallExecutorBuilder
-io.serverlessworkflow.impl.executors.func.JavaLoopFunctionCallExecutorBuilder
-io.serverlessworkflow.impl.executors.func.JavaFunctionCallExecutorBuilder
-io.serverlessworkflow.impl.executors.func.JavaConsumerCallExecutorBuilder
-io.serverlessworkflow.impl.executors.func.JavaContextFunctionCallExecutorBuilder
-io.serverlessworkflow.impl.executors.func.JavaFilterFunctionCallExecutorBuilder
+io.serverlessworkflow.impl.executors.func.JavaCallFunctionBuilder
+

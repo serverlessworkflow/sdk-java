@@ -24,6 +24,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.serverlessworkflow.api.reflection.func.UniqueIdBiFunction;
+import io.serverlessworkflow.api.types.CallFunction;
 import io.serverlessworkflow.api.types.Task;
 import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.api.types.Workflow;
@@ -45,9 +46,10 @@ import org.junit.jupiter.api.Test;
 class FuncDSLUniqueIdTest {
 
   @SuppressWarnings("unchecked")
-  private static FilterFunction<Object, Object> extractFilterFunction(CallJava callJava) {
-    if (callJava instanceof CallJava.CallJavaFilterFunction<?, ?> f) {
-      return (FilterFunction<Object, Object>) f.function();
+  private static FilterFunction<Object, Object> extractFilterFunction(CallFunction callJava) {
+    if (callJava.getWith().getAdditionalProperties().get(CallJava.FUNCTION_NAME_KEY)
+        instanceof FilterFunction f) {
+      return f;
     }
     fail("CallTask is not a CallJavaFilterFunction; DSL contract may have changed.");
     return null; // unreachable
@@ -77,7 +79,7 @@ class FuncDSLUniqueIdTest {
     Task t = items.get(0).getTask();
     assertNotNull(t.getCallTask(), "CallTask expected");
 
-    CallJava cj = (CallJava) t.getCallTask().get();
+    CallFunction cj = (CallFunction) t.getCallTask().get();
     var jff = extractFilterFunction(cj);
     assertNotNull(jff, "JavaFilterFunction must be present for withUniqueId");
 
@@ -125,7 +127,7 @@ class FuncDSLUniqueIdTest {
     Task t = items.get(0).getTask();
     assertNotNull(t.getCallTask(), "CallTask expected");
 
-    CallJava cj = (CallJava) t.getCallTask().get();
+    CallFunction cj = (CallFunction) t.getCallTask().get();
     var jff = extractFilterFunction(cj);
     assertNotNull(jff, "JavaFilterFunction must be present for agent/withUniqueId");
 

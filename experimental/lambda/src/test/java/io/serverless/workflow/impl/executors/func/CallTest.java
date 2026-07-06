@@ -17,6 +17,7 @@ package io.serverless.workflow.impl.executors.func;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.serverlessworkflow.api.types.CallFunction;
 import io.serverlessworkflow.api.types.CallTask;
 import io.serverlessworkflow.api.types.Document;
 import io.serverlessworkflow.api.types.FlowDirective;
@@ -217,10 +218,9 @@ class CallTest {
     }
   }
 
-  private <T> CallJava withPredicate(CallJava call, Predicate<T> pred) {
-    return (CallJava)
-        call.withMetadata(
-            new TaskMetadata().withAdditionalProperty(TaskMetadataKeys.IF_PREDICATE, pred));
+  private <T> CallFunction withPredicate(CallFunction call, Predicate<T> pred) {
+    return call.withMetadata(
+        new TaskMetadata().withAdditionalProperty(TaskMetadataKeys.IF_PREDICATE, pred));
   }
 
   public static boolean isEven(Object model, Integer number) {

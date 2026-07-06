@@ -42,6 +42,7 @@ import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowError;
 import io.serverlessworkflow.impl.WorkflowException;
 import io.serverlessworkflow.impl.WorkflowModel;
+import java.io.IOException;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -60,34 +61,37 @@ public class FuncTryCatchTest {
   private static final String ORDER_003 = "ORDER#003";
 
   @Test
-  void booking_compensation_dsl() {
+  void booking_compensation_dsl() throws IOException {
 
     Workflow workflow =
-        FuncWorkflowBuilder.workflow()
-            .tasks(
-                tryCatch(
-                    "tryStockReservation",
-                    t ->
-                        t.tryCatch(function("stockReservation", this::reserveStock))
-                            .catchError(
-                                err -> err.type(STOCK_ORDER_ERROR),
-                                function("cancelStockReservation", this::cancelReservation)
-                                    .then("endFlow"))),
-                tryCatch(
-                    "tryPaymentProcessing",
-                    t ->
-                        t.tryCatch(function("paymentProcessing", this::processPayment))
-                            .catchWhen(
-                                "${ .status == 503 }",
-                                function("cancelPayment", this::cancelPayment).then("endFlow"))),
-                tryCatch(
-                    "tryShipping",
-                    t ->
-                        t.tryCatch(function("scheduleShipping", this::scheduleShipping))
-                            .catchType(
-                                SHIPPING_ERROR, function("cancelPayment", this::cancelShipping))),
-                function("endFlow", this::endFlow))
-            .build();
+        TestSerializationUtils.writeAndReadInMemory(
+            FuncWorkflowBuilder.workflow()
+                .tasks(
+                    tryCatch(
+                        "tryStockReservation",
+                        t ->
+                            t.tryCatch(function("stockReservation", this::reserveStock))
+                                .catchError(
+                                    err -> err.type(STOCK_ORDER_ERROR),
+                                    function("cancelStockReservation", this::cancelReservation)
+                                        .then("endFlow"))),
+                    tryCatch(
+                        "tryPaymentProcessing",
+                        t ->
+                            t.tryCatch(function("paymentProcessing", this::processPayment))
+                                .catchWhen(
+                                    "${ .status == 503 }",
+                                    function("cancelPayment", this::cancelPayment)
+                                        .then("endFlow"))),
+                    tryCatch(
+                        "tryShipping",
+                        t ->
+                            t.tryCatch(function("scheduleShipping", this::scheduleShipping))
+                                .catchType(
+                                    SHIPPING_ERROR,
+                                    function("cancelPayment", this::cancelShipping))),
+                    function("endFlow", this::endFlow))
+                .build());
 
     try (WorkflowApplication application = WorkflowApplication.builder().build()) {
       WorkflowDefinition workflowDefinition = application.workflowDefinition(workflow);

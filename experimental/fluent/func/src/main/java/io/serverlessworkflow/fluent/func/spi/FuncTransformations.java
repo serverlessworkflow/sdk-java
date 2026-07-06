@@ -21,8 +21,9 @@ import io.serverlessworkflow.api.types.Output;
 import io.serverlessworkflow.api.types.OutputAs;
 import io.serverlessworkflow.api.types.func.ContextFunction;
 import io.serverlessworkflow.api.types.func.FilterFunction;
-import io.serverlessworkflow.api.types.func.InputFromFunction;
-import io.serverlessworkflow.api.types.func.OutputAsFunction;
+import io.serverlessworkflow.api.types.func.TypedContextFunction;
+import io.serverlessworkflow.api.types.func.TypedFilterFunction;
+import io.serverlessworkflow.api.types.func.TypedFunction;
 import io.serverlessworkflow.fluent.spec.spi.TransformationHandlers;
 import java.util.function.Function;
 
@@ -31,37 +32,42 @@ public interface FuncTransformations<SELF extends FuncTransformations<SELF>>
 
   @SuppressWarnings("unchecked")
   default <T, V> SELF inputFrom(Function<T, V> function) {
-    setInput(new Input().withFrom(new InputFromFunction().withFunction(function)));
+    setInput(new Input().withFrom(new InputFrom().withObject(function)));
     return (SELF) this;
   }
 
   @SuppressWarnings("unchecked")
   default <T, V> SELF inputFrom(Function<T, V> function, Class<T> argClass) {
-    setInput(new Input().withFrom(new InputFromFunction().withFunction(function, argClass)));
+    setInput(
+        new Input().withFrom(new InputFrom().withObject(new TypedFunction<>(function, argClass))));
     return (SELF) this;
   }
 
   @SuppressWarnings("unchecked")
   default <T, V> SELF inputFrom(FilterFunction<T, V> function) {
-    setInput(new Input().withFrom(new InputFromFunction().withFunction(function)));
+    setInput(new Input().withFrom(new InputFrom().withObject(function)));
     return (SELF) this;
   }
 
   @SuppressWarnings("unchecked")
   default <T, V> SELF inputFrom(FilterFunction<T, V> function, Class<T> argClass) {
-    setInput(new Input().withFrom(new InputFromFunction().withFunction(function, argClass)));
+    setInput(
+        new Input()
+            .withFrom(new InputFrom().withObject(new TypedFilterFunction<>(function, argClass))));
     return (SELF) this;
   }
 
   @SuppressWarnings("unchecked")
   default <T, V> SELF inputFrom(ContextFunction<T, V> function) {
-    setInput(new Input().withFrom(new InputFromFunction().withFunction(function)));
+    setInput(new Input().withFrom(new InputFrom().withObject((function))));
     return (SELF) this;
   }
 
   @SuppressWarnings("unchecked")
   default <T, V> SELF inputFrom(ContextFunction<T, V> function, Class<T> argClass) {
-    setInput(new Input().withFrom(new InputFromFunction().withFunction(function, argClass)));
+    setInput(
+        new Input()
+            .withFrom(new InputFrom().withObject(new TypedContextFunction<>(function, argClass))));
     return (SELF) this;
   }
 
@@ -73,37 +79,42 @@ public interface FuncTransformations<SELF extends FuncTransformations<SELF>>
 
   @SuppressWarnings("unchecked")
   default <T, V> SELF outputAs(Function<T, V> function) {
-    setOutput(new Output().withAs(new OutputAsFunction().withFunction(function)));
+    setOutput(new Output().withAs(new OutputAs().withObject(function)));
     return (SELF) this;
   }
 
   @SuppressWarnings("unchecked")
   default <T, V> SELF outputAs(Function<T, V> function, Class<T> argClass) {
-    setOutput(new Output().withAs(new OutputAsFunction().withFunction(function, argClass)));
+    setOutput(
+        new Output().withAs(new OutputAs().withObject(new TypedFunction<>(function, argClass))));
     return (SELF) this;
   }
 
   @SuppressWarnings("unchecked")
   default <T, V> SELF outputAs(FilterFunction<T, V> function) {
-    setOutput(new Output().withAs(new OutputAsFunction().withFunction(function)));
+    setOutput(new Output().withAs(new OutputAs().withObject(function)));
     return (SELF) this;
   }
 
   @SuppressWarnings("unchecked")
   default <T, V> SELF outputAs(FilterFunction<T, V> function, Class<T> argClass) {
-    setOutput(new Output().withAs(new OutputAsFunction().withFunction(function, argClass)));
+    setOutput(
+        new Output()
+            .withAs(new OutputAs().withObject(new TypedFilterFunction<>(function, argClass))));
     return (SELF) this;
   }
 
   @SuppressWarnings("unchecked")
   default <T, V> SELF outputAs(ContextFunction<T, V> function) {
-    setOutput(new Output().withAs(new OutputAsFunction().withFunction(function)));
+    setOutput(new Output().withAs(new OutputAs().withObject(function)));
     return (SELF) this;
   }
 
   @SuppressWarnings("unchecked")
   default <T, V> SELF outputAs(ContextFunction<T, V> function, Class<T> argClass) {
-    setOutput(new Output().withAs(new OutputAsFunction().withFunction(function, argClass)));
+    setOutput(
+        new Output()
+            .withAs(new OutputAs().withObject(new TypedContextFunction<>(function, argClass))));
     return (SELF) this;
   }
 

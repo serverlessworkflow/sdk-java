@@ -15,6 +15,7 @@
  */
 package io.serverlessworkflow.fluent.func;
 
+import io.serverlessworkflow.api.reflection.func.SerializableFunction;
 import io.serverlessworkflow.api.types.CallTask;
 import io.serverlessworkflow.api.types.func.CallJava;
 import io.serverlessworkflow.api.types.func.ContextFunction;
@@ -38,7 +39,7 @@ public class FuncCallTaskBuilder extends TaskBaseBuilder<FuncCallTaskBuilder>
     return this;
   }
 
-  public <T, V> FuncCallTaskBuilder function(Function<T, V> function) {
+  public <T, V> FuncCallTaskBuilder function(SerializableFunction<T, V> function) {
     return function(function, null);
   }
 
