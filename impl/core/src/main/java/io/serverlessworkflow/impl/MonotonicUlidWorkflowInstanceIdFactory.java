@@ -15,9 +15,8 @@
  */
 package io.serverlessworkflow.impl;
 
-import de.huxhorn.sulky.ulid.ULID;
-import java.security.SecureRandom;
-import java.util.concurrent.atomic.AtomicReference;
+import com.github.f4b6a3.ulid.UlidFactory;
+import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * A {@link WorkflowInstanceIdFactory} implementation that generates Monotonic ULIDs as workflow
@@ -25,17 +24,14 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public class MonotonicUlidWorkflowInstanceIdFactory implements WorkflowInstanceIdFactory {
 
-  private final ULID ulid;
-  private final AtomicReference<ULID.Value> currentUlid;
+  private final UlidFactory factory;
 
   public MonotonicUlidWorkflowInstanceIdFactory() {
-    this.ulid = new ULID(new SecureRandom());
-    this.currentUlid = new AtomicReference<>(ulid.nextValue());
+    factory = UlidFactory.newMonotonicInstance(() -> ThreadLocalRandom.current().nextLong());
   }
 
+  @Override
   public String get() {
-    return currentUlid
-        .getAndUpdate(previousUlid -> ulid.nextMonotonicValue(previousUlid))
-        .toString();
+    return factory.create().toString();
   }
 }
