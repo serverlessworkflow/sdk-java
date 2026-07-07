@@ -15,6 +15,9 @@
  */
 package io.serverlessworkflow.fluent.func;
 
+import static io.serverlessworkflow.types.Defaults.DEFAULT_NAMESPACE;
+import static io.serverlessworkflow.types.Defaults.DEFAULT_VERSION;
+
 import io.serverlessworkflow.fluent.func.spi.FuncTransformations;
 import io.serverlessworkflow.fluent.spec.BaseWorkflowBuilder;
 import java.util.UUID;

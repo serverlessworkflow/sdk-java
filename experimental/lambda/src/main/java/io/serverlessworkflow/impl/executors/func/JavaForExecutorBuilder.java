@@ -18,9 +18,12 @@ package io.serverlessworkflow.impl.executors.func;
 import static io.serverlessworkflow.impl.executors.func.JavaFuncUtils.safeObject;
 
 import io.serverlessworkflow.api.types.ForTask;
-import io.serverlessworkflow.api.types.func.ForTaskFunction;
+import io.serverlessworkflow.api.types.func.LoopPredicate;
+import io.serverlessworkflow.api.types.func.LoopPredicateIndex;
+import io.serverlessworkflow.api.types.func.LoopPredicateIndexContext;
 import io.serverlessworkflow.api.types.func.LoopPredicateIndexFilter;
 import io.serverlessworkflow.api.types.func.TypedFunction;
+import io.serverlessworkflow.api.types.utils.ForTaskFunction;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.WorkflowPredicate;
@@ -32,30 +35,52 @@ import java.util.Optional;
 
 public class JavaForExecutorBuilder extends ForExecutorBuilder {
 
-  private final ForTaskFunction taskFunctions;
-
   protected JavaForExecutorBuilder(
       WorkflowMutablePosition position, ForTask task, WorkflowDefinition definition) {
     super(position, task, definition);
-    this.taskFunctions = new ForTaskFunction(task);
   }
 
   @Override
   protected Optional<WorkflowPredicate> buildWhileFilter() {
-    final LoopPredicateIndexFilter whilePred = taskFunctions.getWhilePredicate();
-    Optional<Class<?>> whileClass = taskFunctions.getWhileClass();
+    final Object whilePred = ForTaskFunction.getWhilePredicate(task);
+    Optional<Class<?>> whileClass = ForTaskFunction.getWhileClass(task);
     String varName = task.getFor().getEach();
     String indexName = task.getFor().getAt();
-    if (whilePred != null) {
+    if (whilePred instanceof LoopPredicateIndexFilter pred) {
       return Optional.of(
           (w, t, n) -> {
             Object item = safeObject(t.variables().get(varName));
-            return whilePred.test(
+            return pred.test(
                 JavaFuncUtils.convert(n, whileClass),
                 item,
                 (Integer) safeObject(t.variables().get(indexName)),
                 w,
                 t);
+          });
+    } else if (whilePred instanceof LoopPredicate pred) {
+      return Optional.of(
+          (w, t, n) -> {
+            Object item = safeObject(t.variables().get(varName));
+            return pred.test(JavaFuncUtils.convert(n, whileClass), item);
+          });
+    } else if (whilePred instanceof LoopPredicateIndexContext pred) {
+      return Optional.of(
+          (w, t, n) -> {
+            Object item = safeObject(t.variables().get(varName));
+            return pred.test(
+                JavaFuncUtils.convert(n, whileClass),
+                item,
+                (Integer) safeObject(t.variables().get(indexName)),
+                w);
+          });
+    } else if (whilePred instanceof LoopPredicateIndex pred) {
+      return Optional.of(
+          (w, t, n) -> {
+            Object item = safeObject(t.variables().get(varName));
+            return pred.test(
+                JavaFuncUtils.convert(n, whileClass),
+                item,
+                (Integer) safeObject(t.variables().get(indexName)));
           });
     }
     return super.buildWhileFilter();
@@ -71,14 +96,13 @@ public class JavaForExecutorBuilder extends ForExecutorBuilder {
   }
 
   private Object collectionFilterObject() {
-    return taskFunctions
-        .getForClass()
-        .<Object>map(forClass -> typedCollectionFunction(taskFunctions, forClass))
-        .orElse(taskFunctions.getInCollection());
+    return ForTaskFunction.getForClass(task)
+        .<Object>map(forClass -> typedCollectionFunction(forClass))
+        .orElse(ForTaskFunction.getInCollection(task));
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
-  private Object typedCollectionFunction(ForTaskFunction taskFunctions, Class<?> forClass) {
-    return new TypedFunction(taskFunctions.getInCollection(), forClass);
+  private Object typedCollectionFunction(Class<?> forClass) {
+    return new TypedFunction(ForTaskFunction.getInCollection(task), forClass);
   }
 }

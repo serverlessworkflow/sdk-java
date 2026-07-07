@@ -18,7 +18,7 @@ package io.serverlessworkflow.fluent.func.serialization.jackson;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
-import io.serverlessworkflow.api.reflection.func.ReflectionUtils;
+import io.serverlessworkflow.api.types.utils.ReflectionUtils;
 import java.io.IOException;
 import java.lang.invoke.SerializedLambda;
 import java.util.Optional;
@@ -28,7 +28,7 @@ public class SerializableFunctionSerializer extends JsonSerializer<Object> {
   @Override
   public void serialize(Object value, JsonGenerator gen, SerializerProvider serializers)
       throws IOException {
-    Optional<SerializedLambda> serializedLambda = ReflectionUtils.serializedFromFuntion(value);
+    Optional<SerializedLambda> serializedLambda = ReflectionUtils.serializedFromFunction(value);
     if (serializedLambda.isPresent()) {
       gen.writeObject(serializedLambda.orElseThrow());
     } else {

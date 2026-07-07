@@ -71,7 +71,7 @@ public abstract class ListenExecutor extends RegularTaskExecutor<ListenTask> {
     }
 
     protected WorkflowPredicate buildUntilPredicate(Until until) {
-      return until.getAnyEventUntilCondition() != null
+      return until != null && until.getAnyEventUntilCondition() != null
           ? WorkflowUtils.buildPredicate(application, until.getAnyEventUntilCondition())
           : null;
     }

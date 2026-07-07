@@ -15,7 +15,22 @@
  */
 package io.serverlessworkflow.fluent.func.serialization.jackson;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import io.serverlessworkflow.api.types.TaskMetadata;
+import java.io.IOException;
 
-@JsonDeserialize(converter = TaskMetadataTransformer.class)
-public abstract class TaskMetadataMixIn {}
+public class TaskMetadataDeserializer extends JsonDeserializer<TaskMetadata> {
+
+  @Override
+  public TaskMetadata deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+    try {
+      TaskMetadata result = new TaskMetadata();
+      SerializationUtils.deserializeMap(p, ctxt, result.getAdditionalProperties());
+      return result;
+    } catch (ReflectiveOperationException e) {
+      throw new IOException(e);
+    }
+  }
+}

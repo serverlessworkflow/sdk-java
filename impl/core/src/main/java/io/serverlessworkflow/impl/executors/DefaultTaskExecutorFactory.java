@@ -47,7 +47,7 @@ public class DefaultTaskExecutorFactory implements TaskExecutorFactory {
   protected DefaultTaskExecutorFactory() {}
 
   private Collection<CallableTaskBuilder> callTasks =
-      ServiceLoader.load(CallableTaskBuilder.class).stream().map(Provider::get).toList();
+      ServiceLoader.load(CallableTaskBuilder.class).stream().map(Provider::get).sorted().toList();
 
   @Override
   public TaskExecutorBuilder<? extends TaskBase> getTaskExecutor(
@@ -90,7 +90,7 @@ public class DefaultTaskExecutorFactory implements TaskExecutorFactory {
     return (CallableTaskBuilder<T>)
         callTasks.stream()
             .filter(s -> s.accept(clazz))
-            .findAny()
+            .findFirst()
             .orElseThrow(
                 () ->
                     new UnsupportedOperationException(

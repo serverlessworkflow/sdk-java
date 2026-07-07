@@ -29,8 +29,12 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class JavaCallFunctionBuilder extends CallFunctionExecutorBuilder {
+
+  private static final Logger logger = LoggerFactory.getLogger(JavaCallFunctionBuilder.class);
 
   @Override
   public int priority() {
@@ -40,9 +44,19 @@ public class JavaCallFunctionBuilder extends CallFunctionExecutorBuilder {
   @Override
   public CallableTaskFactory init(
       CallFunction task, WorkflowDefinition definition, WorkflowMutablePosition position) {
-    if (task.getCall().equals(CallJava.JAVA_CALL_KEY)) {
+    if (CallJava.JAVA_CALL_KEY.equals(task.getCall())) {
+      if (task.getWith() == null) {
+        throw new IllegalArgumentException(
+            "At least one key "
+                + CallJava.FUNCTION_NAME_KEY
+                + " is expected as Java function argument");
+      }
       Map<String, Object> props = task.getWith().getAdditionalProperties();
       Object obj = props.get(CallJava.FUNCTION_NAME_KEY);
+      if (obj == null) {
+        throw new IllegalArgumentException(
+            "Missing required Java function argument '" + CallJava.FUNCTION_NAME_KEY + "'");
+      }
       Optional<Class<?>> input =
           (Optional<Class<?>>) props.getOrDefault(CallJava.INPUT_CLASS_KEY, Optional.empty());
       Optional<Class<?>> output =
@@ -72,6 +86,7 @@ public class JavaCallFunctionBuilder extends CallFunctionExecutorBuilder {
         throw new UnsupportedOperationException("Unrecognized function " + obj);
       }
     } else {
+      logger.info("Calling regular function handler for task call {}", task.getCall());
       return super.init(task, definition, position);
     }
   }

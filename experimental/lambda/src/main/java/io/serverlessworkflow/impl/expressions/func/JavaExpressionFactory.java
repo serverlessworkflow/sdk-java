@@ -22,13 +22,13 @@ import io.serverlessworkflow.api.types.func.ContextFunction;
 import io.serverlessworkflow.api.types.func.ContextPredicate;
 import io.serverlessworkflow.api.types.func.FilterFunction;
 import io.serverlessworkflow.api.types.func.FilterPredicate;
-import io.serverlessworkflow.api.types.func.TaskMetadataKeys;
 import io.serverlessworkflow.api.types.func.TypedContextFunction;
 import io.serverlessworkflow.api.types.func.TypedContextPredicate;
 import io.serverlessworkflow.api.types.func.TypedFilterFunction;
 import io.serverlessworkflow.api.types.func.TypedFilterPredicate;
 import io.serverlessworkflow.api.types.func.TypedFunction;
 import io.serverlessworkflow.api.types.func.TypedPredicate;
+import io.serverlessworkflow.api.types.utils.TypesUtils;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowPredicate;
 import io.serverlessworkflow.impl.expressions.AbstractExpressionFactory;
@@ -128,7 +128,7 @@ public class JavaExpressionFactory extends AbstractExpressionFactory {
   public Optional<WorkflowPredicate> buildIfFilter(TaskBase task) {
     TaskMetadata metadata = task.getMetadata();
     if (metadata != null) {
-      Object obj = metadata.getAdditionalProperties().get(TaskMetadataKeys.IF_PREDICATE);
+      Object obj = metadata.getAdditionalProperties().get(TypesUtils.IF_PREDICATE);
       if (obj instanceof Predicate pred) {
         return Optional.of(fromPredicate(pred));
       } else if (obj instanceof TypedPredicate pred) {

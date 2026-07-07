@@ -18,6 +18,6 @@ package io.serverlessworkflow.api.types.func;
 import io.serverlessworkflow.impl.WorkflowContextData;
 
 @FunctionalInterface
-public interface ContextPredicate<T> {
+public interface ContextPredicate<T> extends FunctionObject {
   boolean test(T value, WorkflowContextData context);
 }

@@ -23,6 +23,7 @@ import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.listen;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.switchWhenOrElse;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.to;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.toOne;
+import static io.serverlessworkflow.fluent.test.TestSerializationUtils.writeAndReadInMemory;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
@@ -42,6 +43,7 @@ import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowModelCollection;
 import io.serverlessworkflow.impl.WorkflowStatus;
 import io.serverlessworkflow.impl.events.EventPublisher;
+import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -60,7 +62,7 @@ import org.junit.jupiter.api.Test;
 class FuncEventFilterTest {
 
   @Test
-  void testListenToOneCollection() {
+  void testListenToOneCollection() throws IOException {
     runIt(
         FuncWorkflowBuilder.workflow("listenToOneReviewCol")
             .tasks(
@@ -70,7 +72,7 @@ class FuncEventFilterTest {
   }
 
   @Test
-  void testListenToOneArrayNode() {
+  void testListenToOneArrayNode() throws IOException {
     runIt(
         FuncWorkflowBuilder.workflow("listenToOneReviewNode")
             .tasks(
@@ -80,7 +82,7 @@ class FuncEventFilterTest {
   }
 
   @Test
-  void testListenToOneList() {
+  void testListenToOneList() throws IOException {
     runIt(
         FuncWorkflowBuilder.workflow("listenToOneReviewList")
             .tasks(
@@ -90,7 +92,7 @@ class FuncEventFilterTest {
   }
 
   @Test
-  void testListenToOneSet() {
+  void testListenToOneSet() throws IOException {
     runIt(
         FuncWorkflowBuilder.workflow("listenToOneReviewSet")
             .tasks(
@@ -100,7 +102,7 @@ class FuncEventFilterTest {
   }
 
   @Test
-  void testListenToOneArray() {
+  void testListenToOneArray() throws IOException {
     runIt(
         FuncWorkflowBuilder.workflow("listenToOneReviewArray")
             .tasks(
@@ -145,13 +147,13 @@ class FuncEventFilterTest {
         .build();
   }
 
-  private void runIt(Workflow listen) {
+  private void runIt(Workflow listen) throws IOException {
     Review review = new Review("Torrente", "espectacular", 5);
 
     try (WorkflowApplication app = WorkflowApplication.builder().build()) {
 
       CompletableFuture<WorkflowModel> waiting =
-          app.workflowDefinition(listen).instance(Map.of()).start();
+          app.workflowDefinition(writeAndReadInMemory(listen)).instance(Map.of()).start();
 
       app.workflowDefinition(reviewEmitter()).instance(review).start().join();
 

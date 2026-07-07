@@ -13,10 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.api.reflection.func;
+package io.serverlessworkflow.fluent.func.serialization.jackson;
 
-import java.io.Serializable;
-import java.util.function.Predicate;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import io.serverlessworkflow.api.types.jackson.OutputAsMixIn;
 
-@FunctionalInterface
-public interface SerializablePredicate<T> extends Predicate<T>, Serializable {}
+@JsonSerialize(using = FuncExportAsSerializer.class)
+@JsonDeserialize(using = FuncExportAsDeserializer.class)
+public class FuncExportAsMixIn extends OutputAsMixIn {}

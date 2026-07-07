@@ -6,8 +6,6 @@
         </encoder>
     </appender>
 
-    <logger name="io.serverlessworkflow.fluent.test.TestSerializationUtils" level="debug"/>
-
     <root level="INFO">
         <appender-ref ref="STDOUT"/>
     </root>

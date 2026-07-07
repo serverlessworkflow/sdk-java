@@ -23,13 +23,13 @@ import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import io.serverlessworkflow.api.reflection.func.UniqueIdBiFunction;
 import io.serverlessworkflow.api.types.CallFunction;
 import io.serverlessworkflow.api.types.Task;
 import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.api.types.func.CallJava;
 import io.serverlessworkflow.api.types.func.FilterFunction;
+import io.serverlessworkflow.api.types.func.UniqueIdBiFunction;
 import io.serverlessworkflow.impl.TaskContextData;
 import io.serverlessworkflow.impl.WorkflowContextData;
 import io.serverlessworkflow.impl.WorkflowInstanceData;

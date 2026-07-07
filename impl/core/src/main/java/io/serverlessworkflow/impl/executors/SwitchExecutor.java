@@ -48,15 +48,15 @@ public class SwitchExecutor extends AbstractTaskExecutor<SwitchTask> {
         WorkflowMutablePosition position, SwitchTask task, WorkflowDefinition definition) {
       super(position, task, definition);
       for (SwitchItem item : task.getSwitch()) {
-        SwitchCase switchCase = item.getSwitchCase();
-        buildFilter(switchCase)
+        buildFilter(item)
             .ifPresentOrElse(
-                f -> workflowFilters.put(switchCase, f),
-                () -> defaultDirective = switchCase.getThen());
+                f -> workflowFilters.put(item.getSwitchCase(), f),
+                () -> defaultDirective = item.getSwitchCase().getThen());
       }
     }
 
-    protected Optional<WorkflowPredicate> buildFilter(SwitchCase switchCase) {
+    protected Optional<WorkflowPredicate> buildFilter(SwitchItem item) {
+      SwitchCase switchCase = item.getSwitchCase();
       return switchCase.getWhen() != null
           ? Optional.of(WorkflowUtils.buildPredicate(application, switchCase.getWhen()))
           : Optional.empty();

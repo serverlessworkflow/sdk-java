@@ -15,7 +15,7 @@
  */
 package io.serverlessworkflow.fluent.func;
 
-import io.serverlessworkflow.api.types.func.MapSetTaskConfiguration;
+import io.serverlessworkflow.api.types.utils.MapSetTaskConfiguration;
 import io.serverlessworkflow.fluent.func.spi.ConditionalTaskBuilder;
 import io.serverlessworkflow.fluent.spec.SetTaskBuilder;
 import java.util.Map;
@@ -24,7 +24,7 @@ public class FuncSetTaskBuilder extends SetTaskBuilder
     implements ConditionalTaskBuilder<FuncSetTaskBuilder> {
 
   public FuncSetTaskBuilder expr(Map<String, Object> map) {
-    this.setTaskConfiguration = new MapSetTaskConfiguration(map);
+    this.setTaskConfiguration = MapSetTaskConfiguration.map(map);
     return this;
   }
 }

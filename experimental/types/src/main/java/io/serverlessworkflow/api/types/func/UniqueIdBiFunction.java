@@ -13,17 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.api.reflection.func;
+package io.serverlessworkflow.api.types.func;
 
-import java.io.Serializable;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 
 /**
- * Alternative to Function for our DSL to discover the input parameter class in runtime via
- * reflection.
+ * Functions that expect a unique ID injection in runtime, typically an idempotent generated unique
+ * id based on the workflow instance id and task name.
  *
- * @param <T>
- * @param <R>
+ * @param <T> The task payload input
+ * @param <R> The task result output
  */
 @FunctionalInterface
-public interface SerializableFunction<T, R> extends Function<T, R>, Serializable {}
+public interface UniqueIdBiFunction<T, R> extends BiFunction<String, T, R>, FunctionObject {
+  R apply(String uniqueId, T object);
+}

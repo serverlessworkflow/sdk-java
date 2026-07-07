@@ -25,7 +25,7 @@ import io.serverlessworkflow.api.types.Task;
 import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.api.types.func.CallJava;
-import io.serverlessworkflow.api.types.func.ForTaskFunction;
+import io.serverlessworkflow.api.types.utils.ForTaskFunction;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import java.util.Collection;
 import java.util.List;
@@ -39,6 +39,20 @@ class ForTaskFunctionRegressionTest {
       throws InterruptedException, ExecutionException {
     try (WorkflowApplication app = WorkflowApplication.builder().build()) {
       ForTaskConfiguration forConfig = new ForTaskConfiguration();
+      ForTask forTask =
+          new ForTask()
+              .withDo(
+                  List.of(
+                      new TaskItem(
+                          "javaCall",
+                          new Task()
+                              .withCallTask(
+                                  new CallTask()
+                                      .withCallFunction(
+                                          CallJava.loopFunction(
+                                              CallTest::sum, forConfig.getEach()))))));
+      ForTaskFunction.withWhile(forTask, CallTest::isEven);
+      ForTaskFunction.withCollection(forTask, v -> v, Collection.class);
       Workflow workflow =
           new Workflow()
               .withDocument(
@@ -48,28 +62,7 @@ class ForTaskFunctionRegressionTest {
                       .withVersion("1.0"))
               .withDo(
                   List.of(
-                      new TaskItem(
-                          "forLoop",
-                          new Task()
-                              .withForTask(
-                                  new ForTaskFunction(
-                                          new ForTask()
-                                              .withDo(
-                                                  List.of(
-                                                      new TaskItem(
-                                                          "javaCall",
-                                                          new Task()
-                                                              .withCallTask(
-                                                                  new CallTask()
-                                                                      .withCallFunction(
-                                                                          CallJava.loopFunction(
-                                                                              CallTest::sum,
-                                                                              forConfig
-                                                                                  .getEach()))))))
-                                              .withFor(forConfig))
-                                      .withWhile(CallTest::isEven)
-                                      .withCollection(v -> v, Collection.class)
-                                      .task()))));
+                      new TaskItem("forLoop", new Task().withForTask(forTask.withFor(forConfig)))));
 
       var result = app.workflowDefinition(workflow).instance(List.of(2, 4, 6)).start().get();
 

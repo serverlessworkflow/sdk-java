@@ -13,10 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.api.types.func;
+package io.serverlessworkflow.api.types.utils;
 
-public final class TaskMetadataKeys {
+import io.serverlessworkflow.api.types.TaskBase;
+import io.serverlessworkflow.api.types.TaskMetadata;
+
+public class TypesUtils {
+
+  private TypesUtils() {}
 
   /** Metadata entry name for the DSL’s “when”/“if” predicate. */
   public static final String IF_PREDICATE = "if_predicate";
+
+  /** Metadata entry name for event until predicate */
+  public static final String UNTIL_PRED_NAME = "until";
+
+  public static TaskMetadata initMetadata(TaskBase task) {
+    TaskMetadata metadata = task.getMetadata();
+    if (metadata == null) {
+      metadata = new TaskMetadata();
+      task.setMetadata(metadata);
+    }
+    return metadata;
+  }
 }

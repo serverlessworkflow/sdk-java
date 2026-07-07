@@ -16,17 +16,17 @@
 package io.serverlessworkflow.fluent.func.dsl;
 
 import io.cloudevents.CloudEventData;
-import io.serverlessworkflow.api.reflection.func.InstanceIdFunction;
-import io.serverlessworkflow.api.reflection.func.ReflectionUtils;
-import io.serverlessworkflow.api.reflection.func.SerializableConsumer;
-import io.serverlessworkflow.api.reflection.func.SerializableFunction;
-import io.serverlessworkflow.api.reflection.func.SerializablePredicate;
-import io.serverlessworkflow.api.reflection.func.UniqueIdBiFunction;
 import io.serverlessworkflow.api.types.FlowDirectiveEnum;
 import io.serverlessworkflow.api.types.OAuth2AuthenticationData;
 import io.serverlessworkflow.api.types.func.ContextFunction;
 import io.serverlessworkflow.api.types.func.FilterFunction;
+import io.serverlessworkflow.api.types.func.InstanceIdFunction;
 import io.serverlessworkflow.api.types.func.LoopFunction;
+import io.serverlessworkflow.api.types.func.SerializableConsumer;
+import io.serverlessworkflow.api.types.func.SerializableFunction;
+import io.serverlessworkflow.api.types.func.SerializablePredicate;
+import io.serverlessworkflow.api.types.func.UniqueIdBiFunction;
+import io.serverlessworkflow.api.types.utils.ReflectionUtils;
 import io.serverlessworkflow.fluent.func.FuncCallTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncEmitTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncRaiseTaskBuilder;

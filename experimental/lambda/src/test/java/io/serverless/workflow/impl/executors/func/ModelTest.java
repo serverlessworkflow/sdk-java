@@ -30,7 +30,7 @@ import io.serverlessworkflow.api.types.WaitTask;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.api.types.func.ContextFunction;
 import io.serverlessworkflow.api.types.func.FilterFunction;
-import io.serverlessworkflow.api.types.func.MapSetTaskConfiguration;
+import io.serverlessworkflow.api.types.utils.MapSetTaskConfiguration;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowInstance;
 import java.util.List;
@@ -94,7 +94,7 @@ class ModelTest {
                                       .withSet(
                                           new Set()
                                               .withSetTaskConfiguration(
-                                                  new MapSetTaskConfiguration(
+                                                  MapSetTaskConfiguration.map(
                                                       Map.of("name", "Francisco"))))
                                       .withOutput(
                                           new Output()

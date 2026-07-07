@@ -15,18 +15,7 @@
  */
 package io.serverlessworkflow.api.types.func;
 
-import io.serverlessworkflow.api.types.SetTaskConfiguration;
-import java.util.Map;
+import java.util.function.Predicate;
 
-public class MapSetTaskConfiguration extends SetTaskConfiguration {
-
-  private static final long serialVersionUID = 1L;
-
-  public MapSetTaskConfiguration(Map<String, Object> map) {
-    map.forEach(this::processItem);
-  }
-
-  private void processItem(String key, Object value) {
-    withAdditionalProperty(key, value);
-  }
-}
+@FunctionalInterface
+public interface SerializablePredicate<T> extends Predicate<T>, FunctionObject {}

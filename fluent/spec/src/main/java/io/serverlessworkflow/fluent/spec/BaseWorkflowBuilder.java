@@ -15,6 +15,8 @@
  */
 package io.serverlessworkflow.fluent.spec;
 
+import static io.serverlessworkflow.types.Defaults.DSL;
+
 import io.serverlessworkflow.api.types.DoTimeout;
 import io.serverlessworkflow.api.types.Document;
 import io.serverlessworkflow.api.types.Input;
@@ -34,10 +36,6 @@ public abstract class BaseWorkflowBuilder<
         DBuilder extends BaseDoTaskBuilder<DBuilder, IListBuilder>,
         IListBuilder extends BaseTaskItemListBuilder<IListBuilder>>
     implements TransformationHandlers {
-
-  public static final String DSL = "1.0.0";
-  public static final String DEFAULT_VERSION = "0.0.1";
-  public static final String DEFAULT_NAMESPACE = "org-acme";
 
   protected final Workflow workflow;
   private final Document document;

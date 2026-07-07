@@ -13,10 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.api.reflection.func;
+package io.serverlessworkflow.fluent.func.serialization.jackson;
 
-import java.io.Serializable;
-import java.util.function.Consumer;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import io.serverlessworkflow.api.types.TaskMetadata;
+import java.io.IOException;
 
-@FunctionalInterface
-public interface SerializableConsumer<T> extends Consumer<T>, Serializable {}
+public class TaskMetadataSerializer extends JsonSerializer<TaskMetadata> {
+  @Override
+  public void serialize(TaskMetadata value, JsonGenerator gen, SerializerProvider serializers)
+      throws IOException {
+    SerializationUtils.serializeMap(gen, value.getAdditionalProperties());
+  }
+}

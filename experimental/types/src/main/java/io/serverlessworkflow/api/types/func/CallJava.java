@@ -15,9 +15,9 @@
  */
 package io.serverlessworkflow.api.types.func;
 
-import io.serverlessworkflow.api.reflection.func.ReflectionUtils;
 import io.serverlessworkflow.api.types.CallFunction;
 import io.serverlessworkflow.api.types.FunctionArguments;
+import io.serverlessworkflow.api.types.utils.ReflectionUtils;
 import java.lang.invoke.MethodType;
 import java.util.Optional;
 import java.util.function.Consumer;

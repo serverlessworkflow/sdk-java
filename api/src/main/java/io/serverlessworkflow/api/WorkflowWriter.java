@@ -22,8 +22,6 @@ import java.io.OutputStream;
 import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Utility class for writing Serverless Workflow definitions to various outputs and formats.
@@ -33,8 +31,6 @@ import org.slf4j.LoggerFactory;
  * {@link WorkflowFormat} parameter or inferred from file extensions.
  */
 public class WorkflowWriter {
-
-  private static final Logger logger = LoggerFactory.getLogger(WorkflowWriter.class);
 
   /**
    * Writes a {@link Workflow} to the given {@link OutputStream} in the specified format.
@@ -99,9 +95,7 @@ public class WorkflowWriter {
    */
   public static String workflowAsString(Workflow workflow, WorkflowFormat format)
       throws IOException {
-    String result = format.mapper().writeValueAsString(workflow);
-    logger.trace("Workflow is {}", result);
-    return result;
+    return format.mapper().writeValueAsString(workflow);
   }
 
   /**

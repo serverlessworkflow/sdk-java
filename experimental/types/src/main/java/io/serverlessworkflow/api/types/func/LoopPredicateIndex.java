@@ -15,9 +15,7 @@
  */
 package io.serverlessworkflow.api.types.func;
 
-import java.io.Serializable;
-
 @FunctionalInterface
-public interface LoopPredicateIndex<T, V> extends Serializable {
+public interface LoopPredicateIndex<T, V> extends FunctionObject {
   boolean test(T model, V item, Integer index);
 }

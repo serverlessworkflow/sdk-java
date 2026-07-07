@@ -13,10 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.api.reflection.func;
+package io.serverlessworkflow.api.types.utils;
 
 import io.serverlessworkflow.api.types.func.ContextFunction;
 import io.serverlessworkflow.api.types.func.FilterFunction;
+import io.serverlessworkflow.api.types.func.InstanceIdFunction;
+import io.serverlessworkflow.api.types.func.SerializableConsumer;
+import io.serverlessworkflow.api.types.func.SerializableFunction;
+import io.serverlessworkflow.api.types.func.SerializablePredicate;
+import io.serverlessworkflow.api.types.func.UniqueIdBiFunction;
 import java.lang.invoke.MethodType;
 import java.lang.invoke.SerializedLambda;
 import java.lang.reflect.InvocationTargetException;
@@ -77,17 +82,11 @@ public final class ReflectionUtils {
     return (Class<T>) inferOutputType(inferMethodType(fn));
   }
 
-  /**
-   * Extracts the input type using the resolved interface signature. * @param fn The serializable
-   * lambda
-   *
-   * @param lambdaParamIndex The index of the payload parameter in the interface's apply method
-   */
   public static Class<?> inferInputTypeFromAny(Object fn, int lambdaParamIndex) {
     return inferInputType(inferMethodType(fn), lambdaParamIndex);
   }
 
-  public static Optional<SerializedLambda> serializedFromFuntion(Object fn) {
+  public static Optional<SerializedLambda> serializedFromFunction(Object fn) {
     try {
       return Optional.of(serializedLambda(fn));
     } catch (ReflectiveOperationException ex) {
@@ -101,7 +100,14 @@ public final class ReflectionUtils {
   }
 
   public static Class<?> loadClass(String className) throws ClassNotFoundException {
-    return Thread.currentThread().getContextClassLoader().loadClass(className);
+    ClassLoader cl = Thread.currentThread().getContextClassLoader();
+    if (cl == null) {
+      cl = ReflectionUtils.class.getClassLoader();
+      if (cl == null) {
+        cl = ClassLoader.getSystemClassLoader();
+      }
+    }
+    return cl.loadClass(className);
   }
 
   public static Object functionFromSerialized(SerializedLambda sl)
@@ -114,7 +120,7 @@ public final class ReflectionUtils {
   }
 
   public static Optional<MethodType> methodType(Object fn) {
-    return serializedFromFuntion(fn).map(ReflectionUtils::inferMethodType);
+    return serializedFromFunction(fn).map(ReflectionUtils::inferMethodType);
   }
 
   public static MethodType inferMethodType(SerializedLambda sl) {
@@ -124,7 +130,7 @@ public final class ReflectionUtils {
         sl.getInstantiatedMethodType(), sl.getClass().getClassLoader());
   }
 
-  private static SerializedLambda serializedLambda(Object fn)
+  public static SerializedLambda serializedLambda(Object fn)
       throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
     Method m = fn.getClass().getDeclaredMethod("writeReplace");
     m.setAccessible(true);

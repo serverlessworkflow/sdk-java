@@ -15,20 +15,20 @@
  */
 package io.serverlessworkflow.fluent.func.serialization.jackson;
 
-import com.fasterxml.jackson.databind.util.StdConverter;
-import java.util.Map;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import io.serverlessworkflow.api.types.InputFrom;
+import io.serverlessworkflow.api.types.jackson.InputFromSerializer;
+import java.io.IOException;
 
-public abstract class AbstractMapValueTransformer<T> extends StdConverter<T, T> {
+public class FuncInputFromSerializer extends InputFromSerializer {
 
-  @Override
-  public T convert(T value) {
-    for (Map.Entry<String, Object> entry : map(value).entrySet()) {
-      GlobalConverterRegistry.get()
-          .findConverter(entry.getKey())
-          .ifPresent(c -> entry.setValue(c.apply(entry.getValue())));
+  public void serialize(InputFrom value, JsonGenerator gen, SerializerProvider serializers)
+      throws IOException {
+    if (SerializationUtils.isFilterSerializable(value.getObject())) {
+      SerializationUtils.serializeObjectWithType(gen, value.getObject());
+    } else {
+      super.serialize(value, gen, serializers);
     }
-    return value;
   }
-
-  protected abstract Map<String, Object> map(T value);
 }

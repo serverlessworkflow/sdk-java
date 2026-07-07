@@ -16,9 +16,8 @@
 package io.serverlessworkflow.api.types.func;
 
 import io.serverlessworkflow.impl.WorkflowContextData;
-import java.io.Serializable;
 
 @FunctionalInterface
-public interface ContextFunction<T, R> extends Serializable {
+public interface ContextFunction<T, R> extends FunctionObject {
   R apply(T object, WorkflowContextData workflowContext);
 }

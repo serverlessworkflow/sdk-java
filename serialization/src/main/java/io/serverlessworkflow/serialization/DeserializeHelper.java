@@ -31,7 +31,12 @@ public class DeserializeHelper {
 
   public static <T> T deserializeOneOf(
       JsonParser p, Class<T> targetClass, Collection<Class<?>> oneOfTypes) throws IOException {
-    TreeNode node = p.readValueAsTree();
+    return deserializeOneOf(p.readValueAsTree(), p, targetClass, oneOfTypes);
+  }
+
+  public static <T> T deserializeOneOf(
+      TreeNode node, JsonParser p, Class<T> targetClass, Collection<Class<?>> oneOfTypes)
+      throws IOException {
     try {
       T result = targetClass.getDeclaredConstructor().newInstance();
       Collection<Exception> exceptions = new ArrayList<>();

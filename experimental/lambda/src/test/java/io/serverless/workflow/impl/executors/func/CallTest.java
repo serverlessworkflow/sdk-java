@@ -24,6 +24,7 @@ import io.serverlessworkflow.api.types.FlowDirective;
 import io.serverlessworkflow.api.types.FlowDirectiveEnum;
 import io.serverlessworkflow.api.types.ForTask;
 import io.serverlessworkflow.api.types.ForTaskConfiguration;
+import io.serverlessworkflow.api.types.SwitchCase;
 import io.serverlessworkflow.api.types.SwitchItem;
 import io.serverlessworkflow.api.types.SwitchTask;
 import io.serverlessworkflow.api.types.Task;
@@ -31,9 +32,9 @@ import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.api.types.TaskMetadata;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.api.types.func.CallJava;
-import io.serverlessworkflow.api.types.func.ForTaskFunction;
-import io.serverlessworkflow.api.types.func.SwitchCasePredicate;
-import io.serverlessworkflow.api.types.func.TaskMetadataKeys;
+import io.serverlessworkflow.api.types.utils.ForTaskFunction;
+import io.serverlessworkflow.api.types.utils.TaskPredicate;
+import io.serverlessworkflow.api.types.utils.TypesUtils;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowModel;
@@ -92,34 +93,26 @@ class CallTest {
   void testForLoop() throws InterruptedException, ExecutionException {
     try (WorkflowApplication app = WorkflowApplication.builder().build()) {
       ForTaskConfiguration forConfig = new ForTaskConfiguration();
+      ForTask forTask =
+          new ForTask()
+              .withFor(forConfig)
+              .withDo(
+                  List.of(
+                      new TaskItem(
+                          "javaCall",
+                          new Task()
+                              .withCallTask(
+                                  new CallTask()
+                                      .withCallFunction(
+                                          CallJava.loopFunction(
+                                              CallTest::sum, forConfig.getEach()))))));
+      ForTaskFunction.withCollection(forTask, v -> v, Collection.class);
+      ForTaskFunction.withWhile(forTask, CallTest::isEven);
       Workflow workflow =
           new Workflow()
               .withDocument(
                   new Document().withNamespace("test").withName("testLoop").withVersion("1.0"))
-              .withDo(
-                  List.of(
-                      new TaskItem(
-                          "forLoop",
-                          new Task()
-                              .withForTask(
-                                  new ForTaskFunction(
-                                          new ForTask()
-                                              .withFor(forConfig)
-                                              .withDo(
-                                                  List.of(
-                                                      new TaskItem(
-                                                          "javaCall",
-                                                          new Task()
-                                                              .withCallTask(
-                                                                  new CallTask()
-                                                                      .withCallFunction(
-                                                                          CallJava.loopFunction(
-                                                                              CallTest::sum,
-                                                                              forConfig
-                                                                                  .getEach())))))))
-                                      .withWhile(CallTest::isEven)
-                                      .withCollection(v -> v, Collection.class)
-                                      .task()))));
+              .withDo(List.of(new TaskItem("forLoop", new Task().withForTask(forTask))));
 
       assertThat(
               app.workflowDefinition(workflow)
@@ -145,17 +138,20 @@ class CallTest {
                           "switch",
                           new Task()
                               .withSwitchTask(
-                                  new SwitchTask()
-                                      .withSwitch(
-                                          List.of(
-                                              new SwitchItem(
-                                                  "odd",
-                                                  new SwitchCasePredicate()
-                                                      .withPredicate(CallTest::isOdd, Integer.class)
-                                                      .withThen(
-                                                          new FlowDirective()
-                                                              .withFlowDirectiveEnum(
-                                                                  FlowDirectiveEnum.END))))))),
+                                  TaskPredicate.withPredicate(
+                                      new SwitchTask()
+                                          .withSwitch(
+                                              List.of(
+                                                  new SwitchItem(
+                                                      "odd",
+                                                      new SwitchCase()
+                                                          .withThen(
+                                                              new FlowDirective()
+                                                                  .withFlowDirectiveEnum(
+                                                                      FlowDirectiveEnum.END))))),
+                                      "odd",
+                                      CallTest::isOdd,
+                                      Integer.class))),
                       new TaskItem(
                           "java",
                           new Task()
@@ -220,7 +216,7 @@ class CallTest {
 
   private <T> CallFunction withPredicate(CallFunction call, Predicate<T> pred) {
     return call.withMetadata(
-        new TaskMetadata().withAdditionalProperty(TaskMetadataKeys.IF_PREDICATE, pred));
+        new TaskMetadata().withAdditionalProperty(TypesUtils.IF_PREDICATE, pred));
   }
 
   public static boolean isEven(Object model, Integer number) {

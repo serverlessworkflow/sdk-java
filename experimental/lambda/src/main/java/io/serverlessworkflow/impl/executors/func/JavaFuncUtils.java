@@ -15,7 +15,6 @@
  */
 package io.serverlessworkflow.impl.executors.func;
 
-import io.serverlessworkflow.api.types.func.PredicateContainer;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowPredicate;
@@ -28,11 +27,8 @@ public class JavaFuncUtils {
     return obj instanceof WorkflowModel model ? model.asJavaObject() : obj;
   }
 
-  static WorkflowPredicate from(WorkflowApplication application, PredicateContainer source) {
-    assert (source.predicate() != null);
-    return application
-        .expressionFactory()
-        .buildPredicate(ExpressionDescriptor.object(source.predicate()));
+  static WorkflowPredicate from(WorkflowApplication application, Object predicate) {
+    return application.expressionFactory().buildPredicate(ExpressionDescriptor.object(predicate));
   }
 
   static <T> T convertT(WorkflowModel model, Optional<Class<T>> inputClass) {

@@ -21,10 +21,10 @@ import io.serverlessworkflow.api.types.ForTaskConfiguration;
 import io.serverlessworkflow.api.types.Task;
 import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.api.types.func.CallJava;
-import io.serverlessworkflow.api.types.func.ForTaskFunction;
 import io.serverlessworkflow.api.types.func.LoopFunction;
 import io.serverlessworkflow.api.types.func.LoopPredicate;
 import io.serverlessworkflow.api.types.func.LoopPredicateIndex;
+import io.serverlessworkflow.api.types.utils.ForTaskFunction;
 import io.serverlessworkflow.fluent.func.spi.ConditionalTaskBuilder;
 import io.serverlessworkflow.fluent.func.spi.FuncTaskTransformations;
 import io.serverlessworkflow.fluent.spec.TaskBaseBuilder;
@@ -41,12 +41,10 @@ public class FuncForTaskBuilder extends TaskBaseBuilder<FuncForTaskBuilder>
         ForEachTaskFluent<FuncForTaskBuilder, FuncTaskItemListBuilder> {
 
   private final ForTask forTask;
-  private final ForTaskFunction forTaskFunction;
   private final List<TaskItem> items;
 
   FuncForTaskBuilder() {
     this.forTask = new ForTask();
-    this.forTaskFunction = new ForTaskFunction(forTask);
     this.forTask.withFor(new ForTaskConfiguration());
     this.items = new ArrayList<>();
     super.setTask(forTask);
@@ -58,23 +56,23 @@ public class FuncForTaskBuilder extends TaskBaseBuilder<FuncForTaskBuilder>
   }
 
   public <T, V> FuncForTaskBuilder whileC(LoopPredicate<T, V> predicate) {
-    this.forTaskFunction.withWhile(predicate);
+    ForTaskFunction.withWhile(forTask, predicate);
     return this;
   }
 
   public <T, V> FuncForTaskBuilder whileC(LoopPredicateIndex<T, V> predicate) {
-    this.forTaskFunction.withWhile(predicate);
+    ForTaskFunction.withWhile(forTask, predicate);
     return this;
   }
 
   public <T, V> FuncForTaskBuilder collection(Function<T, Collection<V>> collectionF) {
-    this.forTaskFunction.withCollection(collectionF);
+    ForTaskFunction.withCollection(forTask, collectionF);
     return this;
   }
 
   public <T, V> FuncForTaskBuilder collection(
       Function<T, Collection<V>> collectionF, Class<T> clazz) {
-    this.forTaskFunction.withCollection(collectionF, clazz);
+    ForTaskFunction.withCollection(forTask, collectionF, clazz);
     return this;
   }
 

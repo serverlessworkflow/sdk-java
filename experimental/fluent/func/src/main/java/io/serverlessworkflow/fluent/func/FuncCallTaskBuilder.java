@@ -15,11 +15,11 @@
  */
 package io.serverlessworkflow.fluent.func;
 
-import io.serverlessworkflow.api.reflection.func.SerializableFunction;
 import io.serverlessworkflow.api.types.CallTask;
 import io.serverlessworkflow.api.types.func.CallJava;
 import io.serverlessworkflow.api.types.func.ContextFunction;
 import io.serverlessworkflow.api.types.func.FilterFunction;
+import io.serverlessworkflow.api.types.func.SerializableFunction;
 import io.serverlessworkflow.fluent.func.spi.ConditionalTaskBuilder;
 import io.serverlessworkflow.fluent.func.spi.FuncTaskTransformations;
 import io.serverlessworkflow.fluent.spec.TaskBaseBuilder;
@@ -102,6 +102,10 @@ public class FuncCallTaskBuilder extends TaskBaseBuilder<FuncCallTaskBuilder>
   }
 
   public CallTask build() {
+    if (this.callTaskJava == null) {
+      throw new IllegalStateException(
+          "Call task is not configured. Call function(...) or consumer(...) before build().");
+    }
     return this.callTaskJava;
   }
 }

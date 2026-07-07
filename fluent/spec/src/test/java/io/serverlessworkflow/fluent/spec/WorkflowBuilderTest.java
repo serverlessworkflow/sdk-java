@@ -76,7 +76,7 @@ public class WorkflowBuilderTest {
     assertNotNull(wf, "Workflow should not be null");
     Document doc = wf.getDocument();
     assertNotNull(doc, "Document should not be null");
-    assertEquals("org-acme", doc.getNamespace(), "Default namespace should be org.acme");
+    assertEquals("org-acme", doc.getNamespace(), "Default namespace should be org-acme");
     assertEquals("0.0.1", doc.getVersion(), "Default version should be 0.0.1");
     assertEquals("1.0.0", doc.getDsl(), "DSL version should be set to 1.0.0");
     assertNotNull(doc.getName(), "Name should be auto-generated");

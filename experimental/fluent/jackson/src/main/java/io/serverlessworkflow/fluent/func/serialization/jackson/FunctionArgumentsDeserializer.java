@@ -15,21 +15,23 @@
  */
 package io.serverlessworkflow.fluent.func.serialization.jackson;
 
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
 import io.serverlessworkflow.api.types.FunctionArguments;
-import io.serverlessworkflow.api.types.func.CallJava;
-import java.util.Map;
+import java.io.IOException;
 
-public class FunctionArgumentsTransformer extends AbstractMapValueTransformer<FunctionArguments> {
-
-  static {
-    GlobalConverterRegistry.get()
-        .registerConverter(CallJava.FUNCTION_NAME_KEY, SerializationUtils::getFunction)
-        .registerConverter(CallJava.INPUT_CLASS_KEY, SerializationUtils::getClassOrEmpty)
-        .registerConverter(CallJava.OUTPUT_CLASS_KEY, SerializationUtils::getClassOrEmpty);
-  }
+public class FunctionArgumentsDeserializer extends JsonDeserializer<FunctionArguments> {
 
   @Override
-  protected Map<String, Object> map(FunctionArguments value) {
-    return value.getAdditionalProperties();
+  public FunctionArguments deserialize(JsonParser p, DeserializationContext ctxt)
+      throws IOException {
+    try {
+      FunctionArguments result = new FunctionArguments();
+      SerializationUtils.deserializeMap(p, ctxt, result.getAdditionalProperties());
+      return result;
+    } catch (ReflectiveOperationException e) {
+      throw new IOException(e);
+    }
   }
 }

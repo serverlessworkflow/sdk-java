@@ -13,8 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.api.types.func;
+package io.serverlessworkflow.api.types.utils;
 
-public interface PredicateContainer {
-  Object predicate();
+import io.serverlessworkflow.api.types.SetTaskConfiguration;
+import java.util.Map;
+
+public class MapSetTaskConfiguration {
+
+  private MapSetTaskConfiguration() {}
+
+  public static SetTaskConfiguration map(Map<String, Object> map) {
+    SetTaskConfiguration config = new SetTaskConfiguration();
+    for (Map.Entry<String, Object> entry : map.entrySet()) {
+      config.withAdditionalProperty(entry.getKey(), entry.getValue());
+    }
+    return config;
+  }
 }

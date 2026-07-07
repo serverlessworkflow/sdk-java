@@ -17,9 +17,8 @@ package io.serverlessworkflow.api.types.func;
 
 import io.serverlessworkflow.impl.TaskContextData;
 import io.serverlessworkflow.impl.WorkflowContextData;
-import java.io.Serializable;
 
 @FunctionalInterface
-public interface FilterPredicate<T> extends Serializable {
+public interface FilterPredicate<T> extends FunctionObject {
   boolean test(T value, WorkflowContextData workflow, TaskContextData task);
 }

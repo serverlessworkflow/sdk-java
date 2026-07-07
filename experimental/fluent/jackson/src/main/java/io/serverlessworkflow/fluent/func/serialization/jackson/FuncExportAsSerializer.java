@@ -15,7 +15,20 @@
  */
 package io.serverlessworkflow.fluent.func.serialization.jackson;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import io.serverlessworkflow.api.types.ExportAs;
+import io.serverlessworkflow.api.types.jackson.ExportAsSerializer;
+import java.io.IOException;
 
-@JsonDeserialize(converter = FunctionArgumentsTransformer.class)
-public abstract class FunctionArgumentsMixIn {}
+public class FuncExportAsSerializer extends ExportAsSerializer {
+
+  public void serialize(ExportAs value, JsonGenerator gen, SerializerProvider serializers)
+      throws IOException {
+    if (SerializationUtils.isFilterSerializable(value.getObject())) {
+      SerializationUtils.serializeObjectWithType(gen, value.getObject());
+    } else {
+      super.serialize(value, gen, serializers);
+    }
+  }
+}

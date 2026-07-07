@@ -19,10 +19,9 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.TreeNode;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import io.serverlessworkflow.api.reflection.func.ReflectionUtils;
+import io.serverlessworkflow.api.types.utils.ReflectionUtils;
 import java.io.IOException;
 import java.lang.invoke.SerializedLambda;
 
@@ -38,8 +37,6 @@ public class SerializedLambdaDeserializer extends JsonDeserializer<SerializedLam
   static final String METHOD_SIGNATURE = "implMethodSignature";
   static final String METHOD_TYPE = "instantiatedMethodType";
   static final String CAPTURED_ARGS = "capturedArgs";
-  static final String TYPE_CAPTURE_ARG = "type";
-  static final String DATA_CAPTURE_ARG = "data";
 
   @Override
   public SerializedLambda deserialize(JsonParser p, DeserializationContext ctxt)
@@ -77,17 +74,7 @@ public class SerializedLambdaDeserializer extends JsonDeserializer<SerializedLam
     } else {
       Object[] result = new Object[node.size()];
       for (int i = 0; i < result.length; i++) {
-        ObjectNode objectNode = (ObjectNode) node.get(i);
-        JsonNode type = objectNode.get(TYPE_CAPTURE_ARG);
-        if (type != null && type.isTextual()) {
-          Object value =
-              ctxt.readTreeAsValue(
-                  objectNode.get(DATA_CAPTURE_ARG), ReflectionUtils.loadClass(type.asText()));
-          result[i] =
-              value instanceof SerializedLambda sl
-                  ? ReflectionUtils.functionFromSerialized(sl)
-                  : value;
-        }
+        result[i] = SerializationUtils.deserializeObjectWithType(ctxt, node.get(i));
       }
       return result;
     }

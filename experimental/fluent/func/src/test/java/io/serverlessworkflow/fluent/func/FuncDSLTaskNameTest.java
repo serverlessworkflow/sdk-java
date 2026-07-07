@@ -22,7 +22,6 @@ import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.function;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.switchWhen;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.switchWhenOrElse;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -32,7 +31,6 @@ import io.serverlessworkflow.api.types.SwitchCase;
 import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.api.types.func.LoopFunction;
-import io.serverlessworkflow.api.types.func.SwitchCasePredicate;
 import io.serverlessworkflow.fluent.func.configurers.FuncTaskConfigurer;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
@@ -61,7 +59,6 @@ class FuncDSLTaskNameTest {
           buildItems(switchWhen("checkSign", (Integer v) -> v > 0, "positive", Integer.class));
       assertEquals("checkSign", items.get(0).getName());
       SwitchCase sc = items.get(0).getTask().getSwitchTask().getSwitch().get(0).getSwitchCase();
-      assertInstanceOf(SwitchCasePredicate.class, sc);
       assertEquals("positive", sc.getThen().getString());
     }
 
@@ -104,7 +101,6 @@ class FuncDSLTaskNameTest {
       assertEquals("scoreGate", items.get(0).getName());
       var cases = items.get(0).getTask().getSwitchTask().getSwitch();
       assertEquals(2, cases.size());
-      assertInstanceOf(SwitchCasePredicate.class, cases.get(0).getSwitchCase());
       assertEquals("pass", cases.get(0).getSwitchCase().getThen().getString());
       assertEquals(
           FlowDirectiveEnum.END, cases.get(1).getSwitchCase().getThen().getFlowDirectiveEnum());
