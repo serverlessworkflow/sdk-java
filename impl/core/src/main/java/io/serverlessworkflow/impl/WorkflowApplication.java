@@ -48,12 +48,15 @@ import io.serverlessworkflow.impl.resources.ExternalResourceHandler;
 import io.serverlessworkflow.impl.resources.ResourceLoaderFactory;
 import io.serverlessworkflow.impl.resources.URITemplateResolver;
 import io.serverlessworkflow.impl.scheduler.AllStrategyCorrelationInfoFactory;
+import io.serverlessworkflow.impl.scheduler.CronResolver;
+import io.serverlessworkflow.impl.scheduler.CronResolverFactory;
 import io.serverlessworkflow.impl.scheduler.DefaultWorkflowScheduler;
 import io.serverlessworkflow.impl.scheduler.InMemoryAllStrategyCorrelationInfo;
 import io.serverlessworkflow.impl.scheduler.WorkflowScheduler;
 import io.serverlessworkflow.impl.schema.SchemaValidator;
 import io.serverlessworkflow.impl.schema.SchemaValidatorFactory;
 import java.net.URI;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -68,6 +71,8 @@ import java.util.ServiceLoader;
 import java.util.ServiceLoader.Provider;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -104,6 +109,7 @@ public class WorkflowApplication implements AutoCloseable {
   private final CloudEventPredicateFactory cloudEventPredicateFactory;
   private final AllStrategyCorrelationInfoFactory allStrategyCorrelationInfoFactory;
   private final WorkflowLifeCycleCloudEventFactory lifeCycleCloudEventFactory;
+  private final ScheduledExecutorService schedulerExecutorService;
 
   private WorkflowApplication(Builder builder) {
     this.taskFactory = builder.taskFactory;
@@ -137,6 +143,7 @@ public class WorkflowApplication implements AutoCloseable {
     this.cloudEventPredicateFactory = builder.cloudEventPredicateFactory;
     this.allStrategyCorrelationInfoFactory = builder.allStrategyCorrelationInfoFactory;
     this.lifeCycleCloudEventFactory = builder.lifeCycleCloudEventFactory;
+    this.schedulerExecutorService = builder.schedulerExecutorService;
   }
 
   public TaskExecutorFactory taskFactory() {
@@ -259,6 +266,8 @@ public class WorkflowApplication implements AutoCloseable {
     private CloudEventPredicateFactory cloudEventPredicateFactory;
     private AllStrategyCorrelationInfoFactory allStrategyCorrelationInfoFactory;
     private WorkflowLifeCycleCloudEventFactory lifeCycleCloudEventFactory;
+    private CronResolverFactory cronResolverFactory;
+    private ScheduledExecutorService schedulerExecutorService;
 
     private Builder() {
       ServiceLoader.load(NamedWorkflowAdditionalObject.class)
@@ -413,6 +422,11 @@ public class WorkflowApplication implements AutoCloseable {
       return this;
     }
 
+    public Builder withCronResolverFactory(CronResolverFactory cronResolverFactory) {
+      this.cronResolverFactory = cronResolverFactory;
+      return this;
+    }
+
     public WorkflowApplication build() {
 
       if (modelFactory == null) {
@@ -452,8 +466,31 @@ public class WorkflowApplication implements AutoCloseable {
       if (idFactory == null) {
         idFactory = new MonotonicUlidWorkflowInstanceIdFactory();
       }
+
       if (scheduler == null) {
-        scheduler = new DefaultWorkflowScheduler();
+        if (cronResolverFactory == null) {
+          cronResolverFactory =
+              loadFirst(CronResolverFactory.class)
+                  .orElseGet(
+                      () ->
+                          new CronResolverFactory() {
+                            private CronResolver emptyResolver =
+                                new CronResolver() {
+                                  @Override
+                                  public Optional<Duration> nextExecution() {
+                                    throw new UnsupportedOperationException(
+                                        "Missing CronResolverFactory, please add serverlessworkflow-impl-cron dependency to your classpath");
+                                  }
+                                };
+
+                            @Override
+                            public CronResolver parseCron(String cron) {
+                              return emptyResolver;
+                            }
+                          });
+        }
+        schedulerExecutorService = Executors.newSingleThreadScheduledExecutor();
+        scheduler = new DefaultWorkflowScheduler(schedulerExecutorService, cronResolverFactory);
       }
       schedulerListener = new SchedulerListener(scheduler);
       listeners.add(schedulerListener);
@@ -531,6 +568,9 @@ public class WorkflowApplication implements AutoCloseable {
         listeners.clear();
       }
       listenersByPriority.clear();
+    }
+    if (this.schedulerExecutorService != null) {
+      schedulerExecutorService.shutdownNow();
     }
   }
 

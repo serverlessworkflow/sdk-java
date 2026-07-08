@@ -94,6 +94,7 @@ This SDK is modular by design—pull in only what you need:
     * **serverlessworkflow-impl-function** Function support. 
     * **serverlessworkflow-impl-template-resolver** JaxRS URI template implementation. 
     * **serverlessworkflow-impl-json** Json common utilities shared by all modules in this list
+    * **serverlessworkflow-impl-cron** Cron parsing
     
 * **serverlessworkflow-impl-http**
   HTTP `Call` task handler, based on Jax-RS client

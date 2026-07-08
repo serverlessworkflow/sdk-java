@@ -13,26 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.serverlessworkflow.impl.scheduler;
+package io.serverlessworkflow.impl.cron;
 
-import com.cronutils.model.CronType;
-import com.cronutils.model.definition.CronDefinitionBuilder;
-import com.cronutils.parser.CronParser;
+import com.cronutils.model.Cron;
+import com.cronutils.model.time.ExecutionTime;
+import io.serverlessworkflow.impl.scheduler.CronResolver;
+import java.time.Duration;
+import java.time.ZonedDateTime;
+import java.util.Optional;
 
-class CronUtilsResolverFactory implements CronResolverFactory {
+class CronUtilsResolver implements CronResolver {
 
-  private final CronParser cronParser;
+  private final ExecutionTime executionTime;
 
-  public CronUtilsResolverFactory() {
-    this(CronType.UNIX);
-  }
-
-  public CronUtilsResolverFactory(CronType type) {
-    this.cronParser = new CronParser(CronDefinitionBuilder.instanceDefinitionFor(type));
+  public CronUtilsResolver(Cron cron) {
+    this.executionTime = ExecutionTime.forCron(cron);
   }
 
   @Override
-  public CronResolver parseCron(String cron) {
-    return new CronUtilsResolver(cronParser.parse(cron));
+  public Optional<Duration> nextExecution() {
+    return executionTime.timeToNextExecution(ZonedDateTime.now());
   }
 }
