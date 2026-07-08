@@ -17,7 +17,6 @@ package io.serverlessworkflow.impl.scheduler;
 
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowInstance;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -27,10 +26,6 @@ import java.util.concurrent.atomic.AtomicReference;
 public class DefaultWorkflowScheduler extends ExecutorServiceWorkflowScheduler {
 
   private final CronResolverFactory cronFactory;
-
-  public DefaultWorkflowScheduler() {
-    this(Executors.newSingleThreadScheduledExecutor(), new CronUtilsResolverFactory());
-  }
 
   public DefaultWorkflowScheduler(
       ScheduledExecutorService service, CronResolverFactory cronFactory) {

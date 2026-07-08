@@ -131,6 +131,11 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
+                <groupId>io.serverlessworkflow</groupId>
+                <artifactId>serverlessworkflow-impl-cron</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>net.thisptr</groupId>
                 <artifactId>jackson-jq</artifactId>
                 <version>${version.net.thisptr}</version>
@@ -231,5 +236,6 @@
         <module>grpc</module>
         <module>openapi-jackson</module>
         <module>a2a</module>
+        <module>cron</module>
     </modules>
 </project>

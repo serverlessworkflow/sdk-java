@@ -15,6 +15,8 @@
  */
 package io.serverlessworkflow.impl.scheduler;
 
-public interface CronResolverFactory {
+import io.serverlessworkflow.impl.ServicePriority;
+
+public interface CronResolverFactory extends ServicePriority {
   CronResolver parseCron(String cron);
 }
