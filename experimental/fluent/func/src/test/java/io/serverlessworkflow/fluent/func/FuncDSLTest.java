@@ -668,4 +668,24 @@ class FuncDSLTest {
     assertInstanceOf(CallGRPC.class, t.getCallTask().get());
     assertEquals("Call", ((CallGRPC) t.getCallTask().get()).getWith().getMethod());
   }
+
+  @Test
+  @DisplayName(
+      "function with nested generic Map<String, List<Integer>> preserves type safety in lambda")
+  void function_with_nested_generics_preserves_type_safety() {
+    Workflow wf =
+        FuncWorkflowBuilder.workflow("nested-generics")
+            .tasks(
+                function(
+                    (Map<String, List<Integer>> map) -> {
+                      List<Integer> values = map.get("scores");
+                      int total = values.stream().mapToInt(Integer::intValue).sum();
+                      return Map.of("total", total, "count", values.size());
+                    }))
+            .build();
+
+    List<TaskItem> items = wf.getDo();
+    assertEquals(1, items.size());
+    assertNotNull(items.get(0).getTask().getCallTask(), "CallTask expected");
+  }
 }

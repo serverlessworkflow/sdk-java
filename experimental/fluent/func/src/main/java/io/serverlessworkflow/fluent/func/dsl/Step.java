@@ -15,9 +15,6 @@
  */
 package io.serverlessworkflow.fluent.func.dsl;
 
-import io.serverlessworkflow.api.reflection.func.ReflectionUtils;
-import io.serverlessworkflow.api.reflection.func.SerializableFunction;
-import io.serverlessworkflow.api.reflection.func.SerializablePredicate;
 import io.serverlessworkflow.api.types.FlowDirectiveEnum;
 import io.serverlessworkflow.api.types.func.ContextFunction;
 import io.serverlessworkflow.api.types.func.FilterFunction;
@@ -51,11 +48,11 @@ abstract class Step<SELF extends Step<SELF, B>, B> implements FuncTaskConfigurer
   // ---------------------------------------------------------------------------
 
   /** Queue a {@code when(predicate)} to be applied on the concrete builder. */
-  public <T> SELF when(SerializablePredicate<T> predicate) {
-    postConfigurers.add(
-        b ->
-            ((ConditionalTaskBuilder<?>) b)
-                .when(predicate, ReflectionUtils.inferInputType(predicate)));
+  @SafeVarargs
+  @SuppressWarnings("unchecked")
+  public final <T> SELF when(Predicate<T> predicate, T... typeToken) {
+    Class<T> inputClass = (Class<T>) typeToken.getClass().getComponentType();
+    postConfigurers.add(b -> ((ConditionalTaskBuilder<?>) b).when(predicate, inputClass));
     return self();
   }
 
@@ -127,11 +124,11 @@ abstract class Step<SELF extends Step<SELF, B>, B> implements FuncTaskConfigurer
    * @return this step for method chaining
    * @see io.serverlessworkflow.fluent.func.spi.FuncTaskTransformations#exportAs(Function)
    */
-  public <T, R> SELF exportAs(SerializableFunction<T, R> function) {
-    postConfigurers.add(
-        b ->
-            ((FuncTaskTransformations<?>) b)
-                .exportAs(function, ReflectionUtils.inferInputType(function)));
+  @SafeVarargs
+  @SuppressWarnings("unchecked")
+  public final <T, R> SELF exportAs(Function<T, R> function, T... typeToken) {
+    Class<T> inputClass = (Class<T>) typeToken.getClass().getComponentType();
+    postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).exportAs(function, inputClass));
     return self();
   }
 
@@ -165,11 +162,11 @@ abstract class Step<SELF extends Step<SELF, B>, B> implements FuncTaskConfigurer
    * @return this step for method chaining
    * @see io.serverlessworkflow.fluent.func.spi.FuncTaskTransformations#exportAs(FilterFunction)
    */
-  public <T, R> SELF exportAs(FilterFunction<T, R> function) {
-    postConfigurers.add(
-        b ->
-            ((FuncTaskTransformations<?>) b)
-                .exportAs(function, ReflectionUtils.inferInputType(function)));
+  @SafeVarargs
+  @SuppressWarnings("unchecked")
+  public final <T, R> SELF exportAs(FilterFunction<T, R> function, T... typeToken) {
+    Class<T> inputClass = (Class<T>) typeToken.getClass().getComponentType();
+    postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).exportAs(function, inputClass));
     return self();
   }
 
@@ -202,11 +199,11 @@ abstract class Step<SELF extends Step<SELF, B>, B> implements FuncTaskConfigurer
    * @return this step for method chaining
    * @see io.serverlessworkflow.fluent.func.spi.FuncTaskTransformations#exportAs(ContextFunction)
    */
-  public <T, R> SELF exportAs(ContextFunction<T, R> function) {
-    postConfigurers.add(
-        b ->
-            ((FuncTaskTransformations<?>) b)
-                .exportAs(function, ReflectionUtils.inferInputType(function)));
+  @SafeVarargs
+  @SuppressWarnings("unchecked")
+  public final <T, R> SELF exportAs(ContextFunction<T, R> function, T... typeToken) {
+    Class<T> inputClass = (Class<T>) typeToken.getClass().getComponentType();
+    postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).exportAs(function, inputClass));
     return self();
   }
 
@@ -288,11 +285,11 @@ abstract class Step<SELF extends Step<SELF, B>, B> implements FuncTaskConfigurer
    * @return this step for method chaining
    * @see io.serverlessworkflow.fluent.func.spi.FuncTransformations#outputAs(Function)
    */
-  public <T, R> SELF outputAs(SerializableFunction<T, R> function) {
-    postConfigurers.add(
-        b ->
-            ((FuncTaskTransformations<?>) b)
-                .outputAs(function, ReflectionUtils.inferInputType(function)));
+  @SafeVarargs
+  @SuppressWarnings("unchecked")
+  public final <T, R> SELF outputAs(Function<T, R> function, T... typeToken) {
+    Class<T> inputClass = (Class<T>) typeToken.getClass().getComponentType();
+    postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).outputAs(function, inputClass));
     return self();
   }
 
@@ -344,11 +341,11 @@ abstract class Step<SELF extends Step<SELF, B>, B> implements FuncTaskConfigurer
    * @return this step for method chaining
    * @see io.serverlessworkflow.fluent.func.spi.FuncTransformations#outputAs(FilterFunction)
    */
-  public <T, R> SELF outputAs(FilterFunction<T, R> function) {
-    postConfigurers.add(
-        b ->
-            ((FuncTaskTransformations<?>) b)
-                .outputAs(function, ReflectionUtils.inferInputType(function)));
+  @SafeVarargs
+  @SuppressWarnings("unchecked")
+  public final <T, R> SELF outputAs(FilterFunction<T, R> function, T... typeToken) {
+    Class<T> inputClass = (Class<T>) typeToken.getClass().getComponentType();
+    postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).outputAs(function, inputClass));
     return self();
   }
 
@@ -380,11 +377,11 @@ abstract class Step<SELF extends Step<SELF, B>, B> implements FuncTaskConfigurer
    * @return this step for method chaining
    * @see io.serverlessworkflow.fluent.func.spi.FuncTransformations#outputAs(ContextFunction)
    */
-  public <T, R> SELF outputAs(ContextFunction<T, R> function) {
-    postConfigurers.add(
-        b ->
-            ((FuncTaskTransformations<?>) b)
-                .outputAs(function, ReflectionUtils.inferInputType(function)));
+  @SafeVarargs
+  @SuppressWarnings("unchecked")
+  public final <T, R> SELF outputAs(ContextFunction<T, R> function, T... typeToken) {
+    Class<T> inputClass = (Class<T>) typeToken.getClass().getComponentType();
+    postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).outputAs(function, inputClass));
     return self();
   }
 
@@ -450,11 +447,11 @@ abstract class Step<SELF extends Step<SELF, B>, B> implements FuncTaskConfigurer
    * @return this step for method chaining
    * @see io.serverlessworkflow.fluent.func.spi.FuncTransformations#inputFrom(Function)
    */
-  public <T, R> SELF inputFrom(SerializableFunction<T, R> function) {
-    postConfigurers.add(
-        b ->
-            ((FuncTaskTransformations<?>) b)
-                .inputFrom(function, ReflectionUtils.inferInputType(function)));
+  @SafeVarargs
+  @SuppressWarnings("unchecked")
+  public final <T, R> SELF inputFrom(Function<T, R> function, T... typeToken) {
+    Class<T> inputClass = (Class<T>) typeToken.getClass().getComponentType();
+    postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).inputFrom(function, inputClass));
     return self();
   }
 
@@ -509,11 +506,11 @@ abstract class Step<SELF extends Step<SELF, B>, B> implements FuncTaskConfigurer
    * @return this step for method chaining
    * @see io.serverlessworkflow.fluent.func.spi.FuncTransformations#inputFrom(FilterFunction)
    */
-  public <T, R> SELF inputFrom(FilterFunction<T, R> function) {
-    postConfigurers.add(
-        b ->
-            ((FuncTaskTransformations<?>) b)
-                .inputFrom(function, ReflectionUtils.inferInputType(function)));
+  @SafeVarargs
+  @SuppressWarnings("unchecked")
+  public final <T, R> SELF inputFrom(FilterFunction<T, R> function, T... typeToken) {
+    Class<T> inputClass = (Class<T>) typeToken.getClass().getComponentType();
+    postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).inputFrom(function, inputClass));
     return self();
   }
 
@@ -547,11 +544,11 @@ abstract class Step<SELF extends Step<SELF, B>, B> implements FuncTaskConfigurer
    * @return this step for method chaining
    * @see io.serverlessworkflow.fluent.func.spi.FuncTransformations#inputFrom(ContextFunction)
    */
-  public <T, R> SELF inputFrom(ContextFunction<T, R> function) {
-    postConfigurers.add(
-        b ->
-            ((FuncTaskTransformations<?>) b)
-                .inputFrom(function, ReflectionUtils.inferInputType(function)));
+  @SafeVarargs
+  @SuppressWarnings("unchecked")
+  public final <T, R> SELF inputFrom(ContextFunction<T, R> function, T... typeToken) {
+    Class<T> inputClass = (Class<T>) typeToken.getClass().getComponentType();
+    postConfigurers.add(b -> ((FuncTaskTransformations<?>) b).inputFrom(function, inputClass));
     return self();
   }
 

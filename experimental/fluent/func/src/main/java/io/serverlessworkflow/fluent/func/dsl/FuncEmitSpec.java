@@ -18,8 +18,6 @@ package io.serverlessworkflow.fluent.func.dsl;
 import io.cloudevents.CloudEventData;
 import io.cloudevents.core.data.BytesCloudEventData;
 import io.cloudevents.core.data.PojoCloudEventData;
-import io.serverlessworkflow.api.reflection.func.ReflectionUtils;
-import io.serverlessworkflow.api.reflection.func.SerializableFunction;
 import io.serverlessworkflow.api.types.func.ContextFunction;
 import io.serverlessworkflow.api.types.func.EventDataFunction;
 import io.serverlessworkflow.fluent.func.FuncEmitEventPropertiesBuilder;
@@ -40,8 +38,10 @@ public final class FuncEmitSpec
   }
 
   /** Sets the event data and the contentType to `application/json` */
-  public <T> FuncEmitSpec jsonData(SerializableFunction<T, CloudEventData> function) {
-    Class<T> clazz = ReflectionUtils.inferInputType(function);
+  @SafeVarargs
+  @SuppressWarnings("unchecked")
+  public final <T> FuncEmitSpec jsonData(Function<T, CloudEventData> function, T... typeToken) {
+    Class<T> clazz = (Class<T>) typeToken.getClass().getComponentType();
     addPropertyStep(e -> e.data(new EventDataFunction().withFunction(function, clazz)));
     return JSON();
   }

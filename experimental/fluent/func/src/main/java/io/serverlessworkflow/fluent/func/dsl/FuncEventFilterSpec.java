@@ -21,7 +21,6 @@ import io.cloudevents.CloudEventData;
 import io.cloudevents.core.CloudEventUtils;
 import io.cloudevents.core.data.PojoCloudEventData;
 import io.cloudevents.jackson.PojoCloudEventDataMapper;
-import io.serverlessworkflow.api.reflection.func.SerializablePredicate;
 import io.serverlessworkflow.api.types.func.ContextPredicate;
 import io.serverlessworkflow.api.types.func.FilterPredicate;
 import io.serverlessworkflow.fluent.func.FuncEventFilterBuilder;
@@ -32,6 +31,7 @@ import io.serverlessworkflow.impl.WorkflowContextData;
 import io.serverlessworkflow.impl.jackson.JsonUtils;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Predicate;
 
 /**
  * Fluent DSL specification builder for configuring CloudEvent filters within a Serverless Workflow
@@ -58,7 +58,7 @@ public final class FuncEventFilterSpec
    * @param predicate the predicate to evaluate against the entire {@link CloudEvent}.
    * @return the current {@link FuncEventFilterSpec} instance.
    */
-  public FuncEventFilterSpec envelope(SerializablePredicate<CloudEvent> predicate) {
+  public FuncEventFilterSpec envelope(Predicate<CloudEvent> predicate) {
     addPropertyStep(e -> e.envelope(predicate));
     return this;
   }
@@ -95,7 +95,7 @@ public final class FuncEventFilterSpec
    * @param predicate the predicate to evaluate against the event data.
    * @return the current {@link FuncEventFilterSpec} instance.
    */
-  public FuncEventFilterSpec data(SerializablePredicate<CloudEventData> predicate) {
+  public FuncEventFilterSpec data(Predicate<CloudEventData> predicate) {
     addPropertyStep(e -> e.data(predicate));
     return this;
   }
@@ -139,7 +139,7 @@ public final class FuncEventFilterSpec
    * @param predicate the predicate to evaluate against the parsed Map.
    * @return the current {@link FuncEventFilterSpec} instance.
    */
-  public FuncEventFilterSpec dataAsMap(SerializablePredicate<Map<String, Object>> predicate) {
+  public FuncEventFilterSpec dataAsMap(Predicate<Map<String, Object>> predicate) {
     addPropertyStep(
         e ->
             e.envelope(
@@ -202,7 +202,7 @@ public final class FuncEventFilterSpec
    * @param <T> The target type.
    * @return the current {@link FuncEventFilterSpec} instance.
    */
-  public <T> FuncEventFilterSpec dataAs(Class<T> targetType, SerializablePredicate<T> predicate) {
+  public <T> FuncEventFilterSpec dataAs(Class<T> targetType, Predicate<T> predicate) {
     addPropertyStep(
         e ->
             e.envelope(

@@ -16,7 +16,6 @@
 package io.serverlessworkflow.fluent.func;
 
 import io.cloudevents.CloudEventData;
-import io.serverlessworkflow.api.reflection.func.SerializableFunction;
 import io.serverlessworkflow.api.types.func.ContextFunction;
 import io.serverlessworkflow.api.types.func.EventDataFunction;
 import io.serverlessworkflow.api.types.func.FilterFunction;
@@ -31,7 +30,7 @@ public class FuncEmitEventPropertiesBuilder
     return this;
   }
 
-  public <T> FuncEmitEventPropertiesBuilder data(SerializableFunction<T, CloudEventData> function) {
+  public <T> FuncEmitEventPropertiesBuilder data(Function<T, CloudEventData> function) {
     this.eventProperties.setData(new EventDataFunction().withFunction(function));
     return this;
   }

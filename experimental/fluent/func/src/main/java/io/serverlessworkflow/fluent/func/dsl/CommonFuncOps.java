@@ -15,9 +15,6 @@
  */
 package io.serverlessworkflow.fluent.func.dsl;
 
-import io.serverlessworkflow.api.reflection.func.ReflectionUtils;
-import io.serverlessworkflow.api.reflection.func.SerializableFunction;
-import io.serverlessworkflow.api.reflection.func.SerializablePredicate;
 import io.serverlessworkflow.api.types.FlowDirectiveEnum;
 import io.serverlessworkflow.fluent.func.FuncCallTaskBuilder;
 import io.serverlessworkflow.fluent.func.FuncSwitchTaskBuilder;
@@ -32,9 +29,10 @@ interface CommonFuncOps {
     return f -> f.function(function, argClass);
   }
 
-  default <T, V> Consumer<FuncCallTaskBuilder> fn(SerializableFunction<T, V> function) {
-    Class<T> clazz = ReflectionUtils.inferInputType(function);
-    return f -> f.function(function, clazz);
+  @SuppressWarnings("unchecked")
+  default <T, V> Consumer<FuncCallTaskBuilder> fn(Function<T, V> function, T... typeToken) {
+    Class<T> clazz = (Class<T>) typeToken.getClass().getComponentType();
+    return fn(function, clazz);
   }
 
   default Consumer<FuncSwitchTaskBuilder> cases(SwitchCaseConfigurer... cases) {
@@ -49,8 +47,9 @@ interface CommonFuncOps {
     return new SwitchCaseSpec<T>().when(when, whenClass);
   }
 
-  default <T> SwitchCaseSpec<T> caseOf(SerializablePredicate<T> when) {
-    return new SwitchCaseSpec<T>().when(when, ReflectionUtils.inferInputType(when));
+  @SuppressWarnings("unchecked")
+  default <T> SwitchCaseSpec<T> caseOf(Predicate<T> when, T... typeToken) {
+    return caseOf(when, (Class<T>) typeToken.getClass().getComponentType());
   }
 
   default SwitchCaseConfigurer caseDefault(String task) {

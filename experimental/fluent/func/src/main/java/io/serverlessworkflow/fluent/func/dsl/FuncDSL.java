@@ -17,10 +17,6 @@ package io.serverlessworkflow.fluent.func.dsl;
 
 import io.cloudevents.CloudEventData;
 import io.serverlessworkflow.api.reflection.func.InstanceIdFunction;
-import io.serverlessworkflow.api.reflection.func.ReflectionUtils;
-import io.serverlessworkflow.api.reflection.func.SerializableConsumer;
-import io.serverlessworkflow.api.reflection.func.SerializableFunction;
-import io.serverlessworkflow.api.reflection.func.SerializablePredicate;
 import io.serverlessworkflow.api.reflection.func.UniqueIdBiFunction;
 import io.serverlessworkflow.api.types.FlowDirectiveEnum;
 import io.serverlessworkflow.api.types.OAuth2AuthenticationData;
@@ -118,19 +114,18 @@ public final class FuncDSL {
    * @param <V> output type
    * @return a consumer that configures a {@code FuncCallTaskBuilder}
    */
-  public static <T, V> Consumer<FuncCallTaskBuilder> fn(SerializableFunction<T, V> function) {
-    return f ->
-        f.function(
-            function,
-            ReflectionUtils.inferInputType(function),
-            ReflectionUtils.inferResultType(function));
+  @SafeVarargs
+  @SuppressWarnings("unchecked")
+  public static <T, V> Consumer<FuncCallTaskBuilder> fn(Function<T, V> function, T... typeToken) {
+    Class<T> inputClass = (Class<T>) typeToken.getClass().getComponentType();
+    return OPS.fn(function, inputClass);
   }
 
   /**
    * Compose multiple switch cases into a single configurer for {@link FuncSwitchTaskBuilder}.
    *
-   * @param cases one or more {@link SwitchCaseConfigurer} built via {@link
-   *     #caseOf(SerializablePredicate)} or {@link #caseDefault(String)}
+   * @param cases one or more {@link SwitchCaseConfigurer} built via {@link #caseOf(Predicate,
+   *     Object[])} or {@link #caseDefault(String)}
    * @return a consumer to apply on a switch task builder
    */
   public static Consumer<FuncSwitchTaskBuilder> cases(SwitchCaseConfigurer... cases) {
@@ -156,8 +151,10 @@ public final class FuncDSL {
    * @param <T> predicate input type
    * @return a fluent builder to set the consequent action (e.g., {@code then("taskName")})
    */
-  public static <T> SwitchCaseSpec<T> caseOf(SerializablePredicate<T> when) {
-    return OPS.caseOf(when);
+  @SafeVarargs
+  @SuppressWarnings("unchecked")
+  public static <T> SwitchCaseSpec<T> caseOf(Predicate<T> when, T... typeToken) {
+    return OPS.caseOf(when, (Class<T>) typeToken.getClass().getComponentType());
   }
 
   /**
@@ -241,15 +238,17 @@ public final class FuncDSL {
    * @param <T> input type to the function
    * @return a consumer to configure {@link FuncEmitTaskBuilder}
    */
+  @SafeVarargs
+  @SuppressWarnings("unchecked")
   public static <T> Consumer<FuncEmitTaskBuilder> produced(
-      String type, SerializableFunction<T, CloudEventData> function) {
-    return event ->
-        event.event(e -> e.type(type).data(function, ReflectionUtils.inferInputType(function)));
+      String type, Function<T, CloudEventData> function, T... typeToken) {
+    Class<T> inputClass = (Class<T>) typeToken.getClass().getComponentType();
+    return event -> event.event(e -> e.type(type).data(function, inputClass));
   }
 
   /**
-   * Same as {@link #produced(String, SerializableFunction)} but with an explicit input class to
-   * guide conversion.
+   * Same as {@link #produced(String, Function, Object[])} but with an explicit input class to guide
+   * conversion.
    *
    * @param type CloudEvent type
    * @param function function that maps workflow input to {@link CloudEventData}
@@ -262,16 +261,20 @@ public final class FuncDSL {
     return event -> event.event(e -> e.type(type).data(function, inputClass));
   }
 
+  @SafeVarargs
+  @SuppressWarnings("unchecked")
   public static <T> Consumer<FuncEmitTaskBuilder> produced(
-      String type, ContextFunction<T, CloudEventData> function) {
-    return event ->
-        event.event(e -> e.type(type).data(function, ReflectionUtils.inferInputType(function)));
+      String type, ContextFunction<T, CloudEventData> function, T... typeToken) {
+    Class<T> inputClass = (Class<T>) typeToken.getClass().getComponentType();
+    return event -> event.event(e -> e.type(type).data(function, inputClass));
   }
 
+  @SafeVarargs
+  @SuppressWarnings("unchecked")
   public static <T> Consumer<FuncEmitTaskBuilder> produced(
-      String type, FilterFunction<T, CloudEventData> function) {
-    return event ->
-        event.event(e -> e.type(type).data(function, ReflectionUtils.inferInputType(function)));
+      String type, FilterFunction<T, CloudEventData> function, T... typeToken) {
+    Class<T> inputClass = (Class<T>) typeToken.getClass().getComponentType();
+    return event -> event.event(e -> e.type(type).data(function, inputClass));
   }
 
   /**
@@ -352,8 +355,10 @@ public final class FuncDSL {
     return withContext(null, fn, in);
   }
 
-  public static <T, R> FuncCallStep<T, R> withContext(ContextFunction<T, R> fn) {
-    return withContext(null, fn, ReflectionUtils.inferInputType(fn));
+  @SafeVarargs
+  @SuppressWarnings("unchecked")
+  public static <T, R> FuncCallStep<T, R> withContext(ContextFunction<T, R> fn, T... typeToken) {
+    return withContext(null, fn, (Class<T>) typeToken.getClass().getComponentType());
   }
 
   /**
@@ -368,7 +373,7 @@ public final class FuncDSL {
    */
   public static <T, R> FuncCallStep<T, R> withContext(
       String name, ContextFunction<T, R> fn, Class<T> in) {
-    return withContext(name, fn, in, ReflectionUtils.inferResultType(fn));
+    return withContext(name, fn, in, null);
   }
 
   public static <T, R> FuncCallStep<T, R> withContext(
@@ -376,8 +381,11 @@ public final class FuncDSL {
     return new FuncCallStep<>(name, fn, in, out);
   }
 
-  public static <T, R> FuncCallStep<T, R> withContext(String name, ContextFunction<T, R> fn) {
-    return withContext(name, fn, ReflectionUtils.inferInputType(fn));
+  @SafeVarargs
+  @SuppressWarnings("unchecked")
+  public static <T, R> FuncCallStep<T, R> withContext(
+      String name, ContextFunction<T, R> fn, T... typeToken) {
+    return withContext(name, fn, (Class<T>) typeToken.getClass().getComponentType());
   }
 
   /**
@@ -409,7 +417,7 @@ public final class FuncDSL {
    */
   public static <T, R> FuncCallStep<T, R> withFilter(
       String name, FilterFunction<T, R> fn, Class<T> in) {
-    return withFilter(name, fn, in, ReflectionUtils.inferResultType(fn));
+    return withFilter(name, fn, in, null);
   }
 
   public static <T, R> FuncCallStep<T, R> withFilter(
@@ -417,12 +425,17 @@ public final class FuncDSL {
     return new FuncCallStep<>(name, fn, in, out);
   }
 
-  public static <T, R> FuncCallStep<T, R> withFilter(FilterFunction<T, R> fn) {
-    return withFilter(null, fn, ReflectionUtils.inferInputType(fn));
+  @SafeVarargs
+  @SuppressWarnings("unchecked")
+  public static <T, R> FuncCallStep<T, R> withFilter(FilterFunction<T, R> fn, T... typeToken) {
+    return withFilter(null, fn, (Class<T>) typeToken.getClass().getComponentType());
   }
 
-  public static <T, R> FuncCallStep<T, R> withFilter(String name, FilterFunction<T, R> fn) {
-    return withFilter(name, fn, ReflectionUtils.inferInputType(fn));
+  @SafeVarargs
+  @SuppressWarnings("unchecked")
+  public static <T, R> FuncCallStep<T, R> withFilter(
+      String name, FilterFunction<T, R> fn, T... typeToken) {
+    return withFilter(name, fn, (Class<T>) typeToken.getClass().getComponentType());
   }
 
   /**
@@ -437,7 +450,7 @@ public final class FuncDSL {
    */
   public static <T, R> FuncCallStep<T, R> withInstanceId(
       String name, InstanceIdFunction<T, R> fn, Class<T> in) {
-    return withInstanceId(name, fn, in, ReflectionUtils.inferResultType(fn));
+    return withInstanceId(name, fn, in, null);
   }
 
   public static <T, R> FuncCallStep<T, R> withInstanceId(
@@ -462,12 +475,18 @@ public final class FuncDSL {
     return withInstanceId(null, fn, in);
   }
 
-  public static <T, R> FuncCallStep<T, R> withInstanceId(String name, InstanceIdFunction<T, R> fn) {
-    return withInstanceId(name, fn, ReflectionUtils.inferInputType(fn));
+  @SafeVarargs
+  @SuppressWarnings("unchecked")
+  public static <T, R> FuncCallStep<T, R> withInstanceId(
+      String name, InstanceIdFunction<T, R> fn, T... typeToken) {
+    return withInstanceId(name, fn, (Class<T>) typeToken.getClass().getComponentType());
   }
 
-  public static <T, R> FuncCallStep<T, R> withInstanceId(InstanceIdFunction<T, R> fn) {
-    return withInstanceId(null, fn, ReflectionUtils.inferInputType(fn));
+  @SafeVarargs
+  @SuppressWarnings("unchecked")
+  public static <T, R> FuncCallStep<T, R> withInstanceId(
+      InstanceIdFunction<T, R> fn, T... typeToken) {
+    return withInstanceId(null, fn, (Class<T>) typeToken.getClass().getComponentType());
   }
 
   /**
@@ -516,13 +535,13 @@ public final class FuncDSL {
    * @param <R> result type
    * @return a named call step that can be chained with additional configurations
    * @see #withUniqueId(String, UniqueIdBiFunction, Class, Class)
-   * @see #withUniqueId(String, UniqueIdBiFunction)
+   * @see #withUniqueId(String, UniqueIdBiFunction, Object[])
    * @see #withUniqueId(UniqueIdBiFunction, Class)
-   * @see #withUniqueId(UniqueIdBiFunction)
+   * @see #withUniqueId(UniqueIdBiFunction, Object[])
    */
   public static <T, R> FuncCallStep<T, R> withUniqueId(
       String name, UniqueIdBiFunction<T, R> fn, Class<T> in) {
-    return withUniqueId(name, fn, in, ReflectionUtils.inferResultType(fn));
+    return withUniqueId(name, fn, in, null);
   }
 
   /**
@@ -561,9 +580,9 @@ public final class FuncDSL {
    * @param <R> result type
    * @return a named call step that can be chained with additional configurations
    * @see #withUniqueId(String, UniqueIdBiFunction, Class)
-   * @see #withUniqueId(String, UniqueIdBiFunction)
+   * @see #withUniqueId(String, UniqueIdBiFunction, Object[])
    * @see #withUniqueId(UniqueIdBiFunction, Class)
-   * @see #withUniqueId(UniqueIdBiFunction)
+   * @see #withUniqueId(UniqueIdBiFunction, Object[])
    */
   public static <T, R> FuncCallStep<T, R> withUniqueId(
       String name, UniqueIdBiFunction<T, R> fn, Class<T> in, Class<R> out) {
@@ -605,10 +624,13 @@ public final class FuncDSL {
    * @return a named call step that can be chained with additional configurations
    * @see #withUniqueId(String, UniqueIdBiFunction, Class)
    * @see #withUniqueId(String, UniqueIdBiFunction, Class, Class)
-   * @see #withUniqueId(UniqueIdBiFunction)
+   * @see #withUniqueId(UniqueIdBiFunction, Object[])
    */
-  public static <T, R> FuncCallStep<T, R> withUniqueId(String name, UniqueIdBiFunction<T, R> fn) {
-    return withUniqueId(name, fn, ReflectionUtils.inferInputType(fn));
+  @SafeVarargs
+  @SuppressWarnings("unchecked")
+  public static <T, R> FuncCallStep<T, R> withUniqueId(
+      String name, UniqueIdBiFunction<T, R> fn, T... typeToken) {
+    return withUniqueId(name, fn, (Class<T>) typeToken.getClass().getComponentType());
   }
 
   /**
@@ -644,7 +666,7 @@ public final class FuncDSL {
    * @return an unnamed call step that can be chained with additional configurations
    * @see #withUniqueId(String, UniqueIdBiFunction, Class)
    * @see #withUniqueId(String, UniqueIdBiFunction, Class, Class)
-   * @see #withUniqueId(UniqueIdBiFunction)
+   * @see #withUniqueId(UniqueIdBiFunction, Object[])
    */
   public static <T, R> FuncCallStep<T, R> withUniqueId(UniqueIdBiFunction<T, R> fn, Class<T> in) {
     return withUniqueId(null, fn, in);
@@ -678,12 +700,15 @@ public final class FuncDSL {
    * @param <T> input type (inferred automatically)
    * @param <R> result type (inferred automatically)
    * @return an unnamed call step that can be chained with additional configurations
-   * @see #withUniqueId(String, UniqueIdBiFunction)
+   * @see #withUniqueId(String, UniqueIdBiFunction, Object[])
    * @see #withUniqueId(UniqueIdBiFunction, Class)
    * @see #withUniqueId(String, UniqueIdBiFunction, Class)
    */
-  public static <T, R> FuncCallStep<T, R> withUniqueId(UniqueIdBiFunction<T, R> fn) {
-    return withUniqueId(null, fn, ReflectionUtils.inferInputType(fn));
+  @SafeVarargs
+  @SuppressWarnings("unchecked")
+  public static <T, R> FuncCallStep<T, R> withUniqueId(
+      UniqueIdBiFunction<T, R> fn, T... typeToken) {
+    return withUniqueId(null, fn, (Class<T>) typeToken.getClass().getComponentType());
   }
 
   /**
@@ -699,8 +724,10 @@ public final class FuncDSL {
     return new ConsumeStep<>(consumer, inputClass);
   }
 
-  public static <T> ConsumeStep<T> consume(SerializableConsumer<T> consumer) {
-    return consume(consumer, ReflectionUtils.inferInputType(consumer));
+  @SafeVarargs
+  @SuppressWarnings("unchecked")
+  public static <T> ConsumeStep<T> consume(Consumer<T> consumer, T... typeToken) {
+    return consume(consumer, (Class<T>) typeToken.getClass().getComponentType());
   }
 
   /**
@@ -716,8 +743,10 @@ public final class FuncDSL {
     return new ConsumeStep<>(name, consumer, inputClass);
   }
 
-  public static <T> ConsumeStep<T> consume(String name, SerializableConsumer<T> consumer) {
-    return consume(name, consumer, ReflectionUtils.inferInputType(consumer));
+  @SafeVarargs
+  @SuppressWarnings("unchecked")
+  public static <T> ConsumeStep<T> consume(String name, Consumer<T> consumer, T... typeToken) {
+    return consume(name, consumer, (Class<T>) typeToken.getClass().getComponentType());
   }
 
   /**
@@ -737,8 +766,10 @@ public final class FuncDSL {
     return withUniqueId(fn, in);
   }
 
-  public static <T, R> FuncCallStep<T, R> agent(UniqueIdBiFunction<T, R> fn) {
-    return withUniqueId(fn, ReflectionUtils.inferInputType(fn));
+  @SafeVarargs
+  @SuppressWarnings("unchecked")
+  public static <T, R> FuncCallStep<T, R> agent(UniqueIdBiFunction<T, R> fn, T... typeToken) {
+    return withUniqueId(fn, (Class<T>) typeToken.getClass().getComponentType());
   }
 
   /**
@@ -758,8 +789,11 @@ public final class FuncDSL {
     return withUniqueId(name, fn, in);
   }
 
-  public static <T, R> FuncCallStep<T, R> agent(String name, UniqueIdBiFunction<T, R> fn) {
-    return withUniqueId(name, fn, ReflectionUtils.inferInputType(fn));
+  @SafeVarargs
+  @SuppressWarnings("unchecked")
+  public static <T, R> FuncCallStep<T, R> agent(
+      String name, UniqueIdBiFunction<T, R> fn, T... typeToken) {
+    return withUniqueId(name, fn, (Class<T>) typeToken.getClass().getComponentType());
   }
 
   /**
@@ -801,13 +835,15 @@ public final class FuncDSL {
    * @param <R> output type
    * @return a call step
    */
-  public static <T, R> FuncCallStep<T, R> function(SerializableFunction<T, R> fn) {
-    return new FuncCallStep<>(
-        fn, ReflectionUtils.inferInputType(fn), ReflectionUtils.inferResultType(fn));
+  @SafeVarargs
+  @SuppressWarnings("unchecked")
+  public static <T, R> FuncCallStep<T, R> function(Function<T, R> fn, T... typeToken) {
+    Class<T> inputClass = (Class<T>) typeToken.getClass().getComponentType();
+    return new FuncCallStep<>(fn, inputClass, null);
   }
 
   /**
-   * Named variant of {@link #function(SerializableFunction)} with inferred input type.
+   * Named variant of {@link #function(Function, Object[])} with inferred input type.
    *
    * @param name task name
    * @param fn the function to execute
@@ -815,9 +851,11 @@ public final class FuncDSL {
    * @param <R> output type
    * @return a named call step
    */
-  public static <T, R> FuncCallStep<T, R> function(String name, SerializableFunction<T, R> fn) {
-    return new FuncCallStep<>(
-        name, fn, ReflectionUtils.inferInputType(fn), ReflectionUtils.inferResultType(fn));
+  @SafeVarargs
+  @SuppressWarnings("unchecked")
+  public static <T, R> FuncCallStep<T, R> function(String name, Function<T, R> fn, T... typeToken) {
+    Class<T> inputClass = (Class<T>) typeToken.getClass().getComponentType();
+    return new FuncCallStep<>(name, fn, inputClass, null);
   }
 
   /**
@@ -909,12 +947,12 @@ public final class FuncDSL {
    * @param <T> input type
    * @return an {@link EmitStep}
    */
-  public static <T> EmitStep emit(String type, SerializableFunction<T, CloudEventData> fn) {
+  public static <T> EmitStep emit(String type, Function<T, CloudEventData> fn) {
     return new EmitStep(null, produced(type, fn));
   }
 
   /**
-   * Named variant of {@link #emit(String, SerializableFunction)}.
+   * Named variant of {@link #emit(String, Function)}.
    *
    * @param name task name
    * @param type CloudEvent type
@@ -922,8 +960,7 @@ public final class FuncDSL {
    * @param <T> input type
    * @return a named {@link EmitStep}
    */
-  public static <T> EmitStep emit(
-      String name, String type, SerializableFunction<T, CloudEventData> fn) {
+  public static <T> EmitStep emit(String name, String type, Function<T, CloudEventData> fn) {
     return new EmitStep(name, produced(type, fn));
   }
 
@@ -1004,7 +1041,7 @@ public final class FuncDSL {
 
   /**
    * Low-level switch case configurer using a custom builder consumer. Prefer the {@link
-   * #caseOf(SerializablePredicate)} helpers when possible.
+   * #caseOf(Predicate, Object[])} helpers when possible.
    *
    * @param taskName optional task name
    * @param switchCase consumer to configure the {@link FuncSwitchTaskBuilder}
@@ -1026,8 +1063,8 @@ public final class FuncDSL {
   }
 
   /**
-   * Convenience to apply multiple {@link SwitchCaseConfigurer} built via {@link
-   * #caseOf(SerializablePredicate)}.
+   * Convenience to apply multiple {@link SwitchCaseConfigurer} built via {@link #caseOf(Predicate,
+   * Object[])}.
    *
    * @param cases case configurers
    * @return list configurer
@@ -1382,9 +1419,12 @@ public final class FuncDSL {
     return switchWhenOrElse(null, pred, thenTask, otherwise, predClass);
   }
 
+  @SafeVarargs
+  @SuppressWarnings("unchecked")
   public static <T> FuncTaskConfigurer switchWhenOrElse(
-      SerializablePredicate<T> pred, String thenTask, FlowDirectiveEnum otherwise) {
-    return switchWhenOrElse(null, pred, thenTask, otherwise);
+      Predicate<T> pred, String thenTask, FlowDirectiveEnum otherwise, T... typeToken) {
+    return switchWhenOrElse(
+        null, pred, thenTask, otherwise, (Class<T>) typeToken.getClass().getComponentType());
   }
 
   /**
@@ -1410,13 +1450,16 @@ public final class FuncDSL {
             FuncDSL.cases(caseOf(pred, predClass).then(thenTask), caseDefault(otherwise)));
   }
 
+  @SafeVarargs
+  @SuppressWarnings("unchecked")
   public static <T> FuncTaskConfigurer switchWhenOrElse(
       String taskName,
-      SerializablePredicate<T> pred,
+      Predicate<T> pred,
       String thenTask,
-      FlowDirectiveEnum otherwise) {
+      FlowDirectiveEnum otherwise,
+      T... typeToken) {
     return switchWhenOrElse(
-        taskName, pred, thenTask, otherwise, ReflectionUtils.inferInputType(pred));
+        taskName, pred, thenTask, otherwise, (Class<T>) typeToken.getClass().getComponentType());
   }
 
   /**
@@ -1434,9 +1477,12 @@ public final class FuncDSL {
     return switchWhenOrElse(null, pred, thenTask, otherwiseTask, predClass);
   }
 
+  @SafeVarargs
+  @SuppressWarnings("unchecked")
   public static <T> FuncTaskConfigurer switchWhenOrElse(
-      SerializablePredicate<T> pred, String thenTask, String otherwiseTask) {
-    return switchWhenOrElse(null, pred, thenTask, otherwiseTask);
+      Predicate<T> pred, String thenTask, String otherwiseTask, T... typeToken) {
+    return switchWhenOrElse(
+        null, pred, thenTask, otherwiseTask, (Class<T>) typeToken.getClass().getComponentType());
   }
 
   /**
@@ -1461,10 +1507,16 @@ public final class FuncDSL {
             taskName, cases(caseOf(pred, predClass).then(thenTask), caseDefault(otherwiseTask)));
   }
 
+  @SafeVarargs
+  @SuppressWarnings("unchecked")
   public static <T> FuncTaskConfigurer switchWhenOrElse(
-      String taskName, SerializablePredicate<T> pred, String thenTask, String otherwiseTask) {
+      String taskName, Predicate<T> pred, String thenTask, String otherwiseTask, T... typeToken) {
     return switchWhenOrElse(
-        taskName, pred, thenTask, otherwiseTask, ReflectionUtils.inferInputType(pred));
+        taskName,
+        pred,
+        thenTask,
+        otherwiseTask,
+        (Class<T>) typeToken.getClass().getComponentType());
   }
 
   /**
@@ -1558,13 +1610,18 @@ public final class FuncDSL {
    * @param <T> input type for the collection function
    * @return list configurer
    */
+  @SafeVarargs
+  @SuppressWarnings("unchecked")
   public static <T, V> FuncTaskConfigurer forEach(
-      SerializableFunction<T, Collection<V>> collection, Consumer<FuncTaskItemListBuilder> body) {
-    return forEach(null, collection, body);
+      Function<T, Collection<V>> collection,
+      Consumer<FuncTaskItemListBuilder> body,
+      T... typeToken) {
+    Class<T> inputClass = (Class<T>) typeToken.getClass().getComponentType();
+    return list -> list.forEach(null, j -> j.collection(collection, inputClass).tasks(body));
   }
 
   /**
-   * Named variant of {@link #forEach(SerializableFunction, Consumer)}.
+   * Named variant of {@link #forEach(Function, Consumer, Object[])}.
    *
    * @param taskName task name for the for-loop task
    * @param collection function that returns the collection to iterate
@@ -1572,41 +1629,59 @@ public final class FuncDSL {
    * @param <T> input type for the collection function
    * @return list configurer
    */
+  @SafeVarargs
+  @SuppressWarnings("unchecked")
   public static <T, V> FuncTaskConfigurer forEach(
       String taskName,
-      SerializableFunction<T, Collection<V>> collection,
-      Consumer<FuncTaskItemListBuilder> body) {
+      Function<T, Collection<V>> collection,
+      Consumer<FuncTaskItemListBuilder> body,
+      T... typeToken) {
+    Class<T> inputClass = (Class<T>) typeToken.getClass().getComponentType();
+    return list -> list.forEach(taskName, j -> j.collection(collection, inputClass).tasks(body));
+  }
+
+  @SafeVarargs
+  @SuppressWarnings("unchecked")
+  public static <T, V> FuncTaskConfigurer forEach(
+      Function<T, Collection<V>> collection, LoopFunction<T, V, ?> function, T... typeToken) {
+    Class<T> inputClass = (Class<T>) typeToken.getClass().getComponentType();
+    return list -> list.forEach(null, j -> j.collection(collection, inputClass).tasks(function));
+  }
+
+  @SafeVarargs
+  @SuppressWarnings("unchecked")
+  public static <T, V> FuncTaskConfigurer forEach(
+      String taskName,
+      Function<T, Collection<V>> collection,
+      LoopFunction<T, V, ?> function,
+      T... typeToken) {
+    Class<T> inputClass = (Class<T>) typeToken.getClass().getComponentType();
+    return list ->
+        list.forEach(taskName, j -> j.collection(collection, inputClass).tasks(function));
+  }
+
+  @SafeVarargs
+  @SuppressWarnings("unchecked")
+  public static <T, V> FuncTaskConfigurer forEachItem(
+      Function<T, Collection<V>> collection, Function<V, ?> function, T... typeToken) {
+    Class<T> inputClass = (Class<T>) typeToken.getClass().getComponentType();
+    return list ->
+        list.forEach(
+            null, j -> j.collection(collection, inputClass).tasks((t, v) -> function.apply((V) v)));
+  }
+
+  @SafeVarargs
+  @SuppressWarnings("unchecked")
+  public static <T, V> FuncTaskConfigurer forEachItem(
+      String taskName,
+      Function<T, Collection<V>> collection,
+      Function<V, ?> function,
+      T... typeToken) {
+    Class<T> inputClass = (Class<T>) typeToken.getClass().getComponentType();
     return list ->
         list.forEach(
             taskName,
-            j -> j.collection(collection, ReflectionUtils.inferInputType(collection)).tasks(body));
-  }
-
-  public static <T, V> FuncTaskConfigurer forEach(
-      SerializableFunction<T, Collection<V>> collection, LoopFunction<T, V, ?> function) {
-    return forEach(null, collection, function);
-  }
-
-  public static <T, V> FuncTaskConfigurer forEach(
-      String taskName,
-      SerializableFunction<T, Collection<V>> collection,
-      LoopFunction<T, V, ?> function) {
-    return list ->
-        list.forEach(
-            taskName,
-            j ->
-                j.collection(collection, ReflectionUtils.inferInputType(collection))
-                    .tasks(function));
-  }
-
-  public static <T, V> FuncTaskConfigurer forEachItem(
-      SerializableFunction<T, Collection<V>> collection, Function<V, ?> function) {
-    return forEachItem(null, collection, function);
-  }
-
-  public static <T, V> FuncTaskConfigurer forEachItem(
-      String taskName, SerializableFunction<T, Collection<V>> collection, Function<V, ?> function) {
-    return forEach(taskName, collection, ((t, v) -> function.apply((V) v)));
+            j -> j.collection(collection, inputClass).tasks((t, v) -> function.apply((V) v)));
   }
 
   /**

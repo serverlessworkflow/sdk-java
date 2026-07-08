@@ -15,7 +15,6 @@
  */
 package io.serverlessworkflow.api.reflection.func;
 
-import java.io.Serializable;
 import java.util.function.BiFunction;
 
 /**
@@ -26,6 +25,6 @@ import java.util.function.BiFunction;
  * @param <R> The task result output
  */
 @FunctionalInterface
-public interface UniqueIdBiFunction<T, R> extends BiFunction<String, T, R>, Serializable {
+public interface UniqueIdBiFunction<T, R> extends BiFunction<String, T, R> {
   R apply(String uniqueId, T object);
 }
