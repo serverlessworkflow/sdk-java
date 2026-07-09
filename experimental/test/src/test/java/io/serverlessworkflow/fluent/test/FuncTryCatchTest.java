@@ -32,6 +32,7 @@ package io.serverlessworkflow.fluent.test;
  */
 
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.function;
+import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.tasks;
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.tryCatch;
 import static io.serverlessworkflow.fluent.test.TestSerializationUtils.writeAndReadInMemory;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
@@ -45,6 +46,8 @@ import io.serverlessworkflow.impl.WorkflowException;
 import io.serverlessworkflow.impl.WorkflowModel;
 import java.io.IOException;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,6 +63,8 @@ public class FuncTryCatchTest {
   private static final String ORDER_001 = "ORDER#001";
   private static final String ORDER_002 = "ORDER#002";
   private static final String ORDER_003 = "ORDER#003";
+
+  private static final String TRANSIENT_ERROR = "ERR_TRANSIENT";
 
   @Test
   void booking_compensation_dsl() throws IOException {
@@ -469,6 +474,129 @@ public class FuncTryCatchTest {
       assertThat(workflowModel.asCollection())
           .map(w -> w.asText().orElseThrow())
           .contains(ORDER_001, "endFlow");
+    }
+  }
+
+  @Test
+  void testRetryWithoutBackoff() {
+    AtomicInteger attempts = new AtomicInteger();
+    Workflow workflow =
+        FuncWorkflowBuilder.workflow()
+            .tasks(
+                tryCatch(
+                    "tryTask",
+                    t ->
+                        t.tryCatch(
+                                tasks(
+                                    function(
+                                        "riskyTask",
+                                        (String input) -> {
+                                          if (attempts.incrementAndGet() <= 2) {
+                                            throw new WorkflowException(
+                                                WorkflowError.error(TRANSIENT_ERROR, 503).build());
+                                          }
+                                          return "success";
+                                        },
+                                        String.class)))
+                            .catchHandler(
+                                handler ->
+                                    handler
+                                        .errorsWith(err -> err.type(TRANSIENT_ERROR))
+                                        .retry(
+                                            retry ->
+                                                retry
+                                                    .delay(d -> d.milliseconds(10))
+                                                    .limit(
+                                                        limit -> limit.attempt(a -> a.count(3)))))))
+            .build();
+
+    try (WorkflowApplication application = WorkflowApplication.builder().build()) {
+      WorkflowDefinition definition = application.workflowDefinition(workflow);
+      WorkflowModel result = definition.instance("input").start().join();
+      Assertions.assertThat(result.asText()).hasValue("success");
+      Assertions.assertThat(attempts.get()).isEqualTo(3);
+    }
+  }
+
+  @Test
+  void testRetryWithoutLimit() {
+    AtomicInteger attempts = new AtomicInteger();
+    Workflow workflow =
+        FuncWorkflowBuilder.workflow()
+            .tasks(
+                tryCatch(
+                    "tryTask",
+                    t ->
+                        t.tryCatch(
+                                tasks(
+                                    function(
+                                        "riskyTask",
+                                        (String input) -> {
+                                          if (attempts.incrementAndGet() <= 2) {
+                                            throw new WorkflowException(
+                                                WorkflowError.error(TRANSIENT_ERROR, 503).build());
+                                          }
+                                          return "success";
+                                        },
+                                        String.class)))
+                            .catchHandler(
+                                handler ->
+                                    handler
+                                        .errorsWith(err -> err.type(TRANSIENT_ERROR))
+                                        .retry(
+                                            retry ->
+                                                retry
+                                                    .delay(d -> d.milliseconds(10))
+                                                    .backoff(b -> b.constant("c", "10"))))))
+            .build();
+
+    try (WorkflowApplication application = WorkflowApplication.builder().build()) {
+      WorkflowDefinition definition = application.workflowDefinition(workflow);
+      WorkflowModel result = definition.instance("input").start().join();
+      Assertions.assertThat(result.asText()).hasValue("success");
+      Assertions.assertThat(attempts.get()).isEqualTo(3);
+    }
+  }
+
+  @Test
+  void testRetryWithoutDelay() {
+    AtomicInteger attempts = new AtomicInteger();
+
+    Workflow workflow =
+        FuncWorkflowBuilder.workflow()
+            .tasks(
+                tryCatch(
+                    "tryTask",
+                    t ->
+                        t.tryCatch(
+                                tasks(
+                                    function(
+                                        "riskyTask",
+                                        (String input) -> {
+                                          if (attempts.incrementAndGet() <= 2) {
+                                            throw new WorkflowException(
+                                                WorkflowError.error(TRANSIENT_ERROR, 503).build());
+                                          }
+                                          return "success";
+                                        },
+                                        String.class)))
+                            .catchHandler(
+                                handler ->
+                                    handler
+                                        .errorsWith(err -> err.type(TRANSIENT_ERROR))
+                                        .retry(
+                                            retry ->
+                                                retry
+                                                    .backoff(b -> b.constant("c", "10"))
+                                                    .limit(
+                                                        limit -> limit.attempt(a -> a.count(3)))))))
+            .build();
+
+    try (WorkflowApplication application = WorkflowApplication.builder().build()) {
+      WorkflowDefinition definition = application.workflowDefinition(workflow);
+      WorkflowModel result = definition.instance("input").start().join();
+      Assertions.assertThat(result.asText()).hasValue("success");
+      Assertions.assertThat(attempts.get()).isEqualTo(3);
     }
   }
 

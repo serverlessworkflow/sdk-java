@@ -15,4 +15,4 @@
  */
 package io.serverlessworkflow.impl.persistence;
 
-public record RetriedTaskInfo(short retryAttempt) implements PersistenceTaskInfo {}
+public record RetriedTaskInfo(int retryAttempt) implements PersistenceTaskInfo {}

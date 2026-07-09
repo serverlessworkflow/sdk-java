@@ -19,6 +19,7 @@ import io.serverlessworkflow.api.types.CatchErrors;
 import io.serverlessworkflow.api.types.ErrorFilter;
 import io.serverlessworkflow.api.types.Retry;
 import io.serverlessworkflow.api.types.RetryBackoff;
+import io.serverlessworkflow.api.types.RetryLimit;
 import io.serverlessworkflow.api.types.RetryPolicy;
 import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.api.types.TryTask;
@@ -107,25 +108,34 @@ public class TryExecutor extends RegularTaskExecutor<TryTask> {
 
     protected RetryExecutor buildRetryExecutor(RetryPolicy retryPolicy) {
       return new DefaultRetryExecutor(
-          retryPolicy.getLimit().getAttempt().getCount(),
+          resolveMaxAttempts(retryPolicy.getLimit()),
           buildIntervalFunction(retryPolicy),
           WorkflowUtils.optionalPredicate(application, retryPolicy.getWhen()),
           WorkflowUtils.optionalPredicate(application, retryPolicy.getExceptWhen()));
     }
 
+    private static int resolveMaxAttempts(RetryLimit limit) {
+      return limit != null && limit.getAttempt() != null
+          ? limit.getAttempt().getCount()
+          : Integer.MAX_VALUE - 1;
+    }
+
     private RetryIntervalFunction buildIntervalFunction(RetryPolicy retryPolicy) {
       RetryBackoff backoff = retryPolicy.getBackoff();
-      if (backoff.getConstantBackoff() != null) {
-        return new ConstantRetryIntervalFunction(
-            application, retryPolicy.getDelay(), retryPolicy.getJitter());
-      } else if (backoff.getLinearBackoff() != null) {
-        return new LinearRetryIntervalFunction(
-            application, retryPolicy.getDelay(), retryPolicy.getJitter());
-      } else if (backoff.getExponentialBackOff() != null) {
-        return new ExponentialRetryIntervalFunction(
-            application, retryPolicy.getDelay(), retryPolicy.getJitter());
+      if (backoff != null) {
+        if (backoff.getConstantBackoff() != null) {
+          return new ConstantRetryIntervalFunction(
+              application, retryPolicy.getDelay(), retryPolicy.getJitter());
+        } else if (backoff.getLinearBackoff() != null) {
+          return new LinearRetryIntervalFunction(
+              application, retryPolicy.getDelay(), retryPolicy.getJitter());
+        } else if (backoff.getExponentialBackOff() != null) {
+          return new ExponentialRetryIntervalFunction(
+              application, retryPolicy.getDelay(), retryPolicy.getJitter());
+        }
       }
-      throw new IllegalStateException("A backoff strategy should be set");
+      return new ConstantRetryIntervalFunction(
+          application, retryPolicy.getDelay(), retryPolicy.getJitter());
     }
 
     @Override

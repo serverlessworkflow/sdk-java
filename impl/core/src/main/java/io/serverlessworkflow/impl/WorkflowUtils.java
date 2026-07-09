@@ -187,30 +187,36 @@ public class WorkflowUtils {
         && exceptFilter.map(w -> !w.test(workflow, taskContext, model)).orElse(true);
   }
 
+  private static final class ZeroDelayResolverHolder {
+    private static final WorkflowValueResolver<Duration> ZERO_DELAY_RESOLVER =
+        (w, t, f) -> Duration.ZERO;
+  }
+
   public static WorkflowValueResolver<Duration> fromTimeoutAfter(
       WorkflowApplication application, TimeoutAfter timeout) {
-    if (timeout.getDurationExpression() != null) {
-      return (w, f, t) ->
-          Duration.parse(
-              application
-                  .expressionFactory()
-                  .resolveString(ExpressionDescriptor.from(timeout.getDurationExpression()))
-                  .apply(w, f, t));
-    } else if (timeout.getDurationLiteral() != null) {
-      Duration duration = Duration.parse(timeout.getDurationLiteral());
-      return (w, f, t) -> duration;
-    } else if (timeout.getDurationInline() != null) {
-      DurationInline inlineDuration = timeout.getDurationInline();
-      return (w, t, f) ->
-          Duration.ofDays(inlineDuration.getDays())
-              .plus(
-                  Duration.ofHours(inlineDuration.getHours())
-                      .plus(Duration.ofMinutes(inlineDuration.getMinutes()))
-                      .plus(Duration.ofSeconds(inlineDuration.getSeconds()))
-                      .plus(Duration.ofMillis(inlineDuration.getMilliseconds())));
-    } else {
-      return (w, t, f) -> Duration.ZERO;
+    if (timeout != null) {
+      if (timeout.getDurationExpression() != null) {
+        return (w, f, t) ->
+            Duration.parse(
+                application
+                    .expressionFactory()
+                    .resolveString(ExpressionDescriptor.from(timeout.getDurationExpression()))
+                    .apply(w, f, t));
+      } else if (timeout.getDurationLiteral() != null) {
+        Duration duration = Duration.parse(timeout.getDurationLiteral());
+        return (w, f, t) -> duration;
+      } else if (timeout.getDurationInline() != null) {
+        DurationInline inlineDuration = timeout.getDurationInline();
+        return (w, t, f) ->
+            Duration.ofDays(inlineDuration.getDays())
+                .plus(
+                    Duration.ofHours(inlineDuration.getHours())
+                        .plus(Duration.ofMinutes(inlineDuration.getMinutes()))
+                        .plus(Duration.ofSeconds(inlineDuration.getSeconds()))
+                        .plus(Duration.ofMillis(inlineDuration.getMilliseconds())));
+      }
     }
+    return ZeroDelayResolverHolder.ZERO_DELAY_RESOLVER;
   }
 
   public static Optional<WorkflowValueResolver<Duration>> getTaskTimeout(

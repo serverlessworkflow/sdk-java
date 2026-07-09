@@ -95,7 +95,7 @@ public abstract class AbstractHandlerPersistenceTest {
     return taskContext;
   }
 
-  protected TaskContextData retriedTaskContext(WorkflowPosition position, short retryAttempt) {
+  protected TaskContextData retriedTaskContext(WorkflowPosition position, int retryAttempt) {
     TaskContext taskContext = mock(TaskContext.class);
     when(taskContext.position()).thenReturn(position);
     when(taskContext.retryAttempt()).thenReturn(retryAttempt);
@@ -120,7 +120,7 @@ public abstract class AbstractHandlerPersistenceTest {
         app.positionFactory().get().addProperty("do").addIndex(0).addProperty("useExpression");
     final WorkflowMutablePosition position2 =
         app.positionFactory().get().addProperty("do").addIndex(1).addProperty("useExpression");
-    final short numRetries = 1;
+    final int numRetries = 1;
 
     final Map<String, Object> completedMap = Map.of("name", "fulanito");
 
@@ -147,7 +147,7 @@ public abstract class AbstractHandlerPersistenceTest {
     when(parentContext.task()).thenReturn(taskBase);
     when(updateTContext.parent()).thenReturn(Optional.of(parentContext));
     instance.restoreContext(updateWContext, updateTContext);
-    ArgumentCaptor<Short> retryAttempt = ArgumentCaptor.forClass(Short.class);
+    ArgumentCaptor<Integer> retryAttempt = ArgumentCaptor.forClass(Integer.class);
     verify(updateTContext).retryAttempt(retryAttempt.capture());
     assertThat(retryAttempt.getValue()).isEqualTo(numRetries);
     verify(parentContext).tryRetryCount(retryAttempt.capture());

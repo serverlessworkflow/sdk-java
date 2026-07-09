@@ -37,10 +37,10 @@ public class TaskContext implements TaskContextData {
   private WorkflowModel rawOutput;
   private Instant completedAt;
   private TransitionInfo transition;
-  private short retryAttempt;
+  private int retryAttempt;
   private int iteration;
   private AuthorizationDescriptor authorization;
-  private Optional<Short> tryRetryCount = Optional.empty();
+  private Optional<Integer> tryRetryCount = Optional.empty();
 
   public TaskContext(
       WorkflowModel input,
@@ -71,7 +71,7 @@ public class TaskContext implements TaskContextData {
     this.output = output;
     this.rawOutput = rawOutput;
     this.retryAttempt =
-        parentContext.map(ctx -> ctx.tryRetryCount.orElse(ctx.retryAttempt())).orElse((short) 0);
+        parentContext.map(ctx -> ctx.tryRetryCount.orElse(ctx.retryAttempt())).orElse(0);
     this.contextVariables =
         parentContext.map(p -> new HashMap<>(p.contextVariables)).orElseGet(HashMap::new);
   }
@@ -173,19 +173,19 @@ public class TaskContext implements TaskContextData {
   }
 
   @Override
-  public short retryAttempt() {
+  public int retryAttempt() {
     return retryAttempt;
   }
 
-  public void retryAttempt(short retryAttempt) {
+  public void retryAttempt(int retryAttempt) {
     this.retryAttempt = retryAttempt;
   }
 
-  public void tryRetryCount(short tryRetryCount) {
+  public void tryRetryCount(int tryRetryCount) {
     this.tryRetryCount = Optional.of(tryRetryCount);
   }
 
-  public Optional<Short> tryRetryCount() {
+  public Optional<Integer> tryRetryCount() {
     return tryRetryCount;
   }
 

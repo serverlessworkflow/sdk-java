@@ -49,21 +49,24 @@ public abstract class AbstractRetryIntervalFunction implements RetryIntervalFunc
       WorkflowContext workflowContext,
       TaskContext taskContext,
       WorkflowModel model,
-      short numAttempts) {
+      int numAttempts) {
     Duration delay = delayResolver.apply(workflowContext, taskContext, model);
     Duration minJittering =
         minJitteringResolver
             .map(min -> min.apply(workflowContext, taskContext, model))
             .orElse(Duration.ZERO);
-    Duration maxJittering =
+    Duration result = calcDelay(delay, numAttempts).plus(minJittering);
+    long maxJittering =
         maxJitteringResolver
             .map(max -> max.apply(workflowContext, taskContext, model))
-            .orElse(Duration.ZERO);
-    return calcDelay(delay, numAttempts)
-        .plus(
-            Duration.ofMillis(
-                (long) (minJittering.toMillis() + Math.random() * maxJittering.toMillis())));
+            .orElse(Duration.ZERO)
+            .toMillis();
+    long diff = maxJittering - minJittering.toMillis();
+    if (diff > 0) {
+      result = result.plus(Duration.ofMillis(Math.round(Math.random() * diff)));
+    }
+    return result;
   }
 
-  protected abstract Duration calcDelay(Duration delay, short numAttempts);
+  protected abstract Duration calcDelay(Duration delay, int numAttempts);
 }
