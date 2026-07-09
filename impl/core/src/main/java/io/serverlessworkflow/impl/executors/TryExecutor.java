@@ -115,25 +115,27 @@ public class TryExecutor extends RegularTaskExecutor<TryTask> {
     }
 
     private static int resolveMaxAttempts(RetryLimit limit) {
-      if (limit == null || limit.getAttempt() == null) {
-        return 0;
-      }
-      return limit.getAttempt().getCount();
+      return limit != null && limit.getAttempt() != null
+          ? limit.getAttempt().getCount()
+          : Integer.MAX_VALUE - 1;
     }
 
     private RetryIntervalFunction buildIntervalFunction(RetryPolicy retryPolicy) {
       RetryBackoff backoff = retryPolicy.getBackoff();
-      if (backoff == null || backoff.getConstantBackoff() != null) {
-        return new ConstantRetryIntervalFunction(
-            application, retryPolicy.getDelay(), retryPolicy.getJitter());
-      } else if (backoff.getLinearBackoff() != null) {
-        return new LinearRetryIntervalFunction(
-            application, retryPolicy.getDelay(), retryPolicy.getJitter());
-      } else if (backoff.getExponentialBackOff() != null) {
-        return new ExponentialRetryIntervalFunction(
-            application, retryPolicy.getDelay(), retryPolicy.getJitter());
+      if (backoff != null) {
+        if (backoff.getConstantBackoff() != null) {
+          return new ConstantRetryIntervalFunction(
+              application, retryPolicy.getDelay(), retryPolicy.getJitter());
+        } else if (backoff.getLinearBackoff() != null) {
+          return new LinearRetryIntervalFunction(
+              application, retryPolicy.getDelay(), retryPolicy.getJitter());
+        } else if (backoff.getExponentialBackOff() != null) {
+          return new ExponentialRetryIntervalFunction(
+              application, retryPolicy.getDelay(), retryPolicy.getJitter());
+        }
       }
-      throw new IllegalStateException("A backoff strategy should be set");
+      return new ConstantRetryIntervalFunction(
+          application, retryPolicy.getDelay(), retryPolicy.getJitter());
     }
 
     @Override

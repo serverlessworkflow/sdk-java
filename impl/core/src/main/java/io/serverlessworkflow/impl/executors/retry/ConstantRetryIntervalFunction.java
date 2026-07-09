@@ -28,7 +28,7 @@ public class ConstantRetryIntervalFunction extends AbstractRetryIntervalFunction
   }
 
   @Override
-  protected Duration calcDelay(Duration delay, short numAttempts) {
+  protected Duration calcDelay(Duration delay, int numAttempts) {
     return delay;
   }
 }

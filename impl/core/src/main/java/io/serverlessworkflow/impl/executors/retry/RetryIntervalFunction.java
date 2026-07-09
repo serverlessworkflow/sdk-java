@@ -25,5 +25,5 @@ public interface RetryIntervalFunction {
       WorkflowContext workflowContext,
       TaskContext taskContext,
       WorkflowModel model,
-      short numAttempts);
+      int numAttempts);
 }

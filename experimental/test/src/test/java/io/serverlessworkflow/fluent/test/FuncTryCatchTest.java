@@ -480,7 +480,6 @@ public class FuncTryCatchTest {
   @Test
   void testRetryWithoutBackoff() {
     AtomicInteger attempts = new AtomicInteger();
-
     Workflow workflow =
         FuncWorkflowBuilder.workflow()
             .tasks(
@@ -521,7 +520,7 @@ public class FuncTryCatchTest {
 
   @Test
   void testRetryWithoutLimit() {
-
+    AtomicInteger attempts = new AtomicInteger();
     Workflow workflow =
         FuncWorkflowBuilder.workflow()
             .tasks(
@@ -533,8 +532,11 @@ public class FuncTryCatchTest {
                                     function(
                                         "riskyTask",
                                         (String input) -> {
-                                          throw new WorkflowException(
-                                              WorkflowError.error(TRANSIENT_ERROR, 503).build());
+                                          if (attempts.incrementAndGet() <= 2) {
+                                            throw new WorkflowException(
+                                                WorkflowError.error(TRANSIENT_ERROR, 503).build());
+                                          }
+                                          return "success";
                                         },
                                         String.class)))
                             .catchHandler(
@@ -550,8 +552,9 @@ public class FuncTryCatchTest {
 
     try (WorkflowApplication application = WorkflowApplication.builder().build()) {
       WorkflowDefinition definition = application.workflowDefinition(workflow);
-      Assertions.assertThatThrownBy(() -> definition.instance("input").start().join())
-          .hasCauseInstanceOf(WorkflowException.class);
+      WorkflowModel result = definition.instance("input").start().join();
+      Assertions.assertThat(result.asText()).hasValue("success");
+      Assertions.assertThat(attempts.get()).isEqualTo(3);
     }
   }
 

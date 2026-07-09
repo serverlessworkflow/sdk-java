@@ -124,9 +124,9 @@ public abstract class BytesMapInstanceTransaction
       WorkflowContextData workflowContext, TaskContext taskContext) {
     ByteArrayOutputStream bytes = new ByteArrayOutputStream();
     try (WorkflowOutputBuffer writer = factory.output(bytes)) {
-      writer.writeByte(VERSION_1);
+      writer.writeByte(VERSION_2);
       writer.writeEnum(TaskStatus.RETRIED);
-      writer.writeShort(taskContext.retryAttempt());
+      writer.writeInt(taskContext.retryAttempt());
     }
     return bytes.toByteArray();
   }
@@ -159,7 +159,7 @@ public abstract class BytesMapInstanceTransaction
             buffer.readBoolean() ? buffer.readString() : null,
             buffer.readInt());
       case RETRIED:
-        return new RetriedTaskInfo(buffer.readShort());
+        return new RetriedTaskInfo(buffer.readInt());
     }
     throw new UnsupportedOperationException("Unknown status " + taskStatus);
   }

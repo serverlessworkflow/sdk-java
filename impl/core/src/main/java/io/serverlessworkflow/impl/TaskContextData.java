@@ -40,5 +40,5 @@ public interface TaskContextData {
 
   int iteration();
 
-  short retryAttempt();
+  int retryAttempt();
 }

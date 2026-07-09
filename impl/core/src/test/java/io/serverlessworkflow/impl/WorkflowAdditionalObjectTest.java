@@ -59,7 +59,7 @@ public class WorkflowAdditionalObjectTest {
   void testAdditionalObjectBiFunction() {
     WorkflowContext workflowContext = mock(WorkflowContext.class);
     TaskContext taskContext = mock(TaskContext.class);
-    when(taskContext.retryAttempt()).thenReturn((short) 2);
+    when(taskContext.retryAttempt()).thenReturn(2);
     final String key = "Dummy_Bifactory";
     try (WorkflowApplication appl =
         WorkflowApplication.builder()

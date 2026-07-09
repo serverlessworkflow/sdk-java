@@ -65,8 +65,8 @@ public class RetryTimeoutTest {
 
   private class RetryListener implements WorkflowExecutionListener {
 
-    private Map<String, Short> taskRetried = new ConcurrentHashMap<>();
-    private Map<String, Short> taskCompleted = new ConcurrentHashMap<>();
+    private Map<String, Integer> taskRetried = new ConcurrentHashMap<>();
+    private Map<String, Integer> taskCompleted = new ConcurrentHashMap<>();
 
     @Override
     public void onTaskRetried(TaskRetriedEvent ev) {
@@ -78,7 +78,7 @@ public class RetryTimeoutTest {
       add2Map(taskCompleted, ev);
     }
 
-    private static void add2Map(Map<String, Short> map, TaskEvent ev) {
+    private static void add2Map(Map<String, Integer> map, TaskEvent ev) {
       TaskContextData taskContext = ev.taskContext();
       map.put(taskContext.position().jsonPointer(), taskContext.retryAttempt());
     }
