@@ -18,4 +18,4 @@ package io.serverlessworkflow.api.types.func;
 import java.util.function.BiFunction;
 
 @FunctionalInterface
-public interface LoopFunction<T, V, R> extends BiFunction<T, V, R> {}
+public interface LoopFunction<T, V, R> extends FunctionObject, BiFunction<T, V, R> {}

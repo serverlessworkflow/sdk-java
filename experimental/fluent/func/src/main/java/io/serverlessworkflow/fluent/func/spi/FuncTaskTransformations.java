@@ -16,9 +16,12 @@
 package io.serverlessworkflow.fluent.func.spi;
 
 import io.serverlessworkflow.api.types.Export;
+import io.serverlessworkflow.api.types.ExportAs;
 import io.serverlessworkflow.api.types.func.ContextFunction;
-import io.serverlessworkflow.api.types.func.ExportAsFunction;
 import io.serverlessworkflow.api.types.func.FilterFunction;
+import io.serverlessworkflow.api.types.func.TypedContextFunction;
+import io.serverlessworkflow.api.types.func.TypedFilterFunction;
+import io.serverlessworkflow.api.types.func.TypedFunction;
 import io.serverlessworkflow.fluent.spec.spi.TaskTransformationHandlers;
 import java.util.function.Function;
 
@@ -27,37 +30,43 @@ public interface FuncTaskTransformations<SELF extends FuncTaskTransformations<SE
 
   @SuppressWarnings("unchecked")
   default <T, V> SELF exportAs(Function<T, V> function) {
-    setExport(new Export().withAs(new ExportAsFunction().withFunction(function)));
+    setExport(new Export().withAs(new ExportAs().withObject(function)));
     return (SELF) this;
   }
 
   @SuppressWarnings("unchecked")
   default <T, V> SELF exportAs(Function<T, V> function, Class<T> argClass) {
-    setExport(new Export().withAs(new ExportAsFunction().withFunction(function, argClass)));
+    setExport(
+        new Export()
+            .withAs(new ExportAs().withObject(new TypedFunction<T, V>(function, argClass))));
     return (SELF) this;
   }
 
   @SuppressWarnings("unchecked")
   default <T, V> SELF exportAs(FilterFunction<T, V> function) {
-    setExport(new Export().withAs(new ExportAsFunction().withFunction(function)));
+    setExport(new Export().withAs(new ExportAs().withObject(function)));
     return (SELF) this;
   }
 
   @SuppressWarnings("unchecked")
   default <T, V> SELF exportAs(FilterFunction<T, V> function, Class<T> argClass) {
-    setExport(new Export().withAs(new ExportAsFunction().withFunction(function, argClass)));
+    setExport(
+        new Export()
+            .withAs(new ExportAs().withObject(new TypedFilterFunction<>(function, argClass))));
     return (SELF) this;
   }
 
   @SuppressWarnings("unchecked")
   default <T, V> SELF exportAs(ContextFunction<T, V> function) {
-    setExport(new Export().withAs(new ExportAsFunction().withFunction(function)));
+    setExport(new Export().withAs(new ExportAs().withObject(function)));
     return (SELF) this;
   }
 
   @SuppressWarnings("unchecked")
   default <T, V> SELF exportAs(ContextFunction<T, V> function, Class<T> argClass) {
-    setExport(new Export().withAs(new ExportAsFunction().withFunction(function, argClass)));
+    setExport(
+        new Export()
+            .withAs(new ExportAs().withObject(new TypedContextFunction<>(function, argClass))));
     return (SELF) this;
   }
 }

@@ -15,4 +15,5 @@
  */
 package io.serverlessworkflow.api.types.func;
 
-public record TypedContextPredicate<T>(ContextPredicate<T> predicate, Class<T> argClass) {}
+public record TypedContextPredicate<T>(ContextPredicate<T> predicate, Class<T> argClass)
+    implements FilterSerializable {}

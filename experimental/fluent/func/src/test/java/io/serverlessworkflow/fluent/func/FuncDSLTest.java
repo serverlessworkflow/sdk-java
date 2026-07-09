@@ -32,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
+import io.serverlessworkflow.api.types.CallFunction;
 import io.serverlessworkflow.api.types.CallGRPC;
 import io.serverlessworkflow.api.types.CallHTTP;
 import io.serverlessworkflow.api.types.Export;
@@ -41,7 +42,6 @@ import io.serverlessworkflow.api.types.RunWorkflow;
 import io.serverlessworkflow.api.types.Task;
 import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.api.types.Workflow;
-import io.serverlessworkflow.api.types.func.CallJava;
 import io.serverlessworkflow.api.types.func.FilterFunction;
 import io.serverlessworkflow.fluent.func.dsl.FuncDSL;
 import java.net.URI;
@@ -68,7 +68,7 @@ class FuncDSLTest {
 
     Task t = items.get(0).getTask();
     assertNotNull(t.getCallTask(), "CallTask expected");
-    Export ex = ((CallJava) t.getCallTask().get()).getExport();
+    Export ex = ((CallFunction) t.getCallTask().get()).getExport();
     assertNotNull(ex, "Export should be set via Step.exportAs(Function)");
     assertNotNull(ex.getAs(), "'as' should be populated");
     // functional export should not produce a literal string
@@ -174,7 +174,7 @@ class FuncDSLTest {
     assertNotNull(t2.getListenTask());
 
     assertNotNull(
-        ((CallJava) t0.getCallTask().get()).getExport(), "function step should carry export");
+        ((CallFunction) t0.getCallTask().get()).getExport(), "function step should carry export");
     assertNotNull(t2.getListenTask().getExport(), "listen step should carry export");
   }
 
@@ -465,7 +465,7 @@ class FuncDSLTest {
     Task t = items.get(0).getTask();
     assertNotNull(t.getCallTask(), "CallTask expected");
 
-    CallJava callJava = (CallJava) t.getCallTask().get();
+    CallFunction callJava = (CallFunction) t.getCallTask().get();
     assertNotNull(callJava.getThen(), "then() should be set on the task");
     assertEquals("otherTask", callJava.getThen().getString(), "then() should point to 'otherTask'");
   }
@@ -484,7 +484,7 @@ class FuncDSLTest {
     Task t = items.get(0).getTask();
     assertNotNull(t.getCallTask(), "CallTask expected");
 
-    CallJava callJava = (CallJava) t.getCallTask().get();
+    CallFunction callJava = (CallFunction) t.getCallTask().get();
     assertNotNull(callJava.getThen(), "then() should be set on the task");
     assertEquals(
         FlowDirectiveEnum.END,
@@ -510,7 +510,7 @@ class FuncDSLTest {
     Task t = items.get(0).getTask();
     assertNotNull(t.getCallTask(), "CallTask expected for consume step");
 
-    CallJava callJava = (CallJava) t.getCallTask().get();
+    CallFunction callJava = (CallFunction) t.getCallTask().get();
     assertNotNull(callJava.getThen(), "then() should be set on the consume task");
     assertEquals("otherTask", callJava.getThen().getString(), "then() should point to 'otherTask'");
   }
@@ -532,7 +532,7 @@ class FuncDSLTest {
     Task t = items.get(0).getTask();
     assertNotNull(t.getCallTask(), "CallTask expected for consume step");
 
-    CallJava callJava = (CallJava) t.getCallTask().get();
+    CallFunction callJava = (CallFunction) t.getCallTask().get();
     assertNotNull(callJava.getThen(), "then() should be set on the consume task");
     assertEquals(
         FlowDirectiveEnum.END,

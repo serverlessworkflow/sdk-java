@@ -20,7 +20,7 @@ import io.serverlessworkflow.api.types.FlowDirectiveEnum;
 import io.serverlessworkflow.api.types.SwitchCase;
 import io.serverlessworkflow.api.types.SwitchItem;
 import io.serverlessworkflow.api.types.SwitchTask;
-import io.serverlessworkflow.api.types.func.SwitchCasePredicate;
+import io.serverlessworkflow.api.types.utils.TaskPredicate;
 import io.serverlessworkflow.fluent.func.spi.ConditionalTaskBuilder;
 import io.serverlessworkflow.fluent.func.spi.FuncTaskTransformations;
 import io.serverlessworkflow.fluent.spec.TaskBaseBuilder;
@@ -56,20 +56,21 @@ public class FuncSwitchTaskBuilder extends TaskBaseBuilder<FuncSwitchTaskBuilder
 
   public FuncSwitchTaskBuilder onPredicate(
       String name, Consumer<SwitchCasePredicateBuilder> consumer) {
-    final SwitchCasePredicateBuilder switchCase = new SwitchCasePredicateBuilder();
+    final SwitchCasePredicateBuilder switchCase =
+        new SwitchCasePredicateBuilder(defaultItemNameIfBlank(name));
     consumer.accept(switchCase);
-    final SwitchCasePredicate switchCaseValue = (SwitchCasePredicate) switchCase.build();
+    final SwitchCase switchCaseValue = switchCase.build();
 
     // Handling default cases
-    if (switchCaseValue.predicate() == null) {
-      Objects.requireNonNull(switchCaseValue.getThen(), "When is required");
+    if (TaskPredicate.predicate(switchTask, switchCase.name) == null) {
+      Objects.requireNonNull(switchCaseValue.getThen(), "Then is required");
       if (switchCaseValue.getThen().getFlowDirectiveEnum() != null) {
         return this.onDefault(switchCaseValue.getThen().getFlowDirectiveEnum());
       } else {
         return this.onDefault(switchCaseValue.getThen().getString());
       }
     }
-    this.switchItems.add(new SwitchItem(defaultItemNameIfBlank(name), switchCase.build()));
+    this.switchItems.add(new SwitchItem(switchCase.name, switchCase.build()));
     return this;
   }
 
@@ -91,20 +92,22 @@ public class FuncSwitchTaskBuilder extends TaskBaseBuilder<FuncSwitchTaskBuilder
     return switchTask;
   }
 
-  public static final class SwitchCasePredicateBuilder {
-    private final SwitchCasePredicate switchCase;
+  public final class SwitchCasePredicateBuilder {
+    private final SwitchCase switchCase;
+    private final String name;
 
-    SwitchCasePredicateBuilder() {
-      this.switchCase = new SwitchCasePredicate();
+    SwitchCasePredicateBuilder(String name) {
+      this.name = name;
+      this.switchCase = new SwitchCase();
     }
 
     public <T> SwitchCasePredicateBuilder when(Predicate<T> when) {
-      this.switchCase.withPredicate(when);
+      TaskPredicate.withPredicate(FuncSwitchTaskBuilder.this.switchTask, name, when);
       return this;
     }
 
     public <T> SwitchCasePredicateBuilder when(Predicate<T> when, Class<T> whenClass) {
-      this.switchCase.withPredicate(when, whenClass);
+      TaskPredicate.withPredicate(FuncSwitchTaskBuilder.this.switchTask, name, when, whenClass);
       return this;
     }
 

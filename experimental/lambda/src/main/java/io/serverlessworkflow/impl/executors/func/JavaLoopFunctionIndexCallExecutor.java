@@ -20,6 +20,7 @@ import static io.serverlessworkflow.impl.executors.func.JavaFuncUtils.safeObject
 import io.serverlessworkflow.api.types.func.LoopFunctionIndex;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
+import java.util.Optional;
 
 public class JavaLoopFunctionIndexCallExecutor<T, V, R> extends AbstractJavaCallExecutor<T, R> {
 
@@ -28,7 +29,12 @@ public class JavaLoopFunctionIndexCallExecutor<T, V, R> extends AbstractJavaCall
   private final String indexName;
 
   public JavaLoopFunctionIndexCallExecutor(
-      LoopFunctionIndex<T, V, R> function, String varName, String indexName) {
+      LoopFunctionIndex<T, V, R> function,
+      String varName,
+      String indexName,
+      Optional<Class<T>> inputClass,
+      Optional<Class<R>> outputClass) {
+    super(inputClass, outputClass);
     this.function = function;
     this.varName = varName;
     this.indexName = indexName;

@@ -17,17 +17,18 @@ package io.serverlessworkflow.impl;
 
 import io.serverlessworkflow.api.types.Document;
 import io.serverlessworkflow.api.types.Workflow;
+import io.serverlessworkflow.types.Defaults;
 
 public record WorkflowDefinitionId(String namespace, String name, String version) {
-
-  public static final String DEFAULT_VERSION = "0.0.1";
-  public static final String DEFAULT_NAMESPACE = "org.acme";
 
   public static WorkflowDefinitionId of(Workflow workflow) {
     Document document = workflow.getDocument();
     return new WorkflowDefinitionId(
         document.getNamespace(), document.getName(), document.getVersion());
   }
+
+  public static final String DEFAULT_NAMESPACE = Defaults.DEFAULT_NAMESPACE;
+  public static final String DEFAULT_VERSION = Defaults.DEFAULT_VERSION;
 
   public static WorkflowDefinitionId fromName(String name) {
     return new WorkflowDefinitionId(DEFAULT_NAMESPACE, name, DEFAULT_VERSION);

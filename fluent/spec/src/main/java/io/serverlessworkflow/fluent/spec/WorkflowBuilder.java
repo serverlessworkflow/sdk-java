@@ -15,6 +15,9 @@
  */
 package io.serverlessworkflow.fluent.spec;
 
+import static io.serverlessworkflow.types.Defaults.DEFAULT_NAMESPACE;
+import static io.serverlessworkflow.types.Defaults.DEFAULT_VERSION;
+
 import java.util.UUID;
 
 public class WorkflowBuilder

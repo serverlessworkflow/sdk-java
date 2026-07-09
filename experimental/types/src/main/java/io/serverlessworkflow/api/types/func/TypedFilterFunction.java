@@ -15,4 +15,5 @@
  */
 package io.serverlessworkflow.api.types.func;
 
-public record TypedFilterFunction<T, V>(FilterFunction<T, V> function, Class<T> argClass) {}
+public record TypedFilterFunction<T, V>(FilterFunction<T, V> function, Class<T> argClass)
+    implements FilterSerializable {}

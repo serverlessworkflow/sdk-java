@@ -16,6 +16,7 @@
 package io.serverlessworkflow.fluent.test;
 
 import static io.serverlessworkflow.fluent.func.dsl.FuncDSL.*;
+import static io.serverlessworkflow.fluent.test.TestSerializationUtils.writeAndReadInMemory;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
@@ -26,6 +27,7 @@ import io.serverlessworkflow.fluent.func.FuncWorkflowBuilder;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.lifecycle.TraceExecutionListener;
+import java.io.IOException;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
@@ -44,12 +46,13 @@ public class ForEachFuncTest {
   private record OrderName(String id, String name) {}
 
   @Test
-  void testForEachIteration() {
+  void testForEachIteration() throws IOException {
 
     Workflow workflow =
-        FuncWorkflowBuilder.workflow("foreach-workflow")
-            .tasks(forEachItem(OrdersPayload::orders, ForEachFuncTest::enhace))
-            .build();
+        writeAndReadInMemory(
+            FuncWorkflowBuilder.workflow("foreach-workflow")
+                .tasks(forEachItem(OrdersPayload::orders, ForEachFuncTest::enhace))
+                .build());
 
     try (WorkflowApplication app = WorkflowApplication.builder().build()) {
       OrdersPayload input =

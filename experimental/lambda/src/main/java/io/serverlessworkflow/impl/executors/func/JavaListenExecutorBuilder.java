@@ -17,7 +17,8 @@ package io.serverlessworkflow.impl.executors.func;
 
 import io.serverlessworkflow.api.types.ListenTask;
 import io.serverlessworkflow.api.types.Until;
-import io.serverlessworkflow.api.types.func.UntilPredicate;
+import io.serverlessworkflow.api.types.utils.TaskPredicate;
+import io.serverlessworkflow.api.types.utils.TypesUtils;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.WorkflowPredicate;
@@ -32,8 +33,9 @@ public class JavaListenExecutorBuilder extends ListenExecutorBuilder {
 
   @Override
   protected WorkflowPredicate buildUntilPredicate(Until until) {
-    return until instanceof UntilPredicate untilPred && untilPred.predicate() != null
-        ? JavaFuncUtils.from(application, untilPred)
+    Object predicate = TaskPredicate.predicate(task, TypesUtils.UNTIL_PRED_NAME);
+    return predicate != null
+        ? JavaFuncUtils.from(application, predicate)
         : super.buildUntilPredicate(until);
   }
 }

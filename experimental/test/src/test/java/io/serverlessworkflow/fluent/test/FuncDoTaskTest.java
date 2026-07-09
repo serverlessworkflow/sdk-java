@@ -22,6 +22,7 @@ import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowInstance;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowStatus;
+import java.io.IOException;
 import java.net.URI;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -30,7 +31,7 @@ import org.junit.jupiter.api.Test;
 public class FuncDoTaskTest {
 
   @Test
-  void testDoTaskRaiseAndTryCatch() throws Exception {
+  void testDoTaskRaiseAndTryCatch() throws IOException {
     try (WorkflowApplication app = WorkflowApplication.builder().build()) {
 
       var workflow =
@@ -67,7 +68,9 @@ public class FuncDoTaskTest {
                                                                   Map.of("handled", true)))))))
               .build();
 
-      WorkflowInstance instance = app.workflowDefinition(workflow).instance(Map.of());
+      WorkflowInstance instance =
+          app.workflowDefinition(TestSerializationUtils.writeAndReadInMemory(workflow))
+              .instance(Map.of());
 
       CompletableFuture<WorkflowModel> future = instance.start();
       WorkflowModel result = future.join();

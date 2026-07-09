@@ -15,9 +15,9 @@
  */
 package io.serverlessworkflow.impl.executors.func;
 
-import io.serverlessworkflow.api.types.SwitchCase;
+import io.serverlessworkflow.api.types.SwitchItem;
 import io.serverlessworkflow.api.types.SwitchTask;
-import io.serverlessworkflow.api.types.func.SwitchCasePredicate;
+import io.serverlessworkflow.api.types.utils.TaskPredicate;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.WorkflowPredicate;
@@ -32,9 +32,10 @@ public class JavaSwitchExecutorBuilder extends SwitchExecutorBuilder {
   }
 
   @Override
-  protected Optional<WorkflowPredicate> buildFilter(SwitchCase switchCase) {
-    return switchCase instanceof SwitchCasePredicate predicate && predicate.predicate() != null
+  protected Optional<WorkflowPredicate> buildFilter(SwitchItem item) {
+    Object predicate = TaskPredicate.predicate(task, item.getName());
+    return predicate != null
         ? Optional.of(JavaFuncUtils.from(application, predicate))
-        : super.buildFilter(switchCase);
+        : super.buildFilter(item);
   }
 }

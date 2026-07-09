@@ -47,21 +47,15 @@ public record EventRegistrationBuilderInfo(
       AnyEventConsumptionStrategy any = to.getAnyEventConsumptionStrategy();
       registrations = anyEvents(any, application);
       Until untilDesc = any.getUntil();
-      if (untilDesc != null) {
-        until = predBuilder.apply(untilDesc);
-        if (until == null) {
-          if (untilDesc.getAnyEventUntilConsumed() != null) {
-            EventConsumptionStrategy strategy = untilDesc.getAnyEventUntilConsumed();
-            if (strategy.getAllEventConsumptionStrategy() != null) {
-              untilRegistrations =
-                  allEvents(strategy.getAllEventConsumptionStrategy(), application);
-            } else if (strategy.getAnyEventConsumptionStrategy() != null) {
-              untilRegistrations =
-                  anyEvents(strategy.getAnyEventConsumptionStrategy(), application);
-            } else if (strategy.getOneEventConsumptionStrategy() != null) {
-              untilRegistrations = oneEvent(strategy.getOneEventConsumptionStrategy(), application);
-            }
-          }
+      until = predBuilder.apply(untilDesc);
+      if (until == null && untilDesc != null && untilDesc.getAnyEventUntilConsumed() != null) {
+        EventConsumptionStrategy strategy = untilDesc.getAnyEventUntilConsumed();
+        if (strategy.getAllEventConsumptionStrategy() != null) {
+          untilRegistrations = allEvents(strategy.getAllEventConsumptionStrategy(), application);
+        } else if (strategy.getAnyEventConsumptionStrategy() != null) {
+          untilRegistrations = anyEvents(strategy.getAnyEventConsumptionStrategy(), application);
+        } else if (strategy.getOneEventConsumptionStrategy() != null) {
+          untilRegistrations = oneEvent(strategy.getOneEventConsumptionStrategy(), application);
         }
       }
     } else {

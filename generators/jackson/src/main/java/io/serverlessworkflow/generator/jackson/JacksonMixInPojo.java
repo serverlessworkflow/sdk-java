@@ -165,7 +165,8 @@ public class JacksonMixInPojo extends AbstractMojo {
 
   private JExpression processAnnotatedClass(ClassInfo classInfo, AnnotationProcessor processor)
       throws JClassAlreadyExistsException {
-    JDefinedClass result = rootPackage._class(JMod.ABSTRACT, classInfo.getSimpleName() + "MixIn");
+    JDefinedClass result =
+        rootPackage._class(JMod.ABSTRACT | JMod.PUBLIC, classInfo.getSimpleName() + "MixIn");
     nativeHandler.addClass(result);
     processor.accept(classInfo, result);
     return JExpr.dotclass(result);

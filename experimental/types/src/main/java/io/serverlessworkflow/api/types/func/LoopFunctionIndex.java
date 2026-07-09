@@ -16,6 +16,6 @@
 package io.serverlessworkflow.api.types.func;
 
 @FunctionalInterface
-public interface LoopFunctionIndex<T, V, R> {
+public interface LoopFunctionIndex<T, V, R> extends FunctionObject {
   R apply(T model, V item, Integer index);
 }

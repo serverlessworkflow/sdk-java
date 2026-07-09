@@ -53,6 +53,7 @@ class ObjectMapperFactory {
         .configure(SerializationFeature.INDENT_OUTPUT, true)
         .configure(SerializationFeature.WRITE_EMPTY_JSON_ARRAYS, false)
         .configure(SerializationFeature.WRITE_NULL_MAP_VALUES, false)
+        .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
         .registerModule(validationModule)
         .registerModule(new JacksonMixInModule())
         .findAndRegisterModules();

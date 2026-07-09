@@ -21,12 +21,19 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.fluent.func.FuncWorkflowBuilder;
 import io.serverlessworkflow.impl.WorkflowApplication;
+import java.io.IOException;
 import org.junit.jupiter.api.Test;
 
 public class ForkFuncTest {
 
+  private int value = 2;
+
+  public int getValue() {
+    return value;
+  }
+
   @Test
-  void testForkVerbose() {
+  void testForkVerbose() throws IOException {
     testIt(
         FuncWorkflowBuilder.workflow("parallel-execution-workflow")
             .tasks(
@@ -35,35 +42,36 @@ public class ForkFuncTest {
                         funcForkTaskBuilder ->
                             funcForkTaskBuilder.branches(
                                 inner -> {
-                                  inner.function(f -> f.function(this::doubleIt, int.class));
-                                  inner.function(f -> f.function(this::halfIt, int.class));
+                                  inner.function(f -> f.function(this::doubleIt));
+                                  inner.function(f -> f.function(this::halfIt));
                                 })))
             .build());
   }
 
   @Test
-  void testForkSyntaxSugar() {
+  void testForkSyntaxSugar() throws IOException {
     testIt(
         FuncWorkflowBuilder.workflow("parallel-execution-workflow")
             .tasks(fork(function(this::doubleIt), function(this::halfIt)))
             .build());
   }
 
-  private void testIt(Workflow workflow) {
+  private void testIt(Workflow workflow) throws IOException {
+    workflow = TestSerializationUtils.writeAndReadInMemory(workflow);
     try (WorkflowApplication app = WorkflowApplication.builder().build()) {
       assertThat(
               app.workflowDefinition(workflow).instance(8).start().join().asCollection().stream()
                   .flatMap(m -> m.asMap().orElseThrow().values().stream())
                   .toList())
-          .containsExactlyInAnyOrder(4, 16);
+          .containsExactlyInAnyOrder(2, 18);
     }
   }
 
   private int doubleIt(int number) {
-    return number << 1;
+    return (number << 1) + value;
   }
 
   private int halfIt(int number) {
-    return number >> 1;
+    return (number >> 1) - value;
   }
 }

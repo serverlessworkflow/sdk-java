@@ -31,10 +31,6 @@ public abstract class AbstractJavaCallExecutor<T, V> implements CallableTask {
   private final boolean directCompletable;
   private final boolean convertedCompletable;
 
-  protected AbstractJavaCallExecutor() {
-    this(Optional.empty(), Optional.empty());
-  }
-
   protected AbstractJavaCallExecutor(
       Optional<Class<T>> inputClass, Optional<Class<V>> outputClass) {
     this.inputClass = inputClass;

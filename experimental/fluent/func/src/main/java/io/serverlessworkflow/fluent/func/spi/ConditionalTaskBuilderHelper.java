@@ -16,19 +16,13 @@
 package io.serverlessworkflow.fluent.func.spi;
 
 import io.serverlessworkflow.api.types.TaskBase;
-import io.serverlessworkflow.api.types.TaskMetadata;
-import io.serverlessworkflow.api.types.func.TaskMetadataKeys;
+import io.serverlessworkflow.api.types.utils.TypesUtils;
 
 class ConditionalTaskBuilderHelper {
 
   private ConditionalTaskBuilderHelper() {}
 
   static void setMetadata(TaskBase task, Object predicate) {
-    TaskMetadata metadata = task.getMetadata();
-    if (metadata == null) {
-      metadata = new TaskMetadata();
-      task.setMetadata(metadata);
-    }
-    metadata.setAdditionalProperty(TaskMetadataKeys.IF_PREDICATE, predicate);
+    TypesUtils.initMetadata(task).setAdditionalProperty(TypesUtils.IF_PREDICATE, predicate);
   }
 }

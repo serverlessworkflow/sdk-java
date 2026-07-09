@@ -15,10 +15,10 @@
  */
 package io.serverlessworkflow.fluent.func;
 
+import io.serverlessworkflow.api.types.CallTask;
 import io.serverlessworkflow.api.types.Task;
 import io.serverlessworkflow.api.types.TaskItem;
 import io.serverlessworkflow.api.types.func.CallJava;
-import io.serverlessworkflow.api.types.func.CallTaskJava;
 import io.serverlessworkflow.fluent.func.spi.ConditionalTaskBuilder;
 import io.serverlessworkflow.fluent.func.spi.FuncTaskTransformations;
 import io.serverlessworkflow.fluent.spec.AbstractForkTaskBuilder;
@@ -61,7 +61,8 @@ public class FuncForkTaskBuilder
             this.defaultBranchName(name, this.currentOffset()),
             new Task()
                 .withCallTask(
-                    new CallTaskJava(CallJava.function(function, argParam, returnClass)))));
+                    new CallTask()
+                        .withCallFunction(CallJava.function(function, argParam, returnClass)))));
     return this;
   }
 

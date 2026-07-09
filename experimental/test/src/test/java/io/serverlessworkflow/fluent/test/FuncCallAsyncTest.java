@@ -25,6 +25,7 @@ import io.serverlessworkflow.impl.WorkflowInstance;
 import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.lifecycle.WorkflowExecutionListener;
 import io.serverlessworkflow.impl.lifecycle.WorkflowStartedEvent;
+import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
 import org.junit.jupiter.api.Test;
@@ -53,17 +54,17 @@ public class FuncCallAsyncTest {
   }
 
   @Test
-  void testCompletableCall() {
+  void testCompletableCall() throws IOException {
     runIt(FuncWorkflowBuilder.workflow("waitCompletable").tasks(function(this::waitAsync)).build());
   }
 
   @Test
-  void testReferencedFunctionCall() {
+  void testReferencedFunctionCall() throws IOException {
     runIt(FuncWorkflowBuilder.workflow("waitReference").tasks(function(this::waitSync)).build());
   }
 
   @Test
-  void testLambdaCall() {
+  void testLambdaCall() throws IOException {
     runIt(FuncWorkflowBuilder.workflow("waitLambda").tasks(function(v -> 1)).build());
   }
 
@@ -77,11 +78,13 @@ public class FuncCallAsyncTest {
     }
   }
 
-  private void runIt(Workflow workflow) {
+  private void runIt(Workflow workflow) throws IOException {
     TimeListener listener = new TimeListener();
     try (WorkflowApplication app = WorkflowApplication.builder().withListener(listener).build()) {
       final long waitTime = 200;
-      WorkflowInstance instance = app.workflowDefinition(workflow).instance(waitTime);
+      WorkflowInstance instance =
+          app.workflowDefinition(TestSerializationUtils.writeAndReadInMemory(workflow))
+              .instance(waitTime);
       CompletableFuture<WorkflowModel> future = instance.start();
       assertThat(System.currentTimeMillis() - listener.startTime.get()).isLessThan(waitTime);
       assertThat(future.join().asNumber().map(Number::intValue).orElseThrow()).isEqualTo(1);
