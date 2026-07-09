@@ -29,11 +29,12 @@ public final class FuncCallStep<T, R> extends Step<FuncCallStep<T, R>, FuncCallT
   private final ContextFunction<T, R> ctxFn;
   private final FilterFunction<T, R> filterFn;
   private final Class<T> argClass;
+  private final Class<R> returnClass;
+
   @SuppressWarnings("unchecked")
   private static <R> Class<R> defaultReturnClass(Class<R> c) {
     return c != null ? c : (Class<R>) Object.class;
   }
-  private final Class<R> returnClass;
 
   /** Function<T,R> variant (unnamed). */
   FuncCallStep(Function<T, R> fn, Class<T> argClass, Class<R> returnClass) {
