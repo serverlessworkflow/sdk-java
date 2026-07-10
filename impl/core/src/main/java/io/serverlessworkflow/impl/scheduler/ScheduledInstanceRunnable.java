@@ -19,8 +19,12 @@ import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowInstance;
 import io.serverlessworkflow.impl.WorkflowModel;
 import java.util.function.Consumer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ScheduledInstanceRunnable implements Runnable, Consumer<WorkflowInstance> {
+
+  private static final Logger logger = LoggerFactory.getLogger(ScheduledInstanceRunnable.class);
 
   protected final WorkflowDefinition definition;
 
@@ -45,6 +49,22 @@ public class ScheduledInstanceRunnable implements Runnable, Consumer<WorkflowIns
   private static void runScheduledInstance(
       WorkflowDefinition definition, WorkflowInstance instance) {
     definition.addScheduledInstance(instance);
-    definition.application().executorService().execute(() -> instance.start());
+    definition
+        .application()
+        .executorService()
+        .execute(
+            () ->
+                instance
+                    .start()
+                    .whenComplete(
+                        (model, ex) -> {
+                          if (ex != null) {
+                            logger.error(
+                                "Scheduled workflow instance {} of definition {} has failed",
+                                instance.id(),
+                                definition.id(),
+                                ex);
+                          }
+                        }));
   }
 }

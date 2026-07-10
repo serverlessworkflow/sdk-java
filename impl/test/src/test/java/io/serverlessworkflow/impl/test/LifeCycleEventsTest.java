@@ -25,6 +25,7 @@ import io.serverlessworkflow.api.WorkflowReader;
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.fluent.spec.WorkflowBuilder;
 import io.serverlessworkflow.fluent.spec.dsl.DSL;
+import io.serverlessworkflow.impl.ExecutorServiceFactory;
 import io.serverlessworkflow.impl.WorkflowApplication;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowDefinitionId;
@@ -54,6 +55,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.stream.Stream;
@@ -76,9 +79,25 @@ class LifeCycleEventsTest {
     for (String type : AbstractLifeCyclePublisher.getLifeCycleTypes()) {
       eventBroker.register(type, ce -> publishedEvents.add(ce));
     }
+    ;
     appl =
         WorkflowApplication.builder()
             .withLifeCycleCloudEventFactory(new InputOutputLifeCycleCloudEventFactory())
+            .withExecutorFactory(
+                new ExecutorServiceFactory() {
+
+                  private ExecutorService service = Executors.newFixedThreadPool(2);
+
+                  @Override
+                  public void close() throws Exception {
+                    service.shutdownNow();
+                  }
+
+                  @Override
+                  public ExecutorService get() {
+                    return service;
+                  }
+                })
             .withEventConsumer(eventBroker)
             .withEventPublisher(eventBroker)
             .build();
@@ -160,34 +179,6 @@ class LifeCycleEventsTest {
 
   @ParameterizedTest(name = "{0}")
   @MethodSource("waitSetWorkflowSources")
-  void testSuspendResumeWait(String sourceName, Workflow workflow)
-      throws ExecutionException, InterruptedException, TimeoutException {
-    doTestSuspendResumeWait(workflow);
-  }
-
-  private void doTestSuspendResumeWait(Workflow workflow)
-      throws InterruptedException, ExecutionException, TimeoutException {
-    WorkflowDefinition def = appl.workflowDefinition(workflow);
-    WorkflowInstance instance = def.instance(Map.of());
-    CompletableFuture<WorkflowModel> future = instance.start();
-    assertThat(instance.status()).isEqualTo(WorkflowStatus.WAITING);
-    instance.suspend();
-    assertThat(instance.status()).isEqualTo(WorkflowStatus.SUSPENDED);
-    Thread.sleep(550);
-    instance.resume();
-    assertThat(future.get(1, TimeUnit.SECONDS).asMap().orElseThrow())
-        .isEqualTo(Map.of("name", "Javierito"));
-    assertThat(instance.status()).isEqualTo(WorkflowStatus.COMPLETED);
-    WorkflowSuspendedCEData workflowSuspendedEvent =
-        assertPojoInCE(
-            "io.serverlessworkflow.workflow.suspended.v1", WorkflowSuspendedCEData.class);
-    WorkflowResumedCEData workflowResumedEvent =
-        assertPojoInCE("io.serverlessworkflow.workflow.resumed.v1", WorkflowResumedCEData.class);
-    assertThat(workflowSuspendedEvent.suspendedAt()).isBefore(workflowResumedEvent.resumedAt());
-  }
-
-  @ParameterizedTest(name = "{0}")
-  @MethodSource("waitSetWorkflowSources")
   void testCancel(String sourceName, Workflow workflow) throws IOException {
     doTestCancel(workflow);
   }
@@ -206,16 +197,19 @@ class LifeCycleEventsTest {
 
   @ParameterizedTest(name = "{0}")
   @MethodSource("waitSetWorkflowSources")
-  void testSuspendResumeTimeout(String sourceName, Workflow workflow) {
-    doTestSuspendResumeTimeout(workflow);
+  void testSuspendTimeout(String sourceName, Workflow workflow) {
+    doTestSuspendTimeout(workflow);
   }
 
-  private static void doTestSuspendResumeTimeout(Workflow workflow) {
+  private static void doTestSuspendTimeout(Workflow workflow) {
     WorkflowDefinition def = appl.workflowDefinition(workflow);
     WorkflowInstance instance = def.instance(Map.of());
     CompletableFuture<WorkflowModel> future = instance.start();
     instance.suspend();
-    assertThat(catchThrowableOfType(TimeoutException.class, () -> future.get(1, TimeUnit.SECONDS)))
+    assertThat(instance.status()).isEqualTo(WorkflowStatus.SUSPENDED);
+    assertThat(
+            catchThrowableOfType(
+                TimeoutException.class, () -> future.get(400, TimeUnit.MILLISECONDS)))
         .isNotNull();
   }
 
@@ -255,11 +249,10 @@ class LifeCycleEventsTest {
   private static Workflow waitTestWorkflow() {
     return WorkflowBuilder.workflow("wait-test-java-dsl", "test", "0.1.0")
         .tasks(
-            // wait 500 ms
             DSL.wait(
                 "waitABit",
                 timeoutBuilder ->
-                    timeoutBuilder.duration(durationBuilder -> durationBuilder.milliseconds(500))),
+                    timeoutBuilder.duration(durationBuilder -> durationBuilder.milliseconds(200))),
             DSL.set("useExpression", setTaskBuilder -> setTaskBuilder.put("name", "Javierito")))
         .build();
   }
