@@ -31,11 +31,6 @@ public final class FuncCallStep<T, R> extends Step<FuncCallStep<T, R>, FuncCallT
   private final Class<T> argClass;
   private final Class<R> returnClass;
 
-  @SuppressWarnings("unchecked")
-  private static <R> Class<R> defaultReturnClass(Class<R> c) {
-    return c != null ? c : (Class<R>) Object.class;
-  }
-
   /** Function<T,R> variant (unnamed). */
   FuncCallStep(Function<T, R> fn, Class<T> argClass, Class<R> returnClass) {
     this(null, fn, argClass, returnClass);
@@ -48,7 +43,7 @@ public final class FuncCallStep<T, R> extends Step<FuncCallStep<T, R>, FuncCallT
     this.ctxFn = null;
     this.filterFn = null;
     this.argClass = argClass;
-    this.returnClass = defaultReturnClass(returnClass);
+    this.returnClass = returnClass;
   }
 
   /** ContextFunction<T,R> variant (unnamed). */
@@ -63,7 +58,7 @@ public final class FuncCallStep<T, R> extends Step<FuncCallStep<T, R>, FuncCallT
     this.ctxFn = ctxFn;
     this.filterFn = null;
     this.argClass = argClass;
-    this.returnClass = defaultReturnClass(returnClass);
+    this.returnClass = returnClass;
   }
 
   /** FilterFunction<T,R> variant (unnamed). */
@@ -79,7 +74,7 @@ public final class FuncCallStep<T, R> extends Step<FuncCallStep<T, R>, FuncCallT
     this.ctxFn = null;
     this.filterFn = filterFn;
     this.argClass = argClass;
-    this.returnClass = defaultReturnClass(returnClass);
+    this.returnClass = returnClass;
   }
 
   @Override

@@ -65,11 +65,18 @@ public abstract class AbstractJavaCallExecutor<T, V> implements CallableTask {
               workflowContext.definition().application().executorService())
           .thenApply(v -> output2Model(modelFactory, input, convertTypedResponse(v)));
     } else {
-      Object result =
-          convertResponse(callJavaFunction(workflowContext, taskContext, model2Input(input)));
-      return result instanceof CompletableFuture future
-          ? future.thenApply(v -> output2Model(modelFactory, input, convertResponse(v)))
-          : CompletableFuture.completedFuture(output2Model(modelFactory, input, result));
+      return CompletableFuture.supplyAsync(
+              () ->
+                  convertResponse(
+                      callJavaFunction(workflowContext, taskContext, model2Input(input))),
+              workflowContext.definition().application().executorService())
+          .thenCompose(
+              result ->
+                  result instanceof CompletableFuture<?> future
+                      ? future.thenApply(
+                          v -> output2Model(modelFactory, input, convertResponse(v)))
+                      : CompletableFuture.completedFuture(
+                          output2Model(modelFactory, input, result)));
     }
   }
 
