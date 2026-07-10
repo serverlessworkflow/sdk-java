@@ -6,7 +6,7 @@ document:
 do: 
   - waitABit:
       wait:
-        milliseconds: 500
+        milliseconds: 200
   - useExpression:
       set:
         name : Javierito
