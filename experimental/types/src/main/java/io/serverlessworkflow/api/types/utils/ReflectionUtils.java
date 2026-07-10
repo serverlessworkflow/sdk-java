@@ -100,6 +100,10 @@ public final class ReflectionUtils {
   }
 
   public static Class<?> loadClass(String className) throws ClassNotFoundException {
+    return Class.forName(className, false, getClassLoader());
+  }
+
+  private static ClassLoader getClassLoader() {
     ClassLoader cl = Thread.currentThread().getContextClassLoader();
     if (cl == null) {
       cl = ReflectionUtils.class.getClassLoader();
@@ -107,7 +111,7 @@ public final class ReflectionUtils {
         cl = ClassLoader.getSystemClassLoader();
       }
     }
-    return cl.loadClass(className);
+    return cl;
   }
 
   public static Object functionFromSerialized(SerializedLambda sl)
@@ -126,8 +130,7 @@ public final class ReflectionUtils {
   public static MethodType inferMethodType(SerializedLambda sl) {
     // getInstantiatedMethodType() provides the exact generic signature resolved
     // by the compiler, completely bypassing captured variables and method kind switches!
-    return MethodType.fromMethodDescriptorString(
-        sl.getInstantiatedMethodType(), sl.getClass().getClassLoader());
+    return MethodType.fromMethodDescriptorString(sl.getInstantiatedMethodType(), getClassLoader());
   }
 
   public static SerializedLambda serializedLambda(Object fn)
