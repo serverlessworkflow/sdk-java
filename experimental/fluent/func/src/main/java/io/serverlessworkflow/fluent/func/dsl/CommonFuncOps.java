@@ -29,7 +29,7 @@ interface CommonFuncOps {
     return f -> f.function(function, argClass);
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({"unchecked", "varargs"})
   default <T, V> Consumer<FuncCallTaskBuilder> fn(Function<T, V> function, T... typeToken) {
     Class<T> clazz = (Class<T>) typeToken.getClass().getComponentType();
     return fn(function, clazz);
@@ -47,7 +47,7 @@ interface CommonFuncOps {
     return new SwitchCaseSpec<T>().when(when, whenClass);
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings({"unchecked", "varargs"})
   default <T> SwitchCaseSpec<T> caseOf(Predicate<T> when, T... typeToken) {
     return caseOf(when, (Class<T>) typeToken.getClass().getComponentType());
   }

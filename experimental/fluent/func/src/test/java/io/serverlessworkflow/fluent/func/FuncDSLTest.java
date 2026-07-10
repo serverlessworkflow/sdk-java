@@ -686,6 +686,13 @@ class FuncDSLTest {
 
     List<TaskItem> items = wf.getDo();
     assertEquals(1, items.size());
-    assertNotNull(items.get(0).getTask().getCallTask(), "CallTask expected");
+
+    Task t = items.get(0).getTask();
+    assertNotNull(t.getCallTask(), "CallTask expected");
+    CallJava callJava = assertInstanceOf(CallJava.class, t.getCallTask().get());
+    assertEquals(
+        Map.class,
+        callJava.inputClass().orElse(null),
+        "Varargs type token should infer raw Map.class from Map<String, List<Integer>>");
   }
 }
