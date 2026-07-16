@@ -40,6 +40,7 @@ import jakarta.ws.rs.core.Response;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 class JaxRSAccessTokenProvider implements AccessTokenProvider {
 
@@ -54,7 +55,8 @@ class JaxRSAccessTokenProvider implements AccessTokenProvider {
     this.jwtConverter = converter;
   }
 
-  public JWT validateAndGet(WorkflowContext workflow, TaskContext context, WorkflowModel model) {
+  public CompletableFuture<JWT> validateAndGet(
+      WorkflowContext workflow, TaskContext context, WorkflowModel model) {
     Map<String, Object> token = invoke(workflow, context, model);
     JWT jwt = jwtConverter.fromToken((String) token.get("access_token"));
     if (issuers != null && !issuers.isEmpty()) {
@@ -66,7 +68,7 @@ class JaxRSAccessTokenProvider implements AccessTokenProvider {
                 }
               });
     }
-    return jwt;
+    return CompletableFuture.completedFuture(jwt);
   }
 
   private Map<String, Object> invoke(

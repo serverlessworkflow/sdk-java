@@ -18,7 +18,9 @@ package io.serverlessworkflow.impl.auth;
 import io.serverlessworkflow.impl.TaskContext;
 import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
+import java.util.concurrent.CompletableFuture;
 
 public interface AccessTokenProvider {
-  JWT validateAndGet(WorkflowContext workflow, TaskContext context, WorkflowModel model);
+  CompletableFuture<JWT> validateAndGet(
+      WorkflowContext workflow, TaskContext context, WorkflowModel model);
 }

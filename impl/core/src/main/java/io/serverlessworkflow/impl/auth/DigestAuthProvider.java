@@ -31,7 +31,6 @@ import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
 import io.serverlessworkflow.impl.utils.RandomFactory;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.security.MessageDigest;
@@ -39,6 +38,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Optional;
 import java.util.Random;
 import java.util.StringTokenizer;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -146,7 +146,8 @@ class DigestAuthProvider implements AuthProvider {
   }
 
   @Override
-  public String content(WorkflowContext workflow, TaskContext task, WorkflowModel model, URI uri) {
+  public CompletableFuture<String> content(
+      WorkflowContext workflow, TaskContext task, WorkflowModel model, URI uri) {
     try {
       HttpURLConnection connection = (HttpURLConnection) uri.toURL().openConnection();
       connection.setRequestMethod(method);
@@ -186,17 +187,19 @@ class DigestAuthProvider implements AuthProvider {
                             ha2))
                 .orElseGet(() -> calculateHash(ha1, serverInfo.nonce, ha2));
 
-        return buildResponseInfo(serverInfo, userName, path, clientNonce, nonceCount, response);
+        return CompletableFuture.completedFuture(
+            buildResponseInfo(serverInfo, userName, path, clientNonce, nonceCount, response));
       } else {
-        throw new IllegalStateException(
-            "URI "
-                + uri
-                + " is not digest protected, it returned code "
-                + responseCode
-                + " when invoked without authentication header, but it should have returned 401 as per RFC 2617");
+        return CompletableFuture.failedFuture(
+            new IllegalStateException(
+                "URI "
+                    + uri
+                    + " is not digest protected, it returned code "
+                    + responseCode
+                    + " when invoked without authentication header, but it should have returned 401 as per RFC 2617"));
       }
     } catch (IOException io) {
-      throw new UncheckedIOException(io);
+      return CompletableFuture.failedFuture(io);
     }
   }
 
