@@ -15,16 +15,23 @@
  */
 package io.serverlessworkflow.impl.auth;
 
-import io.serverlessworkflow.impl.TaskContext;
-import io.serverlessworkflow.impl.WorkflowContext;
-import io.serverlessworkflow.impl.WorkflowModel;
-import java.net.URI;
-import java.util.concurrent.CompletableFuture;
+import static org.assertj.core.api.Assertions.assertThat;
 
-public interface AuthProvider {
+import java.util.List;
+import org.junit.jupiter.api.Test;
 
-  String scheme();
+public class JWTTest {
 
-  CompletableFuture<String> content(
-      WorkflowContext workflow, TaskContext task, WorkflowModel model, URI uri);
+  @Test
+  public void testToStringCollection() {
+    String[] test = {"javierito", "fulanito", "menganito"};
+    assertThat(JWT.toCollection(test, String.class))
+        .isEqualTo(List.of("javierito", "fulanito", "menganito"));
+  }
+
+  @Test
+  public void testToIntCollection() {
+    Integer[] test = {1, 2, 3};
+    assertThat(JWT.toCollection(test, Integer.class)).isEqualTo(List.of(1, 2, 3));
+  }
 }

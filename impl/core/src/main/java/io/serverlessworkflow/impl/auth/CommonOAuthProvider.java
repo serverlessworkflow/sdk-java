@@ -29,8 +29,9 @@ import io.serverlessworkflow.impl.WorkflowValueResolver;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
-abstract class CommonOAuthProvider implements AuthProvider {
+public abstract class CommonOAuthProvider implements AuthProvider {
 
   private final WorkflowValueResolver<AccessTokenProvider> tokenProvider;
 
@@ -47,8 +48,12 @@ abstract class CommonOAuthProvider implements AuthProvider {
   }
 
   @Override
-  public String content(WorkflowContext workflow, TaskContext task, WorkflowModel model, URI uri) {
-    return tokenProvider.apply(workflow, task, model).validateAndGet(workflow, task, model).token();
+  public CompletableFuture<String> content(
+      WorkflowContext workflow, TaskContext task, WorkflowModel model, URI uri) {
+    return tokenProvider
+        .apply(workflow, task, model)
+        .validateAndGet(workflow, task, model)
+        .thenApply(JWT::token);
   }
 
   @Override

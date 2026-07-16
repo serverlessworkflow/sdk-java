@@ -32,6 +32,8 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.Status.Family;
 import java.net.URI;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 
 abstract class AbstractRequestExecutor implements RequestExecutor {
 
@@ -46,10 +48,30 @@ abstract class AbstractRequestExecutor implements RequestExecutor {
   }
 
   @Override
-  public WorkflowModel apply(
+  public CompletableFuture<WorkflowModel> apply(
       Builder request, URI uri, WorkflowContext workflow, TaskContext task, WorkflowModel model) {
-    HttpModelConverter converter = HttpConverterResolver.converter(workflow, task);
-    authProvider.ifPresent(auth -> addAuthHeader(auth, uri, request, workflow, task, model));
+    ExecutorService executorService = workflow.definition().application().executorService();
+    CompletableFuture<HttpModelConverter> converterFuture =
+        CompletableFuture.supplyAsync(
+            () -> HttpConverterResolver.converter(workflow, task), executorService);
+    CompletableFuture<HttpModelConverter> authFuture =
+        authProvider
+            .map(
+                auth ->
+                    converterFuture.thenCompose(
+                        converter ->
+                            addAuthHeader(auth, uri, request, workflow, task, model)
+                                .thenApply(v -> converter)))
+            .orElse(converterFuture);
+    return authFuture.thenApply(converter -> doRequest(request, converter, workflow, task, model));
+  }
+
+  private WorkflowModel doRequest(
+      Builder request,
+      HttpModelConverter converter,
+      WorkflowContext workflow,
+      TaskContext task,
+      WorkflowModel model) {
     try (Response response = invokeRequest(request, converter, workflow, task, model)) {
       validateStatus(task, response, converter);
       return workflow
@@ -84,7 +106,7 @@ abstract class AbstractRequestExecutor implements RequestExecutor {
       TaskContext task,
       WorkflowModel model);
 
-  private void addAuthHeader(
+  private CompletableFuture<?> addAuthHeader(
       AuthProvider auth,
       URI uri,
       Builder request,
@@ -92,8 +114,12 @@ abstract class AbstractRequestExecutor implements RequestExecutor {
       TaskContext task,
       WorkflowModel model) {
     String scheme = auth.scheme();
-    String parameter = auth.content(workflow, task, model, uri);
-    task.authorization(scheme, parameter);
-    request.header(AuthUtils.AUTH_HEADER_NAME, AuthUtils.authHeaderValue(scheme, parameter));
+    return auth.content(workflow, task, model, uri)
+        .thenAccept(
+            parameter -> {
+              task.authorization(scheme, parameter);
+              request.header(
+                  AuthUtils.AUTH_HEADER_NAME, AuthUtils.authHeaderValue(scheme, parameter));
+            });
   }
 }

@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -98,9 +99,9 @@ public class CustomAuthProviderFactoryOverrideTest {
                   }
 
                   @Override
-                  public String content(
+                  public CompletableFuture<String> content(
                       WorkflowContext workflow, TaskContext task, WorkflowModel model, URI uri) {
-                    return frameworkToken;
+                    return CompletableFuture.completedFuture(frameworkToken);
                   }
                 });
           }

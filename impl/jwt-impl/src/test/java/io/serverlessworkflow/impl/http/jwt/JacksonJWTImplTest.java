@@ -16,6 +16,7 @@
 package io.serverlessworkflow.impl.http.jwt;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -43,27 +44,23 @@ public class JacksonJWTImplTest {
   @Test
   void headerAndType() {
     JWT jwt = converter.fromToken(JWT_TOKEN);
-
     Map<String, Object> h = jwt.header();
     assertEquals("RS256", h.get("alg"));
     assertTrue(h.containsKey("kid"));
     assertEquals("JWT", h.get("typ"));
-
     assertEquals(Optional.of("JWT"), jwt.type(), "type() must be a header.typ");
   }
 
   @Test
   void payloadTypIsArbitraryClaim() {
     JWT jwt = converter.fromToken(JWT_TOKEN);
-
-    assertEquals(Optional.of("Bearer"), jwt.claim("typ", String.class));
+    assertEquals("Bearer", jwt.claims().get("typ"));
     assertEquals("JWT", jwt.header().get("typ"));
   }
 
   @Test
   void standardClaims() {
     JWT jwt = converter.fromToken(JWT_TOKEN);
-
     assertEquals(Optional.of("http://localhost:8088/realms/test-realm"), jwt.issuer());
     assertEquals(Optional.of("a1d7e1ee-5ff3-477b-a2da-3a46da8efdd1"), jwt.subject());
     assertEquals(List.of("account"), jwt.audience());
@@ -72,7 +69,6 @@ public class JacksonJWTImplTest {
   @Test
   void timeClaims() {
     JWT jwt = converter.fromToken(JWT_TOKEN);
-
     assertEquals(Instant.ofEpochSecond(1756148257L), jwt.expiresAt().orElseThrow());
     assertEquals(Instant.ofEpochSecond(1756147957L), jwt.issuedAt().orElseThrow());
   }
@@ -80,19 +76,9 @@ public class JacksonJWTImplTest {
   @Test
   void typedClaimAccess() {
     JWT jwt = converter.fromToken(JWT_TOKEN);
-
-    assertEquals(Optional.of("any@example.org"), jwt.claim("email", String.class));
-    assertEquals(Optional.of(false), jwt.claim("email_verified", Boolean.class));
-    assertTrue(jwt.claim("nonexistent", String.class).isEmpty());
-    assertTrue(jwt.claim("email_verified", String.class).isEmpty());
-  }
-
-  @Test
-  void mapsAreUnmodifiable() {
-    JWT jwt = converter.fromToken(JWT_TOKEN);
-
-    assertThrows(UnsupportedOperationException.class, () -> jwt.claims().put("x", 1));
-    assertThrows(UnsupportedOperationException.class, () -> jwt.header().put("x", 1));
+    assertEquals("any@example.org", jwt.claims().get("email"));
+    assertEquals(false, jwt.claims().get("email_verified"));
+    assertNull(jwt.claims().get("nonexistent"));
   }
 
   @Test

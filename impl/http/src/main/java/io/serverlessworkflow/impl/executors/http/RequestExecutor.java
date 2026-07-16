@@ -20,9 +20,10 @@ import io.serverlessworkflow.impl.WorkflowContext;
 import io.serverlessworkflow.impl.WorkflowModel;
 import jakarta.ws.rs.client.Invocation.Builder;
 import java.net.URI;
+import java.util.concurrent.CompletableFuture;
 
 @FunctionalInterface
 interface RequestExecutor {
-  WorkflowModel apply(
+  CompletableFuture<WorkflowModel> apply(
       Builder request, URI uri, WorkflowContext workflow, TaskContext task, WorkflowModel model);
 }

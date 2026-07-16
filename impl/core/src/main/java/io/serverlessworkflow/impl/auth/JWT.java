@@ -16,29 +16,79 @@
 package io.serverlessworkflow.impl.auth;
 
 import java.time.Instant;
+import java.time.format.DateTimeParseException;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-public interface JWT {
+public record JWT(String token, Map<String, Object> header, Map<String, Object> claims) {
 
-  String token();
+  public Optional<Instant> expiresAt() {
+    return toInstant(claims.get("exp"));
+  }
 
-  List<String> audience();
+  public Optional<Instant> issuedAt() {
+    return toInstant(claims.get("iat"));
+  }
 
-  Map<String, Object> claims();
+  public Collection<String> audience() {
+    return toCollection(claims.get("aud"), String.class);
+  }
 
-  <T> Optional<T> claim(String name, Class<T> type);
+  public Optional<String> issuer() {
+    return Optional.ofNullable((String) claims.get("iss"));
+  }
 
-  Optional<Instant> expiresAt();
+  public Optional<String> subject() {
+    return Optional.ofNullable((String) claims.get("sub"));
+  }
 
-  Map<String, Object> header();
+  public Optional<String> type() {
+    return header.containsKey("typ")
+        ? Optional.of((String) header.get("typ"))
+        : Optional.ofNullable((String) claims.get("typ"));
+  }
 
-  Optional<Instant> issuedAt();
+  static Optional<Instant> toInstant(Object v) {
+    if (v == null) {
+      return Optional.empty();
+    }
+    if (v instanceof Instant i) {
+      return Optional.of(i);
+    }
+    if (v instanceof Number n) {
+      return Optional.of(Instant.ofEpochSecond((n.longValue())));
+    }
+    if (v instanceof String s) {
+      try {
+        long sec = Long.parseLong(s.trim());
+        return Optional.of(Instant.ofEpochSecond((sec)));
+      } catch (NumberFormatException ignored) {
+        try {
+          return Optional.of(Instant.parse(s.trim()));
+        } catch (DateTimeParseException ex) {
+        }
+      }
+    }
+    return Optional.empty();
+  }
 
-  Optional<String> issuer();
-
-  Optional<String> subject();
-
-  Optional<String> type();
+  /* Does not support primitive types intentionally, as they are not used in that context. */
+  static <T> Collection<T> toCollection(Object v, Class<T> clazz) {
+    if (v == null) {
+      return List.of();
+    }
+    if (clazz.isInstance(v)) {
+      return List.of(clazz.cast(v));
+    }
+    if (v instanceof Collection col) {
+      return col;
+    }
+    if (v.getClass().isArray() && v.getClass().getComponentType().equals(clazz)) {
+      return Arrays.asList((T[]) v);
+    }
+    return List.of();
+  }
 }

@@ -29,6 +29,7 @@ import io.serverlessworkflow.impl.WorkflowModel;
 import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
 import java.net.URI;
+import java.util.concurrent.CompletableFuture;
 
 class BearerAuthProvider implements AuthProvider {
 
@@ -49,8 +50,9 @@ class BearerAuthProvider implements AuthProvider {
   }
 
   @Override
-  public String content(WorkflowContext workflow, TaskContext task, WorkflowModel model, URI uri) {
-    return tokenFilter.apply(workflow, task, model);
+  public CompletableFuture<String> content(
+      WorkflowContext workflow, TaskContext task, WorkflowModel model, URI uri) {
+    return CompletableFuture.completedFuture(tokenFilter.apply(workflow, task, model));
   }
 
   @Override

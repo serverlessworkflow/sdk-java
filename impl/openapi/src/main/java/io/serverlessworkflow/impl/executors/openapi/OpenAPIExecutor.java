@@ -56,38 +56,44 @@ class OpenAPIExecutor implements CallableTask {
   public CompletableFuture<WorkflowModel> apply(
       WorkflowContext workflowContext, TaskContext taskContext, WorkflowModel input) {
 
-    // In the same workflow, access to an already cached document
-    final OperationDefinition operationDefinition =
-        processor.parse(
-            workflowContext
-                .definition()
-                .resourceLoader()
-                .load(
-                    resource,
-                    h -> readUnifiedOpenAPI(workflowContext, taskContext, h),
-                    workflowContext,
-                    taskContext,
-                    input));
+    return CompletableFuture.supplyAsync(
+            () ->
+                processor.parse(
+                    workflowContext
+                        .definition()
+                        .resourceLoader()
+                        .load(
+                            resource,
+                            h -> readUnifiedOpenAPI(workflowContext, taskContext, h),
+                            workflowContext,
+                            taskContext,
+                            input)),
+            workflowContext.definition().application().executorService())
+        .thenCompose(
+            operationDefinition -> {
+              fillHttpBuilder(workflowContext.definition().application(), operationDefinition);
+              // One executor per operation, even if the document is the same
+              // Me may refactor this even further to reuse the same executor (since the base URI is
+              // the same,
+              // but the path differs, although some use cases may require different client
+              // configurations for
+              // different paths...)
+              Collection<HttpExecutor> executors =
+                  operationDefinition.getServers().stream().map(builder::build).toList();
 
-    fillHttpBuilder(workflowContext.definition().application(), operationDefinition);
-    // One executor per operation, even if the document is the same
-    // Me may refactor this even further to reuse the same executor (since the base URI is the same,
-    // but the path differs, although some use cases may require different client configurations for
-    // different paths...)
-    Collection<HttpExecutor> executors =
-        operationDefinition.getServers().stream().map(builder::build).toList();
-
-    Iterator<HttpExecutor> iter = executors.iterator();
-    if (!iter.hasNext()) {
-      throw new IllegalArgumentException(
-          "List of servers is empty for schema " + resource.getName());
-    }
-    CompletableFuture<WorkflowModel> future =
-        iter.next().apply(workflowContext, taskContext, input);
-    while (iter.hasNext()) {
-      future.exceptionallyCompose(i -> iter.next().apply(workflowContext, taskContext, input));
-    }
-    return future;
+              Iterator<HttpExecutor> iter = executors.iterator();
+              if (!iter.hasNext()) {
+                throw new IllegalArgumentException(
+                    "List of servers is empty for schema " + resource.getName());
+              }
+              CompletableFuture<WorkflowModel> future =
+                  iter.next().apply(workflowContext, taskContext, input);
+              while (iter.hasNext()) {
+                future.exceptionallyCompose(
+                    i -> iter.next().apply(workflowContext, taskContext, input));
+              }
+              return future;
+            });
   }
 
   private void fillHttpBuilder(WorkflowApplication application, OperationDefinition operation) {

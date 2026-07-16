@@ -113,7 +113,8 @@ public abstract class ResourceLoader implements AutoCloseable {
             .map(
                 auth ->
                     AuthUtils.authHeaderValue(
-                        auth.scheme(), auth.content(workflowContext, taskContext, model, uri))));
+                        auth.scheme(),
+                        auth.content(workflowContext, taskContext, model, uri).join())));
   }
 
   public <T> T loadURI(URI uri, Function<ExternalResourceHandler, T> function) {
