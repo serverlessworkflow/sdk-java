@@ -77,7 +77,7 @@ public final class DSL {
    * tasks(
    *   call(
    *     http()
-   *       .GET()
+   *       .get()
    *       .endpoint("http://service/api")
    *   )
    * );

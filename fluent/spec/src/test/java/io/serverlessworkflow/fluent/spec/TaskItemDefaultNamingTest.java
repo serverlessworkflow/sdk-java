@@ -42,7 +42,7 @@ public class TaskItemDefaultNamingTest {
             .tasks(
                 d ->
                     d.set(null, s -> s.expr("$.foo = 'bar'"))
-                        .http(null, http().GET().endpoint("http://example.com"))
+                        .http(null, http().get().endpoint("http://example.com"))
                         .emit("", e -> e.event(ev -> ev.type("test.event")))
                         .set("explicitName", s -> s.expr("$.x = 1")) // Explicit name should be kept
                         .fork(null, fb -> {}) // No-op fork to check index 4
@@ -77,7 +77,7 @@ public class TaskItemDefaultNamingTest {
                             t.tryHandler(
                                 tb ->
                                     tb.set(null, s -> s.expr("$.start = true"))
-                                        .http(null, http().GET().endpoint("http://test"))
+                                        .http(null, http().get().endpoint("http://test"))
                                         .set(null, s -> s.expr("$.end = true")))))
             .build();
 
@@ -112,7 +112,7 @@ public class TaskItemDefaultNamingTest {
                                 // Define tasks to be executed for each item in the forEach loop
                                 .tasks(
                                     tb ->
-                                        tb.http(null, http().POST().endpoint("http://test"))
+                                        tb.http(null, http().post().endpoint("http://test"))
                                             .set(null, s -> s.expr("$.processed = true")))))
             .build();
 
@@ -159,7 +159,7 @@ public class TaskItemDefaultNamingTest {
                                 b ->
                                     b.set(null, s -> s.expr("$.a = 1"))
                                         .set(null, s -> s.expr("$.a = 2"))
-                                        .http(null, http().GET().endpoint("http://b")))))
+                                        .http(null, http().get().endpoint("http://b")))))
             .build();
 
     List<TaskItem> topItems = wf.getDo();
@@ -189,7 +189,7 @@ public class TaskItemDefaultNamingTest {
             .tasks(
                 d ->
                     d.set(null, s -> s.expr("$.a = 1"))
-                        .http(null, http().GET().endpoint("http://example.com"))
+                        .http(null, http().get().endpoint("http://example.com"))
                         .emit("customEmit", e -> e.event(ev -> ev.type("test")))
                         .tryCatch(
                             null, t -> t.tryHandler(tb -> tb.set(null, s -> s.expr("$.b = 2")))))
@@ -201,7 +201,7 @@ public class TaskItemDefaultNamingTest {
             .tasks(
                 d ->
                     d.set(null, s -> s.expr("$.a = 1"))
-                        .http(null, http().GET().endpoint("http://example.com"))
+                        .http(null, http().get().endpoint("http://example.com"))
                         .emit("customEmit", e -> e.event(ev -> ev.type("test")))
                         .tryCatch(
                             null, t -> t.tryHandler(tb -> tb.set(null, s -> s.expr("$.b = 2")))))
@@ -238,7 +238,7 @@ public class TaskItemDefaultNamingTest {
             .tasks(
                 d ->
                     d.set(null, s -> s.expr("$.a = 1"))
-                        .http(null, http().GET().endpoint("http://a")))
+                        .http(null, http().get().endpoint("http://a")))
             // Second invocation: list has 2 items, offset passed to builder should be 2
             .tasks(
                 d ->
@@ -273,7 +273,7 @@ public class TaskItemDefaultNamingTest {
                                 // 2. Second call: list has 1 item, offset should be 1
                                 .branches(b -> b.set(null, s -> s.expr("$.b = 2")))
                                 // 3. Third call: list has 2 items, offset should be 2
-                                .branches(b -> b.http(null, http().GET().endpoint("http://test")))))
+                                .branches(b -> b.http(null, http().get().endpoint("http://test")))))
             .build();
 
     List<TaskItem> topItems = wf.getDo();
@@ -310,7 +310,7 @@ public class TaskItemDefaultNamingTest {
                                 // 2. Second call: list has 1 item, offset should be 1
                                 .tasks(tb -> tb.set(null, s -> s.expr("$.b = 2")))
                                 // 3. Third call: list has 2 items, offset should be 2
-                                .tasks(tb -> tb.http(null, http().GET().endpoint("http://test")))))
+                                .tasks(tb -> tb.http(null, http().get().endpoint("http://test")))))
             .build();
 
     List<TaskItem> topItems = wf.getDo();
@@ -344,7 +344,7 @@ public class TaskItemDefaultNamingTest {
     subBuilder.tasks(tb -> tb.set(null, s -> s.expr("$.b = 2")));
 
     // 3. Third call: list has 2 items, offset should be 2
-    subBuilder.tasks(tb -> tb.http(null, http().GET().endpoint("http://test")));
+    subBuilder.tasks(tb -> tb.http(null, http().get().endpoint("http://test")));
 
     // Build and verify
     List<TaskItem> nestedTasks = subBuilder.build().getDo();
@@ -380,7 +380,7 @@ public class TaskItemDefaultNamingTest {
                                                 cb ->
                                                     cb.http(
                                                         null,
-                                                        http().GET().endpoint("http://test"))))))
+                                                        http().get().endpoint("http://test"))))))
             .build();
 
     List<TaskItem> topItems = wf.getDo();
@@ -427,7 +427,7 @@ public class TaskItemDefaultNamingTest {
                                         .tasks(
                                             tb ->
                                                 tb.http(
-                                                    null, http().GET().endpoint("http://test"))))))
+                                                    null, http().get().endpoint("http://test"))))))
             .build();
 
     List<TaskItem> topItems = wf.getDo();

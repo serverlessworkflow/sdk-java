@@ -52,7 +52,7 @@ public class DSLTest {
                     http()
                         .acceptJSON()
                         .header("CustomKey", "CustomValue")
-                        .POST()
+                        .post()
                         .endpoint("${ \"https://petstore.swagger.io/v2/pet/\\(.petId)\" }")))
             .build();
 
