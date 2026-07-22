@@ -43,7 +43,6 @@
         <module>annotations</module>
         <module>generators</module>
         <module>serialization</module>
-        <module>experimental</module>
         <module>fluent</module>
         <module>mermaid</module>
         <module>bom</module>
