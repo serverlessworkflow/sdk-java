@@ -17,6 +17,7 @@ package io.serverlessworkflow.generator;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.sun.codemodel.JDefinedClass;
+import com.sun.codemodel.JExpr;
 import com.sun.codemodel.JFieldVar;
 import io.serverlessworkflow.annotations.AdditionalProperties;
 import jakarta.validation.constraints.Pattern;
@@ -40,7 +41,9 @@ public class CustomAnnotator extends AbstractAnnotator {
   public void propertyField(
       JFieldVar field, JDefinedClass clazz, String propertyName, JsonNode propertyNode) {
     if (propertyNode.has(CONST)) {
-      field.annotate(Pattern.class).param("regexp", propertyNode.get(CONST).asText());
+      String callValue = propertyNode.get(CONST).asText();
+      field.annotate(Pattern.class).param("regexp", callValue);
+      field.init(JExpr.lit(callValue));
     }
   }
 }

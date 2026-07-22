@@ -15,7 +15,6 @@
  */
 package io.serverlessworkflow.api;
 
-import static io.serverlessworkflow.api.WorkflowReader.readWorkflow;
 import static io.serverlessworkflow.api.WorkflowReader.readWorkflowFromClasspath;
 import static io.serverlessworkflow.api.WorkflowReader.validation;
 import static io.serverlessworkflow.api.WorkflowWriter.workflowAsBytes;
@@ -30,8 +29,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class FeaturesTest {
+
+  private static final Logger logger = LoggerFactory.getLogger(FeaturesTest.class);
 
   @ParameterizedTest
   @ValueSource(
@@ -71,8 +74,11 @@ public class FeaturesTest {
       writeWorkflow(out, workflow, WorkflowFormat.JSON);
       bytes = out.toByteArray();
     }
+    if (logger.isDebugEnabled()) {
+      logger.debug("Workflow string representation is {}", new String(bytes));
+    }
     try (ByteArrayInputStream in = new ByteArrayInputStream(bytes)) {
-      return readWorkflow(in, WorkflowFormat.JSON);
+      return validation().read(in, WorkflowFormat.JSON);
     }
   }
 
