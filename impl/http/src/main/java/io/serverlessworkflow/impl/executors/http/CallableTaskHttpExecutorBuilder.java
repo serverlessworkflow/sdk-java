@@ -24,14 +24,14 @@ import io.serverlessworkflow.api.types.TaskBase;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
+import io.serverlessworkflow.impl.executors.CallableTask;
 import io.serverlessworkflow.impl.executors.CallableTaskBuilder;
-import io.serverlessworkflow.impl.executors.CallableTaskFactory;
 import java.net.URI;
 
 public class CallableTaskHttpExecutorBuilder implements CallableTaskBuilder<CallHTTP> {
 
   @Override
-  public CallableTaskFactory init(
+  public CallableTask build(
       CallHTTP task, WorkflowDefinition definition, WorkflowMutablePosition position) {
 
     HttpExecutorBuilder builder = HttpExecutorBuilder.builder(definition);
@@ -67,7 +67,7 @@ public class CallableTaskHttpExecutorBuilder implements CallableTaskBuilder<Call
     builder.withBody(httpArgs.getBody());
     builder.withMethod(httpArgs.getMethod().toUpperCase());
     builder.redirect(httpArgs.isRedirect());
-    return () -> builder.build(uriSupplier);
+    return builder.build(uriSupplier);
   }
 
   @Override

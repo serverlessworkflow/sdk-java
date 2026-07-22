@@ -24,8 +24,8 @@ import io.serverlessworkflow.api.types.WithGRPCService;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.WorkflowUtils;
+import io.serverlessworkflow.impl.executors.CallableTask;
 import io.serverlessworkflow.impl.executors.CallableTaskBuilder;
-import io.serverlessworkflow.impl.executors.CallableTaskFactory;
 import java.util.Map;
 import java.util.Objects;
 
@@ -37,7 +37,7 @@ public class GrpcExecutorBuilder implements CallableTaskBuilder<CallGRPC> {
   }
 
   @Override
-  public CallableTaskFactory init(
+  public CallableTask build(
       CallGRPC task, WorkflowDefinition definition, WorkflowMutablePosition position) {
     GRPCArguments with = task.getWith();
     WithGRPCService service = with.getService();
@@ -53,16 +53,13 @@ public class GrpcExecutorBuilder implements CallableTaskBuilder<CallGRPC> {
         Objects.requireNonNull(
             serviceDescriptor.findMethodByName(with.getMethod()),
             "Method not found: " + with.getMethod());
-    return () ->
-        new GrpcExecutor(
-            service.getHost(),
-            service.getPort(),
-            WorkflowUtils.buildMapResolver(
-                definition.application(),
-                with.getArguments() != null
-                    ? with.getArguments().getAdditionalProperties()
-                    : Map.of()),
-            serviceDescriptor,
-            methodDescriptor);
+    return new GrpcExecutor(
+        service.getHost(),
+        service.getPort(),
+        WorkflowUtils.buildMapResolver(
+            definition.application(),
+            with.getArguments() != null ? with.getArguments().getAdditionalProperties() : Map.of()),
+        serviceDescriptor,
+        methodDescriptor);
   }
 }

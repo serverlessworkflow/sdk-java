@@ -34,7 +34,7 @@ import java.util.Optional;
 public class CallFunctionExecutorBuilder implements CallableTaskBuilder<CallFunction> {
 
   @Override
-  public CallableTaskFactory init(
+  public CallableTask build(
       CallFunction task, WorkflowDefinition definition, WorkflowMutablePosition position) {
     String functionName = task.getCall();
     Use use = definition.workflow().getUse();
@@ -86,7 +86,7 @@ public class CallFunctionExecutorBuilder implements CallableTaskBuilder<CallFunc
             ? WorkflowUtils.buildMapResolver(
                 definition.application(), functionArgs.getAdditionalProperties())
             : (w, t, m) -> Map.of();
-    return () -> this.build(executorBuilder, args);
+    return buildCallable(executorBuilder, args);
   }
 
   private String pathFromFunctionName(String functionName) {
@@ -120,7 +120,7 @@ public class CallFunctionExecutorBuilder implements CallableTaskBuilder<CallFunc
     return clazz.equals(CallFunction.class);
   }
 
-  private CallableTask build(
+  private CallableTask buildCallable(
       TaskExecutorBuilder<? extends TaskBase> executorBuilder, WorkflowValueResolver<?> args) {
     TaskExecutor<? extends TaskBase> executor = executorBuilder.build();
     return (w, t, m) ->

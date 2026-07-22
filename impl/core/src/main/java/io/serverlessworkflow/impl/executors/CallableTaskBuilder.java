@@ -24,5 +24,5 @@ public interface CallableTaskBuilder<T extends TaskBase> extends ServicePriority
 
   boolean accept(Class<? extends TaskBase> clazz);
 
-  CallableTaskFactory init(T task, WorkflowDefinition definition, WorkflowMutablePosition position);
+  CallableTask build(T task, WorkflowDefinition definition, WorkflowMutablePosition position);
 }
