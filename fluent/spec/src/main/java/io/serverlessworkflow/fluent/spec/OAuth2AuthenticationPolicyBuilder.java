@@ -25,6 +25,7 @@ public final class OAuth2AuthenticationPolicyBuilder
 
   OAuth2AuthenticationPolicyBuilder() {
     super();
+    this.authenticationData.setEndpoints(new OAuth2AuthenticationPropertiesEndpoints());
   }
 
   public OAuth2AuthenticationPolicyBuilder endpoints(

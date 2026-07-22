@@ -21,6 +21,8 @@ import io.serverlessworkflow.types.Defaults;
 
 public record WorkflowDefinitionId(String namespace, String name, String version) {
 
+  public static final String DEFAULT_SEPARATOR = ":";
+
   public static WorkflowDefinitionId of(Workflow workflow) {
     Document document = workflow.getDocument();
     return new WorkflowDefinitionId(
@@ -36,7 +38,7 @@ public record WorkflowDefinitionId(String namespace, String name, String version
 
   @Override
   public String toString() {
-    return toString(":");
+    return toString(DEFAULT_SEPARATOR);
   }
 
   public String toString(String separator) {
