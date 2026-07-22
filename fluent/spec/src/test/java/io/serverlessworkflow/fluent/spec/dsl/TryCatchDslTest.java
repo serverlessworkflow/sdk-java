@@ -44,7 +44,7 @@ public class TryCatchDslTest {
                     t.tryCatch(
                         tryCatch()
                             // try block (one HTTP call)
-                            .tasks(call(http().GET().endpoint(EXPR_ENDPOINT)))
+                            .tasks(call(http().get().endpoint(EXPR_ENDPOINT)))
                             // catch block
                             .catches()
                             .when("$.error == true")
@@ -118,7 +118,7 @@ public class TryCatchDslTest {
                         tryCatch()
                             // try with two tasks
                             .tasks(
-                                call(http().GET().endpoint(EXPR_ENDPOINT)),
+                                call(http().get().endpoint(EXPR_ENDPOINT)),
                                 set("$.status = \"IN_FLIGHT\""))
                             // catch with exceptWhen + explicit URI error filter + status
                             .catches()
@@ -170,7 +170,7 @@ public class TryCatchDslTest {
                 t ->
                     t.tryCatch(
                         tryCatch()
-                            .tasks(call(http().GET().endpoint(EXPR_ENDPOINT)))
+                            .tasks(call(http().get().endpoint(EXPR_ENDPOINT)))
                             .catches()
                             .when("$.fail == true")
                             .errors(Errors.COMMUNICATION, 503)
@@ -407,7 +407,7 @@ public class TryCatchDslTest {
                         .tasks(
                             call(
                                 "getPet",
-                                http().GET().endpoint("http://localhost:9797").redirect(true)))
+                                http().get().endpoint("http://localhost:9797").redirect(true)))
                         .catches()
                         .errors(Errors.COMMUNICATION, 404)
                         .retry()
@@ -450,7 +450,7 @@ public class TryCatchDslTest {
                         .tasks(
                             call(
                                 "getPet",
-                                http().GET().endpoint("http://localhost:9797").redirect(true)))
+                                http().get().endpoint("http://localhost:9797").redirect(true)))
                         .catches()
                         .errors(Errors.COMMUNICATION, 404)
                         .retry("default")
@@ -494,7 +494,7 @@ public class TryCatchDslTest {
                                         call(
                                             "getPet",
                                             http()
-                                                .GET()
+                                                .get()
                                                 .endpoint("http://localhost:9797")
                                                 .redirect(true)))
                                     .catches()
@@ -539,7 +539,7 @@ public class TryCatchDslTest {
                         .tasks(
                             call(
                                 "getPet",
-                                http().GET().endpoint("http://localhost:9797").redirect(true)))
+                                http().get().endpoint("http://localhost:9797").redirect(true)))
                         .catches()
                         .errors(Errors.COMMUNICATION, 404)
                         .retry()
@@ -567,7 +567,7 @@ public class TryCatchDslTest {
                 tryCatch(
                     "tryTask",
                     tryCatch()
-                        .tasks(call(http().GET().endpoint("http://localhost:9797")))
+                        .tasks(call(http().get().endpoint("http://localhost:9797")))
                         .catches()
                         .errors(Errors.COMMUNICATION, 404)
                         .retry()
@@ -599,7 +599,7 @@ public class TryCatchDslTest {
                 tryCatch(
                     "tryTask",
                     tryCatch()
-                        .tasks(call(http().GET().endpoint("http://localhost:9797")))
+                        .tasks(call(http().get().endpoint("http://localhost:9797")))
                         .catches()
                         .errors(Errors.COMMUNICATION, 404)
                         .retry()

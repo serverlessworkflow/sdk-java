@@ -38,7 +38,10 @@ public interface BaseCallHttpSpec<SELF extends BaseCallHttpSpec<SELF>> {
     return self();
   }
 
-  @Deprecated
+  /**
+   * @deprecated Use {@link #get()} instead.
+   */
+  @Deprecated(since = "7.25.0", forRemoval = true)
   default SELF GET() {
     return get();
   }
@@ -48,7 +51,10 @@ public interface BaseCallHttpSpec<SELF extends BaseCallHttpSpec<SELF>> {
     return self();
   }
 
-  @Deprecated
+  /**
+   * @deprecated Use {@link #post()} instead.
+   */
+  @Deprecated(since = "7.25.0", forRemoval = true)
   default SELF POST() {
     return post();
   }

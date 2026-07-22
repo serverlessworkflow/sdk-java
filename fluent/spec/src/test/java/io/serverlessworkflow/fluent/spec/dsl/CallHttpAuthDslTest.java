@@ -38,7 +38,7 @@ public class CallHttpAuthDslTest {
   void when_call_http_with_basic_auth_on_endpoint_expr() {
     Workflow wf =
         WorkflowBuilder.workflow("f", "ns", "1")
-            .tasks(call(http().GET().endpoint(EXPR_ENDPOINT, basic("alice", "secret"))))
+            .tasks(call(http().get().endpoint(EXPR_ENDPOINT, basic("alice", "secret"))))
             .build();
 
     var args = wf.getDo().get(0).getTask().getCallTask().getCallHTTP().getWith();
@@ -79,7 +79,7 @@ public class CallHttpAuthDslTest {
   void when_call_http_with_bearer_auth_on_endpoint_expr() {
     Workflow wf =
         WorkflowBuilder.workflow("f", "ns", "1")
-            .tasks(call(http().GET().endpoint(EXPR_ENDPOINT, bearer("token-123"))))
+            .tasks(call(http().get().endpoint(EXPR_ENDPOINT, bearer("token-123"))))
             .build();
 
     var args = wf.getDo().get(0).getTask().getCallTask().getCallHTTP().getWith();
@@ -109,7 +109,7 @@ public class CallHttpAuthDslTest {
   void when_call_http_with_digest_auth_on_endpoint_expr() {
     Workflow wf =
         WorkflowBuilder.workflow("f", "ns", "1")
-            .tasks(call(http().GET().endpoint(EXPR_ENDPOINT, digest("bob", "p@ssw0rd"))))
+            .tasks(call(http().get().endpoint(EXPR_ENDPOINT, digest("bob", "p@ssw0rd"))))
             .build();
 
     var args = wf.getDo().get(0).getTask().getCallTask().getCallHTTP().getWith();
@@ -148,7 +148,7 @@ public class CallHttpAuthDslTest {
             .tasks(
                 call(
                     http()
-                        .POST()
+                        .post()
                         .endpoint(
                             EXPR_ENDPOINT,
                             oidc(
@@ -196,7 +196,7 @@ public class CallHttpAuthDslTest {
             .tasks(
                 call(
                     http()
-                        .POST()
+                        .post()
                         .endpoint(
                             EXPR_ENDPOINT,
                             oauth2(
@@ -237,7 +237,7 @@ public class CallHttpAuthDslTest {
   void when_call_http_with_basic_auth_on_uri_string() {
     Workflow wf =
         WorkflowBuilder.workflow("f", "ns", "1")
-            .tasks(call(http().GET().uri("https://api.example.com/v1/resource", basic("u", "p"))))
+            .tasks(call(http().get().uri("https://api.example.com/v1/resource", basic("u", "p"))))
             .build();
 
     var args = wf.getDo().get(0).getTask().getCallTask().getCallHTTP().getWith();

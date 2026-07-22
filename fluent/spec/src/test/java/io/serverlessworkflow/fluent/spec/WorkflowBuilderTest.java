@@ -199,7 +199,7 @@ public class WorkflowBuilderTest {
             .tasks(
                 doTasks(
                     set("set", "$.initialized = true"),
-                    call("call", http().GET().endpoint("http://example.com")),
+                    call("call", http().get().endpoint("http://example.com")),
                     emit("emit", e -> e.event(p -> p.type("test.event"))),
                     listen(
                         "listen",
@@ -539,7 +539,7 @@ public class WorkflowBuilderTest {
                     d.http(
                         "basicCall",
                         http()
-                            .POST()
+                            .post()
                             .uri(URI.create("http://example.com/api"))
                             .andThen(b -> b.body(Map.of("foo", "bar")))))
             .build();
@@ -564,7 +564,7 @@ public class WorkflowBuilderTest {
                 d ->
                     d.http(
                         "hdrCall",
-                        http().GET().endpoint("${uriExpr}").headers(Map.of("A", "1", "B", "2"))))
+                        http().get().endpoint("${uriExpr}").headers(Map.of("A", "1", "B", "2"))))
             .build();
     CallHTTP call = wf.getDo().get(0).getTask().getCallTask().getCallHTTP();
     HTTPHeaders hh = call.getWith().getHeaders().getHTTPHeaders();
@@ -576,7 +576,7 @@ public class WorkflowBuilderTest {
             .tasks(
                 d ->
                     d.http(
-                        http().GET().endpoint("${ expr }").headers(Map.of("X", "10", "Y", "20"))))
+                        http().get().endpoint("${ expr }").headers(Map.of("X", "10", "Y", "20"))))
             .build();
     CallHTTP call2 = wf2.getDo().get(0).getTask().getCallTask().getCallHTTP();
     HTTPHeaders hh2 = call2.getWith().getHeaders().getHTTPHeaders();
@@ -593,7 +593,7 @@ public class WorkflowBuilderTest {
                     d.http(
                         "qryCall",
                         http()
-                            .GET()
+                            .get()
                             .endpoint("${ exprUri }")
                             .andThen(q -> q.query(Map.of("k1", "v1", "k2", "v2")))))
             .build();
@@ -629,7 +629,7 @@ public class WorkflowBuilderTest {
   void testDoTaskCallHTTPQuerySingleKeyValue() {
     Workflow wf =
         WorkflowBuilder.workflow("flowCallQuerySingle")
-            .tasks(d -> d.http("qryOne", http().GET().endpoint("http://uri").query("id", "42")))
+            .tasks(d -> d.http("qryOne", http().get().endpoint("http://uri").query("id", "42")))
             .build();
     HTTPQuery hq =
         wf.getDo().get(0).getTask().getCallTask().getCallHTTP().getWith().getQuery().getHTTPQuery();
