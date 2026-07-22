@@ -24,8 +24,8 @@ import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.WorkflowUtils;
 import io.serverlessworkflow.impl.WorkflowValueResolver;
+import io.serverlessworkflow.impl.executors.CallableTask;
 import io.serverlessworkflow.impl.executors.CallableTaskBuilder;
-import io.serverlessworkflow.impl.executors.CallableTaskFactory;
 import java.net.URI;
 import java.util.Map;
 import java.util.Optional;
@@ -38,7 +38,7 @@ public class A2AExecutorBuilder implements CallableTaskBuilder<CallA2A> {
   }
 
   @Override
-  public CallableTaskFactory init(
+  public CallableTask build(
       CallA2A task, WorkflowDefinition definition, WorkflowMutablePosition position) {
     A2AArguments args = task.getWith();
 
@@ -88,6 +88,6 @@ public class A2AExecutorBuilder implements CallableTaskBuilder<CallA2A> {
                   parameters.getString(),
                   a2aParameters != null ? a2aParameters.getAdditionalProperties() : null));
     }
-    return () -> new A2AExecutor(uriSupplier, dispatcher, mapResolver);
+    return new A2AExecutor(uriSupplier, dispatcher, mapResolver);
   }
 }

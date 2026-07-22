@@ -24,7 +24,7 @@ import io.serverlessworkflow.api.types.func.LoopFunctionIndex;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowMutablePosition;
 import io.serverlessworkflow.impl.executors.CallFunctionExecutorBuilder;
-import io.serverlessworkflow.impl.executors.CallableTaskFactory;
+import io.serverlessworkflow.impl.executors.CallableTask;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -42,7 +42,7 @@ public class JavaCallFunctionBuilder extends CallFunctionExecutorBuilder {
   }
 
   @Override
-  public CallableTaskFactory init(
+  public CallableTask build(
       CallFunction task, WorkflowDefinition definition, WorkflowMutablePosition position) {
     if (CallJava.JAVA_CALL_KEY.equals(task.getCall())) {
       if (task.getWith() == null) {
@@ -62,32 +62,30 @@ public class JavaCallFunctionBuilder extends CallFunctionExecutorBuilder {
       Optional<Class<?>> output =
           (Optional<Class<?>>) props.getOrDefault(CallJava.OUTPUT_CLASS_KEY, Optional.empty());
       if (obj instanceof ContextFunction fn) {
-        return () -> new JavaContextFunctionCallExecutor(input, output, fn);
+        return new JavaContextFunctionCallExecutor(input, output, fn);
       } else if (obj instanceof FilterFunction fn) {
-        return () -> new JavaFilterFunctionCallExecutor(input, output, fn);
+        return new JavaFilterFunctionCallExecutor(input, output, fn);
       } else if (obj instanceof LoopFunction loop) {
-        return () ->
-            new JavaLoopFunctionCallExecutor(
-                loop, (String) props.get(CallJava.VAR_NAME_KEY), input, output);
+        return new JavaLoopFunctionCallExecutor(
+            loop, (String) props.get(CallJava.VAR_NAME_KEY), input, output);
       } else if (obj instanceof LoopFunctionIndex loop) {
-        return () ->
-            new JavaLoopFunctionIndexCallExecutor(
-                loop,
-                (String) props.get(CallJava.VAR_NAME_KEY),
-                (String) props.get(CallJava.INDEX_NAME_KEY),
-                input,
-                output);
+        return new JavaLoopFunctionIndexCallExecutor(
+            loop,
+            (String) props.get(CallJava.VAR_NAME_KEY),
+            (String) props.get(CallJava.INDEX_NAME_KEY),
+            input,
+            output);
 
       } else if (obj instanceof Function fn) {
-        return () -> new JavaFunctionCallExecutor(input, output, fn);
+        return new JavaFunctionCallExecutor(input, output, fn);
       } else if (obj instanceof Consumer consumer) {
-        return () -> new JavaConsumerCallExecutor(input, consumer);
+        return new JavaConsumerCallExecutor(input, consumer);
       } else {
         throw new UnsupportedOperationException("Unrecognized function " + obj);
       }
     } else {
       logger.info("Calling regular function handler for task call {}", task.getCall());
-      return super.init(task, definition, position);
+      return super.build(task, definition, position);
     }
   }
 }

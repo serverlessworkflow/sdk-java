@@ -30,7 +30,6 @@ public class CallTaskExecutor<T extends TaskBase> extends RegularTaskExecutor<T>
 
   public static class CallTaskExecutorBuilder<T extends TaskBase>
       extends RegularTaskExecutorBuilder<T> {
-    private CallableTaskFactory callableFactory;
     private List<CallableTaskProxyBuilder> callableProxyBuilders;
     private CallableTask callable;
 
@@ -44,12 +43,11 @@ public class CallTaskExecutor<T extends TaskBase> extends RegularTaskExecutor<T>
           definition.application().callableProxyBuilders().stream()
               .filter(t -> t.accept(task))
               .toList();
-      this.callableFactory = callableBuilder.init(task, definition, position);
+      this.callable = callableBuilder.build(task, definition, position);
     }
 
     @Override
     public CallTaskExecutor<T> buildInstance() {
-      this.callable = callableFactory.get();
       for (CallableTaskProxyBuilder callableBuilder : callableProxyBuilders) {
         this.callable = callableBuilder.build(callable);
       }

@@ -21,8 +21,8 @@ import io.serverlessworkflow.api.types.OpenAPIArguments;
 import io.serverlessworkflow.api.types.TaskBase;
 import io.serverlessworkflow.impl.WorkflowDefinition;
 import io.serverlessworkflow.impl.WorkflowMutablePosition;
+import io.serverlessworkflow.impl.executors.CallableTask;
 import io.serverlessworkflow.impl.executors.CallableTaskBuilder;
-import io.serverlessworkflow.impl.executors.CallableTaskFactory;
 import io.serverlessworkflow.impl.executors.http.HttpExecutorBuilder;
 import java.util.Map;
 
@@ -34,7 +34,7 @@ public class OpenAPIExecutorBuilder implements CallableTaskBuilder<CallOpenAPI> 
   }
 
   @Override
-  public CallableTaskFactory init(
+  public CallableTask build(
       CallOpenAPI task, WorkflowDefinition definition, WorkflowMutablePosition position) {
     OpenAPIArguments with = task.getWith();
     OpenAPIProcessor processor = new OpenAPIProcessor(with.getOperationId());
@@ -47,6 +47,6 @@ public class OpenAPIExecutorBuilder implements CallableTaskBuilder<CallOpenAPI> 
         HttpExecutorBuilder.builder(definition)
             .withAuth(with.getAuthentication())
             .redirect(with.isRedirect());
-    return () -> new OpenAPIExecutor(processor, resource, parameters, builder);
+    return new OpenAPIExecutor(processor, resource, parameters, builder);
   }
 }
