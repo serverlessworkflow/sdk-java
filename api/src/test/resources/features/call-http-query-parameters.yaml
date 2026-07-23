@@ -21,4 +21,5 @@ do:
         endpoint: https://swapi.dev/api/people/
         query:
           search: ${.searchQuery}
+          number: "1"
       
