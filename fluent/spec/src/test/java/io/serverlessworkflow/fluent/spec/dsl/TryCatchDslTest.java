@@ -622,4 +622,76 @@ public class TryCatchDslTest {
     assertThat(constant).isNotNull();
     assertThat(constant.getAdditionalProperties()).containsEntry("c", "10");
   }
+
+  @Test
+  void when_try_catch_backoff_exponential_then_oneof_value_is_set() {
+    Workflow wf =
+        WorkflowBuilder.workflow("try-catch-backoff-oneof", "test", "0.1.0")
+            .tasks(
+                tryCatch(
+                    "tryTask",
+                    tryCatch()
+                        .tasks(call(http().get().endpoint("http://localhost:9797")))
+                        .catches()
+                        .errors(Errors.COMMUNICATION, 404)
+                        .retry()
+                        .backoffExponential()
+                        .done()
+                        .done()))
+            .build();
+
+    var backoff =
+        wf.getDo()
+            .get(0)
+            .getTask()
+            .getTryTask()
+            .getCatch()
+            .getRetry()
+            .getRetryPolicyDefinition()
+            .getBackoff();
+
+    assertThat(backoff.get())
+        .as("RetryBackoff.get() must not be null for serialization")
+        .isNotNull();
+
+    assertThat(backoff.getExponentialBackOff()).isNotNull();
+    assertThat(backoff.getConstantBackoff()).isNull();
+    assertThat(backoff.getLinearBackoff()).isNull();
+  }
+
+  @Test
+  void when_try_catch_backoff_constant_then_oneof_value_is_set() {
+    Workflow wf =
+        WorkflowBuilder.workflow("try-catch-backoff-oneof-const", "test", "0.1.0")
+            .tasks(
+                tryCatch(
+                    "tryTask",
+                    tryCatch()
+                        .tasks(call(http().get().endpoint("http://localhost:9797")))
+                        .catches()
+                        .errors(Errors.COMMUNICATION, 404)
+                        .retry()
+                        .backoffConstant()
+                        .done()
+                        .done()))
+            .build();
+
+    var backoff =
+        wf.getDo()
+            .get(0)
+            .getTask()
+            .getTryTask()
+            .getCatch()
+            .getRetry()
+            .getRetryPolicyDefinition()
+            .getBackoff();
+
+    assertThat(backoff.get())
+        .as("RetryBackoff.get() must not be null for serialization")
+        .isNotNull();
+
+    assertThat(backoff.getConstantBackoff()).isNotNull();
+    assertThat(backoff.getExponentialBackOff()).isNull();
+    assertThat(backoff.getLinearBackoff()).isNull();
+  }
 }

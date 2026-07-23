@@ -79,8 +79,11 @@ public class ReferenceableAuthenticationPolicyBuilder {
 
   public ReferenceableAuthenticationPolicy build() {
     final ReferenceableAuthenticationPolicy policy = new ReferenceableAuthenticationPolicy();
-    policy.setAuthenticationPolicy(this.authenticationPolicy);
-    policy.setAuthenticationPolicyReference(this.authenticationPolicyReference);
+    if (this.authenticationPolicyReference != null) {
+      policy.setAuthenticationPolicyReference(this.authenticationPolicyReference);
+    } else if (this.authenticationPolicy != null) {
+      policy.setAuthenticationPolicy(this.authenticationPolicy);
+    }
     return policy;
   }
 }

@@ -342,40 +342,49 @@ public abstract class BaseTryTaskBuilder<
 
   public static final class BackoffBuilder {
     private final RetryBackoff retryBackoff;
-    private final ConstantBackoff constantBackoff;
-    private final ExponentialBackOff exponentialBackOff;
-    private final LinearBackoff linearBackoff;
+    private ConstantBackoff constantBackoff;
+    private ExponentialBackOff exponentialBackOff;
+    private LinearBackoff linearBackoff;
 
     BackoffBuilder() {
       this.retryBackoff = new RetryBackoff();
-
-      this.constantBackoff = new ConstantBackoff();
-      this.constantBackoff.setConstant(new Constant());
-      this.exponentialBackOff = new ExponentialBackOff();
-      this.exponentialBackOff.setExponential(new Exponential());
-      this.linearBackoff = new LinearBackoff();
-      this.linearBackoff.setLinear(new Linear());
     }
 
     public BackoffBuilder constant(String key, String value) {
+      if (this.constantBackoff == null) {
+        this.constantBackoff = new ConstantBackoff();
+        this.constantBackoff.setConstant(new Constant());
+      }
       this.constantBackoff.getConstant().withAdditionalProperty(key, value);
       return this;
     }
 
     public BackoffBuilder exponential(String key, String value) {
+      if (this.exponentialBackOff == null) {
+        this.exponentialBackOff = new ExponentialBackOff();
+        this.exponentialBackOff.setExponential(new Exponential());
+      }
       this.exponentialBackOff.getExponential().withAdditionalProperty(key, value);
       return this;
     }
 
     public BackoffBuilder linear(String key, String value) {
+      if (this.linearBackoff == null) {
+        this.linearBackoff = new LinearBackoff();
+        this.linearBackoff.setLinear(new Linear());
+      }
       this.linearBackoff.getLinear().withAdditionalProperty(key, value);
       return this;
     }
 
     public RetryBackoff build() {
-      this.retryBackoff.setConstantBackoff(constantBackoff);
-      this.retryBackoff.setExponentialBackOff(exponentialBackOff);
-      this.retryBackoff.setLinearBackoff(linearBackoff);
+      if (this.constantBackoff != null) {
+        this.retryBackoff.setConstantBackoff(constantBackoff);
+      } else if (this.exponentialBackOff != null) {
+        this.retryBackoff.setExponentialBackOff(exponentialBackOff);
+      } else if (this.linearBackoff != null) {
+        this.retryBackoff.setLinearBackoff(linearBackoff);
+      }
       return this.retryBackoff;
     }
   }
