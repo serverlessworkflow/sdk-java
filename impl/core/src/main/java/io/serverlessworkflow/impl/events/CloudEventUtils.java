@@ -16,6 +16,7 @@
 package io.serverlessworkflow.impl.events;
 
 import io.cloudevents.CloudEvent;
+import io.serverlessworkflow.impl.WorkflowDefinitionId;
 import java.net.URI;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -44,7 +45,24 @@ public class CloudEventUtils {
     return result;
   }
 
+  /**
+   * Derives a traceable CloudEvent {@code source} from the emitting workflow's identity, rendered
+   * as {@code namespace:name:version}.
+   *
+   * @param id the identity of the workflow definition emitting the event
+   * @return a source URI identifying the emitting workflow
+   */
+  public static URI source(WorkflowDefinitionId id) {
+    return URI.create(id.toString(":"));
+  }
+
+  /**
+   * Last-resort {@code source} default when no per-emit, application-level, or identity-derived
+   * source is available. Identifies the SDK itself rather than an opaque placeholder.
+   *
+   * @return a URN identifying this SDK runtime
+   */
   public static URI source() {
-    return URI.create("reference-impl");
+    return URI.create("urn:serverlessworkflow:sdk-java");
   }
 }

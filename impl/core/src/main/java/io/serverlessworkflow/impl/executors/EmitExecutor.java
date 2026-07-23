@@ -100,7 +100,7 @@ public class EmitExecutor extends RegularTaskExecutor<EmitTask> {
             .sourceFilter()
             .map(filter -> filter.apply(workflow, taskContext, taskContext.input()))
             .map(URI::create)
-            .orElse(CloudEventUtils.source()));
+            .orElseGet(() -> defaultSource(workflow)));
     ceBuilder.withType(
         props
             .typeFilter()
@@ -110,7 +110,8 @@ public class EmitExecutor extends RegularTaskExecutor<EmitTask> {
     props
         .timeFilter()
         .map(filter -> filter.apply(workflow, taskContext, taskContext.input()))
-        .ifPresent(value -> ceBuilder.withTime(value));
+        .ifPresentOrElse(
+            value -> ceBuilder.withTime(value), () -> ceBuilder.withTime(OffsetDateTime.now()));
     props
         .subjectFilter()
         .map(filter -> filter.apply(workflow, taskContext, taskContext.input()))
@@ -133,6 +134,14 @@ public class EmitExecutor extends RegularTaskExecutor<EmitTask> {
         .ifPresent(value -> value.forEach((k, v) -> addExtension(ceBuilder, k, v)));
     emittedDecorators.forEach(d -> d.decorate(ceBuilder, workflow, taskContext));
     return ceBuilder.build();
+  }
+
+  private static URI defaultSource(WorkflowContext workflow) {
+    WorkflowDefinition definition = workflow.definition();
+    return definition
+        .application()
+        .defaultEventSource()
+        .orElseGet(() -> CloudEventUtils.source(definition.id()));
   }
 
   private static void addExtension(CloudEventBuilder builder, String name, Object value) {

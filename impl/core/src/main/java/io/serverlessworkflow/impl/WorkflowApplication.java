@@ -110,6 +110,7 @@ public class WorkflowApplication implements AutoCloseable {
   private final AllStrategyCorrelationInfoFactory allStrategyCorrelationInfoFactory;
   private final WorkflowLifeCycleCloudEventFactory lifeCycleCloudEventFactory;
   private final ScheduledExecutorService schedulerExecutorService;
+  private final Optional<URI> defaultEventSource;
 
   private WorkflowApplication(Builder builder) {
     this.taskFactory = builder.taskFactory;
@@ -144,6 +145,18 @@ public class WorkflowApplication implements AutoCloseable {
     this.allStrategyCorrelationInfoFactory = builder.allStrategyCorrelationInfoFactory;
     this.lifeCycleCloudEventFactory = builder.lifeCycleCloudEventFactory;
     this.schedulerExecutorService = builder.schedulerExecutorService;
+    this.defaultEventSource = builder.defaultEventSource;
+  }
+
+  /**
+   * Optional application-wide default CloudEvent {@code source} for emitted events. When set, it
+   * takes precedence over the workflow-identity-derived source but is still overridden by an
+   * explicit per-emit {@code source}.
+   *
+   * @return the configured default source, or empty if none was set
+   */
+  public Optional<URI> defaultEventSource() {
+    return defaultEventSource;
   }
 
   public TaskExecutorFactory taskFactory() {
@@ -248,6 +261,7 @@ public class WorkflowApplication implements AutoCloseable {
     private ExecutorServiceFactory executorFactory = new DefaultExecutorServiceFactory();
     private EventConsumer<?, ?> eventConsumer;
     private Collection<EventPublisher> eventPublishers = new ArrayList<>();
+    private Optional<URI> defaultEventSource = Optional.empty();
     private RuntimeDescriptorFactory descriptorFactory =
         () -> new RuntimeDescriptor("reference impl", "1.0.0_alpha", Collections.emptyMap());
     private boolean lifeCycleCEPublishingEnabled = true;
@@ -357,6 +371,22 @@ public class WorkflowApplication implements AutoCloseable {
     public Builder withEventPublisher(EventPublisher eventPublisher) {
       this.eventPublishers.add(eventPublisher);
       return this;
+    }
+
+    /**
+     * Sets an application-wide default CloudEvent {@code source} applied to every emitted event
+     * that does not specify its own source. Overrides the workflow-identity-derived default; still
+     * overridden by an explicit per-emit {@code source}.
+     */
+    public Builder withDefaultEventSource(URI defaultEventSource) {
+      this.defaultEventSource = Optional.ofNullable(defaultEventSource);
+      return this;
+    }
+
+    /** String overload of {@link #withDefaultEventSource(URI)}. */
+    public Builder withDefaultEventSource(String defaultEventSource) {
+      return withDefaultEventSource(
+          defaultEventSource == null ? null : URI.create(defaultEventSource));
     }
 
     public Builder withSecretManager(SecretManager secretManager) {
