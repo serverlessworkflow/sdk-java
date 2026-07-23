@@ -32,7 +32,11 @@ class ObjectMapperFactory {
   private static final ObjectMapper jsonMapper = configure(new ObjectMapper());
 
   private static final ObjectMapper yamlMapper =
-      configure(new ObjectMapper(new YAMLFactory().enable(Feature.MINIMIZE_QUOTES)));
+      configure(
+          new ObjectMapper(
+              new YAMLFactory()
+                  .enable(Feature.MINIMIZE_QUOTES)
+                  .enable(Feature.ALWAYS_QUOTE_NUMBERS_AS_STRINGS)));
 
   public static ObjectMapper jsonMapper() {
     return jsonMapper;
