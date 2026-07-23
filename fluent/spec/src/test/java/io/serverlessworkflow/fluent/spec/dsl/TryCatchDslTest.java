@@ -24,6 +24,7 @@ import static io.serverlessworkflow.fluent.spec.dsl.DSL.set;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.tryCatch;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.use;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.fluent.spec.WorkflowBuilder;
@@ -693,5 +694,30 @@ public class TryCatchDslTest {
     assertThat(backoff.getConstantBackoff()).isNotNull();
     assertThat(backoff.getExponentialBackOff()).isNull();
     assertThat(backoff.getLinearBackoff()).isNull();
+  }
+
+  @Test
+  void when_backoff_builder_mixes_variants_then_throws() {
+    assertThatThrownBy(
+            () ->
+                WorkflowBuilder.workflow("mixed-backoff", "test", "0.1.0")
+                    .tasks(
+                        tryCatch(
+                            "tryTask",
+                            tryCatch()
+                                .tasks(call(http().get().endpoint("http://localhost:9797")))
+                                .catches()
+                                .errors(Errors.COMMUNICATION, 404)
+                                .retry()
+                                .backoff(
+                                    b -> {
+                                      b.constant("c", "10");
+                                      b.exponential("e", "1.5");
+                                    })
+                                .done()
+                                .done()))
+                    .build())
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessageContaining("Only one backoff variant");
   }
 }

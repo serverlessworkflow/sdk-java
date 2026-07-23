@@ -351,6 +351,7 @@ public abstract class BaseTryTaskBuilder<
     }
 
     public BackoffBuilder constant(String key, String value) {
+      ensureExclusive(this.constantBackoff, this.exponentialBackOff, this.linearBackoff);
       if (this.constantBackoff == null) {
         this.constantBackoff = new ConstantBackoff();
         this.constantBackoff.setConstant(new Constant());
@@ -360,6 +361,7 @@ public abstract class BaseTryTaskBuilder<
     }
 
     public BackoffBuilder exponential(String key, String value) {
+      ensureExclusive(this.exponentialBackOff, this.constantBackoff, this.linearBackoff);
       if (this.exponentialBackOff == null) {
         this.exponentialBackOff = new ExponentialBackOff();
         this.exponentialBackOff.setExponential(new Exponential());
@@ -369,12 +371,22 @@ public abstract class BaseTryTaskBuilder<
     }
 
     public BackoffBuilder linear(String key, String value) {
+      ensureExclusive(this.linearBackoff, this.constantBackoff, this.exponentialBackOff);
       if (this.linearBackoff == null) {
         this.linearBackoff = new LinearBackoff();
         this.linearBackoff.setLinear(new Linear());
       }
       this.linearBackoff.getLinear().withAdditionalProperty(key, value);
       return this;
+    }
+
+    private void ensureExclusive(Object current, Object... others) {
+      for (Object other : others) {
+        if (other != null) {
+          throw new IllegalStateException(
+              "Only one backoff variant (constant, exponential, or linear) can be configured");
+        }
+      }
     }
 
     public RetryBackoff build() {
