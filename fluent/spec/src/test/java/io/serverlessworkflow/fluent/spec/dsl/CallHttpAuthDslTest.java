@@ -234,6 +234,32 @@ public class CallHttpAuthDslTest {
   }
 
   @Test
+  void when_call_http_with_basic_auth_then_oneof_value_is_set() {
+    Workflow wf =
+        WorkflowBuilder.workflow("f", "ns", "1")
+            .tasks(call(http().get().endpoint(EXPR_ENDPOINT, basic("alice", "secret"))))
+            .build();
+
+    var authentication =
+        wf.getDo()
+            .get(0)
+            .getTask()
+            .getCallTask()
+            .getCallHTTP()
+            .getWith()
+            .getEndpoint()
+            .getEndpointConfiguration()
+            .getAuthentication();
+
+    assertThat(authentication.get())
+        .as("ReferenceableAuthenticationPolicy.get() must not be null for serialization")
+        .isNotNull();
+
+    assertThat(authentication.getAuthenticationPolicy()).isNotNull();
+    assertThat(authentication.getAuthenticationPolicyReference()).isNull();
+  }
+
+  @Test
   void when_call_http_with_basic_auth_on_uri_string() {
     Workflow wf =
         WorkflowBuilder.workflow("f", "ns", "1")

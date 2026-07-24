@@ -24,6 +24,7 @@ import static io.serverlessworkflow.fluent.spec.dsl.DSL.set;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.tryCatch;
 import static io.serverlessworkflow.fluent.spec.dsl.DSL.use;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.serverlessworkflow.api.types.Workflow;
 import io.serverlessworkflow.fluent.spec.WorkflowBuilder;
@@ -621,5 +622,102 @@ public class TryCatchDslTest {
     var constant = constBackoff.getConstant();
     assertThat(constant).isNotNull();
     assertThat(constant.getAdditionalProperties()).containsEntry("c", "10");
+  }
+
+  @Test
+  void when_try_catch_backoff_exponential_then_oneof_value_is_set() {
+    Workflow wf =
+        WorkflowBuilder.workflow("try-catch-backoff-oneof", "test", "0.1.0")
+            .tasks(
+                tryCatch(
+                    "tryTask",
+                    tryCatch()
+                        .tasks(call(http().get().endpoint("http://localhost:9797")))
+                        .catches()
+                        .errors(Errors.COMMUNICATION, 404)
+                        .retry()
+                        .backoffExponential()
+                        .done()
+                        .done()))
+            .build();
+
+    var backoff =
+        wf.getDo()
+            .get(0)
+            .getTask()
+            .getTryTask()
+            .getCatch()
+            .getRetry()
+            .getRetryPolicyDefinition()
+            .getBackoff();
+
+    assertThat(backoff.get())
+        .as("RetryBackoff.get() must not be null for serialization")
+        .isNotNull();
+
+    assertThat(backoff.getExponentialBackOff()).isNotNull();
+    assertThat(backoff.getConstantBackoff()).isNull();
+    assertThat(backoff.getLinearBackoff()).isNull();
+  }
+
+  @Test
+  void when_try_catch_backoff_constant_then_oneof_value_is_set() {
+    Workflow wf =
+        WorkflowBuilder.workflow("try-catch-backoff-oneof-const", "test", "0.1.0")
+            .tasks(
+                tryCatch(
+                    "tryTask",
+                    tryCatch()
+                        .tasks(call(http().get().endpoint("http://localhost:9797")))
+                        .catches()
+                        .errors(Errors.COMMUNICATION, 404)
+                        .retry()
+                        .backoffConstant()
+                        .done()
+                        .done()))
+            .build();
+
+    var backoff =
+        wf.getDo()
+            .get(0)
+            .getTask()
+            .getTryTask()
+            .getCatch()
+            .getRetry()
+            .getRetryPolicyDefinition()
+            .getBackoff();
+
+    assertThat(backoff.get())
+        .as("RetryBackoff.get() must not be null for serialization")
+        .isNotNull();
+
+    assertThat(backoff.getConstantBackoff()).isNotNull();
+    assertThat(backoff.getExponentialBackOff()).isNull();
+    assertThat(backoff.getLinearBackoff()).isNull();
+  }
+
+  @Test
+  void when_backoff_builder_mixes_variants_then_throws() {
+    assertThatThrownBy(
+            () ->
+                WorkflowBuilder.workflow("mixed-backoff", "test", "0.1.0")
+                    .tasks(
+                        tryCatch(
+                            "tryTask",
+                            tryCatch()
+                                .tasks(call(http().get().endpoint("http://localhost:9797")))
+                                .catches()
+                                .errors(Errors.COMMUNICATION, 404)
+                                .retry()
+                                .backoff(
+                                    b -> {
+                                      b.constant("c", "10");
+                                      b.exponential("e", "1.5");
+                                    })
+                                .done()
+                                .done()))
+                    .build())
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessageContaining("Only one backoff variant");
   }
 }
